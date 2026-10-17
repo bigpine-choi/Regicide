@@ -151,7 +151,9 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
         require(duration <= 2.0, "native snapshot itself exceeded the fail-closed bound")
         max_duration = max(max_duration, duration)
         timestamp = utc(row["utc"])
-        gap = 0.0 if previous_elapsed is None else elapsed - previous_elapsed
+        # The frozen guard timestamps snapshot completion. Its first gap is
+        # that initial snapshot's duration; later gaps are completion deltas.
+        gap = duration if previous_elapsed is None else elapsed - previous_elapsed
         require(gap >= 0 and gap <= 2.0, "nonmonotonic or excessive snapshot gap")
         require(abs(gap - numeric(row["gap_seconds"], "snapshot gap")) <= 1e-7,
                 "reported snapshot gap differs from monotonic evidence")
@@ -467,8 +469,8 @@ def self_test():
                       "ancestry_to_monitor": None, "ancestry_processes": None}]
         if 21 <= index < 62:
             processes.extend(dict(item, cpu_ticks=index, owned=True, exited_during_snapshot=False) for item in owned)
-        rows.append({"utc": stamp(index * 0.5), "elapsed_seconds": index * 0.5,
-                     "phase": phase, "gap_seconds": 0 if index == 0 else 0.5,
+        rows.append({"utc": stamp(index * 0.5 + 0.01), "elapsed_seconds": index * 0.5 + 0.01,
+                     "phase": phase, "gap_seconds": 0.01 if index == 0 else 0.5,
                      "snapshot_duration_seconds": 0.01,
                      "processes": processes, "external_cpu_delta_ticks": 0, "contaminated": False})
     summary = {"schema_version": 1, "started_utc": stamp(-0.1), "finished_utc": stamp(32),
@@ -512,6 +514,7 @@ def self_test():
     reject("ancestor PID reuse", lambda s, r, m: s["owned_engines"][0]["ancestry_processes"][-1].update(creation_ticks=2))
     reject("oversized gap", lambda s, r, m: r[30].update(elapsed_seconds=20))
     reject("forged gap", lambda s, r, m: r[30].update(gap_seconds=0))
+    reject("initial gap omits snapshot duration", lambda s, r, m: r[0].update(gap_seconds=0))
     reject("slow last snapshot", lambda s, r, m: r[-1].update(snapshot_duration_seconds=2.1))
     reject("short idle", lambda s, r, m: s.update(completed_idle_seconds=9.9))
     reject("missing row", lambda s, r, m: r.pop(30))
@@ -647,6 +650,8 @@ def main(argv=None):
         adopted, attempts = inventory_attempts(root, directory, args.harness_commit, validation["input_json_sha256"])
         result = {"status": "PASS", "candidate_commit": CANDIDATE_COMMIT, "baseline_commit": BASELINE_COMMIT,
                   "harness_commit": args.harness_commit, "opening_sha256": OPENING_SHA256,
+                  "auditor_source": Path(__file__).relative_to(ROOT).as_posix(),
+                  "auditor_source_sha256": digest(Path(__file__)),
                   "chess_version": chess.__version__, "validation": validation, "attempts": attempts,
                   "adoption_policy": "First complete clean time block at each time control; contaminated blocks wholly excluded and preserved; no result-based replacement.",
                   "matches": [audit_match(adopted[f"time{movetime}"], args.harness_commit, movetime) for movetime in (100, 1000)]}
