@@ -1,0 +1,21 @@
+name: Rules core
+on: [push, pull_request]
+jobs:
+  rules:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --config Release
+      - run: ctest --test-dir build -C Release --output-on-failure
+      - run: python -m pip install -r requirements-test.txt
+      - if: runner.os == 'Linux'
+        run: python tests/differential.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/differential.py build/Release/regicide.exe
