@@ -1,0 +1,9 @@
+import pathlib,json,statistics
+out=pathlib.Path('build-see-cost')
+for name in ['loss-scenes-profile-guarded','mixed-regression-profile-guarded']:
+ data=json.loads((out/(name+'.json')).read_text());r=[s['reference']['nanoseconds']/s['reference']['calls'] for s in data['samples']]; c=[s['candidate']['nanoseconds']/s['candidate']['calls'] for s in data['samples']];ratios=[s['candidate']['nanoseconds']/s['reference']['nanoseconds'] for s in data['samples']]
+ print(name,'queries',data['queries'],'reference median',statistics.median(r),'candidate median',statistics.median(c),'pairedmedianratio',statistics.median(ratios),'ratios',ratios)
+data=json.loads((out/'loss-scenes-search-profile-guarded.json').read_text());rows=data['rows']; wall=sum(r['search_instrumented_ns'] for r in rows); see=sum(r['see_instrumented_ns'] for r in rows); calls=sum(r['see_calls'] for r in rows)
+print('search','wallns',wall,'seens',see,'calls',calls,'fraction',see/wall,'empty intervalperpair',data['empty_interval_ns']/data['clock_pair_iterations'],'clock_pairwallperpair',data['clock_pair_wall_ns']/data['clock_pair_iterations'])
+p=out/'profile_see_search.cpp';text=p.read_text(encoding='utf-8-sig');text=text.replace('<< result.nodes << ",\\\"depth\\\":"','<< result.nodes << ",\\\"qnodes\\\":" << result.qnodes << ",\\\"pvs_probes\\\":" << result.pvs_probes << ",\\\"pvs_researches\\\":" << result.pvs_researches << ",\\\"depth\\\":"');p.write_text(text,encoding='utf-8')
+p=out/'run-final-profile.py';text=p.read_text(encoding='utf-8-sig');begin=text.index('workloads=[');end=text.index('\ntry:',begin);text=text[:begin]+"workloads=[('loss-scenes-search-profile-detailed-guarded',['build-see-cost/profile_see_search.exe'],'loss-scenes.fens')]"+text[end:];text=text.replace('final-profile.monitor','detailed-search-profile.monitor').replace("'final-profile-run.json'","'detailed-search-profile-run.json'");(out/'run-detailed-search-profile.py').write_text(text,encoding='utf-8')

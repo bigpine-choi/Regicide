@@ -1,0 +1,1550 @@
+{
+  "schema_version": 1,
+  "role": "Independent read-only arithmetic and recorded-data audit; no engine searches, builds, tests, benchmark reruns or tracked edits. Does not import the benchmark summarizer or guard implementation.",
+  "passed": true,
+  "checks": 8919,
+  "total_pairs": 125,
+  "unique_input_positions_replayed": 15,
+  "input_replay_plies": 263,
+  "unique_pvs_replayed": 26,
+  "pv_replay_plies": 119,
+  "failures": [],
+  "datasets": [
+    {
+      "name": "depth3",
+      "passed": true,
+      "depth": 3,
+      "repeats": 5,
+      "positions": 10,
+      "pairs": 50,
+      "actual_equal_fields": [
+        "move",
+        "score",
+        "nodes",
+        "depth",
+        "seldepth",
+        "pv",
+        "tt_counters",
+        "tt_memory",
+        "search_fen"
+      ],
+      "field_mismatches": {},
+      "warmups_separately_recorded_and_excluded": 2,
+      "first_role_counts": {
+        "candidate": 25,
+        "baseline": 25
+      },
+      "effective_options": {
+        "Move Overhead": 20,
+        "UsePositionalEvaluation": true,
+        "UseQuiescence": true,
+        "UseTranspositionTable": true,
+        "Hash": 16,
+        "UseFastMoves": true,
+        "UseQuietMoveOrdering": true,
+        "UseQuiescenceChecks": true,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "timing": {
+        "pairs": 50,
+        "candidate_over_baseline_wall": {
+          "median": 1.0194341023329732,
+          "mean": 1.0367120217694805,
+          "min": 0.7824399643137234,
+          "max": 1.3097006345808972,
+          "sample_standard_deviation": 0.10589930417441615
+        },
+        "median_baseline_over_candidate_wall_speedup": 0.9809391542910021,
+        "candidate_slower_pairs": 29,
+        "candidate_faster_pairs": 21,
+        "same_wall_pairs": 0,
+        "baseline_wall_seconds_sum": 0.5614137999364175,
+        "candidate_wall_seconds_sum": 0.5649279000353999,
+        "baseline_engine_seconds_sum": 0.461,
+        "candidate_engine_seconds_sum": 0.46900000000000003,
+        "engine_ratio_usable_pairs": 40,
+        "engine_ratio_excluded_pairs": 10,
+        "candidate_over_baseline_engine": {
+          "median": 1.0,
+          "mean": 1.0583358768742064,
+          "min": 0.75,
+          "max": 1.5
+        },
+        "ratio_of_total_wall_candidate_over_baseline": 1.006259376059834
+      },
+      "per_position": [
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.1290098251744582,
+            "mean": 1.0887737712857088,
+            "min": 0.7824399643137234,
+            "max": 1.3035339616567725,
+            "sample_standard_deviation": 0.18937686711027257
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.8857318844373004,
+          "candidate_slower_pairs": 4,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.010558400012087077,
+          "candidate_wall_seconds_sum": 0.01140550003037788,
+          "baseline_engine_seconds_sum": 0.0,
+          "candidate_engine_seconds_sum": 0.003,
+          "engine_ratio_usable_pairs": 0,
+          "engine_ratio_excluded_pairs": 5,
+          "candidate_over_baseline_engine": null,
+          "ratio_of_total_wall_candidate_over_baseline": 1.08022996072521,
+          "index": 0,
+          "name": "Initial position"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0639813764233161,
+            "mean": 1.0312072539971084,
+            "min": 0.9068300242931421,
+            "max": 1.1664368665975802,
+            "sample_standard_deviation": 0.10229823135724223
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9398660748758628,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.025780600000871345,
+          "candidate_wall_seconds_sum": 0.02651179998065345,
+          "baseline_engine_seconds_sum": 0.016,
+          "candidate_engine_seconds_sum": 0.016,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.0166666666666666,
+            "min": 0.75,
+            "max": 1.3333333333333333
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0283624112610796,
+          "index": 1,
+          "name": "Open game"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0734802247665673,
+            "mean": 1.0911477148042397,
+            "min": 1.0631050632931571,
+            "max": 1.1452494280076162,
+            "sample_standard_deviation": 0.03353384449855313
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.93154953107539,
+          "candidate_slower_pairs": 5,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.02015269995899871,
+          "candidate_wall_seconds_sum": 0.02200029999949038,
+          "baseline_engine_seconds_sum": 0.01,
+          "candidate_engine_seconds_sum": 0.013000000000000001,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.5,
+            "mean": 1.3,
+            "min": 1.0,
+            "max": 1.5
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.091680025219979,
+          "index": 2,
+          "name": "Queen pawn game"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9794387669923885,
+            "mean": 1.0205727904361301,
+            "min": 0.9485379560062935,
+            "max": 1.177414788426788,
+            "sample_standard_deviation": 0.09233744022600393
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0209928723474464,
+          "candidate_slower_pairs": 2,
+          "candidate_faster_pairs": 3,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.08024850001675077,
+          "candidate_wall_seconds_sum": 0.08168250002199784,
+          "baseline_engine_seconds_sum": 0.07,
+          "candidate_engine_seconds_sum": 0.07200000000000001,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.0306227106227106,
+            "min": 0.9333333333333333,
+            "max": 1.1428571428571428
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0178694929493728,
+          "index": 3,
+          "name": "Sicilian family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9761321687224175,
+            "mean": 0.9797236789695346,
+            "min": 0.9446798005463479,
+            "max": 1.0064161968312018,
+            "sample_standard_deviation": 0.02455880955675269
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0244514339782709,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 4,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.11253330000909045,
+          "candidate_wall_seconds_sum": 0.1101687999907881,
+          "baseline_engine_seconds_sum": 0.10200000000000001,
+          "candidate_engine_seconds_sum": 0.099,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.95,
+            "mean": 0.9731350114416476,
+            "min": 0.9130434782608696,
+            "max": 1.0526315789473684
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9789884414825536,
+          "index": 4,
+          "name": "French family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0026543634542107,
+            "mean": 1.020099222406016,
+            "min": 0.9772400922791357,
+            "max": 1.1017152477598857,
+            "sample_standard_deviation": 0.0520321192651355
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9973526635389426,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.10947709999163635,
+          "candidate_wall_seconds_sum": 0.11166439999942668,
+          "baseline_engine_seconds_sum": 0.1,
+          "candidate_engine_seconds_sum": 0.10200000000000001,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.02,
+            "min": 1.0,
+            "max": 1.0999999999999999
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.019979520903983,
+          "index": 5,
+          "name": "Caro-Kann family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9623728598316279,
+            "mean": 0.9737462744162301,
+            "min": 0.9123768399807417,
+            "max": 1.0211479011141416,
+            "sample_standard_deviation": 0.045889467702335575
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0390982972804899,
+          "candidate_slower_pairs": 2,
+          "candidate_faster_pairs": 3,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.11363830001209863,
+          "candidate_wall_seconds_sum": 0.1105540000135079,
+          "baseline_engine_seconds_sum": 0.10300000000000001,
+          "candidate_engine_seconds_sum": 0.101,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 0.9818181818181818,
+            "min": 0.9090909090909092,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9728586225043638,
+          "index": 6,
+          "name": "Queen's Gambit Declined family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9732117240005607,
+            "mean": 0.986563181988366,
+            "min": 0.9036992660223387,
+            "max": 1.0652873388612905,
+            "sample_standard_deviation": 0.06563933740261756
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0275256404529545,
+          "candidate_slower_pairs": 2,
+          "candidate_faster_pairs": 3,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.05389499999000691,
+          "candidate_wall_seconds_sum": 0.053000700019765645,
+          "baseline_engine_seconds_sum": 0.041999999999999996,
+          "candidate_engine_seconds_sum": 0.043,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.0277777777777777,
+            "min": 0.888888888888889,
+            "max": 1.125
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9834066245401785,
+          "index": 7,
+          "name": "Reti-English family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.036496494917432,
+            "mean": 1.07790808258904,
+            "min": 0.9345474886436471,
+            "max": 1.2820220300746727,
+            "sample_standard_deviation": 0.13337318071508544
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9647885978424467,
+          "candidate_slower_pairs": 4,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.027829499944346026,
+          "candidate_wall_seconds_sum": 0.03001600003335625,
+          "baseline_engine_seconds_sum": 0.018000000000000002,
+          "candidate_engine_seconds_sum": 0.02,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.1166666666666667,
+            "min": 1.0,
+            "max": 1.3333333333333333
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0785677102852307,
+          "index": 8,
+          "name": "Defended rook recapture"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0727231632635654,
+            "mean": 1.0973782468024311,
+            "min": 0.9394374415508834,
+            "max": 1.3097006345808972,
+            "sample_standard_deviation": 0.16494126121641406
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9322069609811366,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.007300400000531226,
+          "candidate_wall_seconds_sum": 0.007923899946035817,
+          "baseline_engine_seconds_sum": 0.0,
+          "candidate_engine_seconds_sum": 0.0,
+          "engine_ratio_usable_pairs": 0,
+          "engine_ratio_excluded_pairs": 5,
+          "candidate_over_baseline_engine": null,
+          "ratio_of_total_wall_candidate_over_baseline": 1.0854062716370638,
+          "index": 9,
+          "name": "Opposed pawn endgame"
+        }
+      ],
+      "guard": {
+        "snapshots": 27,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_gap_seconds": 0.529910099983681,
+        "min_gap_seconds": 0.01057869999203831,
+        "max_snapshot_duration_seconds": 0.020717699982924387,
+        "completed_idle_seconds": 10.049369200016372,
+        "transport_identities": {
+          "baseline": {
+            "pid": 15804,
+            "creation_ticks": 134367383815290685
+          },
+          "candidate": {
+            "pid": 37448,
+            "creation_ticks": 134367383815595473
+          }
+        },
+        "external_initial": [
+          {
+            "pid": 18392,
+            "creation_ticks": 134367207003283831,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2842812500
+          },
+          {
+            "pid": 29128,
+            "creation_ticks": 134367246683890009,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 761718750
+          },
+          {
+            "pid": 14996,
+            "creation_ticks": 134367256611607980,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2168281250
+          },
+          {
+            "pid": 16684,
+            "creation_ticks": 134367283253665253,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 1335781250
+          },
+          {
+            "pid": 20244,
+            "creation_ticks": 134367312384632090,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 433593750
+          }
+        ]
+      }
+    },
+    {
+      "name": "depth4",
+      "passed": true,
+      "depth": 4,
+      "repeats": 5,
+      "positions": 10,
+      "pairs": 50,
+      "actual_equal_fields": [
+        "move",
+        "score",
+        "nodes",
+        "depth",
+        "seldepth",
+        "pv",
+        "tt_counters",
+        "tt_memory",
+        "search_fen"
+      ],
+      "field_mismatches": {},
+      "warmups_separately_recorded_and_excluded": 2,
+      "first_role_counts": {
+        "candidate": 25,
+        "baseline": 25
+      },
+      "effective_options": {
+        "Move Overhead": 20,
+        "UsePositionalEvaluation": true,
+        "UseQuiescence": true,
+        "UseTranspositionTable": true,
+        "Hash": 16,
+        "UseFastMoves": true,
+        "UseQuietMoveOrdering": true,
+        "UseQuiescenceChecks": true,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "timing": {
+        "pairs": 50,
+        "candidate_over_baseline_wall": {
+          "median": 0.9766053827021774,
+          "mean": 0.9758298343547825,
+          "min": 0.6395035351506678,
+          "max": 1.2669316015670486,
+          "sample_standard_deviation": 0.10664203405164048
+        },
+        "median_baseline_over_candidate_wall_speedup": 1.0239592498917087,
+        "candidate_slower_pairs": 18,
+        "candidate_faster_pairs": 32,
+        "same_wall_pairs": 0,
+        "baseline_wall_seconds_sum": 2.628129600198008,
+        "candidate_wall_seconds_sum": 2.588881200150354,
+        "baseline_engine_seconds_sum": 2.521,
+        "candidate_engine_seconds_sum": 2.476,
+        "engine_ratio_usable_pairs": 45,
+        "engine_ratio_excluded_pairs": 5,
+        "candidate_over_baseline_engine": {
+          "median": 0.9782608695652174,
+          "mean": 0.9586149585713045,
+          "min": 0.5714285714285714,
+          "max": 1.144
+        },
+        "ratio_of_total_wall_candidate_over_baseline": 0.9850660332562378
+      },
+      "per_position": [
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9283148325959191,
+            "mean": 0.8847874425791121,
+            "min": 0.6395035351506678,
+            "max": 1.2669316015670486,
+            "sample_standard_deviation": 0.25856953665922516
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0772207497790616,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 4,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.03181650000624359,
+          "candidate_wall_seconds_sum": 0.02622299996437505,
+          "baseline_engine_seconds_sum": 0.022,
+          "candidate_engine_seconds_sum": 0.017,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 0.8342857142857143,
+            "min": 0.5714285714285714,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.824194991882486,
+          "index": 0,
+          "name": "Initial position"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9629690786516459,
+            "mean": 0.9844942516484788,
+            "min": 0.9262251517089293,
+            "max": 1.0686209637088537,
+            "sample_standard_deviation": 0.05569290185976027
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0384549433302728,
+          "candidate_slower_pairs": 2,
+          "candidate_faster_pairs": 3,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.12609100004192442,
+          "candidate_wall_seconds_sum": 0.12336270001833327,
+          "baseline_engine_seconds_sum": 0.11599999999999999,
+          "candidate_engine_seconds_sum": 0.11299999999999999,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.96875,
+            "mean": 0.9766071428571429,
+            "min": 0.95,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.978362452334552,
+          "index": 1,
+          "name": "Open game"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9785864947819565,
+            "mean": 0.9549426377579219,
+            "min": 0.8240259401911247,
+            "max": 1.0525085162007553,
+            "sample_standard_deviation": 0.08392233269064264
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.02188207719218,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 4,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.0962236000050325,
+          "candidate_wall_seconds_sum": 0.08991420004167594,
+          "baseline_engine_seconds_sum": 0.08600000000000001,
+          "candidate_engine_seconds_sum": 0.078,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9285714285714285,
+            "mean": 0.9232142857142857,
+            "min": 0.8214285714285714,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9344298076248803,
+          "index": 2,
+          "name": "Queen pawn game"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0135472764380593,
+            "mean": 1.0152876469108039,
+            "min": 0.9795228767035153,
+            "max": 1.0638891232593666,
+            "sample_standard_deviation": 0.03283258023987367
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9866337991793842,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.4247204000421334,
+          "candidate_wall_seconds_sum": 0.43326920000254177,
+          "baseline_engine_seconds_sum": 0.41400000000000003,
+          "candidate_engine_seconds_sum": 0.42100000000000004,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0153846153846153,
+            "mean": 1.0107608855987757,
+            "min": 0.9701492537313433,
+            "max": 1.0619469026548671
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0201280653332412,
+          "index": 3,
+          "name": "Sicilian family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0022641212075494,
+            "mean": 0.9845145386887869,
+            "min": 0.8411128544418033,
+            "max": 1.0941969329655312,
+            "sample_standard_deviation": 0.09293992914886677
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9977409934570725,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.5740361000061966,
+          "candidate_wall_seconds_sum": 0.560848100023577,
+          "baseline_engine_seconds_sum": 0.563,
+          "candidate_engine_seconds_sum": 0.546,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9782608695652174,
+            "mean": 0.9757490681410887,
+            "min": 0.8407643312101911,
+            "max": 1.0942028985507246
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9770258351652844,
+          "index": 4,
+          "name": "French family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9726024433999643,
+            "mean": 0.953441699808044,
+            "min": 0.8799836987840293,
+            "max": 1.0124247053679554,
+            "sample_standard_deviation": 0.05326271985763177
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0281693273402244,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 4,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.461875500070164,
+          "candidate_wall_seconds_sum": 0.4348754000093322,
+          "baseline_engine_seconds_sum": 0.45099999999999996,
+          "candidate_engine_seconds_sum": 0.422,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.961038961038961,
+            "mean": 0.9488476208694694,
+            "min": 0.8716216216216217,
+            "max": 1.0136986301369864
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9415424718203712,
+          "index": 5,
+          "name": "Caro-Kann family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.004744108382312,
+            "mean": 1.0418068769495192,
+            "min": 0.9723764277888283,
+            "max": 1.1369698490689863,
+            "sample_standard_deviation": 0.07252731600835335
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9952782919126042,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.5049445999611635,
+          "candidate_wall_seconds_sum": 0.5292094000324141,
+          "baseline_engine_seconds_sum": 0.494,
+          "candidate_engine_seconds_sum": 0.518,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0081967213114753,
+            "mean": 1.0414004410179656,
+            "min": 0.9625,
+            "max": 1.144
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0480543807639826,
+          "index": 6,
+          "name": "Queen's Gambit Declined family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9746242706223984,
+            "mean": 0.9717813147859662,
+            "min": 0.9315109521017253,
+            "max": 1.002220623825651,
+            "sample_standard_deviation": 0.02556191524099675
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0260364225912377,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 4,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.288378500030376,
+          "candidate_wall_seconds_sum": 0.27898410003399476,
+          "baseline_engine_seconds_sum": 0.276,
+          "candidate_engine_seconds_sum": 0.268,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9777777777777777,
+            "mean": 0.9729146793852677,
+            "min": 0.945945945945946,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9674233689564523,
+          "index": 7,
+          "name": "Reti-English family"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 0.9461714564842836,
+            "mean": 0.937957752417387,
+            "min": 0.8709618983962432,
+            "max": 0.9741228784811395,
+            "sample_standard_deviation": 0.042802386687656714
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0568908976769693,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 5,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.11057710001477972,
+          "candidate_wall_seconds_sum": 0.10249509997083806,
+          "baseline_engine_seconds_sum": 0.099,
+          "candidate_engine_seconds_sum": 0.092,
+          "engine_ratio_usable_pairs": 5,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9333333333333333,
+            "mean": 0.9437547892720306,
+            "min": 0.888888888888889,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9269107252508755,
+          "index": 8,
+          "name": "Defended rook recapture"
+        },
+        {
+          "pairs": 5,
+          "candidate_over_baseline_wall": {
+            "median": 1.0246141799992574,
+            "mean": 1.0292841820018048,
+            "min": 0.9226588807293306,
+            "max": 1.2478866892198635,
+            "sample_standard_deviation": 0.1323587285227215
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9759771234092474,
+          "candidate_slower_pairs": 3,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.009466300019994378,
+          "candidate_wall_seconds_sum": 0.009700000053271651,
+          "baseline_engine_seconds_sum": 0.0,
+          "candidate_engine_seconds_sum": 0.001,
+          "engine_ratio_usable_pairs": 0,
+          "engine_ratio_excluded_pairs": 5,
+          "candidate_over_baseline_engine": null,
+          "ratio_of_total_wall_candidate_over_baseline": 1.0246875793904335,
+          "index": 9,
+          "name": "Opposed pawn endgame"
+        }
+      ],
+      "guard": {
+        "snapshots": 35,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_gap_seconds": 0.5357056999928318,
+        "min_gap_seconds": 0.01245589999598451,
+        "max_snapshot_duration_seconds": 0.023589399992488325,
+        "completed_idle_seconds": 10.04543030000059,
+        "transport_identities": {
+          "baseline": {
+            "pid": 17192,
+            "creation_ticks": 134367383933608529
+          },
+          "candidate": {
+            "pid": 30492,
+            "creation_ticks": 134367383933893402
+          }
+        },
+        "external_initial": [
+          {
+            "pid": 18392,
+            "creation_ticks": 134367207003283831,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2842812500
+          },
+          {
+            "pid": 29128,
+            "creation_ticks": 134367246683890009,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 761718750
+          },
+          {
+            "pid": 14996,
+            "creation_ticks": 134367256611607980,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2168281250
+          },
+          {
+            "pid": 16684,
+            "creation_ticks": 134367283253665253,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 1335781250
+          },
+          {
+            "pid": 20244,
+            "creation_ticks": 134367312384632090,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 433593750
+          }
+        ]
+      }
+    },
+    {
+      "name": "see-off-depth4",
+      "passed": true,
+      "depth": 4,
+      "repeats": 1,
+      "positions": 10,
+      "pairs": 10,
+      "actual_equal_fields": [
+        "move",
+        "score",
+        "nodes",
+        "depth",
+        "seldepth",
+        "pv",
+        "tt_counters",
+        "tt_memory",
+        "search_fen"
+      ],
+      "field_mismatches": {},
+      "warmups_separately_recorded_and_excluded": 2,
+      "first_role_counts": {
+        "candidate": 5,
+        "baseline": 5
+      },
+      "effective_options": {
+        "Move Overhead": 20,
+        "UsePositionalEvaluation": true,
+        "UseQuiescence": true,
+        "UseTranspositionTable": true,
+        "Hash": 16,
+        "UseFastMoves": true,
+        "UseQuietMoveOrdering": true,
+        "UseQuiescenceChecks": true,
+        "PVS": true,
+        "UseSEE": false
+      },
+      "timing": {
+        "pairs": 10,
+        "candidate_over_baseline_wall": {
+          "median": 1.0084211907096414,
+          "mean": 1.0276309805348258,
+          "min": 0.9267873769228907,
+          "max": 1.3184538573036497,
+          "sample_standard_deviation": 0.1065622074908744
+        },
+        "median_baseline_over_candidate_wall_speedup": 0.9916663268219783,
+        "candidate_slower_pairs": 6,
+        "candidate_faster_pairs": 4,
+        "same_wall_pairs": 0,
+        "baseline_wall_seconds_sum": 0.47519609992741607,
+        "candidate_wall_seconds_sum": 0.47882340001524426,
+        "baseline_engine_seconds_sum": 0.453,
+        "candidate_engine_seconds_sum": 0.456,
+        "engine_ratio_usable_pairs": 9,
+        "engine_ratio_excluded_pairs": 1,
+        "candidate_over_baseline_engine": {
+          "median": 1.0123456790123457,
+          "mean": 0.9944447827619388,
+          "min": 0.9166666666666666,
+          "max": 1.0555555555555556
+        },
+        "ratio_of_total_wall_candidate_over_baseline": 1.0076332699034825
+      },
+      "per_position": [
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 0.9613536602748614,
+            "mean": 0.9613536602748614,
+            "min": 0.9613536602748614,
+            "max": 0.9613536602748614,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0401999194698954,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.00530710001476109,
+          "candidate_wall_seconds_sum": 0.005102000024635345,
+          "baseline_engine_seconds_sum": 0.003,
+          "candidate_engine_seconds_sum": 0.003,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0,
+            "mean": 1.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9613536602748614,
+          "index": 0,
+          "name": "Initial position"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 0.9267873769228907,
+            "mean": 0.9267873769228907,
+            "min": 0.9267873769228907,
+            "max": 0.9267873769228907,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0789961375177433,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.026432599988766015,
+          "candidate_wall_seconds_sum": 0.024497400008840486,
+          "baseline_engine_seconds_sum": 0.024,
+          "candidate_engine_seconds_sum": 0.022,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9166666666666666,
+            "mean": 0.9166666666666666,
+            "min": 0.9166666666666666,
+            "max": 0.9166666666666666
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9267873769228907,
+          "index": 1,
+          "name": "Open game"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.0245190324977391,
+            "mean": 1.0245190324977391,
+            "min": 1.0245190324977391,
+            "max": 1.0245190324977391,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9760677628038177,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.02071859998977743,
+          "candidate_wall_seconds_sum": 0.021226600016234443,
+          "baseline_engine_seconds_sum": 0.018,
+          "candidate_engine_seconds_sum": 0.019,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0555555555555556,
+            "mean": 1.0555555555555556,
+            "min": 1.0555555555555556,
+            "max": 1.0555555555555556
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0245190324977391,
+          "index": 2,
+          "name": "Queen pawn game"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.0194851685940571,
+            "mean": 1.0194851685940571,
+            "min": 1.0194851685940571,
+            "max": 1.0194851685940571,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9808872466276988,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.08282709997729398,
+          "candidate_wall_seconds_sum": 0.08444099998450838,
+          "baseline_engine_seconds_sum": 0.081,
+          "candidate_engine_seconds_sum": 0.082,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0123456790123457,
+            "mean": 1.0123456790123457,
+            "min": 1.0123456790123457,
+            "max": 1.0123456790123457
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0194851685940571,
+          "index": 3,
+          "name": "Sicilian family"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.0126201213958315,
+            "mean": 1.0126201213958315,
+            "min": 1.0126201213958315,
+            "max": 1.0126201213958315,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9875371611434746,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.09749509999528527,
+          "candidate_wall_seconds_sum": 0.09872549999272451,
+          "baseline_engine_seconds_sum": 0.095,
+          "candidate_engine_seconds_sum": 0.097,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0210526315789474,
+            "mean": 1.0210526315789474,
+            "min": 1.0210526315789474,
+            "max": 1.0210526315789474
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0126201213958315,
+          "index": 4,
+          "name": "French family"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.0042222600234514,
+            "mean": 1.0042222600234514,
+            "min": 1.0042222600234514,
+            "max": 1.0042222600234514,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9957954925004822,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.0788913999858778,
+          "candidate_wall_seconds_sum": 0.07922449999023229,
+          "baseline_engine_seconds_sum": 0.076,
+          "candidate_engine_seconds_sum": 0.077,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.013157894736842,
+            "mean": 1.013157894736842,
+            "min": 1.013157894736842,
+            "max": 1.013157894736842
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0042222600234514,
+          "index": 5,
+          "name": "Caro-Kann family"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.0185335680493763,
+            "mean": 1.0185335680493763,
+            "min": 1.0185335680493763,
+            "max": 1.0185335680493763,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.9818036747822946,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.09942499999306165,
+          "candidate_wall_seconds_sum": 0.1012676999962423,
+          "baseline_engine_seconds_sum": 0.097,
+          "candidate_engine_seconds_sum": 0.099,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 1.0206185567010309,
+            "mean": 1.0206185567010309,
+            "min": 1.0206185567010309,
+            "max": 1.0206185567010309
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0185335680493763,
+          "index": 6,
+          "name": "Queen's Gambit Declined family"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 0.9982986091384229,
+            "mean": 0.9982986091384229,
+            "min": 0.9982986091384229,
+            "max": 0.9982986091384229,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0017042905259033,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.045727299991995096,
+          "candidate_wall_seconds_sum": 0.04564949998166412,
+          "baseline_engine_seconds_sum": 0.044,
+          "candidate_engine_seconds_sum": 0.043,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9772727272727273,
+            "mean": 0.9772727272727273,
+            "min": 0.9772727272727273,
+            "max": 0.9772727272727273
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9982986091384229,
+          "index": 7,
+          "name": "Reti-English family"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 0.9920361511479783,
+            "mean": 0.9920361511479783,
+            "min": 0.9920361511479783,
+            "max": 0.9920361511479783,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.008027780885612,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 1,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.016951600002357736,
+          "candidate_wall_seconds_sum": 0.016816600022139028,
+          "baseline_engine_seconds_sum": 0.015,
+          "candidate_engine_seconds_sum": 0.014,
+          "engine_ratio_usable_pairs": 1,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9333333333333333,
+            "mean": 0.9333333333333333,
+            "min": 0.9333333333333333,
+            "max": 0.9333333333333333
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9920361511479783,
+          "index": 8,
+          "name": "Defended rook recapture"
+        },
+        {
+          "pairs": 1,
+          "candidate_over_baseline_wall": {
+            "median": 1.3184538573036497,
+            "mean": 1.3184538573036497,
+            "min": 1.3184538573036497,
+            "max": 1.3184538573036497,
+            "sample_standard_deviation": null
+          },
+          "median_baseline_over_candidate_wall_speedup": 0.7584641619882587,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 0,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.0014202999882400036,
+          "candidate_wall_seconds_sum": 0.001872599998023361,
+          "baseline_engine_seconds_sum": 0.0,
+          "candidate_engine_seconds_sum": 0.0,
+          "engine_ratio_usable_pairs": 0,
+          "engine_ratio_excluded_pairs": 1,
+          "candidate_over_baseline_engine": null,
+          "ratio_of_total_wall_candidate_over_baseline": 1.3184538573036497,
+          "index": 9,
+          "name": "Opposed pawn endgame"
+        }
+      ],
+      "guard": {
+        "snapshots": 26,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_gap_seconds": 0.5301760000002105,
+        "min_gap_seconds": 0.013248300005216151,
+        "max_snapshot_duration_seconds": 0.016518800024641678,
+        "completed_idle_seconds": 10.048972700024024,
+        "transport_identities": {
+          "baseline": {
+            "pid": 39748,
+            "creation_ticks": 134367384093206685
+          },
+          "candidate": {
+            "pid": 18864,
+            "creation_ticks": 134367384093524449
+          }
+        },
+        "external_initial": [
+          {
+            "pid": 18392,
+            "creation_ticks": 134367207003283831,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2842812500
+          },
+          {
+            "pid": 29128,
+            "creation_ticks": 134367246683890009,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 761718750
+          },
+          {
+            "pid": 14996,
+            "creation_ticks": 134367256611607980,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2168281250
+          },
+          {
+            "pid": 16684,
+            "creation_ticks": 134367283253665253,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 1335781250
+          },
+          {
+            "pid": 20244,
+            "creation_ticks": 134367312384632090,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 433593750
+          }
+        ]
+      }
+    },
+    {
+      "name": "loss-scenes-depth4",
+      "passed": true,
+      "depth": 4,
+      "repeats": 3,
+      "positions": 5,
+      "pairs": 15,
+      "actual_equal_fields": [
+        "move",
+        "score",
+        "nodes",
+        "depth",
+        "seldepth",
+        "pv",
+        "tt_counters",
+        "tt_memory",
+        "search_fen"
+      ],
+      "field_mismatches": {},
+      "warmups_separately_recorded_and_excluded": 2,
+      "first_role_counts": {
+        "baseline": 8,
+        "candidate": 7
+      },
+      "effective_options": {
+        "Move Overhead": 20,
+        "UsePositionalEvaluation": true,
+        "UseQuiescence": true,
+        "UseTranspositionTable": true,
+        "Hash": 16,
+        "UseFastMoves": true,
+        "UseQuietMoveOrdering": true,
+        "UseQuiescenceChecks": true,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "timing": {
+        "pairs": 15,
+        "candidate_over_baseline_wall": {
+          "median": 0.98371787794214,
+          "mean": 0.9855349065905707,
+          "min": 0.9147270876794383,
+          "max": 1.071419153417325,
+          "sample_standard_deviation": 0.03395518927252167
+        },
+        "median_baseline_over_candidate_wall_speedup": 1.0165516175144858,
+        "candidate_slower_pairs": 4,
+        "candidate_faster_pairs": 11,
+        "same_wall_pairs": 0,
+        "baseline_wall_seconds_sum": 25.206090000050608,
+        "candidate_wall_seconds_sum": 25.074911900010193,
+        "baseline_engine_seconds_sum": 25.169999999999998,
+        "candidate_engine_seconds_sum": 25.037,
+        "engine_ratio_usable_pairs": 15,
+        "engine_ratio_excluded_pairs": 0,
+        "candidate_over_baseline_engine": {
+          "median": 0.9830148619957538,
+          "mean": 0.9851532574025426,
+          "min": 0.9173553719008265,
+          "max": 1.0714995034756705
+        },
+        "ratio_of_total_wall_candidate_over_baseline": 0.9947957775267742
+      },
+      "per_position": [
+        {
+          "pairs": 3,
+          "candidate_over_baseline_wall": {
+            "median": 0.9910104239370994,
+            "mean": 0.9940703399357581,
+            "min": 0.9766624667304041,
+            "max": 1.0145381291397708,
+            "sample_standard_deviation": 0.019122336812644365
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0090711216005042,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 18.745135900040623,
+          "candidate_wall_seconds_sum": 18.637411200004863,
+          "baseline_engine_seconds_sum": 18.739,
+          "candidate_engine_seconds_sum": 18.63,
+          "engine_ratio_usable_pairs": 3,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9908809640123758,
+            "mean": 0.9939998868922565,
+            "min": 0.9766918501848577,
+            "max": 1.0144268464795358
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9942531918354602,
+          "index": 0,
+          "name": "loss-g11-p039"
+        },
+        {
+          "pairs": 3,
+          "candidate_over_baseline_wall": {
+            "median": 0.9804629478994581,
+            "mean": 0.987206413137269,
+            "min": 0.9763571439506161,
+            "max": 1.0047991475617326,
+            "sample_standard_deviation": 0.015373439267576507
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0199263543231267,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 1.7052928000048269,
+          "candidate_wall_seconds_sum": 1.6833499999775086,
+          "baseline_engine_seconds_sum": 1.698,
+          "candidate_engine_seconds_sum": 1.6760000000000002,
+          "engine_ratio_usable_pairs": 3,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9806338028169016,
+            "mean": 0.9871256089932514,
+            "min": 0.975395430579965,
+            "max": 1.0053475935828875
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9871325322975291,
+          "index": 1,
+          "name": "loss-g02-p022"
+        },
+        {
+          "pairs": 3,
+          "candidate_over_baseline_wall": {
+            "median": 0.985099545687092,
+            "mean": 0.9914555250345063,
+            "min": 0.98371787794214,
+            "max": 1.005549151474287,
+            "sample_standard_deviation": 0.01222497366489687
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0151258361433058,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 1.3873260999971535,
+          "candidate_wall_seconds_sum": 1.3753723000118043,
+          "baseline_engine_seconds_sum": 1.38,
+          "candidate_engine_seconds_sum": 1.369,
+          "engine_ratio_usable_pairs": 3,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9867549668874173,
+            "mean": 0.9921162587505307,
+            "min": 0.9830148619957538,
+            "max": 1.006578947368421
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.991383568733138,
+          "index": 2,
+          "name": "loss-g12-p040"
+        },
+        {
+          "pairs": 3,
+          "candidate_over_baseline_wall": {
+            "median": 0.9883746655595443,
+            "mean": 1.0099369843234016,
+            "min": 0.9700171339933352,
+            "max": 1.071419153417325,
+            "sample_standard_deviation": 0.05403047823841131
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0117620724665928,
+          "candidate_slower_pairs": 1,
+          "candidate_faster_pairs": 2,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 3.0134560000151396,
+          "candidate_wall_seconds_sum": 3.0437123000156134,
+          "baseline_engine_seconds_sum": 3.0069999999999997,
+          "candidate_engine_seconds_sum": 3.036,
+          "engine_ratio_usable_pairs": 3,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9879032258064516,
+            "mean": 1.0095495870093847,
+            "min": 0.9692460317460317,
+            "max": 1.0714995034756705
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 1.0100403987980318,
+          "index": 3,
+          "name": "loss-g11-p045"
+        },
+        {
+          "pairs": 3,
+          "candidate_over_baseline_wall": {
+            "median": 0.9463916237631809,
+            "mean": 0.945005270521919,
+            "min": 0.9147270876794383,
+            "max": 0.9738971001231377,
+            "sample_standard_deviation": 0.02960935788950939
+          },
+          "median_baseline_over_candidate_wall_speedup": 1.0566450239950917,
+          "candidate_slower_pairs": 0,
+          "candidate_faster_pairs": 3,
+          "same_wall_pairs": 0,
+          "baseline_wall_seconds_sum": 0.3548791999928653,
+          "candidate_wall_seconds_sum": 0.3350661000004038,
+          "baseline_engine_seconds_sum": 0.346,
+          "candidate_engine_seconds_sum": 0.326,
+          "engine_ratio_usable_pairs": 3,
+          "engine_ratio_excluded_pairs": 0,
+          "candidate_over_baseline_engine": {
+            "median": 0.9385964912280701,
+            "mean": 0.9429749453672899,
+            "min": 0.9173553719008265,
+            "max": 0.9729729729729729
+          },
+          "ratio_of_total_wall_candidate_over_baseline": 0.9441694526113116,
+          "index": 4,
+          "name": "loss-g10-p076"
+        }
+      ],
+      "guard": {
+        "snapshots": 142,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_gap_seconds": 0.5359805999905802,
+        "min_gap_seconds": 0.017802199989091605,
+        "max_snapshot_duration_seconds": 0.02296030000434257,
+        "completed_idle_seconds": 10.049116699985461,
+        "transport_identities": {
+          "baseline": {
+            "pid": 20708,
+            "creation_ticks": 134367384208139057
+          },
+          "candidate": {
+            "pid": 11532,
+            "creation_ticks": 134367384208463095
+          }
+        },
+        "external_initial": [
+          {
+            "pid": 18392,
+            "creation_ticks": 134367207003283831,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2842812500
+          },
+          {
+            "pid": 29128,
+            "creation_ticks": 134367246683890009,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 761718750
+          },
+          {
+            "pid": 14996,
+            "creation_ticks": 134367256611607980,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 2168281250
+          },
+          {
+            "pid": 16684,
+            "creation_ticks": 134367283253665253,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 1335781250
+          },
+          {
+            "pid": 20244,
+            "creation_ticks": 134367312384632090,
+            "name": "regicide.exe",
+            "initial_cpu_ticks": 433593750
+          }
+        ]
+      }
+    }
+  ],
+  "artifacts": {
+    "build/see-cost-evidence/depth3.json": {
+      "sha256": "7d39e835a92a304418b7be3dbcbe5d0c876a5d26e6d976faec9bac5ea3b689f2",
+      "bytes": 113591
+    },
+    "build/see-cost-evidence/depth3.monitor.json": {
+      "sha256": "59869803cfdd1aa9b521e0810bc1dc1021a08cbfc5b4654aa20f36f3fc9a7f57",
+      "bytes": 5056
+    },
+    "build/see-cost-evidence/depth3.monitor.jsonl": {
+      "sha256": "0e8784d0078bc42167099691c8bfa34f201564f88140ffbf4878c12282317bfd",
+      "bytes": 41388
+    },
+    "tests/data/profile_positions.json": {
+      "sha256": "e0c395ad2d531646c7ccee9d3a156f7580500f59af62186a533a49989e440905",
+      "bytes": 1412
+    },
+    "build-see-native/regicide.exe": {
+      "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+      "bytes": 402432
+    },
+    "build-see-cost/regicide.exe": {
+      "sha256": "722b46c3b7223a3fa354a1fc504cb4cced9be0db8ea1e49d5b796b36d434a335",
+      "bytes": 406528
+    },
+    "build/see-cost-evidence/depth4.json": {
+      "sha256": "27c63d288b2c0d18e54a3dd6177b66f873ec9793b879640654d96d4f5ecc2a3e",
+      "bytes": 116703
+    },
+    "build/see-cost-evidence/depth4.monitor.json": {
+      "sha256": "f8364a966f7fb31e0ed827ccbc79801a9451b65239afc18ad1af2c9aaf43f84f",
+      "bytes": 5056
+    },
+    "build/see-cost-evidence/depth4.monitor.jsonl": {
+      "sha256": "cc28c480c6841c091e5afda91714131a1f95a441e1455e6eb03fdaa14ef85192",
+      "bytes": 58765
+    },
+    "build/see-cost-evidence/see-off-depth4.json": {
+      "sha256": "ff468c143adc90aa0b68420138012c5160e4169b2c4dd9d2f1242f5322527027",
+      "bytes": 36922
+    },
+    "build/see-cost-evidence/see-off-depth4.monitor.json": {
+      "sha256": "37894541feace6bd0b7b48e221d6bc695be9d9bd202aa846dadc865e4076e979",
+      "bytes": 5067
+    },
+    "build/see-cost-evidence/see-off-depth4.monitor.jsonl": {
+      "sha256": "dac782ac5c709a17310b68a8e7e475dcd5e50c3de777cd71457cd0cd4e59e39a",
+      "bytes": 39231
+    },
+    "build/see-cost-evidence/loss-scenes-depth4.json": {
+      "sha256": "3281b57201d98e6eef8f55e9ce2674b5d0be769186eb1559cef88b772d35c27e",
+      "bytes": 49626
+    },
+    "build/see-cost-evidence/loss-scenes-depth4.monitor.json": {
+      "sha256": "1241b2938d3a239a49ed77698109bb9c4dc161948448ea64c7065000b314a688",
+      "bytes": 5186
+    },
+    "build/see-cost-evidence/loss-scenes-depth4.monitor.jsonl": {
+      "sha256": "e3118ec2dcda974aa876bdee51d54598cd163da538dcfcee91c6d3285d806a8a",
+      "bytes": 291208
+    },
+    "build/see-cost-evidence/development-cost-benchmark.json": {
+      "sha256": "8977cbb60a18e160bcd00ac45427a966915d44717a7d49f4bc76b00c2e346489",
+      "bytes": 5133
+    }
+  },
+  "limits": [
+    "Matching recorded score/move/nodes/PV/depth/TT fields supports unchanged observed search behavior; no full visited-tree hash exists.",
+    "Wall time includes UCI reset/transaction and excludes process startup. At millisecond scales host scheduling and transport noise remain; zero named external-engine CPU growth does not exclude other host work or unknown/transient engines.",
+    "Engine time has millisecond granularity; zero or missing engine-time ratios are omitted exactly as declared.",
+    "Fixed-depth same-work timing is separate from timed-game strength. The 7.17% clock-instrumented SEE share and 402 exact-value microprofile queries are earlier distinct measurements and are not counted as these 125 fixed-depth pairs.",
+    "No timing benefit should be claimed for every position or every individual sample."
+  ]
+}
