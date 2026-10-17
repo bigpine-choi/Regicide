@@ -11,7 +11,20 @@ Windows에서는 저장소의 **`Play-Regicide-Godot.cmd`를 더블클릭**한�
 
 오른쪽에서 **내 기물**과 **한 수 생각 시간**을 고른 뒤 **새 대국 시작**을 누른다. 생각 시간은 0.1·1·3·5초이며 기본 1초다. 흑을 고르면 Regicide가 먼저 둔다. 사람의 생각 시간에는 제한이 없다.
 
-**한 턴 되돌리기**는 내 수와 엔진 응수를 함께 되돌린다. 내가 흑이면 엔진의 첫 수는 남는다. 기권과 PGN 저장을 지원하며, 매 수의 기보·재현용 JSON은 `build/human-games/`에 자동 저장한다. 창을 닫으면 이 창에 연결된 대국 관리기와 엔진을 종료한다. 별도로 열어 둔 브라우저 대국은 영향을 받지 않는다.
+**무르기**는 내 수와 엔진 응수를 함께 되돌린다. 여러 번 눌러 더 앞선 내 차례로 돌아갈 수 있다. 응수 전 내 수만 있으면 그 수만 되돌리며, 내 마지막 수로 메이트·무승부가 난 경우에도 무를 수 있다. 내가 흑이면 엔진의 첫 수는 남는다. 기권과 PGN 저장을 지원하며, 매 수의 기보·재현용 JSON은 `build/human-games/`에 자동 저장한다. 창을 닫으면 이 창에 연결된 대국 관리기와 엔진을 종료한다. 별도로 열어 둔 대국에는 영향을 주지 않는다.
+
+## Regicide에 핸디캡 주기
+
+1. 오른쪽 목록에서 **바꾸고 싶은 Regicide의 수**를 고른다. 가장 최근 응수가 기본이며, 과거 수나 흑 플레이 시 엔진의 첫 수도 고를 수 있다.
+2. **Regicide 수 바꾸기**를 누른다. 선택한 수를 두기 직전으로 돌아가며 **그 수 이후의 기존 수순은 대체 대상**이 된다. 엔진은 자동으로 두지 않고 사용자의 지정을 기다린다.
+3. Regicide의 기물과 도착 칸을 클릭하거나 드래그해 **합법 수 중 원하는 수**를 둔다. 예를 들어 원래 `...e5`를 `...f6`로 바꿔 약점을 만들 수 있다. 승격할 때는 기물도 직접 고른다.
+4. 지정한 수가 확정되면 내 차례다. 내가 응수하면 Regicide는 **강제한 수를 포함한 새 수순**에서 다시 계산한다. 이전에 버린 수순은 사용하지 않는다.
+
+지정하기 전 **수 바꾸기 취소**를 누르면 원래 기물 배치·전체 수순·종료 상태로 복원된다. 편집 중에는 무르기·기권·새 대국·PGN 저장 버튼을 잠시 잠근다. 지정 전 미리보기로 원래 자동 저장 파일을 덮어쓰지 않으며, 그 상태로 창을 닫으면 원래 기보가 남는다.
+
+핸디캡 중에도 백·흑 시점 전환과 승격 선택을 사용할 수 있다. 엔진이 생각하는 중에는 응수가 끝난 뒤 수 바꾸기·무르기를 누른다. 체크 방치·불법 이동·왕 제거 같은 자유 편집은 제공하지 않는다.
+
+사용자가 대신 둔 수는 화면 기보에 **핸디캡**으로 표시하며 PGN 주석과 `HandicapMoves` 머리글에도 기록한다. JSON의 `handicap_events`에는 바뀐 수와 버린 이전 수순을 남긴다. 무르기·수 교체 후에는 엔진의 검색 상태를 새로 시작하되 반복·캐슬링·앙파상·50수 판정을 위한 전체 유효 수순은 보존한다. 이 대국은 사용자가 개입하는 연습이며 엔진의 독립 경기력 기록과 구분한다.
 
 반복·50수 규칙으로 청구 가능한 무승부는 양쪽 모두 자동 청구한다. 예정 수로 청구 가능한 경우도 포함한다. 되돌리기를 허용하는 연습 대국이므로 공식 경기력 측정과 구분한다.
 
@@ -38,16 +51,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/play_godot.ps1 -Godo
 
 ## 구조와 검증
 
-Godot은 화면·입력·시점만 담당한다. 로컬 Python 대국 관리기가 합법 수·종료 판정·기보를 관리하고, **수를 선택하는 주체는 기존 C++ Regicide**다. 통신은 비동기이므로 엔진 응수를 기다려도 뒤집기 버튼이 동작한다. 서버 상태를 바꾸는 요청에는 최신 대국 번호를 보내 오래된 요청을 거부한다. 시점 전환은 서버에 요청하지 않는다.
+Godot은 화면·입력·시점만 담당한다. 로컬 Python 대국 관리기가 합법 수·종료 판정·기보를 관리하고, **일반 응수는 기존 C++ Regicide가 선택**한다. 핸디캡으로 지정한 수만 사용자가 대신 선택한다. 통신은 비동기이므로 엔진 응수를 기다려도 뒤집기 버튼이 동작한다. 서버 상태를 바꾸는 요청에는 최신 대국 번호를 보내 오래된 요청을 거부한다. 시점 전환은 서버에 요청하지 않는다.
 
 각 창은 실행 시 생성한 전용 파일로 로컬 인증 정보를 전달받는다. 인증 값은 콘솔 출력에 넣지 않는다. 이 파일은 생성물 폴더에 보관하므로 공유하지 않는다. 외부 서비스·폰트·기물 이미지는 내려받지 않으며, 화면의 벡터 기물은 자체 작성했다. Godot의 [MIT 이용 조건](https://godotengine.org/license/)과 기존 Python 패키지의 [이용 조건](ENGINE.md)은 각각 적용된다.
 
 ```powershell
 .\.venv-tests\Scripts\python.exe tests/human_play_tests.py build/regicide.exe
+.\.venv-tests\Scripts\python.exe tests/handicap_play_tests.py build/regicide.exe
 .\.venv-tests\Scripts\python.exe tests/godot_bootstrap_tests.py build/regicide.exe
 .\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe
 # 실제 창을 렌더링하고 자동 입력 및 화면 캡처까지 검사
 .\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
+.\.venv-tests\Scripts\python.exe tests/handicap_godot_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
 ```
 
 양쪽 시점의 전체 좌표, 클릭·드래그, 특수 수와 승격 선택, 실제 엔진의 응답 중 뒤집기, 양색 대국·되돌리기·종료, 저장 기보의 독립 재생을 검사한다. 자동 입력으로 실제 Godot 장면을 검증한 결과이며 사람의 수동 대국 검증과 구분한다. 기존 C++ 규칙 검증과 외부 기준의 2,997개 교차 검증도 유지한다. [검증 기록](experiments/2026-10-17-godot-play.md)에 실행 조건과 결과를 남긴다.

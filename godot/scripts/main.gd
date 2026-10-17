@@ -19,6 +19,7 @@ var error_message: String = ""
 var _pending_pgn: String = ""
 var _rendered_move_count: int = -1
 var _notice_message: String = ""
+var _handicap_choices_key: String = ""
 
 var board: ChessBoard
 var flip_button: Button
@@ -35,6 +36,10 @@ var color_option: OptionButton
 var time_option: OptionButton
 var new_button: Button
 var undo_button: Button
+var handicap_option: OptionButton
+var handicap_button: Button
+var handicap_cancel_button: Button
+var handicap_help: Label
 var resign_button: Button
 var save_button: Button
 var refresh_button: Button
@@ -76,8 +81,8 @@ func _install_theme() -> void:
 				style.bg_color = Color("132235")
 			style.content_margin_left = 15
 			style.content_margin_right = 15
-			style.content_margin_top = 10
-			style.content_margin_bottom = 10
+			style.content_margin_top = 7
+			style.content_margin_bottom = 7
 			if style_name == "focus":
 				style.bg_color = Color(0, 0, 0, 0)
 				style.border_color = Color("80d0c6")
@@ -174,12 +179,18 @@ func _build_ui() -> void:
 	body.add_child(side_panel)
 	var side_margins := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]:
-		side_margins.add_theme_constant_override("margin_" + side, 18)
+		side_margins.add_theme_constant_override("margin_" + side, 14)
 	side_panel.add_child(side_margins)
+	# The default window keeps the controls visible; a smaller window may scroll.
+	var sidebar_scroll := ScrollContainer.new()
+	sidebar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	side_margins.add_child(sidebar_scroll)
 	var sidebar := VBoxContainer.new()
-	sidebar.add_theme_constant_override("separation", 13)
-	side_margins.add_child(sidebar)
-	status_label = _label("체스판을 준비하고 있어요", 20, "f6f0de")
+	sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sidebar.add_theme_constant_override("separation", 8)
+	sidebar_scroll.add_child(sidebar)
+	status_label = _label("체스판을 준비하고 있어요", 18, "f6f0de")
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_label)
 	status_detail = _label("잠시만 기다려 주세요.", 13, "a3b6c8")
@@ -213,12 +224,13 @@ func _build_ui() -> void:
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 10)
 	sidebar.add_child(actions)
-	undo_button = _button("한 턴 되돌리기", _on_undo_pressed)
-	undo_button.tooltip_text = "내 수와 엔진의 응답을 함께 되돌립니다."
+	undo_button = _button("무르기", _on_undo_pressed)
+	undo_button.tooltip_text = "내 수와 Regicide의 응답을 함께 되돌려 내 차례로 돌아갑니다."
 	undo_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(undo_button)
 	resign_button = _button("기권", _on_resign_pressed)
 	actions.add_child(resign_button)
+	_build_handicap(sidebar)
 	_build_promotion(sidebar)
 	sidebar.add_child(HSeparator.new())
 	var history_title := HBoxContainer.new()
@@ -229,7 +241,7 @@ func _build_ui() -> void:
 	move_count = _label("0수", 13, "8197aa")
 	history_title.add_child(move_count)
 	move_history = RichTextLabel.new()
-	move_history.custom_minimum_size.y = 80
+	move_history.custom_minimum_size.y = 64
 	move_history.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	move_history.bbcode_enabled = true
 	move_history.scroll_following = true
@@ -253,6 +265,30 @@ func _build_ui() -> void:
 	save_dialog.current_dir = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
 	save_dialog.file_selected.connect(_save_pgn_file)
 	add_child(save_dialog)
+
+
+func _build_handicap(parent: VBoxContainer) -> void:
+	parent.add_child(HSeparator.new())
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 5)
+	parent.add_child(section)
+	handicap_option = OptionButton.new()
+	handicap_option.name = "HandicapMove"
+	handicap_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	handicap_option.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	handicap_option.tooltip_text = "바꾸고 싶은 Regicide의 수를 고르세요. 가장 최근 수가 기본 선택됩니다."
+	section.add_child(handicap_option)
+	handicap_button = _button("Regicide 수 바꾸기", _on_handicap_pressed)
+	handicap_button.name = "ReplaceEngineMove"
+	handicap_button.tooltip_text = "선택한 수 이후를 되돌리고, Regicide 대신 합법 수 중 한 수를 둡니다."
+	section.add_child(handicap_button)
+	handicap_cancel_button = _button("수 바꾸기 취소", _on_handicap_cancel_pressed)
+	handicap_cancel_button.name = "CancelEngineReplacement"
+	handicap_cancel_button.tooltip_text = "수 바꾸기를 시작하기 전의 대국으로 돌아갑니다."
+	section.add_child(handicap_cancel_button)
+	handicap_help = _label("선택한 수 이후를 되돌리고,\nRegicide 대신 합법 수 중 한 수를 둡니다.", 12, "a3b6c8")
+	handicap_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	section.add_child(handicap_help)
 
 
 func _build_promotion(parent: VBoxContainer) -> void:
@@ -377,7 +413,7 @@ func _mutate(path: String, payload: Dictionary = {}) -> void:
 
 
 func _play_engine_if_needed() -> void:
-	if closing or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
+	if closing or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
 		return
 	engine_thinking = true
 	_render()
@@ -401,7 +437,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _on_square_pressed(square: String) -> void:
-	if request_in_flight or closing or not state.get("human_to_move", false) or not board_model.pending_promotions.is_empty():
+	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
 		return
 	if square == board_model.selected_square:
 		board_model.selected_square = ""
@@ -417,7 +453,7 @@ func _on_square_pressed(square: String) -> void:
 		_render()
 		return
 	if candidates.size() == 1:
-		_mutate("/api/move", {"move": candidates[0]})
+		_submit_selected_move(candidates[0])
 		return
 	board_model.selected_square = ""
 	for move in state.get("legal_moves", []):
@@ -430,12 +466,20 @@ func _on_square_pressed(square: String) -> void:
 func _on_promotion_pressed(kind: String) -> void:
 	for move in board_model.pending_promotions:
 		if move.ends_with(kind):
-			_mutate("/api/move", {"move": move})
+			_submit_selected_move(move)
 			return
 
 
+func _can_select_move() -> bool:
+	return state.get("human_to_move", false) or state.get("handicap_mode", false)
+
+
+func _submit_selected_move(move: String) -> void:
+	_mutate("/api/forced-move" if state.get("handicap_mode", false) else "/api/move", {"move": move})
+
+
 func _on_drag_requested(from_square: String, to_square: String) -> void:
-	if request_in_flight or closing or not state.get("human_to_move", false) or not board_model.pending_promotions.is_empty():
+	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
 		return
 	# Re-select the logical origin even when pressing an already selected piece
 	# toggled its click selection off. A flipped view still supplies the same UCI.
@@ -460,12 +504,25 @@ func _on_undo_pressed() -> void:
 	_mutate("/api/undo")
 
 
+func _on_handicap_pressed() -> void:
+	if not state.get("can_handicap", false) or state.get("handicap_mode", false) or handicap_option.selected < 0:
+		return
+	var ply: int = handicap_option.get_selected_id()
+	if ply > 0:
+		_mutate("/api/handicap", {"ply": ply})
+
+
+func _on_handicap_cancel_pressed() -> void:
+	if state.get("handicap_mode", false):
+		_mutate("/api/handicap-cancel")
+
+
 func _on_resign_pressed() -> void:
 	_mutate("/api/resign")
 
 
 func _on_save_pressed() -> void:
-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty():
+	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
 	request_in_flight = true
 	_render()
@@ -512,14 +569,16 @@ func _render() -> void:
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
 	var enabled: bool = ready and not request_in_flight
-	new_button.disabled = not enabled
-	color_option.disabled = not enabled
-	time_option.disabled = not enabled
-	undo_button.disabled = not enabled or not state.get("can_undo", false)
-	resign_button.disabled = not enabled or not active
-	save_button.disabled = not enabled
+	var replacing: bool = state.get("handicap_mode", false)
+	new_button.disabled = not enabled or replacing
+	color_option.disabled = not enabled or replacing
+	time_option.disabled = not enabled or replacing
+	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
+	resign_button.disabled = not enabled or not active or replacing
+	save_button.disabled = not enabled or replacing
 	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing
 	refresh_button.visible = not error_message.is_empty() or state.is_empty()
+	_render_handicap(enabled)
 	error_label.text = error_message if not error_message.is_empty() else str(state.get("error", "") if state.get("error") != null else "")
 	error_label.visible = not error_label.text.is_empty()
 	if closing:
@@ -539,6 +598,8 @@ func _render() -> void:
 			status_detail.text = "승격할 기물을 선택하면 수가 적용됩니다."
 		elif not board_model.selected_square.is_empty():
 			status_detail.text = "%s 선택 · 표시된 칸으로 이동하세요." % board_model.selected_square
+		elif replacing:
+			status_detail.text = "Regicide의 기물과 도착 칸을 선택하세요.\n이 수부터 새 기보로 이어집니다."
 		else:
 			var color_name := "백" if human_color == "white" else "흑"
 			status_detail.text = "당신은 %s · 한 수에 %s초 생각합니다." % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
@@ -562,6 +623,41 @@ func _player_text(color_name: String, human_color: String) -> String:
 	return text
 
 
+func _render_handicap(enabled: bool) -> void:
+	var choices: Array = []
+	for move in state.get("moves", []):
+		if move.get("actor", "") == "engine":
+			choices.append({"ply": int(move.get("ply", 0)), "san": str(move.get("san", "")),
+				"forced": bool(move.get("forced", false))})
+	var key := JSON.stringify(choices)
+	if key != _handicap_choices_key or handicap_option.item_count == 0:
+		var previous_ply: int = handicap_option.get_selected_id() if handicap_option.selected >= 0 else -1
+		var prior_count: int = handicap_option.item_count
+		handicap_option.clear()
+		for move in choices:
+			var move_number: int = (int(move.ply) + 1) / 2
+			var color_name := "백" if int(move.ply) % 2 == 1 else "흑"
+			var description: String = "%d수 %s · %s%s" % [move_number, color_name, move.san, " (핸디캡)" if move.forced else ""]
+			handicap_option.add_item(description, int(move.ply))
+		if choices.is_empty():
+			handicap_option.add_item("바꿀 Regicide 수가 없습니다", -1)
+			handicap_option.set_item_disabled(0, true)
+		else:
+			var previous_index: int = handicap_option.get_item_index(previous_ply)
+			# New engine replies become the default target; view-only renders never
+			# reset an explicitly chosen earlier move.
+			handicap_option.select(choices.size() - 1 if choices.size() > prior_count or previous_index < 0 else previous_index)
+		_handicap_choices_key = key
+	var replacing: bool = state.get("handicap_mode", false)
+	handicap_option.visible = not replacing
+	handicap_option.disabled = not enabled or not state.get("can_handicap", false) or choices.is_empty()
+	handicap_button.visible = not replacing
+	handicap_button.disabled = not enabled or not state.get("can_handicap", false) or choices.is_empty()
+	handicap_cancel_button.visible = replacing
+	handicap_cancel_button.disabled = not enabled
+	handicap_help.text = "Regicide 대신 합법 수를 직접 두는 중입니다.\n취소하면 원래 대국을 복원합니다." if replacing else "선택한 수 이후를 되돌리고,\nRegicide 대신 합법 수 중 한 수를 둡니다."
+
+
 func _render_history() -> void:
 	var moves: Array = state.get("moves", [])
 	move_count.text = "%d수" % moves.size()
@@ -574,6 +670,8 @@ func _render_history() -> void:
 			contents += "[cell][color=#8197aa]%d.   [/color][/cell]" % (index / 2 + 1)
 			for ply in range(index, index + 2):
 				var san: String = str(moves[ply].get("san", "")) if ply < moves.size() else ""
+				if ply < moves.size() and moves[ply].get("forced", false):
+					san += " [hint=사용자가 Regicide 대신 지정한 수입니다.][color=#ffd578]핸디캡[/color][/hint]"
 				if ply == moves.size() - 1:
 					san = "[color=#98dfcb]" + san + "[/color]"
 				contents += "[cell]" + san + "     [/cell]"
