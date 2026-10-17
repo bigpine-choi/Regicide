@@ -23,6 +23,7 @@ import chess.engine
 import chess.pgn
 
 from play_game import source_version
+from game_archive import GameArchive, default_game_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
@@ -57,6 +58,9 @@ class HumanGame:
         self.engine_name = self._engine.id.get("name", "Regicide")
 
     def _reset(self, color, movetime_ms):
+        if getattr(self, "_game_open", False):
+            self._game_open = False
+            self._save()
         self.board = chess.Board()
         self.human_color = chess.WHITE if color == "white" else chess.BLACK
         self.movetime_ms = movetime_ms
@@ -66,7 +70,10 @@ class HumanGame:
         self._handicap_backup = None
         self._handicap_events = []
         self._game_token = object()
+        self._game_open = True
         self.started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self.updated_at = self.started_at
+        self.ended_at = None
         self.game_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:12]
         self.revision += 1
         self._save()
@@ -120,7 +127,10 @@ class HumanGame:
             # engine reply). The initial engine opening is still retained.
             can_undo = (not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
-            return {"revision": self.revision,
+            return {"revision": self.revision, "game_id": self.game_id,
+                    "started_at": self.started_at, "updated_at": self.updated_at,
+                    "ended_at": self.ended_at, "record_status": self._record_status(),
+                    "storage_path": str(self.save_dir),
                     "board": {chess.square_name(square): piece.symbol()
                               for square, piece in self.board.piece_map().items()},
                     "turn": "white" if self.board.turn else "black",
@@ -238,7 +248,8 @@ class HumanGame:
             self._handicap_backup = {"board": self.board.copy(stack=True),
                                      "forced_plies": self._forced_plies.copy(),
                                      "override": self._override, "error": self.error,
-                                     "outcome": self._outcome(), "ply": ply}
+                                     "outcome": self._outcome(), "ply": ply,
+                                     "updated_at": self.updated_at, "ended_at": self.ended_at}
             self.board = preview
             self._forced_plies.intersection_update(range(1, ply))
             self.error = None
@@ -289,9 +300,11 @@ class HumanGame:
             self._forced_plies = backup["forced_plies"]
             self.error = backup["error"]
             self._override = backup["override"]
+            self.updated_at = backup["updated_at"]
+            self.ended_at = backup["ended_at"]
             self._handicap_backup = None
             self.revision += 1
-            self._save()
+            self._save(update_timestamp=False)
             return self.state()
 
     def pgn(self):
@@ -303,7 +316,7 @@ class HumanGame:
             game = chess.pgn.Game.from_board(board)
             result, termination = backup["outcome"] if backup else self._outcome()
             game.headers.update({"Event": "Regicide local human practice", "Site": "local",
-                                 "Date": self.started_at[:10].replace("-", "."),
+                                 "Date": datetime.datetime.fromisoformat(self.started_at).astimezone().strftime("%Y.%m.%d"),
                                  "White": "Human" if self.human_color else self.engine_name,
                                  "Black": self.engine_name if self.human_color else "Human",
                                  "Result": result, "EngineMoveTimeMS": str(self.movetime_ms),
@@ -318,9 +331,24 @@ class HumanGame:
                     node.comment = "User-forced Regicide move (handicap)"
             return str(game) + "\n\n"
 
-    def _save(self):
+    def _record_status(self):
+        if self.error:
+            return "error"
+        if self._outcome()[0] != "*":
+            return "completed"
+        return "in_progress" if self._game_open else "unfinished"
+
+    def _save(self, update_timestamp=True):
+        if update_timestamp:
+            self.updated_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        if self._record_status() == "in_progress":
+            self.ended_at = None
+        elif self.ended_at is None:
+            self.ended_at = self.updated_at
         state = self.state()
         record = {"game_id": self.game_id, "started_at": self.started_at,
+                  "updated_at": self.updated_at, "ended_at": self.ended_at,
+                  "record_status": self._record_status(), "schema_version": 2,
                   "source": self.source, "binary": str(self.binary),
                   "initial_fen": self.board.root().fen(en_passant="fen"),
                   "final_fen": self.board.fen(en_passant="fen"),
@@ -337,12 +365,21 @@ class HumanGame:
 
     def close(self):
         with self._lock:
-            if self._engine is not None:
-                try:
-                    self._engine.quit()
-                except Exception:
-                    self._engine.close()
-                self._engine = None
+            try:
+                if getattr(self, "_game_open", False):
+                    self._game_open = False
+                    # A handicap preview must leave the original durable files
+                    # byte-for-byte intact. A later session labels its still-
+                    # open record unfinished when it is no longer the live ID.
+                    if self._handicap_backup is None:
+                        self._save()
+            finally:
+                if self._engine is not None:
+                    try:
+                        self._engine.quit()
+                    except Exception:
+                        self._engine.close()
+                    self._engine = None
 
 
 class HumanServer(ThreadingHTTPServer):
@@ -351,6 +388,7 @@ class HumanServer(ThreadingHTTPServer):
     def __init__(self, game, port=0):
         super().__init__(("127.0.0.1", port), HumanHandler)
         self.game = game
+        self.archive = GameArchive(game.save_dir)
         self.token = secrets.token_urlsafe(32)
         self.origin = f"http://127.0.0.1:{self.server_address[1]}"
 
@@ -394,6 +432,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.game.state())
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
+        elif self.path == "/api/games" or self.path.startswith("/api/games/"):
+            self._archive_get()
         elif self.path in ("/", "/index.html", "/style.css", "/app.js"):
             filename = "index.html" if self.path == "/" else self.path[1:]
             mime = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript"}[filename]
@@ -403,6 +443,30 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, contents, mime + "; charset=utf-8")
         else:
             self._send(404, {"error": "페이지를 찾을 수 없습니다."})
+
+    def _archive_get(self):
+        archive = self.server.archive
+        game = self.server.game
+        current_id = game.game_id if game._game_open else None
+        try:
+            if self.path == "/api/games":
+                data = archive.list_games(current_game_id=current_id)
+                data["storage_path"] = str(game.save_dir)
+                self._send(200, data)
+                return
+            parts = self.path.removeprefix("/api/games/").split("/")
+            if len(parts) == 1:
+                self._send(200, archive.get_game(parts[0], current_game_id=current_id))
+            elif len(parts) == 2 and parts[1] == "pgn":
+                self._send(200, archive.get_pgn(parts[0]), "application/x-chess-pgn; charset=utf-8")
+            else:
+                self._send(404, {"error": "기보를 찾을 수 없습니다."})
+        except FileNotFoundError:
+            self._send(404, {"error": "기보를 찾을 수 없습니다."})
+        except ValueError:
+            self._send(400, {"error": "기보가 올바르지 않아 읽을 수 없습니다. 원본은 보존했습니다."})
+        except OSError:
+            self._send(500, {"error": "기보 보관함을 읽지 못했습니다. 저장 폴더를 확인해 주세요."})
 
     def do_POST(self):
         if not self._allowed(True):
@@ -449,7 +513,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, default=ROOT / ("build/regicide.exe" if sys.platform == "win32" else "build/regicide"))
     parser.add_argument("--port", type=int, default=0)
-    parser.add_argument("--save-dir", type=Path, default=ROOT / "build/human-games")
+    parser.add_argument("--save-dir", type=Path, help="Override the persistent personal game library")
+    parser.add_argument("--import-games", type=Path, action="append", default=[],
+                        help="Import an old local games directory without changing its originals")
     parser.add_argument("--startup-file", type=Path)
     parser.add_argument("--desktop-client", action="store_true",
                         help="Include the local session token in the private startup file, never stdout")
@@ -459,7 +525,12 @@ def main():
         parser.error("port must be in 0..65535")
     if args.desktop_client and not args.startup_file:
         parser.error("--desktop-client requires --startup-file")
-    game = HumanGame(args.binary, args.save_dir)
+    save_dir = args.save_dir if args.save_dir is not None else default_game_directory()
+    imports = list(args.import_games)
+    if args.save_dir is None:
+        imports.append(ROOT / "build/human-games")
+    GameArchive(save_dir).import_legacy(imports)
+    game = HumanGame(args.binary, save_dir)
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),

@@ -19,7 +19,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install_desktop_shor
 
 오른쪽에서 **내 기물**과 **한 수 생각 시간**을 고른 뒤 **새 대국 시작**을 누른다. 생각 시간은 0.1·1·3·5초이며 기본 1초다. 흑을 고르면 Regicide가 먼저 둔다. 사람의 생각 시간에는 제한이 없다.
 
-**무르기**는 내 수와 엔진 응수를 함께 되돌린다. 여러 번 눌러 더 앞선 내 차례로 돌아갈 수 있다. 응수 전 내 수만 있으면 그 수만 되돌리며, 내 마지막 수로 메이트·무승부가 난 경우에도 무를 수 있다. 내가 흑이면 엔진의 첫 수는 남는다. 기권과 PGN 저장을 지원하며, 매 수의 기보·재현용 JSON은 `build/human-games/`에 자동 저장한다. 창을 닫으면 이 창에 연결된 대국 관리기와 엔진을 종료한다. 별도로 열어 둔 대국에는 영향을 주지 않는다.
+**무르기**는 내 수와 엔진 응수를 함께 되돌린다. 여러 번 눌러 더 앞선 내 차례로 돌아갈 수 있다. 응수 전 내 수만 있으면 그 수만 되돌리며, 내 마지막 수로 메이트·무승부가 난 경우에도 무를 수 있다. 내가 흑이면 엔진의 첫 수는 남는다. 창을 닫으면 진행한 수를 보관하고 이 창의 대국 관리기와 엔진을 종료한다. 별도로 열어 둔 대국에는 영향을 주지 않는다.
+
+## 내 대국 기보 보관함
+
+매 수가 끝날 때 **PGN과 재현용 JSON을 자동 저장**한다. Windows 기본 위치는 실제 **문서 폴더의 `Regicide/games/`**다. OneDrive로 문서 폴더를 옮겼다면 그 위치를 사용한다. 저장소·빌드 폴더를 옮기거나 프로그램을 다시 실행해도 같은 보관함을 사용한다. 개인 기보는 소스 코드와 별도로 PC에 보관한다.
+
+1. 오른쪽 **내 대국 기보**를 누른다. 최근 대국부터 날짜·내 색·승패/미완료·착수 수·핸디캡 횟수를 확인한다.
+2. 대국을 선택하고 **선택한 기보 보기**를 누른다.
+3. **처음·이전·다음·끝**으로 체스판을 한 수씩 재생한다. 백·흑 시점도 자유롭게 바꾼다. 다시 보기에서는 현재 대국의 수를 바꾸거나 엔진을 실행하지 않는다.
+4. **이 기보 파일로 저장 (PGN)**은 선택한 대국 전체 기보를 저장한다. **현재 대국으로 돌아가기**를 누르면 보던 대국으로 복귀한다.
+
+새 대국마다 고유 번호와 별도 파일을 사용하므로 앞선 대국이 남는다. 새 대국을 시작하거나 창을 닫았을 때 끝나지 않은 대국은 결과 `*`인 **미완료**로 보관한다. 완료·오류·핸디캡 기록도 구분하며, 한 수도 두지 않은 빈 시작 화면은 목록에서 제외한다. 미완료 기보도 다시 볼 수 있으며, 보관함의 재생은 읽기 전용이다.
+
+이전 `build/human-games/`의 기보는 실행 시 가져온다. 원본은 수정하지 않고 중복을 피하며, 같은 번호의 다른 기록은 별도로 보존한다. 사용하던 두 개발 폴더의 기존 실제 대국 12개도 초기 가져오기로 보관했다. 오래된 기록에 없는 종료 시각은 만들어 내지 않는다. 손상된 파일은 원본을 보존하고 정상 기보 목록과 분리한다.
+
+명령줄의 `--save-dir`로 별도 보관함을 지정할 수 있고, `--import-games 경로`를 여러 번 지정해 이전 폴더를 추가로 가져올 수 있다. Linux의 기본 위치는 `$XDG_DATA_HOME/regicide/games` 또는 `~/.local/share/regicide/games`이며, macOS는 `~/Library/Application Support/Regicide/games`다.
 
 ## Regicide에 핸디캡 주기
 
@@ -66,11 +81,13 @@ Godot은 화면·입력·시점만 담당한다. 로컬 Python 대국 관리기�
 ```powershell
 .\.venv-tests\Scripts\python.exe tests/human_play_tests.py build/regicide.exe
 .\.venv-tests\Scripts\python.exe tests/handicap_play_tests.py build/regicide.exe
+.\.venv-tests\Scripts\python.exe tests/game_archive_tests.py build/regicide.exe
 .\.venv-tests\Scripts\python.exe tests/godot_bootstrap_tests.py build/regicide.exe
 .\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe
 # 실제 창을 렌더링하고 자동 입력 및 화면 캡처까지 검사
 .\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
 .\.venv-tests\Scripts\python.exe tests/handicap_godot_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
+.\.venv-tests\Scripts\python.exe tests/archive_godot_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
 ```
 
 양쪽 시점의 전체 좌표, 클릭·드래그, 특수 수와 승격 선택, 실제 엔진의 응답 중 뒤집기, 양색 대국·되돌리기·종료, 저장 기보의 독립 재생을 검사한다. 자동 입력으로 실제 Godot 장면을 검증한 결과이며 사람의 수동 대국 검증과 구분한다. 기존 C++ 규칙 검증과 외부 기준의 2,997개 교차 검증도 유지한다. [검증 기록](experiments/2026-10-17-godot-play.md)에 실행 조건과 결과를 남긴다.

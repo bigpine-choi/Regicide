@@ -44,6 +44,10 @@ jobs:
       - if: runner.os == 'Windows'
         run: python tests/handicap_play_tests.py build/Release/regicide.exe
       - if: runner.os == 'Linux'
+        run: python tests/game_archive_tests.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/game_archive_tests.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
         run: python tests/godot_bootstrap_tests.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/godot_bootstrap_tests.py build/Release/regicide.exe
@@ -57,4 +61,6 @@ jobs:
           python tests/godot_integration_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/handicap_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/archive_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
