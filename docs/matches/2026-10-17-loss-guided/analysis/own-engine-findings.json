@@ -1,0 +1,35 @@
+{
+  "source": "docs/matches/2026-10-17-hash-memory/time100-retry.json",
+  "method": "Read-only source review and eight exact-history Regicide UCI queries, each depth cap 7 and node cap 1000000. Two forced-child depth-4 CLI queries confirm the fork fixture. No external engine move selection or production edits.",
+  "loss_games": [1, 2, 6, 7, 10, 11, 13],
+  "observations": [
+    "Games 2 and 6 reach identical critical positions and continue with matching candidate moves and evaluation drops; these losses are not independent failure patterns.",
+    "No check-evasion or mate handling error found in the reviewed qsearch: checked nodes do not stand pat, all legal evasions are searched, mate takes precedence over draw counters.",
+    "Quiescence extends captures and promotions only. Quiet checks, quiet forks and other threats beyond the full-search horizon are not extended.",
+    "Evaluation has material, piece position, phase blending and home-minor development only. It does not compute attacked squares, king-zone danger, pawn structure, passed pawns or trapped-piece mobility.",
+    "An unfinished iterative depth is discarded in full, retaining the previous completed iteration. This preserves the current correctness contract, but tactical positions sometimes complete only depth 2 or 3 inside the recorded 80ms internal allowance."
+  ],
+  "reproducible_fork_fixture": {
+    "game": 13,
+    "ply": 17,
+    "fen": "rnbq1rk1/pp3ppp/3p1n2/3p4/3P4/2NQ1N2/PP2PPPP/R3KB1R w KQ - 0 9",
+    "recorded_move": "e1c1",
+    "recorded_depth": 3,
+    "recorded_score_cp": 1,
+    "current_depth4": {"move": "e1c1", "score_cp": -20},
+    "current_depth5": {"move": "d3b5", "score_cp": 2},
+    "castle_child_depth4": {"black_move": "f6g4", "black_score_cp": 251, "pv": ["f6g4", "h1g1", "g4f2", "d3c2", "f2d1", "c2d1"]},
+    "qb5_child_depth4": {"black_move": "d8b6", "black_score_cp": -2, "pv": ["d8b6", "b5b6", "a7b6", "e1c1"]},
+    "interpretation": "Quiet ...Ng4 threatens ...Nxf2, forking the queen on d3 and rook on d1. This fixture supports a tactical horizon failure, with the deeper own-engine alternative preventing the exchange loss. It does not by itself prove a general king-danger evaluation patch is best."
+  },
+  "other_selected_queries": [
+    {"game": 1, "ply": 47, "recorded": "f2f4 depth4 +3", "deeper": "d1e1 depth6 -6", "interpretation": "Deeper own-engine score remains near equal; not enough alone to attribute the loss."},
+    {"game": 2, "ply": 94, "recorded": "b1b2 depth5 0", "deeper": "b1b2 depth7 -121", "interpretation": "Same move, deeper engine recognizes loss of a pawn; alternative not proven here."},
+    {"game": 2, "ply": 96, "recorded": "d8d5 depth5 -121", "deeper": "d8g8 depth7 -155", "interpretation": "A changed defensive move appears, but equal-depth forced comparison was not run."},
+    {"game": 7, "ply": 41, "recorded": "h2h4 depth2 -25", "deeper": "f5f3 depth6 -54", "interpretation": "Qf3 becomes preferred at depth3; king-side h-pawn push preferred only shallowly."},
+    {"game": 10, "ply": 44, "recorded": "a8c8 depth2 -7", "deeper": "e7d7 depth5 -112", "interpretation": "Bc5 is preferred at depths3/4; deep score declines, exact better alternative not independently proven."},
+    {"game": 11, "ply": 57, "recorded": "e4d5 depth3 +209", "deeper": "c2b3 depth5 +212", "interpretation": "Qb3 replaces the knight capture; score difference small."},
+    {"game": 11, "ply": 59, "recorded": "f5e7 depth3 +98", "deeper": "f5e7 depth5 +108", "interpretation": "Own-engine depth5 still likes Nxe7, despite the subsequent severe decline. This may need stronger reference analysis rather than merely increasing this one depth."}
+  ],
+  "limits": "Own-engine evaluation is not an independent oracle. Only the game13 fork is supported by matched child-depth comparison here. No matches or strength claims were made."
+}

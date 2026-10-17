@@ -3,6 +3,7 @@
 #include "regicide/transposition.hpp"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -32,8 +33,20 @@ bool automatic_draw(const Board& board) {
            board.repetition_count() >= 5;
 }
 
+bool quiet_move(const Board& board, Move move) {
+    const auto& position = board.position();
+    const char piece = position.squares[move.from];
+    const bool en_passant = (piece == 'P' || piece == 'p') && move.to == position.en_passant;
+    return position.squares[move.to] == '.' && !en_passant && !move.promotion;
+}
+
+using QuietHistory = std::array<std::array<int, 64>, 64>;
+using Killers = std::array<std::optional<Move>, 2>;
+constexpr int history_limit = 16384;
+
 void order_moves(const Board& board, std::vector<Move>& moves,
-                 const std::optional<Move>& preferred = {}) {
+                 const std::optional<Move>& preferred = {},
+                 const Killers* killers = nullptr, const QuietHistory* history = nullptr) {
     const auto& position = board.position();
     const auto priority = [&](Move move) {
         int captured = value(position.squares[move.to]);
@@ -42,7 +55,15 @@ void order_moves(const Board& board, std::vector<Move>& moves,
             captured = 100;
         int result = captured ? 16 * captured - value(piece) : 0;
         if (move.promotion) result += 16 * value(move.promotion);
-        if (preferred && move == *preferred) result += 1000000;
+        if (killers && history) {
+            if (!quiet_move(board, move)) result += 1000000;
+            else {
+                if ((*killers)[0] == move) result += 200000;
+                else if ((*killers)[1] == move) result += 100000;
+                result += (*history)[move.from][move.to];
+            }
+            if (preferred && move == *preferred) result += 10000000;
+        } else if (preferred && move == *preferred) result += 1000000;
         return result;
     };
     std::sort(moves.begin(), moves.end(), [&](Move left, Move right) {
@@ -84,7 +105,7 @@ public:
                 std::vector<Move>& pv, const std::optional<Move>& preferred = {}) {
         // A horizon position belongs to exactly one node, even when extended.
         if (depth == 0 && options_.quiescence)
-            return quiescence(board, ply, 0, alpha, beta, pv);
+            return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0, alpha, beta, pv);
         poll();
         ++nodes;
         seldepth = std::max(seldepth, ply);
@@ -127,7 +148,10 @@ public:
             alpha = std::max(alpha, 0);
             if (alpha >= beta) return 0;
         }
-        order_moves(board, moves, ordered_preferred);
+        const auto color = board.position().turn == Color::white ? 0U : 1U;
+        if (options_.quiet_ordering)
+            order_moves(board, moves, ordered_preferred, &killers_[ply], &history_[color]);
+        else order_moves(board, moves, ordered_preferred);
         int best = -infinity;
         for (Move move : moves) {
             poll(false);
@@ -149,7 +173,16 @@ public:
                 pv.insert(pv.end(), child_pv.begin(), child_pv.end());
             }
             alpha = std::max(alpha, score);
-            if (alpha >= beta) break;
+            if (alpha >= beta) {
+                if (options_.quiet_ordering && quiet_move(board, move)) {
+                    auto& killers = killers_[ply];
+                    if (killers[0] != move) { killers[1] = killers[0]; killers[0] = move; }
+                    auto& history = history_[color][move.from][move.to];
+                    const int reward = depth * depth;
+                    history += reward - history * reward / history_limit;
+                }
+                break;
+            }
         }
         const int score = current_claim ? std::max(0, best) : best;
         if (table_) {
@@ -168,6 +201,8 @@ private:
     Clock::time_point start_;
     SearchOptions options_;
     TranspositionTable* table_;
+    std::array<Killers, max_search_ply + 1> killers_{};
+    std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
 
     int static_evaluation(const Board& board) const {
         const int score = options_.positional ? evaluate_position(board) : evaluate_material(board);
@@ -176,7 +211,7 @@ private:
                           mate_score - reserved_plies - 1);
     }
 
-    int quiescence(Board& board, int ply, int qply, int alpha, int beta,
+    int quiescence(Board& board, int ply, int qply, int checks_left, int alpha, int beta,
                    std::vector<Move>& pv) {
         poll();
         ++nodes;
@@ -201,12 +236,9 @@ private:
             if (best < 0 && (current_claim || intended_claim_available(board, moves))) best = 0;
             if (best >= beta || qply >= max_quiescence_depth) return best;
             alpha = std::max(alpha, best);
-            const auto& position = board.position();
             std::erase_if(moves, [&](Move move) {
-                const char piece = position.squares[move.from];
-                const bool en_passant = (piece == 'P' || piece == 'p') &&
-                                        move.to == position.en_passant;
-                return position.squares[move.to] == '.' && !en_passant && !move.promotion;
+                return quiet_move(board, move) &&
+                       !(checks_left > 0 && board.gives_check_generated(move));
             });
         } else if (current_claim) {
             best = 0;
@@ -217,11 +249,17 @@ private:
         for (Move move : moves) {
             poll(false);
             int score;
+            const bool quiet = quiet_move(board, move);
             std::vector<Move> child_pv;
             {
                 AppliedMove applied(board, move, options_.fast_moves);
                 const bool intended_claim = claimable(board);
-                score = -quiescence(board, ply + 1, qply + 1, -beta, -alpha, child_pv);
+                // Captures/promotions preserve the quiet-check budget. All
+                // check evasions remain legal candidates even at zero; a
+                // quiet countercheck consumes the budget only if one remains.
+                const int child_checks = checks_left -
+                    (checks_left > 0 && quiet && board.in_check() ? 1 : 0);
+                score = -quiescence(board, ply + 1, qply + 1, child_checks, -beta, -alpha, child_pv);
                 if (intended_claim) score = std::max(0, score);
             }
             if (score > best) {

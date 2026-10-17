@@ -125,7 +125,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.4.1");
+            send("id name Regicide 0.5.0");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -134,6 +134,8 @@ public:
             send("option name Hash type spin default 16 min 1 max 256");
             send("option name Clear Hash type button");
             send("option name UseFastMoves type check default true");
+            send("option name UseQuietMoveOrdering type check default true");
+            send("option name UseQuiescenceChecks type check default true");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -167,7 +169,8 @@ private:
             context_.clear(); return;
         }
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
-            option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash") return;
+            option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
+            option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -181,7 +184,9 @@ private:
         if (option == "UsePositionalEvaluation") options_.positional = text == "true";
         else if (option == "UseQuiescence") options_.quiescence = text == "true";
         else if (option == "UseTranspositionTable") options_.transposition = text == "true";
-        else options_.fast_moves = text == "true";
+        else if (option == "UseFastMoves") options_.fast_moves = text == "true";
+        else if (option == "UseQuietMoveOrdering") options_.quiet_ordering = text == "true";
+        else options_.quiescence_checks = text == "true";
     }
     void progress(const SearchResult& result) {
         std::ostringstream line;
