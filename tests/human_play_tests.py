@@ -12,6 +12,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import threading
@@ -510,4 +511,6 @@ if __name__ == "__main__":
     parser.add_argument("binary", type=Path, nargs="?")
     args, rest = parser.parse_known_args()
     REAL_BINARY = args.binary.resolve() if args.binary else None
+    subprocess.run([sys.executable, str(ROOT / "tests/evaluation_state_tests.py")],
+                   check=True, timeout=30)
     unittest.main(argv=[str(Path(__file__)), *rest], verbosity=2)

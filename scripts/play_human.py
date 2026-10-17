@@ -43,6 +43,9 @@ class HumanGame:
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10))
         self._lock = threading.RLock()
+        # Evaluation polling must not wait for the game lock held by a search.
+        self._evaluation_lock = threading.Lock()
+        self._evaluation = {}
         self._engine = None
         self.revision = 0
         try:
@@ -76,6 +79,7 @@ class HumanGame:
         self.ended_at = None
         self.game_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:12]
         self.revision += 1
+        self._sync_evaluation()
         self._save()
 
     def _check_revision(self, revision):
@@ -87,6 +91,64 @@ class HumanGame:
             return self._override
         outcome = self.board.outcome(claim_draw=True)
         return (outcome.result(), outcome.termination.name.lower()) if outcome else ("*", None)
+
+    def evaluation(self):
+        """Read an immutable score snapshot without touching the game/search lock."""
+        with self._evaluation_lock:
+            return dict(self._evaluation)
+
+    def _sync_evaluation(self, keep_search=False, status="waiting"):
+        """Called under the game lock after a position or revision changes."""
+        result, termination = self._outcome()
+        previous = self.evaluation() if keep_search else {}
+        snapshot = {"game_id": self.game_id, "revision": self.revision,
+                    "fen": self.board.fen(en_passant="fen"),
+                    "turn": "white" if self.board.turn else "black",
+                    "status": "unavailable" if self.error else status,
+                    "cp": None, "mate": None, "depth": None, "bound": None,
+                    "white_share": None, "result": result, "winner": None,
+                    "source": "search", "source_fen": None}
+        if result != "*":
+            winner = "white" if result == "1-0" else "black" if result == "0-1" else None
+            snapshot.update(status="terminal", source="result", winner=winner,
+                            white_share=1.0 if winner == "white" else 0.0 if winner == "black" else 0.5)
+            if termination == "checkmate":
+                snapshot["mate"] = 0
+        elif not self.error and (previous.get("cp") is not None or previous.get("mate") is not None):
+            # A root best-move estimate is useful after that exact chosen move,
+            # but is explicitly labelled as a carried, previous-search estimate.
+            snapshot.update({key: previous[key] for key in
+                             ("cp", "mate", "depth", "bound", "white_share", "winner", "source_fen")})
+            snapshot.update(status="ready", source="previous_search")
+        with self._evaluation_lock:
+            self._evaluation = snapshot
+
+    def _publish_evaluation(self, info):
+        """Publish completed-depth UCI scores in White's point of view."""
+        score = info.get("score")
+        depth = info.get("depth")
+        if not isinstance(score, chess.engine.PovScore) or type(depth) is not int or depth < 1:
+            return
+        white_score = score.pov(chess.WHITE)
+        cp, mate = white_score.score(), white_score.mate()
+        if cp is None and mate is None:
+            return
+        lower, upper = bool(info.get("lowerbound")), bool(info.get("upperbound"))
+        if score.turn == chess.BLACK:
+            lower, upper = upper, lower
+        if lower and upper:
+            return
+        winner = None
+        if mate is not None:
+            winner = "white" if white_score.score(mate_score=30000) > 0 else "black"
+            share = 1.0 if winner == "white" else 0.0
+        else:
+            share = 0.5 + 0.5 * cp / (abs(cp) + 400.0)
+        with self._evaluation_lock:
+            self._evaluation.update(cp=cp, mate=mate, depth=depth,
+                                    bound="lower" if lower else "upper" if upper else "exact",
+                                    white_share=share, winner=winner, status="searching",
+                                    source="search", source_fen=self.board.fen(en_passant="fen"))
 
     def state(self):
         with self._lock:
@@ -128,6 +190,7 @@ class HumanGame:
             can_undo = (not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
             return {"revision": self.revision, "game_id": self.game_id,
+                    "fen": self.board.fen(en_passant="fen"),
                     "started_at": self.started_at, "updated_at": self.updated_at,
                     "ended_at": self.ended_at, "record_status": self._record_status(),
                     "storage_path": str(self.save_dir),
@@ -173,6 +236,7 @@ class HumanGame:
                 raise ValueError("그 칸으로 이동할 수 없습니다.")
             self.board.push(move)
             self.revision += 1
+            self._sync_evaluation()
             self._save()
             return self.state()
 
@@ -181,19 +245,57 @@ class HumanGame:
             self._check_revision(revision)
             if not self.state()["engine_to_move"]:
                 raise ValueError("지금은 Regicide 차례가 아닙니다.")
+            carry_score = False
+            watchdog = None
+            timed_out = threading.Event()
             try:
                 self._ensure_engine()
-                reply = self._engine.play(self.board, chess.engine.Limit(time=self.movetime_ms / 1000),
-                                          game=self._game_token, info=chess.engine.INFO_ALL)
+                self._sync_evaluation(status="searching")
+                limit = chess.engine.Limit(time=self.movetime_ms / 1000)
+                if callable(getattr(self._engine, "analysis", None)):
+                    engine = self._engine
+                    def expire_search():
+                        timed_out.set()
+                        engine.close()
+                    # Stream iteration itself has no python-chess timeout.
+                    # Retain the previous play() transport timeout policy.
+                    watchdog = threading.Timer(limit.time + float(getattr(engine, "timeout", 10) or 10),
+                                               expire_search)
+                    watchdog.daemon = True
+                    watchdog.start()
+                    # This is the move search itself, not a second background
+                    # engine competing for CPU or an external engine's advice.
+                    with self._engine.analysis(self.board, limit, game=self._game_token,
+                                               info=chess.engine.INFO_ALL) as analysis:
+                        for info in analysis:
+                            self._publish_evaluation(info)
+                        reply = analysis.wait()
+                        final_info = analysis.info
+                else:
+                    # Lightweight test peers and older injected clients.
+                    reply = self._engine.play(self.board, limit, game=self._game_token,
+                                              info=chess.engine.INFO_ALL)
+                    final_info = reply.info
+                    self._publish_evaluation(final_info)
+                if timed_out.is_set():
+                    raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
                 if reply.move is None or reply.move not in self.board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
+                # Do not attach a different principal variation's score to the
+                # played position. Depth-zero fallback moves have no estimate.
+                pv = final_info.get("pv", [])
+                carry_score = bool(pv and pv[0] == reply.move)
                 self.board.push(reply.move)
             except Exception as exc:
                 self.error = f"{type(exc).__name__}: {exc}"
                 if self._engine is not None:
                     self._engine.close()
                     self._engine = None
+            finally:
+                if watchdog is not None:
+                    watchdog.cancel()
             self.revision += 1
+            self._sync_evaluation(keep_search=not self.error and carry_score)
             self._save()
             return self.state()
 
@@ -215,6 +317,7 @@ class HumanGame:
             if self._engine is None:
                 self._ensure_engine()
             self.revision += 1
+            self._sync_evaluation()
             self._save()
             return self.state()
 
@@ -226,6 +329,7 @@ class HumanGame:
                 raise ValueError("이미 종료된 대국입니다.")
             self._override = ("0-1" if self.human_color else "1-0", "resignation")
             self.revision += 1
+            self._sync_evaluation()
             self._save()
             return self.state()
 
@@ -255,6 +359,7 @@ class HumanGame:
             self.error = None
             self._override = None
             self.revision += 1
+            self._sync_evaluation()
             return self.state()
 
     def forced_move(self, uci, revision):
@@ -287,6 +392,7 @@ class HumanGame:
             # the next search, including all repetition/castling/EP history.
             self._game_token = object()
             self.revision += 1
+            self._sync_evaluation()
             self._save()
             return self.state()
 
@@ -304,6 +410,7 @@ class HumanGame:
             self.ended_at = backup["ended_at"]
             self._handicap_backup = None
             self.revision += 1
+            self._sync_evaluation()
             self._save(update_timestamp=False)
             return self.state()
 
@@ -430,6 +537,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/api/state":
             self._send(200, self.server.game.state())
+        elif self.path == "/api/evaluation":
+            self._send(200, self.server.game.evaluation())
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
         elif self.path == "/api/games" or self.path.startswith("/api/games/"):

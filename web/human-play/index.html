@@ -19,7 +19,19 @@
     <main class="game-layout">
       <section class="board-panel" aria-label="체스판과 대국 상태">
         <div class="player-strip opponent-strip"><div class="avatar" aria-hidden="true">♜</div><div><p class="player-name">Regicide</p><p class="player-detail" id="opponent-detail">엔진에 연결하는 중</p></div><span class="player-color" id="opponent-color">흑</span></div>
-        <div class="board-frame"><div id="board" class="board" role="group" aria-label="체스판"></div></div>
+        <div class="board-evaluation-layout">
+          <div id="evaluation-bar" class="evaluation-bar unknown" role="img" aria-label="형세 분석 대기 중">
+            <div id="evaluation-white" class="evaluation-white"></div>
+            <span id="evaluation-top" class="evaluation-end top" aria-hidden="true">흑</span>
+            <span id="evaluation-bottom" class="evaluation-end bottom" aria-hidden="true">백</span>
+            <span class="evaluation-middle" aria-hidden="true"></span>
+          </div>
+          <div class="board-frame"><div id="board" class="board" role="group" aria-label="체스판"></div></div>
+        </div>
+        <div class="evaluation-summary" aria-label="현재 형세">
+          <div class="evaluation-reading"><span class="evaluation-title">형세</span><strong id="evaluation-label">분석 대기 중</strong><span id="evaluation-score">—</span></div>
+          <p id="evaluation-detail">Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다.</p>
+        </div>
         <div class="player-strip"><div class="avatar human-avatar" aria-hidden="true">♙</div><div><p class="player-name">나</p><p class="player-detail" id="human-detail">기물을 누르고 이동할 칸을 눌러주세요.</p></div><span class="player-color" id="human-color">백</span></div>
         <div class="status-panel" aria-live="polite" aria-atomic="true"><span class="status-dot" id="status-dot" aria-hidden="true"></span><div><p id="status-text">체스판을 준비하고 있어요.</p><p id="status-detail">잠시만 기다려주세요.</p></div></div>
         <div class="error-panel" id="error-panel" role="alert" hidden><p id="error-text"></p></div>

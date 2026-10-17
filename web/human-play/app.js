@@ -15,6 +15,8 @@
   let errorMessage = "";
   let pendingPromotion = [];
   let renderedMoveCount = -1;
+  let evaluation = null;
+  let evaluationPollInFlight = false;
 
   function showError(message) {
     errorMessage = message || "";
@@ -22,14 +24,15 @@
     byId("error-panel").hidden = !errorMessage;
   }
 
-  async function request(path, payload) {
+  async function request(path, payload, signal) {
     let response;
     try {
       response = await fetch(path, {
         method: payload === undefined ? "GET" : "POST",
         headers: {"X-Regicide-Token": token, ...(payload === undefined ? {} : {"Content-Type": "application/json"})},
         ...(payload === undefined ? {} : {body: JSON.stringify(payload)}),
-        cache: "no-store"
+        cache: "no-store",
+        ...(signal ? {signal} : {})
       });
     } catch (_) {
       throw new Error("대국 프로그램과 연결이 끊겼습니다. 실행 창을 확인하고 페이지를 새로 열어주세요.");
@@ -45,9 +48,97 @@
   }
 
   function applyState(next) {
+    if (!samePosition(state, next)) evaluation = null;
     state = next;
+    if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
     selected = null;
     render();
+  }
+
+  function samePosition(first, second) {
+    return Boolean(first && second && first.game_id != null && first.revision != null && first.fen &&
+      first.game_id === second.game_id &&
+      first.revision === second.revision && first.fen === second.fen);
+  }
+
+  function evaluationView() {
+    const note = "Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다.";
+    const result = state?.result !== "*" ? state?.result : evaluation?.status === "terminal" ? evaluation.result : "*";
+    if (result && result !== "*") {
+      const label = result === "1-0" ? "백 승리" : result === "0-1" ? "흑 승리" : result === "1/2-1/2" ? "무승부" : "대국 종료";
+      const share = result === "1-0" ? 1 : result === "0-1" ? 0 : result === "1/2-1/2" ? .5 : null;
+      return {label, score:result, detail:"확정된 대국 결과", share};
+    }
+    if (closed) return {label:"대국 종료", score:"—", detail:note, share:null};
+    if (!evaluation || evaluation.status === "waiting") {
+      return {label:"분석 대기 중", score:"—", detail:note, share:null};
+    }
+    if (evaluation.status === "unavailable") {
+      return {label:"평가를 사용할 수 없습니다", score:"—", detail:"대국은 계속할 수 있습니다. " + note, share:null};
+    }
+    const hasCp = Number.isFinite(evaluation.cp);
+    const hasMate = Number.isInteger(evaluation.mate);
+    if (!hasCp && !hasMate) {
+      return {label:"분석 중…", score:"—", detail:note, share:null};
+    }
+    const prefix = evaluation.bound === "lower" ? "≥ " : evaluation.bound === "upper" ? "≤ " : "";
+    let score;
+    let label;
+    if (hasMate) {
+      score = evaluation.mate === 0 ? "M0" : `${evaluation.mate > 0 ? "+" : "−"}M${Math.abs(evaluation.mate)}`;
+      label = evaluation.mate === 0 ? (evaluation.winner ? `${colorName(evaluation.winner)} 체크메이트 승리` : "체크메이트 평가") : `${evaluation.mate > 0 ? "백" : "흑"} 메이트 예상`;
+    } else {
+      score = `${evaluation.cp > 0 ? "+" : evaluation.cp < 0 ? "−" : ""}${(Math.abs(evaluation.cp) / 100).toFixed(2)}`;
+      label = evaluation.cp > 0 ? "백 우세" : evaluation.cp < 0 ? "흑 우세" : "균형";
+    }
+    // A bound is not an exact assessment of which side is ahead.
+    if (prefix) label = evaluation.bound === "lower" ? "백 평가 하한" : "백 평가 상한";
+    const details = [];
+    if (evaluation.status === "searching") details.push("분석 중");
+    if (evaluation.source === "previous_search") details.push("직전 탐색 평가");
+    if (Number.isInteger(evaluation.depth)) details.push(`탐색 깊이 ${evaluation.depth}`);
+    if (prefix) details.push("확정 평가가 아닌 탐색 경계값");
+    details.push(note);
+    const share = Number.isFinite(evaluation.white_share) ? Math.max(0, Math.min(1, evaluation.white_share)) : null;
+    return {label, score:prefix + score, detail:details.join(" · "), share};
+  }
+
+  function renderEvaluation() {
+    const view = evaluationView();
+    const blackView = state?.human_color === "black";
+    const bar = byId("evaluation-bar");
+    bar.classList.toggle("black-view", blackView);
+    bar.classList.toggle("unknown", view.share === null);
+    bar.setAttribute("aria-label", `${view.label}, ${view.score}. ${view.detail}`);
+    byId("evaluation-white").style.height = `${(view.share ?? 0) * 100}%`;
+    byId("evaluation-top").textContent = blackView ? "백" : "흑";
+    byId("evaluation-bottom").textContent = blackView ? "흑" : "백";
+    byId("evaluation-label").textContent = view.label;
+    byId("evaluation-score").textContent = view.score;
+    byId("evaluation-detail").textContent = view.detail;
+  }
+
+  async function pollEvaluation() {
+    if (evaluationPollInFlight || closed || !state || state.result !== "*") return;
+    evaluationPollInFlight = true;
+    const position = {game_id:state.game_id, revision:state.revision, fen:state.fen};
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      const next = await request("/api/evaluation", undefined, controller.signal);
+      if (!closed && samePosition(state, position) && samePosition(state, next)) {
+        evaluation = next;
+        renderEvaluation();
+      }
+    } catch (_) {
+      if (samePosition(state, position) && !closed) {
+        evaluation = {...position, status:"unavailable"};
+        renderEvaluation();
+      }
+    } finally {
+      clearTimeout(timeout);
+      evaluationPollInFlight = false;
+    }
   }
 
   function renderBoard() {
@@ -137,6 +228,7 @@
   function render() {
     renderBoard();
     renderMoves();
+    renderEvaluation();
     const ready = Boolean(state) && !closed;
     const active = ready && state.result === "*";
     const humanColor = state?.human_color || "white";
@@ -275,5 +367,8 @@
     } catch (error) { showError(error.message); }
     finally { busy = false; render(); }
   }
+  // Analysis polling has its own request and keeps running while /api/engine waits.
+  const evaluationTimer = setInterval(() => { void pollEvaluation(); }, 200);
+  window.addEventListener("pagehide", () => clearInterval(evaluationTimer));
   void initialize();
 })();

@@ -161,6 +161,93 @@ h1{
   border:1px solid #dce4da;
   border-radius:5px
 }
+.board-evaluation-layout{
+  display:grid;
+  grid-template-columns:24px minmax(0,1fr);
+  gap:9px;
+  align-items:stretch
+}
+.evaluation-bar{
+  position:relative;
+  overflow:hidden;
+  border:1px solid #758379;
+  border-radius:4px;
+  background:#23392e;
+  min-height:0
+}
+.evaluation-white{
+  position:absolute;
+  width:100%;
+  bottom:0;
+  background:#f8f8ee;
+  transition:height .25s ease-out;
+  height:0
+}
+.evaluation-bar.black-view .evaluation-white{
+  top:0;
+  bottom:auto
+}
+.evaluation-bar.unknown{
+  background:repeating-linear-gradient(135deg,#a8b4aa 0 6px,#b8c1b7 6px 12px)
+}
+.evaluation-bar.unknown .evaluation-white{
+  visibility:hidden;
+  transition:none
+}
+.evaluation-end{
+  position:absolute;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:9px;
+  line-height:1;
+  font-weight:700;
+  color:#fff;
+  text-shadow:0 1px 2px #12251d;
+  pointer-events:none
+}
+.evaluation-end.top{
+  top:7px
+}
+.evaluation-end.bottom{
+  bottom:7px
+}
+.evaluation-middle{
+  position:absolute;
+  width:100%;
+  top:50%;
+  border-top:1px solid #81908380
+}
+.evaluation-summary{
+  padding:9px 0 0 33px
+}
+.evaluation-reading{
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  column-gap:9px;
+  row-gap:3px;
+  font-size:11px
+}
+.evaluation-title{
+  color:var(--muted);
+  font-size:10px
+}
+#evaluation-label{
+  font-size:11px;
+  font-weight:650
+}
+#evaluation-score{
+  font-variant-numeric:tabular-nums;
+  font-weight:700;
+  margin-left:auto
+}
+#evaluation-detail{
+  font-size:9px;
+  color:var(--muted);
+  line-height:1.5;
+  margin-top:4px
+}
 .board-frame{
   border-radius:5px;
   overflow:hidden;
@@ -591,6 +678,9 @@ select{
   .status-dot.thinking{
     animation:none
   }
+  .evaluation-white{
+    transition:none
+  }
 }
 @media(min-width:1300px){
   .piece{
@@ -634,6 +724,13 @@ select{
   }
 }
 @media(max-width:670px){
+  .board-evaluation-layout{
+    grid-template-columns:20px minmax(0,1fr);
+    gap:7px
+  }
+  .evaluation-summary{
+    padding-left:27px
+  }
   .page-shell{
     padding:18px 15px
   }
@@ -781,7 +878,7 @@ select{
 }
 @media(min-width:671px){
   .board-panel {
-    width:min(100%,660px,max(260px,calc(100dvh - 285px)));
+    width:min(100%,660px,max(260px,calc(100dvh - 330px)));
     justify-self:center
   }
   .page-shell {
