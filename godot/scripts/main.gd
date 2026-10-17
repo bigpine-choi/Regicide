@@ -550,8 +550,9 @@ func _display_state() -> Dictionary:
 	shown["moves"] = review_moves.slice(0, review_ply)
 	shown["human_color"] = review_summary.get("human_color", "white")
 	if not shown.has("engine"):
+		var saved_movetime: Variant = review_summary.get("movetime_ms", 1000)
 		shown["engine"] = {"name": str(review_summary.get("engine_name", "Regicide")),
-			"movetime_ms": int(review_summary.get("movetime_ms", 1000))}
+			"movetime_ms": int(saved_movetime) if saved_movetime != null else 1000}
 	return shown
 
 

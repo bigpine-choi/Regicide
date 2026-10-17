@@ -130,6 +130,8 @@ func _run() -> void:
 	verify(app.review_controls.visible, "replay controls are visible")
 	verify(str(app.review_summary.game_id) == str(expected.game_id), "correct selected game is replayed")
 	verify(app.review_summary.get("handicap_moves", 0) == 1, "handicap count is retained in archive")
+	verify(app.review_summary.get("movetime_ms") == null, "legacy missing move time arrives as HTTP null")
+	verify(app._display_state().engine.movetime_ms == 1000, "legacy null move time uses valid display fallback")
 	verify(app.state == live, "opening replay preserves authoritative live game")
 	verify(app.undo_button.disabled and app.new_button.disabled and app.resign_button.disabled and app.handicap_button.disabled, "replay disables live mutations")
 	verify(not app.new_button.is_visible_in_tree() and not app.undo_button.is_visible_in_tree() and not app.resign_button.is_visible_in_tree() and not app.handicap_button.is_visible_in_tree(), "replay hides current-game controls")

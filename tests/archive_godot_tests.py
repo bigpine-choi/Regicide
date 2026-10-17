@@ -70,6 +70,12 @@ def main():
             seed.resign(seed.state()["revision"])
         finally:
             seed.close()
+        # Older saved games can lack engine timing metadata. Exercise the real
+        # HTTP null contract rather than a synthetic scene-only dictionary.
+        selected_record = folder / (selected_id + ".json")
+        legacy = json.loads(selected_record.read_text(encoding="utf-8"))
+        legacy["state"]["engine"].pop("movetime_ms", None)
+        selected_record.write_text(json.dumps(legacy), encoding="utf-8")
         saved_before_restart = {path.name: path.read_bytes() for path in folder.iterdir() if path.is_file()}
         game = backend.HumanGame(args.binary, folder)
         server = backend.HumanServer(game)
