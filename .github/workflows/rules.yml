@@ -39,3 +39,16 @@ jobs:
         run: python tests/human_play_tests.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/human_play_tests.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/godot_bootstrap_tests.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/godot_bootstrap_tests.py build/Release/regicide.exe
+      - name: Install pinned official Godot for scene checks
+        shell: pwsh
+        run: ./scripts/install_test_godot.ps1
+      - name: Godot perspective and live engine checks
+        shell: pwsh
+        run: |
+          $binary = if ($IsWindows) { 'build/Release/regicide.exe' } else { 'build/regicide' }
+          python tests/godot_integration_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

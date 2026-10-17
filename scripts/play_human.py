@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import secrets
 import sys
+import tempfile
 import threading
 import uuid
 import webbrowser
@@ -344,10 +345,14 @@ def main():
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--save-dir", type=Path, default=ROOT / "build/human-games")
     parser.add_argument("--startup-file", type=Path)
+    parser.add_argument("--desktop-client", action="store_true",
+                        help="Include the local session token in the private startup file, never stdout")
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
     if not 0 <= args.port <= 65535:
         parser.error("port must be in 0..65535")
+    if args.desktop_client and not args.startup_file:
+        parser.error("--desktop-client requires --startup-file")
     game = HumanGame(args.binary, args.save_dir)
     try:
         with HumanServer(game, args.port) as server:
@@ -355,9 +360,20 @@ def main():
                        "engine_name": game.engine_name, "binary_sha256": game.binary_sha256}
             if args.startup_file:
                 args.startup_file.parent.mkdir(parents=True, exist_ok=True)
-                temporary = args.startup_file.with_suffix(".tmp")
-                temporary.write_text(json.dumps(startup), encoding="utf-8")
-                temporary.replace(args.startup_file)
+                bootstrap = dict(startup)
+                if args.desktop_client:
+                    bootstrap["token"] = server.token
+                temporary = None
+                try:
+                    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                                     dir=args.startup_file.parent,
+                                                     prefix=".startup-", suffix=".tmp", delete=False) as stream:
+                        temporary = Path(stream.name)
+                        json.dump(bootstrap, stream)
+                    temporary.replace(args.startup_file)
+                finally:
+                    if temporary is not None:
+                        temporary.unlink(missing_ok=True)
             print(json.dumps(startup), flush=True)
             if not args.no_browser:
                 webbrowser.open(server.origin)

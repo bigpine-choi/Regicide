@@ -1,0 +1,53 @@
+# Godot에서 최신 Regicide와 대국하기
+
+Windows에서는 저장소의 **`Play-Regicide-Godot.cmd`를 더블클릭**한다. 브라우저와 별도의 Godot 창에서 자체 엔진 v0.5.0과 대국한다.
+
+## 시점과 기물 이동
+
+- **시점 뒤집기 ⇅** 버튼 또는 **F** 키를 누를 때마다 백 시점 ↔ 흑 시점으로 바뀐다. 백 시점은 백이 아래, 흑 시점은 흑이 아래다.
+- 내 기물 색과 시점은 독립적이다. 내가 백이어도 흑 시점에서 둘 수 있고, 내가 흑이어도 백 시점에서 둘 수 있다. 엔진이 생각하는 중, 승격 기물을 고르는 중, 대국이 끝난 후에도 전환할 수 있다.
+- 뒤집으면 기물·좌표·클릭 방향이 함께 바뀐다. 기물 배치, 선택한 기물, 승격 후보, 차례, 수순은 유지된다. 새 대국과 되돌리기도 현재 시점을 유지한다. 프로그램을 다시 열면 백 시점으로 시작한다.
+- 기물을 누른 뒤 도착 칸을 누르거나 드래그한다. 캐슬링은 왕을 두 칸 이동하고, 승격은 퀸·룩·비숍·나이트 중 고른다.
+
+오른쪽에서 **내 기물**과 **한 수 생각 시간**을 고른 뒤 **새 대국 시작**을 누른다. 생각 시간은 0.1·1·3·5초이며 기본 1초다. 흑을 고르면 Regicide가 먼저 둔다. 사람의 생각 시간에는 제한이 없다.
+
+**한 턴 되돌리기**는 내 수와 엔진 응수를 함께 되돌린다. 내가 흑이면 엔진의 첫 수는 남는다. 기권과 PGN 저장을 지원하며, 매 수의 기보·재현용 JSON은 `build/human-games/`에 자동 저장한다. 창을 닫으면 이 창에 연결된 대국 관리기와 엔진을 종료한다. 별도로 열어 둔 브라우저 대국은 영향을 받지 않는다.
+
+반복·50수 규칙으로 청구 가능한 무승부는 양쪽 모두 자동 청구한다. 예정 수로 청구 가능한 경우도 포함한다. 되돌리기를 허용하는 연습 대국이므로 공식 경기력 측정과 구분한다.
+
+## 실행 준비
+
+현재 개발 PC에서는 Godot **4.7.2 stable**, Python 3.13.16, 기존 C++ 실행 파일로 확인했다. 런처는 Godot 4.4 이상을 요구하며, 모든 하위 버전을 검증한 것은 아니다. 독립 실행 파일로 내보낸 배포판은 아직 만들지 않았다.
+
+새 Windows 환경에서는 Godot, Python 3.11 이상, Visual Studio의 C++ 데스크톱 개발 도구를 설치한 뒤 다음을 실행한다.
+
+```powershell
+python -m venv .venv-tests
+.\.venv-tests\Scripts\python.exe -m pip install -r requirements-test.txt
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Test
+.\Play-Regicide-Godot.cmd
+```
+
+Godot 실행 파일은 `-GodotPath`, `REGICIDE_GODOT_PATH`, PATH의 `godot`/`godot4`, 현재 PC의 `~/Tools/Godot/Godot_v4.7.2-stable_win64.exe` 순서로 찾는다. 다른 위치라면 다음처럼 지정한다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/play_godot.ps1 -GodotPath "C:\Tools\Godot\Godot.exe"
+```
+
+실행 기록은 `build/godot-play/`에 남는다. 새 실행마다 빈 로컬 포트와 별도 대국을 사용한다. 실행기는 누락된 엔진을 기존 빌드 스크립트로 만들지만 Python 패키지나 Godot을 자동 설치하지 않는다. 프로젝트 편집은 Godot에서 `godot/project.godot`을 연다.
+
+## 구조와 검증
+
+Godot은 화면·입력·시점만 담당한다. 로컬 Python 대국 관리기가 합법 수·종료 판정·기보를 관리하고, **수를 선택하는 주체는 기존 C++ Regicide**다. 통신은 비동기이므로 엔진 응수를 기다려도 뒤집기 버튼이 동작한다. 서버 상태를 바꾸는 요청에는 최신 대국 번호를 보내 오래된 요청을 거부한다. 시점 전환은 서버에 요청하지 않는다.
+
+각 창은 실행 시 생성한 전용 파일로 로컬 인증 정보를 전달받는다. 인증 값은 콘솔 출력에 넣지 않는다. 이 파일은 생성물 폴더에 보관하므로 공유하지 않는다. 외부 서비스·폰트·기물 이미지는 내려받지 않으며, 화면의 벡터 기물은 자체 작성했다. Godot의 [MIT 이용 조건](https://godotengine.org/license/)과 기존 Python 패키지의 [이용 조건](ENGINE.md)은 각각 적용된다.
+
+```powershell
+.\.venv-tests\Scripts\python.exe tests/human_play_tests.py build/regicide.exe
+.\.venv-tests\Scripts\python.exe tests/godot_bootstrap_tests.py build/regicide.exe
+.\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe
+# 실제 창을 렌더링하고 자동 입력 및 화면 캡처까지 검사
+.\.venv-tests\Scripts\python.exe tests/godot_integration_tests.py --godot "C:\Users\hanso\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe" --binary build/regicide.exe --rendered
+```
+
+양쪽 시점의 전체 좌표, 클릭·드래그, 특수 수와 승격 선택, 실제 엔진의 응답 중 뒤집기, 양색 대국·되돌리기·종료, 저장 기보의 독립 재생을 검사한다. 자동 입력으로 실제 Godot 장면을 검증한 결과이며 사람의 수동 대국 검증과 구분한다. 기존 C++ 규칙 검증과 외부 기준의 2,997개 교차 검증도 유지한다. [검증 기록](experiments/2026-10-17-godot-play.md)에 실행 조건과 결과를 남긴다.
