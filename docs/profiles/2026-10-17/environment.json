@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-17",
+  "timezone": "Asia/Seoul",
+  "cpu": "AMD Ryzen AI 7 350 w/ Radeon 860M",
+  "logical_cpus": 16,
+  "ram_bytes": 33598976000,
+  "profile_environment": "WSL Ubuntu 24.04",
+  "compiler": "GCC 13.3",
+  "profiler": "GNU gprof 2.42",
+  "sample_seconds": 0.01,
+  "flags": "-std=c++20 -O2 -DNDEBUG -pg",
+  "workload": "4 positions x 30 repeats x 5000 nodes = 600000 nodes",
+  "baseline_source_commit": "3869db0fc2a575c25ad8026cf022733708f76b08",
+  "candidate_source_commit": "df045565042442e5684ec4c9d36e495aaa39d086",
+  "baseline_profile_sha256": "98ad36d491f565fb9f52cad9abc7e358cc796e71607c165c31326eb86e8692e5",
+  "candidate_profile_sha256": "a4de1f949266f86e1a9c3511270ffb5a2c0c5fa0a08a765c4cfa1caae0bcb317",
+  "original_driver_sha256": "579281d89c1f78fde647ce048abf526c6fcd3884ff36eeb9c50eb4237f71da52",
+  "driver_note": "scripts/profile_search.cpp has the same workload; only explanatory comments were added after the measured builds.",
+  "baseline_command": "g++ -std=c++20 -O2 -DNDEBUG -pg -Ibaseline-source/include baseline-source/src/board.cpp baseline-source/src/evaluation.cpp baseline-source/src/search.cpp profile_driver.cpp -o baseline_profile",
+  "candidate_command": "g++ -std=c++20 -O2 -DNDEBUG -pg -I../include ../src/board.cpp ../src/evaluation.cpp ../src/search.cpp ../src/transposition.cpp ../scripts/profile_search.cpp -o candidate_profile",
+  "execution_note": "Commands run in build-profile. Each binary writes gmon.out; save its flat and callgraph before running the other binary.",
+  "report_commands": [
+    "gprof -b -p ./BASE_profile gmon.out > BASE-flat.txt",
+    "gprof -b -q ./BASE_profile gmon.out > BASE-callgraph.txt"
+  ],
+  "timing_note": "Instrumented sampled self times are for hotspot diagnosis; actual speedup uses separate uninstrumented Windows fixed-depth wall timings."
+}

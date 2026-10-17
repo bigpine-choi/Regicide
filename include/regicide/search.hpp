@@ -28,6 +28,9 @@ struct SearchLimits {
 struct SearchOptions {
     bool positional = true;
     bool quiescence = true;
+    bool transposition = true;
+    int hash_mb = 16; // Search-local table; accepted range is 1..256 MiB.
+    bool fast_moves = true; // Only for moves just returned by legal_moves().
 };
 
 struct SearchResult {
@@ -36,6 +39,10 @@ struct SearchResult {
     int depth = 0; // Last completely searched iteration; zero is a legal fallback.
     std::uint64_t nodes = 0; // Includes unfinished work and iterative roots.
     std::uint64_t qnodes = 0; // Quiescence nodes are a subset of nodes.
+    std::uint64_t tt_probes = 0;
+    std::uint64_t tt_hits = 0; // All key fields match, even if depth is unusable.
+    std::uint64_t tt_cutoffs = 0;
+    std::uint64_t tt_stores = 0; // Completed normal nodes accepted by replacement.
     int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;

@@ -149,6 +149,41 @@ def assert_legal_pvs(board, output):
                 continuation.push(move)
 
 
+def configure(engine, **options):
+    for name, value in options.items():
+        text = str(value).lower() if isinstance(value, bool) else str(value)
+        engine.send(f"setoption name {name} value {text}")
+        output = engine.ready()
+        assert not any(line.startswith("info string ") for line in output), (name, value, output)
+
+
+def search_fingerprint(move, output):
+    """Ignore wall time, retain the deterministic search graph and TT work."""
+    progress = [line.split() for line in output
+                if line.startswith("info depth ")]
+    assert progress, output
+    final = progress[-1]
+    score_at = final.index("score")
+    depth = int(final[final.index("depth") + 1])
+    nodes = int(final[final.index("nodes") + 1])
+    pv = tuple(final[final.index("pv") + 1:]) if "pv" in final else ()
+    counters = []
+    for line in output:
+        if line.startswith("info string tt "):
+            fields = line.split()[3:]
+            assert fields[::2] == ["probes", "hits", "cutoffs", "stores"], line
+            values = tuple(map(int, fields[1::2]))
+            probes, hits, cutoffs, stores = values
+            assert 0 <= cutoffs <= hits <= probes, line
+            assert 0 <= stores <= probes, line
+            counters.append(values)
+    assert counters, output
+    for earlier, later in zip(counters, counters[1:]):
+        assert all(a <= b for a, b in zip(earlier, later)), counters
+    return (move, tuple(final[score_at + 1:score_at + 3]), depth,
+            nodes, pv, counters[-1])
+
+
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
@@ -380,18 +415,117 @@ def test_evaluation_options(binary):
         assert developed.move in {chess.Move.from_uci(m) for m in ["b1c3", "g1f3"]}, developed
 
 
+def test_transposition_options(binary):
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        for name in ["UseTranspositionTable", "UseFastMoves"]:
+            option = engine.options.get(name)
+            assert option and option.type == "check" and option.default is True, engine.options
+        option = engine.options.get("Hash")
+        assert option and option.type == "spin", engine.options
+        assert (option.default, option.min, option.max) == (16, 1, 256), option
+        engine.configure({"UseTranspositionTable": False, "UseFastMoves": False, "Hash": 1})
+        result = engine.play(chess.Board(), chess.engine.Limit(depth=2))
+        assert result.move in chess.Board().legal_moves, result
+
+    with UciProcess(binary) as engine:
+        # Both booleans and the advertised memory endpoints must parse. The
+        # maximum is reset before searching, so this is not a 256 MiB load test.
+        for enabled in [False, True]:
+            configure(engine, UseTranspositionTable=enabled, UseFastMoves=enabled)
+        for amount in [1, 16, 256]:
+            configure(engine, Hash=amount)
+        configure(engine, Hash=1, UseTranspositionTable=True, UseFastMoves=True)
+        board = chess.Board()
+        original = search_fingerprint(*engine.search(board, "go depth 3"))
+        for command in [
+            "setoption name UseTranspositionTable value yes",
+            "setoption name UseTranspositionTable",
+            "setoption name UseTranspositionTable value true extra",
+            "setoption name UseFastMoves value 1",
+            "setoption name UseFastMoves value",
+            "setoption name Hash value 0",
+            "setoption name Hash value 257",
+            "setoption name Hash value -1",
+            "setoption name Hash value nope",
+            "setoption name Hash",
+            "setoption name Hash value 16 extra",
+        ]:
+            engine.send(command)
+            output = engine.ready()
+            assert any(line.startswith("info string ") for line in output), (command, output)
+            assert not any(line.startswith("bestmove ") for line in output), (command, output)
+        after_rejections = search_fingerprint(*engine.search(board, "go depth 3"))
+        assert original == after_rejections, (original, after_rejections)
+
+
+def test_transposition_search(binary):
+    fixtures = [
+        chess.Board(),
+        chess.Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"),
+        chess.Board("4k3/8/8/3pP3/8/8/8/R3K3 w - d6 0 2"),
+        chess.Board(MATE_FEN),
+    ]
+    saw_hit = False
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1)
+        for board in fixtures:
+            configure(engine, UseTranspositionTable=False, UseFastMoves=True)
+            uncached = search_fingerprint(*engine.search(board, "go depth 3"))
+            configure(engine, UseTranspositionTable=True)
+            cached = search_fingerprint(*engine.search(board, "go depth 3"))
+            assert uncached[1] == cached[1], (board.fen(), uncached, cached)
+            assert uncached[2] == cached[2] == 3, (uncached, cached)
+            assert uncached[-1] == (0, 0, 0, 0), uncached
+            assert cached[-1][0] > 0 and cached[-1][3] > 0, cached
+            saw_hit |= cached[-1][1] > 0
+            configure(engine, UseFastMoves=False)
+            checked_moves = search_fingerprint(*engine.search(board, "go depth 3"))
+            assert checked_moves == cached, (board.fen(), cached, checked_moves)
+    assert saw_hit, "TT was enabled but never reused any entry"
+
+
+def test_transposition_isolation(binary):
+    # Each go starts a fresh table. Repeatability includes node counts and TT
+    # counters: a warm table accidentally kept across searches changes these.
+    board = chess.Board()
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseTranspositionTable=True, UseFastMoves=True)
+        original = search_fingerprint(*engine.search(board, "go depth 4"))
+        repeated = search_fingerprint(*engine.search(board, "go depth 4"))
+        assert repeated == original, (original, repeated)
+        engine.search(chess.Board(CAPTURE_FEN), "go depth 3")
+        configure(engine, UsePositionalEvaluation=False, UseQuiescence=False,
+                  UseTranspositionTable=False, UseFastMoves=False)
+        altered = search_fingerprint(*engine.search(board, "go depth 3"))
+        assert altered[-1] == (0, 0, 0, 0), altered
+        configure(engine, UsePositionalEvaluation=True, UseQuiescence=True,
+                  UseTranspositionTable=True, UseFastMoves=True, Hash=1)
+        restored = search_fingerprint(*engine.search(board, "go depth 4"))
+        assert restored == original, (original, restored)
+        engine.send("ucinewgame")
+        engine.ready()
+        new_game = search_fingerprint(*engine.search(board, "go depth 4"))
+        assert new_game == original, (original, new_game)
+        configure(engine, Hash=16)
+        engine.search(chess.Board(CAPTURE_FEN), "go depth 3")
+        configure(engine, Hash=1)
+        resized = search_fingerprint(*engine.search(board, "go depth 4"))
+        assert resized == original, (original, resized)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     checks = [test_python_chess, test_history_and_terminal, test_limits,
-              test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options]
+              test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options,
+              test_transposition_options, test_transposition_search, test_transposition_isolation]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT isolation")
 
 
 if __name__ == "__main__":

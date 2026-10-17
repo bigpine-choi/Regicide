@@ -16,21 +16,27 @@ chcp 65001 >nul
 call "$vcvars" >nul
 if errorlevel 1 exit /b 1
 cd /d "$repoRoot"
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\board.cpp /Fobuild\board.obj
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\board.cpp /Fobuild\board.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\search.cpp /Fobuild\search.obj
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\search.cpp /Fobuild\search.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\evaluation.cpp /Fobuild\evaluation.obj
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\evaluation.cpp /Fobuild\evaluation.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\uci.cpp /Fobuild\uci.obj
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\transposition.cpp /Fobuild\transposition.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\uci.cpp /Fobuild\uci.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\rules_tests.cpp build\board.obj /Fobuild\rules_tests.obj /Febuild\regicide_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\search_tests.cpp build\board.obj build\search.obj build\evaluation.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\rules_tests.cpp build\board.obj /Fobuild\rules_tests.obj /Febuild\regicide_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\evaluation_tests.cpp build\board.obj build\evaluation.obj /Fobuild\evaluation_tests.obj /Febuild\regicide_evaluation_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\search_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\evaluation_tests.cpp build\board.obj build\evaluation.obj /Fobuild\evaluation_tests.obj /Febuild\regicide_evaluation_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\board_state_tests.cpp build\board.obj /Fobuild\board_state_tests.obj /Febuild\regicide_board_state_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\transposition_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj /Fobuild\transposition_tests.obj /Febuild\regicide_transposition_tests.exe
 exit /b %errorlevel%
 "@
 [System.IO.File]::WriteAllText($batchFile, $batch, [System.Text.UTF8Encoding]::new($false))
@@ -43,4 +49,8 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Search tests failed.' }
     & (Join-Path $buildDir 'regicide_evaluation_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Evaluation tests failed.' }
+    & (Join-Path $buildDir 'regicide_board_state_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Board state tests failed.' }
+    & (Join-Path $buildDir 'regicide_transposition_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Transposition tests failed.' }
 }

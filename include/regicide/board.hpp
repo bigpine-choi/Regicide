@@ -61,12 +61,24 @@ public:
     // Position analysis may continue beyond a draw; a game driver must honor outcome().
     void play(Move move);
     void play(std::string_view uci) { play(Move::from_uci(uci)); }
+    // Search-only fast path: move must come from legal_moves() on this exact
+    // board state. Debug builds assert that precondition; external input uses play().
+    void play_generated(Move move);
     void undo();
     std::size_t history_size() const { return history_.size(); }
     bool operator==(const Board&) const = default;
 
     // Imported FEN starts a new history: earlier repetitions are unknown.
     int repetition_count() const;
+    // True if any position has already appeared twice since an irreversible
+    // move. False proves that no next move can support a threefold claim.
+    bool has_repetition_candidate() const;
+    // Deterministic Zobrist identity: pieces, turn, castling, and legal EP only.
+    // Hashes accelerate search; draw rules still compare exact position data.
+    std::uint64_t position_key() const;
+    // Count-multiset digest of positions since pawn/capture/castling-right loss.
+    // Halfmove/fullmove counters are excluded; search must key halfmove separately.
+    std::uint64_t repetition_context_key() const;
     Outcome outcome() const;
     DrawClaims claims_now() const;
     DrawClaims claims_after(Move intended_move) const;
@@ -78,9 +90,20 @@ public:
     std::vector<std::pair<Move, std::uint64_t>> divide(int depth) const;
 
 private:
+    struct RepetitionState {
+        // Squares + side + castling + legal EP (encoded as square+1, or zero).
+        std::array<char, 67> identity{};
+        std::uint64_t key = 0;
+        std::uint64_t context = 0;
+        std::size_t reversible_begin = 0;
+        int occurrences = 1;
+        bool has_candidate = false;
+        bool operator==(const RepetitionState&) const = default;
+    };
+    void apply_generated(Move move);
     Position position_;
     std::vector<Position> history_;
-    std::vector<std::string> repetition_keys_;
+    std::vector<RepetitionState> repetition_states_;
 };
 
 } // namespace regicide

@@ -13,7 +13,7 @@ namespace {
 SearchResult legacy_search(const Board& board, const SearchLimits& limits,
                            const std::atomic_bool* stop = nullptr,
                            SearchCallback callback = {}) {
-    return search(board, limits, stop, std::move(callback), {false, false});
+    return search(board, limits, stop, std::move(callback), {false, false, false, 16, false});
 }
 
 int assertions = 0, groups = 0, failures = 0;
@@ -372,6 +372,74 @@ int main() {
                "interrupting inside the first q extension requires a legal fallback");
         expect(legal(board, early.best_move) && board == saved, "early q interruption changed board");
         valid_pv(board, early);
+    });
+    test("transposition scores agree with uncached fixed-depth search", [] {
+        for (const char* fen : {"7k/6pp/8/8/8/8/PP6/K7 w - - 0 1",
+                                "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+                                "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+                                "7k/5Q2/6K1/8/8/8/8/8 w - - 0 1"}) {
+            for (bool quiet : {false, true}) {
+                Board board(fen);
+                const auto saved = board;
+                const auto uncached = search(board, {.depth = 3}, nullptr, {}, {true, quiet, false, 1});
+                const auto cached = search(board, {.depth = 3}, nullptr, {}, {true, quiet, true, 1});
+                expect(!cached.stopped && cached.depth == 3 && cached.score == uncached.score,
+                       "table changed fixed-depth result");
+                expect(!uncached.tt_probes && !uncached.tt_hits && !uncached.tt_cutoffs && !uncached.tt_stores,
+                       "disabled table must do no cache work");
+                expect(cached.tt_probes > 0 && cached.tt_stores > 0 &&
+                           cached.tt_cutoffs <= cached.tt_hits && cached.tt_hits <= cached.tt_probes,
+                       "table counters are inconsistent");
+                expect(board == saved, "cached search changed board or repetition context");
+                valid_pv(board, cached);
+            }
+        }
+    });
+    test("transpositions reuse completed work and never publish a partial root", [] {
+        Board board("7k/6pp/8/8/8/8/PP6/K7 w - - 0 1");
+        const auto saved = board;
+        const auto uncached = search(board, {.depth = 5}, nullptr, {}, {true, false, false, 1});
+        const auto cached = search(board, {.depth = 5}, nullptr, {}, {true, false, true, 1});
+        expect(cached.score == uncached.score && cached.depth == 5 && !cached.stopped,
+               "reusing a transposition changed the completed score");
+        expect(cached.tt_hits > 0 && cached.tt_cutoffs > 0, "fixture must exercise actual score cutoffs");
+        expect(cached.nodes < uncached.nodes, "fixture must reduce visited nodes");
+        valid_pv(board, cached);
+        const auto quiet_plain = search(board, {.depth = 5}, nullptr, {}, {true, true, false, 1});
+        const auto quiet_cached = search(board, {.depth = 5}, nullptr, {}, {true, true, true, 1});
+        expect(quiet_cached.score == quiet_plain.score && quiet_cached.depth == 5 &&
+                   quiet_cached.tt_cutoffs > 0 && quiet_cached.qnodes > 0,
+               "normal-node cache reuse must preserve a quiescence frontier");
+        valid_pv(board, quiet_cached);
+        const auto interrupted = search(board, {.depth = 5, .nodes = 1}, nullptr, {}, {true, true, true, 1});
+        expect(interrupted.stopped && interrupted.depth == 0 && interrupted.tt_stores == 0,
+               "unfinished first root must never be stored or published");
+        expect(legal(board, interrupted.best_move) && board == saved, "interruption changed root or fallback");
+        const auto repeated = search(board, {.depth = 5}, nullptr, {}, {true, false, true, 1});
+        expect(repeated.score == cached.score && repeated.pv == cached.pv && repeated.nodes == cached.nodes &&
+                   repeated.tt_hits == cached.tt_hits && repeated.tt_stores == cached.tt_stores,
+               "table must be search-local and deterministic across calls");
+    });
+    test("cached search keeps optional history-dependent claims", [] {
+        Board repeated;
+        cycle(repeated); cycle(repeated);
+        Board other_history;
+        for (const char* move : {"b1c3", "b8c6", "c3b1", "c6b8"}) other_history.play(move);
+        for (Board board : {repeated, other_history,
+                            Board("7k/8/8/8/8/8/q7/6K1 w - - 99 1"),
+                            Board("7k/5Q2/6K1/8/8/8/8/8 w - - 149 1")}) {
+            const auto saved = board;
+            const auto plain = search(board, {.depth = 2}, nullptr, {}, {true, true, false, 1});
+            const auto cached = search(board, {.depth = 2}, nullptr, {}, {true, true, true, 1});
+            expect(cached.score == plain.score && cached.depth == 2,
+                   "table changed mate precedence or an optional draw claim");
+            expect(board == saved, "history-dependent cached search changed input");
+            valid_pv(board, cached);
+        }
+        rejects([&] { (void)search(repeated, {.depth = 1}, nullptr, {}, {true, true, true, 0}); },
+                "zero hash size must be rejected");
+        rejects([&] { (void)search(repeated, {.depth = 1}, nullptr, {}, {true, true, true, 1025}); },
+                "unbounded hash size must be rejected");
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

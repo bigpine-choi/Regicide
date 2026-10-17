@@ -1,5 +1,6 @@
 #include "regicide/search.hpp"
 #include "regicide/evaluation.hpp"
+#include "regicide/transposition.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -55,7 +56,10 @@ void order_moves(const Board& board, std::vector<Move>& moves,
 // Restores board and repetition history, including when cancellation unwinds.
 class AppliedMove {
 public:
-    AppliedMove(Board& board, Move move) : board_(board) { board_.play(move); }
+    AppliedMove(Board& board, Move move, bool fast) : board_(board) {
+        if (fast) board_.play_generated(move);
+        else board_.play(move);
+    }
     ~AppliedMove() { board_.undo(); }
     AppliedMove(const AppliedMove&) = delete;
     AppliedMove& operator=(const AppliedMove&) = delete;
@@ -69,10 +73,13 @@ class Searcher {
 public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
              SearchOptions options)
-        : limits_(limits), stop_(stop), start_(start), options_(options) {}
+        : limits_(limits), stop_(stop), start_(start), options_(options) {
+        if (options.transposition) table_.emplace(options.hash_mb);
+    }
 
     std::uint64_t nodes = 0;
     std::uint64_t qnodes = 0;
+    std::uint64_t tt_probes = 0, tt_hits = 0, tt_cutoffs = 0, tt_stores = 0;
     int seldepth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
@@ -94,18 +101,42 @@ public:
             if (score < 0 && (current_claim || intended_claim_available(board, moves))) return 0;
             return score;
         }
+        const int original_alpha = alpha;
+        const TranspositionKey key{board.position_key(), board.repetition_context_key(),
+                                   board.position().halfmove};
+        std::optional<Move> ordered_preferred = preferred;
+        if (table_) {
+            ++tt_probes;
+            if (const auto* entry = table_->probe(key)) {
+                ++tt_hits;
+                // Verify a cached move before putting it in a published PV.
+                // Never return a cached root result: the completed iteration
+                // must always provide an explicitly searched legal root move.
+                if (entry->best_move &&
+                    std::find(moves.begin(), moves.end(), *entry->best_move) != moves.end()) {
+                    ordered_preferred = entry->best_move;
+                    if (ply > 0) {
+                        if (const auto score = entry->cutoff_score(depth, ply, alpha, beta)) {
+                            ++tt_cutoffs;
+                            pv.push_back(*entry->best_move);
+                            return *score;
+                        }
+                    }
+                }
+            }
+        }
         if (current_claim) {
             alpha = std::max(alpha, 0);
             if (alpha >= beta) return 0;
         }
-        order_moves(board, moves, preferred);
+        order_moves(board, moves, ordered_preferred);
         int best = -infinity;
         for (Move move : moves) {
             poll(false);
             int score;
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move);
+                AppliedMove applied(board, move, options_.fast_moves);
                 const bool intended_claim = claimable(board);
                 score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
                 // The mover may claim before an intended move that creates a
@@ -122,7 +153,15 @@ public:
             alpha = std::max(alpha, score);
             if (alpha >= beta) break;
         }
-        return current_claim ? std::max(0, best) : best;
+        const int score = current_claim ? std::max(0, best) : best;
+        if (table_) {
+            const auto bound = score <= original_alpha ? TranspositionBound::upper :
+                               score >= beta ? TranspositionBound::lower : TranspositionBound::exact;
+            // Interrupted recursion unwinds before this point, so partial
+            // nodes can never masquerade as completed scores or bounds.
+            if (table_->store(key, depth, score, ply, bound, pv.front())) ++tt_stores;
+        }
+        return score;
     }
 
 private:
@@ -130,6 +169,7 @@ private:
     const std::atomic_bool* stop_;
     Clock::time_point start_;
     SearchOptions options_;
+    std::optional<TranspositionTable> table_;
 
     int static_evaluation(const Board& board) const {
         const int score = options_.positional ? evaluate_position(board) : evaluate_material(board);
@@ -181,7 +221,7 @@ private:
             int score;
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move);
+                AppliedMove applied(board, move, options_.fast_moves);
                 const bool intended_claim = claimable(board);
                 score = -quiescence(board, ply + 1, qply + 1, -beta, -alpha, child_pv);
                 if (intended_claim) score = std::max(0, score);
@@ -199,12 +239,13 @@ private:
     }
 
     bool intended_claim_available(Board& board, const std::vector<Move>& moves) const {
-        // Three occurrences need at least two four-ply cycles. Avoid replaying
-        // candidate moves when the known history is too short to claim.
-        if (board.position().halfmove < 99 && board.history_size() < 7) return false;
+        // A third occurrence is impossible unless some reversible-history
+        // position has already occurred twice. The board maintains this fact
+        // exactly, avoiding a full speculative move scan at most q leaves.
+        if (board.position().halfmove < 99 && !board.has_repetition_candidate()) return false;
         for (Move move : moves) {
             poll(false);
-            AppliedMove applied(board, move);
+            AppliedMove applied(board, move, options_.fast_moves);
             if (claimable(board) && board.outcome() == Outcome::ongoing) return true;
         }
         return false;
@@ -233,6 +274,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         throw std::invalid_argument("search depth must be 1..64");
     if (limits.movetime.count() < 0)
         throw std::invalid_argument("search movetime cannot be negative");
+    if (options.hash_mb < 1 || options.hash_mb > max_hash_mb)
+        throw std::invalid_argument("hash size must be 1..256 MiB");
     const auto start = Clock::now();
     SearchResult result;
     Board board = input;
@@ -266,12 +309,20 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.depth = depth;
         result.nodes = searcher.nodes;
         result.qnodes = searcher.qnodes;
+        result.tt_probes = searcher.tt_probes;
+        result.tt_hits = searcher.tt_hits;
+        result.tt_cutoffs = searcher.tt_cutoffs;
+        result.tt_stores = searcher.tt_stores;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
     }
     result.nodes = searcher.nodes;
     result.qnodes = searcher.qnodes;
+    result.tt_probes = searcher.tt_probes;
+    result.tt_hits = searcher.tt_hits;
+    result.tt_cutoffs = searcher.tt_cutoffs;
+    result.tt_stores = searcher.tt_stores;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

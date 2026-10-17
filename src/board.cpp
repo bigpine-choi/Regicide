@@ -1,6 +1,7 @@
 #include "regicide/board.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <charconv>
 #include <cctype>
 #include <cmath>
@@ -199,19 +200,81 @@ std::string to_fen(const Position& p) {
     return out.str();
 }
 
-std::string repetition_key(Position p) {
-    if (p.en_passant != -1) {
-        const auto moves = legal(p);
-        const bool usable = std::any_of(moves.begin(), moves.end(), [&](Move m) {
-            return m.to == p.en_passant && type(p.squares[m.from]) == 'p';
-        });
-        if (!usable) p.en_passant = -1;
+// FIDE repetition identity includes EP only when an EP capture is legal.
+// Testing at most two EP candidates avoids generating unrelated legal moves.
+int legal_en_passant(const Position& p) {
+    if (p.en_passant == -1) return -1;
+    const int pawn_rank = p.en_passant / 8 + (p.turn == Color::white ? -1 : 1);
+    const int file = p.en_passant % 8;
+    for (int df : {-1, 1}) {
+        if (!inside(file + df, pawn_rank)) continue;
+        const int from = pawn_rank * 8 + file + df;
+        if (p.squares[from] != colored('p', p.turn)) continue;
+        Position next = p;
+        apply(next, {from, p.en_passant});
+        if (!checked(next, p.turn)) return p.en_passant;
     }
-    std::string key = to_fen(p);
-    // Counters are not part of position identity.
-    key.erase(key.rfind(' '));
-    key.erase(key.rfind(' '));
+    return -1;
+}
+
+std::array<char, 67> repetition_identity(const Position& p, int ep) {
+    std::array<char, 67> identity{};
+    std::copy(p.squares.begin(), p.squares.end(), identity.begin());
+    identity[64] = p.turn == Color::white ? 0 : 1;
+    identity[65] = static_cast<char>(p.castling);
+    identity[66] = static_cast<char>(ep + 1);
+    return identity;
+}
+
+// Fixed, reproducible salts; no platform-dependent std::hash or random seed.
+constexpr std::uint64_t mix(std::uint64_t value) {
+    value += 0x9e3779b97f4a7c15ULL;
+    value = (value ^ (value >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    value = (value ^ (value >> 27)) * 0x94d049bb133111ebULL;
+    return value ^ (value >> 31);
+}
+constexpr std::uint64_t key_seed = 0x243f6a8885a308d3ULL;
+constexpr auto make_piece_keys() {
+    std::array<std::array<std::uint64_t, 64>, 12> keys{};
+    for (std::size_t piece = 0; piece < keys.size(); ++piece)
+        for (std::size_t square = 0; square < keys[piece].size(); ++square)
+            keys[piece][square] = mix(key_seed + piece * 64 + square);
+    return keys;
+}
+constexpr auto piece_keys = make_piece_keys();
+constexpr std::uint64_t turn_key = mix(key_seed + 850);
+std::uint64_t piece_key(char piece, int square) {
+    const auto index = std::string_view("PNBRQKpnbrqk").find(piece);
+    return index == std::string_view::npos ? 0 : piece_keys[index][square];
+}
+std::uint64_t castling_key(unsigned rights) { return mix(key_seed + 768 + rights); }
+std::uint64_t ep_key(int ep) { return mix(key_seed + 784 + static_cast<unsigned>(ep + 1)); }
+std::uint64_t position_hash(const Position& p, int ep) {
+    std::uint64_t key = castling_key(p.castling) ^ ep_key(ep);
+    if (p.turn == Color::black) key ^= turn_key;
+    for (int square = 0; square < 64; ++square) key ^= piece_key(p.squares[square], square);
     return key;
+}
+std::uint64_t updated_hash(std::uint64_t key, const Position& before,
+                           const Position& after, Move move, int old_ep, int new_ep) {
+    key ^= turn_key ^ castling_key(before.castling) ^ castling_key(after.castling)
+         ^ ep_key(old_ep) ^ ep_key(new_ep);
+    auto changed_square = [&](int square) {
+        key ^= piece_key(before.squares[square], square) ^ piece_key(after.squares[square], square);
+    };
+    changed_square(move.from);
+    changed_square(move.to);
+    const char piece = type(before.squares[move.from]);
+    if (piece == 'p' && move.to == before.en_passant && before.squares[move.to] == '.')
+        changed_square(move.to + (before.turn == Color::white ? -8 : 8));
+    if (piece == 'k' && std::abs(move.to - move.from) == 2) {
+        changed_square(move.to > move.from ? move.from + 3 : move.from - 4);
+        changed_square((move.from + move.to) / 2);
+    }
+    return key;
+}
+std::uint64_t count_token(std::uint64_t key, int count) {
+    return mix(key ^ mix(0xd1b54a32d192ed03ULL + static_cast<std::uint64_t>(count)));
 }
 
 int counter(std::string_view s, int minimum) {
@@ -327,7 +390,12 @@ std::string_view name(Outcome o) {
     throw std::logic_error("unknown outcome");
 }
 Board::Board(std::string_view fen) : position_(parse_fen(fen)) {
-    repetition_keys_.push_back(repetition_key(position_));
+    RepetitionState initial;
+    const int ep = legal_en_passant(position_);
+    initial.identity = repetition_identity(position_, ep);
+    initial.key = position_hash(position_, ep);
+    initial.context = count_token(initial.key, 1);
+    repetition_states_.push_back(initial);
 }
 std::string Board::fen() const { return to_fen(position_); }
 std::vector<Move> Board::legal_moves() const { auto p = position_; return legal(p); }
@@ -335,21 +403,57 @@ bool Board::in_check() const { return checked(position_, position_.turn); }
 void Board::play(Move move) {
     const auto moves = legal_moves();
     if (std::find(moves.begin(), moves.end(), move) == moves.end()) throw std::invalid_argument("illegal move");
+    apply_generated(move);
+}
+void Board::play_generated(Move move) {
+#ifndef NDEBUG
+    const auto moves = legal_moves();
+    assert(std::find(moves.begin(), moves.end(), move) != moves.end());
+#endif
+    apply_generated(move);
+}
+void Board::apply_generated(Move move) {
     if (position_.halfmove == std::numeric_limits<int>::max() || position_.fullmove == std::numeric_limits<int>::max())
         throw std::overflow_error("move counters exhausted");
+
+    Position next = position_;
+    apply(next, move);
+    const auto& previous = repetition_states_.back();
+    const int ep = legal_en_passant(next);
+    RepetitionState state;
+    state.identity = repetition_identity(next, ep);
+    state.key = updated_hash(previous.key, position_, next, move, previous.identity[66] - 1, ep);
+    const bool irreversible = next.halfmove == 0 || position_.castling != next.castling;
+    state.reversible_begin = irreversible ? repetition_states_.size() : previous.reversible_begin;
+    state.context = irreversible ? 0 : previous.context;
+    state.has_candidate = !irreversible && previous.has_candidate;
+    // Exact identity, never the probabilistic search key, controls repetition.
+    for (std::size_t i = state.reversible_begin; i < repetition_states_.size(); ++i)
+        if (repetition_states_[i].identity == state.identity) ++state.occurrences;
+    if (state.occurrences > 1) {
+        state.context ^= count_token(state.key, state.occurrences - 1);
+        state.has_candidate = true;
+    }
+    state.context ^= count_token(state.key, state.occurrences);
+
+    // Allocate both history entries before publishing the new position.
     history_.push_back(position_);
-    apply(position_, move);
-    repetition_keys_.push_back(repetition_key(position_));
+    try { repetition_states_.push_back(state); }
+    catch (...) { history_.pop_back(); throw; }
+    position_ = next;
 }
 void Board::undo() {
     if (history_.empty()) throw std::out_of_range("no move to undo");
     position_ = history_.back();
     history_.pop_back();
-    repetition_keys_.pop_back();
+    repetition_states_.pop_back();
 }
 int Board::repetition_count() const {
-    return static_cast<int>(std::count(repetition_keys_.begin(), repetition_keys_.end(), repetition_keys_.back()));
+    return repetition_states_.back().occurrences;
 }
+bool Board::has_repetition_candidate() const { return repetition_states_.back().has_candidate; }
+std::uint64_t Board::position_key() const { return repetition_states_.back().key; }
+std::uint64_t Board::repetition_context_key() const { return repetition_states_.back().context; }
 bool Board::has_known_dead_material() const {
     int minors = 0, bishops = 0, bishop_color = -1;
     bool same_color = true;

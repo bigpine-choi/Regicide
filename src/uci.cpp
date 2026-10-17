@@ -125,11 +125,14 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.3.0");
+            send("id name Regicide 0.4.0");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
             send("option name UseQuiescence type check default true");
+            send("option name UseTranspositionTable type check default true");
+            send("option name Hash type spin default 16 min 1 max 256");
+            send("option name UseFastMoves type check default true");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); board_ = Board(); }
@@ -158,14 +161,22 @@ private:
             if (!option.empty()) option += ' ';
             option += *i;
         }
-        if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence") return;
+        if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
+            option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
+        if (option == "Hash") {
+            const auto amount = number(*(value + 1), 256);
+            if (!amount) throw std::invalid_argument("Hash must be 1..256 MiB");
+            options_.hash_mb = static_cast<int>(amount); return;
+        }
         const auto& text = *(value + 1);
         if (text != "true" && text != "false") throw std::invalid_argument("check option requires true or false");
         if (option == "UsePositionalEvaluation") options_.positional = text == "true";
-        else options_.quiescence = text == "true";
+        else if (option == "UseQuiescence") options_.quiescence = text == "true";
+        else if (option == "UseTranspositionTable") options_.transposition = text == "true";
+        else options_.fast_moves = text == "true";
     }
     void progress(const SearchResult& result) {
         std::ostringstream line;
@@ -181,6 +192,8 @@ private:
             for (auto move : result.pv) line << ' ' << move.uci();
         }
         send(line.str());
+        send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
+             " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores));
     }
     void start(Go go) {
         stop_.store(false, std::memory_order_relaxed);
