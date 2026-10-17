@@ -1,0 +1,61 @@
+2026-10-18T02:27:30+09:00
+g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+Copyright (C) 2023 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+=== ASan/UBSan search ===
+PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescence terminal and optional claim handling
+PASS quiescence shares exact node budgets and restores interrupted work
+PASS transposition scores agree with uncached fixed-depth search
+PASS transpositions reuse completed work and never publish a partial root
+PASS cached search keeps optional history-dependent claims
+PASS caller-owned memory reuse preserves every completed iteration graph
+PASS reused memory isolates options FENs history clocks and hash resize
+PASS disabled terminal and interrupted calls preserve reusable storage safely
+PASS quiet move ordering changes work without changing exact fixed-depth scores
+PASS one quiet-check qsearch matches an unpruned independent oracle
+PASS quiet checks recognize mate beyond the capture-only frontier
+PASS Caro-Kann loss regression sees the checking knight refutation
+PASS PVS and alpha-beta select oracle-optimal moves with and without TT
+PASS PVS preserves independently enumerated quiescence and quiet-check values
+PASS PVS scouts ties without re-search and re-searches a genuine improvement
+PASS PVS handles current intended and historical optional draw claims
+PASS an intended draw floor can require a PVS full-window re-search
+PASS PVS interruption at scout and re-search entry retains the completed iteration
+PASS reused PVS memory isolates modes histories options and interruption
+PASS SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode
+PASS favorable captures precede losing captures without discarding either
+PASS negative SEE queen sacrifice remains available and produces the oracle mate
+PASS SEE preserves the independent bounded-check quiescence oracle
+PASS SEE mode changes and cancellation cannot leak through retained memory
+42 groups, 13579 assertions, 0 failures
+=== ASan/UBSan see ===
+PASS free material, poisoned capture and optional stopping
+PASS updated occupancy reveals both black and white x-ray attackers
+PASS absolute pins exclude illegal recaptures
+PASS kings may recapture only onto unattacked squares
+PASS en passant removes the off-target pawn and recomputes pins and rays
+PASS initial promotions and promotion recaptures include material increments
+SEE differential: 45 positions, 1442 moves, 57 losing exchanges, 8 promotions, 1 en passant
+PASS LVA agrees with independent legal-move recursion on varied legal positions
+PASS repeated calls preserve castling repetition and undo history
+8 groups, 3438 assertions, 0 failures
