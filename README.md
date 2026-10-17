@@ -16,7 +16,7 @@
 
 ## 현재 상태
 
-C++20으로 규칙 코어의 첫 기준 버전을 구현했습니다. 초기 합법 수 20개, FEN 입출력, 수 적용·되돌리기, 체크와 특수 수를 처리합니다. 자체 탐색·평가·시간 관리·UCI 대국 연결은 다음 단계입니다. Python은 독립적인 검증 도구에만 사용합니다.
+C++20 규칙 코어에 기물 가치 평가와 negamax/alpha-beta 탐색, 기본 시간 관리, UCI 대국 연결을 구현했습니다. Regicide가 직접 수를 선택하며 별도 Python 도구가 대국을 진행하고 합법성·종료를 검증해 PGN/JSON을 저장합니다. 기존 규칙 검증도 그대로 유지합니다. 현재 평가는 기물 가치만 사용하며 경기력·Elo는 아직 측정하지 않았습니다.
 
 ## 바로 실행하기
 
@@ -27,9 +27,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Test
 .\build\regicide.exe
 .\build\regicide.exe perft 5
 .\build\regicide.exe inspect --play e2e4 e7e5 g1f3
+.\build\regicide.exe search 3
+.\build\regicide.exe search 64 --movetime 200
 ```
 
 첫 실행은 초기 FEN과 합법 수 20개, `make_undo: OK`를 출력합니다. `perft 5`의 기대값은 **4,865,609**입니다. GUI가 없는 콘솔 프로그램입니다.
+
+직접 대국을 진행하고 기보를 저장하려면 선택적 Python 도구 의존성을 설치합니다. `python`은 3.11 이상이 필요합니다.
+
+```powershell
+python -m venv .venv-tests
+.\.venv-tests\Scripts\python.exe -m pip install -r requirements-test.txt
+.\.venv-tests\Scripts\python.exe scripts/play_game.py build/regicide.exe --depth 2 --pgn games/selfplay.pgn
+```
+
+백·흑 모두 별도의 Regicide 프로세스가 수를 고릅니다. 기본 정책은 가능한 3회 반복·50수 무승부를 청구하는 것입니다. 종료 판정에 도달하면 PGN과 재현용 JSON을 저장하며, 수 제한 때문에 중단되면 미완료 `*`로 기록합니다. 기존 출력은 `--overwrite` 없이는 덮어쓰지 않습니다.
+
+UCI를 지원하는 GUI에는 실행 파일과 인수 `uci`를 등록합니다. 명령줄에서는 `.\build\regicide.exe uci`로 시작할 수 있습니다. 지원 명령·제한은 [엔진 설명](docs/ENGINE.md)을 참고합니다.
 
 CMake 3.20 이상과 C++20 컴파일러가 있으면 Linux에서도 빌드할 수 있습니다.
 
@@ -48,12 +62,17 @@ Visual Studio CMake 생성기를 사용한 Windows 빌드는 실행 파일이 `b
 - 캐슬링의 경로·공격·권리 상실, 앙파상의 킹 노출·유효 기간, 4종 승격과 잡으며 승격.
 - 체크메이트·스테일메이트, 현재/예정 수에 대한 3회 반복·50수 청구 가능 여부, 5회 반복·75수 자동 무승부.
 - 테스트 전용 외부 라이브러리 `chess==1.11.2`와 2,997개 사례 교차 검증.
+- 기물 획득·메이트·한 수 뒤 재캡처, alpha-beta와 작은 완전 탐색의 점수 일치, 중단 후 상태 복원.
+- UCI 클라이언트 연결, 탐색 중 준비 확인·중지·종료, 깊이·노드·시간·시계 제한.
+- 초기 배치 자기대국의 실제 종료와 PGN/JSON 전체 수순 재검증; 자세한 조건은 실험 기록 참조.
 
-**제한:** 킹만 남음, 킹과 단일 비숍/나이트 대 킹, 모든 비숍이 같은 색 칸에 있는 비숍 전용 배치의 죽은 포지션을 판정합니다. 폰 벽 등 복잡한 죽은 포지션의 일반 판정은 미구현입니다. FEN만 불러오면 이전 반복 이력은 알 수 없습니다. 현재 결과는 규칙 검증이며 경기력이나 Elo 측정 결과가 아닙니다.
+**제한:** 폰 벽 등 복잡한 죽은 포지션의 일반 판정은 미구현입니다. FEN만 불러오면 이전 반복 이력은 알 수 없습니다. 탐색은 고정 깊이 끝에서 기물 가치만 평가하므로 깊이 밖의 전술을 놓칠 수 있습니다. 자기대국 완주는 운영·정확성 검증이며 경기력 향상을 입증하지 않습니다.
 
 ## 문서
 
 - [프로젝트 지침](docs/PROJECT_INSTRUCTIONS.md)
 - [개발 로드맵](docs/ROADMAP.md)
 - [규칙 코어 구조·실행·검증 방법](docs/RULES_CORE.md)
+- [첫 대국 엔진의 원리·사용법·제한](docs/ENGINE.md)
 - [2026-10-17 검증 기록](docs/experiments/2026-10-17-rules-core.md)
+- [첫 엔진 검증과 실제 대국 기보](docs/experiments/2026-10-17-first-engine.md)

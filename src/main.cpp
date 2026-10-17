@@ -1,7 +1,10 @@
 #include "regicide/board.hpp"
+#include "regicide/search.hpp"
+#include "regicide/uci.hpp"
 
 #include <algorithm>
 #include <charconv>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <sstream>
@@ -58,9 +61,11 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide rules core\n"
+            std::cout << "Regicide 0.2.0\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
+                         "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
+                         "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
         }
@@ -68,13 +73,20 @@ int main(int argc, char** argv) {
             if (argc != 2) throw std::invalid_argument("batch takes no arguments");
             batch(); return 0;
         }
-        if (command != "moves" && command != "inspect" && command != "perft" && command != "divide")
+        if (command == "uci") {
+            if (argc != 2) throw std::invalid_argument("uci takes no arguments");
+            return regicide::run_uci(std::cin, std::cout);
+        }
+        if (command != "moves" && command != "inspect" && command != "perft" && command != "divide" && command != "search")
             throw std::invalid_argument("unknown command; see --help");
         int arg = 2, depth = 0;
         if (command == "perft" || command == "divide") {
             if (arg >= argc) throw std::invalid_argument("missing depth");
             depth = depth_arg(argv[arg++]);
         }
+        regicide::SearchLimits limits;
+        if (command == "search" && arg < argc && std::string_view(argv[arg]).substr(0, 2) != "--")
+            limits.depth = depth_arg(argv[arg++]);
         std::string fen(Board::start_fen);
         std::vector<std::string> moves;
         while (arg < argc) {
@@ -82,11 +94,33 @@ int main(int argc, char** argv) {
             if (option == "--fen" && arg < argc) fen = argv[arg++];
             else if (option == "--play" && arg < argc) {
                 while (arg < argc && std::string_view(argv[arg]).substr(0, 2) != "--") moves.emplace_back(argv[arg++]);
+            } else if (command == "search" && option == "--nodes" && arg < argc) {
+                const std::string_view value(argv[arg++]);
+                const auto result = std::from_chars(value.data(), value.data() + value.size(), limits.nodes);
+                if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || !limits.nodes)
+                    throw std::invalid_argument("nodes must be a positive integer");
+            } else if (command == "search" && option == "--movetime" && arg < argc) {
+                const int time = depth_arg(argv[arg++]);
+                if (time < 1) throw std::invalid_argument("movetime must be positive milliseconds");
+                limits.movetime = std::chrono::milliseconds(time);
             } else throw std::invalid_argument("invalid option or missing value");
         }
         Board board(fen);
         for (const auto& move : moves) board.play(move);
-        if (command == "perft") std::cout << "nodes: " << board.perft(depth) << '\n';
+        if (command == "search") {
+            const auto result = regicide::search(board, limits);
+            std::cout << "bestmove: " << (result.best_move ? result.best_move->uci() : "0000")
+                      << '\n';
+            if (std::abs(result.score) >= regicide::mate_score - regicide::max_search_depth) {
+                const int mate = (regicide::mate_score - std::abs(result.score) + 1) / 2;
+                std::cout << "score_mate: " << (result.score < 0 ? -mate : mate);
+            } else std::cout << "score_cp: " << result.score;
+            std::cout << "\ndepth: " << result.depth
+                      << "\nnodes: " << result.nodes << "\ntime_ms: " << result.elapsed.count()
+                      << "\nstopped: " << result.stopped << "\npv:";
+            for (auto move : result.pv) std::cout << ' ' << move.uci();
+            std::cout << '\n';
+        } else if (command == "perft") std::cout << "nodes: " << board.perft(depth) << '\n';
         else if (command == "divide") {
             std::uint64_t total = 0;
             for (auto [move, nodes] : board.divide(depth)) {
