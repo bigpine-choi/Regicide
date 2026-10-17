@@ -1,0 +1,362 @@
+{
+  "status": "PASS",
+  "candidate_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+  "baseline_commit": "1441d5ec23733af570b05521620935619c39cefa",
+  "harness_commit": "5a3eb23318a247318df1334e3113cc6408eb9330",
+  "opening_sha256": "e12daff0f80ba3e2a09b2c4e9105f5b897763a777d7a2ede46e40012d2003289",
+  "auditor_source": "tests/audit_see_replication.py",
+  "auditor_source_sha256": "26a65c669199b0048dc7f2e1095d31917ee0047dc0a389c87ccfe521566b2c99",
+  "chess_version": "1.11.2",
+  "validation": {
+    "status": "PASS",
+    "input_json_sha256": "b1df7b3068639a893e15407e702e8bcb0b263a256d83972a73ee24fbbcc2efa1",
+    "checks": 21,
+    "native_groups": 94,
+    "native_assertions": 44813,
+    "completed_utc": "2026-10-17T18:16:02.449183+00:00",
+    "skipped_case_count": 1,
+    "skip_note": "Windows symlink permission test is expected to be skipped when unavailable; no entire suite is skipped."
+  },
+  "attempts": [
+    {
+      "attempt": "attempt-001",
+      "run_state_sha256": "9a3a0060d26448efb1ef05ac7181b516bc615d881f5fde69f02d2fe5f473bf02",
+      "exit_code": 2,
+      "contaminated": true,
+      "temporary_wake_restored": true,
+      "steps": [
+        {
+          "name": "time100",
+          "exit_code": 2,
+          "contaminated": true,
+          "valid_for_comparison": false,
+          "monitor_json_sha256": "7817e8e3f271748c07178657caa584a43e82d36109e5e7430b6b8a18e87f970a",
+          "monitor_jsonl_sha256": "bea8b5eb669e57d623e60581e647c48e4608c8ee186e424ca22296a0ed4d1e59",
+          "failure": {
+            "utc": "2026-10-17T18:23:41.765041+00:00",
+            "reason": "External engine CPU increased by 5156250 native ticks",
+            "kind": "external_cpu",
+            "retry_allowed": true
+          },
+          "adopted": false
+        }
+      ]
+    },
+    {
+      "attempt": "attempt-002",
+      "run_state_sha256": "f5e6878379671d4a04d1cc92bc7267d3f1aedbc00266aaacd252539dbbd91058",
+      "exit_code": 0,
+      "contaminated": false,
+      "temporary_wake_restored": true,
+      "steps": [
+        {
+          "name": "time100",
+          "exit_code": 0,
+          "contaminated": false,
+          "valid_for_comparison": true,
+          "monitor_json_sha256": "e7fe16e454bb05ac7683696ea6523eccf3aa13abde1eac6757e8ec8b304e0fc6",
+          "monitor_jsonl_sha256": "904cc0ac4665a879a2b06b3ba1f7a55dd1d7a687e521c4de183dc25754bd3815",
+          "failure": null,
+          "adopted": true
+        },
+        {
+          "name": "time1000",
+          "exit_code": 0,
+          "contaminated": false,
+          "valid_for_comparison": true,
+          "monitor_json_sha256": "82a1b7ede78249a83bed33c76f72707549d9c9dd302715f0311175b03e06ae55",
+          "monitor_jsonl_sha256": "f1f63ec475835d1497b435cba26e82e644db7aca2607bd9d8eed7dadebe6385e",
+          "failure": null,
+          "adopted": true
+        }
+      ]
+    }
+  ],
+  "adoption_policy": "First complete clean time block at each time control; contaminated blocks wholly excluded and preserved; no result-based replacement.",
+  "matches": [
+    {
+      "status": "PASS",
+      "source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-replication\\attempt-002\\time100.json",
+      "input_json_sha256": "a9a30db9c29f6e353878568a5b6d81507ac7dd975d3dce603ad70d3f5a9fca6b",
+      "input_pgn_sha256": "c6fd81793d05053c4b64b19567e336a0246693f71d6c40aa36bc4d4fdb9b60d6",
+      "monitor_json_sha256": "e7fe16e454bb05ac7683696ea6523eccf3aa13abde1eac6757e8ec8b304e0fc6",
+      "monitor_jsonl_sha256": "904cc0ac4665a879a2b06b3ba1f7a55dd1d7a687e521c4de183dc25754bd3815",
+      "movetime_ms": 100,
+      "engines": {
+        "baseline": {
+          "commit": "1441d5ec23733af570b05521620935619c39cefa",
+          "sha256": "c333ccfa7ec3efbaa7f52df4c007875e64f68d0816a847c1390aa3213d0e427b",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        },
+        "candidate": {
+          "commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+          "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+          "id": {
+            "name": "Regicide 0.5.2",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true
+          }
+        }
+      },
+      "candidate_wins": 7,
+      "candidate_draws": 5,
+      "candidate_losses": 4,
+      "candidate_points": 9.5,
+      "candidate_score": 0.59375,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "actual_plies": 1559,
+      "pv_plies": 6848,
+      "terminations": {
+        "threefold_repetition": 5,
+        "checkmate": 11
+      },
+      "pair_scores": [
+        0.5,
+        0.75,
+        0.75,
+        0.5,
+        0.75,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "paired_opening_bootstrap95": {
+        "seed": 20261019,
+        "resamples": 20000,
+        "pairs": 8,
+        "interval": [
+          0.53125,
+          0.6875
+        ],
+        "scope": "Descriptive fixed-opening paired percentile bootstrap, not universal strength or Elo."
+      },
+      "harness_bootstrap_preserved": {
+        "interval": [
+          0.53125,
+          0.6875
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "monitor": {
+        "status": "PASS",
+        "snapshots": 276,
+        "external_processes": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_snapshot_gap_seconds": 0.5489846999989823,
+        "max_snapshot_duration_seconds": 0.03854559999308549,
+        "observed_idle_seconds": 10.045860199985327,
+        "owned_transport_identities": {
+          "baseline": [
+            28568,
+            134367353431987186
+          ],
+          "candidate": [
+            3432,
+            134367353432245559
+          ]
+        },
+        "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded."
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 693,
+          "nodes_total": 32014167,
+          "mean_nodes": 46196.48917748918,
+          "mean_completed_depth": 4.284271284271284,
+          "mean_seldepth": 19.48917748917749,
+          "mean_wall_ms": 81.6412251082251,
+          "max_wall_ms": 83.33200000000001,
+          "mean_internal_ms": 80.0,
+          "max_internal_ms": 80.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        },
+        "candidate": {
+          "searched_moves": 694,
+          "nodes_total": 29784376,
+          "mean_nodes": 42916.968299711814,
+          "mean_completed_depth": 4.302593659942363,
+          "mean_seldepth": 18.865994236311238,
+          "mean_wall_ms": 81.66194524495678,
+          "max_wall_ms": 84.968,
+          "mean_internal_ms": 80.0,
+          "max_internal_ms": 80.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        }
+      }
+    },
+    {
+      "status": "PASS",
+      "source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-replication\\attempt-002\\time1000.json",
+      "input_json_sha256": "335e5aa4146cfb2ecb5d21a0afda30e905224d3df2ea95f4c3ab922348f64b65",
+      "input_pgn_sha256": "f60cd8844d452ecb84dfc7e349f46a70c73464834d602647482a2a1ba828ffed",
+      "monitor_json_sha256": "82a1b7ede78249a83bed33c76f72707549d9c9dd302715f0311175b03e06ae55",
+      "monitor_jsonl_sha256": "f1f63ec475835d1497b435cba26e82e644db7aca2607bd9d8eed7dadebe6385e",
+      "movetime_ms": 1000,
+      "engines": {
+        "baseline": {
+          "commit": "1441d5ec23733af570b05521620935619c39cefa",
+          "sha256": "c333ccfa7ec3efbaa7f52df4c007875e64f68d0816a847c1390aa3213d0e427b",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        },
+        "candidate": {
+          "commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+          "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+          "id": {
+            "name": "Regicide 0.5.2",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true
+          }
+        }
+      },
+      "candidate_wins": 3,
+      "candidate_draws": 6,
+      "candidate_losses": 7,
+      "candidate_points": 6.0,
+      "candidate_score": 0.375,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "actual_plies": 1697,
+      "pv_plies": 10744,
+      "terminations": {
+        "checkmate": 10,
+        "threefold_repetition": 6
+      },
+      "pair_scores": [
+        0.0,
+        0.5,
+        0.5,
+        1.0,
+        0.25,
+        0.0,
+        0.5,
+        0.25
+      ],
+      "paired_opening_bootstrap95": {
+        "seed": 20261019,
+        "resamples": 20000,
+        "pairs": 8,
+        "interval": [
+          0.1875,
+          0.59375
+        ],
+        "scope": "Descriptive fixed-opening paired percentile bootstrap, not universal strength or Elo."
+      },
+      "harness_bootstrap_preserved": {
+        "interval": [
+          0.1875,
+          0.59375
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "monitor": {
+        "status": "PASS",
+        "snapshots": 2935,
+        "external_processes": 5,
+        "external_cpu_increase_ticks": 0,
+        "max_snapshot_gap_seconds": 0.5446201000013389,
+        "max_snapshot_duration_seconds": 0.03413600000203587,
+        "observed_idle_seconds": 10.052940299996408,
+        "owned_transport_identities": {
+          "baseline": [
+            37212,
+            134367354686840167
+          ],
+          "candidate": [
+            14564,
+            134367354687080335
+          ]
+        },
+        "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded."
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 763,
+          "nodes_total": 422214526,
+          "mean_nodes": 553361.1087811271,
+          "mean_completed_depth": 6.3315858453473135,
+          "mean_seldepth": 23.676277850589777,
+          "mean_wall_ms": 981.726739187418,
+          "max_wall_ms": 1035.529,
+          "mean_internal_ms": 980.0,
+          "max_internal_ms": 980.0,
+          "wall_over_requested_count": 1,
+          "internal_over_allocated_count": 0
+        },
+        "candidate": {
+          "searched_moves": 762,
+          "nodes_total": 395628938,
+          "mean_nodes": 519198.0813648294,
+          "mean_completed_depth": 6.479002624671916,
+          "mean_seldepth": 23.32020997375328,
+          "mean_wall_ms": 981.6890236220472,
+          "max_wall_ms": 1011.1360000000001,
+          "mean_internal_ms": 980.005249343832,
+          "max_internal_ms": 984.0,
+          "wall_over_requested_count": 1,
+          "internal_over_allocated_count": 1
+        }
+      }
+    }
+  ]
+}
