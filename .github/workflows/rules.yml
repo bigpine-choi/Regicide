@@ -27,3 +27,7 @@ jobs:
         run: python tests/game_runner_tests.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/game_runner_tests.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/compare_engines_tests.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/compare_engines_tests.py build/Release/regicide.exe

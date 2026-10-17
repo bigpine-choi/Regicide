@@ -61,10 +61,11 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.2.0\n"
+            std::cout << "Regicide 0.3.0\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
+                         "  optional search flags: --no-position --no-quiescence\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -85,6 +86,7 @@ int main(int argc, char** argv) {
             depth = depth_arg(argv[arg++]);
         }
         regicide::SearchLimits limits;
+        regicide::SearchOptions search_options;
         if (command == "search" && arg < argc && std::string_view(argv[arg]).substr(0, 2) != "--")
             limits.depth = depth_arg(argv[arg++]);
         std::string fen(Board::start_fen);
@@ -92,6 +94,8 @@ int main(int argc, char** argv) {
         while (arg < argc) {
             const std::string option = argv[arg++];
             if (option == "--fen" && arg < argc) fen = argv[arg++];
+            else if (command == "search" && option == "--no-position") search_options.positional = false;
+            else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (option == "--play" && arg < argc) {
                 while (arg < argc && std::string_view(argv[arg]).substr(0, 2) != "--") moves.emplace_back(argv[arg++]);
             } else if (command == "search" && option == "--nodes" && arg < argc) {
@@ -108,15 +112,16 @@ int main(int argc, char** argv) {
         Board board(fen);
         for (const auto& move : moves) board.play(move);
         if (command == "search") {
-            const auto result = regicide::search(board, limits);
+            const auto result = regicide::search(board, limits, nullptr, {}, search_options);
             std::cout << "bestmove: " << (result.best_move ? result.best_move->uci() : "0000")
                       << '\n';
-            if (std::abs(result.score) >= regicide::mate_score - regicide::max_search_depth) {
+            if (std::abs(result.score) >= regicide::mate_score - regicide::max_search_ply) {
                 const int mate = (regicide::mate_score - std::abs(result.score) + 1) / 2;
                 std::cout << "score_mate: " << (result.score < 0 ? -mate : mate);
             } else std::cout << "score_cp: " << result.score;
             std::cout << "\ndepth: " << result.depth
                       << "\nnodes: " << result.nodes << "\ntime_ms: " << result.elapsed.count()
+                      << "\nqnodes: " << result.qnodes << "\nseldepth: " << result.seldepth
                       << "\nstopped: " << result.stopped << "\npv:";
             for (auto move : result.pv) std::cout << ' ' << move.uci();
             std::cout << '\n';
