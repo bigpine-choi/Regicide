@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from urllib.parse import urlsplit
 
 import chess
 import chess.engine
@@ -94,6 +95,58 @@ def load_openings(path, count=None):
     return contents, openings[:count] if count is not None else openings
 
 
+
+def load_external_source(path, binary):
+    """Read caller-declared source identity and verify only the executable hash.
+
+    No URL is fetched and no source-to-binary build relationship is inferred.
+    Arguments are passed directly to the process, never through a shell.
+    """
+    path = path.expanduser().resolve()
+    raw = path.read_bytes()
+    source = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(source, dict):
+        raise ValueError("external baseline source must be a JSON object")
+    for key in ("name", "version", "source_url", "revision"):
+        value = source.get(key)
+        if (not isinstance(value, str) or not value.strip()
+                or any(character in value for character in "\r\n\0")):
+            raise ValueError(f"external source {key} must be a nonempty single-line string")
+    url = urlsplit(source["source_url"])
+    if (url.scheme != "https" or not url.netloc or url.hostname is None
+            or url.username is not None or url.password is not None):
+        raise ValueError("external source_url must be an absolute HTTPS URL without credentials")
+    digest = source.get("binary_sha256")
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        raise ValueError("external binary_sha256 must contain exactly 64 hexadecimal characters")
+    command_args = source.get("args", [])
+    if (not isinstance(command_args, list)
+            or any(not isinstance(value, str) or "\0" in value for value in command_args)):
+        raise ValueError("external args must be a list of strings without NUL characters")
+    with binary.open("rb") as stream:
+        actual = hashlib.file_digest(stream, "sha256").hexdigest()
+    if actual != digest.lower():
+        raise ValueError("external baseline binary SHA256 does not match the source manifest")
+    # Copy only supported identity fields; preserve the exact input-file hash.
+    return {key: source[key] for key in ("name", "version", "source_url", "revision")} | {
+        "binary_sha256": digest.lower(), "args": list(command_args),
+        "manifest_path": str(path), "manifest_sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def parse_options(text, flag):
+    options = json.loads(text)
+    if not isinstance(options, dict):
+        raise ValueError(f"{flag} must be a JSON object")
+    for name, value in options.items():
+        if not name.strip() or any(character in name for character in "\r\n\0"):
+            raise ValueError(f"{flag} option names must be nonempty single-line strings")
+        if isinstance(value, (dict, list)):
+            raise ValueError(f"{flag} option values must be JSON scalars")
+        if isinstance(value, str) and "\0" in value:
+            raise ValueError(f"{flag} option values must not contain NUL characters")
+    return options
+
+
 def arguments(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=Path)
@@ -108,7 +161,11 @@ def arguments(argv=None):
     parser.add_argument("--max-plies", type=positive_int, default=500,
                         help="total ply cap including opening; unfinished '*' at the cap")
     parser.add_argument("--draw-policy", choices=("claim", "automatic"), default="claim")
-    parser.add_argument("--baseline-commit", required=True)
+    baseline_source = parser.add_mutually_exclusive_group(required=True)
+    baseline_source.add_argument("--baseline-commit", help="full commit ID in this Regicide checkout")
+    baseline_source.add_argument("--baseline-source", type=Path,
+                                 help="external-engine identity, SHA256 and argv JSON manifest")
+    parser.add_argument("--baseline-options", default="{}", help="JSON mapping of advertised UCI options")
     parser.add_argument("--candidate-commit", required=True)
     parser.add_argument("--candidate-options", default="{}", help="JSON mapping of advertised UCI options")
     parser.add_argument("--overwrite", action="store_true")
@@ -121,11 +178,15 @@ def arguments(argv=None):
     if args.nodes is None and args.movetime is None and args.depth is None:
         args.nodes = 1000
     try:
-        args.baseline_commit = verified_commit(args.baseline_commit)
+        args.external_baseline_source = None
+        if args.baseline_source is not None:
+            args.baseline_source = args.baseline_source.expanduser().resolve()
+            args.external_baseline_source = load_external_source(args.baseline_source, args.baseline)
+        else:
+            args.baseline_commit = verified_commit(args.baseline_commit)
         args.candidate_commit = verified_commit(args.candidate_commit)
-        args.candidate_options = json.loads(args.candidate_options)
-        if not isinstance(args.candidate_options, dict):
-            raise ValueError("--candidate-options must be a JSON object")
+        args.baseline_options = parse_options(args.baseline_options, "--baseline-options")
+        args.candidate_options = parse_options(args.candidate_options, "--candidate-options")
         args.opening_document, args.selected_openings = load_openings(args.openings, args.opening_count)
         if any(len(opening["moves"]) >= args.max_plies for opening in args.selected_openings):
             raise ValueError("--max-plies must leave at least one searched ply beyond every selected opening")
@@ -134,7 +195,10 @@ def arguments(argv=None):
         for binary in (args.baseline, args.candidate):
             if not binary.is_file():
                 raise ValueError(f"engine executable does not exist: {binary}")
-        if {args.pgn, args.json} & {args.baseline, args.candidate, args.openings}:
+        inputs = {args.baseline, args.candidate, args.openings}
+        if args.baseline_source is not None:
+            inputs.add(args.baseline_source)
+        if {args.pgn, args.json} & inputs:
             raise ValueError("output paths must not replace input files")
         if not args.overwrite:
             for path in (args.pgn, args.json):
@@ -303,13 +367,31 @@ def summarize(records, openings):
                           for role in ("baseline", "candidate")}}
 
 
-def binary_provenance(binary, commit, options):
+def binary_provenance(binary, commit, options, external_source=None):
     with binary.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
-    return {"command": [str(binary), "uci"], "sha256": digest,
-            "provided_source_commit": commit, "source_commit_object_verified": True,
-            "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
-            "requested_options": options, "engine_id": {}, "advertised_options": {}}
+    external = external_source is not None
+    if external and digest != external_source["binary_sha256"]:
+        raise ValueError("external baseline binary changed after manifest validation")
+    item = {
+        "command": [str(binary), *(external_source["args"] if external else ["uci"])],
+        "sha256": digest, "provided_source_commit": None if external else commit,
+        "source_commit_object_verified": not external,
+        "source_provenance_note":
+            "External identity/revision/URL are caller-declared; the executable matches the manifest SHA256. "
+            "No external commit was fetched or verified, and no source-to-binary build relationship is proven."
+            if external else
+            "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+        "requested_options": options, "validated_options": {},
+        "configuration_note":
+            "validated_options records values accepted against advertised types/ranges after configure returned. "
+            "UCI provides no general option readback; advertised defaults and sent settings are not independently "
+            "verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+        "engine_id": {}, "advertised_options": {}}
+    if external:
+        item["external_source"] = dict(external_source)
+        item["binary_sha256_matches_manifest"] = True
+    return item
 
 
 def run_match(args):
@@ -317,7 +399,9 @@ def run_match(args):
     metadata = {"schema_version": 1,
                 "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "harness_checkout": checkout_provenance(),
-                "engines": {"baseline": binary_provenance(args.baseline, args.baseline_commit, {}),
+                "engines": {"baseline": binary_provenance(
+                    args.baseline, args.baseline_commit, args.baseline_options,
+                    args.external_baseline_source),
                             "candidate": binary_provenance(args.candidate, args.candidate_commit,
                                                            args.candidate_options)},
                 "python_version": platform.python_version(), "chess_version": chess.__version__,
@@ -350,13 +434,21 @@ def run_match(args):
                        "max": option.max, "var": option.var}
                 for name, option in engine.options.items()}
             if item["requested_options"]:
-                # Validate check values strictly: Python truthiness must not turn "false" into true.
+                validated = {}
                 for name, value in item["requested_options"].items():
                     if name not in engine.options:
                         raise ValueError(f"{role} does not advertise UCI option {name}")
-                    if engine.options[name].type == "check" and not isinstance(value, bool):
+                    option = engine.options[name]
+                    if option.is_managed():
+                        raise ValueError(f"UCI option {name} is managed by python-chess")
+                    # Avoid truthy strings and silently truncated fractional spin values.
+                    if option.type == "check" and not isinstance(value, bool):
                         raise ValueError(f"UCI check option {name} requires a JSON boolean")
-                engine.configure(item["requested_options"])
+                    if option.type == "spin" and isinstance(value, (bool, float)):
+                        raise ValueError(f"UCI spin option {name} requires an integer")
+                    validated[name] = option.parse(value)
+                engine.configure(validated)
+                item["validated_options"] = validated
         number = 0
         for pair, opening in enumerate(args.selected_openings, 1):
             for candidate_white in (True, False):
@@ -412,11 +504,17 @@ def pgn_text(metadata):
             "Termination": "normal" if record["completed"] else "unterminated",
             "TerminationReason": record["termination"], "DrawPolicy": metadata["draw_policy"],
             "WhiteSHA256": white["sha256"], "BlackSHA256": black["sha256"],
-            "WhiteSourceCommit": white["provided_source_commit"],
-            "BlackSourceCommit": black["provided_source_commit"],
+            "WhiteSourceCommit": white["provided_source_commit"] or "external: see JSON",
+            "BlackSourceCommit": black["provided_source_commit"] or "external: see JSON",
             "RequestedNodes": str(metadata["limits"]["nodes"] or "-"),
             "RequestedDepth": str(metadata["limits"]["depth"] or "-"),
             "RequestedMoveTimeMS": str(metadata["limits"]["movetime_ms"] or "-")})
+        for color, provenance in (("White", white), ("Black", black)):
+            external = provenance.get("external_source")
+            if external is not None:
+                game.headers[color + "SourceURL"] = external["source_url"]
+                game.headers[color + "SourceRevision"] = external["revision"]
+                game.headers[color + "DeclaredVersion"] = external["version"]
         node = game
         for move in record["uci_moves"]:
             node = node.add_variation(chess.Move.from_uci(move))

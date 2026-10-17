@@ -94,6 +94,8 @@ def main():
     parser.add_argument("binary", type=Path)
     args = parser.parse_args()
     binary = args.binary.resolve()
+    subprocess.run([sys.executable, str(ROOT / "tests/external_baseline_tests.py"), str(binary)],
+                   check=True, timeout=90)
     passed = 0
     _, declared = RUNNER.load_openings(ROOT / "tests/data/comparison_openings.json")
     assert len(declared) == 8 and declared[0]["moves"] == [], declared
