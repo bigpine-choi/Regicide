@@ -75,3 +75,4 @@ Visual Studio CMake 생성기를 사용한 Windows 빌드는 실행 파일이 `b
 - [규칙 코어 구조·실행·검증 방법](docs/RULES_CORE.md)
 - [첫 대국 엔진의 원리·사용법·제한](docs/ENGINE.md)
 - [2026-10-17 검증 기록](docs/experiments/2026-10-17-rules-core.md)
+- [첫 엔진 검증과 실제 대국 기보](docs/experiments/2026-10-17-first-engine.md)
