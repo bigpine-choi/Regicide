@@ -30,6 +30,8 @@ Windows에서는 **`Play-Regicide-Godot.cmd`를 더블클릭**하면 Godot 대�
 
 Windows 바탕화면 바로가기는 `scripts/install_desktop_shortcut.ps1`로 만들 수 있습니다. 자체 Regicide 왕 아이콘을 사용하며 같은 최신 Godot 대국을 엽니다.
 
+사용자 대국은 **문서 폴더의 `Regicide/games/`**에 매 수 자동 보관합니다. **내 대국 기보**에서 완료·미완료·핸디캡 기록을 모아 보고 한 수씩 다시 재생할 수 있습니다. 기존 기보도 원본을 보존하면서 가져옵니다. [기보 보관·재생 검증](docs/experiments/2026-10-18-game-library.md)에 조건과 결과를 기록합니다.
+
 ## 바로 실행하기
 
 Windows에서 Visual Studio의 **C++를 사용한 데스크톱 개발** 구성 요소가 필요합니다. 저장소 폴더에서 실행합니다.

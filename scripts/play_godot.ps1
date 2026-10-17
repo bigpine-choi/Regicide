@@ -10,7 +10,7 @@ $backendScript = Join-Path $PSScriptRoot 'play_human.py'
 $engineExecutable = Join-Path $repoRoot 'build/regicide.exe'
 $projectDirectory = Join-Path $repoRoot 'godot'
 $logDirectory = Join-Path $repoRoot 'build/godot-play'
-$gameDirectory = Join-Path $repoRoot 'build/human-games'
+$gameDirectory = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Regicide/Games'
 $serverProcess = $null
 $godotProcess = $null
 $launchComplete = $false
@@ -135,6 +135,7 @@ try {
         '--binary', (Quote-ProcessPath $engineExecutable),
         '--port', '0',
         '--save-dir', (Quote-ProcessPath $gameDirectory),
+        '--import-games', (Quote-ProcessPath (Join-Path $repoRoot 'build/human-games')),
         '--startup-file', (Quote-ProcessPath $startupFile),
         '--no-browser', '--desktop-client'
     )

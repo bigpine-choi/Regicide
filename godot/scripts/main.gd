@@ -20,6 +20,15 @@ var _pending_pgn: String = ""
 var _rendered_move_count: int = -1
 var _notice_message: String = ""
 var _handicap_choices_key: String = ""
+var review_mode: bool = false
+var review_frames: Array = []
+var review_moves: Array = []
+var review_ply: int = 0
+var review_summary: Dictionary = {}
+var review_pgn: String = ""
+var _live_selected_square: String = ""
+var _live_pending_promotions: Array[String] = []
+var _library_games: Array = []
 
 var board: ChessBoard
 var flip_button: Button
@@ -34,6 +43,9 @@ var move_history: RichTextLabel
 var move_count: Label
 var color_option: OptionButton
 var time_option: OptionButton
+var live_settings: GridContainer
+var live_actions: HBoxContainer
+var handicap_section: VBoxContainer
 var new_button: Button
 var undo_button: Button
 var handicap_option: OptionButton
@@ -43,6 +55,18 @@ var handicap_help: Label
 var resign_button: Button
 var save_button: Button
 var refresh_button: Button
+var library_button: Button
+var library_dialog: AcceptDialog
+var library_list: ItemList
+var library_open_button: Button
+var library_detail: Label
+var review_controls: VBoxContainer
+var review_position_label: Label
+var review_first_button: Button
+var review_previous_button: Button
+var review_next_button: Button
+var review_last_button: Button
+var review_return_button: Button
 var promotion_panel: PanelContainer
 var promotion_buttons: Dictionary = {}
 var save_dialog: FileDialog
@@ -201,8 +225,14 @@ func _build_ui() -> void:
 	sidebar.add_child(error_label)
 	refresh_button = _button("연결 다시 확인", _connect_backend)
 	sidebar.add_child(refresh_button)
+	library_button = _button("내 대국 기보", _on_library_pressed)
+	library_button.name = "GameLibrary"
+	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
+	sidebar.add_child(library_button)
+	_build_review_controls(sidebar)
 	sidebar.add_child(HSeparator.new())
 	var settings := GridContainer.new()
+	live_settings = settings
 	settings.columns = 2
 	settings.add_theme_constant_override("h_separation", 12)
 	settings.add_theme_constant_override("v_separation", 10)
@@ -222,6 +252,7 @@ func _build_ui() -> void:
 	new_button = _button("새 대국 시작", _on_new_game_pressed)
 	sidebar.add_child(new_button)
 	var actions := HBoxContainer.new()
+	live_actions = actions
 	actions.add_theme_constant_override("separation", 10)
 	sidebar.add_child(actions)
 	undo_button = _button("무르기", _on_undo_pressed)
@@ -265,13 +296,70 @@ func _build_ui() -> void:
 	save_dialog.current_dir = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
 	save_dialog.file_selected.connect(_save_pgn_file)
 	add_child(save_dialog)
+	_build_library_dialog()
+
+
+func _build_review_controls(parent: VBoxContainer) -> void:
+	review_controls = VBoxContainer.new()
+	review_controls.name = "RecordReplayControls"
+	review_controls.add_theme_constant_override("separation", 5)
+	parent.add_child(review_controls)
+	review_position_label = _label("처음 위치", 14, "9bd7ca")
+	review_position_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	review_controls.add_child(review_position_label)
+	var navigation := HBoxContainer.new()
+	navigation.add_theme_constant_override("separation", 5)
+	review_controls.add_child(navigation)
+	review_first_button = _button("처음", _set_review_ply.bind(0))
+	review_previous_button = _button("이전", _step_review.bind(-1))
+	review_next_button = _button("다음", _step_review.bind(1))
+	review_last_button = _button("끝", _last_review_position)
+	for button in [review_first_button, review_previous_button, review_next_button, review_last_button]:
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		navigation.add_child(button)
+	review_return_button = _button("현재 대국으로 돌아가기", _exit_review)
+	review_return_button.name = "ReturnToLiveGame"
+	review_controls.add_child(review_return_button)
+
+
+func _build_library_dialog() -> void:
+	library_dialog = AcceptDialog.new()
+	library_dialog.name = "GameLibraryDialog"
+	library_dialog.title = "내 대국 기보"
+	library_dialog.min_size = Vector2i(620, 360)
+	library_dialog.size = Vector2i(780, 440)
+	library_dialog.unresizable = false
+	library_dialog.dialog_hide_on_ok = false
+	library_dialog.add_cancel_button("닫기")
+	library_dialog.confirmed.connect(_open_selected_record)
+	add_child(library_dialog)
+	library_open_button = library_dialog.get_ok_button()
+	library_open_button.text = "선택한 대국 보기"
+	var contents := VBoxContainer.new()
+	contents.add_theme_constant_override("separation", 10)
+	library_dialog.add_child(contents)
+	library_detail = _label("보관된 대국을 불러오고 있습니다.", 14, "a3b6c8")
+	library_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contents.add_child(library_detail)
+	library_list = ItemList.new()
+	library_list.name = "ArchivedGames"
+	library_list.custom_minimum_size = Vector2(580, 260)
+	library_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	library_list.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	library_list.item_selected.connect(_on_library_selection_changed)
+	library_list.item_activated.connect(_on_library_item_activated)
+	contents.add_child(library_list)
+	contents.add_child(_label("대국을 다시 봐도 현재 진행 중인 대국은 바뀌지 않습니다.", 13, "9bd7ca"))
 
 
 func _build_handicap(parent: VBoxContainer) -> void:
-	parent.add_child(HSeparator.new())
+	handicap_section = VBoxContainer.new()
+	handicap_section.add_theme_constant_override("separation", 8)
+	parent.add_child(handicap_section)
+	handicap_section.add_child(HSeparator.new())
 	var section := VBoxContainer.new()
 	section.add_theme_constant_override("separation", 5)
-	parent.add_child(section)
+	handicap_section.add_child(section)
 	handicap_option = OptionButton.new()
 	handicap_option.name = "HandicapMove"
 	handicap_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -340,6 +428,164 @@ func _load_backend_arguments() -> void:
 	_render()
 
 
+func _on_library_pressed() -> void:
+	if request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+		return
+	request_in_flight = true
+	error_message = ""
+	_library_games.clear()
+	library_list.clear()
+	library_open_button.disabled = true
+	library_detail.text = "보관된 대국을 불러오고 있습니다."
+	library_dialog.popup_centered_ratio(0.72)
+	_render()
+	var response: Dictionary = await _send_request("/api/games")
+	request_in_flight = false
+	if response.get("ok", false):
+		var data: Dictionary = response.data
+		_library_games = data.get("games", [])
+		for game in _library_games:
+			var description := _record_description(game)
+			library_list.add_item(description)
+			library_list.set_item_tooltip(library_list.item_count - 1, description)
+		var total: int = int(data.get("total", _library_games.size()))
+		library_detail.text = "자동 보관된 대국 %d개 · 최근 대국부터 표시합니다." % total if total > 0 else "아직 보관된 대국이 없습니다. 첫 수부터 자동으로 차곡차곡 보관합니다."
+		if int(data.get("invalid_count", 0)) > 0:
+			library_detail.text += "\n읽을 수 없는 기보 %d개는 원본을 보존하고 목록에서 제외했습니다." % int(data.invalid_count)
+		library_detail.tooltip_text = str(data.get("storage_path", ""))
+		if not _library_games.is_empty():
+			library_list.select(0)
+			library_open_button.disabled = false
+	else:
+		library_detail.text = str(response.get("error", "기보 목록을 불러오지 못했습니다."))
+	_render()
+
+
+func _record_description(game: Dictionary) -> String:
+	var date := _record_local_date(str(game.get("started_at", game.get("updated_at", ""))))
+	var color_name := "백" if game.get("human_color", "white") == "white" else "흑"
+	var result_text: String = str(game.get("result", "*"))
+	match result_text:
+		"1-0": result_text = "백 승"
+		"0-1": result_text = "흑 승"
+		"1/2-1/2": result_text = "무승부"
+		_: result_text = "진행 중" if game.get("record_status", "") == "in_progress" else "미완료"
+	if game.get("record_status", "") == "error":
+		result_text = "오류로 중단"
+	var handicap: int = int(game.get("handicap_moves", 0))
+	return "%s  ·  내 %s  ·  %s  ·  %d수%s" % [date, color_name, result_text,
+		int(game.get("ply_count", 0)), "  ·  핸디캡 %d회" % handicap if handicap > 0 else ""]
+
+
+func _record_local_date(value: String) -> String:
+	# Archive timestamps are UTC. Show them in the computer's local time.
+	if value.length() < 19 or value[10] != "T":
+		return value.replace("T", " ").left(19)
+	var utc_seconds: int = Time.get_unix_time_from_datetime_string(value.left(19))
+	var bias_minutes: int = int(Time.get_time_zone_from_system().get("bias", 0))
+	return Time.get_datetime_string_from_unix_time(utc_seconds + bias_minutes * 60).replace("T", " ")
+
+
+func _on_library_selection_changed(_index: int) -> void:
+	library_open_button.disabled = request_in_flight or library_list.get_selected_items().is_empty()
+
+
+func _on_library_item_activated(index: int) -> void:
+	library_list.select(index)
+	_open_selected_record()
+
+
+func _open_selected_record() -> void:
+	var selected := library_list.get_selected_items()
+	if request_in_flight or closing or selected.is_empty():
+		return
+	var index: int = selected[0]
+	if index < 0 or index >= _library_games.size():
+		return
+	var game_id: String = str(_library_games[index].get("game_id", ""))
+	if game_id.is_empty():
+		return
+	request_in_flight = true
+	library_open_button.disabled = true
+	library_detail.text = "선택한 기보를 불러오고 있습니다."
+	_render()
+	var response: Dictionary = await _send_request("/api/games/" + game_id.uri_encode())
+	request_in_flight = false
+	# Closing the chooser while it loads cancels presentation only; no game
+	# mutation or replay should appear after the user has dismissed it.
+	if closing or not library_dialog.visible:
+		_render()
+		return
+	if response.get("ok", false):
+		var detail: Dictionary = response.data
+		var frames: Variant = detail.get("frames", [])
+		var moves: Variant = detail.get("moves", [])
+		if frames is Array and moves is Array and not frames.is_empty() and frames.size() == moves.size() + 1:
+			if not review_mode:
+				_live_selected_square = board_model.selected_square
+				_live_pending_promotions = board_model.pending_promotions.duplicate()
+			review_frames = frames.duplicate(true)
+			review_moves = moves.duplicate(true)
+			review_summary = detail.get("summary", {}).duplicate(true)
+			review_pgn = str(detail.get("pgn", ""))
+			review_mode = true
+			review_ply = 0
+			board_model.selected_square = ""
+			board_model.pending_promotions.clear()
+			_notice_message = ""
+			error_message = ""
+			library_dialog.hide()
+		else:
+			library_detail.text = "기보의 수순을 읽지 못했습니다. 다른 대국을 선택해 주세요."
+	else:
+		library_detail.text = str(response.get("error", "기보를 불러오지 못했습니다."))
+	library_open_button.disabled = library_list.get_selected_items().is_empty()
+	_render()
+
+
+func _display_state() -> Dictionary:
+	if not review_mode or review_frames.is_empty():
+		return state
+	var shown: Dictionary = review_frames[review_ply].duplicate(true)
+	shown["moves"] = review_moves.slice(0, review_ply)
+	shown["human_color"] = review_summary.get("human_color", "white")
+	if not shown.has("engine"):
+		shown["engine"] = {"name": str(review_summary.get("engine_name", "Regicide")),
+			"movetime_ms": int(review_summary.get("movetime_ms", 1000))}
+	return shown
+
+
+func _set_review_ply(ply: int) -> void:
+	if not review_mode or closing or review_frames.is_empty():
+		return
+	review_ply = clampi(ply, 0, review_frames.size() - 1)
+	_render()
+
+
+func _step_review(change: int) -> void:
+	_set_review_ply(review_ply + change)
+
+
+func _last_review_position() -> void:
+	_set_review_ply(review_frames.size() - 1)
+
+
+func _exit_review() -> void:
+	if not review_mode or request_in_flight or closing:
+		return
+	review_mode = false
+	review_frames.clear()
+	review_moves.clear()
+	review_summary.clear()
+	review_pgn = ""
+	review_ply = 0
+	board_model.selected_square = _live_selected_square
+	board_model.pending_promotions = _live_pending_promotions.duplicate()
+	board_model.apply_state(state)
+	_notice_message = "현재 대국으로 돌아왔습니다."
+	_render()
+
+
 func _send_request(path: String, payload: Variant = null, client: HTTPRequest = null) -> Dictionary:
 	var requester: HTTPRequest = http if client == null else client
 	var headers := PackedStringArray(["X-Regicide-Token: " + backend_token])
@@ -356,7 +602,7 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest = 
 	if response[0] != HTTPRequest.RESULT_SUCCESS:
 		return {"ok": false, "error": "대국 관리기와 연결이 끊겼습니다. 연결을 다시 확인해 주세요."}
 	var text: String = response[3].get_string_from_utf8()
-	if path == "/api/pgn" and int(response[1]) == 200:
+	if (path == "/api/pgn" or path.ends_with("/pgn")) and int(response[1]) == 200:
 		return {"ok": true, "pgn": text}
 	var parsed: Variant = JSON.parse_string(text)
 	if not parsed is Dictionary:
@@ -368,7 +614,8 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest = 
 
 func accept_state(next: Dictionary) -> void:
 	state = next.duplicate(true)
-	board_model.apply_state(state)
+	if not review_mode:
+		board_model.apply_state(state)
 	_render()
 	state_changed.emit(int(state.get("revision", 0)))
 
@@ -384,7 +631,7 @@ func _handle_response(response: Dictionary) -> bool:
 
 
 func _connect_backend() -> void:
-	if request_in_flight or backend_url.is_empty() or closing:
+	if request_in_flight or backend_url.is_empty() or closing or review_mode:
 		return
 	request_in_flight = true
 	error_message = ""
@@ -396,7 +643,7 @@ func _connect_backend() -> void:
 
 
 func _mutate(path: String, payload: Dictionary = {}) -> void:
-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty():
+	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
 		return
 	request_in_flight = true
 	error_message = ""
@@ -413,7 +660,7 @@ func _mutate(path: String, payload: Dictionary = {}) -> void:
 
 
 func _play_engine_if_needed() -> void:
-	if closing or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
+	if closing or review_mode or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
 		return
 	engine_thinking = true
 	_render()
@@ -464,6 +711,8 @@ func _on_square_pressed(square: String) -> void:
 
 
 func _on_promotion_pressed(kind: String) -> void:
+	if review_mode:
+		return
 	for move in board_model.pending_promotions:
 		if move.ends_with(kind):
 			_submit_selected_move(move)
@@ -471,7 +720,7 @@ func _on_promotion_pressed(kind: String) -> void:
 
 
 func _can_select_move() -> bool:
-	return state.get("human_to_move", false) or state.get("handicap_mode", false)
+	return not review_mode and (state.get("human_to_move", false) or state.get("handicap_mode", false))
 
 
 func _submit_selected_move(move: String) -> void:
@@ -524,6 +773,11 @@ func _on_resign_pressed() -> void:
 func _on_save_pressed() -> void:
 	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
+	if review_mode:
+		_pending_pgn = review_pgn
+		save_dialog.current_file = "Regicide-" + str(review_summary.get("game_id", "record")) + ".pgn"
+		save_dialog.popup_centered_ratio(0.75)
+		return
 	request_in_flight = true
 	_render()
 	var response: Dictionary = await _send_request("/api/pgn")
@@ -553,37 +807,55 @@ func _save_pgn_file(path: String) -> void:
 func _render() -> void:
 	if board == null:
 		return
-	board.state = state
+	var shown: Dictionary = _display_state()
+	board.state = shown
 	board.queue_redraw()
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = false
-	var human_color: String = str(state.get("human_color", "white"))
+	var human_color: String = str(shown.get("human_color", "white"))
 	var bottom_color: String = "white" if board_model.view_from_white else "black"
 	var upper_color: String = "black" if board_model.view_from_white else "white"
 	top_player.text = _player_text(upper_color, human_color)
 	bottom_player.text = _player_text(bottom_color, human_color)
-	var engine: Dictionary = state.get("engine", {})
+	var engine: Dictionary = shown.get("engine", {})
 	engine_label.text = str(engine.get("name", "엔진 연결 준비 중"))
 	if not engine.is_empty():
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
-	var enabled: bool = ready and not request_in_flight
+	var enabled: bool = ready and not request_in_flight and not review_mode
 	var replacing: bool = state.get("handicap_mode", false)
+	live_settings.visible = not review_mode
+	live_actions.visible = not review_mode
+	handicap_section.visible = not review_mode
+	new_button.visible = not review_mode
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
 	time_option.disabled = not enabled or replacing
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
-	save_button.disabled = not enabled or replacing
-	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing
-	refresh_button.visible = not error_message.is_empty() or state.is_empty()
+	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and review_pgn.is_empty())
+	save_button.text = "이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)"
+	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing or review_mode
+	refresh_button.visible = not review_mode and (not error_message.is_empty() or state.is_empty())
+	library_button.disabled = request_in_flight or backend_url.is_empty() or closing or replacing
+	review_controls.visible = review_mode
+	if review_mode:
+		review_position_label.text = "%d / %d수 · %s" % [review_ply, review_moves.size(), "시작 배치" if review_ply == 0 else str(review_moves[review_ply - 1].get("san", ""))]
+		review_first_button.disabled = review_ply == 0
+		review_previous_button.disabled = review_ply == 0
+		review_next_button.disabled = review_ply >= review_frames.size() - 1
+		review_last_button.disabled = review_ply >= review_frames.size() - 1
+		review_return_button.disabled = request_in_flight or closing
 	_render_handicap(enabled)
 	error_label.text = error_message if not error_message.is_empty() else str(state.get("error", "") if state.get("error") != null else "")
 	error_label.visible = not error_label.text.is_empty()
 	if closing:
 		status_label.text = "대국을 저장하고 종료합니다"
 		status_detail.text = "진행한 수는 자동 저장돼 있습니다."
+	elif review_mode:
+		status_label.text = "기보 다시 보기 · 읽기 전용"
+		status_detail.text = _record_description(review_summary) + "\n처음·이전·다음·끝으로 수순을 살펴보세요."
 	elif engine_thinking:
 		status_label.text = "Regicide가 생각하고 있어요"
 		status_detail.text = "기다리는 동안에도 시점을 자유롭게 뒤집어 볼 수 있습니다."
@@ -605,7 +877,7 @@ func _render() -> void:
 			status_detail.text = "당신은 %s · 한 수에 %s초 생각합니다." % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
-	promotion_panel.visible = not board_model.pending_promotions.is_empty()
+	promotion_panel.visible = not review_mode and not board_model.pending_promotions.is_empty()
 	for kind in promotion_buttons:
 		var available := false
 		for move in board_model.pending_promotions:
@@ -618,7 +890,8 @@ func _render() -> void:
 func _player_text(color_name: String, human_color: String) -> String:
 	var text := "백" if color_name == "white" else "흑"
 	text += "  ·  당신" if color_name == human_color else "  ·  Regicide"
-	if state.get("result", "*") == "*" and state.get("turn", "") == color_name:
+	var shown: Dictionary = _display_state()
+	if shown.get("result", "*") == "*" and shown.get("turn", "") == color_name:
 		text += "   ● 차례"
 	return text
 
@@ -659,11 +932,11 @@ func _render_handicap(enabled: bool) -> void:
 
 
 func _render_history() -> void:
-	var moves: Array = state.get("moves", [])
+	var moves: Array = _display_state().get("moves", [])
 	move_count.text = "%d수" % moves.size()
 	var contents := ""
 	if moves.is_empty():
-		contents = "[color=#8197aa]첫 수를 기다리고 있습니다.[/color]"
+		contents = "[color=#8197aa]시작 배치입니다. 다음 수를 눌러 살펴보세요.[/color]" if review_mode else "[color=#8197aa]첫 수를 기다리고 있습니다.[/color]"
 	else:
 		contents = "[table=3]"
 		for index in range(0, moves.size(), 2):
