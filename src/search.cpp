@@ -72,10 +72,8 @@ struct Interrupted {};
 class Searcher {
 public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
-             SearchOptions options)
-        : limits_(limits), stop_(stop), start_(start), options_(options) {
-        if (options.transposition) table_.emplace(options.hash_mb);
-    }
+             SearchOptions options, TranspositionTable* table)
+        : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {}
 
     std::uint64_t nodes = 0;
     std::uint64_t qnodes = 0;
@@ -169,7 +167,7 @@ private:
     const std::atomic_bool* stop_;
     Clock::time_point start_;
     SearchOptions options_;
-    std::optional<TranspositionTable> table_;
+    TranspositionTable* table_;
 
     int static_evaluation(const Board& board) const {
         const int score = options_.positional ? evaluate_position(board) : evaluate_material(board);
@@ -269,7 +267,7 @@ int evaluate_material(const Board& board) {
 
 SearchResult search(const Board& input, const SearchLimits& limits,
                     const std::atomic_bool* stop, SearchCallback on_iteration,
-                    SearchOptions options) {
+                    SearchOptions options, SearchContext* context) {
     if (limits.depth < 1 || limits.depth > max_search_depth)
         throw std::invalid_argument("search depth must be 1..64");
     if (limits.movetime.count() < 0)
@@ -293,7 +291,18 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.pv.push_back(moves.front());
     result.score = options.positional ? evaluate_position(board) : evaluate_material(board);
     if (claimable(board)) result.score = std::max(0, result.score);
-    Searcher searcher(limits, stop, start, options);
+    SearchContext one_shot_context;
+    auto& active_context = context ? *context : one_shot_context;
+    TranspositionTable* table = nullptr;
+    if (options.transposition) {
+        const auto work = active_context.table_.prepare(options.hash_mb);
+        result.tt_allocations = work.allocations;
+        result.tt_reuses = work.reuses;
+        result.tt_clears = work.clears;
+        result.tt_bytes = work.bytes;
+        table = &active_context.table_;
+    }
+    Searcher searcher(limits, stop, start, options, table);
     for (int depth = 1; depth <= limits.depth; ++depth) {
         std::vector<Move> pv;
         int score;

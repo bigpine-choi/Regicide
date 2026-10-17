@@ -1,4 +1,4 @@
-"""Paired, cold-table, fixed-depth UCI search-cost benchmark (not a strength test).
+"""Paired, fixed-depth UCI search-cost benchmark (not a strength test).
 
 Every sample starts a new UCI game, preserving the declared opening's move
 history while clearing a conforming engine's previous game search state. Engine
@@ -6,6 +6,9 @@ process startup is excluded; wall time includes the complete UCI play transactio
 (including ucinewgame/isready). Engine-reported time is retained separately.
 Each position's engine order alternates across repetitions; a seeded shuffle
 changes position order. No score or move is inferred from wall-clock speed.
+Engine processes stay alive: logical table clearing does not require an engine
+to release its allocated buffer. Optional warmups are recorded separately and
+excluded from measured-pair summaries; zero warmups includes first allocation.
 """
 
 import argparse
@@ -34,6 +37,13 @@ def positive_int(text):
     value = int(text)
     if value <= 0:
         raise argparse.ArgumentTypeError("must be a positive integer")
+    return value
+
+
+def nonnegative_int(text):
+    value = int(text)
+    if value < 0:
+        raise argparse.ArgumentTypeError("must be a nonnegative integer")
     return value
 
 
@@ -103,6 +113,8 @@ def arguments(argv=None):
     parser.add_argument("--positions", type=Path, default=ROOT / "tests/data/profile_positions.json")
     parser.add_argument("--depth", type=positive_int, default=3)
     parser.add_argument("--repeats", type=positive_int, default=5)
+    parser.add_argument("--warmup", type=nonnegative_int, default=0,
+                        help="searches per engine on declared position zero, recorded outside paired summaries")
     parser.add_argument("--seed", type=int, default=20261017)
     parser.add_argument("--baseline-commit", required=True)
     parser.add_argument("--candidate-commit", required=True)
@@ -110,6 +122,8 @@ def arguments(argv=None):
     parser.add_argument("--candidate-options", default="{}")
     parser.add_argument("--allow-score-differences", action="store_true",
                         help="retain and visibly report differing exact scores, but exit successfully")
+    parser.add_argument("--require-same-search", action="store_true",
+                        help="also require identical move, depth, nodes, seldepth, PV and TT work counters")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
     try:
@@ -140,18 +154,37 @@ def score_record(info, color):
             "upperbound": bool(info.get("upperbound", False))}
 
 
-def transposition_counters(info):
-    """Parse Regicide's optional final UCI telemetry; absent is not zero."""
+def transposition_telemetry(info):
+    """Accept both original four-counter and appended memory UCI telemetry."""
     text = info.get("string")
     if not isinstance(text, str):
         return None
-    match = re.fullmatch(r"tt probes (\d+) hits (\d+) cutoffs (\d+) stores (\d+)", text.strip())
+    return re.fullmatch(
+        r"tt probes (\d+) hits (\d+) cutoffs (\d+) stores (\d+)"
+        r"(?: allocations (\d+) reuses (\d+) clears (\d+) bytes (\d+))?", text.strip())
+
+
+def transposition_counters(info):
+    """Preserve the original four-field record; absent is not zero."""
+    match = transposition_telemetry(info)
     if match is None:
         return None
-    counters = dict(zip(("probes", "hits", "cutoffs", "stores"), map(int, match.groups())))
+    counters = dict(zip(("probes", "hits", "cutoffs", "stores"), map(int, match.groups()[:4])))
     if not counters["cutoffs"] <= counters["hits"] <= counters["probes"]:
-        raise RuntimeError(f"inconsistent transposition counters: {text}")
+        raise RuntimeError(f"inconsistent transposition counters: {info['string']}")
     return counters
+
+
+def transposition_memory(info):
+    match = transposition_telemetry(info)
+    if match is None or match.group(5) is None:
+        return None
+    return dict(zip(("allocations", "reuses", "clears", "bytes"), map(int, match.groups()[4:])))
+
+
+def search_differences(baseline, candidate):
+    fields = ("score", "move", "depth", "nodes", "seldepth", "pv", "tt_counters")
+    return [field for field in fields if baseline.get(field) != candidate.get(field)]
 
 
 def sample(engine, position, depth):
@@ -173,7 +206,7 @@ def sample(engine, position, depth):
               "nodes": info["nodes"], "engine_time_seconds": info.get("time"),
               "wall_time_seconds": wall, "score": score_record(info, board.turn),
               "pv": [move.uci() for move in info.get("pv", [])],
-              "tt_counters": transposition_counters(info)}
+              "tt_counters": transposition_counters(info), "tt_memory": transposition_memory(info)}
     if result["score"]["lowerbound"] or result["score"]["upperbound"]:
         raise RuntimeError("benchmark requires an exact root score, not a bound")
     for text in result["pv"]:
@@ -213,12 +246,13 @@ def summarize(records, positions):
                      and record["candidate"]["engine_time_seconds"] > 0]
     result = {"completed_pairs": len(complete),
               "score_mismatches": sum(not record["scores_equal"] for record in complete),
+              "search_graph_mismatches": sum(record.get("search_equal") is False for record in complete),
               "median_paired_wall_speedup_baseline_over_candidate": median_or_none(wall_ratios),
               "median_paired_engine_speedup_baseline_over_candidate": median_or_none(engine_ratios),
               "engine_time_ratio_pairs_excluding_zero_or_missing_time": len(engine_ratios),
               "median_paired_node_ratio_candidate_over_baseline": median_or_none([
                   record["candidate"]["nodes"] / record["baseline"]["nodes"] for record in complete]),
-              "transposition_counters": {}, "per_position": []}
+              "transposition_counters": {}, "transposition_memory": {}, "per_position": []}
     for role in ROLES:
         reported = [record[role]["tt_counters"] for record in complete
                     if record[role].get("tt_counters") is not None]
@@ -226,6 +260,13 @@ def summarize(records, positions):
             "samples_reporting": len(reported),
             **{name: sum(counters[name] for counters in reported) if reported else None
                for name in ("probes", "hits", "cutoffs", "stores")}}
+        memory = [record[role]["tt_memory"] for record in complete
+                  if record[role].get("tt_memory") is not None]
+        result["transposition_memory"][role] = {
+            "samples_reporting": len(memory),
+            **{name: sum(item[name] for item in memory) if memory else None
+               for name in ("allocations", "reuses", "clears")},
+            "bytes_max": max(item["bytes"] for item in memory) if memory else None}
     for position in positions:
         pairs = [record for record in complete if record["position"] == position["name"]]
         row = {"name": position["name"], "pairs": len(pairs)}
@@ -257,15 +298,28 @@ def run(args, output, engine_factory=chess.engine.SimpleEngine.popen_uci):
     document = {"schema_version": 1, "started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "purpose": "fixed-depth search cost; not an Elo or playing-strength measurement",
                 "depth": args.depth, "repeats": args.repeats, "seed": args.seed,
-                "table_policy": "fresh ucinewgame per sample; cold search table; no persistent-game reuse",
+                "warmup": args.warmup,
+                "table_policy": "fresh ucinewgame per sample; logical table cleared; live processes may retain allocated buffer",
+                "allocation_policy": ("no warmup; first measured sample includes any first allocation; later samples may reuse memory"
+                                      if args.warmup == 0 else
+                                      "recorded warmups excluded from paired summaries; measured samples follow warmup in same process"),
+                "warmup_policy": "each role searches declared position zero N times after configuration, with a fresh game per search",
                 "timing_policy": "wall includes UCI play transaction and game reset; process startup excluded",
                 "order_policy": "seeded shuffle of positions per repetition; engine order alternates for each position",
                 "allow_score_differences": args.allow_score_differences,
+                "require_same_search": args.require_same_search,
                 "environment": environment(), "engines": {},
                 "positions_file": {"path": str(args.positions), "sha256": digest(args.positions),
                                    "document": args.position_document},
-                "records": [], "error": None, "exit_code": None}
+                "warmup_records": [], "records": [], "error": None, "exit_code": None}
     engines = {}
+    process_searches = {role: 0 for role in ROLES}
+
+    def search_sample(role, position):
+        result = sample(engines[role], position, args.depth)
+        process_searches[role] += 1
+        result["process_search_index"] = process_searches[role]
+        return result
 
     def save():
         document["summary"] = summarize(document["records"], args.selected_positions)
@@ -293,23 +347,36 @@ def run(args, output, engine_factory=chess.engine.SimpleEngine.popen_uci):
                                               "min": item.min, "max": item.max, "var": item.var}
                                               for name, item in engine.options.items()}}
         save()
+        for role in ROLES:
+            for number in range(1, args.warmup + 1):
+                position = args.selected_positions[0]
+                document["warmup_records"].append({
+                    "role": role, "warmup_index": number, "position_index": 0,
+                    "position": position["name"], "result": search_sample(role, position)})
+                save()
         for repetition, index, order in schedule(args.selected_positions, args.repeats, args.seed):
             position = args.selected_positions[index]
             record = {"repetition": repetition, "position_index": index, "position": position["name"],
                       "order": order, "scores_equal": None}
             document["records"].append(record)
             for role in order:
-                record[role] = sample(engines[role], position, args.depth)
+                record[role] = search_sample(role, position)
             record["scores_equal"] = record["baseline"]["score"] == record["candidate"]["score"]
+            record["search_differences"] = search_differences(record["baseline"], record["candidate"])
+            record["search_equal"] = not record["search_differences"]
             if not record["scores_equal"]:
                 print(f"SCORE MISMATCH repetition={repetition} position={position['name']}: "
                       f"baseline={record['baseline']['score']} candidate={record['candidate']['score']}",
                       file=sys.stderr, flush=True)
+            if args.require_same_search and not record["search_equal"]:
+                print(f"SEARCH MISMATCH repetition={repetition} position={position['name']}: "
+                      f"fields={record['search_differences']}", file=sys.stderr, flush=True)
             save()
             print(f"pair {len(document['records'])}/{len(args.selected_positions) * args.repeats}: "
                   f"{position['name']} scores_equal={record['scores_equal']}", flush=True)
         mismatches = document["summary"]["score_mismatches"]
-        document["exit_code"] = 1 if mismatches and not args.allow_score_differences else 0
+        graph_failure = args.require_same_search and document["summary"]["search_graph_mismatches"] > 0
+        document["exit_code"] = 1 if graph_failure or (mismatches and not args.allow_score_differences) else 0
     except BaseException as exc:
         document["error"] = f"{type(exc).__name__}: {exc}"
         document["exit_code"] = 130 if isinstance(exc, KeyboardInterrupt) else 2

@@ -1,8 +1,10 @@
-# 자체 대국 엔진 v0.2 → v0.4
+# 자체 대국 엔진 v0.2 → v0.4.1
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
 v0.4는 평가를 유지하고 [프로파일링 기반 최적화·전이표](PERFORMANCE.md)를 추가한다. 이전 버전과 [속도·같은 시간 대국 결과](experiments/2026-10-17-profile-transposition.md)를 따로 측정했다.
+
+v0.4.1은 [전이표 메모리를 재사용](HASH_MEMORY_REUSE.md)하고 검색별 기록을 세대로 격리한다. 옵션·이력이 달라져도 이전 결과를 읽지 않으며, [반복 검색 비용과 같은 시간 대국](experiments/2026-10-17-hash-memory.md)을 별도로 검증했다.
 
 ## 원리와 작은 체스 예
 
@@ -25,7 +27,7 @@ Alpha-beta는 현재 최선의 선택을 바꿀 수 없는 응수들을 건너�
 | 중단 복구 | 깊이 1부터 반복 심화; 마지막으로 끝난 깊이의 수·점수·주요 수순 유지 |
 | 안정화 탐색 | 깊이 끝의 잡기·모든 승격을 연장; 체크 중에는 모든 회피 수를 탐색 |
 | 수 순서 | 전이표·직전 최선 수, 캡처·승격 우선; 동점은 출발·도착·승격 문자 순서로 고정 |
-| 재사용 | 검색별 기본 16 MiB 전이표; 위치·반복 맥락·50수 카운터와 동일 남은 깊이를 확인 |
+| 재사용 | 기본 16 MiB 전이표 버퍼를 세션에서 유지, 검색별 새 기록; 위치·반복 맥락·50수 카운터와 동일 남은 깊이를 확인 |
 | 종료 | 메이트와 무승부를 깊이 끝의 정적 평가보다 먼저 확인; 빠른 메이트를 선호 |
 | 자원 | 탐색 노드 수, 밀리초 시간, 원자적 중지 신호; 단일 탐색 스레드 |
 | 상태 | 원본 보드와 전체 반복 이력의 복사본에서 탐색; 정상·중단 경로 모두 수를 되돌림 |
@@ -66,6 +68,7 @@ setoption name UsePositionalEvaluation value true
 setoption name UseQuiescence value true
 setoption name UseTranspositionTable value true
 setoption name Hash value 16
+setoption name Clear Hash
 setoption name UseFastMoves value true
 ucinewgame
 position startpos moves e2e4 e7e5
@@ -83,7 +86,7 @@ quit
 
 깊이·노드·시간을 함께 지정하면 먼저 걸린 제한을 따른다. UCI `go`에 아무 제한이 없으면 깊이 4다. 시간 또는 노드만 지정하면 최대 깊이 64를 사용한다. 시계가 주어지면 `남은 시간 / 남은 예상 수 + 증가 시간의 75%`를 기본 할당량으로 계산하고 현재 남은 시간을 넘지 않도록 제한한다. 남은 예상 수는 `movestogo`가 없으면 30이다. `Move Overhead`(기본 20ms, 범위 0..5000ms)를 남겨 입출력 여유를 둔다. 최소 탐색 할당은 1ms이며 운영체제 스케줄링·입출력 지연까지 보장하는 실시간 타이머는 아니다.
 
-`Hash`는 1..256 MiB이며 기본 16이다. `UseTranspositionTable`·`UseFastMoves`는 기본 true다. 테이블은 매 검색마다 새로 만들며 초기화 시간도 예산에 포함한다. 캐시로 차단한 하위 트리의 PV는 짧아질 수 있다.
+`Hash`는 1..256 MiB이며 기본 16이다. `UseTranspositionTable`·`UseFastMoves`는 기본 true다. 같은 크기의 테이블 메모리는 세션에서 재사용하며 매 검색마다 세대를 바꿔 기록을 무효화한다. 최초 할당·크기 변경 비용도 검색 예산에 포함한다. `Clear Hash`는 값 없는 버튼이며 새 대국과 마찬가지로 버퍼를 보유한 채 기록만 무효화한다. 캐시로 차단한 하위 트리의 PV는 짧아질 수 있다.
 
 `go searchmoves`, `go ponder`, `go mate`는 아직 지원하지 않으며 오류 설명과 `bestmove 0000`을 반환한다. Chess960, 여러 PV, Threads 옵션도 지원하지 않는다. 알 수 없는 설정은 무시한다. 잘못된 `position`은 기존 위치를 유지한다. 종료 판정에 도달한 위치는 최종 수 없이 `0000`을 반환하므로 대국 관리자는 먼저 종료 여부를 확인해야 한다.
 

@@ -27,13 +27,16 @@ SPEC.loader.exec_module(RUNNER)
 
 
 class FakeEngine:
-    def __init__(self, cp=12, depth_delta=0, bound=False, illegal_pv=False, fail=False, counters=False):
+    def __init__(self, cp=12, depth_delta=0, bound=False, illegal_pv=False, fail=False, counters=False,
+                 memory=False, node_delta=0):
         self.cp = cp
         self.depth_delta = depth_delta
         self.bound = bound
         self.illegal_pv = illegal_pv
         self.fail = fail
         self.counters = counters
+        self.memory = memory
+        self.node_delta = node_delta
         self.options = {"Hash": SimpleNamespace(type="spin", default=16, min=1, max=128, var=None)}
         self.id = {"name": "Scripted evidence engine"}
         self.configured = None
@@ -50,11 +53,14 @@ class FakeEngine:
         move = next(iter(board.legal_moves))
         info = {
             "score": chess.engine.PovScore(chess.engine.Cp(self.cp), board.turn),
-            "depth": limit.depth + self.depth_delta, "nodes": 25, "time": 0.001,
+            "depth": limit.depth + self.depth_delta, "nodes": 25 + self.node_delta, "time": 0.001,
             "lowerbound": self.bound,
             "pv": [chess.Move.from_uci("a1a8")] if self.illegal_pv else [move]}
-        if self.counters:
+        if self.counters or self.memory:
             info["string"] = "tt probes 20 hits 8 cutoffs 3 stores 15"
+        if self.memory:
+            first = len(self.calls) == 1
+            info["string"] += f" allocations {int(first)} reuses {int(not first)} clears 0 bytes 4096"
         return chess.engine.PlayResult(move, None, info=info)
 
     def quit(self):
@@ -67,7 +73,8 @@ def fake_args(binary):
     return SimpleNamespace(baseline=binary, candidate=binary, baseline_commit="a" * 40,
                            candidate_commit="b" * 40, baseline_options={}, candidate_options={"Hash": 8},
                            positions=source, position_document=document, selected_positions=positions[:2],
-                           depth=1, repeats=2, seed=20261017, allow_score_differences=False)
+                           depth=1, repeats=2, warmup=0, require_same_search=False,
+                           seed=20261017, allow_score_differences=False)
 
 
 def fake_run(args, baseline, candidate):
@@ -137,6 +144,13 @@ def main():
         "probes": 0, "hits": 0, "cutoffs": 0, "stores": 0}
     assert RUNNER.transposition_counters({"string": "tt probes 20 hits 8 cutoffs 3 stores 15"}) == {
         "probes": 20, "hits": 8, "cutoffs": 3, "stores": 15}
+    extended = {"string": "tt probes 20 hits 8 cutoffs 3 stores 15 allocations 1 reuses 0 clears 1 bytes 4096"}
+    assert RUNNER.transposition_counters(extended) == {"probes": 20, "hits": 8, "cutoffs": 3, "stores": 15}
+    assert RUNNER.transposition_memory(extended) == {"allocations": 1, "reuses": 0, "clears": 1, "bytes": 4096}
+    assert RUNNER.transposition_memory({"string": "tt probes 20 hits 8 cutoffs 3 stores 15"}) is None
+    assert RUNNER.transposition_memory({}) is None
+    assert RUNNER.transposition_memory({"string": "tt probes 0 hits 0 cutoffs 0 stores 0 allocations 0 reuses 0 clears 0 bytes 0"}) == {
+        "allocations": 0, "reuses": 0, "clears": 0, "bytes": 0}
     try:
         RUNNER.transposition_counters({"string": "tt probes 2 hits 3 cutoffs 1 stores 2"})
     except RuntimeError:
@@ -150,6 +164,8 @@ def main():
     baseline, candidate = FakeEngine(), FakeEngine(counters=True)
     data, errors = fake_run(config, baseline, candidate)
     assert data["exit_code"] == 0 and not errors
+    assert data["warmup"] == 0 and data["warmup_records"] == []
+    assert "first measured sample includes" in data["allocation_policy"]
     assert data["summary"]["completed_pairs"] == 4 and data["summary"]["score_mismatches"] == 0
     assert baseline.configured == {} and candidate.configured == {"Hash": 8}
     assert len({id(call[2]["game"]) for call in baseline.calls}) == 4
@@ -164,6 +180,7 @@ def main():
                                         "lowerbound": False, "upperbound": False}
             assert sample["tt_counters"] == ({"probes": 20, "hits": 8, "cutoffs": 3, "stores": 15}
                                                if role == "candidate" else None)
+            assert sample["tt_memory"] is None
     assert data["summary"]["transposition_counters"] == {
         "baseline": {"samples_reporting": 0, "probes": None, "hits": None, "cutoffs": None, "stores": None},
         "candidate": {"samples_reporting": 4, "probes": 80, "hits": 32, "cutoffs": 12, "stores": 60}}
@@ -171,6 +188,54 @@ def main():
     assert data["positions_file"]["sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
     assert data["engines"]["candidate"]["advertised_options"]["Hash"]["default"] == 16
     print("PASS fresh UCI game per sample, opening history, option provenance and complete persisted evidence")
+    passed += 1
+
+    memory_config = fake_args(binary)
+    memory_config.require_same_search = True
+    baseline, candidate = FakeEngine(counters=True), FakeEngine(memory=True)
+    data, errors = fake_run(memory_config, baseline, candidate)
+    assert data["exit_code"] == 0 and not errors and data["summary"]["search_graph_mismatches"] == 0
+    assert data["summary"]["transposition_memory"] == {
+        "baseline": {"samples_reporting": 0, "allocations": None, "reuses": None, "clears": None, "bytes_max": None},
+        "candidate": {"samples_reporting": 4, "allocations": 1, "reuses": 3, "clears": 0, "bytes_max": 4096}}
+    assert data["records"][0]["candidate"]["process_search_index"] == 1
+    assert data["records"][0]["candidate"]["tt_memory"]["allocations"] == 1
+    memory_config.warmup = 2
+    baseline, candidate = FakeEngine(counters=True), FakeEngine(memory=True)
+    warm, errors = fake_run(memory_config, baseline, candidate)
+    assert warm["exit_code"] == 0 and not errors
+    assert len(warm["warmup_records"]) == 4 and len(warm["records"]) == 4
+    assert warm["summary"]["completed_pairs"] == 4
+    assert warm["summary"]["transposition_counters"]["candidate"]["probes"] == 80
+    assert warm["summary"]["transposition_memory"]["candidate"] == {
+        "samples_reporting": 4, "allocations": 0, "reuses": 4, "clears": 0, "bytes_max": 4096}
+    assert [row["position_index"] for row in warm["warmup_records"]] == [0] * 4
+    assert [row["role"] for row in warm["warmup_records"]] == ["baseline"] * 2 + ["candidate"] * 2
+    assert warm["warmup_records"][2]["result"]["tt_memory"]["allocations"] == 1
+    assert warm["warmup_records"][3]["result"]["tt_memory"]["reuses"] == 1
+    assert warm["records"][0]["candidate"]["process_search_index"] == 3
+    assert [(row["repetition"], row["position_index"], row["order"]) for row in data["records"]] == [
+        (row["repetition"], row["position_index"], row["order"]) for row in warm["records"]]
+    assert len(candidate.calls) == 6 and len({id(call[2]["game"]) for call in candidate.calls}) == 6
+    assert all(call[0] == [] for call in candidate.calls[:2])
+    print("PASS cold first allocation, retained-buffer telemetry, warmup exclusion and unchanged paired schedule")
+    passed += 1
+
+    memory_config.warmup = 0
+    memory_config.allow_score_differences = True
+    data, errors = fake_run(memory_config, FakeEngine(), FakeEngine(node_delta=1))
+    assert data["exit_code"] == 1 and data["summary"]["score_mismatches"] == 0
+    assert data["summary"]["search_graph_mismatches"] == 4
+    assert errors.count("SEARCH MISMATCH") == 4
+    assert all(row["search_differences"] == ["nodes"] for row in data["records"])
+    reference = data["records"][0]["baseline"]
+    for field in ("score", "move", "depth", "nodes", "seldepth", "pv", "tt_counters"):
+        changed = dict(reference)
+        changed[field] = "different"
+        assert RUNNER.search_differences(reference, changed) == [field]
+    changed = dict(reference, tt_memory={"allocations": 1}, wall_time_seconds=999)
+    assert RUNNER.search_differences(reference, changed) == []
+    print("PASS strict graph equality, visible mismatch rejection and exclusion of memory/timing counters")
     passed += 1
 
     for allow, expected in [(False, 1), (True, 0)]:
@@ -208,6 +273,7 @@ def main():
         assert evidence["exit_code"] == 0 and evidence["summary"]["completed_pairs"] == 4
         assert evidence["summary"]["score_mismatches"] == 0
         assert len(evidence["records"]) == 4
+        assert evidence["warmup"] == 0 and evidence["warmup_records"] == []
         advertises_tt = "UseTranspositionTable" in evidence["engines"]["candidate"]["advertised_options"]
         for record in evidence["records"]:
             assert record["scores_equal"]
@@ -228,11 +294,28 @@ def main():
         assert output.read_bytes() == original
         result = subprocess.run(command + ["--overwrite"], capture_output=True, text=True, timeout=45)
         assert result.returncode == 0, (result.stdout, result.stderr)
+        result = subprocess.run(command + ["--overwrite", "--warmup", "1", "--require-same-search"],
+                                capture_output=True, text=True, timeout=45)
+        assert result.returncode == 0, (result.stdout, result.stderr)
+        warmed = json.loads(output.read_text(encoding="utf-8"))
+        assert warmed["warmup"] == 1 and len(warmed["warmup_records"]) == 2
+        assert warmed["summary"]["completed_pairs"] == 4 and warmed["summary"]["search_graph_mismatches"] == 0
+        assert all(row["search_equal"] for row in warmed["records"])
+        for role in RUNNER.ROLES:
+            assert warmed["records"][0][role]["process_search_index"] == 2
+            if warmed["records"][0][role]["tt_memory"] is not None:
+                memory = warmed["summary"]["transposition_memory"][role]
+                assert memory["samples_reporting"] == 4
+                assert memory["allocations"] == 0 and memory["reuses"] == 4 and memory["clears"] == 0
+                assert memory["bytes_max"] > 0
+        result = subprocess.run(command + ["--overwrite", "--warmup", "-1"],
+                                capture_output=True, text=True, timeout=10)
+        assert result.returncode == 2 and "must be a nonnegative integer" in result.stderr
         input_command = command.copy()
         input_command[-1] = str(binary)
         result = subprocess.run(input_command + ["--overwrite"], capture_output=True, text=True, timeout=10)
         assert result.returncode == 2 and "output must not replace an input file" in result.stderr
-    print("PASS real UCI depth-one repeats, legal moves, persisted scores, overwrite refusal and explicit overwrite")
+    print("PASS real UCI repeats, strict warm search equality, persisted telemetry and output/argument protections")
     passed += 1
     print(f"benchmark harness: {passed} checks passed")
 

@@ -31,6 +31,7 @@ struct TranspositionEntry {
     int depth = -1; // -1 marks an unused slot.
     int score = 0; // Normalized with score_to_table().
     TranspositionBound bound = TranspositionBound::exact;
+    std::uint32_t generation = 0; // Zero is never an active generation.
     std::optional<Move> best_move;
 
     // Equal remaining depth preserves the fixed-depth horizon semantics.
@@ -39,12 +40,24 @@ struct TranspositionEntry {
     std::optional<int> cutoff_score(int requested_depth, int ply, int alpha, int beta) const;
 };
 
+struct TranspositionMemoryWork {
+    std::uint64_t allocations = 0;
+    std::uint64_t reuses = 0;
+    std::uint64_t clears = 0; // Physical full clear, only on generation wrap.
+    std::uint64_t bytes = 0;
+};
+
 // Direct-mapped, depth-preferred replacement. All key fields are checked after
 // indexing; an index collision can only evict work, never return another key.
-// A search owns its table and reuses it only across its iterative depths.
+// Each search gets a fresh generation: only backing memory survives searches.
 class TranspositionTable {
 public:
+    TranspositionTable() = default; // No allocation before the first search.
     explicit TranspositionTable(int megabytes);
+    TranspositionMemoryWork prepare(int megabytes);
+    // Invalidates scores and moves while retaining storage. Returns true only
+    // if generation wrap required a physical clear of all entries.
+    bool clear();
     const TranspositionEntry* probe(const TranspositionKey& key) const;
     bool store(const TranspositionKey& key, int depth, int score, int ply,
                TranspositionBound bound, std::optional<Move> best_move);
@@ -52,7 +65,11 @@ public:
     std::size_t allocated_bytes() const { return entries_.size() * sizeof(TranspositionEntry); }
 
 private:
+    // Deterministically tests the uint32 wrap boundary without billions of clears.
+    friend struct TranspositionTableTestAccess;
     std::vector<TranspositionEntry> entries_;
+    int megabytes_ = 0;
+    std::uint32_t generation_ = 0;
     std::size_t index(const TranspositionKey& key) const;
 };
 
