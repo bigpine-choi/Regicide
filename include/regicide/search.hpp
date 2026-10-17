@@ -34,6 +34,7 @@ struct SearchOptions {
     bool fast_moves = true; // Only for moves just returned by legal_moves().
     bool quiet_ordering = true; // Search-local killer/history ordering, no pruning.
     bool quiescence_checks = true; // One optional quiet check; all evasions remain.
+    bool pvs = true; // Full first move, scout later moves; re-search improvements.
 };
 
 struct SearchResult {
@@ -50,6 +51,8 @@ struct SearchResult {
     std::uint64_t tt_reuses = 0; // Existing same-size buffer reused this call.
     std::uint64_t tt_clears = 0; // Physical full clears on generation wrap.
     std::uint64_t tt_bytes = 0; // Active table storage, zero if disabled/terminal.
+    std::uint64_t pvs_probes = 0; // Later-move null-window searches, including unfinished work.
+    std::uint64_t pvs_researches = 0; // Probes needing a full-window re-search.
     int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;
