@@ -19,6 +19,7 @@ jobs:
       - run: python tests/audit_see_results.py --self-test
       - run: python tests/see_clean_guard_tests.py
       - run: python tests/audit_see_replication.py --self-test
+      - run: python tests/audit_see_cost_results.py --self-test
       - if: runner.os == 'Linux'
         run: python tests/differential.py build/regicide
       - if: runner.os == 'Windows'
