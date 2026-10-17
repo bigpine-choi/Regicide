@@ -80,6 +80,12 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
                           const std::optional<Move>& preferred,
                           const Killers* killers, const QuietHistory* history,
                           std::uint64_t& see_calls, Poll&& poll) {
+    // There is no ordering decision for zero or one legal candidate. Keep
+    // cancellation responsive without evaluating an exchange we cannot use.
+    if (moves.size() <= 1) {
+        poll();
+        return;
+    }
     struct OrderedMove {
         Move move;
         int group; // Preferred, non-losing tactical, quiet, losing tactical.
@@ -92,8 +98,11 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
     for (Move move : moves) {
         poll();
         const bool quiet = quiet_move(board, move);
+        const bool is_preferred = preferred && move == *preferred;
         int exchange = 0, priority = 0;
-        if (!quiet) {
+        // A preferred move has a unique, higher group. Its exchange/secondary
+        // score can never enter a comparison, so it needs no SEE calculation.
+        if (!quiet && !is_preferred) {
             // Decorate once: sorting comparisons never repeat exchange work.
             exchange = static_exchange_evaluation(board, move);
             ++see_calls;
@@ -102,12 +111,12 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
             if ((piece == 'P' || piece == 'p') && move.to == position.en_passant) captured = 100;
             priority = captured ? 16 * captured - value(piece) : 0;
             if (move.promotion) priority += 16 * value(move.promotion);
-        } else if (killers && history) {
+        } else if (quiet && killers && history) {
             if ((*killers)[0] == move) priority += 200000;
             else if ((*killers)[1] == move) priority += 100000;
             priority += (*history)[move.from][move.to];
         }
-        const int group = preferred && move == *preferred ? 3 :
+        const int group = is_preferred ? 3 :
                           quiet ? 1 : exchange >= 0 ? 2 : 0;
         ordered.push_back({move, group, exchange, priority});
     }

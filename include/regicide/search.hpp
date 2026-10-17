@@ -54,7 +54,7 @@ struct SearchResult {
     std::uint64_t tt_bytes = 0; // Active table storage, zero if disabled/terminal.
     std::uint64_t pvs_probes = 0; // Later-move null-window searches, including unfinished work.
     std::uint64_t pvs_researches = 0; // Probes needing a full-window re-search.
-    std::uint64_t see_calls = 0; // Once per tactical candidate sorted, including preferred moves.
+    std::uint64_t see_calls = 0; // Tactical candidates needing an exchange key; no sole/preferred move work.
     int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;
