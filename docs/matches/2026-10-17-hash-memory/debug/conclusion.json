@@ -1,0 +1,35 @@
+{
+  "status": "No engine hang reproduced; reproduction work finished",
+  "exact_history_plies": 99,
+  "final_fen": "8/8/7P/2b1n3/1p3pk1/8/3NK3/8 b - - 0 50",
+  "reproduction": {
+    "protocol": "Raw UCI subprocess with continuously drained stdout, go movetime 100, default Move Overhead 20",
+    "completed_searches": 110,
+    "failed_searches": 0,
+    "maximum_elapsed_seconds": 0.08223709999583662,
+    "baseline_and_candidate": true,
+    "modes": [
+      "fresh process exact full history",
+      "FEN import",
+      "prewarmed retained memory exact history",
+      "every preceding black-to-move position from recorded game followed by target"
+    ],
+    "target_bestmove": "f4f3",
+    "source_edits": false
+  },
+  "proven_observations": [
+    "All 110 bounded raw UCI searches returned bestmove normally.",
+    "Exact failed-game history completed in fresh and retained-memory candidate contexts and baseline.",
+    "Warm candidate searches reported allocations 0, reuses 1, clears 0, bytes 16777208.",
+    "Parent independently retrieved Windows standby/resume events 22:28:38 to 22:40:57; source artifact ../suspend-events.json."
+  ],
+  "inference": "The long match timeout is consistent with OS standby interrupting the wall-clock deadline; these repros do not reproduce an engine hang. OS-event attribution is based on parent-provided event evidence.",
+  "evidence": [
+    "raw-reproduction.json",
+    "candidate-fresh-history-0.stdout.log",
+    "candidate-fen-and-warm.stdout.log",
+    "candidate-full-black-replay.stdout.log",
+    "baseline-full-black-replay.stdout.log",
+    "../suspend-events.json"
+  ]
+}

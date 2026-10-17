@@ -1,0 +1,668 @@
+{
+  "audited_utc": "2026-10-17T13:44:08.617399+00:00",
+  "method": "independent saved-evidence replay; no engine search or rebuild",
+  "source_provenance": {
+    "baseline": {
+      "commit": "ef52f14569222acbfaa512245bab81558795180f",
+      "source_files_checked_with_newline_normalization": 17
+    },
+    "candidate": {
+      "commit": "4a0f95a035b1cc0eff8e8d56a14ea898621eab64",
+      "source_files_checked_with_newline_normalization": 17
+    }
+  },
+  "limitations": [
+    "Ten fixed positions; repeats measure timing variability, not independent playing-strength evidence.",
+    "Cold run contains one cold candidate allocation per process, followed by retained-buffer searches; not 100 independent cold starts.",
+    "Baseline v0.4 has no allocation telemetry; its per-search allocation is established by source, not new counters.",
+    "Binary hash and source agreement do not independently prove binary build provenance.",
+    "Wall time includes UCI/reset traffic; integer engine milliseconds are too coarse for many depth-one searches.",
+    "Native layout is checked separately if tt-layout-probe.jsonl is present; layout proof does not prove engine-binary build provenance."
+  ],
+  "native_layout_probe": {
+    "status": "passed",
+    "file_sha256": "2d166566c9a8a9d0c8cf1e0054546923a6200066b3c3c93bf46625d1c8f4ce01",
+    "records": [
+      {
+        "role": "baseline",
+        "entry_bytes": 56,
+        "capacity": 299593,
+        "allocated_bytes": 16777208,
+        "valid": true
+      },
+      {
+        "role": "candidate",
+        "entry_bytes": 56,
+        "capacity": 299593,
+        "allocated_bytes": 16777208,
+        "valid": true
+      }
+    ]
+  },
+  "benchmarks": [
+    {
+      "input": "depth1-cold.json",
+      "input_sha256": "f0f164c8e273b6bfece42460eb569f659477474701b010d025bb832415227069",
+      "pairs": 100,
+      "warmups": 0,
+      "pv_moves_replayed_including_warmups": 200,
+      "all_search_graphs_identical": true,
+      "median_paired_wall_speedup": 4.10149452318745,
+      "aggregate_wall_speedup": 3.791901168668392,
+      "faster_candidate_pairs": 100,
+      "role_statistics": {
+        "baseline": {
+          "nodes_total": 7550,
+          "wall_total_seconds": 0.37433800006692763,
+          "engine_total_seconds": 0.203,
+          "zero_reported_time_samples": 0,
+          "tt_work": {
+            "probes": 100,
+            "hits": 0,
+            "cutoffs": 0,
+            "stores": 100
+          },
+          "tt_memory": {
+            "samples_reporting": 0,
+            "allocations": null,
+            "reuses": null,
+            "clears": null,
+            "bytes_max": null
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 11,
+            "engine_time_seconds": 0.002,
+            "wall_time_seconds": 0.004437600000528619,
+            "score": {
+              "pov": "mover",
+              "cp": 130,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": null,
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 1
+          }
+        },
+        "candidate": {
+          "nodes_total": 7550,
+          "wall_total_seconds": 0.09872039998299442,
+          "engine_total_seconds": 0.002,
+          "zero_reported_time_samples": 99,
+          "tt_work": {
+            "probes": 100,
+            "hits": 0,
+            "cutoffs": 0,
+            "stores": 100
+          },
+          "tt_memory": {
+            "samples_reporting": 100,
+            "allocations": 1,
+            "reuses": 99,
+            "clears": 0,
+            "bytes_max": 16777208
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 11,
+            "engine_time_seconds": 0.002,
+            "wall_time_seconds": 0.004141199999139644,
+            "score": {
+              "pov": "mover",
+              "cp": 130,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": {
+              "allocations": 1,
+              "reuses": 0,
+              "clears": 0,
+              "bytes": 16777208
+            },
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 1
+          }
+        }
+      },
+      "per_position": [
+        {
+          "name": "Initial position",
+          "median_paired_wall_speedup": 5.0253967756778355
+        },
+        {
+          "name": "Open game",
+          "median_paired_wall_speedup": 4.519851994510579
+        },
+        {
+          "name": "Queen pawn game",
+          "median_paired_wall_speedup": 4.620361477953814
+        },
+        {
+          "name": "Sicilian family",
+          "median_paired_wall_speedup": 4.431672384127862
+        },
+        {
+          "name": "French family",
+          "median_paired_wall_speedup": 3.6538828872543743
+        },
+        {
+          "name": "Caro-Kann family",
+          "median_paired_wall_speedup": 3.76349650363645
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "median_paired_wall_speedup": 3.4981138196543204
+        },
+        {
+          "name": "Reti-English family",
+          "median_paired_wall_speedup": 3.873778683630713
+        },
+        {
+          "name": "Defended rook recapture",
+          "median_paired_wall_speedup": 4.532409208943712
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "median_paired_wall_speedup": 4.659151364971702
+        }
+      ],
+      "regressed_position_medians": [],
+      "first_measured_pair_speedup": 1.0715734573192681,
+      "warmup_evidence": []
+    },
+    {
+      "input": "depth1-warm.json",
+      "input_sha256": "54fa1f7e8ef73bc1800862cb559894018d5ab8e36ed1429070786f657d3ff27a",
+      "pairs": 100,
+      "warmups": 2,
+      "pv_moves_replayed_including_warmups": 202,
+      "all_search_graphs_identical": true,
+      "median_paired_wall_speedup": 3.7233958167701067,
+      "aggregate_wall_speedup": 3.659839721003769,
+      "faster_candidate_pairs": 100,
+      "role_statistics": {
+        "baseline": {
+          "nodes_total": 7550,
+          "wall_total_seconds": 0.4353565999917919,
+          "engine_total_seconds": 0.229,
+          "zero_reported_time_samples": 0,
+          "tt_work": {
+            "probes": 100,
+            "hits": 0,
+            "cutoffs": 0,
+            "stores": 100
+          },
+          "tt_memory": {
+            "samples_reporting": 0,
+            "allocations": null,
+            "reuses": null,
+            "clears": null,
+            "bytes_max": null
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 11,
+            "engine_time_seconds": 0.002,
+            "wall_time_seconds": 0.003665199998067692,
+            "score": {
+              "pov": "mover",
+              "cp": 130,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": null,
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 2
+          }
+        },
+        "candidate": {
+          "nodes_total": 7550,
+          "wall_total_seconds": 0.1189550999988569,
+          "engine_total_seconds": 0.001,
+          "zero_reported_time_samples": 99,
+          "tt_work": {
+            "probes": 100,
+            "hits": 0,
+            "cutoffs": 0,
+            "stores": 100
+          },
+          "tt_memory": {
+            "samples_reporting": 100,
+            "allocations": 0,
+            "reuses": 100,
+            "clears": 0,
+            "bytes_max": 16777208
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 11,
+            "engine_time_seconds": 0.0,
+            "wall_time_seconds": 0.0006924000044818968,
+            "score": {
+              "pov": "mover",
+              "cp": 130,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": {
+              "allocations": 0,
+              "reuses": 1,
+              "clears": 0,
+              "bytes": 16777208
+            },
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 2
+          }
+        }
+      },
+      "per_position": [
+        {
+          "name": "Initial position",
+          "median_paired_wall_speedup": 3.8802890505849157
+        },
+        {
+          "name": "Open game",
+          "median_paired_wall_speedup": 4.147942926457835
+        },
+        {
+          "name": "Queen pawn game",
+          "median_paired_wall_speedup": 4.1700831698012415
+        },
+        {
+          "name": "Sicilian family",
+          "median_paired_wall_speedup": 3.820456406370973
+        },
+        {
+          "name": "French family",
+          "median_paired_wall_speedup": 3.5251101063927583
+        },
+        {
+          "name": "Caro-Kann family",
+          "median_paired_wall_speedup": 3.3126012235653404
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "median_paired_wall_speedup": 3.009821340343816
+        },
+        {
+          "name": "Reti-English family",
+          "median_paired_wall_speedup": 3.633117294409902
+        },
+        {
+          "name": "Defended rook recapture",
+          "median_paired_wall_speedup": 3.7481892789841975
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "median_paired_wall_speedup": 4.000157250831307
+        }
+      ],
+      "regressed_position_medians": [],
+      "first_measured_pair_speedup": 5.293471944458257,
+      "warmup_evidence": [
+        {
+          "role": "baseline",
+          "warmup_index": 1,
+          "position_index": 0,
+          "position": "Initial position",
+          "result": {
+            "move": "b1c3",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 21,
+            "engine_time_seconds": 0.002,
+            "wall_time_seconds": 0.004387599998153746,
+            "score": {
+              "pov": "mover",
+              "cp": 30,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "b1c3"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": null,
+            "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "process_search_index": 1
+          }
+        },
+        {
+          "role": "candidate",
+          "warmup_index": 1,
+          "position_index": 0,
+          "position": "Initial position",
+          "result": {
+            "move": "b1c3",
+            "depth": 1,
+            "seldepth": 1,
+            "nodes": 21,
+            "engine_time_seconds": 0.002,
+            "wall_time_seconds": 0.004134600007091649,
+            "score": {
+              "pov": "mover",
+              "cp": 30,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "b1c3"
+            ],
+            "tt_counters": {
+              "probes": 1,
+              "hits": 0,
+              "cutoffs": 0,
+              "stores": 1
+            },
+            "tt_memory": {
+              "allocations": 1,
+              "reuses": 0,
+              "clears": 0,
+              "bytes": 16777208
+            },
+            "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "process_search_index": 1
+          }
+        }
+      ]
+    },
+    {
+      "input": "depth3-warm.json",
+      "input_sha256": "67760a3358ef8451939a813d96ffa5b771e76ccba81a192ad1666d4a263684f6",
+      "pairs": 50,
+      "warmups": 2,
+      "pv_moves_replayed_including_warmups": 326,
+      "all_search_graphs_identical": true,
+      "median_paired_wall_speedup": 1.3661648637317625,
+      "aggregate_wall_speedup": 1.3535021784928025,
+      "faster_candidate_pairs": 49,
+      "role_statistics": {
+        "baseline": {
+          "nodes_total": 170370,
+          "wall_total_seconds": 0.5006678999925498,
+          "engine_total_seconds": 0.409,
+          "zero_reported_time_samples": 0,
+          "tt_work": {
+            "probes": 8510,
+            "hits": 1570,
+            "cutoffs": 0,
+            "stores": 8505
+          },
+          "tt_memory": {
+            "samples_reporting": 0,
+            "allocations": null,
+            "reuses": null,
+            "clears": null,
+            "bytes_max": null
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 3,
+            "seldepth": 5,
+            "nodes": 183,
+            "engine_time_seconds": 0.003,
+            "wall_time_seconds": 0.004999500000849366,
+            "score": {
+              "pov": "mover",
+              "cp": 138,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4",
+              "f6f5",
+              "g2f3"
+            ],
+            "tt_counters": {
+              "probes": 40,
+              "hits": 12,
+              "cutoffs": 0,
+              "stores": 40
+            },
+            "tt_memory": null,
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 2
+          }
+        },
+        "candidate": {
+          "nodes_total": 170370,
+          "wall_total_seconds": 0.36990549993060995,
+          "engine_total_seconds": 0.294,
+          "zero_reported_time_samples": 10,
+          "tt_work": {
+            "probes": 8510,
+            "hits": 1570,
+            "cutoffs": 0,
+            "stores": 8505
+          },
+          "tt_memory": {
+            "samples_reporting": 50,
+            "allocations": 0,
+            "reuses": 50,
+            "clears": 0,
+            "bytes_max": 16777208
+          },
+          "first_measured_sample": {
+            "position": "Opposed pawn endgame",
+            "move": "f2f4",
+            "depth": 3,
+            "seldepth": 5,
+            "nodes": 183,
+            "engine_time_seconds": 0.0,
+            "wall_time_seconds": 0.0010163000115426257,
+            "score": {
+              "pov": "mover",
+              "cp": 138,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "f2f4",
+              "f6f5",
+              "g2f3"
+            ],
+            "tt_counters": {
+              "probes": 40,
+              "hits": 12,
+              "cutoffs": 0,
+              "stores": 40
+            },
+            "tt_memory": {
+              "allocations": 0,
+              "reuses": 1,
+              "clears": 0,
+              "bytes": 16777208
+            },
+            "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+            "process_search_index": 2
+          }
+        }
+      },
+      "per_position": [
+        {
+          "name": "Initial position",
+          "median_paired_wall_speedup": 2.5822554279209533
+        },
+        {
+          "name": "Open game",
+          "median_paired_wall_speedup": 1.3144902691086215
+        },
+        {
+          "name": "Queen pawn game",
+          "median_paired_wall_speedup": 1.558571650849526
+        },
+        {
+          "name": "Sicilian family",
+          "median_paired_wall_speedup": 1.2920167230566058
+        },
+        {
+          "name": "French family",
+          "median_paired_wall_speedup": 1.2700169241020152
+        },
+        {
+          "name": "Caro-Kann family",
+          "median_paired_wall_speedup": 1.302532029710262
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "median_paired_wall_speedup": 1.112845407779914
+        },
+        {
+          "name": "Reti-English family",
+          "median_paired_wall_speedup": 1.7003867583576673
+        },
+        {
+          "name": "Defended rook recapture",
+          "median_paired_wall_speedup": 1.8034014894193964
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "median_paired_wall_speedup": 3.694455742579172
+        }
+      ],
+      "regressed_position_medians": [],
+      "first_measured_pair_speedup": 4.919315107810246,
+      "warmup_evidence": [
+        {
+          "role": "baseline",
+          "warmup_index": 1,
+          "position_index": 0,
+          "position": "Initial position",
+          "result": {
+            "move": "b1c3",
+            "depth": 3,
+            "seldepth": 4,
+            "nodes": 719,
+            "engine_time_seconds": 0.005,
+            "wall_time_seconds": 0.00881630000367295,
+            "score": {
+              "pov": "mover",
+              "cp": 30,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "g1f3"
+            ],
+            "tt_counters": {
+              "probes": 82,
+              "hits": 22,
+              "cutoffs": 0,
+              "stores": 82
+            },
+            "tt_memory": null,
+            "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "process_search_index": 1
+          }
+        },
+        {
+          "role": "candidate",
+          "warmup_index": 1,
+          "position_index": 0,
+          "position": "Initial position",
+          "result": {
+            "move": "b1c3",
+            "depth": 3,
+            "seldepth": 4,
+            "nodes": 719,
+            "engine_time_seconds": 0.004,
+            "wall_time_seconds": 0.005981399997835979,
+            "score": {
+              "pov": "mover",
+              "cp": 30,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "g1f3"
+            ],
+            "tt_counters": {
+              "probes": 82,
+              "hits": 22,
+              "cutoffs": 0,
+              "stores": 82
+            },
+            "tt_memory": {
+              "allocations": 1,
+              "reuses": 0,
+              "clears": 0,
+              "bytes": 16777208
+            },
+            "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "process_search_index": 1
+          }
+        }
+      ]
+    }
+  ],
+  "all_assertions_passed": true
+}
