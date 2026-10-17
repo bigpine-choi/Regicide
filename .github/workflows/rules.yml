@@ -1,4 +1,4 @@
-name: Rules core
+name: Engine and rules
 on: [push, pull_request]
 jobs:
   rules:
@@ -19,3 +19,11 @@ jobs:
         run: python tests/differential.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/differential.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/engine_integration.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/engine_integration.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/game_runner_tests.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/game_runner_tests.py build/Release/regicide.exe
