@@ -1,0 +1,241 @@
+"""Cheap benchmark evidence checks, including two real depth-one paired repeats.
+
+Usage: python tests/benchmark_search_tests.py path/to/regicide
+These are harness checks; their timings must not be reported as an experiment.
+"""
+
+import argparse
+import contextlib
+import hashlib
+import importlib.util
+import io
+import json
+from pathlib import Path
+from types import SimpleNamespace
+import subprocess
+import sys
+import tempfile
+
+import chess
+import chess.engine
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("benchmark_search", ROOT / "scripts/benchmark_search.py")
+RUNNER = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(RUNNER)
+
+
+class FakeEngine:
+    def __init__(self, cp=12, depth_delta=0, bound=False, illegal_pv=False, fail=False, counters=False):
+        self.cp = cp
+        self.depth_delta = depth_delta
+        self.bound = bound
+        self.illegal_pv = illegal_pv
+        self.fail = fail
+        self.counters = counters
+        self.options = {"Hash": SimpleNamespace(type="spin", default=16, min=1, max=128, var=None)}
+        self.id = {"name": "Scripted evidence engine"}
+        self.configured = None
+        self.calls = []
+        self.quit_called = False
+
+    def configure(self, options):
+        self.configured = options
+
+    def play(self, board, limit, **kwargs):
+        if self.fail:
+            raise RuntimeError("scripted search failure")
+        self.calls.append((list(move.uci() for move in board.move_stack), limit, kwargs))
+        move = next(iter(board.legal_moves))
+        info = {
+            "score": chess.engine.PovScore(chess.engine.Cp(self.cp), board.turn),
+            "depth": limit.depth + self.depth_delta, "nodes": 25, "time": 0.001,
+            "lowerbound": self.bound,
+            "pv": [chess.Move.from_uci("a1a8")] if self.illegal_pv else [move]}
+        if self.counters:
+            info["string"] = "tt probes 20 hits 8 cutoffs 3 stores 15"
+        return chess.engine.PlayResult(move, None, info=info)
+
+    def quit(self):
+        self.quit_called = True
+
+
+def fake_args(binary):
+    source = ROOT / "tests/data/profile_positions.json"
+    document, positions = RUNNER.load_positions(source)
+    return SimpleNamespace(baseline=binary, candidate=binary, baseline_commit="a" * 40,
+                           candidate_commit="b" * 40, baseline_options={}, candidate_options={"Hash": 8},
+                           positions=source, position_document=document, selected_positions=positions[:2],
+                           depth=1, repeats=2, seed=20261017, allow_score_differences=False)
+
+
+def fake_run(args, baseline, candidate):
+    engines = iter([baseline, candidate])
+    commands = []
+
+    def factory(command):
+        commands.append(command)
+        return next(engines)
+
+    output = io.StringIO()
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        document = RUNNER.run(args, output, engine_factory=factory)
+    assert document == json.loads(output.getvalue())
+    assert commands == [[str(args.baseline), "uci"], [str(args.candidate), "uci"]]
+    assert baseline.quit_called and candidate.quit_called
+    return document, stderr.getvalue()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("binary", type=Path)
+    args = parser.parse_args()
+    binary = args.binary.resolve()
+    passed = 0
+
+    source = ROOT / "tests/data/profile_positions.json"
+    declared, positions = RUNNER.load_positions(source)
+    assert len(positions) == 10
+    openings = json.loads((ROOT / "tests/data/comparison_openings.json").read_text(encoding="utf-8"))["openings"]
+    assert [{"name": item["name"], "moves": item["moves"]} for item in positions[:8]] == openings
+    assert all(RUNNER.board_for(item).fen(en_passant="fen") == item["search_fen"] for item in positions)
+    first = list(RUNNER.schedule(positions, 5, 7))
+    assert first == list(RUNNER.schedule(positions, 5, 7))
+    assert first != list(RUNNER.schedule(positions, 5, 8))
+    for index in range(len(positions)):
+        orders = [row[2] for row in first if row[1] == index]
+        assert len(orders) == 5
+        assert all(one == list(reversed(two)) for one, two in zip(orders, orders[1:]))
+    print("PASS ten predeclared legal positions, opening compatibility and balanced deterministic scheduling")
+    passed += 1
+
+    def stats_record(name, baseline_wall, candidate_wall, baseline_time, candidate_time, score_equal=True):
+        return {"position": name, "scores_equal": score_equal,
+                "baseline": {"wall_time_seconds": baseline_wall, "engine_time_seconds": baseline_time, "nodes": 100},
+                "candidate": {"wall_time_seconds": candidate_wall, "engine_time_seconds": candidate_time, "nodes": 50}}
+
+    records = [stats_record("one", 6, 2, 6, 2), stats_record("one", 4, 2, 0, 0, False),
+               stats_record("two", 4, 4, None, None), {"position": "one", "baseline": {}}]
+    summary = RUNNER.summarize(records, [{"name": "one"}, {"name": "two"}, {"name": "missing"}])
+    assert summary["completed_pairs"] == 3 and summary["score_mismatches"] == 1
+    assert summary["median_paired_wall_speedup_baseline_over_candidate"] == 2
+    assert summary["median_paired_node_ratio_candidate_over_baseline"] == 0.5
+    assert summary["median_paired_engine_speedup_baseline_over_candidate"] == 3
+    assert summary["engine_time_ratio_pairs_excluding_zero_or_missing_time"] == 1
+    assert summary["per_position"][0]["median_paired_wall_speedup_baseline_over_candidate"] == 2.5
+    assert summary["per_position"][2]["baseline"]["median_wall_time_seconds"] is None
+    print("PASS paired median ratios, unequal scores, partial records and millisecond-zero time handling")
+    passed += 1
+
+    for missing in ({}, {"string": None}, {"string": "unrelated engine message"},
+                    {"string": "tt probes 1 hits 0 cutoffs 0 stores"}):
+        assert RUNNER.transposition_counters(missing) is None
+    assert RUNNER.transposition_counters({"string": "tt probes 0 hits 0 cutoffs 0 stores 0"}) == {
+        "probes": 0, "hits": 0, "cutoffs": 0, "stores": 0}
+    assert RUNNER.transposition_counters({"string": "tt probes 20 hits 8 cutoffs 3 stores 15"}) == {
+        "probes": 20, "hits": 8, "cutoffs": 3, "stores": 15}
+    try:
+        RUNNER.transposition_counters({"string": "tt probes 2 hits 3 cutoffs 1 stores 2"})
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("inconsistent TT counters were accepted")
+    print("PASS optional TT telemetry parser, absent-versus-zero distinction and counter consistency")
+    passed += 1
+
+    config = fake_args(binary)
+    baseline, candidate = FakeEngine(), FakeEngine(counters=True)
+    data, errors = fake_run(config, baseline, candidate)
+    assert data["exit_code"] == 0 and not errors
+    assert data["summary"]["completed_pairs"] == 4 and data["summary"]["score_mismatches"] == 0
+    assert baseline.configured == {} and candidate.configured == {"Hash": 8}
+    assert len({id(call[2]["game"]) for call in baseline.calls}) == 4
+    assert any(call[0] == openings[1]["moves"] for call in baseline.calls)
+    for record in data["records"]:
+        for role in RUNNER.ROLES:
+            sample = record[role]
+            assert sample["nodes"] == 25 and sample["depth"] == 1
+            assert sample["wall_time_seconds"] >= 0 and sample["engine_time_seconds"] == 0.001
+            assert sample["pv"] == [sample["move"]]
+            assert sample["score"] == {"pov": "mover", "cp": 12, "mate": None,
+                                        "lowerbound": False, "upperbound": False}
+            assert sample["tt_counters"] == ({"probes": 20, "hits": 8, "cutoffs": 3, "stores": 15}
+                                               if role == "candidate" else None)
+    assert data["summary"]["transposition_counters"] == {
+        "baseline": {"samples_reporting": 0, "probes": None, "hits": None, "cutoffs": None, "stores": None},
+        "candidate": {"samples_reporting": 4, "probes": 80, "hits": 32, "cutoffs": 12, "stores": 60}}
+    assert data["engines"]["candidate"]["sha256"] == hashlib.sha256(binary.read_bytes()).hexdigest()
+    assert data["positions_file"]["sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert data["engines"]["candidate"]["advertised_options"]["Hash"]["default"] == 16
+    print("PASS fresh UCI game per sample, opening history, option provenance and complete persisted evidence")
+    passed += 1
+
+    for allow, expected in [(False, 1), (True, 0)]:
+        config.allow_score_differences = allow
+        data, errors = fake_run(config, FakeEngine(), FakeEngine(cp=13))
+        assert data["exit_code"] == expected and data["summary"]["score_mismatches"] == 4
+        assert errors.count("SCORE MISMATCH") == 4
+        assert data["allow_score_differences"] == allow
+    print("PASS differing exact scores always visible and strict by default")
+    passed += 1
+
+    for engine in [FakeEngine(depth_delta=-1), FakeEngine(bound=True),
+                   FakeEngine(illegal_pv=True), FakeEngine(fail=True)]:
+        data, errors = fake_run(config, engine, FakeEngine())
+        assert data["exit_code"] == 2 and data["error"] and errors
+        assert data["summary"]["completed_pairs"] == 0
+    config.candidate_options = {"Missing": True}
+    data, errors = fake_run(config, FakeEngine(), FakeEngine())
+    assert data["exit_code"] == 2 and "does not advertise option Missing" in errors
+    print("PASS incomplete depth, bounds, illegal PV, engine errors and unsupported options reject success")
+    passed += 1
+
+    with tempfile.TemporaryDirectory(prefix="regicide-benchmark-test-") as directory:
+        temporary = Path(directory)
+        selected = temporary / "positions.json"
+        selected.write_text(json.dumps({"positions": declared["positions"][:2]}), encoding="utf-8")
+        output = temporary / "benchmark.json"
+        commit = RUNNER.git_command("rev-parse", "HEAD")
+        command = [sys.executable, str(ROOT / "scripts/benchmark_search.py"), str(binary), str(binary),
+                   "--depth", "1", "--repeats", "2", "--positions", str(selected),
+                   "--baseline-commit", commit, "--candidate-commit", commit, "--output", str(output)]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=45)
+        assert result.returncode == 0, (result.stdout, result.stderr)
+        evidence = json.loads(output.read_text(encoding="utf-8"))
+        assert evidence["exit_code"] == 0 and evidence["summary"]["completed_pairs"] == 4
+        assert evidence["summary"]["score_mismatches"] == 0
+        assert len(evidence["records"]) == 4
+        advertises_tt = "UseTranspositionTable" in evidence["engines"]["candidate"]["advertised_options"]
+        for record in evidence["records"]:
+            assert record["scores_equal"]
+            for role in RUNNER.ROLES:
+                board = chess.Board(record[role]["search_fen"])
+                assert chess.Move.from_uci(record[role]["move"]) in board.legal_moves
+                assert record[role]["depth"] == 1 and record[role]["nodes"] > 0
+                if advertises_tt:
+                    counters = record[role]["tt_counters"]
+                    assert counters is not None and counters["probes"] > 0 and counters["stores"] > 0
+                    assert counters["cutoffs"] <= counters["hits"] <= counters["probes"]
+        for role in RUNNER.ROLES:
+            assert evidence["summary"]["transposition_counters"][role]["samples_reporting"] == (
+                4 if advertises_tt else 0)
+        original = output.read_bytes()
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        assert result.returncode == 2 and "output already exists" in result.stderr
+        assert output.read_bytes() == original
+        result = subprocess.run(command + ["--overwrite"], capture_output=True, text=True, timeout=45)
+        assert result.returncode == 0, (result.stdout, result.stderr)
+        input_command = command.copy()
+        input_command[-1] = str(binary)
+        result = subprocess.run(input_command + ["--overwrite"], capture_output=True, text=True, timeout=10)
+        assert result.returncode == 2 and "output must not replace an input file" in result.stderr
+    print("PASS real UCI depth-one repeats, legal moves, persisted scores, overwrite refusal and explicit overwrite")
+    passed += 1
+    print(f"benchmark harness: {passed} checks passed")
+
+
+if __name__ == "__main__":
+    main()
