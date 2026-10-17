@@ -1,10 +1,12 @@
-# 자체 대국 엔진 v0.2 → v0.4.1
+# 자체 대국 엔진 v0.2 → v0.5.0
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
 v0.4는 평가를 유지하고 [프로파일링 기반 최적화·전이표](PERFORMANCE.md)를 추가한다. 이전 버전과 [속도·같은 시간 대국 결과](experiments/2026-10-17-profile-transposition.md)를 따로 측정했다.
 
 v0.4.1은 [전이표 메모리를 재사용](HASH_MEMORY_REUSE.md)하고 검색별 기록을 세대로 격리한다. 옵션·이력이 달라져도 이전 결과를 읽지 않으며, [반복 검색 비용과 같은 시간 대국](experiments/2026-10-17-hash-memory.md)을 별도로 검증했다.
+
+v0.5.0은 [패배 분석 기반 탐색 개선](LOSS_GUIDED_SEARCH.md)으로 비캡처 체크를 제한적으로 연장하고 killer/history 일반 수 정렬을 추가한다. [검증·같은 시간 비교](experiments/2026-10-17-loss-guided.md)를 개발/보류 표본으로 나눠 기록한다.
 
 ## 원리와 작은 체스 예
 
@@ -25,8 +27,8 @@ Alpha-beta는 현재 최선의 선택을 바꿀 수 없는 응수들을 건너�
 | 평가 | 기물 가치 + 중앙화·전개·국면별 위치 점수, 현재 둘 차례 기준의 부호 |
 | 탐색 | negamax와 alpha-beta, 깊이 1..64 |
 | 중단 복구 | 깊이 1부터 반복 심화; 마지막으로 끝난 깊이의 수·점수·주요 수순 유지 |
-| 안정화 탐색 | 깊이 끝의 잡기·모든 승격을 연장; 체크 중에는 모든 회피 수를 탐색 |
-| 수 순서 | 전이표·직전 최선 수, 캡처·승격 우선; 동점은 출발·도착·승격 문자 순서로 고정 |
+| 안정화 탐색 | 깊이 끝의 잡기·모든 승격 및 경로당 비캡처 체크 1회 연장; 체크 중에는 모든 회피 수를 탐색 |
+| 수 순서 | 전이표·직전 최선 수, 캡처·승격, killer/history 일반 수; 동점은 좌표 순서로 고정 |
 | 재사용 | 기본 16 MiB 전이표 버퍼를 세션에서 유지, 검색별 새 기록; 위치·반복 맥락·50수 카운터와 동일 남은 깊이를 확인 |
 | 종료 | 메이트와 무승부를 깊이 끝의 정적 평가보다 먼저 확인; 빠른 메이트를 선호 |
 | 자원 | 탐색 노드 수, 밀리초 시간, 원자적 중지 신호; 단일 탐색 스레드 |
@@ -38,7 +40,7 @@ Alpha-beta는 현재 최선의 선택을 바꿀 수 없는 응수들을 건너�
 
 3회 반복·50수 청구는 선택 가능한 0점으로 반영한다. 이길 수 있는 수가 있으면 탐색에서 승리를 계속 고려한다. UCI에는 무승부를 청구하는 표준 출력 명령이 없으므로 **청구와 최종 대국 판정은 대국 관리자의 책임**이다. 기본 Python 실행 도구는 양측이 가능한 청구를 항상 하는 정책이다. 따라서 이길 기회가 있어도 청구 정책 때문에 무승부가 될 수 있다.
 
-신경망과 학습은 아직 없다. 안정화 탐색은 잡기·승격과 체크 회피를 연장하지만 조용한 전술 전체와 수평선 문제를 해결하지는 못한다. 위치 평가·안정화·전이표·검색 전용 빠른 수 적용은 각각 꺼서 비교할 수 있다. 규칙 코어와 그 검증을 유지하며 외부 엔진의 수를 가져오지 않았다. 대국 완주와 이전 버전 대비 통제된 비교는 별도의 검증이다.
+신경망과 학습은 아직 없다. 안정화 탐색은 잡기·승격·제한된 비캡처 체크와 체크 회피를 연장하지만 조용한 전술 전체와 수평선 문제를 해결하지는 못한다. 위치 평가·안정화·전이표·검색 전용 빠른 수 적용은 각각 꺼서 비교할 수 있다. 규칙 코어와 그 검증을 유지하며 외부 엔진의 수를 가져오지 않았다. 대국 완주와 이전 버전 대비 통제된 비교는 별도의 검증이다.
 
 ## 콘솔에서 수 고르기
 
@@ -70,6 +72,8 @@ setoption name UseTranspositionTable value true
 setoption name Hash value 16
 setoption name Clear Hash
 setoption name UseFastMoves value true
+setoption name UseQuietMoveOrdering value true
+setoption name UseQuiescenceChecks value true
 ucinewgame
 position startpos moves e2e4 e7e5
 position fen <6개 FEN 필드> moves <좌표 수순>
@@ -121,4 +125,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Test
 
 Linux에서는 기존 CMake 빌드 후 같은 세 Python 검증에 `build/regicide`를 전달한다. CI는 Windows/Linux에서 기존 규칙 테스트와 새 탐색·UCI·대국 검증을 함께 실행한다. 실제 실행 결과는 `experiments/`와 커밋의 Actions 결과를 확인한다.
 
-확인일: 2026-10-17. 프로토콜은 원저자 Shredder의 [UCI 안내](https://www.shredderchess.com/chess-features/uci-universal-chess-interface.html)에서 제공하는 [원본 명세](https://www.shredderchess.com/download/div/uci.zip)를 참고했다. 연결·PGN 도구는 [python-chess 1.11.2 엔진 문서](https://python-chess.readthedocs.io/en/v1.11.2/engine.html)와 해당 패키지 API를 사용한다. Python 패키지는 GPL-3.0-or-later이며 C++ 코어에 복사·링크하지 않는다. 수 선택·평가·탐색 구현은 자체 코드다. 다른 엔진의 코드·모델·기보 학습 데이터는 사용하지 않았다.
+확인일: 2026-10-17. 프로토콜은 원저자 Shredder의 [UCI 안내](https://www.shredderchess.com/chess-features/uci-universal-chess-interface.html)에서 제공하는 [원본 명세](https://www.shredderchess.com/download/div/uci.zip)를 참고했다. 연결·PGN 도구는 [python-chess 1.11.2 엔진 문서](https://python-chess.readthedocs.io/en/v1.11.2/engine.html)와 해당 패키지 API를 사용한다. Python 패키지는 GPL-3.0-or-later이며 C++ 코어에 복사·링크하지 않는다. 수 선택·평가·탐색 구현은 자체 코드다. 다른 엔진의 코드·모델·기보 학습 데이터는 사용하지 않았다. v0.5.0 패배 분석에는 별도 Stockfish 16을 진단 도구로 사용했으며 출처·이용 조건과 한계는 해당 실험 기록에 남겼다.

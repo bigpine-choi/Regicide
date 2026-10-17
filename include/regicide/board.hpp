@@ -64,6 +64,9 @@ public:
     // Search-only fast path: move must come from legal_moves() on this exact
     // board state. Debug builds assert that precondition; external input uses play().
     void play_generated(Move move);
+    // Same fresh-legal-move precondition; predicts check after the move without
+    // modifying the position, history, repetition state, or search keys.
+    bool gives_check_generated(Move move) const;
     void undo();
     std::size_t history_size() const { return history_.size(); }
     bool operator==(const Board&) const = default;

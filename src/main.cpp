@@ -61,11 +61,12 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.4.1\n"
+            std::cout << "Regicide 0.5.0\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
+                         "    --no-quiet-ordering --no-quiescence-checks\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -98,6 +99,8 @@ int main(int argc, char** argv) {
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;
             else if (command == "search" && option == "--no-fast-moves") search_options.fast_moves = false;
+            else if (command == "search" && option == "--no-quiet-ordering") search_options.quiet_ordering = false;
+            else if (command == "search" && option == "--no-quiescence-checks") search_options.quiescence_checks = false;
             else if (command == "search" && option == "--hash" && arg < argc) {
                 const int amount = depth_arg(argv[arg++]);
                 if (amount < 1 || amount > 256) throw std::invalid_argument("hash must be 1..256 MiB");

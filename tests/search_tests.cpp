@@ -13,7 +13,7 @@ namespace {
 SearchResult legacy_search(const Board& board, const SearchLimits& limits,
                            const std::atomic_bool* stop = nullptr,
                            SearchCallback callback = {}) {
-    return search(board, limits, stop, std::move(callback), {false, false, false, 16, false});
+    return search(board, limits, stop, std::move(callback), {false, false, false, 16, false, false, false});
 }
 
 int assertions = 0, groups = 0, failures = 0;
@@ -101,6 +101,57 @@ int quiet_minimax(Board& board, int depth, int ply = 0) {
         if (!depth && !checked && position.squares[move.to] == '.' && !ep && !move.promotion) continue;
         board.play(move);
         const int score = -quiet_minimax(board, std::max(0, depth - 1), ply + 1);
+        board.undo();
+        best = std::max(best, score);
+    }
+    return best;
+}
+
+struct CheckOracleCoverage {
+    int quiet_checks = 0;
+    int zero_budget_evasions = 0;
+    int zero_budget_counterchecks = 0;
+    int captures_with_budget = 0;
+    int promotions_with_budget = 0;
+};
+
+// Independent bounded-check oracle: enumerate every legal move and inspect the
+// resulting check state with play(), without the generated-check helper,
+// pruning, ordering, cache or production qsearch code.
+int check_minimax(Board& board, int depth, int checks_left, CheckOracleCoverage& coverage,
+                  int ply = 0) {
+    const auto outcome = board.outcome();
+    if (outcome == Outcome::checkmate) return -mate_score + ply;
+    if (outcome != Outcome::ongoing) return 0;
+    expect(ply < 20, "bounded-check oracle fixture is too deep");
+    const bool checked = board.in_check();
+    int best = depth || checked ? -32000 : evaluate_material(board);
+    const auto position = board.position();
+    for (Move move : board.legal_moves()) {
+        const char piece = position.squares[move.from];
+        const bool capture = position.squares[move.to] != '.' ||
+            ((piece == 'P' || piece == 'p') && move.to == position.en_passant);
+        const bool tactical = capture || move.promotion;
+        board.play(move);
+        const bool gives_check = board.in_check();
+        if (!depth && !checked && !tactical && !(checks_left && gives_check)) {
+            board.undo();
+            continue;
+        }
+        int child_budget = checks_left;
+        if (!depth) {
+            if (checked && checks_left == 0) {
+                ++coverage.zero_budget_evasions;
+                if (!tactical && gives_check) ++coverage.zero_budget_counterchecks;
+            }
+            if (!tactical && gives_check) {
+                ++coverage.quiet_checks;
+                child_budget = std::max(0, checks_left - 1);
+            }
+            if (capture && checks_left) ++coverage.captures_with_budget;
+            if (move.promotion && checks_left) ++coverage.promotions_with_budget;
+        }
+        const int score = -check_minimax(board, std::max(0, depth - 1), child_budget, coverage, ply + 1);
         board.undo();
         best = std::max(best, score);
     }
@@ -312,7 +363,7 @@ int main() {
             Board board(fen);
             const auto saved = board;
             const int expected = quiet_minimax(board, 1);
-            const auto result = search(board, {.depth = 1}, nullptr, {}, {false, true});
+            const auto result = search(board, {.depth = 1}, nullptr, {}, {false, true, true, 16, true, false, false});
             expect(result.score == expected, "quiescence differs from unpruned tactical oracle");
             expect(board == saved, "oracle or production quiescence changed board/history");
             valid_pv(board, result);
@@ -568,6 +619,98 @@ int main() {
         same_graph(restarted, other_worker);
         expect(other_worker.tt_allocations == 1 && !other_worker.tt_reuses,
                "independent worker contexts must own independent allocations");
+    });
+    test("quiet move ordering changes work without changing exact fixed-depth scores", [] {
+        for (const char* fen : {"7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+                                "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            const int expected = minimax(board, 2, 0, true);
+            const auto old = search(board, {.depth = 2}, nullptr, {}, {true, false, false, 1, true, false, false});
+            const auto ordered = search(board, {.depth = 2}, nullptr, {}, {true, false, false, 1, true, true, false});
+            expect(old.score == expected && ordered.score == expected,
+                   "killer/history ordering must preserve unpruned minimax value");
+            expect(board == saved, "quiet ordering changed board or history");
+            valid_pv(board, ordered);
+        }
+        Board initial;
+        const auto old = search(initial, {.depth = 4}, nullptr, {}, {true, false, false, 1, true, false, false});
+        const auto ordered = search(initial, {.depth = 4}, nullptr, {}, {true, false, false, 1, true, true, false});
+        expect(old.score == ordered.score && old.depth == 4 && ordered.depth == 4,
+               "ordering must not change completed initial-position minimax value");
+        expect(ordered.nodes < old.nodes, "initial fixture must exercise useful quiet cutoffs");
+        valid_pv(initial, ordered);
+        SearchContext context;
+        const auto fresh = search(initial, {.depth = 3}, nullptr, {}, {true, false, true, 1, true, true, false}, &context);
+        (void)search(initial, {.depth = 4, .nodes = 50}, nullptr, {},
+                     {true, false, true, 1, true, false, false}, &context);
+        const auto repeated = search(initial, {.depth = 3}, nullptr, {}, {true, false, true, 1, true, true, false}, &context);
+        same_graph(fresh, repeated);
+    });
+    test("one quiet-check qsearch matches an unpruned independent oracle", [] {
+        CheckOracleCoverage total;
+        for (const char* fen : {"7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1",
+                                "1k6/8/7b/8/8/8/2R5/K7 w - - 0 1",
+                                "r6k/3p4/8/4P3/8/8/8/6K1 b - - 0 1",
+                                "6k1/8/8/8/8/8/p7/6KR w - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            CheckOracleCoverage coverage;
+            const int expected = check_minimax(board, 1, 1, coverage);
+            const auto cached = search(board, {.depth = 1}, nullptr, {}, {false, true, true, 1, true, true, true});
+            const auto plain = search(board, {.depth = 1}, nullptr, {}, {false, true, false, 1, true, false, true});
+            expect(cached.score == expected && plain.score == expected && !cached.stopped && !plain.stopped,
+                   "bounded quiet checks must preserve the independent tactical value");
+            expect(board == saved, "quiet check generation or recursion changed original state");
+            valid_pv(board, cached);
+            total.quiet_checks += coverage.quiet_checks;
+            total.zero_budget_evasions += coverage.zero_budget_evasions;
+            total.zero_budget_counterchecks += coverage.zero_budget_counterchecks;
+            total.captures_with_budget += coverage.captures_with_budget;
+            total.promotions_with_budget += coverage.promotions_with_budget;
+        }
+        expect(total.quiet_checks > 0 && total.zero_budget_evasions > 0 &&
+                   total.zero_budget_counterchecks > 0,
+               "fixtures must cover quiet checks and all evasions including counterchecks at zero budget");
+        expect(total.captures_with_budget > 0 && total.promotions_with_budget > 0,
+               "fixtures must cover captures and promotions preserving the quiet-check budget");
+    });
+    test("quiet checks recognize mate beyond the capture-only frontier", [] {
+        Board board("7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1");
+        const auto capture_only = search(board, {.depth = 1}, nullptr, {}, {false, true, true, 1, true, true, false});
+        const auto checking = search(board, {.depth = 1}, nullptr, {}, {false, true, true, 1, true, true, true});
+        expect(capture_only.score > -mate_score + max_search_ply,
+               "capture-only fixture must miss the quiet mating move");
+        expect(checking.score == -mate_score + 2 && checking.pv.size() == 2,
+               "one quiet checking move must reveal mate on the second ply");
+        Board line = board;
+        line.play(checking.pv.front());
+        expect(line.position().squares[checking.pv[1].to] == '.', "mating move must be a non-capture");
+        line.play(checking.pv[1]);
+        expect(line.outcome() == Outcome::checkmate, "quiet-check mate must be verified on the board");
+        valid_pv(board, checking);
+    });
+    test("Caro-Kann loss regression sees the checking knight refutation", [] {
+        Board board("1k2r2r/p3b1p1/5p2/3qnN2/Pp4P1/8/1PQB1P1P/2R3KR w - - 0 30");
+        const auto saved = board;
+        const auto old = search(board, {.depth = 2}, nullptr, {}, {true, true, true, 1, true, true, false});
+        const auto checking = search(board, {.depth = 2}, nullptr, {}, {true, true, true, 1, true, true, true});
+        expect(old.best_move == Move::from_uci("f5e7"), "recorded loss fixture must still tempt Nxe7");
+        expect(checking.best_move != old.best_move && checking.depth == 2 && !checking.stopped,
+               "quiet checking continuation must change the tempting capture choice");
+        expect(board == saved, "tactical extension changed the regression position");
+        valid_pv(board, checking);
+        const auto no_cache = search(board, {.depth = 2}, nullptr, {}, {true, true, false, 1, true, true, true});
+        expect(no_cache.score == checking.score, "normal-node TT must preserve the new qsearch value");
+        SearchContext context;
+        (void)search(board, {.depth = 2}, nullptr, {}, {true, true, true, 1, true, true, false}, &context);
+        const auto reused = search(board, {.depth = 2}, nullptr, {}, {true, true, true, 1, true, true, true}, &context);
+        same_graph(checking, reused);
+        const auto interrupted = search(board, {.depth = 3, .nodes = 100}, nullptr, {},
+                                        {true, true, true, 1, true, true, true}, &context);
+        expect(interrupted.stopped && interrupted.nodes == 100 && legal(board, interrupted.best_move) && board == saved,
+               "quiet-check extension must share exact cancellation budget and restore history");
+        valid_pv(board, interrupted);
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

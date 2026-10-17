@@ -412,6 +412,15 @@ void Board::play_generated(Move move) {
 #endif
     apply_generated(move);
 }
+bool Board::gives_check_generated(Move move) const {
+#ifndef NDEBUG
+    const auto moves = legal_moves();
+    assert(std::find(moves.begin(), moves.end(), move) != moves.end());
+#endif
+    Position next = position_;
+    apply(next, move);
+    return checked(next, next.turn);
+}
 void Board::apply_generated(Move move) {
     if (position_.halfmove == std::numeric_limits<int>::max() || position_.fullmove == std::numeric_limits<int>::max())
         throw std::overflow_error("move counters exhausted");

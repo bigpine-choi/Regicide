@@ -1,5 +1,6 @@
 #include "regicide/board.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -40,6 +41,29 @@ void verify_tree(Board& board, int depth) {
         board.undo();
         expect(board == saved, "generated move undo changed exact board/history/cache");
     }
+}
+void verify_check_tree(const Board& board, int depth) {
+    const Board saved = board;
+    for (auto move : board.legal_moves()) {
+        const bool predicted = board.gives_check_generated(move);
+        expect(board == saved, "check prediction mutated position/history/keys");
+        Board played = board;
+        played.play_generated(move);
+        expect(predicted == played.in_check(), "check prediction differs from applied move " + move.uci());
+        if (depth > 1) verify_check_tree(played, depth - 1);
+    }
+}
+void expect_check(const char* fen, const char* text, bool checking) {
+    const Board board(fen), saved = board;
+    const auto move = Move::from_uci(text);
+    const auto moves = board.legal_moves();
+    expect(std::find(moves.begin(), moves.end(), move) != moves.end(), std::string("test move is not legal: ") + text);
+    const bool predicted = board.gives_check_generated(move);
+    expect(predicted == checking, std::string("wrong check classification for ") + text);
+    expect(board == saved, "special check prediction mutated full board/history");
+    Board played = board;
+    played.play_generated(move);
+    expect(predicted == played.in_check(), "special check prediction differs after play");
 }
 constexpr std::initializer_list<std::string_view> kingside_cycle = {"g1f3", "g8f6", "f3g1", "f6g8"};
 constexpr std::initializer_list<std::string_view> queenside_cycle = {"b1c3", "b8c6", "c3b1", "c6b8"};
@@ -151,6 +175,46 @@ int main() {
         }
         while (board.history_size()) board.undo();
         expect(board == Board(), "full undo failed to restore initial caches");
+    });
+    test("generated check prediction handles direct discovered and special checks", [] {
+        expect_check("4k3/8/8/8/8/8/8/R3K3 w - - 0 1", "a1a8", true);
+        expect_check("4k3/8/8/8/8/8/8/R3K3 w - - 0 1", "a1a2", false);
+        expect_check("4k3/8/8/8/8/8/4B3/4R1K1 w - - 0 1", "e2d3", true);
+        // Castling checks come from the rook's relocation, for either color.
+        expect_check("5k2/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1", true);
+        expect_check("3k4/8/8/8/8/8/8/R3K3 w Q - 0 1", "e1c1", true);
+        expect_check("4k2r/8/8/8/8/8/8/5K2 b k - 0 1", "e8g8", true);
+        // EP removes a second pawn, revealing a rook line that was doubly blocked.
+        expect_check("8/8/8/R2pP2k/8/8/8/K7 w - d6 0 2", "e5d6", true);
+        expect_check("k7/8/8/8/r2Pp2K/8/8/8 b - d3 0 2", "e4d3", true);
+        expect_check("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2", "e5d6", false);
+        // The promoted piece type determines check, including underpromotions.
+        for (char piece : {'q', 'r', 'b', 'n'}) {
+            const std::string promotion = std::string("a7a8") + piece;
+            expect_check("7k/P7/8/8/8/8/8/7K w - - 0 1", promotion.c_str(), piece == 'q' || piece == 'r');
+            expect_check("8/P1k5/8/8/8/8/8/7K w - - 0 1", promotion.c_str(), piece == 'n');
+            expect_check("7K/P7/8/8/8/8/8/7k w - - 0 1", promotion.c_str(), piece == 'q' || piece == 'b');
+            const std::string capture = std::string("a7b8") + piece;
+            expect_check("1r5k/P7/8/8/8/8/8/7K w - - 0 1", capture.c_str(), piece == 'q' || piece == 'r');
+        }
+        // A legal check evasion can itself give a quiet countercheck.
+        expect_check("4r3/8/8/7k/8/8/8/4KB2 w - - 0 1", "f1e2", true);
+    });
+    test("all generated check predictions match full play and preserve repetition history", [] {
+        for (const char* fen : {
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+            "8/8/8/R2pP2k/8/8/8/K7 w - d6 0 2",
+            "k7/8/8/8/r2Pp2K/8/8/8 b - d3 0 2",
+            "1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1",
+            "4k3/8/8/8/8/8/p7/1R2K3 b - - 0 1",
+            "4r3/8/8/7k/8/8/8/4KB2 w - - 0 1"}) {
+            verify_check_tree(Board(fen), 2);
+        }
+        Board repeated;
+        play(repeated, kingside_cycle);
+        expect(repeated.repetition_count() == 2 && repeated.has_repetition_candidate(), "history fixture lacks repetition");
+        verify_check_tree(repeated, 2);
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

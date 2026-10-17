@@ -223,7 +223,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert "Regicide" in engine.id.get("name", ""), engine.id
+        assert engine.id.get("name") == "Regicide 0.5.0", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -437,7 +437,7 @@ def test_evaluation_options(binary):
     # not with a position-table adjustment or an arbitrary move blacklist.
     board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        for option in ["UsePositionalEvaluation", "UseQuiescence"]:
+        for option in ["UsePositionalEvaluation", "UseQuiescence", "UseQuietMoveOrdering", "UseQuiescenceChecks"]:
             assert option in engine.options and engine.options[option].default is True, engine.options
         engine.configure({"UsePositionalEvaluation": False, "UseQuiescence": False})
         shallow = engine.play(board, chess.engine.Limit(depth=1))
@@ -625,7 +625,8 @@ def test_reused_table_context_isolation(binary):
     fixtures = [chess.Board(), *histories, imported, old_clock, later_fullmove,
                 chess.Board(CAPTURE_FEN)]
     defaults = {"Hash": 1, "UsePositionalEvaluation": True, "UseQuiescence": True,
-                "UseTranspositionTable": True, "UseFastMoves": True}
+                "UseTranspositionTable": True, "UseFastMoves": True,
+                "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True}
     with UciProcess(binary) as reused:
         configure(reused, **defaults)
         for index, board in enumerate(fixtures):
@@ -639,7 +640,9 @@ def test_reused_table_context_isolation(binary):
                                 reuses=int(index != 0), hash_mb=1)
         for change in [{"UsePositionalEvaluation": False}, {"UseQuiescence": False},
                        {"UsePositionalEvaluation": False, "UseQuiescence": False},
-                       {"UseTranspositionTable": False}, {"UseFastMoves": False}, {}]:
+                       {"UseTranspositionTable": False}, {"UseFastMoves": False},
+                       {"UseQuietMoveOrdering": False}, {"UseQuiescenceChecks": False},
+                       {"UseQuietMoveOrdering": False, "UseQuiescenceChecks": False}, {}]:
             options = defaults | change
             board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
             with UciProcess(binary) as cold:
@@ -702,6 +705,104 @@ def test_table_options_during_search(binary):
         assert search_fingerprint(*repeated) == search_fingerprint(*original)
 
 
+def test_search_quality_option_lifecycle(binary):
+    """New heuristics are strict options and cannot leak through retained TT memory."""
+    defaults = {"Hash": 1, "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True}
+    board = chess.Board(CAPTURE_FEN)
+    with UciProcess(binary) as engine:
+        configure(engine, **defaults)
+        original = search_fingerprint(*engine.search(board, "go depth 2"))
+        for name in ("UseQuietMoveOrdering", "UseQuiescenceChecks"):
+            for suffix in ("value yes", "", "value", "value false extra"):
+                command = f"setoption name {name} {suffix}".rstrip()
+                engine.send(command)
+                rejected = engine.ready()
+                assert any(line.startswith("info string ") for line in rejected), (command, rejected)
+                assert not any(line.startswith("bestmove ") for line in rejected), (command, rejected)
+        after_rejections = search_fingerprint(*engine.search(board, "go depth 2"))
+        assert after_rejections == original, (original, after_rejections)
+
+        options = dict(defaults)
+        for name, enabled in [("UseQuietMoveOrdering", False), ("UseQuiescenceChecks", False),
+                              ("UseQuietMoveOrdering", True), ("UseQuiescenceChecks", True)]:
+            # Changes arrive while a worker owns the retained table. readyok
+            # must follow its single final result and the option assignment.
+            start = chess.Board()
+            engine.position(start)
+            engine.send("go infinite")
+            engine.await_search_started()
+            command = f"setoption name {name} value {str(enabled).lower()}"
+            engine.send(command)
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (command, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in start.legal_moves, output
+            assert_legal_pvs(start, output)
+            engine.ready()
+            options[name] = enabled
+            actual = engine.search(board, "go depth 2")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 2")
+            assert search_fingerprint(*actual) == search_fingerprint(*expected), (options, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+
+        # The same disabled feature configuration survives new-game invalidation
+        # and a resized buffer; a fresh process supplies the independent query.
+        configure(engine, UseQuietMoveOrdering=False, UseQuiescenceChecks=False)
+        options.update(UseQuietMoveOrdering=False, UseQuiescenceChecks=False)
+        for command, size, allocated in [("ucinewgame", 1, 0),
+                                         ("setoption name Hash value 16", 16, 1),
+                                         ("setoption name Hash value 1", 1, 1)]:
+            engine.send(command)
+            engine.ready()
+            options["Hash"] = size
+            actual = engine.search(board, "go depth 2")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 2")
+            assert search_fingerprint(*actual) == search_fingerprint(*expected), (command, actual, expected)
+            assert_table_memory(actual[1], allocations=allocated, reuses=int(not allocated), hash_mb=size)
+
+
+def test_search_quality_option_behavior(binary):
+    # A capture-only horizon misses the opponent's quiet ...Qd1#. Independent
+    # replay verifies the checking continuation, rather than trusting a CP shift.
+    trap = chess.Board("7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1")
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        for name in ("UseQuietMoveOrdering", "UseQuiescenceChecks"):
+            option = engine.options[name]
+            assert option.type == "check" and option.default is True, option
+        engine.configure({"Hash": 1, "UseQuiescence": True, "UseQuietMoveOrdering": True})
+        for board in (trap, trap.mirror()):
+            engine.configure({"UseQuiescenceChecks": False})
+            old_horizon = engine.play(board, chess.engine.Limit(depth=1), info=chess.engine.INFO_ALL)
+            assert old_horizon.move in board.legal_moves
+            assert old_horizon.info["score"].pov(board.turn).mate() is None, old_horizon
+            engine.configure({"UseQuiescenceChecks": True})
+            checked = engine.play(board, chess.engine.Limit(depth=1), info=chess.engine.INFO_ALL)
+            assert checked.move in board.legal_moves
+            assert checked.info["score"].pov(board.turn).mate() == -1, checked
+            continuation = board.copy()
+            for move in checked.info["pv"]:
+                assert move in continuation.legal_moves, checked
+                continuation.push(move)
+            assert continuation.is_checkmate(), checked
+            assert checked.info["nodes"] > old_horizon.info["nodes"], (old_horizon, checked)
+
+        # With extensions and TT disabled this is the same full-width minimax
+        # query. Ordering must be applied, but need not change its exact score.
+        engine.configure({"UseQuiescence": False, "UseQuiescenceChecks": False,
+                          "UseTranspositionTable": False, "UseQuietMoveOrdering": False})
+        board = chess.Board()
+        original_order = engine.play(board, chess.engine.Limit(depth=4), info=chess.engine.INFO_ALL)
+        engine.configure({"UseQuietMoveOrdering": True})
+        learned_order = engine.play(board, chess.engine.Limit(depth=4), info=chess.engine.INFO_ALL)
+        assert original_order.move in board.legal_moves and learned_order.move in board.legal_moves
+        assert original_order.info["score"] == learned_order.info["score"], (original_order, learned_order)
+        assert original_order.info["nodes"] != learned_order.info["nodes"], (original_order, learned_order)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -711,7 +812,8 @@ def main():
               test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options,
               test_transposition_options, test_transposition_search, test_transposition_isolation,
               test_table_allocation_reuse, test_reused_table_context_isolation,
-              test_table_options_during_search]
+              test_table_options_during_search, test_search_quality_option_lifecycle,
+              test_search_quality_option_behavior]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)

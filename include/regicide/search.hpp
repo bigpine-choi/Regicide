@@ -32,6 +32,8 @@ struct SearchOptions {
     bool transposition = true;
     int hash_mb = 16; // Fresh scores per search; accepted range is 1..256 MiB.
     bool fast_moves = true; // Only for moves just returned by legal_moves().
+    bool quiet_ordering = true; // Search-local killer/history ordering, no pruning.
+    bool quiescence_checks = true; // One optional quiet check; all evasions remain.
 };
 
 struct SearchResult {

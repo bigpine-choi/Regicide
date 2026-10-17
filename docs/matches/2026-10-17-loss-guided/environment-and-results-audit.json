@@ -1,0 +1,262 @@
+{
+  "status": "PASS",
+  "audited_utc": "2026-10-17T14:12:45.143218+00:00",
+  "candidate_commit": "7b796435fefa1ef197b29bd02a103e8c8d5ee8f5",
+  "guard_sha256": "769ff044ebbefaef264ebb49f5a5fc255238d88153c135e6fa5eb1020cbeefbf",
+  "guard": {
+    "started": "2026-10-17T23:06:55.5571318+09:00",
+    "prior_state": 2147483648,
+    "requested_state": "ES_CONTINUOUS | ES_SYSTEM_REQUIRED",
+    "display_required": false,
+    "persistent_power_policy_changed": false,
+    "candidate_commit": "7b796435fefa1ef197b29bd02a103e8c8d5ee8f5",
+    "bundles": [
+      {
+        "name": "development100",
+        "started": "2026-10-17T23:06:55.5614132+09:00",
+        "finished": "2026-10-17T23:08:49.9069683+09:00",
+        "exit_code": 0
+      },
+      {
+        "name": "heldout100",
+        "started": "2026-10-17T23:08:49.9194195+09:00",
+        "finished": "2026-10-17T23:11:07.3274301+09:00",
+        "exit_code": 0
+      }
+    ],
+    "finished": "2026-10-17T23:11:07.3339698+09:00",
+    "restore_requested_state": 2147483648,
+    "restore_succeeded": true
+  },
+  "event_query_sha256": "b5ee3fbf91f2ecc5b34507d325df2ce156c27d596baabad9eead994b67ef3d21",
+  "event_query": {
+    "queried_at": "2026-10-17T23:11:43.7878452+09:00",
+    "log": "System",
+    "provider": "Microsoft-Windows-Kernel-Power",
+    "ids": [
+      506,
+      507
+    ],
+    "start": "2026-10-17T23:06:55.5571318+09:00",
+    "end": "2026-10-17T23:11:07.3339698+09:00",
+    "events": 0,
+    "result": "query succeeded"
+  },
+  "events_sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+  "events": [],
+  "frozen_wrapper_sha256": "a7918a86d48487d030c4ef038def526b7f32fbdefce0b68bc00b1e05a229c604",
+  "conditions": [
+    {
+      "name": "development100",
+      "dataset_role": "development",
+      "match_sha256": "04d341439de64860ea626351a713f77909f549c1616df2707b045f4237e5d9eb",
+      "pgn_sha256": "15330f71b0e2f3a03ce0e153a573ce230f8df6aa65c5b5d3cba3d213f3a27541",
+      "individual_audit_sha256": "2ccfa96bf0a5af87f99bae01a2a53517feea956a5bac915913b7c01f0a00e21a",
+      "bundle": {
+        "name": "development100",
+        "started": "2026-10-17T23:06:55.5614132+09:00",
+        "finished": "2026-10-17T23:08:49.9069683+09:00",
+        "exit_code": 0
+      },
+      "candidate_wdl": [
+        4,
+        4,
+        8
+      ],
+      "candidate_score": 0.375,
+      "paired_opening_bootstrap95_descriptive": {
+        "interval": [
+          0.21875,
+          0.53125
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "completed_games": 16,
+      "total_pgn_plies": 1476,
+      "engine_selected_plies": 1384,
+      "pv_plies": 6392,
+      "terminations": {
+        "checkmate": 12,
+        "threefold_repetition": 4
+      },
+      "statistics": {
+        "baseline": {
+          "searched_moves": 692,
+          "mean_depth": 4.1473988439306355,
+          "mean_nodes": 35767.492774566475,
+          "mean_seldepth": 16.95086705202312,
+          "mean_engine_time_ms": 80.0,
+          "max_engine_time_ms": 80.0,
+          "mean_wall_time_ms": 81.72190751445086,
+          "max_wall_time_ms": 83.797,
+          "wall_over_requested_budget_moves": 0,
+          "engine_over_effective_allowance_moves": 0,
+          "total_nodes": 24751105,
+          "total_wall_seconds": 56.55156
+        },
+        "candidate": {
+          "searched_moves": 692,
+          "mean_depth": 3.7326589595375723,
+          "mean_nodes": 31902.755780346823,
+          "mean_seldepth": 19.846820809248555,
+          "mean_engine_time_ms": 80.0,
+          "max_engine_time_ms": 80.0,
+          "mean_wall_time_ms": 81.71734537572254,
+          "max_wall_time_ms": 82.84700000000001,
+          "wall_over_requested_budget_moves": 0,
+          "engine_over_effective_allowance_moves": 0,
+          "total_nodes": 22076707,
+          "total_wall_seconds": 56.548403
+        }
+      },
+      "source_checks": {
+        "baseline": {
+          "source_commit": "a31091548033d538e01d2c194f05bada403d5263",
+          "binary_sha256": "8bee3b83d05e39474eb00752b340ddb38d89ac5e51a6d475c4ec69045162f035",
+          "source_files_compared_to_commit": 13,
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-strength-baseline\\source",
+          "limit": "Source files and recorded binary hashes verified; this audit does not independently rebuild the executable."
+        },
+        "candidate": {
+          "source_commit": "7b796435fefa1ef197b29bd02a103e8c8d5ee8f5",
+          "binary_sha256": "cf4162a083d81756aa282595005ae0c9f06bebb4a15b098e0afabae5fb4bf7b9",
+          "source_files_compared_to_commit": 13,
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide",
+          "limit": "Source files and recorded binary hashes verified; this audit does not independently rebuild the executable."
+        }
+      },
+      "options_verified": {
+        "both": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "UseFastMoves": true
+        },
+        "candidate": {
+          "Clear Hash": {
+            "type": "button",
+            "default": null
+          },
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true
+        },
+        "requested_options": {}
+      }
+    },
+    {
+      "name": "heldout100",
+      "dataset_role": "heldout",
+      "match_sha256": "c23809c0f0049f65a18b0b187acdbb9169f5d7c546b749131606429bcbec17d9",
+      "pgn_sha256": "3b2a18551349733fc535f7631242dc9e1056d09d910fe632cda1d10137c1cb71",
+      "individual_audit_sha256": "d1287a9d1aa679646ad67f1a8eaf7c02f56c7869ef6afb0a87dbe05b33685658",
+      "bundle": {
+        "name": "heldout100",
+        "started": "2026-10-17T23:08:49.9194195+09:00",
+        "finished": "2026-10-17T23:11:07.3274301+09:00",
+        "exit_code": 0
+      },
+      "candidate_wdl": [
+        10,
+        3,
+        3
+      ],
+      "candidate_score": 0.71875,
+      "paired_opening_bootstrap95_descriptive": {
+        "interval": [
+          0.53125,
+          0.90625
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "completed_games": 16,
+      "total_pgn_plies": 1791,
+      "engine_selected_plies": 1671,
+      "pv_plies": 8789,
+      "terminations": {
+        "threefold_repetition": 3,
+        "checkmate": 13
+      },
+      "statistics": {
+        "baseline": {
+          "searched_moves": 834,
+          "mean_depth": 4.896882494004796,
+          "mean_nodes": 52352.17865707434,
+          "mean_seldepth": 15.56474820143885,
+          "mean_engine_time_ms": 80.0,
+          "max_engine_time_ms": 80.0,
+          "mean_wall_time_ms": 81.53145563549161,
+          "max_wall_time_ms": 82.576,
+          "wall_over_requested_budget_moves": 0,
+          "engine_over_effective_allowance_moves": 0,
+          "total_nodes": 43661717,
+          "total_wall_seconds": 67.997234
+        },
+        "candidate": {
+          "searched_moves": 837,
+          "mean_depth": 4.416965352449224,
+          "mean_nodes": 47884.114695340504,
+          "mean_seldepth": 18.019115890083633,
+          "mean_engine_time_ms": 80.0,
+          "max_engine_time_ms": 80.0,
+          "mean_wall_time_ms": 81.53777419354839,
+          "max_wall_time_ms": 82.706,
+          "wall_over_requested_budget_moves": 0,
+          "engine_over_effective_allowance_moves": 0,
+          "total_nodes": 40079004,
+          "total_wall_seconds": 68.247117
+        }
+      },
+      "source_checks": {
+        "baseline": {
+          "source_commit": "a31091548033d538e01d2c194f05bada403d5263",
+          "binary_sha256": "8bee3b83d05e39474eb00752b340ddb38d89ac5e51a6d475c4ec69045162f035",
+          "source_files_compared_to_commit": 13,
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-strength-baseline\\source",
+          "limit": "Source files and recorded binary hashes verified; this audit does not independently rebuild the executable."
+        },
+        "candidate": {
+          "source_commit": "7b796435fefa1ef197b29bd02a103e8c8d5ee8f5",
+          "binary_sha256": "cf4162a083d81756aa282595005ae0c9f06bebb4a15b098e0afabae5fb4bf7b9",
+          "source_files_compared_to_commit": 13,
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide",
+          "limit": "Source files and recorded binary hashes verified; this audit does not independently rebuild the executable."
+        }
+      },
+      "options_verified": {
+        "both": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "UseFastMoves": true
+        },
+        "candidate": {
+          "Clear Hash": {
+            "type": "button",
+            "default": null
+          },
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true
+        },
+        "requested_options": {}
+      }
+    }
+  ],
+  "legality_totals_only": {
+    "games": 32,
+    "actual_pgn_plies": 3267,
+    "engine_selected_plies": 3055,
+    "pv_plies": 15181
+  },
+  "interpretation": "Held-out and development results point in opposite directions. The new fixed held-out sample improved; development performance regressed. Do not pool the two WDL percentages or claim general strength/Elo improvement.",
+  "scope": "Saved PGN/JSON, source and executable hashes, guard records and live System-event query verified. No independent engine-binary rebuild; no claim of hard real-time guarantees."
+}
