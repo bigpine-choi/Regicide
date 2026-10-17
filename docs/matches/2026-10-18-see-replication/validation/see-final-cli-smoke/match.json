@@ -1,0 +1,644 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-17T18:23:14.669279+00:00",
+  "harness_checkout": {
+    "commit": "5a3eb23318a247318df1334e3113cc6408eb9330",
+    "status_porcelain": "",
+    "scope": "harness checkout at match start; not proof of either binary's build source"
+  },
+  "engines": {
+    "baseline": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-baseline\\source\\build\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "c333ccfa7ec3efbaa7f52df4c007875e64f68d0816a847c1390aa3213d0e427b",
+      "provided_source_commit": "1441d5ec23733af570b05521620935619c39cefa",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {},
+      "engine_id": {
+        "name": "Regicide 0.5.1",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    },
+    "candidate": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+      "provided_source_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {
+        "Hash": 16,
+        "Move Overhead": 20,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "engine_id": {
+        "name": "Regicide 0.5.2",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    }
+  },
+  "python_version": "3.13.16",
+  "chess_version": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD",
+  "logical_cpus": 16,
+  "limits": {
+    "nodes": null,
+    "depth": null,
+    "movetime_ms": 100
+  },
+  "max_plies": 500,
+  "draw_policy": "claim",
+  "draw_policy_detail": "Both players always claim an available threefold or 50-move draw, including an intended legal next move.",
+  "opening_source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-final-cli-smoke\\opening.json",
+  "opening_file_sha256": "dbc9cc5c94ab40a3c9b2bce34c4e7bbc85a82a746af8a777f96705f2918bb4e0",
+  "opening_document": {
+    "openings": [
+      {
+        "name": "Previously tested fools mate only",
+        "moves": [
+          "f2f3",
+          "e7e5",
+          "g2g4"
+        ],
+        "fen_after_opening": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2"
+      }
+    ]
+  },
+  "selected_openings": [
+    {
+      "name": "Previously tested fools mate only",
+      "moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "fen_after_opening": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2"
+    }
+  ],
+  "opening_selection": "Ordered prefix fixed by invocation before results; both colors per opening.",
+  "pair_order": "Each opening: candidate White, then candidate Black; openings in file order.",
+  "backtrack_definition": "Adjacent engine-selected moves by the same side, both quiet non-pawn moves and neither a check evasion, form an opportunity. A->B then B->A by the same piece is a backtrack. Opening moves excluded. This is not a judgment that the reversal was unnecessary.",
+  "move_selection": "Supplied binaries only; deterministic opening and color schedule; no runner move randomness.",
+  "games_requested": 2,
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "opening": "Previously tested fools mate only",
+      "opening_uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "opening_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+      "white": "candidate",
+      "black": "baseline",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",
+      "uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4",
+        "d8h4"
+      ],
+      "plies": 4,
+      "search_moves": [
+        {
+          "ply": 4,
+          "role": "baseline",
+          "color": "black",
+          "move": "d8h4",
+          "fen_before": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "elapsed_seconds": 0.082791,
+          "nodes": 51815,
+          "depth": 5,
+          "seldepth": 15,
+          "engine_time_seconds": 0.08,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8h4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 0.0,
+      "elapsed_seconds": 0.08332,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 0
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 0
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 1,
+          "reported_nodes": 51815,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.082791
+        },
+        "candidate": {
+          "searched_moves": 0,
+          "reported_nodes": 0,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0
+        }
+      }
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "opening": "Previously tested fools mate only",
+      "opening_uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "opening_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+      "white": "baseline",
+      "black": "candidate",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",
+      "uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4",
+        "d8h4"
+      ],
+      "plies": 4,
+      "search_moves": [
+        {
+          "ply": 4,
+          "role": "candidate",
+          "color": "black",
+          "move": "d8h4",
+          "fen_before": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "elapsed_seconds": 0.082392,
+          "nodes": 48947,
+          "depth": 5,
+          "seldepth": 15,
+          "engine_time_seconds": 0.08,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8h4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 1.0,
+      "elapsed_seconds": 0.082834,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 0
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 0
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 0,
+          "reported_nodes": 0,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0
+        },
+        "candidate": {
+          "searched_moves": 1,
+          "reported_nodes": 48947,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.082392
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "total_elapsed_seconds": 0.544374,
+  "completed": true,
+  "summary": {
+    "candidate_wins": 1,
+    "candidate_draws": 0,
+    "candidate_losses": 1,
+    "completed_games": 2,
+    "incomplete_games": 0,
+    "unplayed_games": 0,
+    "scheduled_games": 2,
+    "attempted_games": 2,
+    "incomplete_scope": "incomplete_games counts attempted unfinished games; unplayed_games counts scheduled games never started after an error.",
+    "candidate_points": 1.0,
+    "candidate_score": 0.5,
+    "score_scope": "Finite match score among completed games only; no Elo estimate.",
+    "wilson95_descriptive": [
+      0.09453120573423074,
+      0.9054687942657693
+    ],
+    "wilson_interpretation": "Approximate descriptive Wilson interval with draws as half a success; independent Bernoulli assumptions do not hold for draws or paired openings and can overstate certainty.",
+    "paired_opening_bootstrap95_descriptive": null,
+    "pairs": [
+      {
+        "pair": 1,
+        "opening": "Previously tested fools mate only",
+        "games": [
+          1,
+          2
+        ],
+        "completed": true,
+        "results": [
+          "0-1",
+          "0-1"
+        ],
+        "candidate_points": 1.0,
+        "candidate_score": 0.5
+      }
+    ],
+    "backtracks": {
+      "baseline": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      },
+      "candidate": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      }
+    },
+    "resources": {
+      "baseline": {
+        "searched_moves": 1,
+        "reported_nodes": 51815,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.082791
+      },
+      "candidate": {
+        "searched_moves": 1,
+        "reported_nodes": 48947,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.082392
+      }
+    }
+  },
+  "exit_code": 0,
+  "external_engine_guard": {
+    "schema_version": 1,
+    "started_utc": "2026-10-17T18:23:04.603568+00:00",
+    "finished_utc": "2026-10-17T18:23:15.228844+00:00",
+    "monitor_root_pid": 20284,
+    "monitor_root_creation_ticks": 134367349841383285,
+    "poll_seconds": 0.5,
+    "max_allowed_snapshot_gap_seconds": 2.0,
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "engine_names": [
+      "lc0-cpu.exe",
+      "lc0.exe",
+      "regicide.exe",
+      "stockfish.exe"
+    ],
+    "new_or_disappearing_external_engine_is_failure": true,
+    "snapshot_count": 29,
+    "max_snapshot_gap_seconds": 0.5320336000004318,
+    "max_snapshot_duration_seconds": 0.016954400023678318,
+    "external_cpu_increase_ticks": 0,
+    "owned_engines": [
+      {
+        "pid": 3272,
+        "creation_ticks": 134367349949045577,
+        "parent_pid": 20284,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          3272,
+          20284
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 3272,
+            "parent_pid": 20284,
+            "creation_ticks": 134367349949045577
+          },
+          {
+            "pid": 20284,
+            "parent_pid": 39152,
+            "creation_ticks": 134367349841383285
+          }
+        ]
+      },
+      {
+        "pid": 13224,
+        "creation_ticks": 134367349949374441,
+        "parent_pid": 20284,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          13224,
+          20284
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 13224,
+            "parent_pid": 20284,
+            "creation_ticks": 134367349949374441
+          },
+          {
+            "pid": 20284,
+            "parent_pid": 39152,
+            "creation_ticks": 134367349841383285
+          }
+        ]
+      }
+    ],
+    "transport_engines": {
+      "baseline": {
+        "pid": 3272,
+        "creation_ticks": 134367349949045577,
+        "parent_pid": 20284,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          3272,
+          20284
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 3272,
+            "parent_pid": 20284,
+            "creation_ticks": 134367349949045577
+          },
+          {
+            "pid": 20284,
+            "parent_pid": 39152,
+            "creation_ticks": 134367349841383285
+          }
+        ],
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-baseline\\source\\build\\regicide.exe",
+          "uci"
+        ]
+      },
+      "candidate": {
+        "pid": 13224,
+        "creation_ticks": 134367349949374441,
+        "parent_pid": 20284,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          13224,
+          20284
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 13224,
+            "parent_pid": 20284,
+            "creation_ticks": 134367349949374441
+          },
+          {
+            "pid": 20284,
+            "parent_pid": 39152,
+            "creation_ticks": 134367349841383285
+          }
+        ],
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+          "uci"
+        ]
+      }
+    },
+    "external_engine_identities": [
+      {
+        "pid": 18392,
+        "creation_ticks": 134367207003283831,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 2842812500
+      },
+      {
+        "pid": 29128,
+        "creation_ticks": 134367246683890009,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 761718750
+      },
+      {
+        "pid": 14996,
+        "creation_ticks": 134367256611607980,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 2168281250
+      },
+      {
+        "pid": 16684,
+        "creation_ticks": 134367283253665253,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 1335781250
+      },
+      {
+        "pid": 20244,
+        "creation_ticks": 134367312384632090,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 433593750
+      },
+      {
+        "pid": 7408,
+        "creation_ticks": 134367324002242136,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 3768593750
+      }
+    ],
+    "observed_external_engine_cpu_increase": false,
+    "contaminated": false,
+    "valid_for_comparison": true,
+    "failure": null,
+    "completed_idle_seconds": 10.051917300006608,
+    "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded.",
+    "harness_commit": "5a3eb23318a247318df1334e3113cc6408eb9330",
+    "candidate_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+    "baseline_commit": "1441d5ec23733af570b05521620935619c39cefa",
+    "movetime_ms": 100,
+    "monitor_log_sha256": "43c78e63f0a6309d7921469c071f480c8e4caf30979ae3f125d56fd16dbc4041",
+    "error": null,
+    "exit_code": 0
+  },
+  "valid_for_comparison": true,
+  "harness_source_commit": "5a3eb23318a247318df1334e3113cc6408eb9330"
+}

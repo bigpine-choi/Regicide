@@ -1,0 +1,635 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-17T18:19:31.451197+00:00",
+  "harness_checkout": {
+    "commit": "2bf2406b426f31f240930cb423dcfd913e0d7037",
+    "status_porcelain": "M .gitattributes\n M .github/workflows/rules.yml\n M docs/experiments/2026-10-18-see-replication-plan.md\n?? scripts/run_see_clean_comparison.ps1\n?? scripts/see_clean_guard.py\n?? tests/audit_see_replication.py\n?? tests/see_clean_guard_tests.py",
+    "scope": "harness checkout at match start; not proof of either binary's build source"
+  },
+  "engines": {
+    "baseline": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-baseline\\source\\build\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "c333ccfa7ec3efbaa7f52df4c007875e64f68d0816a847c1390aa3213d0e427b",
+      "provided_source_commit": "1441d5ec23733af570b05521620935619c39cefa",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {},
+      "engine_id": {
+        "name": "Regicide 0.5.1",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    },
+    "candidate": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+      "provided_source_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {
+        "Hash": 16,
+        "Move Overhead": 20,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "engine_id": {
+        "name": "Regicide 0.5.2",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    }
+  },
+  "python_version": "3.13.16",
+  "chess_version": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD",
+  "logical_cpus": 16,
+  "limits": {
+    "nodes": null,
+    "depth": 1,
+    "movetime_ms": null
+  },
+  "max_plies": 10,
+  "draw_policy": "claim",
+  "draw_policy_detail": "Both players always claim an available threefold or 50-move draw, including an intended legal next move.",
+  "opening_source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-clean-uci-smoke-v2\\fools-mate-only.json",
+  "opening_file_sha256": "4f304cc31bafd0963a7c40ff8dc7914a6d45090f92ec7db2ece7f7e24a802678",
+  "opening_document": {
+    "openings": [
+      {
+        "name": "Existing public Fool's Mate in one",
+        "moves": [
+          "f2f3",
+          "e7e5",
+          "g2g4"
+        ],
+        "fen_after_opening": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2"
+      }
+    ]
+  },
+  "selected_openings": [
+    {
+      "name": "Existing public Fool's Mate in one",
+      "moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "fen_after_opening": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2"
+    }
+  ],
+  "opening_selection": "Ordered prefix fixed by invocation before results; both colors per opening.",
+  "pair_order": "Each opening: candidate White, then candidate Black; openings in file order.",
+  "backtrack_definition": "Adjacent engine-selected moves by the same side, both quiet non-pawn moves and neither a check evasion, form an opportunity. A->B then B->A by the same piece is a backtrack. Opening moves excluded. This is not a judgment that the reversal was unnecessary.",
+  "move_selection": "Supplied binaries only; deterministic opening and color schedule; no runner move randomness.",
+  "games_requested": 2,
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "opening": "Existing public Fool's Mate in one",
+      "opening_uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "opening_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+      "white": "candidate",
+      "black": "baseline",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",
+      "uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4",
+        "d8h4"
+      ],
+      "plies": 4,
+      "search_moves": [
+        {
+          "ply": 4,
+          "role": "baseline",
+          "color": "black",
+          "move": "d8h4",
+          "fen_before": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "elapsed_seconds": 0.004564,
+          "nodes": 40,
+          "depth": 1,
+          "seldepth": 3,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8h4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 0.0,
+      "elapsed_seconds": 0.004955,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 0
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 0
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 1,
+          "reported_nodes": 40,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.004564
+        },
+        "candidate": {
+          "searched_moves": 0,
+          "reported_nodes": 0,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0
+        }
+      }
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "opening": "Existing public Fool's Mate in one",
+      "opening_uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "opening_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+      "white": "baseline",
+      "black": "candidate",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",
+      "uci_moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4",
+        "d8h4"
+      ],
+      "plies": 4,
+      "search_moves": [
+        {
+          "ply": 4,
+          "role": "candidate",
+          "color": "black",
+          "move": "d8h4",
+          "fen_before": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "elapsed_seconds": 0.005338,
+          "nodes": 40,
+          "depth": 1,
+          "seldepth": 3,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8h4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 1.0,
+      "elapsed_seconds": 0.005868,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 0
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 0
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 0,
+          "reported_nodes": 0,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0
+        },
+        "candidate": {
+          "searched_moves": 1,
+          "reported_nodes": 40,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.005338
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "total_elapsed_seconds": 0.35161,
+  "completed": true,
+  "summary": {
+    "candidate_wins": 1,
+    "candidate_draws": 0,
+    "candidate_losses": 1,
+    "completed_games": 2,
+    "incomplete_games": 0,
+    "unplayed_games": 0,
+    "scheduled_games": 2,
+    "attempted_games": 2,
+    "incomplete_scope": "incomplete_games counts attempted unfinished games; unplayed_games counts scheduled games never started after an error.",
+    "candidate_points": 1.0,
+    "candidate_score": 0.5,
+    "score_scope": "Finite match score among completed games only; no Elo estimate.",
+    "wilson95_descriptive": [
+      0.09453120573423074,
+      0.9054687942657693
+    ],
+    "wilson_interpretation": "Approximate descriptive Wilson interval with draws as half a success; independent Bernoulli assumptions do not hold for draws or paired openings and can overstate certainty.",
+    "paired_opening_bootstrap95_descriptive": null,
+    "pairs": [
+      {
+        "pair": 1,
+        "opening": "Existing public Fool's Mate in one",
+        "games": [
+          1,
+          2
+        ],
+        "completed": true,
+        "results": [
+          "0-1",
+          "0-1"
+        ],
+        "candidate_points": 1.0,
+        "candidate_score": 0.5
+      }
+    ],
+    "backtracks": {
+      "baseline": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      },
+      "candidate": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      }
+    },
+    "resources": {
+      "baseline": {
+        "searched_moves": 1,
+        "reported_nodes": 40,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.004564
+      },
+      "candidate": {
+        "searched_moves": 1,
+        "reported_nodes": 40,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.005338
+      }
+    }
+  },
+  "exit_code": 0,
+  "guard_smoke": {
+    "schema_version": 1,
+    "started_utc": "2026-10-17T18:19:31.326898+00:00",
+    "finished_utc": "2026-10-17T18:19:31.828139+00:00",
+    "monitor_root_pid": 39180,
+    "monitor_root_creation_ticks": 134367347687301528,
+    "poll_seconds": 0.01,
+    "max_allowed_snapshot_gap_seconds": 2.0,
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "engine_names": [
+      "lc0-cpu.exe",
+      "lc0.exe",
+      "regicide.exe",
+      "stockfish.exe"
+    ],
+    "new_or_disappearing_external_engine_is_failure": true,
+    "snapshot_count": 24,
+    "max_snapshot_gap_seconds": 0.03277930000331253,
+    "max_snapshot_duration_seconds": 0.014805400016484782,
+    "external_cpu_increase_ticks": 0,
+    "owned_engines": [
+      {
+        "pid": 18472,
+        "creation_ticks": 134367347716690941,
+        "parent_pid": 39180,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          18472,
+          39180
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 18472,
+            "parent_pid": 39180,
+            "creation_ticks": 134367347716690941
+          },
+          {
+            "pid": 39180,
+            "parent_pid": 25228,
+            "creation_ticks": 134367347687301528
+          }
+        ]
+      },
+      {
+        "pid": 35772,
+        "creation_ticks": 134367347716936924,
+        "parent_pid": 39180,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          35772,
+          39180
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 35772,
+            "parent_pid": 39180,
+            "creation_ticks": 134367347716936924
+          },
+          {
+            "pid": 39180,
+            "parent_pid": 25228,
+            "creation_ticks": 134367347687301528
+          }
+        ]
+      }
+    ],
+    "transport_engines": {
+      "baseline": {
+        "pid": 18472,
+        "creation_ticks": 134367347716690941,
+        "parent_pid": 39180,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          18472,
+          39180
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 18472,
+            "parent_pid": 39180,
+            "creation_ticks": 134367347716690941
+          },
+          {
+            "pid": 39180,
+            "parent_pid": 25228,
+            "creation_ticks": 134367347687301528
+          }
+        ],
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-baseline\\source\\build\\regicide.exe",
+          "uci"
+        ]
+      },
+      "candidate": {
+        "pid": 35772,
+        "creation_ticks": 134367347716936924,
+        "parent_pid": 39180,
+        "name": "regicide.exe",
+        "ancestry_to_monitor": [
+          35772,
+          39180
+        ],
+        "ancestry_processes": [
+          {
+            "pid": 35772,
+            "parent_pid": 39180,
+            "creation_ticks": 134367347716936924
+          },
+          {
+            "pid": 39180,
+            "parent_pid": 25228,
+            "creation_ticks": 134367347687301528
+          }
+        ],
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+          "uci"
+        ]
+      }
+    },
+    "external_engine_identities": [
+      {
+        "pid": 18392,
+        "creation_ticks": 134367207003283831,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 2842812500
+      },
+      {
+        "pid": 29128,
+        "creation_ticks": 134367246683890009,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 761718750
+      },
+      {
+        "pid": 14996,
+        "creation_ticks": 134367256611607980,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 2168281250
+      },
+      {
+        "pid": 16684,
+        "creation_ticks": 134367283253665253,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 1335781250
+      },
+      {
+        "pid": 20244,
+        "creation_ticks": 134367312384632090,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 433593750
+      },
+      {
+        "pid": 7408,
+        "creation_ticks": 134367324002242136,
+        "name": "regicide.exe",
+        "initial_cpu_ticks": 3521718750
+      }
+    ],
+    "observed_external_engine_cpu_increase": false,
+    "contaminated": false,
+    "valid_for_comparison": false,
+    "failure": null,
+    "completed_idle_seconds": 0.11214330000802875,
+    "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded."
+  }
+}
