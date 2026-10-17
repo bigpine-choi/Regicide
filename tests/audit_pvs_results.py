@@ -319,7 +319,7 @@ def markdown(result):
     for match in result["matches"]:
         low, high = match["paired_opening_bootstrap95"]["interval"]
         lines.append(f"| {match['movetime_ms']}ms | {match['candidate_wins']}·{match['candidate_draws']}·{match['candidate_losses']} "
-                     f"| {match['candidate_score']:.3%} | {low:.3%}–{high:.3%} |")
+                     f"| {match['candidate_score']:.3%} | {low:.3%} ~ {high:.3%} |")
     lines += ["", "부트스트랩은 사전 선언 seed 20261018, 20,000회입니다. 기존 대국 도구의 seed 20261017 요약은 원자료에 보존했습니다.",
               "8개 고정 시작 쌍의 기술적 참고 구간이며 보편적인 강도나 Elo 구간이 아닙니다.", "",
               "| 비용 조건 | 후보/기준 전체 노드 | 기준/후보 시간 중앙 비율 | 점수 차이 |", "|---|---:|---:|---:|"]

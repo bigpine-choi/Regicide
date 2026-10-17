@@ -1,0 +1,910 @@
+{
+  "status": "PASS",
+  "candidate_commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+  "baseline_commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+  "chess_version": "1.11.2",
+  "scope": "Independent replay and metadata/hash consistency; not an independent binary rebuild.",
+  "costs": [
+    {
+      "status": "PASS",
+      "depth": 3,
+      "pvs_enabled": true,
+      "input_json_sha256": "eaa8193f8a6c58ce97922525f9fe227536088a349e36a69bae4680f9e62f80e2",
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        }
+      },
+      "measured_pairs": 50,
+      "score_differences": 0,
+      "pv_plies": 320,
+      "nodes_total": {
+        "baseline": 364310,
+        "candidate": 262675
+      },
+      "node_ratio_candidate_over_baseline": 0.7210205594136861,
+      "median_paired_wall_speedup_baseline_over_candidate": 1.1787472035730784,
+      "per_position": [
+        {
+          "name": "Initial position",
+          "baseline": {
+            "median_wall_ms": 1.615600020159036,
+            "median_nodes": 645
+          },
+          "candidate": {
+            "median_wall_ms": 1.5888999914750457,
+            "median_nodes": 652
+          }
+        },
+        {
+          "name": "Open game",
+          "baseline": {
+            "median_wall_ms": 6.611900025745854,
+            "median_nodes": 2570
+          },
+          "candidate": {
+            "median_wall_ms": 5.382500006817281,
+            "median_nodes": 2079
+          }
+        },
+        {
+          "name": "Queen pawn game",
+          "baseline": {
+            "median_wall_ms": 3.9219000027514994,
+            "median_nodes": 1695
+          },
+          "candidate": {
+            "median_wall_ms": 4.229000012855977,
+            "median_nodes": 1632
+          }
+        },
+        {
+          "name": "Sicilian family",
+          "baseline": {
+            "median_wall_ms": 20.628099999157712,
+            "median_nodes": 8969
+          },
+          "candidate": {
+            "median_wall_ms": 15.367899992270395,
+            "median_nodes": 6633
+          }
+        },
+        {
+          "name": "French family",
+          "baseline": {
+            "median_wall_ms": 26.809100003447384,
+            "median_nodes": 11752
+          },
+          "candidate": {
+            "median_wall_ms": 23.55030001490377,
+            "median_nodes": 10157
+          }
+        },
+        {
+          "name": "Caro-Kann family",
+          "baseline": {
+            "median_wall_ms": 24.52659999835305,
+            "median_nodes": 10303
+          },
+          "candidate": {
+            "median_wall_ms": 20.30529998592101,
+            "median_nodes": 8497
+          }
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "baseline": {
+            "median_wall_ms": 56.037900008959696,
+            "median_nodes": 25161
+          },
+          "candidate": {
+            "median_wall_ms": 31.163500010734424,
+            "median_nodes": 14345
+          }
+        },
+        {
+          "name": "Reti-English family",
+          "baseline": {
+            "median_wall_ms": 13.536199985537678,
+            "median_nodes": 5995
+          },
+          "candidate": {
+            "median_wall_ms": 11.370599997462705,
+            "median_nodes": 5041
+          }
+        },
+        {
+          "name": "Defended rook recapture",
+          "baseline": {
+            "median_wall_ms": 7.546300010289997,
+            "median_nodes": 5598
+          },
+          "candidate": {
+            "median_wall_ms": 5.502100015291944,
+            "median_nodes": 3326
+          }
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "baseline": {
+            "median_wall_ms": 0.8555999957025051,
+            "median_nodes": 174
+          },
+          "candidate": {
+            "median_wall_ms": 1.0069000127259642,
+            "median_nodes": 173
+          }
+        }
+      ]
+    },
+    {
+      "status": "PASS",
+      "depth": 4,
+      "pvs_enabled": true,
+      "input_json_sha256": "e706a372c1e830588deaa3bb1acb844de27f931d2d9fd35fc652027f894e37ed",
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        }
+      },
+      "measured_pairs": 50,
+      "score_differences": 0,
+      "pv_plies": 470,
+      "nodes_total": {
+        "baseline": 1723125,
+        "candidate": 1046725
+      },
+      "node_ratio_candidate_over_baseline": 0.6074573812114618,
+      "median_paired_wall_speedup_baseline_over_candidate": 1.325112481065446,
+      "per_position": [
+        {
+          "name": "Initial position",
+          "baseline": {
+            "median_wall_ms": 4.948099987814203,
+            "median_nodes": 2199
+          },
+          "candidate": {
+            "median_wall_ms": 4.69509998220019,
+            "median_nodes": 2189
+          }
+        },
+        {
+          "name": "Open game",
+          "baseline": {
+            "median_wall_ms": 45.404400007100776,
+            "median_nodes": 13370
+          },
+          "candidate": {
+            "median_wall_ms": 34.5136999967508,
+            "median_nodes": 10003
+          }
+        },
+        {
+          "name": "Queen pawn game",
+          "baseline": {
+            "median_wall_ms": 31.054299994139,
+            "median_nodes": 13319
+          },
+          "candidate": {
+            "median_wall_ms": 21.805399999720976,
+            "median_nodes": 8570
+          }
+        },
+        {
+          "name": "Sicilian family",
+          "baseline": {
+            "median_wall_ms": 188.40849999105558,
+            "median_nodes": 57175
+          },
+          "candidate": {
+            "median_wall_ms": 123.12350000138395,
+            "median_nodes": 36720
+          }
+        },
+        {
+          "name": "French family",
+          "baseline": {
+            "median_wall_ms": 203.63050000742078,
+            "median_nodes": 61522
+          },
+          "candidate": {
+            "median_wall_ms": 140.5945000005886,
+            "median_nodes": 42059
+          }
+        },
+        {
+          "name": "Caro-Kann family",
+          "baseline": {
+            "median_wall_ms": 86.55300000100397,
+            "median_nodes": 36369
+          },
+          "candidate": {
+            "median_wall_ms": 81.73490001354367,
+            "median_nodes": 33881
+          }
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "baseline": {
+            "median_wall_ms": 393.9906999876257,
+            "median_nodes": 116146
+          },
+          "candidate": {
+            "median_wall_ms": 145.82509998581372,
+            "median_nodes": 43121
+          }
+        },
+        {
+          "name": "Reti-English family",
+          "baseline": {
+            "median_wall_ms": 62.44529999094084,
+            "median_nodes": 28326
+          },
+          "candidate": {
+            "median_wall_ms": 46.613499987870455,
+            "median_nodes": 20583
+          }
+        },
+        {
+          "name": "Defended rook recapture",
+          "baseline": {
+            "median_wall_ms": 29.026800009887666,
+            "median_nodes": 15668
+          },
+          "candidate": {
+            "median_wall_ms": 23.169899999629706,
+            "median_nodes": 11704
+          }
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "baseline": {
+            "median_wall_ms": 2.0623999880626798,
+            "median_nodes": 531
+          },
+          "candidate": {
+            "median_wall_ms": 2.1071000082883984,
+            "median_nodes": 515
+          }
+        }
+      ]
+    },
+    {
+      "status": "PASS",
+      "depth": 3,
+      "pvs_enabled": false,
+      "input_json_sha256": "0d30babbf0693111a39df05df9a6cad97319d96f95fc8b7b2094cabdece6abc8",
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": false
+          }
+        }
+      },
+      "measured_pairs": 50,
+      "score_differences": 0,
+      "pv_plies": 320,
+      "nodes_total": {
+        "baseline": 364310,
+        "candidate": 364310
+      },
+      "node_ratio_candidate_over_baseline": 1.0,
+      "median_paired_wall_speedup_baseline_over_candidate": 1.0091902573136144,
+      "per_position": [
+        {
+          "name": "Initial position",
+          "baseline": {
+            "median_wall_ms": 1.7028000147547573,
+            "median_nodes": 645
+          },
+          "candidate": {
+            "median_wall_ms": 1.812900009099394,
+            "median_nodes": 645
+          }
+        },
+        {
+          "name": "Open game",
+          "baseline": {
+            "median_wall_ms": 6.443899997975677,
+            "median_nodes": 2570
+          },
+          "candidate": {
+            "median_wall_ms": 6.460000004153699,
+            "median_nodes": 2570
+          }
+        },
+        {
+          "name": "Queen pawn game",
+          "baseline": {
+            "median_wall_ms": 4.334400000516325,
+            "median_nodes": 1695
+          },
+          "candidate": {
+            "median_wall_ms": 4.1028999839909375,
+            "median_nodes": 1695
+          }
+        },
+        {
+          "name": "Sicilian family",
+          "baseline": {
+            "median_wall_ms": 20.62669998849742,
+            "median_nodes": 8969
+          },
+          "candidate": {
+            "median_wall_ms": 20.844000013312325,
+            "median_nodes": 8969
+          }
+        },
+        {
+          "name": "French family",
+          "baseline": {
+            "median_wall_ms": 26.87180001521483,
+            "median_nodes": 11752
+          },
+          "candidate": {
+            "median_wall_ms": 26.483299996471033,
+            "median_nodes": 11752
+          }
+        },
+        {
+          "name": "Caro-Kann family",
+          "baseline": {
+            "median_wall_ms": 24.29830000619404,
+            "median_nodes": 10303
+          },
+          "candidate": {
+            "median_wall_ms": 24.172700010240078,
+            "median_nodes": 10303
+          }
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "baseline": {
+            "median_wall_ms": 55.738900002324954,
+            "median_nodes": 25161
+          },
+          "candidate": {
+            "median_wall_ms": 55.312099982984364,
+            "median_nodes": 25161
+          }
+        },
+        {
+          "name": "Reti-English family",
+          "baseline": {
+            "median_wall_ms": 13.157600013073534,
+            "median_nodes": 5995
+          },
+          "candidate": {
+            "median_wall_ms": 13.106500002322719,
+            "median_nodes": 5995
+          }
+        },
+        {
+          "name": "Defended rook recapture",
+          "baseline": {
+            "median_wall_ms": 7.755800004815683,
+            "median_nodes": 5598
+          },
+          "candidate": {
+            "median_wall_ms": 7.661699986783788,
+            "median_nodes": 5598
+          }
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "baseline": {
+            "median_wall_ms": 0.9250000002793968,
+            "median_nodes": 174
+          },
+          "candidate": {
+            "median_wall_ms": 1.0653000208549201,
+            "median_nodes": 174
+          }
+        }
+      ]
+    },
+    {
+      "status": "PASS",
+      "depth": 4,
+      "pvs_enabled": false,
+      "input_json_sha256": "ebb697f598cd90d7387fcddafec67bb5146821ef6147b29a091a5a154efd2df4",
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": false
+          }
+        }
+      },
+      "measured_pairs": 50,
+      "score_differences": 0,
+      "pv_plies": 470,
+      "nodes_total": {
+        "baseline": 1723125,
+        "candidate": 1723125
+      },
+      "node_ratio_candidate_over_baseline": 1.0,
+      "median_paired_wall_speedup_baseline_over_candidate": 0.9965916687431793,
+      "per_position": [
+        {
+          "name": "Initial position",
+          "baseline": {
+            "median_wall_ms": 6.431500019971281,
+            "median_nodes": 2199
+          },
+          "candidate": {
+            "median_wall_ms": 6.818599998950958,
+            "median_nodes": 2199
+          }
+        },
+        {
+          "name": "Open game",
+          "baseline": {
+            "median_wall_ms": 45.424000010825694,
+            "median_nodes": 13370
+          },
+          "candidate": {
+            "median_wall_ms": 46.55669999192469,
+            "median_nodes": 13370
+          }
+        },
+        {
+          "name": "Queen pawn game",
+          "baseline": {
+            "median_wall_ms": 41.861799982143566,
+            "median_nodes": 13319
+          },
+          "candidate": {
+            "median_wall_ms": 44.05299999052659,
+            "median_nodes": 13319
+          }
+        },
+        {
+          "name": "Sicilian family",
+          "baseline": {
+            "median_wall_ms": 187.55899998359382,
+            "median_nodes": 57175
+          },
+          "candidate": {
+            "median_wall_ms": 194.33420000132173,
+            "median_nodes": 57175
+          }
+        },
+        {
+          "name": "French family",
+          "baseline": {
+            "median_wall_ms": 228.48530000192113,
+            "median_nodes": 61522
+          },
+          "candidate": {
+            "median_wall_ms": 222.13080001529306,
+            "median_nodes": 61522
+          }
+        },
+        {
+          "name": "Caro-Kann family",
+          "baseline": {
+            "median_wall_ms": 126.89429998863488,
+            "median_nodes": 36369
+          },
+          "candidate": {
+            "median_wall_ms": 130.099700007122,
+            "median_nodes": 36369
+          }
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "baseline": {
+            "median_wall_ms": 418.52589999325573,
+            "median_nodes": 116146
+          },
+          "candidate": {
+            "median_wall_ms": 416.94970001117326,
+            "median_nodes": 116146
+          }
+        },
+        {
+          "name": "Reti-English family",
+          "baseline": {
+            "median_wall_ms": 97.40329999476671,
+            "median_nodes": 28326
+          },
+          "candidate": {
+            "median_wall_ms": 89.23049998702481,
+            "median_nodes": 28326
+          }
+        },
+        {
+          "name": "Defended rook recapture",
+          "baseline": {
+            "median_wall_ms": 28.79950002534315,
+            "median_nodes": 15668
+          },
+          "candidate": {
+            "median_wall_ms": 29.49580000131391,
+            "median_nodes": 15668
+          }
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "baseline": {
+            "median_wall_ms": 1.9073000003118068,
+            "median_nodes": 531
+          },
+          "candidate": {
+            "median_wall_ms": 1.9933000148739666,
+            "median_nodes": 531
+          }
+        }
+      ]
+    }
+  ],
+  "matches": [
+    {
+      "status": "PASS",
+      "input_json_sha256": "5aa9a47d467289f0bebe3aa35674998587408b41e384fab8c664d7b34f590611",
+      "input_pgn_sha256": "c9f89236cf206d4f7f5e1b31212b30ed1854d28b8b35fd46d9e7e577f920e800",
+      "movetime_ms": 100,
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        }
+      },
+      "candidate_wins": 9,
+      "candidate_draws": 4,
+      "candidate_losses": 3,
+      "candidate_points": 11.0,
+      "candidate_score": 0.6875,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "actual_plies": 1366,
+      "pv_plies": 5498,
+      "terminations": {
+        "checkmate": 12,
+        "threefold_repetition": 4
+      },
+      "pair_scores": [
+        1.0,
+        0.5,
+        1.0,
+        0.25,
+        0.75,
+        0.75,
+        0.5,
+        0.75
+      ],
+      "paired_opening_bootstrap95": {
+        "seed": 20261018,
+        "resamples": 20000,
+        "pairs": 8,
+        "interval": [
+          0.5,
+          0.84375
+        ],
+        "scope": "Descriptive fixed-opening paired percentile bootstrap, not universal strength or Elo."
+      },
+      "harness_bootstrap_preserved": {
+        "interval": [
+          0.5,
+          0.84375
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 618,
+          "nodes_total": 18352636,
+          "mean_nodes": 29696.822006472492,
+          "mean_completed_depth": 3.8009708737864076,
+          "mean_seldepth": 19.846278317152105,
+          "mean_wall_ms": 81.76689644012946,
+          "max_wall_ms": 84.49900000000001,
+          "mean_internal_ms": 80.0,
+          "max_internal_ms": 80.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        },
+        "candidate": {
+          "searched_moves": 620,
+          "nodes_total": 18181584,
+          "mean_nodes": 29325.135483870967,
+          "mean_completed_depth": 3.7887096774193547,
+          "mean_seldepth": 19.120967741935484,
+          "mean_wall_ms": 81.74562741935485,
+          "max_wall_ms": 82.944,
+          "mean_internal_ms": 80.0,
+          "max_internal_ms": 80.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        }
+      }
+    },
+    {
+      "status": "PASS",
+      "input_json_sha256": "7e0c28a20d15f32566c06a6cd64d9757428d703e408d93fe3eb23cf3ba6db45a",
+      "input_pgn_sha256": "f608b8668a8264c4f1b1f5b88815a9d058b5c830a7cc19a3fe2049548111a21a",
+      "movetime_ms": 1000,
+      "engines": {
+        "baseline": {
+          "commit": "8820094588cddadff39bc7cac7c19f92ed522822",
+          "sha256": "80b16d9b398c14fff0cd5a780657a87c8278a533c2b5a63db7f4d0614832c591",
+          "id": {
+            "name": "Regicide 0.5.0",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true
+          }
+        },
+        "candidate": {
+          "commit": "366aaa4090058ceb1e0bc2232502656f9a5f1e96",
+          "sha256": "7afd48aa37c94380380e324cd2a3bf7acd2a34d0d8e853b8bec216f8b2d50982",
+          "id": {
+            "name": "Regicide 0.5.1",
+            "author": "Regicide project"
+          },
+          "effective_options": {
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "Hash": 16,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true
+          }
+        }
+      },
+      "candidate_wins": 6,
+      "candidate_draws": 4,
+      "candidate_losses": 6,
+      "candidate_points": 8.0,
+      "candidate_score": 0.5,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "actual_plies": 1930,
+      "pv_plies": 11857,
+      "terminations": {
+        "threefold_repetition": 3,
+        "checkmate": 12,
+        "fifty_moves": 1
+      },
+      "pair_scores": [
+        0.75,
+        1.0,
+        0.0,
+        0.25,
+        0.0,
+        0.5,
+        0.75,
+        0.75
+      ],
+      "paired_opening_bootstrap95": {
+        "seed": 20261018,
+        "resamples": 20000,
+        "pairs": 8,
+        "interval": [
+          0.25,
+          0.75
+        ],
+        "scope": "Descriptive fixed-opening paired percentile bootstrap, not universal strength or Elo."
+      },
+      "harness_bootstrap_preserved": {
+        "interval": [
+          0.25,
+          0.75
+        ],
+        "seed": 20261017,
+        "resamples": 20000,
+        "completed_pairs": 8,
+        "interpretation": "Descriptive paired-opening percentile bootstrap; small fixed opening sample, not a universal strength or Elo interval."
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 900,
+          "nodes_total": 349130357,
+          "mean_nodes": 387922.6188888889,
+          "mean_completed_depth": 5.864444444444445,
+          "mean_seldepth": 22.43888888888889,
+          "mean_wall_ms": 981.9045577777778,
+          "max_wall_ms": 983.298,
+          "mean_internal_ms": 980.0,
+          "max_internal_ms": 980.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        },
+        "candidate": {
+          "searched_moves": 902,
+          "nodes_total": 338451197,
+          "mean_nodes": 375223.05654101993,
+          "mean_completed_depth": 6.109756097560975,
+          "mean_seldepth": 21.568736141906875,
+          "mean_wall_ms": 981.9260631929046,
+          "max_wall_ms": 983.168,
+          "mean_internal_ms": 980.0,
+          "max_internal_ms": 980.0,
+          "wall_over_requested_count": 0,
+          "internal_over_allocated_count": 0
+        }
+      }
+    }
+  ]
+}
