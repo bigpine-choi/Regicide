@@ -87,6 +87,24 @@ class GuardTests(unittest.TestCase):
         guard.sample("next")
         self.assertTrue(guard.summary["contaminated"])
 
+    def test_external_exit_inside_final_snapshot_contaminates(self):
+        process = ProcessInfo(920001, 1, "regicide.exe", 200, 10, exited_during_snapshot=True)
+        guard = self.new_guard([engine(920001, cpu=10)], [process])
+        guard.sample("start")
+        guard.sample("finished")
+        self.assertTrue(guard.summary["contaminated"])
+        self.assertEqual(guard.summary["failure"]["kind"], "external_identity_change")
+        self.assertTrue(guard.summary["failure"]["retry_allowed"])
+        self.assertEqual(guard.summary["external_cpu_increase_ticks"], 0)
+
+    def test_exact_owned_exit_inside_snapshot_is_safe_cleanup(self):
+        process = ProcessInfo(910001, os.getpid(), "regicide.exe", 200, 10,
+                              exited_during_snapshot=True)
+        guard = self.new_guard([engine(910001, os.getpid())], [process])
+        guard.sample("start")
+        guard.sample("finished")
+        self.assertFalse(guard.summary["contaminated"])
+
     def test_reused_pid_is_a_new_identity(self):
         guard = self.new_guard([engine(920001)], [engine(920001, creation=300)])
         guard.sample("start")

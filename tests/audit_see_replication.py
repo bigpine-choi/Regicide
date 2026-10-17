@@ -138,6 +138,7 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
     seen_owned = set()
     cpu_total = 0
     max_gap = 0.0
+    max_duration = 0.0
     first_utc = utc(rows[0]["utc"])
     previous_utc = None
     previous_elapsed = None
@@ -146,6 +147,9 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
     for index, row in enumerate(rows):
         require(row["contaminated"] is False, "contaminated monitor row")
         elapsed = numeric(row["elapsed_seconds"], "snapshot monotonic elapsed")
+        duration = numeric(row["snapshot_duration_seconds"], "snapshot duration")
+        require(duration <= 2.0, "native snapshot itself exceeded the fail-closed bound")
+        max_duration = max(max_duration, duration)
         timestamp = utc(row["utc"])
         gap = 0.0 if previous_elapsed is None else elapsed - previous_elapsed
         require(gap >= 0 and gap <= 2.0, "nonmonotonic or excessive snapshot gap")
@@ -168,6 +172,7 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
             require(isinstance(ticks, int) and not isinstance(ticks, bool) and ticks >= 0,
                     "invalid native process CPU counter")
             require(type(process["owned"]) is bool, "invalid owned process flag")
+            require(type(process["exited_during_snapshot"]) is bool, "invalid process exit observation")
             if process["owned"]:
                 require(process_identity in registered, "claimed owned process is not an actual UCI transport")
                 if process_identity not in seen_owned:
@@ -177,6 +182,8 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
                 seen_owned.add(process_identity)
             else:
                 require(process_identity not in registered, "actual transport labelled external")
+                require(process["exited_during_snapshot"] is False,
+                        "external engine exited during the native snapshot")
                 require(process["ancestry_to_monitor"] is None, "external process claims monitor ancestry")
                 require(process["ancestry_processes"] is None, "external process claims ancestor evidence")
                 current[process_identity] = ticks
@@ -207,6 +214,8 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
     require(cpu_total == summary["external_cpu_increase_ticks"] == 0, "summary CPU tick total mismatch")
     require(abs(max_gap - summary["max_snapshot_gap_seconds"]) <= 1e-7,
             "summary maximum snapshot gap mismatch")
+    require(abs(max_duration - summary["max_snapshot_duration_seconds"]) <= 1e-7,
+            "summary maximum snapshot duration mismatch")
     before, after = phases.count("before-game"), phases.count("after-game")
     require(before == after == 16, "monitor does not cover all sixteen games")
     game_phases = [phase for phase in phases if phase in {"before-game", "after-game"}]
@@ -219,6 +228,7 @@ def replay_monitor(summary, rows, document, movetime, harness_commit):
             "monitor does not cover the entire match including engine launch/cleanup")
     return {"status": "PASS", "snapshots": len(rows), "external_processes": len(first_external),
             "external_cpu_increase_ticks": cpu_total, "max_snapshot_gap_seconds": max_gap,
+            "max_snapshot_duration_seconds": max_duration,
             "observed_idle_seconds": idle_complete["elapsed_seconds"] - rows[0]["elapsed_seconds"],
             "owned_transport_identities": {role: list(identity(item)) for role, item in transports.items()},
             "scope": summary["scope"]}
@@ -364,6 +374,14 @@ def inventory_attempts(root, selected, harness_commit, validation_sha):
             cursor = end
             monitor_path = directory / (name + ".monitor.json")
             monitor = read_json(monitor_path)
+            extensions = ("json", "pgn", "monitor.json", "monitor.jsonl", "log", "stderr.log")
+            artifacts = {name + "." + extension: directory / (name + "." + extension)
+                         for extension in extensions if (directory / (name + "." + extension)).is_file()}
+            require(set(step["artifact_sha256"]) == set(artifacts), "runner artifact fingerprint set mismatch")
+            for filename, artifact in artifacts.items():
+                require(step["artifact_sha256"][filename] == digest(artifact), "runner artifact hash mismatch")
+            if step["valid_for_comparison"]:
+                require(len(artifacts) == 6, "a clean block lacks one of its six raw artifacts")
             raw_log = directory / (name + ".monitor.jsonl")
             require(monitor["monitor_log_sha256"] == digest(raw_log), "attempt monitor log hash mismatch")
             require(monitor["harness_commit"] == harness_commit and monitor["candidate_commit"] == CANDIDATE_COMMIT
@@ -445,11 +463,13 @@ def self_test():
         if 22 <= index < 54:
             phase = "before-game" if index % 2 == 0 else "after-game"
         processes = [{"pid": 10, "creation_ticks": 5, "parent_pid": 9, "name": "stockfish.exe",
-                      "cpu_ticks": 42, "owned": False, "ancestry_to_monitor": None, "ancestry_processes": None}]
+                      "cpu_ticks": 42, "owned": False, "exited_during_snapshot": False,
+                      "ancestry_to_monitor": None, "ancestry_processes": None}]
         if 21 <= index < 62:
-            processes.extend(dict(item, cpu_ticks=index, owned=True) for item in owned)
+            processes.extend(dict(item, cpu_ticks=index, owned=True, exited_during_snapshot=False) for item in owned)
         rows.append({"utc": stamp(index * 0.5), "elapsed_seconds": index * 0.5,
                      "phase": phase, "gap_seconds": 0 if index == 0 else 0.5,
+                     "snapshot_duration_seconds": 0.01,
                      "processes": processes, "external_cpu_delta_ticks": 0, "contaminated": False})
     summary = {"schema_version": 1, "started_utc": stamp(-0.1), "finished_utc": stamp(32),
                "monitor_root_pid": 1, "monitor_root_creation_ticks": 1, "poll_seconds": 0.5,
@@ -463,6 +483,7 @@ def self_test():
                "new_or_disappearing_external_engine_is_failure": True, "owned_engines": owned,
                "transport_engines": transports, "external_cpu_increase_ticks": 0,
                "max_snapshot_gap_seconds": 0.5,
+               "max_snapshot_duration_seconds": 0.01,
                "external_engine_identities": [{"pid": 10, "creation_ticks": 5, "initial_cpu_ticks": 42}],
                "scope": "synthetic pure-helper test"}
     document = {"engines": {role: {"command": item["command"]} for role, item in transports.items()},
@@ -483,6 +504,7 @@ def self_test():
     reject("new PID", lambda s, r, m: r[30]["processes"].append(dict(r[30]["processes"][0], pid=11)))
     reject("disappearing PID", lambda s, r, m: r[30]["processes"].pop(0))
     reject("PID reuse", lambda s, r, m: r[30]["processes"][0].update(creation_ticks=6))
+    reject("external exit within final snapshot", lambda s, r, m: r[-1]["processes"][0].update(exited_during_snapshot=True))
     reject("claimed owned lie", lambda s, r, m: r[30]["processes"][0].update(owned=True, ancestry_to_monitor=[10, 1]))
     reject("third owned engine", lambda s, r, m: s["owned_engines"].append(dict(owned[0], pid=4)))
     reject("wrong transport role", lambda s, r, m: s["transport_engines"]["candidate"].update(command=["/baseline/regicide.exe", "uci"]))
@@ -490,6 +512,7 @@ def self_test():
     reject("ancestor PID reuse", lambda s, r, m: s["owned_engines"][0]["ancestry_processes"][-1].update(creation_ticks=2))
     reject("oversized gap", lambda s, r, m: r[30].update(elapsed_seconds=20))
     reject("forged gap", lambda s, r, m: r[30].update(gap_seconds=0))
+    reject("slow last snapshot", lambda s, r, m: r[-1].update(snapshot_duration_seconds=2.1))
     reject("short idle", lambda s, r, m: s.update(completed_idle_seconds=9.9))
     reject("missing row", lambda s, r, m: r.pop(30))
     reject("UTC reversal", lambda s, r, m: r[30].update(utc=stamp(1)))
@@ -537,8 +560,13 @@ def self_test():
                            "candidate_commit": CANDIDATE_COMMIT, "baseline_commit": BASELINE_COMMIT,
                            "movetime_ms": int(name[4:])}
                 (attempt / (name + ".monitor.json")).write_text(json.dumps(monitor), encoding="utf-8")
+                for extension in ("json", "pgn", "log", "stderr.log"):
+                    (attempt / (name + "." + extension)).write_text("{}\n", encoding="utf-8")
+                artifacts = {name + "." + extension: digest(attempt / (name + "." + extension))
+                             for extension in ("json", "pgn", "monitor.json", "monitor.jsonl", "log", "stderr.log")}
                 steps.append({"name": name, "started_utc": stamp(start), "finished_utc": stamp(finish),
-                              "contaminated": not valid, "valid_for_comparison": valid, "exit_code": 0 if valid else 2})
+                              "contaminated": not valid, "valid_for_comparison": valid, "exit_code": 0 if valid else 2,
+                              "artifact_sha256": artifacts})
             state = {"attempt": attempt.name, "candidate_commit": CANDIDATE_COMMIT,
                      "baseline_commit": BASELINE_COMMIT, "harness_commit": "a" * 40,
                      "binary_sha256": BINARY_SHA256, "opening_sha256": OPENING_SHA256,
@@ -580,6 +608,9 @@ def self_test():
         data = read_json(bad_monitor)
         data["failure"].update(kind="ownership_error", retry_allowed=False)
         bad_monitor.write_text(json.dumps(data), encoding="utf-8")
+        state = copy.deepcopy(synthetic[0][1])
+        state["steps"][1]["artifact_sha256"]["time1000.monitor.json"] = digest(bad_monitor)
+        (synthetic[0][0] / "run-state.json").write_text(json.dumps(state), encoding="utf-8")
         try:
             inventory_attempts(attempt_root, synthetic[-1][0], "a" * 40, "b" * 64)
         except ValueError:

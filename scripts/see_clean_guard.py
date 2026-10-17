@@ -45,6 +45,7 @@ class ProcessInfo:
     creation_ticks: int | None = None
     cpu_ticks: int | None = None
     error: str | None = None
+    exited_during_snapshot: bool = False
 
     @property
     def identity(self):
@@ -147,8 +148,13 @@ class WindowsProcesses:
                                error=f"GetProcessTimes error {ctypes.get_last_error()}")
         def value(item):
             return item.dwLowDateTime | (item.dwHighDateTime << 32)
+        exit_status = self.kernel.WaitForSingleObject(handle, 0)
+        if exit_status not in (0, 258):  # signaled process object or WAIT_TIMEOUT
+            return ProcessInfo(process.pid, process.parent_pid, process.name,
+                               error=f"Process exit-state query error {ctypes.get_last_error()}")
         return ProcessInfo(process.pid, process.parent_pid, process.name,
-                           value(creation), value(kernel) + value(user))
+                           value(creation), value(kernel) + value(user),
+                           exited_during_snapshot=exit_status == 0)
 
     def close(self):
         for handle, _ in self.engine_handles.values():
@@ -262,9 +268,13 @@ class EngineCpuGuard:
                                 self.fail("An unexpected third descendant engine appeared")
                     else:
                         external[process.identity] = process
+                        if process.exited_during_snapshot:
+                            self.fail("External engine exited during the native CPU snapshot",
+                                      "external_identity_change", True)
                     rows.append({"pid": process.pid, "parent_pid": process.parent_pid,
                                  "name": process.name, "creation_ticks": process.creation_ticks,
                                  "cpu_ticks": process.cpu_ticks, "owned": owned,
+                                 "exited_during_snapshot": process.exited_during_snapshot,
                                  "ancestry_to_monitor": chain,
                                  "ancestry_processes": [
                                      {"pid": processes[pid].pid, "parent_pid": processes[pid].parent_pid,
