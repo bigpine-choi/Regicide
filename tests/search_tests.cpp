@@ -1,5 +1,6 @@
 #include "regicide/search.hpp"
 #include "regicide/evaluation.hpp"
+#include "regicide/see.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -10,13 +11,14 @@
 
 using namespace regicide;
 namespace {
-// Keep every pre-PVS regression on its original full-window search graph.
+// Keep every pre-PVS/SEE regression on its original full-window search graph.
 // Dedicated tests below exercise both modes without relaxing old invariants.
 SearchResult alpha_beta_search(const Board& board, const SearchLimits& limits,
                                const std::atomic_bool* stop = nullptr,
                                SearchCallback callback = {}, SearchOptions options = {},
                                SearchContext* context = nullptr) {
     options.pvs = false;
+    options.see_ordering = false;
     return search(board, limits, stop, std::move(callback), options, context);
 }
 SearchResult legacy_search(const Board& board, const SearchLimits& limits,
@@ -71,7 +73,8 @@ void same_graph(const SearchResult& left, const SearchResult& right) {
     expect(left.nodes == right.nodes && left.qnodes == right.qnodes && left.seldepth == right.seldepth &&
                left.tt_probes == right.tt_probes && left.tt_hits == right.tt_hits &&
                left.tt_cutoffs == right.tt_cutoffs && left.tt_stores == right.tt_stores &&
-               left.pvs_probes == right.pvs_probes && left.pvs_researches == right.pvs_researches,
+               left.pvs_probes == right.pvs_probes && left.pvs_researches == right.pvs_researches &&
+               left.see_calls == right.see_calls,
            "reused memory changed the search graph or transposition work");
 }
 void no_memory_work(const SearchResult& result) {
@@ -170,7 +173,14 @@ int check_minimax(Board& board, int depth, int checks_left, CheckOracleCoverage&
 
 SearchOptions pvs_options(bool enabled, bool table, bool positional = false,
                           bool quiet = false, bool checks = false) {
-    return {positional, quiet, table, 1, true, true, checks, enabled};
+    return {positional, quiet, table, 1, true, true, checks, enabled, false};
+}
+
+SearchOptions see_options(bool enabled, bool pvs, bool table,
+                          bool quiet = false, bool checks = false) {
+    auto options = pvs_options(pvs, table, false, quiet, checks);
+    options.see_ordering = enabled;
+    return options;
 }
 
 struct OptimalMoves {
@@ -964,6 +974,132 @@ int main() {
                 expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
                        "PVS mode or incomplete prior search leaked through retained storage");
                 valid_pv(board, restarted);
+            }
+        }
+    });
+    test("SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode", [] {
+        std::uint64_t calls = 0;
+        for (const char* fen : {"7k/8/8/8/8/8/q7/R5K1 w - - 0 1",
+                                "r5k1/Q7/8/8/8/8/8/7K b - - 0 1",
+                                "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+                                "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+                                "1rr5/P6k/8/8/8/8/8/7K w - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            const auto expected = optimal_moves(board, 2, false);
+            for (bool enabled : {false, true}) for (bool pvs : {false, true})
+                for (bool table : {false, true}) {
+                    const auto result = search(board, {.depth = 2}, nullptr, {},
+                                               see_options(enabled, pvs, table));
+                    expect(result.depth == 2 && !result.stopped && result.score == expected.score,
+                           "SEE sorting changed the full minimax value");
+                    expect(result.best_move && std::find(expected.moves.begin(), expected.moves.end(),
+                                                         *result.best_move) != expected.moves.end(),
+                           "SEE sorting selected a non-optimal legal root move");
+                    expect(board == saved, "SEE ordering changed complete board/history");
+                    if (!enabled) expect(result.see_calls == 0, "disabled SEE performed exchange work");
+                    calls += result.see_calls;
+                    valid_pv(board, result);
+                }
+        }
+        expect(calls > 0, "SEE mode never evaluated a tactical candidate");
+    });
+    test("favorable captures precede losing captures without discarding either", [] {
+        // a4 is outside the defending rook's fifth rank, so Rxa4 is truly free.
+        Board board("7k/8/4p3/3r4/p7/8/8/R2Q2K1 w - - 0 1");
+        const auto saved = board;
+        expect(static_exchange_evaluation(board, Move::from_uci("a1a4")) == 100 &&
+                   static_exchange_evaluation(board, Move::from_uci("d1d5")) == -400,
+               "fixture must offer a free pawn and a poisoned rook");
+        auto old_options = see_options(false, true, false);
+        old_options.quiet_ordering = false;
+        auto new_options = old_options;
+        new_options.see_ordering = true;
+        const auto old = search(board, {.depth = 1}, nullptr, {}, old_options);
+        const auto ordered = search(board, {.depth = 1}, nullptr, {}, new_options);
+        // At a deliberately unextended material horizon the poisoned rook is
+        // worth more. It must still be searched after the favorable pawn and
+        // improve the first candidate, triggering a full-window PVS re-search.
+        expect(old.best_move == Move::from_uci("d1d5") && ordered.best_move == old.best_move &&
+                   old.score == ordered.score && old.pvs_researches == 0 && ordered.pvs_researches > 0,
+               "favorable capture did not lead, or a losing exchange was pruned");
+        expect(ordered.see_calls > 0 && old.see_calls == 0 && board == saved,
+               "SEE cost or input-preservation contract failed");
+        valid_pv(board, ordered);
+    });
+    test("negative SEE queen sacrifice remains available and produces the oracle mate", [] {
+        Board board("5rnk/6pp/7N/3Q4/8/8/8/K7 w - - 0 1");
+        const auto saved = board;
+        const auto sacrifice = Move::from_uci("d5g8");
+        expect(static_exchange_evaluation(board, sacrifice) < 0,
+               "smothered-mate fixture must sacrifice material in its local exchange");
+        const auto expected = optimal_moves(board, 3, false);
+        expect(expected.score == mate_score - 3 &&
+                   std::find(expected.moves.begin(), expected.moves.end(), sacrifice) != expected.moves.end(),
+               "unpruned oracle must see the sacrifice's forced mate");
+        for (bool pvs : {false, true}) for (bool table : {false, true}) {
+            const auto result = search(board, {.depth = 3}, nullptr, {}, see_options(true, pvs, table));
+            expect(result.score == expected.score && result.best_move &&
+                       std::find(expected.moves.begin(), expected.moves.end(), *result.best_move) != expected.moves.end(),
+                   "negative SEE suppressed the mating sacrifice in normal search");
+            // The capture-only/quiet-check frontier also must retain the
+            // negative capture; it is an ordering hint, never a qsearch filter.
+            const auto tactical = search(board, {.depth = 1}, nullptr, {},
+                                         see_options(true, pvs, table, true, true));
+            expect(tactical.score == mate_score - 3 && tactical.best_move == sacrifice,
+                   "negative SEE suppressed the mating sacrifice at the tactical frontier");
+            expect(board == saved, "sacrifice search changed board/history");
+            valid_pv(board, result);
+            valid_pv(board, tactical);
+        }
+    });
+    test("SEE preserves the independent bounded-check quiescence oracle", [] {
+        for (const char* fen : {"7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1",
+                                "1k6/8/7b/8/8/8/2R5/K7 w - - 0 1",
+                                "r6k/3p4/8/4P3/8/8/8/6K1 b - - 0 1",
+                                "6k1/8/8/8/8/8/p7/6KR w - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            CheckOracleCoverage coverage;
+            const int expected = check_minimax(board, 1, 1, coverage);
+            for (bool pvs : {false, true}) for (bool table : {false, true}) {
+                const auto result = search(board, {.depth = 1}, nullptr, {},
+                                           see_options(true, pvs, table, true, true));
+                expect(!result.stopped && result.depth == 1 && result.score == expected,
+                       "SEE ordering changed independent tactical/check-evasion value");
+                expect(board == saved, "SEE tactical sort changed input state/history");
+                valid_pv(board, result);
+            }
+        }
+    });
+    test("SEE mode changes and cancellation cannot leak through retained memory", [] {
+        Board repeated;
+        cycle(repeated);
+        SearchContext context;
+        for (const Board& board : {repeated,
+                                  Board("3r3k/8/8/3pP3/8/8/8/3R2K1 w - d6 0 1")}) {
+            const auto saved = board;
+            for (bool enabled : {true, false, true}) for (bool pvs : {false, true}) {
+                auto options = see_options(enabled, pvs, true, true, true);
+                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, reused);
+                options.see_ordering = !enabled;
+                const auto cancelled = search(board, {.depth = 4, .nodes = 20}, nullptr, {}, options, &context);
+                expect(cancelled.stopped && cancelled.nodes == 20 && legal(board, cancelled.best_move),
+                       "SEE ordering bypassed the shared cancellation budget");
+                options.see_ordering = enabled;
+                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, restarted);
+                expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
+                       "SEE change or incomplete search leaked through retained memory");
+                std::atomic_bool stop{true};
+                const auto stopped = search(board, {.depth = 3}, &stop, {}, options, &context);
+                expect(stopped.stopped && !stopped.nodes && !stopped.see_calls,
+                       "preexisting stop should avoid SEE work in fallback ordering");
+                valid_pv(board, reused);
+                valid_pv(board, cancelled);
+                valid_pv(board, stopped);
             }
         }
     });

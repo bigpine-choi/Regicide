@@ -1,4 +1,4 @@
-# 자체 대국 엔진 v0.2 → v0.5.1
+# 자체 대국 엔진 v0.2 → v0.5.2
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
@@ -9,6 +9,8 @@ v0.4.1은 [전이표 메모리를 재사용](HASH_MEMORY_REUSE.md)하고 검색�
 v0.5.0은 [패배 분석 기반 탐색 개선](LOSS_GUIDED_SEARCH.md)으로 비캡처 체크를 제한적으로 연장하고 killer/history 일반 수 정렬을 추가한다. [검증·같은 시간 비교](experiments/2026-10-17-loss-guided.md)를 개발/보류 표본으로 나눠 기록한다.
 
 v0.5.1 개발 후보는 [PVS](PVS.md)를 추가한다. 후속 후보를 좁은 범위로 먼저 검사하고 개선 후보를 다시 탐색한다. UCI `PVS` 옵션으로 켜고 끌 수 있으며 평가·안정화·규칙·전이표 격리 정책은 유지한다. [계획](experiments/2026-10-18-pvs-plan.md)은 구현 전에 고정했고 [비용·100ms·1초 결과](experiments/2026-10-18-pvs.md)를 구분해 기록했다. 1초 경기력 향상은 확인하지 못해 현재 안정 설치본은 보존한다.
+
+v0.5.2 개발 후보는 [SEE 교환 손익 추정](SEE.md)을 수 정렬에만 추가한다. 전이표/직전 PV 다음으로 손해 없는 교환을 우선하고 불리한 교환도 읽는다. UCI `UseSEE`, 콘솔 `--no-see`로 끌 수 있다. [비교 계획](experiments/2026-10-18-see-plan.md)을 구현 전에 고정했고, [비용·100ms·1초 결과와 부하 한계](experiments/2026-10-18-see.md)를 기록했다.
 
 ## 원리와 작은 체스 예
 
@@ -30,7 +32,7 @@ Alpha-beta는 현재 최선의 선택을 바꿀 수 없는 응수들을 건너�
 | 탐색 | negamax와 alpha-beta, 깊이 1..64 |
 | 중단 복구 | 깊이 1부터 반복 심화; 마지막으로 끝난 깊이의 수·점수·주요 수순 유지 |
 | 안정화 탐색 | 깊이 끝의 잡기·모든 승격 및 경로당 비캡처 체크 1회 연장; 체크 중에는 모든 회피 수를 탐색 |
-| 수 순서 | 전이표·직전 최선 수, 캡처·승격, killer/history 일반 수; 동점은 좌표 순서로 고정 |
+| 수 순서 | 전이표·직전 완료 최선 수, SEE 0 이상 캡처·승격, killer/history 일반 수, SEE 음수 캡처·승격; 동점은 좌표 순서로 고정 |
 | 재사용 | 기본 16 MiB 전이표 버퍼를 세션에서 유지, 검색별 새 기록; 위치·반복 맥락·50수 카운터와 동일 남은 깊이를 확인 |
 | 종료 | 메이트와 무승부를 깊이 끝의 정적 평가보다 먼저 확인; 빠른 메이트를 선호 |
 | 자원 | 탐색 노드 수, 밀리초 시간, 원자적 중지 신호; 단일 탐색 스레드 |
@@ -75,6 +77,7 @@ setoption name Hash value 16
 setoption name Clear Hash
 setoption name UseFastMoves value true
 setoption name UseQuietMoveOrdering value true
+setoption name UseSEE value true
 setoption name UseQuiescenceChecks value true
 ucinewgame
 position startpos moves e2e4 e7e5
