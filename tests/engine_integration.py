@@ -157,8 +157,39 @@ def configure(engine, **options):
         assert not any(line.startswith("info string ") for line in output), (name, value, output)
 
 
+def tt_statistics(output):
+    records = []
+    for line in output:
+        if line.startswith("info string tt "):
+            fields = line.split()[3:]
+            assert len(fields) % 2 == 0, line
+            record = dict(zip(fields[::2], map(int, fields[1::2])))
+            assert len(record) * 2 == len(fields), line
+            assert all(value >= 0 for value in record.values()), line
+            probes, hits, cutoffs, stores = (record[key] for key in ["probes", "hits", "cutoffs", "stores"])
+            assert 0 <= cutoffs <= hits <= probes and 0 <= stores <= probes, line
+            records.append(record)
+    assert records, output
+    return records
+
+
+def assert_table_memory(output, allocations=0, reuses=0, hash_mb=None):
+    """These are per-search work counters, rather than process RSS estimates."""
+    records = tt_statistics(output)
+    keys = ["allocations", "reuses", "clears", "bytes"]
+    memory = [tuple(record[key] for key in keys) for record in records]
+    assert all(item == memory[0] for item in memory), memory
+    allocated, reused, cleared, size = memory[-1]
+    assert (allocated, reused, cleared) == (allocations, reuses, 0), memory
+    if hash_mb is None:
+        assert size == 0, memory
+    else:
+        assert 0 < size <= hash_mb * 1024 * 1024, memory
+    return size
+
+
 def search_fingerprint(move, output):
-    """Ignore wall time, retain the deterministic search graph and TT work."""
+    """Ignore wall time/allocation lifecycle, retain the exact search graph."""
     progress = [line.split() for line in output
                 if line.startswith("info depth ")]
     assert progress, output
@@ -167,21 +198,26 @@ def search_fingerprint(move, output):
     depth = int(final[final.index("depth") + 1])
     nodes = int(final[final.index("nodes") + 1])
     pv = tuple(final[final.index("pv") + 1:]) if "pv" in final else ()
-    counters = []
-    for line in output:
-        if line.startswith("info string tt "):
-            fields = line.split()[3:]
-            assert fields[::2] == ["probes", "hits", "cutoffs", "stores"], line
-            values = tuple(map(int, fields[1::2]))
-            probes, hits, cutoffs, stores = values
-            assert 0 <= cutoffs <= hits <= probes, line
-            assert 0 <= stores <= probes, line
-            counters.append(values)
-    assert counters, output
+    counters = [tuple(record[key] for key in ["probes", "hits", "cutoffs", "stores"])
+                for record in tt_statistics(output)]
     for earlier, later in zip(counters, counters[1:]):
         assert all(a <= b for a, b in zip(earlier, later)), counters
     return (move, tuple(final[score_at + 1:score_at + 3]), depth,
             nodes, pv, counters[-1])
+
+
+def search_history(engine, board, go="go depth 3"):
+    """Send full known history, unlike a FEN-only analysis request."""
+    command = "position fen " + board.root().fen(en_passant="fen")
+    if board.move_stack:
+        command += " moves " + " ".join(move.uci() for move in board.move_stack)
+    engine.send(command)
+    engine.send(go)
+    move, output = engine.bestmove()
+    assert chess.Move.from_uci(move) in board.legal_moves, (board.fen(), output)
+    assert_legal_pvs(board, output)
+    engine.ready()
+    return move, output
 
 
 def test_python_chess(binary):
@@ -423,6 +459,8 @@ def test_transposition_options(binary):
         option = engine.options.get("Hash")
         assert option and option.type == "spin", engine.options
         assert (option.default, option.min, option.max) == (16, 1, 256), option
+        clear_hash = engine.options.get("Clear Hash")
+        assert clear_hash and clear_hash.type == "button", engine.options
         engine.configure({"UseTranspositionTable": False, "UseFastMoves": False, "Hash": 1})
         result = engine.play(chess.Board(), chess.engine.Limit(depth=2))
         assert result.move in chess.Board().legal_moves, result
@@ -485,8 +523,8 @@ def test_transposition_search(binary):
 
 
 def test_transposition_isolation(binary):
-    # Each go starts a fresh table. Repeatability includes node counts and TT
-    # counters: a warm table accidentally kept across searches changes these.
+    # Each go starts a fresh logical generation. Repeatability includes node
+    # counts and TT counters: stale entries accidentally reused change these.
     board = chess.Board()
     with UciProcess(binary) as engine:
         configure(engine, Hash=1, UseTranspositionTable=True, UseFastMoves=True)
@@ -513,6 +551,157 @@ def test_transposition_isolation(binary):
         assert resized == original, (original, resized)
 
 
+def test_table_allocation_reuse(binary):
+    board = chess.Board()
+    terminal = chess.Board("7k/6Q1/5K2/8/8/8/8/8 b - - 0 1")
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1)
+        first = engine.search(board, "go depth 2")
+        original = search_fingerprint(*first)
+        small_size = assert_table_memory(first[1], allocations=1, hash_mb=1)
+        for _ in range(12):
+            repeated = engine.search(board, "go depth 2")
+            assert search_fingerprint(*repeated) == original, (original, repeated)
+            assert assert_table_memory(repeated[1], reuses=1, hash_mb=1) == small_size
+
+        # Clear Hash and a new game invalidate entries without reallocating or
+        # physically sweeping the buffer. Search results remain cold-equivalent.
+        for command in ["setoption name Clear Hash", "ucinewgame"]:
+            engine.send(command)
+            output = engine.ready()
+            assert not any(line.startswith("info string ") for line in output), output
+            repeated = engine.search(board, "go depth 2")
+            assert search_fingerprint(*repeated) == original, (command, repeated)
+            assert assert_table_memory(repeated[1], reuses=1, hash_mb=1) == small_size
+        engine.send("setoption name Clear Hash value ignored")
+        rejected = engine.ready()
+        assert any(line.startswith("info string ") for line in rejected), rejected
+        repeated = engine.search(board, "go depth 2")
+        assert search_fingerprint(*repeated) == original
+        assert_table_memory(repeated[1], reuses=1, hash_mb=1)
+
+        engine.position(terminal)
+        engine.send("go depth 2")
+        move, output = engine.bestmove()
+        assert move == "0000", output
+        assert_table_memory(output)
+        engine.ready()
+        configure(engine, UseTranspositionTable=False)
+        _, output = engine.search(board, "go depth 2")
+        assert_table_memory(output)
+        configure(engine, UseTranspositionTable=True)
+        _, output = engine.search(board, "go depth 2")
+        assert_table_memory(output, reuses=1, hash_mb=1)
+
+        configure(engine, Hash=16)
+        _, output = engine.search(board, "go depth 2")
+        large_size = assert_table_memory(output, allocations=1, hash_mb=16)
+        assert large_size > small_size, (small_size, large_size)
+        _, output = engine.search(board, "go depth 2")
+        assert assert_table_memory(output, reuses=1, hash_mb=16) == large_size
+        configure(engine, Hash=1)
+        resized = engine.search(board, "go depth 2")
+        assert search_fingerprint(*resized) == original
+        assert assert_table_memory(resized[1], allocations=1, hash_mb=1) == small_size
+
+
+def test_reused_table_context_isolation(binary):
+    cycles = [["g1f3", "g8f6", "f3g1", "f6g8"],
+              ["b1c3", "b8c6", "c3b1", "c6b8"]]
+    histories = []
+    for cycle in cycles:
+        board = chess.Board()
+        for move in cycle:
+            board.push_uci(move)
+        histories.append(board)
+    assert histories[0].fen() == histories[1].fen()
+    assert histories[0].is_repetition(2) and histories[1].is_repetition(2)
+    imported = chess.Board(histories[0].fen())
+    assert not imported.is_repetition(2)
+    old_clock = imported.copy()
+    old_clock.halfmove_clock = 99
+    later_fullmove = imported.copy()
+    later_fullmove.fullmove_number = 42
+    fixtures = [chess.Board(), *histories, imported, old_clock, later_fullmove,
+                chess.Board(CAPTURE_FEN)]
+    defaults = {"Hash": 1, "UsePositionalEvaluation": True, "UseQuiescence": True,
+                "UseTranspositionTable": True, "UseFastMoves": True}
+    with UciProcess(binary) as reused:
+        configure(reused, **defaults)
+        for index, board in enumerate(fixtures):
+            with UciProcess(binary) as cold:
+                configure(cold, **defaults)
+                expected = search_history(cold, board)
+                assert_table_memory(expected[1], allocations=1, hash_mb=1)
+            actual = search_history(reused, board)
+            assert search_fingerprint(*actual) == search_fingerprint(*expected), (index, actual, expected)
+            assert_table_memory(actual[1], allocations=int(index == 0),
+                                reuses=int(index != 0), hash_mb=1)
+        for change in [{"UsePositionalEvaluation": False}, {"UseQuiescence": False},
+                       {"UsePositionalEvaluation": False, "UseQuiescence": False},
+                       {"UseTranspositionTable": False}, {"UseFastMoves": False}, {}]:
+            options = defaults | change
+            board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board)
+            configure(reused, **options)
+            actual = search_history(reused, board)
+            assert search_fingerprint(*actual) == search_fingerprint(*expected), (options, actual, expected)
+            if options["UseTranspositionTable"]:
+                assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            else:
+                assert_table_memory(actual[1])
+
+
+def test_table_options_during_search(binary):
+    board = chess.Board()
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1)
+        original = engine.search(board, "go depth 3")
+        assert_table_memory(original[1], allocations=1, hash_mb=1)
+        for command, allocated, enabled, size in [
+            ("setoption name Hash value 16", 1, True, 16),
+            ("setoption name Hash value 1", 1, True, 1),
+            ("setoption name Clear Hash", 0, True, 1),
+            ("setoption name UseTranspositionTable value false", 0, False, None),
+            ("setoption name UseTranspositionTable value true", 0, True, 1),
+            ("ucinewgame", 0, True, 1),
+        ]:
+            engine.position(board)
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(command)
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (command, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in board.legal_moves, output
+            assert_legal_pvs(board, output)
+            engine.ready()  # Joined search cannot emit another result after readyok.
+            completed = engine.search(board, "go depth 3")
+            if enabled:
+                assert_table_memory(completed[1], allocations=allocated,
+                                    reuses=int(not allocated), hash_mb=size)
+                if size == 1:
+                    assert search_fingerprint(*completed) == search_fingerprint(*original), (command, completed)
+            else:
+                assert_table_memory(completed[1])
+
+        # A stopped infinite search must release exclusive use of the retained
+        # buffer before the next search starts, without releasing its allocation.
+        engine.send("go infinite")
+        engine.await_search_started()
+        engine.send("stop")
+        move, output = engine.bestmove()
+        assert chess.Move.from_uci(move) in board.legal_moves, output
+        assert_legal_pvs(board, output)
+        assert_table_memory(output, reuses=1, hash_mb=1)
+        engine.ready()
+        repeated = engine.search(board, "go depth 3")
+        assert_table_memory(repeated[1], reuses=1, hash_mb=1)
+        assert search_fingerprint(*repeated) == search_fingerprint(*original)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -520,12 +709,14 @@ def main():
     binary = args.binary.resolve(strict=True)
     checks = [test_python_chess, test_history_and_terminal, test_limits,
               test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options,
-              test_transposition_options, test_transposition_search, test_transposition_isolation]
+              test_transposition_options, test_transposition_search, test_transposition_isolation,
+              test_table_allocation_reuse, test_reused_table_context_isolation,
+              test_table_options_during_search]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT isolation")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT isolation/reuse")
 
 
 if __name__ == "__main__":

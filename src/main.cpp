@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.4.0\n"
+            std::cout << "Regicide 0.4.1\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
@@ -131,6 +131,8 @@ int main(int argc, char** argv) {
                       << "\nqnodes: " << result.qnodes << "\nseldepth: " << result.seldepth
                       << "\ntt_probes: " << result.tt_probes << "\ntt_hits: " << result.tt_hits
                       << "\ntt_cutoffs: " << result.tt_cutoffs << "\ntt_stores: " << result.tt_stores
+                      << "\ntt_allocations: " << result.tt_allocations << "\ntt_reuses: " << result.tt_reuses
+                      << "\ntt_clears: " << result.tt_clears << "\ntt_bytes: " << result.tt_bytes
                       << "\nstopped: " << result.stopped << "\npv:";
             for (auto move : result.pv) std::cout << ' ' << move.uci();
             std::cout << '\n';

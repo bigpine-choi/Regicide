@@ -55,6 +55,19 @@ void valid_pv(const Board& input, const SearchResult& result) {
 void cycle(Board& board) {
     for (const char* move : {"g1f3", "g8f6", "f3g1", "f6g8"}) board.play(move);
 }
+void same_graph(const SearchResult& left, const SearchResult& right) {
+    expect(left.best_move == right.best_move && left.score == right.score &&
+               left.depth == right.depth && left.pv == right.pv && left.stopped == right.stopped,
+           "reused memory changed the selected move, score, PV or completed depth");
+    expect(left.nodes == right.nodes && left.qnodes == right.qnodes && left.seldepth == right.seldepth &&
+               left.tt_probes == right.tt_probes && left.tt_hits == right.tt_hits &&
+               left.tt_cutoffs == right.tt_cutoffs && left.tt_stores == right.tt_stores,
+           "reused memory changed the search graph or transposition work");
+}
+void no_memory_work(const SearchResult& result) {
+    expect(!result.tt_allocations && !result.tt_reuses && !result.tt_clears && !result.tt_bytes,
+           "disabled or terminal search must do no transposition memory work");
+}
 
 // Deliberately unpruned oracle on small positions, independent of search windows.
 int minimax(Board& board, int depth, int ply = 0, bool positional = false) {
@@ -440,6 +453,121 @@ int main() {
                 "zero hash size must be rejected");
         rejects([&] { (void)search(repeated, {.depth = 1}, nullptr, {}, {true, true, true, 1025}); },
                 "unbounded hash size must be rejected");
+    });
+    test("caller-owned memory reuse preserves every completed iteration graph", [] {
+        Board board("7k/6pp/8/8/8/8/PP6/K7 w - - 0 1");
+        const SearchOptions options{true, true, true, 1};
+        SearchContext context;
+        context.clear(); // A new context and Clear Hash must not preallocate.
+        std::vector<SearchResult> first_iterations;
+        const auto first = search(board, {.depth = 4}, nullptr,
+                                  [&](const SearchResult& result) { first_iterations.push_back(result); },
+                                  options, &context);
+        expect(first.tt_allocations == 1 && first.tt_reuses == 0 && first.tt_clears == 0 &&
+                   first.tt_bytes > 0 && first.tt_bytes <= 1024 * 1024,
+               "first active search must account for one bounded allocation");
+        std::vector<SearchResult> reused_iterations;
+        const auto reused = search(board, {.depth = 4}, nullptr,
+                                   [&](const SearchResult& result) { reused_iterations.push_back(result); },
+                                   options, &context);
+        expect(reused.tt_allocations == 0 && reused.tt_reuses == 1 && reused.tt_clears == 0 &&
+                   reused.tt_bytes == first.tt_bytes, "second search must reuse the same bounded storage");
+        same_graph(first, reused);
+        expect(first_iterations.size() == 4 && reused_iterations.size() == first_iterations.size(),
+               "all iterative results must remain available");
+        for (std::size_t i = 0; i < first_iterations.size(); ++i) {
+            same_graph(first_iterations[i], reused_iterations[i]);
+            expect(first_iterations[i].tt_allocations == 1 && reused_iterations[i].tt_reuses == 1,
+                   "iteration callbacks must carry this call's memory work");
+        }
+        const auto fresh = search(board, {.depth = 4}, nullptr, {}, options);
+        same_graph(reused, fresh);
+        expect(fresh.tt_allocations == 1 && !fresh.tt_reuses,
+               "null-context callers must retain one-shot allocation behavior");
+        context.clear();
+        const auto after_clear = search(board, {.depth = 4}, nullptr, {}, options, &context);
+        same_graph(fresh, after_clear);
+        expect(!after_clear.tt_allocations && after_clear.tt_reuses == 1 && !after_clear.tt_clears,
+               "explicit clear must retain allocation and start another fresh graph");
+        valid_pv(board, after_clear);
+    });
+    test("reused memory isolates options FENs history clocks and hash resize", [] {
+        SearchContext context;
+        Board knight_g, knight_b;
+        cycle(knight_g);
+        for (const char* move : {"b1c3", "b8c6", "c3b1", "c6b8"}) knight_b.play(move);
+        Board repeated = knight_g;
+        cycle(repeated);
+        std::vector<Board> positions{
+            knight_g, knight_b, Board(knight_g.fen()), repeated,
+            Board("7k/8/8/8/8/8/q7/6K1 w - - 98 1"),
+            Board("7k/8/8/8/8/8/q7/6K1 w - - 99 1"),
+            Board("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"),
+            Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")};
+        const std::vector<SearchOptions> options{
+            {true, true, true, 1, true}, {false, false, true, 1, false},
+            {true, false, true, 1, true}, {false, true, true, 1, true},
+            {true, true, false, 1, true}, {true, true, true, 2, true},
+            {true, true, true, 1, true}};
+        int retained_mb = 0;
+        for (const auto& position : positions) {
+            const auto saved = position;
+            for (const auto& option : options) {
+                const auto fresh = search(position, {.depth = 2}, nullptr, {}, option);
+                const auto reused = search(position, {.depth = 2}, nullptr, {}, option, &context);
+                same_graph(fresh, reused);
+                if (option.transposition) {
+                    const bool resize = retained_mb != option.hash_mb;
+                    expect(reused.tt_allocations == (resize ? 1U : 0U) &&
+                               reused.tt_reuses == (resize ? 0U : 1U) && reused.tt_clears == 0,
+                           "only actual hash-size changes may allocate storage");
+                    expect(reused.tt_bytes == fresh.tt_bytes &&
+                               reused.tt_bytes <= static_cast<std::uint64_t>(option.hash_mb) * 1024 * 1024,
+                           "retained storage must obey the current Hash budget after a shrink");
+                    retained_mb = option.hash_mb;
+                } else {
+                    no_memory_work(reused);
+                }
+                valid_pv(position, reused);
+                expect(position == saved, "shared context changed input state/history");
+            }
+        }
+    });
+    test("disabled terminal and interrupted calls preserve reusable storage safely", [] {
+        SearchContext context;
+        Board board("7k/6pp/8/8/8/8/PP6/K7 w - - 0 1");
+        const SearchOptions options{true, true, true, 1};
+        const auto expected = search(board, {.depth = 3}, nullptr, {}, options, &context);
+        const auto saved = board;
+        const auto disabled = search(board, {.depth = 1}, nullptr, {}, {true, true, false, 2}, &context);
+        no_memory_work(disabled);
+        for (const char* fen : {"7k/6Q1/6K1/8/8/8/8/8 b - - 0 1",
+                                "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1",
+                                "7k/8/8/8/8/8/8/K7 w - - 0 1"}) {
+            const auto terminal = search(Board(fen), {.depth = 3}, nullptr, {}, {true, true, true, 2}, &context);
+            no_memory_work(terminal);
+            expect(!terminal.best_move && terminal.pv.empty(), "terminal root must remain terminal");
+        }
+        const auto interrupted = search(board, {.depth = 5, .nodes = expected.nodes + 2},
+                                        nullptr, {}, options, &context);
+        expect(interrupted.stopped && interrupted.tt_reuses == 1 && interrupted.tt_allocations == 0 &&
+                   interrupted.tt_bytes == expected.tt_bytes, "interruption must not discard retained storage");
+        valid_pv(board, interrupted);
+        std::atomic_bool stop{true};
+        const auto stopped = search(board, {.depth = 5}, &stop, {}, options, &context);
+        expect(stopped.stopped && stopped.nodes == 0 && stopped.tt_reuses == 1,
+               "preexisting stop must still produce a legal fallback with bounded reuse");
+        valid_pv(board, stopped);
+        const auto restarted = search(board, {.depth = 3}, nullptr, {}, options, &context);
+        same_graph(expected, restarted);
+        expect(restarted.tt_reuses == 1 && !restarted.tt_allocations &&
+                   restarted.tt_bytes == expected.tt_bytes && board == saved,
+               "disabled/terminal/interrupted calls must preserve allocation without leaking scores");
+        SearchContext independent;
+        const auto other_worker = search(board, {.depth = 3}, nullptr, {}, options, &independent);
+        same_graph(restarted, other_worker);
+        expect(other_worker.tt_allocations == 1 && !other_worker.tt_reuses,
+               "independent worker contexts must own independent allocations");
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

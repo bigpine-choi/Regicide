@@ -2,6 +2,8 @@
 #include "regicide/search.hpp"
 
 #include <bit>
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 
 namespace regicide {
@@ -32,10 +34,39 @@ std::optional<int> TranspositionEntry::cutoff_score(int requested_depth, int ply
 }
 
 TranspositionTable::TranspositionTable(int megabytes) {
+    (void)prepare(megabytes);
+}
+
+TranspositionMemoryWork TranspositionTable::prepare(int megabytes) {
     if (megabytes < 1 || megabytes > max_hash_mb)
         throw std::invalid_argument("hash size must be 1..256 MiB");
-    const auto bytes = static_cast<std::size_t>(megabytes) * 1024 * 1024;
-    entries_.resize(bytes / sizeof(TranspositionEntry));
+    TranspositionMemoryWork work;
+    if (megabytes_ != megabytes) {
+        const auto bytes = static_cast<std::size_t>(megabytes) * 1024 * 1024;
+        // Construct first for a strong exception guarantee; resize must also
+        // release any larger old capacity rather than silently retaining it.
+        std::vector<TranspositionEntry> replacement(bytes / sizeof(TranspositionEntry));
+        entries_.swap(replacement);
+        megabytes_ = megabytes;
+        generation_ = 1;
+        work.allocations = 1;
+    } else {
+        work.reuses = 1;
+        work.clears = clear() ? 1 : 0;
+    }
+    work.bytes = allocated_bytes();
+    return work;
+}
+
+bool TranspositionTable::clear() {
+    if (entries_.empty()) return false;
+    if (generation_ == std::numeric_limits<std::uint32_t>::max()) {
+        std::fill(entries_.begin(), entries_.end(), TranspositionEntry{});
+        generation_ = 1;
+        return true;
+    }
+    ++generation_;
+    return false;
 }
 
 std::size_t TranspositionTable::index(const TranspositionKey& key) const {
@@ -50,18 +81,22 @@ std::size_t TranspositionTable::index(const TranspositionKey& key) const {
 }
 
 const TranspositionEntry* TranspositionTable::probe(const TranspositionKey& key) const {
+    if (entries_.empty()) return nullptr;
     const auto& entry = entries_[index(key)];
-    return entry.depth >= 0 && entry.key == key ? &entry : nullptr;
+    return entry.generation == generation_ && entry.depth >= 0 && entry.key == key ? &entry : nullptr;
 }
 
 bool TranspositionTable::store(const TranspositionKey& key, int depth, int score, int ply,
                                TranspositionBound bound, std::optional<Move> best_move) {
+    if (entries_.empty()) return false;
     auto& entry = entries_[index(key)];
-    if (entry.depth > depth) return false;
-    if (entry.depth == depth && entry.key == key &&
-        entry.bound == TranspositionBound::exact && bound != TranspositionBound::exact)
-        return false;
-    entry = {key, depth, score_to_table(score, ply), bound, best_move};
+    if (entry.generation == generation_) {
+        if (entry.depth > depth) return false;
+        if (entry.depth == depth && entry.key == key &&
+            entry.bound == TranspositionBound::exact && bound != TranspositionBound::exact)
+            return false;
+    }
+    entry = {key, depth, score_to_table(score, ply), bound, generation_, best_move};
     return true;
 }
 

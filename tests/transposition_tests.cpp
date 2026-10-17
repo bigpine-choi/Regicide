@@ -4,8 +4,17 @@
 #include <bit>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
+
+namespace regicide {
+struct TranspositionTableTestAccess {
+    static void generation(TranspositionTable& table, std::uint32_t generation) {
+        table.generation_ = generation;
+    }
+};
+}
 
 using namespace regicide;
 namespace {
@@ -124,6 +133,74 @@ int main() {
                    zero_clock.repetition_context_key() == old_clock.repetition_context_key(),
                "fixture must differ only by halfmove clock");
         expect(key(zero_clock) != key(old_clock), "50/75-move counters must be part of the query");
+    });
+    test("same-size prepare reuses backing memory but no old entries", [] {
+        TranspositionTable table;
+        expect(table.capacity() == 0 && table.allocated_bytes() == 0,
+               "default table must not preallocate");
+        expect(!table.clear() && !table.probe({}) &&
+                   !table.store({}, 1, 0, 0, TranspositionBound::exact, {}),
+               "unallocated table must remain safe and empty");
+        const auto allocated = table.prepare(1);
+        expect(allocated.allocations == 1 && allocated.reuses == 0 && allocated.clears == 0 &&
+                   allocated.bytes == table.allocated_bytes(), "first prepare must allocate once");
+        const TranspositionKey original{};
+        const TranspositionKey collision{std::rotl(UINT64_C(1), 23), 1, 0};
+        table.store(original, 64, mate_score - 3, 0, TranspositionBound::exact, Move::from_uci("e2e4"));
+        const auto* address = table.probe(original);
+        expect(address != nullptr, "first search must store entries");
+        const auto reused = table.prepare(1);
+        expect(reused.allocations == 0 && reused.reuses == 1 && reused.clears == 0 &&
+                   reused.bytes == allocated.bytes, "same-size prepare must avoid allocation and full clear");
+        expect(!table.probe(original), "old scores and moves must be invisible in the next search");
+        expect(table.store(collision, 1, 10, 0, TranspositionBound::upper, Move::from_uci("d2d4")),
+               "deep stale entry must not block a shallow new-generation collision");
+        expect(table.probe(collision) == address, "same-size search must retain the actual backing address");
+        expect(!table.clear() && !table.probe(collision), "explicit clear must logically invalidate without a sweep");
+        expect(table.allocated_bytes() == allocated.bytes, "explicit clear must retain bounded storage");
+        expect(table.store(original, 1, 42, 0, TranspositionBound::exact, {}) &&
+                   table.probe(original) == address, "cleared storage must be reusable");
+    });
+    test("resizing changes storage budget and invalid arguments preserve a table", [] {
+        TranspositionTable table;
+        const auto one = table.prepare(1);
+        table.store({}, 4, 70, 0, TranspositionBound::exact, {});
+        const auto two = table.prepare(2);
+        expect(two.allocations == 1 && two.reuses == 0 && two.clears == 0 &&
+                   two.bytes > one.bytes && two.bytes <= 2 * 1024 * 1024,
+               "growing table must allocate the new requested budget");
+        expect(!table.probe({}), "resizing must discard old entries");
+        table.store({}, 8, 80, 0, TranspositionBound::exact, {});
+        const auto shrunk = table.prepare(1);
+        expect(shrunk.allocations == 1 && shrunk.reuses == 0 && shrunk.bytes == one.bytes,
+               "shrinking must release the old larger capacity");
+        expect(!table.probe({}), "shrinking must not expose old larger-table entries");
+        table.store({}, 2, 90, 0, TranspositionBound::exact, {});
+        const auto* original = table.probe({});
+        rejects([&] { (void)table.prepare(0); });
+        rejects([&] { (void)table.prepare(max_hash_mb + 1); });
+        expect(table.probe({}) == original && table.probe({})->score == 90 &&
+                   table.allocated_bytes() == one.bytes, "rejected resize must preserve the previous table");
+    });
+    test("generation wrap physically removes old generation-one records once", [] {
+        TranspositionTable table(1);
+        table.store({}, 64, 123, 0, TranspositionBound::exact, Move::from_uci("a2a4"));
+        const auto* address = table.probe({});
+        const auto bytes = table.allocated_bytes();
+        TranspositionTableTestAccess::generation(table, std::numeric_limits<std::uint32_t>::max() - 1);
+        expect(!table.clear() && !table.probe({}), "last non-wrapping clear must stay logical");
+        // The generation-one record remains physically present until wrap.
+        expect(address->generation == 1 && address->depth == 64, "fixture needs a stale generation-one record");
+        const auto wrapped = table.prepare(1);
+        expect(wrapped.allocations == 0 && wrapped.reuses == 1 && wrapped.clears == 1 &&
+                   wrapped.bytes == bytes, "wrap must sweep once while retaining allocation");
+        expect(!table.probe({}) && address->generation == 0 && address->depth == -1,
+               "wrapped generation must never resurrect an ancient score or move");
+        expect(table.store({}, 1, 5, 0, TranspositionBound::exact, {}) && table.probe({}) == address,
+               "physically cleared storage must remain usable");
+        const auto next = table.prepare(1);
+        expect(next.allocations == 0 && next.reuses == 1 && next.clears == 0 && !table.probe({}),
+               "ordinary search after wrap must return to constant-time invalidation");
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

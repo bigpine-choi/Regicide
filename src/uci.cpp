@@ -125,17 +125,18 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.4.0");
+            send("id name Regicide 0.4.1");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
             send("option name UseQuiescence type check default true");
             send("option name UseTranspositionTable type check default true");
             send("option name Hash type spin default 16 min 1 max 256");
+            send("option name Clear Hash type button");
             send("option name UseFastMoves type check default true");
             send("uciok");
         } else if (command == "stop") stop();
-        else if (command == "ucinewgame") { stop(); board_ = Board(); }
+        else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
         else if (command == "position") { stop(); board_ = parse_position(tokens); }
         else if (command == "setoption") {
             // Options are changed only after a current search has been joined.
@@ -160,6 +161,10 @@ private:
         for (auto i = tokens.begin() + 2; i != value; ++i) {
             if (!option.empty()) option += ' ';
             option += *i;
+        }
+        if (option == "Clear Hash") {
+            if (value != tokens.end()) throw std::invalid_argument("Clear Hash is a button without a value");
+            context_.clear(); return;
         }
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash") return;
@@ -193,7 +198,9 @@ private:
         }
         send(line.str());
         send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
-             " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores));
+             " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores) +
+             " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +
+             " clears " + std::to_string(result.tt_clears) + " bytes " + std::to_string(result.tt_bytes));
     }
     void start(Go go) {
         stop_.store(false, std::memory_order_relaxed);
@@ -201,7 +208,7 @@ private:
         const auto options = options_;
         worker_ = std::thread([this, snapshot, go, options] {
             try {
-                auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); }, options);
+                auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); }, options, &context_);
                 if (go.infinite) {
                     std::unique_lock lock(wait_mutex_);
                     wake_.wait(lock, [this] { return stop_.load(std::memory_order_relaxed); });
@@ -222,6 +229,7 @@ private:
     std::thread worker_;
     int overhead_ = 20;
     SearchOptions options_;
+    SearchContext context_; // Accessed only after joining any prior search worker.
 };
 } // namespace
 
