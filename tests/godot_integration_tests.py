@@ -158,6 +158,7 @@ def main():
     if imported.returncode or "SCRIPT ERROR:" in imported.stdout or "ERROR:" in imported.stdout:
         raise AssertionError(f"Godot import failed (exit {imported.returncode})\n{imported.stdout}")
     run_godot(args, "orientation_tests.gd", ["--evidence-dir", args.output])
+    run_godot(args, "evaluation_bar_tests.gd")
     with tempfile.TemporaryDirectory(prefix="regicide-godot-") as temporary:
         temporary = Path(temporary)
         game = backend.HumanGame(args.binary, temporary / "games")

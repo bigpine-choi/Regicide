@@ -5,6 +5,7 @@ signal state_changed(revision: int)
 
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const ChessBoard = preload("res://scripts/chess_board.gd")
+const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -29,8 +30,13 @@ var review_pgn: String = ""
 var _live_selected_square: String = ""
 var _live_pending_promotions: Array[String] = []
 var _library_games: Array = []
+var evaluation: Dictionary = {}
+var evaluation_in_flight: bool = false
 
 var board: ChessBoard
+var evaluation_bar: EvaluationBar
+var evaluation_summary: Label
+var evaluation_detail: Label
 var flip_button: Button
 var view_label: Label
 var status_label: Label
@@ -71,6 +77,8 @@ var promotion_panel: PanelContainer
 var promotion_buttons: Dictionary = {}
 var save_dialog: FileDialog
 var http: HTTPRequest
+var evaluation_http: HTTPRequest
+var evaluation_timer: Timer
 
 
 func _ready() -> void:
@@ -186,14 +194,34 @@ func _build_ui() -> void:
 	flip_button.name = "FlipView"
 	flip_button.tooltip_text = "언제든 백·흑 시점을 전환합니다. 내 색과 대국 상태는 그대로입니다. (F)"
 	board_toolbar.add_child(flip_button)
+	evaluation_summary = _label("형세 분석 대기", 16, "f6f0de")
+	evaluation_summary.name = "EvaluationSummary"
+	board_column.add_child(evaluation_summary)
+	evaluation_detail = _label("현재 체스판의 분석을 기다립니다.", 12, "8197aa")
+	evaluation_detail.name = "EvaluationDetail"
+	board_column.add_child(evaluation_detail)
 	top_player = _label("흑  ·  Regicide", 15, "bccbd8")
 	board_column.add_child(top_player)
+	var board_row := HBoxContainer.new()
+	board_row.add_theme_constant_override("separation", 0)
+	board_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board_column.add_child(board_row)
+	var evaluation_gutter := Control.new()
+	evaluation_gutter.custom_minimum_size.x = 40
+	board_row.add_child(evaluation_gutter)
 	board = ChessBoard.new()
 	board.name = "ChessBoard"
 	board.model = board_model
 	board.square_pressed.connect(_on_square_pressed)
 	board.drag_requested.connect(_on_drag_requested)
-	board_column.add_child(board)
+	board_row.add_child(board)
+	# Overlay against the drawn squares, which may be centered inside a wide row.
+	evaluation_bar = EvaluationBar.new()
+	evaluation_bar.name = "LiveEvaluationBar"
+	evaluation_bar.board = board
+	board.add_child(evaluation_bar)
+	evaluation_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	board.resized.connect(evaluation_bar.queue_redraw)
 	bottom_player = _label("백  ·  당신", 15, "bccbd8")
 	board_column.add_child(bottom_player)
 	board_column.add_child(_label("기물 → 도착 칸 클릭  /  드래그 이동  /  F 키로 시점 전환", 12, "8197aa"))
@@ -287,6 +315,15 @@ func _build_ui() -> void:
 	http = HTTPRequest.new()
 	http.timeout = 15.0
 	add_child(http)
+	# Search updates must arrive while the move request is still waiting.
+	evaluation_http = HTTPRequest.new()
+	evaluation_http.timeout = 3.0
+	add_child(evaluation_http)
+	evaluation_timer = Timer.new()
+	evaluation_timer.wait_time = 0.2
+	evaluation_timer.timeout.connect(_poll_evaluation)
+	add_child(evaluation_timer)
+	evaluation_timer.start()
 	save_dialog = FileDialog.new()
 	save_dialog.title = "기보 저장"
 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
@@ -615,10 +652,68 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest = 
 
 func accept_state(next: Dictionary) -> void:
 	state = next.duplicate(true)
+	if not _evaluation_matches(evaluation, state):
+		evaluation.clear()
 	if not review_mode:
 		board_model.apply_state(state)
 	_render()
 	state_changed.emit(int(state.get("revision", 0)))
+
+
+func _evaluation_matches(value: Dictionary, position: Dictionary) -> bool:
+	return not value.is_empty() and not str(position.get("game_id", "")).is_empty() \
+		and str(value.get("game_id", "")) == str(position.get("game_id", "")) \
+		and int(value.get("revision", -1)) == int(position.get("revision", -2)) \
+		and str(value.get("fen", "")) == str(position.get("fen", ""))
+
+
+func accept_evaluation(value: Dictionary) -> bool:
+	# Both a move and a new game can finish before an older GET callback.
+	if review_mode or closing or not _evaluation_matches(value, state):
+		return false
+	evaluation = value.duplicate(true)
+	_render_evaluation()
+	return true
+
+
+func _poll_evaluation() -> void:
+	if evaluation_in_flight or offline_mode or review_mode or closing or backend_url.is_empty() or state.is_empty():
+		return
+	evaluation_in_flight = true
+	var requested_position: Dictionary = state.duplicate(true)
+	var response: Dictionary = await _send_request("/api/evaluation", null, evaluation_http)
+	evaluation_in_flight = false
+	if review_mode or closing or not _evaluation_matches(requested_position, state):
+		return
+	if response.get("ok", false):
+		accept_evaluation(response.data)
+	else:
+		var unavailable: Dictionary = requested_position.duplicate(true)
+		unavailable["status"] = "unavailable"
+		unavailable["message"] = "형세 분석에 연결할 수 없습니다. 대국은 계속할 수 있습니다."
+		accept_evaluation(unavailable)
+
+
+func _render_evaluation() -> void:
+	if evaluation_bar == null:
+		return
+	var shown: Dictionary = _display_state()
+	var presented: Dictionary = {"status": "waiting"}
+	if review_mode:
+		# Older records contain no analysis. A live score must not leak into replay.
+		presented = {"status": "unavailable", "message": "이 기보 위치에는 저장된 평가값이 없습니다."}
+		var saved: Variant = shown.get("evaluation")
+		if saved is Dictionary and str(saved.get("fen", "")) == str(shown.get("fen", "")):
+			presented = saved
+	elif shown.get("result", "*") in ["1-0", "0-1", "1/2-1/2"]:
+		presented = {"status": "terminal", "source": "result", "result": shown.result}
+	elif _evaluation_matches(evaluation, shown):
+		presented = evaluation
+	evaluation_bar.present(presented, board_model.view_from_white)
+	evaluation_summary.text = evaluation_bar.summary_text
+	evaluation_detail.text = evaluation_bar.detail_text
+	evaluation_summary.tooltip_text = evaluation_bar.tooltip_text
+	evaluation_detail.tooltip_text = evaluation_bar.tooltip_text
 
 
 func _handle_response(response: Dictionary) -> bool:
@@ -811,6 +906,7 @@ func _render() -> void:
 	var shown: Dictionary = _display_state()
 	board.state = shown
 	board.queue_redraw()
+	_render_evaluation()
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = false
 	var human_color: String = str(shown.get("human_color", "white"))

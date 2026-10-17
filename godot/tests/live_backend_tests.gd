@@ -109,6 +109,14 @@ func _run() -> void:
 		return
 	verify(int(app.state.revision) == initial_revision + 1, "exactly one human move applied")
 	verify(app.state.moves.size() == 1 and app.state.moves[0].uci == "e2e4", "flipped input submitted exact e2e4")
+	if not await wait_for(func(): return app.engine_thinking and app.evaluation.get("status") == "searching" and app.evaluation.get("depth") != null,
+			"independent evaluation poll receives a search depth while the move HTTP request is pending", 2.0):
+		await finish()
+		return
+	var live_evaluation: Dictionary = app.evaluation.duplicate(true)
+	verify(app.request_in_flight and app.evaluation_bar.has_score, "evaluation graphic updates during the outstanding engine request")
+	verify(live_evaluation.game_id == app.state.game_id and int(live_evaluation.revision) == int(app.state.revision) and live_evaluation.fen == app.state.fen,
+		"in-flight evaluation belongs to the displayed game, revision and position")
 	await flip_without_mutation("1000 ms engine request")
 	await flip_without_mutation("same pending engine request")
 	verify(app.engine_thinking, "GUI flips complete before engine callback")
@@ -120,6 +128,21 @@ func _run() -> void:
 	verify(app.state.human_to_move, "turn returns to white after real engine callback")
 	verify(not app.board_model.view_from_white, "engine callback preserves chosen black perspective")
 	verify(app.error_message.is_empty(), "white real-engine game has no UI error")
+	if not await wait_for(func(): return app.evaluation.get("status") == "ready" and app.evaluation.get("source") == "previous_search",
+			"completed engine move receives its labelled previous-search estimate"):
+		await finish()
+		return
+	var ready_evaluation: Dictionary = app.evaluation.duplicate(true)
+	verify(ready_evaluation.game_id == app.state.game_id and int(ready_evaluation.revision) == int(app.state.revision) and ready_evaluation.fen == app.state.fen,
+		"ready evaluation matches the new displayed position")
+	verify(ready_evaluation.source_fen == live_evaluation.fen and app.evaluation_detail.text.contains("직전 탐색"),
+		"retained analysis identifies its previous root and does not claim fresh analysis")
+	await capture("evaluation-after-engine")
+	if not evidence_dir.is_empty():
+		var evidence := FileAccess.open(evidence_dir.path_join("evaluation-live.json"), FileAccess.WRITE)
+		verify(evidence != null, "live evaluation evidence file opens")
+		if evidence != null:
+			evidence.store_string(JSON.stringify({"searching": live_evaluation, "ready": ready_evaluation}, "\t") + "\n")
 	await click_at(app.undo_button.get_global_rect().get_center())
 	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.is_empty(), "undo callback restores starting board"):
 		await finish()
