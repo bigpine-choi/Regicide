@@ -275,6 +275,7 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual(outside.read_text(encoding="utf-8"), '{"secret":"not a game"}')
 
     def test_symlinked_record_cannot_escape_library(self):
+        self.opening()
         outside = self.root / "outside.json"
         record = self.record()
         record["game_id"] = "linked"
