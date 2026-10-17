@@ -24,7 +24,7 @@ C++20 자체 엔진 v0.5.0입니다. 이전 100ms 패배 기보를 분석해 **�
 
 ## 최신 엔진과 직접 대국하기
 
-Windows에서는 **`Play-Regicide-Godot.cmd`를 더블클릭**하면 Godot 대국 창이 열립니다. **시점 뒤집기** 버튼 또는 **F** 키로 언제든 백·흑 시점을 바꿀 수 있습니다. 내가 두는 색과 시점은 독립적이며, 엔진이 생각하는 중에도 전환됩니다. 클릭·드래그 이동, 백·흑 선택, 생각 시간(0.1·1·3·5초), 기보 저장·한 턴 되돌리기를 지원합니다. [Godot 실행·검증 안내](docs/GODOT_PLAY.md)를 참고합니다.
+Windows에서는 **`Play-Regicide-Godot.cmd`를 더블클릭**하면 Godot 대국 창이 열립니다. **시점 뒤집기** 버튼 또는 **F** 키로 언제든 백·흑 시점을 바꿀 수 있습니다. 내가 두는 색과 시점은 독립적이며, 엔진이 생각하는 중에도 전환됩니다. 클릭·드래그 이동, 백·흑 선택, 생각 시간(0.1·1·3·5초), 기보 저장·**무르기**를 지원합니다. **Regicide 수 바꾸기**로 과거 엔진 수를 사용자가 지정한 합법 수로 바꾸고 새 수순을 이어가는 핸디캡 연습도 가능합니다. [Godot 실행·검증 안내](docs/GODOT_PLAY.md)를 참고합니다.
 
 기존 **`Play-Regicide.cmd`**의 브라우저 대국도 계속 사용할 수 있습니다. [브라우저 실행 안내](docs/HUMAN_PLAY.md)에 설명합니다.
 
@@ -105,3 +105,4 @@ Visual Studio CMake 생성기를 사용한 Windows 빌드는 실행 파일이 `b
 - [최신 Regicide와 직접 대국하기](docs/HUMAN_PLAY.md)
 - [Godot 대국과 자유로운 백·흑 시점 전환](docs/GODOT_PLAY.md)
 - [Godot 화면·입력·실제 엔진 연결 검증](docs/experiments/2026-10-17-godot-play.md)
+- [무르기·핸디캡 수 교체와 새 수순 탐색 검증](docs/experiments/2026-10-18-handicap-play.md)

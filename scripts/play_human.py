@@ -1,4 +1,4 @@
-"""Local click-board host. Regicide alone chooses the opponent's moves.
+"""Local practice host. Regicide chooses moves except explicit user handicaps.
 
 python-chess supplies UCI transport, legality, adjudication and PGN formatting.
 Bind only to loopback; JSON mutations require a per-process browser token.
@@ -62,6 +62,9 @@ class HumanGame:
         self.movetime_ms = movetime_ms
         self.error = None
         self._override = None
+        self._forced_plies = set()
+        self._handicap_backup = None
+        self._handicap_events = []
         self._game_token = object()
         self.started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.game_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:12]
@@ -81,14 +84,18 @@ class HumanGame:
     def state(self):
         with self._lock:
             result, termination = self._outcome()
-            human_turn = result == "*" and not self.error and self.board.turn == self.human_color
-            engine_turn = result == "*" and not self.error and self.board.turn != self.human_color
+            handicap_mode = self._handicap_backup is not None
+            active = result == "*" and not self.error
+            human_turn = active and not handicap_mode and self.board.turn == self.human_color
+            engine_turn = active and not handicap_mode and self.board.turn != self.human_color
             names = {"checkmate": "체크메이트", "stalemate": "스테일메이트",
                      "insufficient_material": "메이트 불가능한 기물 구성",
                      "threefold_repetition": "3회 반복 청구", "fivefold_repetition": "5회 반복",
                      "fifty_moves": "50수 청구", "seventyfive_moves": "75수 규칙",
                      "resignation": "기권"}
-            if self.error:
+            if handicap_mode:
+                status = "핸디캡 · Regicide 대신 두세요"
+            elif self.error:
                 status = "엔진 응답에 문제가 생겼습니다. 기보는 보존됐습니다. 새 대국으로 다시 시작해 주세요."
             elif result == "1/2-1/2":
                 status = "무승부 · " + names.get(termination, termination or "대국 종료")
@@ -103,24 +110,30 @@ class HumanGame:
             replay = self.board.root()
             moves = []
             for ply, move in enumerate(self.board.move_stack, 1):
-                moves.append({"ply": ply, "san": replay.san(move), "uci": move.uci(),
-                              "actor": "human" if replay.turn == self.human_color else "engine"})
+                entry = {"ply": ply, "san": replay.san(move), "uci": move.uci(),
+                         "actor": "human" if replay.turn == self.human_color else "engine"}
+                if ply in self._forced_plies:
+                    entry["forced"] = True
+                moves.append(entry)
                 replay.push(move)
-            minimum_undo = 2 if self.human_color else 3
-            can_undo = len(self.board.move_stack) >= minimum_undo
-            if engine_turn and self.board.move_stack:
-                can_undo = True
+            # Include a human move that itself ended the game (there may be no
+            # engine reply). The initial engine opening is still retained.
+            can_undo = (not handicap_mode and bool(self.board.move_stack) and
+                        (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
             return {"revision": self.revision,
                     "board": {chess.square_name(square): piece.symbol()
                               for square, piece in self.board.piece_map().items()},
                     "turn": "white" if self.board.turn else "black",
                     "human_color": "white" if self.human_color else "black",
                     "human_to_move": bool(human_turn), "engine_to_move": bool(engine_turn),
-                    "legal_moves": [move.uci() for move in self.board.legal_moves] if human_turn else [],
+                    "legal_moves": [move.uci() for move in self.board.legal_moves]
+                    if human_turn or handicap_mode else [],
                     "moves": moves, "status": status, "result": result, "termination": termination,
                     "in_check": self.board.is_check(),
                     "last_move": self.board.peek().uci() if self.board.move_stack else None,
                     "can_undo": can_undo, "error": self.error,
+                    "handicap_mode": handicap_mode,
+                    "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256}}
@@ -128,6 +141,7 @@ class HumanGame:
     def new_game(self, color, movetime_ms, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_no_handicap()
             if color not in ("white", "black") or type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
             self._ensure_engine()
@@ -158,6 +172,7 @@ class HumanGame:
             if not self.state()["engine_to_move"]:
                 raise ValueError("지금은 Regicide 차례가 아닙니다.")
             try:
+                self._ensure_engine()
                 reply = self._engine.play(self.board, chess.engine.Limit(time=self.movetime_ms / 1000),
                                           game=self._game_token, info=chess.engine.INFO_ALL)
                 if reply.move is None or reply.move not in self.board.legal_moves:
@@ -175,6 +190,7 @@ class HumanGame:
     def undo(self, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_no_handicap()
             if not self.state()["can_undo"]:
                 raise ValueError("되돌릴 당신의 수가 없습니다.")
             if self.board.turn != self.human_color:
@@ -184,6 +200,8 @@ class HumanGame:
                 self.board.pop()
             self.error = None
             self._override = None
+            self._forced_plies.intersection_update(range(1, len(self.board.move_stack) + 1))
+            self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
             self.revision += 1
@@ -193,6 +211,7 @@ class HumanGame:
     def resign(self, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_no_handicap()
             if self._outcome()[0] != "*" or self.error:
                 raise ValueError("이미 종료된 대국입니다.")
             self._override = ("0-1" if self.human_color else "1-0", "resignation")
@@ -200,10 +219,89 @@ class HumanGame:
             self._save()
             return self.state()
 
+    def _require_no_handicap(self):
+        if self._handicap_backup is not None:
+            raise ValueError("Regicide의 수 바꾸기를 완료하거나 취소해 주세요.")
+
+    def begin_handicap(self, ply, revision):
+        """Preview a replacement without overwriting the durable original line."""
+        with self._lock:
+            self._check_revision(revision)
+            self._require_no_handicap()
+            if type(ply) is not int or not 1 <= ply <= len(self.board.move_stack):
+                raise ValueError("바꿀 Regicide의 수를 선택해 주세요.")
+            preview = self.board.copy(stack=True)
+            while len(preview.move_stack) >= ply:
+                preview.pop()
+            if preview.turn == self.human_color:
+                raise ValueError("당신의 수가 아닌 Regicide의 수를 선택해 주세요.")
+            self._handicap_backup = {"board": self.board.copy(stack=True),
+                                     "forced_plies": self._forced_plies.copy(),
+                                     "override": self._override, "error": self.error,
+                                     "outcome": self._outcome(), "ply": ply}
+            self.board = preview
+            self._forced_plies.intersection_update(range(1, ply))
+            self.error = None
+            self._override = None
+            self.revision += 1
+            return self.state()
+
+    def forced_move(self, uci, revision):
+        with self._lock:
+            self._check_revision(revision)
+            if self._handicap_backup is None or self.board.turn == self.human_color:
+                raise ValueError("먼저 바꿀 Regicide의 수를 선택해 주세요.")
+            if not isinstance(uci, str) or len(uci) not in (4, 5):
+                raise ValueError("올바른 수를 선택해 주세요.")
+            try:
+                move = chess.Move.from_uci(uci)
+            except ValueError:
+                raise ValueError("올바른 수를 선택해 주세요.") from None
+            if move not in self.board.legal_moves:
+                raise ValueError("그 칸으로 이동할 수 없습니다. 합법 수 중에서 선택해 주세요.")
+            backup = self._handicap_backup
+            ply = backup["ply"]
+            self.board.push(move)
+            self._forced_plies.add(ply)
+            self._handicap_events.append({
+                "ply": ply, "replacement": move.uci(),
+                "removed_suffix": [item.uci() for item in backup["board"].move_stack[ply - 1:]],
+                "original_forced_plies": sorted(backup["forced_plies"]),
+                "original_result": backup["outcome"][0],
+                "original_termination": backup["outcome"][1],
+                "original_error": backup["error"],
+                "at": datetime.datetime.now(datetime.timezone.utc).isoformat()})
+            self._handicap_backup = None
+            # python-chess sends ucinewgame and the complete new branch before
+            # the next search, including all repetition/castling/EP history.
+            self._game_token = object()
+            self.revision += 1
+            self._save()
+            return self.state()
+
+    def cancel_handicap(self, revision):
+        with self._lock:
+            self._check_revision(revision)
+            if self._handicap_backup is None:
+                raise ValueError("현재 바꾸고 있는 Regicide의 수가 없습니다.")
+            backup = self._handicap_backup
+            self.board = backup["board"]
+            self._forced_plies = backup["forced_plies"]
+            self.error = backup["error"]
+            self._override = backup["override"]
+            self._handicap_backup = None
+            self.revision += 1
+            self._save()
+            return self.state()
+
     def pgn(self):
         with self._lock:
-            game = chess.pgn.Game.from_board(self.board)
-            result, termination = self._outcome()
+            backup = self._handicap_backup
+            board = backup["board"] if backup else self.board
+            forced_plies = backup["forced_plies"] if backup else self._forced_plies
+            error = backup["error"] if backup else self.error
+            game = chess.pgn.Game.from_board(board)
+            result, termination = backup["outcome"] if backup else self._outcome()
             game.headers.update({"Event": "Regicide local human practice", "Site": "local",
                                  "Date": self.started_at[:10].replace("-", "."),
                                  "White": "Human" if self.human_color else self.engine_name,
@@ -213,7 +311,11 @@ class HumanGame:
                                  "InterfaceSourceCommit": self.source["commit"] or "unknown",
                                  "DrawPolicy": "always claim available threefold/50-move draws",
                                  "Termination": "unterminated" if result == "*" else "normal",
-                                 "TerminationReason": termination or ("engine_error" if self.error else "in_progress")})
+                                 "TerminationReason": termination or ("engine_error" if error else "in_progress"),
+                                 "HandicapMoves": str(len(forced_plies))})
+            for ply, node in enumerate(game.mainline(), 1):
+                if ply in forced_plies:
+                    node.comment = "User-forced Regicide move (handicap)"
             return str(game) + "\n\n"
 
     def _save(self):
@@ -224,7 +326,8 @@ class HumanGame:
                   "final_fen": self.board.fen(en_passant="fen"),
                   "uci_moves": [move.uci() for move in self.board.move_stack],
                   "state": state, "draw_policy": "always claim available threefold/50-move draws",
-                  "purpose": "Human practice; undo permitted, not a strength measurement"}
+                  "handicap_events": self._handicap_events,
+                  "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
             target = self.save_dir / f"{self.game_id}.{extension}"
@@ -319,6 +422,9 @@ class HumanHandler(BaseHTTPRequestHandler):
             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),
                        "/api/engine": lambda: game.engine_move(revision),
+                       "/api/handicap": lambda: game.begin_handicap(data.get("ply"), revision),
+                       "/api/forced-move": lambda: game.forced_move(data.get("move"), revision),
+                       "/api/handicap-cancel": lambda: game.cancel_handicap(revision),
                        "/api/undo": lambda: game.undo(revision),
                        "/api/resign": lambda: game.resign(revision)}
             if self.path == "/api/shutdown":
