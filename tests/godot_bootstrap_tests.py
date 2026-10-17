@@ -43,8 +43,17 @@ class BootstrapTests(unittest.TestCase):
                     deadline = time.monotonic() + 10
                     while time.monotonic() < deadline:
                         if startup_file.is_file():
-                            startup = json.loads(startup_file.read_text(encoding="utf-8"))
-                            break
+                            # The private file is published just before the
+                            # public stdout line. Wait for both, rather than
+                            # assuming a scheduler cannot switch between them.
+                            try:
+                                candidate = json.loads(startup_file.read_text(encoding="utf-8"))
+                                json.loads(stdout_file.read_text(encoding="utf-8").strip())
+                            except (OSError, json.JSONDecodeError):
+                                pass
+                            else:
+                                startup = candidate
+                                break
                         if process.poll() is not None:
                             self.fail("manager exited: " + stderr_file.read_text(encoding="utf-8"))
                         time.sleep(0.02)
