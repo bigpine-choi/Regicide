@@ -99,6 +99,7 @@ public:
     std::uint64_t nodes = 0;
     std::uint64_t qnodes = 0;
     std::uint64_t tt_probes = 0, tt_hits = 0, tt_cutoffs = 0, tt_stores = 0;
+    std::uint64_t pvs_probes = 0, pvs_researches = 0;
     int seldepth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
@@ -153,6 +154,7 @@ public:
             order_moves(board, moves, ordered_preferred, &killers_[ply], &history_[color]);
         else order_moves(board, moves, ordered_preferred);
         int best = -infinity;
+        bool first_move = true;
         for (Move move : moves) {
             poll(false);
             int score;
@@ -160,12 +162,28 @@ public:
             {
                 AppliedMove applied(board, move, options_.fast_moves);
                 const bool intended_claim = claimable(board);
-                score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
+                if (options_.pvs && !first_move) {
+                    // A one-point window first asks only whether this move can
+                    // improve alpha. An improvement below beta needs a normal
+                    // search before publishing its score or principal variation.
+                    ++pvs_probes;
+                    score = -negamax(board, depth - 1, ply + 1, -alpha - 1, -alpha, child_pv);
+                    // The mover's intended claim belongs to this move's value,
+                    // so account for it before deciding whether to re-search.
+                    if (intended_claim) score = std::max(0, score);
+                    if (score > alpha && score < beta) {
+                        ++pvs_researches;
+                        score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
+                    }
+                } else {
+                    score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
+                }
                 // The mover may claim before an intended move that creates a
                 // third repetition or completes 50 moves, even if the opponent
                 // would decline a claim and continue with a winning position.
                 if (intended_claim) score = std::max(0, score);
             }
+            first_move = false;
             if (score > best) {
                 best = score;
                 pv.clear();
@@ -360,6 +378,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.tt_hits = searcher.tt_hits;
         result.tt_cutoffs = searcher.tt_cutoffs;
         result.tt_stores = searcher.tt_stores;
+        result.pvs_probes = searcher.pvs_probes;
+        result.pvs_researches = searcher.pvs_researches;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -370,6 +390,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.tt_hits = searcher.tt_hits;
     result.tt_cutoffs = searcher.tt_cutoffs;
     result.tt_stores = searcher.tt_stores;
+    result.pvs_probes = searcher.pvs_probes;
+    result.pvs_researches = searcher.pvs_researches;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

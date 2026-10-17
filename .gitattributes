@@ -5,3 +5,6 @@ docs/profiles/** linguist-generated=true
 docs/profiles/** whitespace=-blank-at-eol
 # PGN uses blank lines between games and after the final game.
 *.pgn whitespace=-blank-at-eof
+# Keep archived PVS evidence byte-identical so checkout line endings cannot
+# invalidate the independent audit's JSON/PGN SHA256 values.
+docs/matches/2026-10-18-pvs/** -text

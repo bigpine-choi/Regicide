@@ -206,6 +206,25 @@ def search_fingerprint(move, output):
             nodes, pv, counters[-1])
 
 
+def pvs_statistics(output):
+    records = []
+    for line in output:
+        if line.startswith("info string pvs "):
+            fields = line.split()[3:]
+            assert len(fields) == 4 and fields[::2] == ["probes", "researches"], line
+            probes, researches = map(int, fields[1::2])
+            assert 0 <= researches <= probes, line
+            records.append((probes, researches))
+    assert records, output
+    for earlier, later in zip(records, records[1:]):
+        assert all(a <= b for a, b in zip(earlier, later)), records
+    return records
+
+
+def pvs_fingerprint(move, output):
+    return search_fingerprint(move, output), pvs_statistics(output)[-1]
+
+
 def search_history(engine, board, go="go depth 3"):
     """Send full known history, unlike a FEN-only analysis request."""
     command = "position fen " + board.root().fen(en_passant="fen")
@@ -223,7 +242,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.0", engine.id
+        assert engine.id.get("name") == "Regicide 0.5.1", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -626,7 +645,7 @@ def test_reused_table_context_isolation(binary):
                 chess.Board(CAPTURE_FEN)]
     defaults = {"Hash": 1, "UsePositionalEvaluation": True, "UseQuiescence": True,
                 "UseTranspositionTable": True, "UseFastMoves": True,
-                "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True}
+                "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True, "PVS": True}
     with UciProcess(binary) as reused:
         configure(reused, **defaults)
         for index, board in enumerate(fixtures):
@@ -642,6 +661,7 @@ def test_reused_table_context_isolation(binary):
                        {"UsePositionalEvaluation": False, "UseQuiescence": False},
                        {"UseTranspositionTable": False}, {"UseFastMoves": False},
                        {"UseQuietMoveOrdering": False}, {"UseQuiescenceChecks": False},
+                       {"PVS": False},
                        {"UseQuietMoveOrdering": False, "UseQuiescenceChecks": False}, {}]:
             options = defaults | change
             board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
@@ -803,6 +823,115 @@ def test_search_quality_option_behavior(binary):
         assert original_order.info["nodes"] != learned_order.info["nodes"], (original_order, learned_order)
 
 
+def test_pvs_protocol_and_fixed_depth(binary):
+    # Validate the advertised default using a separate UCI client. On/off
+    # comparisons below demand equal exact values, not identical tied moves.
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options.get("PVS")
+        assert option and option.type == "check" and option.default is True, client.options
+    capture = chess.Board("7k/8/8/8/8/8/q7/R5K1 w - - 0 1")
+    fixtures = [(capture, "a1a2"), (capture.mirror(), "a8a7"),
+                (chess.Board(MATE_FEN), None),
+                (chess.Board("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"), None)]
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False)
+        for board, unique in fixtures:
+            expected_score = None
+            before = board.copy(stack=True)
+            for table in (False, True):
+                configure(engine, UseTranspositionTable=table)
+                for enabled in (False, True):
+                    configure(engine, PVS=enabled)
+                    move, output = engine.search(board, "go depth 2")
+                    fingerprint = search_fingerprint(move, output)
+                    if expected_score is None:
+                        expected_score = fingerprint[1]
+                    assert fingerprint[1] == expected_score and fingerprint[2] == 2, (board.fen(), output)
+                    counters = pvs_statistics(output)[-1]
+                    if enabled:
+                        assert counters[0] > 0, (board.fen(), output)
+                    else:
+                        assert counters == (0, 0), output
+                    if unique:
+                        assert move == unique, (board.fen(), output)
+                    if board.fen() == MATE_FEN:
+                        after = board.copy()
+                        after.push_uci(move)
+                        assert after.is_checkmate() and expected_score == ("mate", "1"), output
+                    assert board == before and board.move_stack == before.move_stack
+
+        # The 99th quiet halfmove permits an intended draw even though the
+        # earlier ordered capture resets its clock and leaves a losing score.
+        draw = chess.Board("7k/8/3q4/3p4/8/8/8/3R2K1 w - - 99 1")
+        assert draw.can_claim_fifty_moves()
+        configure(engine, PVS=True, UseQuietMoveOrdering=False)
+        move, output = engine.search(draw, "go depth 1")
+        assert move != "d1d5" and search_fingerprint(move, output)[1] == ("cp", "0"), output
+        assert pvs_statistics(output)[-1][1] > 0, output
+
+
+def test_pvs_option_lifecycle(binary):
+    board = chess.Board()
+    options = {"Hash": 1, "PVS": True, "UseQuiescence": False}
+    with UciProcess(binary) as engine:
+        configure(engine, **options)
+        original = pvs_fingerprint(*engine.search(board, "go depth 3"))
+        assert original[1][0] > 0, original
+        for command in ["setoption name PVS value yes", "setoption name PVS",
+                        "setoption name PVS value", "setoption name PVS value false extra"]:
+            engine.send(command)
+            rejected = engine.ready()
+            assert any(line.startswith("info string ") for line in rejected), (command, rejected)
+            assert not any(line.startswith("bestmove ") for line in rejected), (command, rejected)
+        assert pvs_fingerprint(*engine.search(board, "go depth 3")) == original
+
+        for enabled in (False, True):
+            # An option change must first join the active worker and emit its
+            # single final move. The next query must match a cold process.
+            engine.position(board)
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(f"setoption name PVS value {str(enabled).lower()}")
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (enabled, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in board.legal_moves, output
+            assert_legal_pvs(board, output)
+            pvs_statistics(output)
+            engine.ready()  # No late worker output may leak past readyok.
+            options["PVS"] = enabled
+            actual = engine.search(board, "go depth 3")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 3")
+            assert pvs_fingerprint(*actual) == pvs_fingerprint(*expected), (enabled, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            if enabled:
+                assert pvs_fingerprint(*actual) == original
+            else:
+                assert pvs_statistics(actual[1])[-1] == (0, 0)
+
+        # New-game invalidation, explicit clear and resizing preserve a chosen
+        # disabled setting while retaining the table's allocation semantics.
+        configure(engine, PVS=False)
+        options["PVS"] = False
+        for command, size, allocation in [("ucinewgame", 1, 0),
+                                          ("setoption name Clear Hash", 1, 0),
+                                          ("setoption name Hash value 16", 16, 1),
+                                          ("setoption name Hash value 1", 1, 1)]:
+            engine.send(command)
+            engine.ready()
+            options["Hash"] = size
+            actual = engine.search(board, "go depth 3")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 3")
+            assert pvs_fingerprint(*actual) == pvs_fingerprint(*expected), (command, actual, expected)
+            assert pvs_statistics(actual[1])[-1] == (0, 0)
+            assert_table_memory(actual[1], allocations=allocation,
+                                reuses=int(not allocation), hash_mb=size)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -813,12 +942,13 @@ def main():
               test_transposition_options, test_transposition_search, test_transposition_isolation,
               test_table_allocation_reuse, test_reused_table_context_isolation,
               test_table_options_during_search, test_search_quality_option_lifecycle,
-              test_search_quality_option_behavior]
+              test_search_quality_option_behavior, test_pvs_protocol_and_fixed_depth,
+              test_pvs_option_lifecycle]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT isolation/reuse")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS isolation/reuse")
 
 
 if __name__ == "__main__":
