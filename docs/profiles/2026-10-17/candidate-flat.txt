@@ -1,0 +1,48 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 39.47      0.30     0.30 18786652     0.00     0.00  regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color)
+ 21.05      0.46     0.16   600130     0.00     0.00  regicide::(anonymous namespace)::legal(regicide::Position&)
+ 11.84      0.55     0.09   780960     0.00     0.00  regicide::evaluate_position(regicide::Board const&)
+ 10.53      0.63     0.08 35596102     0.00     0.00  regicide::(anonymous namespace)::candidates(regicide::Position const&)::{lambda(int, int)#1}::operator()(int, int) const
+  6.58      0.68     0.05      120     0.42     0.42  std::vector<regicide::TranspositionEntry, std::allocator<regicide::TranspositionEntry> >::_M_default_append(unsigned long)
+  3.95      0.71     0.03  5310480     0.00     0.00  regicide::(anonymous namespace)::Searcher::intended_claim_available(regicide::Board&, std::vector<regicide::Move, std::allocator<regicide::Move> > const&) const
+  2.63      0.73     0.02   297360     0.00     0.00  regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)
+  1.32      0.74     0.01   600000     0.00     0.00  regicide::Board::has_known_dead_material() const
+  1.32      0.75     0.01   228330     0.00     0.00  void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>)
+  1.32      0.76     0.01                             _init
+  0.00      0.76     0.00  1799700     0.00     0.00  regicide::Board::repetition_count() const
+  0.00      0.76     0.00   600120     0.00     0.00  regicide::Board::legal_moves() const
+  0.00      0.76     0.00   599920     0.00     0.00  regicide::(anonymous namespace)::count_token(unsigned long, int)
+  0.00      0.76     0.00   599714     0.00     0.00  regicide::(anonymous namespace)::legal_en_passant(regicide::Position const&)
+  0.00      0.76     0.00   599714     0.00     0.00  std::vector<regicide::Board::RepetitionState, std::allocator<regicide::Board::RepetitionState> >::push_back(regicide::Board::RepetitionState const&)
+  0.00      0.76     0.00   599710     0.00     0.00  regicide::Board::apply_generated(regicide::Move)
+  0.00      0.76     0.00   599700     0.00     0.00  regicide::Board::play_generated(regicide::Move)
+  0.00      0.76     0.00   599700     0.00     0.00  regicide::Board::undo()
+  0.00      0.76     0.00   550650     0.00     0.00  regicide::Board::in_check() const
+  0.00      0.76     0.00   265860     0.00     0.00  regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&)
+  0.00      0.76     0.00   223440     0.00     0.00  regicide::Board::has_repetition_candidate() const
+  0.00      0.76     0.00    49350     0.00     0.00  regicide::TranspositionTable::probe(regicide::TranspositionKey const&) const
+  0.00      0.76     0.00    49350     0.00     0.00  regicide::Board::position_key() const
+  0.00      0.76     0.00    49350     0.00     0.00  regicide::Board::repetition_context_key() const
+  0.00      0.76     0.00    46800     0.00     0.00  regicide::TranspositionTable::store(regicide::TranspositionKey const&, int, int, int, regicide::TranspositionBound, std::optional<regicide::Move>)
+  0.00      0.76     0.00    13530     0.00     0.00  regicide::TranspositionEntry::cutoff_score(int, int, int, int) const
+  0.00      0.76     0.00     1380     0.00     0.00  std::_Vector_base<regicide::Move, std::allocator<regicide::Move> >::~_Vector_base()
+  0.00      0.76     0.00      420     0.00     1.67  regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)
+  0.00      0.76     0.00      120     0.00     0.42  regicide::TranspositionTable::TranspositionTable(int)
+  0.00      0.76     0.00      120     0.00     0.00  regicide::Board::Board(regicide::Board const&)
+  0.00      0.76     0.00      120     0.00     6.25  regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions)
+  0.00      0.76     0.00       20     0.00     0.00  regicide::(anonymous namespace)::read_square(std::basic_string_view<char, std::char_traits<char> >)
+  0.00      0.76     0.00       10     0.00     0.00  regicide::Move::from_uci(std::basic_string_view<char, std::char_traits<char> >)
+  0.00      0.76     0.00       10     0.00     0.00  regicide::Board::play(regicide::Move)
+  0.00      0.76     0.00        8     0.00     0.00  regicide::(anonymous namespace)::counter(std::basic_string_view<char, std::char_traits<char> >, int)
+  0.00      0.76     0.00        4     0.00     0.00  regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >)
+  0.00      0.76     0.00        1     0.00     0.00  std::_Vector_base<regicide::Board::RepetitionState, std::allocator<regicide::Board::RepetitionState> >::~_Vector_base()
+  0.00      0.76     0.00        1     0.00     0.00  std::_Vector_base<regicide::Position, std::allocator<regicide::Position> >::~_Vector_base()
+  0.00      0.76     0.00        1     0.00     0.00  void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >)
+  0.00      0.76     0.00        1     0.00     0.00  void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<char const (&) [69]>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, char const (&) [69])
+  0.00      0.76     0.00        1     0.00     0.00  void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<regicide::Board const&>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, regicide::Board const&)
+  0.00      0.76     0.00        1     0.00     0.00  std::vector<regicide::Board, std::allocator<regicide::Board> >::push_back(regicide::Board const&)
+  0.00      0.76     0.00        1     0.00     0.00  std::vector<regicide::Board, std::allocator<regicide::Board> >::~vector()

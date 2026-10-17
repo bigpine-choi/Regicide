@@ -1,0 +1,226 @@
+			Call graph
+
+
+granularity: each sample hit covers 4 byte(s) for 0.18% of 5.67 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     98.2    0.00    5.57                 main [1]
+                0.00    5.57     120/120         regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.00      10/4677820     regicide::Board::play(regicide::Move) [6]
+                0.00    0.00       2/4           regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+                0.00    0.00       1/1           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >) [20]
+                0.00    0.00       1/1           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<char const (&) [69]>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, char const (&) [69]) [21]
+                0.00    0.00      10/10          regicide::Move::from_uci(std::basic_string_view<char, std::char_traits<char> >) [36]
+                0.00    0.00       1/1           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<regicide::Board const&>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, regicide::Board const&) [39]
+                0.00    0.00       1/1           std::vector<regicide::Board, std::allocator<regicide::Board> >::push_back(regicide::Board const&) [40]
+                0.00    0.00       1/1           std::_Vector_base<regicide::Position, std::allocator<regicide::Position> >::~_Vector_base() [38]
+                0.00    0.00       1/1           std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::~vector() [43]
+                0.00    0.00       1/1           std::vector<regicide::Board, std::allocator<regicide::Board> >::~vector() [41]
+-----------------------------------------------
+                0.00    5.57     120/120         main [1]
+[2]     98.2    0.00    5.57     120         regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    5.57     420/420         regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    0.00     120/600120      regicide::Board::legal_moves() const [10]
+                0.00    0.00     120/323220      regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+                0.00    0.00     240/5877810     regicide::Board::repetition_count() const [13]
+                0.00    0.00     120/5154420     regicide::evaluate_position(regicide::Board const&) [15]
+                0.00    0.00     120/120         regicide::Board::Board(regicide::Board const&) [34]
+                0.00    0.00     120/600000      regicide::Board::has_known_dead_material() const [31]
+-----------------------------------------------
+                              266460             regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    5.57     420/420         regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+[3]     98.2    0.00    5.57     420+266460  regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    5.24  226260/226260      regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+                0.01    0.28  266460/4677820     regicide::Board::play(regicide::Move) [6]
+                0.00    0.04   40590/600120      regicide::Board::legal_moves() const [10]
+                0.00    0.00   40590/323220      regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+                0.00    0.00  347640/5877810     regicide::Board::repetition_count() const [13]
+                0.00    0.00   82950/5154420     regicide::evaluate_position(regicide::Board const&) [15]
+                0.00    0.00  266070/4677810     regicide::Board::undo() [30]
+                0.00    0.00   40590/600000      regicide::Board::has_known_dead_material() const [31]
+                              266460             regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+-----------------------------------------------
+                              333240             regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+                0.00    5.24  226260/226260      regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+[4]     92.5    0.00    5.24  226260+333240  regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+                0.11    4.56 4411350/4677820     regicide::Board::play(regicide::Move) [6]
+                0.00    0.48  559410/600120      regicide::Board::legal_moves() const [10]
+                0.05    0.00 5529930/5877810     regicide::Board::repetition_count() const [13]
+                0.01    0.02  282510/323220      regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+                0.01    0.00  559410/200716693     regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color) [7]
+                0.00    0.00  725250/5154420     regicide::evaluate_position(regicide::Board const&) [15]
+                0.00    0.00 4411110/4677810     regicide::Board::undo() [30]
+                0.00    0.00  559410/559410      regicide::Board::in_check() const [32]
+                0.00    0.00  559290/600000      regicide::Board::has_known_dead_material() const [31]
+                              333240             regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+-----------------------------------------------
+                0.09    0.37  529772/5807712     regicide::(anonymous namespace)::repetition_key(regicide::Position) [8]
+                0.10    0.42  600120/5807712     regicide::Board::legal_moves() const [10]
+                0.81    3.24 4677820/5807712     regicide::Board::play(regicide::Move) [6]
+[5]     88.7    1.01    4.02 5807712         regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+                3.28    0.00 200157279/200716693     regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color) [7]
+                0.74    0.00 382904180/387582000     regicide::(anonymous namespace)::candidates(regicide::Position const&)::{lambda(int, int)#1}::operator()(int, int) const [9]
+-----------------------------------------------
+                0.00    0.00      10/4677820     main [1]
+                0.01    0.28  266460/4677820     regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.11    4.56 4411350/4677820     regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[6]     87.3    0.12    4.83 4677820         regicide::Board::play(regicide::Move) [6]
+                0.81    3.24 4677820/5807712     regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+                0.00    0.77 4677820/4677824     regicide::(anonymous namespace)::repetition_key(regicide::Position) [8]
+                0.01    0.00 4677820/387582000     regicide::(anonymous namespace)::candidates(regicide::Position const&)::{lambda(int, int)#1}::operator()(int, int) const [9]
+                0.00    0.00 4677820/4683344     regicide::(anonymous namespace)::square_name(int) [29]
+-----------------------------------------------
+                0.00    0.00       4/200716693     regicide::(anonymous namespace)::parse_fen(std::basic_string_view<char, std::char_traits<char> >) [22]
+                0.01    0.00  559410/200716693     regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+                3.28    0.00 200157279/200716693     regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+[7]     58.0    3.29    0.00 200716693         regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color) [7]
+-----------------------------------------------
+                0.00    0.00       4/4677824     regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+                0.00    0.77 4677820/4677824     regicide::Board::play(regicide::Move) [6]
+[8]     13.6    0.00    0.77 4677824         regicide::(anonymous namespace)::repetition_key(regicide::Position) [8]
+                0.09    0.37  529772/5807712     regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+                0.29    0.02 4677824/4677824     regicide::(anonymous namespace)::to_fen(regicide::Position const&) [11]
+-----------------------------------------------
+                0.01    0.00 4677820/387582000     regicide::Board::play(regicide::Move) [6]
+                0.74    0.00 382904180/387582000     regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+[9]     13.2    0.75    0.00 387582000         regicide::(anonymous namespace)::candidates(regicide::Position const&)::{lambda(int, int)#1}::operator()(int, int) const [9]
+-----------------------------------------------
+                0.00    0.00     120/600120      regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.04   40590/600120      regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    0.48  559410/600120      regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[10]     9.2    0.00    0.52  600120         regicide::Board::legal_moves() const [10]
+                0.10    0.42  600120/5807712     regicide::(anonymous namespace)::legal(regicide::Position&) [5]
+-----------------------------------------------
+                0.29    0.02 4677824/4677824     regicide::(anonymous namespace)::repetition_key(regicide::Position) [8]
+[11]     5.5    0.29    0.02 4677824         regicide::(anonymous namespace)::to_fen(regicide::Position const&) [11]
+                0.01    0.01 4677824/4677824     std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::replace(unsigned long, unsigned long, char const*, unsigned long) [16]
+                0.00    0.00    5520/4683344     regicide::(anonymous namespace)::square_name(int) [29]
+-----------------------------------------------
+                                 120             _init [12]
+[12]     1.8    0.10    0.00       0+120     _init [12]
+                0.00    0.00    1380/1380        std::_Vector_base<regicide::Move, std::allocator<regicide::Move> >::~_Vector_base() [33]
+                0.00    0.00     630/4677810     regicide::Board::undo() [30]
+                                 120             _init [12]
+-----------------------------------------------
+                0.00    0.00     240/5877810     regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.00  347640/5877810     regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.05    0.00 5529930/5877810     regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[13]     0.9    0.05    0.00 5877810         regicide::Board::repetition_count() const [13]
+-----------------------------------------------
+                0.00    0.00     120/323220      regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.00   40590/323220      regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.01    0.02  282510/323220      regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[14]     0.6    0.01    0.03  323220         regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+                0.02    0.00 3302700/5154420     regicide::evaluate_position(regicide::Board const&) [15]
+                0.00    0.01  248610/248610      void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>) [18]
+-----------------------------------------------
+                0.00    0.00     120/5154420     regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.00   82950/5154420     regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    0.00  725250/5154420     regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+                0.01    0.00 1043400/5154420     void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>) [18]
+                0.02    0.00 3302700/5154420     regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+[15]     0.5    0.03    0.00 5154420         regicide::evaluate_position(regicide::Board const&) [15]
+-----------------------------------------------
+                0.01    0.01 4677824/4677824     regicide::(anonymous namespace)::to_fen(regicide::Position const&) [11]
+[16]     0.4    0.01    0.01 4677824         std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::replace(unsigned long, unsigned long, char const*, unsigned long) [16]
+                0.01    0.00 4677824/4677824     std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) [17]
+-----------------------------------------------
+                0.01    0.00 4677824/4677824     std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::replace(unsigned long, unsigned long, char const*, unsigned long) [16]
+[17]     0.2    0.01    0.00 4677824         std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) [17]
+-----------------------------------------------
+                               40980             void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>) [18]
+                0.00    0.01  248610/248610      regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [14]
+[18]     0.1    0.00    0.01  248610+40980   void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>) [18]
+                0.01    0.00 1043400/5154420     regicide::evaluate_position(regicide::Board const&) [15]
+                               40980             void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>) [18]
+-----------------------------------------------
+                0.00    0.00       1/4           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >) [20]
+                0.00    0.00       1/4           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<char const (&) [69]>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, char const (&) [69]) [21]
+                0.00    0.00       2/4           main [1]
+[19]     0.0    0.00    0.00       4         regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+                0.00    0.00       4/4677824     regicide::(anonymous namespace)::repetition_key(regicide::Position) [8]
+                0.00    0.00       4/4           regicide::(anonymous namespace)::parse_fen(std::basic_string_view<char, std::char_traits<char> >) [22]
+                0.00    0.00       4/4683344     regicide::(anonymous namespace)::square_name(int) [29]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[20]     0.0    0.00    0.00       1         void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >) [20]
+                0.00    0.00       1/4           regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[21]     0.0    0.00    0.00       1         void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<char const (&) [69]>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, char const (&) [69]) [21]
+                0.00    0.00       1/4           regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+-----------------------------------------------
+                0.00    0.00       4/4           regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+[22]     0.0    0.00    0.00       4         regicide::(anonymous namespace)::parse_fen(std::basic_string_view<char, std::char_traits<char> >) [22]
+                0.00    0.00       4/200716693     regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color) [7]
+                0.00    0.00       8/8           regicide::(anonymous namespace)::counter(std::basic_string_view<char, std::char_traits<char> >, int) [37]
+-----------------------------------------------
+                0.00    0.00       4/4683344     regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [19]
+                0.00    0.00    5520/4683344     regicide::(anonymous namespace)::to_fen(regicide::Position const&) [11]
+                0.00    0.00 4677820/4683344     regicide::Board::play(regicide::Move) [6]
+[29]     0.0    0.00    0.00 4683344         regicide::(anonymous namespace)::square_name(int) [29]
+-----------------------------------------------
+                0.00    0.00     630/4677810     _init [12]
+                0.00    0.00  266070/4677810     regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    0.00 4411110/4677810     regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[30]     0.0    0.00    0.00 4677810         regicide::Board::undo() [30]
+-----------------------------------------------
+                0.00    0.00     120/600000      regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+                0.00    0.00   40590/600000      regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [3]
+                0.00    0.00  559290/600000      regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[31]     0.0    0.00    0.00  600000         regicide::Board::has_known_dead_material() const [31]
+-----------------------------------------------
+                0.00    0.00  559410/559410      regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [4]
+[32]     0.0    0.00    0.00  559410         regicide::Board::in_check() const [32]
+-----------------------------------------------
+                0.00    0.00    1380/1380        _init [12]
+[33]     0.0    0.00    0.00    1380         std::_Vector_base<regicide::Move, std::allocator<regicide::Move> >::~_Vector_base() [33]
+-----------------------------------------------
+                0.00    0.00     120/120         regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [2]
+[34]     0.0    0.00    0.00     120         regicide::Board::Board(regicide::Board const&) [34]
+-----------------------------------------------
+                0.00    0.00      20/20          regicide::Move::from_uci(std::basic_string_view<char, std::char_traits<char> >) [36]
+[35]     0.0    0.00    0.00      20         regicide::(anonymous namespace)::read_square(std::basic_string_view<char, std::char_traits<char> >) [35]
+-----------------------------------------------
+                0.00    0.00      10/10          main [1]
+[36]     0.0    0.00    0.00      10         regicide::Move::from_uci(std::basic_string_view<char, std::char_traits<char> >) [36]
+                0.00    0.00      20/20          regicide::(anonymous namespace)::read_square(std::basic_string_view<char, std::char_traits<char> >) [35]
+-----------------------------------------------
+                0.00    0.00       8/8           regicide::(anonymous namespace)::parse_fen(std::basic_string_view<char, std::char_traits<char> >) [22]
+[37]     0.0    0.00    0.00       8         regicide::(anonymous namespace)::counter(std::basic_string_view<char, std::char_traits<char> >, int) [37]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[38]     0.0    0.00    0.00       1         std::_Vector_base<regicide::Position, std::allocator<regicide::Position> >::~_Vector_base() [38]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[39]     0.0    0.00    0.00       1         void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<regicide::Board const&>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, regicide::Board const&) [39]
+                0.00    0.00       1/1           std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::vector(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) [42]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[40]     0.0    0.00    0.00       1         std::vector<regicide::Board, std::allocator<regicide::Board> >::push_back(regicide::Board const&) [40]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[41]     0.0    0.00    0.00       1         std::vector<regicide::Board, std::allocator<regicide::Board> >::~vector() [41]
+-----------------------------------------------
+                0.00    0.00       1/1           void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<regicide::Board const&>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, regicide::Board const&) [39]
+[42]     0.0    0.00    0.00       1         std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::vector(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) [42]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[43]     0.0    0.00    0.00       1         std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::~vector() [43]
+-----------------------------------------------
+
+Index by function name
+
+  [14] regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [36] regicide::Move::from_uci(std::basic_string_view<char, std::char_traits<char> >) [20] void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >)
+  [35] regicide::(anonymous namespace)::read_square(std::basic_string_view<char, std::char_traits<char> >) [6] regicide::Board::play(regicide::Move) [21] void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<char const (&) [69]>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, char const (&) [69])
+  [29] regicide::(anonymous namespace)::square_name(int) [30] regicide::Board::undo() [39] void std::vector<regicide::Board, std::allocator<regicide::Board> >::_M_realloc_insert<regicide::Board const&>(__gnu_cxx::__normal_iterator<regicide::Board*, std::vector<regicide::Board, std::allocator<regicide::Board> > >, regicide::Board const&)
+   [8] regicide::(anonymous namespace)::repetition_key(regicide::Position) [34] regicide::Board::Board(regicide::Board const&) [40] std::vector<regicide::Board, std::allocator<regicide::Board> >::push_back(regicide::Board const&)
+   [5] regicide::(anonymous namespace)::legal(regicide::Position&) [19] regicide::Board::Board(std::basic_string_view<char, std::char_traits<char> >) [41] std::vector<regicide::Board, std::allocator<regicide::Board> >::~vector()
+  [11] regicide::(anonymous namespace)::to_fen(regicide::Position const&) [2] regicide::search(regicide::Board const&, regicide::SearchLimits const&, std::atomic<bool> const*, std::function<void (regicide::SearchResult const&)>, regicide::SearchOptions) [42] std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::vector(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)
+   [7] regicide::(anonymous namespace)::checked(regicide::Position const&, regicide::Color) [10] regicide::Board::legal_moves() const [43] std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::~vector()
+  [37] regicide::(anonymous namespace)::counter(std::basic_string_view<char, std::char_traits<char> >, int) [13] regicide::Board::repetition_count() const [16] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::replace(unsigned long, unsigned long, char const*, unsigned long)
+   [4] regicide::(anonymous namespace)::Searcher::quiescence(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&) [31] regicide::Board::has_known_dead_material() const [17] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long)
+   [3] regicide::(anonymous namespace)::Searcher::negamax(regicide::Board&, int, int, int, int, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&) [32] regicide::Board::in_check() const [18] void std::__introsort_loop<__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}> >(__gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, __gnu_cxx::__normal_iterator<regicide::Move*, std::vector<regicide::Move, std::allocator<regicide::Move> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<regicide::(anonymous namespace)::order_moves(regicide::Board const&, std::vector<regicide::Move, std::allocator<regicide::Move> >&, std::optional<regicide::Move> const&)::{lambda(regicide::Move, regicide::Move)#1}>)
+  [22] regicide::(anonymous namespace)::parse_fen(std::basic_string_view<char, std::char_traits<char> >) [33] std::_Vector_base<regicide::Move, std::allocator<regicide::Move> >::~_Vector_base() [9] regicide::(anonymous namespace)::candidates(regicide::Position const&)::{lambda(int, int)#1}::operator()(int, int) const
+  [15] regicide::evaluate_position(regicide::Board const&) [38] std::_Vector_base<regicide::Position, std::allocator<regicide::Position> >::~_Vector_base() [12] _init
