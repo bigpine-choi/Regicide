@@ -2,6 +2,14 @@
 
 Windows에서는 저장소의 **`Play-Regicide-Godot.cmd`를 더블클릭**한다. 브라우저와 별도의 Godot 창에서 자체 엔진 v0.5.0과 대국한다.
 
+바탕화면의 **Regicide** 바로가기도 같은 Godot 대국을 실행한다. 바로가기는 일반 개발 폴더의 실행기를 가리키므로 Codex 프로젝트 폴더를 열 필요가 없다. 새 컴퓨터나 다른 저장 위치에서는 준비를 마친 저장소에서 다음을 실행해 바로가기를 만든다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install_desktop_shortcut.ps1
+```
+
+이 설치기는 Windows가 지정한 실제 바탕화면 위치(OneDrive로 옮긴 경우 포함)를 사용하고, 자체 왕 아이콘을 연결한다. 다른 위치를 가리키는 기존 동명 바로가기는 덮어쓰지 않는다. 실행 파일·Python 환경·Godot은 아래 실행 준비와 같이 필요하다.
+
 ## 시점과 기물 이동
 
 - **시점 뒤집기 ⇅** 버튼 또는 **F** 키를 누를 때마다 백 시점 ↔ 흑 시점으로 바뀐다. 백 시점은 백이 아래, 흑 시점은 흑이 아래다.

@@ -28,6 +28,8 @@ Windows에서는 **`Play-Regicide-Godot.cmd`를 더블클릭**하면 Godot 대�
 
 기존 **`Play-Regicide.cmd`**의 브라우저 대국도 계속 사용할 수 있습니다. [브라우저 실행 안내](docs/HUMAN_PLAY.md)에 설명합니다.
 
+Windows 바탕화면 바로가기는 `scripts/install_desktop_shortcut.ps1`로 만들 수 있습니다. 자체 Regicide 왕 아이콘을 사용하며 같은 최신 Godot 대국을 엽니다.
+
 ## 바로 실행하기
 
 Windows에서 Visual Studio의 **C++를 사용한 데스크톱 개발** 구성 요소가 필요합니다. 저장소 폴더에서 실행합니다.
