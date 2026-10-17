@@ -242,7 +242,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.1", engine.id
+        assert engine.id.get("name") == "Regicide 0.5.2", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -793,7 +793,8 @@ def test_search_quality_option_behavior(binary):
         for name in ("UseQuietMoveOrdering", "UseQuiescenceChecks"):
             option = engine.options[name]
             assert option.type == "check" and option.default is True, option
-        engine.configure({"Hash": 1, "UseQuiescence": True, "UseQuietMoveOrdering": True})
+        engine.configure({"Hash": 1, "UseQuiescence": True, "UseQuietMoveOrdering": True,
+                          "UseSEE": False})  # Preserve the original ordering regression.
         for board in (trap, trap.mirror()):
             engine.configure({"UseQuiescenceChecks": False})
             old_horizon = engine.play(board, chess.engine.Limit(depth=1), info=chess.engine.INFO_ALL)
@@ -834,7 +835,7 @@ def test_pvs_protocol_and_fixed_depth(binary):
                 (chess.Board(MATE_FEN), None),
                 (chess.Board("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"), None)]
     with UciProcess(binary) as engine:
-        configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False)
+        configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False, UseSEE=False)
         for board, unique in fixtures:
             expected_score = None
             before = board.copy(stack=True)
@@ -872,7 +873,7 @@ def test_pvs_protocol_and_fixed_depth(binary):
 
 def test_pvs_option_lifecycle(binary):
     board = chess.Board()
-    options = {"Hash": 1, "PVS": True, "UseQuiescence": False}
+    options = {"Hash": 1, "PVS": True, "UseQuiescence": False, "UseSEE": False}
     with UciProcess(binary) as engine:
         configure(engine, **options)
         original = pvs_fingerprint(*engine.search(board, "go depth 3"))
@@ -932,6 +933,122 @@ def test_pvs_option_lifecycle(binary):
                                 reuses=int(not allocation), hash_mb=size)
 
 
+def see_statistics(output):
+    records = []
+    for line in output:
+        if line.startswith("info string see "):
+            fields = line.split()[3:]
+            assert len(fields) == 2 and fields[0] == "calls", line
+            value = int(fields[1])
+            assert value >= 0, line
+            records.append(value)
+    assert records, output
+    assert all(a <= b for a, b in zip(records, records[1:])), records
+    return records
+
+
+def see_fingerprint(move, output):
+    return pvs_fingerprint(move, output), see_statistics(output)[-1]
+
+
+def test_see_protocol_and_fixed_depth(binary):
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options.get("UseSEE")
+        assert option and option.type == "check" and option.default is True, client.options
+    fixtures = [chess.Board(CAPTURE_FEN),
+                chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1"),
+                chess.Board("3r3k/8/8/3pP3/8/8/8/3R2K1 w - d6 0 1"),
+                chess.Board("1rr5/P6k/8/8/8/8/8/7K w - - 0 1")]
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False)
+        for board in fixtures:
+            expected = None
+            before = board.copy(stack=True)
+            for table in (False, True):
+                for pvs in (False, True):
+                    for enabled in (False, True):
+                        configure(engine, UseTranspositionTable=table, PVS=pvs, UseSEE=enabled)
+                        move, output = engine.search(board, "go depth 2")
+                        fingerprint = search_fingerprint(move, output)
+                        if expected is None:
+                            expected = fingerprint[1]
+                        assert fingerprint[1] == expected and fingerprint[2] == 2, (board.fen(), output)
+                        calls = see_statistics(output)[-1]
+                        assert (calls > 0) if enabled else (calls == 0), (enabled, output)
+                        assert board == before and board.move_stack == before.move_stack
+
+        # The queen sacrifice is a losing local exchange, followed by a quiet
+        # checking knight mate. SEE must retain it in normal and tactical search.
+        sacrifice = chess.Board("5rnk/6pp/7N/3Q4/8/8/8/K7 w - - 0 1")
+        for quiet, depth in ((False, 3), (True, 1)):
+            configure(engine, UseSEE=True, PVS=True, UseTranspositionTable=True,
+                      UseQuiescence=quiet, UseQuiescenceChecks=quiet)
+            move, output = engine.search(sacrifice, f"go depth {depth}")
+            assert move == "d5g8" and search_fingerprint(move, output)[1] == ("mate", "2"), output
+            after = sacrifice.copy()
+            for token in ["d5g8", "f8g8", "h6f7"]:
+                assert chess.Move.from_uci(token) in after.legal_moves
+                after.push_uci(token)
+            assert after.is_checkmate()
+
+
+def test_see_option_lifecycle(binary):
+    board = chess.Board("7k/8/4p3/3r4/p7/8/8/R2Q2K1 w - - 0 1")
+    options = {"Hash": 1, "PVS": True, "UseQuiescence": False, "UseSEE": True}
+    with UciProcess(binary) as engine:
+        configure(engine, **options)
+        original = see_fingerprint(*engine.search(board, "go depth 2"))
+        assert original[-1] > 0, original
+        for command in ["setoption name UseSEE value yes", "setoption name UseSEE",
+                        "setoption name UseSEE value", "setoption name UseSEE value false extra"]:
+            engine.send(command)
+            rejected = engine.ready()
+            assert any(line.startswith("info string ") for line in rejected), (command, rejected)
+            assert not any(line.startswith("bestmove ") for line in rejected), (command, rejected)
+        assert see_fingerprint(*engine.search(board, "go depth 2")) == original
+
+        for enabled in (False, True, False):
+            start = chess.Board()
+            engine.position(start)
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(f"setoption name UseSEE value {str(enabled).lower()}")
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (enabled, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in start.legal_moves, output
+            assert_legal_pvs(start, output)
+            see_statistics(output)
+            engine.ready()
+            options["UseSEE"] = enabled
+            actual = engine.search(board, "go depth 2")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 2")
+            assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            if enabled:
+                assert see_fingerprint(*actual) == original
+            else:
+                assert see_statistics(actual[1])[-1] == 0
+
+        for command, size, allocation in [("ucinewgame", 1, 0),
+                                          ("setoption name Clear Hash", 1, 0),
+                                          ("setoption name Hash value 16", 16, 1),
+                                          ("setoption name Hash value 1", 1, 1)]:
+            engine.send(command)
+            engine.ready()
+            options["Hash"] = size
+            actual = engine.search(board, "go depth 2")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go depth 2")
+            assert see_fingerprint(*actual) == see_fingerprint(*expected), (command, actual, expected)
+            assert see_statistics(actual[1])[-1] == 0
+            assert_table_memory(actual[1], allocations=allocation,
+                                reuses=int(not allocation), hash_mb=size)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -943,7 +1060,8 @@ def main():
               test_table_allocation_reuse, test_reused_table_context_isolation,
               test_table_options_during_search, test_search_quality_option_lifecycle,
               test_search_quality_option_behavior, test_pvs_protocol_and_fixed_depth,
-              test_pvs_option_lifecycle]
+              test_pvs_option_lifecycle, test_see_protocol_and_fixed_depth,
+              test_see_option_lifecycle]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)

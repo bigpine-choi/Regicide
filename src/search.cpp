@@ -1,5 +1,6 @@
 #include "regicide/search.hpp"
 #include "regicide/evaluation.hpp"
+#include "regicide/see.hpp"
 #include "regicide/transposition.hpp"
 
 #include <algorithm>
@@ -74,6 +75,53 @@ void order_moves(const Board& board, std::vector<Move>& moves,
     });
 }
 
+template<class Poll>
+void order_moves_with_see(const Board& board, std::vector<Move>& moves,
+                          const std::optional<Move>& preferred,
+                          const Killers* killers, const QuietHistory* history,
+                          std::uint64_t& see_calls, Poll&& poll) {
+    struct OrderedMove {
+        Move move;
+        int group; // Preferred, non-losing tactical, quiet, losing tactical.
+        int exchange;
+        int priority;
+    };
+    const auto& position = board.position();
+    std::vector<OrderedMove> ordered;
+    ordered.reserve(moves.size());
+    for (Move move : moves) {
+        poll();
+        const bool quiet = quiet_move(board, move);
+        int exchange = 0, priority = 0;
+        if (!quiet) {
+            // Decorate once: sorting comparisons never repeat exchange work.
+            exchange = static_exchange_evaluation(board, move);
+            ++see_calls;
+            int captured = value(position.squares[move.to]);
+            const char piece = position.squares[move.from];
+            if ((piece == 'P' || piece == 'p') && move.to == position.en_passant) captured = 100;
+            priority = captured ? 16 * captured - value(piece) : 0;
+            if (move.promotion) priority += 16 * value(move.promotion);
+        } else if (killers && history) {
+            if ((*killers)[0] == move) priority += 200000;
+            else if ((*killers)[1] == move) priority += 100000;
+            priority += (*history)[move.from][move.to];
+        }
+        const int group = preferred && move == *preferred ? 3 :
+                          quiet ? 1 : exchange >= 0 ? 2 : 0;
+        ordered.push_back({move, group, exchange, priority});
+    }
+    std::sort(ordered.begin(), ordered.end(), [](const OrderedMove& left, const OrderedMove& right) {
+        if (left.group != right.group) return left.group > right.group;
+        if (left.exchange != right.exchange) return left.exchange > right.exchange;
+        if (left.priority != right.priority) return left.priority > right.priority;
+        return std::tie(left.move.from, left.move.to, left.move.promotion) <
+               std::tie(right.move.from, right.move.to, right.move.promotion);
+    });
+    for (std::size_t i = 0; i < moves.size(); ++i) moves[i] = ordered[i].move;
+    poll();
+}
+
 // Restores board and repetition history, including when cancellation unwinds.
 class AppliedMove {
 public:
@@ -100,6 +148,7 @@ public:
     std::uint64_t qnodes = 0;
     std::uint64_t tt_probes = 0, tt_hits = 0, tt_cutoffs = 0, tt_stores = 0;
     std::uint64_t pvs_probes = 0, pvs_researches = 0;
+    std::uint64_t see_calls = 0;
     int seldepth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
@@ -150,7 +199,12 @@ public:
             if (alpha >= beta) return 0;
         }
         const auto color = board.position().turn == Color::white ? 0U : 1U;
-        if (options_.quiet_ordering)
+        if (options_.see_ordering)
+            order_moves_with_see(board, moves, ordered_preferred,
+                                 options_.quiet_ordering ? &killers_[ply] : nullptr,
+                                 options_.quiet_ordering ? &history_[color] : nullptr,
+                                 see_calls, [this] { poll(false); });
+        else if (options_.quiet_ordering)
             order_moves(board, moves, ordered_preferred, &killers_[ply], &history_[color]);
         else order_moves(board, moves, ordered_preferred);
         int best = -infinity;
@@ -263,7 +317,9 @@ private:
             alpha = std::max(alpha, 0);
             if (alpha >= beta) return 0;
         }
-        order_moves(board, moves);
+        if (options_.see_ordering)
+            order_moves_with_see(board, moves, {}, nullptr, nullptr, see_calls, [this] { poll(false); });
+        else order_moves(board, moves);
         for (Move move : moves) {
             poll(false);
             int score;
@@ -363,7 +419,13 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         std::vector<Move> pv;
         int score;
         try {
-            score = searcher.negamax(board, depth, 0, -infinity, infinity, pv, result.best_move);
+            // Before the first iteration, best_move is only a cheap legal
+            // cancellation fallback, not a searched PV. Let SEE choose that
+            // iteration's first candidate; later completed PVs remain first.
+            // The disabled path preserves the previous version's exact order.
+            const auto preferred = depth == 1 && options.see_ordering ?
+                                   std::optional<Move>{} : result.best_move;
+            score = searcher.negamax(board, depth, 0, -infinity, infinity, pv, preferred);
         } catch (const Interrupted&) {
             result.stopped = true;
             break;
@@ -380,6 +442,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.tt_stores = searcher.tt_stores;
         result.pvs_probes = searcher.pvs_probes;
         result.pvs_researches = searcher.pvs_researches;
+        result.see_calls = searcher.see_calls;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -392,6 +455,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.tt_stores = searcher.tt_stores;
     result.pvs_probes = searcher.pvs_probes;
     result.pvs_researches = searcher.pvs_researches;
+    result.see_calls = searcher.see_calls;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

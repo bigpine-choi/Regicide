@@ -16,6 +16,7 @@ jobs:
       - run: ctest --test-dir build -C Release --output-on-failure
       - run: python -m pip install -r requirements-test.txt
       - run: python tests/audit_pvs_results.py --self-test
+      - run: python tests/audit_see_results.py --self-test
       - if: runner.os == 'Linux'
         run: python tests/differential.py build/regicide
       - if: runner.os == 'Windows'
