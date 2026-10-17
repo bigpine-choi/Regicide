@@ -22,6 +22,10 @@ C++20 자체 엔진 v0.5.0입니다. 이전 100ms 패배 기보를 분석해 **�
 
 이전 [v0.4.1 실험](docs/experiments/2026-10-17-hash-memory.md)의 100ms 전체 재측정은 4승 5무 7패였습니다. 전이표 메모리 재사용의 비용 감소와 경기력 결과, 유휴 절전으로 중단된 원본·재측정 근거도 보존합니다.
 
+## 최신 엔진과 직접 대국하기
+
+Windows에서는 **`Play-Regicide.cmd`를 더블클릭**하면 브라우저 체스판이 열립니다. 기본은 내가 백, Regicide가 흑이며 기물을 누르고 도착 칸을 누르면 됩니다. 백·흑과 엔진 생각 시간(0.1·1·3·5초)을 선택할 수 있습니다. 수순은 자동 저장하며 기보 내려받기·한 턴 되돌리기를 지원합니다. [실행·규칙·검증 안내](docs/HUMAN_PLAY.md)를 참고합니다.
+
 ## 바로 실행하기
 
 Windows에서 Visual Studio의 **C++를 사용한 데스크톱 개발** 구성 요소가 필요합니다. 저장소 폴더에서 실행합니다.
@@ -37,7 +41,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Test
 .\build\regicide.exe search 4 --no-tt
 ```
 
-첫 실행은 초기 FEN과 합법 수 20개, `make_undo: OK`를 출력합니다. `perft 5`의 기대값은 **4,865,609**입니다. GUI가 없는 콘솔 프로그램입니다.
+첫 실행은 초기 FEN과 합법 수 20개, `make_undo: OK`를 출력합니다. `perft 5`의 기대값은 **4,865,609**입니다. 핵심 엔진은 콘솔 프로그램이며, 위의 로컬 체스판으로 직접 대국할 수 있습니다.
 
 직접 대국을 진행하고 기보를 저장하려면 선택적 Python 도구 의존성을 설치합니다. `python`은 3.11 이상이 필요합니다.
 
@@ -95,3 +99,5 @@ Visual Studio CMake 생성기를 사용한 Windows 빌드는 실행 파일이 `b
 
 - [패배 분석 기반 탐색 개선의 원리·옵션](docs/LOSS_GUIDED_SEARCH.md)
 - [100ms 패배 분석·기존/새 시작 위치 비교](docs/experiments/2026-10-17-loss-guided.md)
+
+- [최신 Regicide와 직접 대국하기](docs/HUMAN_PLAY.md)
