@@ -361,13 +361,32 @@ def test_shutdown(binary):
             assert time.monotonic() - start < TIMEOUT, end
 
 
+def test_evaluation_options(binary):
+    # The same independently verified poisoned capture must change with qsearch,
+    # not with a position-table adjustment or an arbitrary move blacklist.
+    board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        for option in ["UsePositionalEvaluation", "UseQuiescence"]:
+            assert option in engine.options and engine.options[option].default is True, engine.options
+        engine.configure({"UsePositionalEvaluation": False, "UseQuiescence": False})
+        shallow = engine.play(board, chess.engine.Limit(depth=1))
+        assert shallow.move == chess.Move.from_uci("d1d5"), shallow
+        engine.configure({"UseQuiescence": True})
+        stable = engine.play(board, chess.engine.Limit(depth=1), info=chess.engine.INFO_ALL)
+        assert stable.move in board.legal_moves and stable.move != shallow.move, stable
+        assert stable.info.get("seldepth", 0) >= 2, stable
+        engine.configure({"UsePositionalEvaluation": True, "UseQuiescence": False})
+        developed = engine.play(chess.Board(), chess.engine.Limit(depth=1))
+        assert developed.move in {chess.Move.from_uci(m) for m in ["b1c3", "g1f3"]}, developed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     checks = [test_python_chess, test_history_and_terminal, test_limits,
-              test_interleaving, test_bad_commands, test_shutdown]
+              test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)

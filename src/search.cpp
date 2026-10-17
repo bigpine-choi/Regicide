@@ -1,4 +1,5 @@
 #include "regicide/search.hpp"
+#include "regicide/evaluation.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -66,15 +67,22 @@ struct Interrupted {};
 
 class Searcher {
 public:
-    Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start)
-        : limits_(limits), stop_(stop), start_(start) {}
+    Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
+             SearchOptions options)
+        : limits_(limits), stop_(stop), start_(start), options_(options) {}
 
     std::uint64_t nodes = 0;
+    std::uint64_t qnodes = 0;
+    int seldepth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
                 std::vector<Move>& pv, const std::optional<Move>& preferred = {}) {
+        // A horizon position belongs to exactly one node, even when extended.
+        if (depth == 0 && options_.quiescence)
+            return quiescence(board, ply, 0, alpha, beta, pv);
         poll();
         ++nodes;
+        seldepth = std::max(seldepth, ply);
         pv.clear();
         auto moves = board.legal_moves();
         // A mate on the last searched ply outranks material and draw counters.
@@ -82,9 +90,7 @@ public:
         if (automatic_draw(board)) return 0;
         const bool current_claim = claimable(board);
         if (depth == 0) {
-            const int score = std::clamp(evaluate_material(board),
-                                         -mate_score + max_search_depth + 1,
-                                         mate_score - max_search_depth - 1);
+            const int score = static_evaluation(board);
             if (score < 0 && (current_claim || intended_claim_available(board, moves))) return 0;
             return score;
         }
@@ -95,6 +101,7 @@ public:
         order_moves(board, moves, preferred);
         int best = -infinity;
         for (Move move : moves) {
+            poll(false);
             int score;
             std::vector<Move> child_pv;
             {
@@ -122,6 +129,74 @@ private:
     const SearchLimits& limits_;
     const std::atomic_bool* stop_;
     Clock::time_point start_;
+    SearchOptions options_;
+
+    int static_evaluation(const Board& board) const {
+        const int score = options_.positional ? evaluate_position(board) : evaluate_material(board);
+        const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
+        return std::clamp(score, -mate_score + reserved_plies + 1,
+                          mate_score - reserved_plies - 1);
+    }
+
+    int quiescence(Board& board, int ply, int qply, int alpha, int beta,
+                   std::vector<Move>& pv) {
+        poll();
+        ++nodes;
+        ++qnodes;
+        seldepth = std::max(seldepth, ply);
+        pv.clear();
+        auto moves = board.legal_moves();
+        const bool checked = board.in_check();
+        if (moves.empty()) return checked ? -mate_score + ply : 0;
+        if (automatic_draw(board)) return 0;
+        const bool current_claim = claimable(board);
+        // No position in check may use stand pat. If the absolute extension
+        // ceiling is reached, discard this iteration and retain the previous
+        // complete result, rather than treating an unresolved check as quiet.
+        if (checked && qply >= max_quiescence_depth) throw Interrupted{};
+
+        int best = -infinity;
+        if (!checked) {
+            best = static_evaluation(board);
+            // A quiet intended move can permit a draw even though quiescence
+            // otherwise searches only captures and promotions.
+            if (best < 0 && (current_claim || intended_claim_available(board, moves))) best = 0;
+            if (best >= beta || qply >= max_quiescence_depth) return best;
+            alpha = std::max(alpha, best);
+            const auto& position = board.position();
+            std::erase_if(moves, [&](Move move) {
+                const char piece = position.squares[move.from];
+                const bool en_passant = (piece == 'P' || piece == 'p') &&
+                                        move.to == position.en_passant;
+                return position.squares[move.to] == '.' && !en_passant && !move.promotion;
+            });
+        } else if (current_claim) {
+            best = 0;
+            alpha = std::max(alpha, 0);
+            if (alpha >= beta) return 0;
+        }
+        order_moves(board, moves);
+        for (Move move : moves) {
+            poll(false);
+            int score;
+            std::vector<Move> child_pv;
+            {
+                AppliedMove applied(board, move);
+                const bool intended_claim = claimable(board);
+                score = -quiescence(board, ply + 1, qply + 1, -beta, -alpha, child_pv);
+                if (intended_claim) score = std::max(0, score);
+            }
+            if (score > best) {
+                best = score;
+                pv.clear();
+                pv.push_back(move);
+                pv.insert(pv.end(), child_pv.begin(), child_pv.end());
+            }
+            alpha = std::max(alpha, score);
+            if (alpha >= beta) break;
+        }
+        return best;
+    }
 
     bool intended_claim_available(Board& board, const std::vector<Move>& moves) const {
         // Three occurrences need at least two four-ply cycles. Avoid replaying
@@ -152,7 +227,8 @@ int evaluate_material(const Board& board) {
 }
 
 SearchResult search(const Board& input, const SearchLimits& limits,
-                    const std::atomic_bool* stop, SearchCallback on_iteration) {
+                    const std::atomic_bool* stop, SearchCallback on_iteration,
+                    SearchOptions options) {
     if (limits.depth < 1 || limits.depth > max_search_depth)
         throw std::invalid_argument("search depth must be 1..64");
     if (limits.movetime.count() < 0)
@@ -172,9 +248,9 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     order_moves(board, moves);
     result.best_move = moves.front();
     result.pv.push_back(moves.front());
-    result.score = evaluate_material(board);
+    result.score = options.positional ? evaluate_position(board) : evaluate_material(board);
     if (claimable(board)) result.score = std::max(0, result.score);
-    Searcher searcher(limits, stop, start);
+    Searcher searcher(limits, stop, start, options);
     for (int depth = 1; depth <= limits.depth; ++depth) {
         std::vector<Move> pv;
         int score;
@@ -189,10 +265,14 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.score = score;
         result.depth = depth;
         result.nodes = searcher.nodes;
+        result.qnodes = searcher.qnodes;
+        result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
     }
     result.nodes = searcher.nodes;
+    result.qnodes = searcher.qnodes;
+    result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;
 }

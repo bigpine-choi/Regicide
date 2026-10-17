@@ -125,9 +125,11 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.2.0");
+            send("id name Regicide 0.3.0");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
+            send("option name UsePositionalEvaluation type check default true");
+            send("option name UseQuiescence type check default true");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); board_ = Board(); }
@@ -135,9 +137,7 @@ public:
         else if (command == "setoption") {
             // Options are changed only after a current search has been joined.
             stop();
-            if (tokens.size() == 6 && tokens[1] == "name" && tokens[2] == "Move" &&
-                tokens[3] == "Overhead" && tokens[4] == "value")
-                overhead_ = static_cast<int>(number(tokens[5], 5000));
+            set_option(tokens);
         } else if (command == "go") {
             stop();
             try {
@@ -150,10 +150,27 @@ public:
             send("info string unknown command: " + command);
     }
 private:
+    void set_option(const std::vector<std::string>& tokens) {
+        if (tokens.size() < 3 || tokens[1] != "name") return;
+        const auto value = std::find(tokens.begin() + 2, tokens.end(), "value");
+        std::string option;
+        for (auto i = tokens.begin() + 2; i != value; ++i) {
+            if (!option.empty()) option += ' ';
+            option += *i;
+        }
+        if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence") return;
+        if (value == tokens.end() || tokens.end() - value != 2)
+            throw std::invalid_argument("missing or extra option value");
+        if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
+        const auto& text = *(value + 1);
+        if (text != "true" && text != "false") throw std::invalid_argument("check option requires true or false");
+        if (option == "UsePositionalEvaluation") options_.positional = text == "true";
+        else options_.quiescence = text == "true";
+    }
     void progress(const SearchResult& result) {
         std::ostringstream line;
-        line << "info depth " << result.depth << " score ";
-        if (std::abs(result.score) >= mate_score - max_search_depth) {
+        line << "info depth " << result.depth << " seldepth " << result.seldepth << " score ";
+        if (std::abs(result.score) >= mate_score - max_search_ply) {
             const int distance = mate_score - std::abs(result.score);
             const int moves = (distance + 1) / 2;
             line << "mate " << (result.score < 0 ? -moves : moves);
@@ -168,9 +185,10 @@ private:
     void start(Go go) {
         stop_.store(false, std::memory_order_relaxed);
         const Board snapshot = board_;
-        worker_ = std::thread([this, snapshot, go] {
+        const auto options = options_;
+        worker_ = std::thread([this, snapshot, go, options] {
             try {
-                auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); });
+                auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); }, options);
                 if (go.infinite) {
                     std::unique_lock lock(wait_mutex_);
                     wake_.wait(lock, [this] { return stop_.load(std::memory_order_relaxed); });
@@ -190,6 +208,7 @@ private:
     std::atomic_bool stop_{false};
     std::thread worker_;
     int overhead_ = 20;
+    SearchOptions options_;
 };
 } // namespace
 

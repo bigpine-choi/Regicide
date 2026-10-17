@@ -13,6 +13,8 @@ namespace regicide {
 
 inline constexpr int mate_score = 30000;
 inline constexpr int max_search_depth = 64;
+inline constexpr int max_quiescence_depth = 32;
+inline constexpr int max_search_ply = max_search_depth + max_quiescence_depth;
 
 // Positive scores favor the side to move; one pawn is 100 centipawns.
 int evaluate_material(const Board& board);
@@ -23,11 +25,18 @@ struct SearchLimits {
     std::chrono::milliseconds movetime{0}; // Zero means unlimited.
 };
 
+struct SearchOptions {
+    bool positional = true;
+    bool quiescence = true;
+};
+
 struct SearchResult {
     std::optional<Move> best_move;
     int score = 0;
     int depth = 0; // Last completely searched iteration; zero is a legal fallback.
     std::uint64_t nodes = 0; // Includes unfinished work and iterative roots.
+    std::uint64_t qnodes = 0; // Quiescence nodes are a subset of nodes.
+    int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;
     std::vector<Move> pv;
@@ -41,6 +50,6 @@ using SearchCallback = std::function<void(const SearchResult&)>;
 // Invalid depth (outside 1..64) or negative movetime throws invalid_argument.
 SearchResult search(const Board& board, const SearchLimits& limits,
                     const std::atomic_bool* stop = nullptr,
-                    SearchCallback on_iteration = {});
+                    SearchCallback on_iteration = {}, SearchOptions options = {});
 
 } // namespace regicide

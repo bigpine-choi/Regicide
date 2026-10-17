@@ -20,13 +20,17 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\boa
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\search.cpp /Fobuild\search.obj
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\evaluation.cpp /Fobuild\evaluation.obj
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude /c src\uci.cpp /Fobuild\uci.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude src\main.cpp build\board.obj build\search.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\rules_tests.cpp build\board.obj /Fobuild\rules_tests.obj /Febuild\regicide_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\search_tests.cpp build\board.obj build\search.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\search_tests.cpp build\board.obj build\search.obj build\evaluation.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /Iinclude tests\evaluation_tests.cpp build\board.obj build\evaluation.obj /Fobuild\evaluation_tests.obj /Febuild\regicide_evaluation_tests.exe
 exit /b %errorlevel%
 "@
 [System.IO.File]::WriteAllText($batchFile, $batch, [System.Text.UTF8Encoding]::new($false))
@@ -37,4 +41,6 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Rules tests failed.' }
     & (Join-Path $buildDir 'regicide_search_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Search tests failed.' }
+    & (Join-Path $buildDir 'regicide_evaluation_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Evaluation tests failed.' }
 }
