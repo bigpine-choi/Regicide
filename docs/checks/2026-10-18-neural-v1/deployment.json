@@ -1,0 +1,56 @@
+{
+  "installed_at_kst": "2026-10-18T22:18:01+09:00",
+  "version": "0.6.0",
+  "primary_checkout": "<INSTALLED_REPO>",
+  "branch": "desktop/selfplay-neural-evaluation",
+  "source_snapshot_at_installation": "938e7bb3979b987da023849effe33f9aff7e8306",
+  "source_commit_note": "Final publication/test-only commits will be fast-forwarded before handoff; engine source is frozen at release_engine_source_commit.",
+  "release_engine_source_commit": "ce79b0d80c271092e38588f0f2ee4deef686e967",
+  "previous_source_commit": "b0bae28cd5573f0c0fdc2aa6d6bf04cd126a24b5",
+  "previous_branch_preserved": "desktop/conservative-lmr",
+  "installed_engine": {
+    "path": "build/regicide.exe",
+    "sha256": "57439f4bd1b23ddbb7d5ec2d5ba097dcb4a5a38a80c4911bc43bf4fac6eb7038"
+  },
+  "previous_engine_backup": {
+    "path": "build/v058-before-learning/regicide.exe",
+    "sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+  },
+  "installed_model": {
+    "path": "models/regicide-small-v1.nn",
+    "sha256": "bef74501fa114eaa0059533e186faf3a0ac16983bf11b50efd87d38f6bd34bdc",
+    "status": "experimental; held-out test error worsened"
+  },
+  "default_evaluation": "classical",
+  "shortcuts_read_back_and_verified": [
+    {
+      "name": "Regicide.lnk",
+      "target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "arguments": "-NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"<INSTALLED_REPO>\\scripts\\play_godot.ps1\"",
+      "working_directory": "<INSTALLED_REPO>",
+      "icon": "<INSTALLED_REPO>\\assets\\regicide.ico,0"
+    },
+    {
+      "name": "Regicide - Neural Experiment.lnk",
+      "target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "arguments": "-NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"<INSTALLED_REPO>\\scripts\\play_godot.ps1\" -NeuralModel \"<INSTALLED_REPO>\\models\\regicide-small-v1.nn\"",
+      "working_directory": "<INSTALLED_REPO>",
+      "icon": "<INSTALLED_REPO>\\assets\\regicide.ico,0"
+    },
+    {
+      "name": "Regicide - Collect and Learn.lnk",
+      "target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "arguments": "-NoLogo -NoProfile -NoExit -ExecutionPolicy Bypass -File \"<INSTALLED_REPO>\\scripts\\learn.ps1\"",
+      "working_directory": "<INSTALLED_REPO>",
+      "icon": "<INSTALLED_REPO>\\assets\\regicide.ico,0"
+    }
+  ],
+  "verification": {
+    "installed_version_command": "Regicide 0.6.0",
+    "installed_model_eval_command": "score_cp: 125 (initial position, static only)",
+    "installed_integration_tests": 13,
+    "integration_log": "validation/installed-neural-integration.log",
+    "manual_gui_game_played_for_this_release": false,
+    "personal_game_archives_edited": false
+  }
+}

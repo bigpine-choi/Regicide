@@ -13,7 +13,7 @@
 | 학습 | NumPy2.3.5 CPU float64, 시드20261018, 100epoch, batch64, Adam학습률0.003 |
 | 모델 | 768→32→16→1, 25,153개 매개변수, 기물 점수+학습 보정 |
 | 선택 | 검증 오차 최저인97epoch. 시험 자료로 재조정하지 않음 |
-| 재현 | 같은 자료·시드·환경의 재실행에서 모델 SHA256 일치 |
+| 재현 | 같은 자료·시드·환경의 재실행 및 공개 자료 사본을 이용한 재실행에서 모델 SHA256 일치 |
 
 외부 엔진 점수·가중치나 개인 기보를 사용하지 않았다. 두 색과 추가 교사 검색 모두 동결한 자체 v0.5.8 바이너리 SHA256 `17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1`로 수행했다. 선언한 소스는 `b0bae28cd5573f0c0fdc2aa6d6bf04cd126a24b5`이며, 파일 해시 확인과 소스-실행파일의 재현 빌드 인증은 구분한다. [별도 자료 감사](data-audit.md)에서 전체 기보·표본·교사 PV·해시를 다시 확인했다.
 
@@ -37,7 +37,7 @@
 
 - Windows MSVC 및 Linux GCC의 기존6개 핵심 검사: **운영체제별127그룹·466,590개 확인 통과**. 신경망15그룹·56개를 더해 **각142그룹·466,646개 확인, 실패0**.
 - Linux AddressSanitizer/UndefinedBehaviorSanitizer: 탐색·평가·신경망 **95그룹·430,131개 확인, 실패0**. 전체 규칙을 sanitizer로 검사했다는 뜻은 아니다.
-- 최종 배포 바이너리: 독립 규칙 대조 **2,997사례**, 기존 UCI **26그룹**, 새 신경망 통합 **12검사** 통과. 학습용 순수 검사15개와 수집용15개, 기존 패배 진단21개도 통과했다.
+- 최종 배포 바이너리: 독립 규칙 대조 **2,997사례**, 기존 UCI **26그룹**, 새 신경망 통합 **13검사** 통과. 학습용 순수 검사15개와 수집용15개, 기존 패배 진단21개도 통과했다. [13개 통합 검사 로그](validation/neural-release-integration-13.log), [설치된 실행 파일의 13개 검사 로그](validation/installed-neural-integration.log).
 - 최종 바이너리와 학습된 실제 모델의588개 평가값을 Python/C++로 비교해 **최대 차이0cp**. 별도44위치×3개 시험 모델의132개 비교도 허용 범위1cp 이내였다. [최종 모델 대조](model-parity-release.json).
 - 신경망을 쓰지 않는 경로는 기존 동결 v0.5.8과24위치×3설정=**72쌍**에서 수·점수·깊이·노드·PV·TT/SEE/LMR 통계가 같았다(시간 필드 제외). [기본 경로 대조](validation/default-equivalence-release.json). 시간 단축/기력 증거가 아니다.
 - 모델 파일 오류·연속 공백 경로·모델 전환·탐색 중단·메이트와 무승부 우선순위·본 엔진/추천수의 세션 사본·JSON/PGN 모델 신원을 검사했다.
@@ -48,7 +48,9 @@
 
 ## 사용·재현과 기록
 
-[사용 설명](../../NEURAL_EVALUATION.md)의 `Learn-Regicide.cmd`, `Play-Regicide-Learned.cmd`로 실행한다. 새 학습은 새 폴더에 저장되고 기본 모델을 자동 교체하지 않는다. 기존 바탕화면 대국은 수식 평가를 사용한다. 로컬 반영 상태와 실행 파일·모델의 신원은 [설치 기록](deployment.json)에 남긴다.
+[사용 설명](../../NEURAL_EVALUATION.md)의 `Learn-Regicide.cmd`, `Play-Regicide-Learned.cmd`로 실행한다. 바탕화면에도 **Regicide - Collect and Learn**, **Regicide - Neural Experiment** 바로가기를 설치하고 저장된 실행 경로를 다시 확인했다. 새 학습은 새 폴더에 저장되고 기본 모델을 자동 교체하지 않는다. 기존 바탕화면 대국은 수식 평가를 사용한다. 로컬 반영 상태와 실행 파일·모델의 신원은 [설치 기록](deployment.json)에 남긴다.
+
+공개 자료 사본에서도 같은 학습 프로토콜을 다시 실행해 모델 바이트가 같음을 확인했다. [공개 자료 재현 보고서](training/public-reproduction-report.json), [재현 로그](validation/public-reproduction.log)를 보존한다. 이는 공개 파일의 재현성 검사이며 시험 결과를 개선하기 위한 재선정은 아니다.
 
 공개 자료는 [수집 명세](data/manifest.json), [전체 게임](data/games.jsonl), [표본](data/positions.jsonl), [PGN](data/games.pgn)이다. 게임·표본·PGN은 원본 바이트 그대로 보존했다. 명세·보고서와 텍스트 로그의 로컬 경로를 가리고 JSON을 다시 저장하거나 줄바꿈을 정규화한 경우 원본과 공개 SHA256은 다를 수 있다. [공개 명세](publication-manifest.json)는 두 해시를 구분한다. 학습 보고서의 입력 해시는 원본 명세의 해시이며 공개 명세로 바꾸어 읽지 않는다.
 

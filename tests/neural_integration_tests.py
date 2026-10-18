@@ -184,6 +184,31 @@ class NeuralIntegrationTests(unittest.TestCase):
                         ["search", "2", "--eval-file", self.root / "missing.nn"]):
             self.assertIn("error:", cli(command, expected_returncode=1).stderr)
 
+    def test_shipped_v1_model_matches_public_report_and_native_evaluator(self):
+        model_path = ROOT / "models" / "regicide-small-v1.nn"
+        public = ROOT / "docs" / "checks" / "2026-10-18-neural-v1"
+        report_path = public / "training" / "report.json"
+        positions_path = public / "data" / "positions.jsonl"
+        # These are shipped release artifacts, so missing files must fail CI.
+        # Temporary test models alone cannot protect the released model link.
+        self.assertTrue(model_path.is_file(), "shipped v1 model is missing")
+        self.assertTrue(report_path.is_file(), "public v1 training report is missing")
+        self.assertTrue(positions_path.is_file(), "public v1 training positions are missing")
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(hashlib.sha256(model_path.read_bytes()).hexdigest(), report["model_sha256"])
+        model = load_model(model_path)
+        rows = [json.loads(line) for line in positions_path.read_text(encoding="utf-8").splitlines()
+                if line.strip()]
+        self.assertEqual(len(rows), 588)
+        indices = [index * (len(rows) - 1) // 5 for index in range(6)]
+        self.assertEqual(len(set(indices)), 6)
+        for index in indices:
+            with self.subTest(public_row=index + 1):
+                expected = evaluate_cp(rows[index]["fen"], model)
+                actual = int(fields(cli(["eval", "--eval-file", model_path,
+                                         "--fen", rows[index]["fen"]]).stdout)["score_cp"])
+                self.assertLessEqual(abs(actual - expected), 1)
+
     def test_uci_default_and_loaded_but_disabled_preserve_classical_graph(self):
         boards = [chess.Board(), corpus()[5], corpus()[9]]
         for board in boards:
