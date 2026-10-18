@@ -1,0 +1,882 @@
+{
+  "schema": "regicide.learning.publication.v1",
+  "published_at_kst": "2026-10-19T00:48:08+09:00",
+  "source_freeze_commit": "6550d6cd9bf74f98b08bf1789a9ebbedf55c72ac",
+  "engine_source_commit": "6550d6cd9bf74f98b08bf1789a9ebbedf55c72ac",
+  "engine_sha256": "ec71a626b8124359fe2e47ab2876e9ea0bc342d42179869158c5aeda63fd921f",
+  "scope": "Local prefixes are redacted. Original internal source hashes refer to raw bytes; use the raw/published map when hashes differ. Published arena artifacts are for audit, not a permission to install a model. Re-run the native strict arena before any new adoption.",
+  "derived_files": [
+    {
+      "path": "store/bootstrap/games.jsonl",
+      "raw_sha256": "9ec6cc4d75aa2a1322974543d9df66a9c7299895134cbd64152e4d2d4ffa1cc5",
+      "published_sha256": "9ec6cc4d75aa2a1322974543d9df66a9c7299895134cbd64152e4d2d4ffa1cc5",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/bootstrap/games.pgn",
+      "raw_sha256": "10e432cc7551f93432ed9805c67fb6b039b719f8ac0c087bcfc9c9b31e74d49a",
+      "published_sha256": "10e432cc7551f93432ed9805c67fb6b039b719f8ac0c087bcfc9c9b31e74d49a",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/bootstrap/manifest.json",
+      "raw_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af",
+      "published_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/bootstrap/positions.jsonl",
+      "raw_sha256": "260005178e8e6189f21f76000d649984d9decc3c34c724aa5c0f751291179e55",
+      "published_sha256": "260005178e8e6189f21f76000d649984d9decc3c34c724aa5c0f751291179e55",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/bootstrap-snapshot.json",
+      "raw_sha256": "96a99dd0f33a8a9e5132c7daf6769e042b40e6b680075d24fae48f2ecf062430",
+      "published_sha256": "96a99dd0f33a8a9e5132c7daf6769e042b40e6b680075d24fae48f2ecf062430",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/catalog.json",
+      "raw_sha256": "09f4f2c8e792f0262fd5972d3bc8585e2b883b055d9e358d118dfb3d696efb8a",
+      "published_sha256": "09f4f2c8e792f0262fd5972d3bc8585e2b883b055d9e358d118dfb3d696efb8a",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/latest.json",
+      "raw_sha256": "423c3580d673e2e974e95fed1d01379427245ad98a86ee236af1d52fec8f46ba",
+      "published_sha256": "423c3580d673e2e974e95fed1d01379427245ad98a86ee236af1d52fec8f46ba",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/arena/arena.json",
+      "raw_sha256": "d04be086d01674031ab56e730fb10fa29384f99d33929f35d60bc296730c5a72",
+      "published_sha256": "d7ab2d78ef732b5f1ba3cc3ffe8176e24524e071cd8ec38fcbfd7709c549c100",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/arena/candidate.nn",
+      "raw_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69",
+      "published_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/arena/games.pgn",
+      "raw_sha256": "98d0f559796de46ad4102a46758210540a14e5c76b9295650f48de5abe08c811",
+      "published_sha256": "9e8eaf49cd26540cb09b4ab0220b9b1f80dc0cb2ee1c6d88487631363f0888aa",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/arena/resource-samples.jsonl",
+      "raw_sha256": "887dfc0cee990014080485d173d50482cf3d1f5607d1ff5636415283f72ecae0",
+      "published_sha256": "887dfc0cee990014080485d173d50482cf3d1f5607d1ff5636415283f72ecae0",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/corpus/games.jsonl",
+      "raw_sha256": "e268b9d86a754fc5b4cc741bcaff2674618795e67d4689254dc7416391283ffa",
+      "published_sha256": "e268b9d86a754fc5b4cc741bcaff2674618795e67d4689254dc7416391283ffa",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/corpus/games.pgn",
+      "raw_sha256": "1f6aa74cd2b6efeee5e5eb03040f177d36d0ed9e294f6ee09bc3e6970002940f",
+      "published_sha256": "1f6aa74cd2b6efeee5e5eb03040f177d36d0ed9e294f6ee09bc3e6970002940f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/corpus/manifest.json",
+      "raw_sha256": "e4d61e5a5ba7802260337ad1dc4fc59f73c34ebb0fc5ab694878f1c36872fd16",
+      "published_sha256": "e4d61e5a5ba7802260337ad1dc4fc59f73c34ebb0fc5ab694878f1c36872fd16",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/corpus/positions.jsonl",
+      "raw_sha256": "dfcfedcd097c7b80558898893075593a9b016e9dd4578f2dc1333c0cca683fea",
+      "published_sha256": "dfcfedcd097c7b80558898893075593a9b016e9dd4578f2dc1333c0cca683fea",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/cycle.json",
+      "raw_sha256": "e3956666f60cada5bf3595dc88282701dd469144cbf20e458ba6cb15a8cfd11b",
+      "published_sha256": "e3956666f60cada5bf3595dc88282701dd469144cbf20e458ba6cb15a8cfd11b",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/data/games.jsonl",
+      "raw_sha256": "04dcd773c012b417cfb3b2b41f94a228f307c30e554a31780ba904c79d36d783",
+      "published_sha256": "04dcd773c012b417cfb3b2b41f94a228f307c30e554a31780ba904c79d36d783",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/data/games.pgn",
+      "raw_sha256": "8f5bd4cf0eb1acc780c984b1fc760d328f7ca46cf9b55ef79e98c1eb6c9efb7d",
+      "published_sha256": "8f5bd4cf0eb1acc780c984b1fc760d328f7ca46cf9b55ef79e98c1eb6c9efb7d",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/data/manifest.json",
+      "raw_sha256": "7abb0d946e776d7410852a5d274b399b5c9e3b30e20660bc4961aafd9aeb3d4b",
+      "published_sha256": "7abb0d946e776d7410852a5d274b399b5c9e3b30e20660bc4961aafd9aeb3d4b",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/data/positions.jsonl",
+      "raw_sha256": "fe711814a0c67e9d1db7d3acecf2a39f4537d2564a2ac18ef38c2ca49da50057",
+      "published_sha256": "fe711814a0c67e9d1db7d3acecf2a39f4537d2564a2ac18ef38c2ca49da50057",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/loss-analysis/loss-report.json",
+      "raw_sha256": "d0599b3d5e7fd340e4689c8e2af1977f338e026764630ffb454c6aadf01c1820",
+      "published_sha256": "4c0fa3f2aa60a73c25698409eb0c64792c59b109ff59e8959ea4078d1bcbfb42",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/loss-analysis/positions.jsonl",
+      "raw_sha256": "86fe7de5b0772f1e55b32ffe1bcc269204a7b877d6cf4d0e0515c36c4a4d2e39",
+      "published_sha256": "86fe7de5b0772f1e55b32ffe1bcc269204a7b877d6cf4d0e0515c36c4a4d2e39",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/model/report.json",
+      "raw_sha256": "665c73cba62d45e8f9e3741b231c3ae0606ee4685de47a1350254425586fb133",
+      "published_sha256": "665c73cba62d45e8f9e3741b231c3ae0606ee4685de47a1350254425586fb133",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/model/small-v1.nn",
+      "raw_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69",
+      "published_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/rules/checks.json",
+      "raw_sha256": "7f815b8fda481b8f9cd11832b8b57797199137b3968268115f5ea77f2c56649d",
+      "published_sha256": "7f815b8fda481b8f9cd11832b8b57797199137b3968268115f5ea77f2c56649d",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/rules/differential.log",
+      "raw_sha256": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "published_sha256": "add29c605360285d15f7937a2dcdf4390bb9f012c60951eae5c9daeee75be515",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/rules/neural-integration.log",
+      "raw_sha256": "17bd248b90337388f87bfa815eef4c2ee41e7956257e6f8a7b7bcadce764cb41",
+      "published_sha256": "c3c289f2f0f15bb638a5f35a6798678f1af2604167585c1ddd0a83e580444a27",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/summary.md",
+      "raw_sha256": "393280e1ee2b6c083c6798991d753e67de2429a866a5f96fb47dafc3a198567d",
+      "published_sha256": "393280e1ee2b6c083c6798991d753e67de2429a866a5f96fb47dafc3a198567d",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000001-88bbee0e1ae3/training.log",
+      "raw_sha256": "34b71b164b3429bd706f00f2fc5f7666b66ea10b78ca0aa04a6545c9d4410721",
+      "published_sha256": "effda9364f75180d57c7997289a8d0943c33905552af9ac9c909092c2b8a0b67",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/arena/arena.json",
+      "raw_sha256": "ffbe3e44c0825189903eba7f1894864cd42b266b7577b81d59e8f08094316ecc",
+      "published_sha256": "8d6862be05b1316b0df789f97905927b0e23881c50fba1f51f379bcbca5edacf",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/arena/candidate.nn",
+      "raw_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+      "published_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/arena/games.pgn",
+      "raw_sha256": "5604f506f4a59798fb43c234f27bbd56cce51139f8f983c235a2104e0edb5849",
+      "published_sha256": "927af603ce18ba34f718379aa215a35bce375d412014ad45b5f09f76eb5ccefc",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/arena/resource-samples.jsonl",
+      "raw_sha256": "c473f36294141a5f7e2044c48b345d351234df32142dd818248f4849584251a1",
+      "published_sha256": "c473f36294141a5f7e2044c48b345d351234df32142dd818248f4849584251a1",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/corpus/games.jsonl",
+      "raw_sha256": "d963b21ee142f8c6d940ff5efaa9858b52e5529fb70bb721d2dd6785fac4ea2c",
+      "published_sha256": "d963b21ee142f8c6d940ff5efaa9858b52e5529fb70bb721d2dd6785fac4ea2c",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/corpus/games.pgn",
+      "raw_sha256": "bc8da476dc64070494d35e0b2877bd69836a280ad5b495b4f7f890052838495b",
+      "published_sha256": "bc8da476dc64070494d35e0b2877bd69836a280ad5b495b4f7f890052838495b",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/corpus/manifest.json",
+      "raw_sha256": "ffabf8999dd5d3b34f4d0190b9e3d8d6065e79c807a9cbce24471e9fb10bf869",
+      "published_sha256": "ffabf8999dd5d3b34f4d0190b9e3d8d6065e79c807a9cbce24471e9fb10bf869",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/corpus/positions.jsonl",
+      "raw_sha256": "dfe17ebe25ce773cc4bc3daa7fbeb8878aa322523addc951368f5a476f58e155",
+      "published_sha256": "dfe17ebe25ce773cc4bc3daa7fbeb8878aa322523addc951368f5a476f58e155",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/cycle.json",
+      "raw_sha256": "f6bc64ac42f684726a8669ea27bd0d9e677142f3091fc1d00d9f3dda679b5920",
+      "published_sha256": "f6bc64ac42f684726a8669ea27bd0d9e677142f3091fc1d00d9f3dda679b5920",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/data/games.jsonl",
+      "raw_sha256": "47e66d19e864f9da51ce64bf7c47dcc0e2bf49e0e9cbeece286a32df2ebfcfe3",
+      "published_sha256": "47e66d19e864f9da51ce64bf7c47dcc0e2bf49e0e9cbeece286a32df2ebfcfe3",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/data/games.pgn",
+      "raw_sha256": "4cf6afc8418c0fa63f74fe219b7bd68d355f6006771a13f5637527d336661d97",
+      "published_sha256": "4cf6afc8418c0fa63f74fe219b7bd68d355f6006771a13f5637527d336661d97",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/data/manifest.json",
+      "raw_sha256": "1c4d9f4dd2663f927e4e7edaa853d897c6e864308c544c73a760d02f7c126d4e",
+      "published_sha256": "1c4d9f4dd2663f927e4e7edaa853d897c6e864308c544c73a760d02f7c126d4e",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/data/positions.jsonl",
+      "raw_sha256": "40671b6a5e5d607fcf94cb5d7bbe8bf9494432017bb16819be3461d46ddc3697",
+      "published_sha256": "40671b6a5e5d607fcf94cb5d7bbe8bf9494432017bb16819be3461d46ddc3697",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/loss-analysis/loss-report.json",
+      "raw_sha256": "0169241a349b94d941c92b32cd8b9256a348aedd168e121301803404d5e6e8b6",
+      "published_sha256": "3e9cb15a2ed5803592f111578df937879a57f8bba6d892fddd1a418773d6f7cc",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/loss-analysis/positions.jsonl",
+      "raw_sha256": "1ab2293a6b0dd1d222080e1eb115d1149ea11c2cc9a9f4ca7d8a0134329dd4fb",
+      "published_sha256": "1ab2293a6b0dd1d222080e1eb115d1149ea11c2cc9a9f4ca7d8a0134329dd4fb",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/model/report.json",
+      "raw_sha256": "b6192bd90d8993048d2bd7cca16000be6da1b0a699bc46db87f18fc79fd5e8f8",
+      "published_sha256": "b6192bd90d8993048d2bd7cca16000be6da1b0a699bc46db87f18fc79fd5e8f8",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/model/small-v1.nn",
+      "raw_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+      "published_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/rules/checks.json",
+      "raw_sha256": "d702a3fd255da2abc4e1e1abaa23b88a240e03ca40c007564d96bf7d4d4f7afd",
+      "published_sha256": "d702a3fd255da2abc4e1e1abaa23b88a240e03ca40c007564d96bf7d4d4f7afd",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/rules/differential.log",
+      "raw_sha256": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "published_sha256": "add29c605360285d15f7937a2dcdf4390bb9f012c60951eae5c9daeee75be515",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/rules/neural-integration.log",
+      "raw_sha256": "04c74edf1f76bf4b76e2dcabf772b1368b9de0041555de8642ffdeb3457b285d",
+      "published_sha256": "74a745615e82a4c13b50df72dcb67958a18f3c0c311147477fffd5fa1398245f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/summary.md",
+      "raw_sha256": "403d35524125e09103f101565fd04ae6e7a154d95cb96052d48152ee0219e4b1",
+      "published_sha256": "403d35524125e09103f101565fd04ae6e7a154d95cb96052d48152ee0219e4b1",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000002-95a3500d5501/training.log",
+      "raw_sha256": "efc6216bea1c8a67f10744aa472e6bac3c55ddc6ef6e29d08a641cfffef857d2",
+      "published_sha256": "d9711bf1b6f61374f1785623a75a5f73f67ef9b372a2ede601f0c51a73a9db7f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/arena/arena.json",
+      "raw_sha256": "db2ddf7b6190910ad4fe1f8f50bd69ac111c56e7be07f345fe57360913f09dd4",
+      "published_sha256": "59f8b23307a5682efc78f589efdeb86bd1c479acb27b5959a8fc2d99032e740a",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/arena/candidate.nn",
+      "raw_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+      "published_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/arena/games.pgn",
+      "raw_sha256": "2e7ae94d02fc8ed03c6c12716fa38bd9b8dffd2774b2538d520e22895f0b0658",
+      "published_sha256": "47dc8551c0e29d4259b7c0c2ab00b20de36585bf0bccdae1acee8375b7fbaa99",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/arena/resource-samples.jsonl",
+      "raw_sha256": "a5f9c21d3e4f87a19a91eca7177a45065fba72d39771dd686beb3ad0ca16096a",
+      "published_sha256": "a5f9c21d3e4f87a19a91eca7177a45065fba72d39771dd686beb3ad0ca16096a",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/corpus/games.jsonl",
+      "raw_sha256": "4b09a8d07c087edc63db6fc602270dcca45ea49f83b25453c14202a8293ed703",
+      "published_sha256": "4b09a8d07c087edc63db6fc602270dcca45ea49f83b25453c14202a8293ed703",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/corpus/games.pgn",
+      "raw_sha256": "f27ea4078359b98284a788b547840a9f50ae617dad823f7780eedcdbbc093577",
+      "published_sha256": "f27ea4078359b98284a788b547840a9f50ae617dad823f7780eedcdbbc093577",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/corpus/manifest.json",
+      "raw_sha256": "d290d79b60745fcfa23596ca0e7a44bf6c90cf4d466f2badc54c031cc6f3b535",
+      "published_sha256": "d290d79b60745fcfa23596ca0e7a44bf6c90cf4d466f2badc54c031cc6f3b535",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/corpus/positions.jsonl",
+      "raw_sha256": "52ed61820c3707a4b0cedfe5c106f56ab896010649fcda83b5359141a544c528",
+      "published_sha256": "52ed61820c3707a4b0cedfe5c106f56ab896010649fcda83b5359141a544c528",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/cycle.json",
+      "raw_sha256": "548348988e63dcf327289069de9e5d6a56ea665f0bb7fee54d5568e452108708",
+      "published_sha256": "548348988e63dcf327289069de9e5d6a56ea665f0bb7fee54d5568e452108708",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/data/games.jsonl",
+      "raw_sha256": "7f2e4900afba7c8b1cc31c077c58f405772d5a70ea928fd72cda9fc9921f1fcd",
+      "published_sha256": "7f2e4900afba7c8b1cc31c077c58f405772d5a70ea928fd72cda9fc9921f1fcd",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/data/games.pgn",
+      "raw_sha256": "a868feab37ebe41d5761ea1290773b30a4434a60e52f05bc2917fa479b49558e",
+      "published_sha256": "a868feab37ebe41d5761ea1290773b30a4434a60e52f05bc2917fa479b49558e",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/data/manifest.json",
+      "raw_sha256": "5a0940d995794f27c63c5bcc8fd12626d083d8ae2c7f717e5831254d81a8173e",
+      "published_sha256": "5a0940d995794f27c63c5bcc8fd12626d083d8ae2c7f717e5831254d81a8173e",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/data/positions.jsonl",
+      "raw_sha256": "6f186d696d1b98a28343e4cfe51186b3907e67aa424510e58ae48c2bef86d66e",
+      "published_sha256": "6f186d696d1b98a28343e4cfe51186b3907e67aa424510e58ae48c2bef86d66e",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/loss-analysis/loss-report.json",
+      "raw_sha256": "f0a23c2474ffbe598af9a2aeac4c4fe4722aebd09d295f48141afc5d9003665d",
+      "published_sha256": "b27167849e66e37149c2abadc5ed492c885fc62804eb25708f21afafc4ca2444",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/loss-analysis/positions.jsonl",
+      "raw_sha256": "df83a419ef1c8a628fd7d84b521e2ef869de15f83f2bd23a60b95e3a7a582ffc",
+      "published_sha256": "df83a419ef1c8a628fd7d84b521e2ef869de15f83f2bd23a60b95e3a7a582ffc",
+      "transformation": "identical JSONL bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/model/report.json",
+      "raw_sha256": "6a686bfd2becf9c3c8437d7a8d55409e212f07ec20ee8e7ac38e70ad4af78346",
+      "published_sha256": "6a686bfd2becf9c3c8437d7a8d55409e212f07ec20ee8e7ac38e70ad4af78346",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/model/small-v2.nn",
+      "raw_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+      "published_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+      "transformation": "identical model bytes"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/rules/checks.json",
+      "raw_sha256": "2a71e45fff8c6fe79979f3bbc3d0dbf2292229f91a5e944e54912f4ac5020428",
+      "published_sha256": "2a71e45fff8c6fe79979f3bbc3d0dbf2292229f91a5e944e54912f4ac5020428",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/rules/differential.log",
+      "raw_sha256": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "published_sha256": "add29c605360285d15f7937a2dcdf4390bb9f012c60951eae5c9daeee75be515",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/rules/neural-integration.log",
+      "raw_sha256": "5958a5ce3558fb76a78a0377b5768ca354f6e5e5ab5b7c209c6df965a8a27824",
+      "published_sha256": "a529728da7943d8dd5d4b23ce56f87e4076b9ca56733e150a4041192a3daa1d1",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/summary.md",
+      "raw_sha256": "e778e468ab68a9347260a08576ea5e18f2b77728757b68b841a9b69479fb6654",
+      "published_sha256": "e778e468ab68a9347260a08576ea5e18f2b77728757b68b841a9b69479fb6654",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "store/runs/000003-2daceeed6656/training.log",
+      "raw_sha256": "ae006bd60fff7594f4b46d89d93d01f31d1cb6a16acd1891125577fea07c16db",
+      "published_sha256": "9ae432ee931b5bd95e1ef5e0588496f16e25c54784928259ec669bff191da09e",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/analyze_v1_failure.py",
+      "raw_sha256": "6fbfb26e80a72d16a5f63dc0dd2c3748e66406aac19cbcd788c0e090dfcc8325",
+      "published_sha256": "6fbfb26e80a72d16a5f63dc0dd2c3748e66406aac19cbcd788c0e090dfcc8325",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/archive_godot_tests.log",
+      "raw_sha256": "4ae33269e14f71da90b52d281bfa85cbbc6f9e55acddd7af98a486260baef398",
+      "published_sha256": "e0df79b49c6fc777754a9ab37b6ddc04c11d6c22756c0baf1c79e0362119418c",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/audit-raw-sha256.json",
+      "raw_sha256": "122210ec661606f53dae02493cf0708e43ec3cf429d63782d90e05e942819fbf",
+      "published_sha256": "b9d6ef9b3308ce473cc03da2d9cd6dbd5feba8104cf5384aa77c2bcef9a49113",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/audit_cycle.py",
+      "raw_sha256": "503b8c8a9799966c3d8a0520a268ab4b571642fd8de587b6e8198785b5b7eb02",
+      "published_sha256": "503b8c8a9799966c3d8a0520a268ab4b571642fd8de587b6e8198785b5b7eb02",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/benchmark_search_tests.log",
+      "raw_sha256": "4a1be630f17f76e4bf49fc53f3156f756d9056fa110c6760d0257f30a62255b8",
+      "published_sha256": "0f8d778c42da090a506493f8b4e661b42395b7c316e6a18e8c5d5ebb854e0068",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/ci-source-first.json",
+      "raw_sha256": "d5a15726a64d9926b7cb4e2167b0ec576e7db8bec162db9aa6425d57908da54f",
+      "published_sha256": "d5a15726a64d9926b7cb4e2167b0ec576e7db8bec162db9aa6425d57908da54f",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/ci-source-first.log",
+      "raw_sha256": "84d7bafb07ff03f86c6a7698c565d349284a4215385242dc9f0588a59edf0485",
+      "published_sha256": "84d7bafb07ff03f86c6a7698c565d349284a4215385242dc9f0588a59edf0485",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/classical-native-parity.json",
+      "raw_sha256": "3e8ef8d8610e3c415df0f5c7cb04acd71ee9bc191256e42c9d7a0ac8aa63eb45",
+      "published_sha256": "39808d62a015700b0fd11345ef5740bb69550e6511efe94fa85d2dca41d576f0",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/classical_evaluation_tests.log",
+      "raw_sha256": "fc182810be6f398631edce29b8a75c0d7d4bb26b07cc1e3e78361495482e79e7",
+      "published_sha256": "a58173e10c50e831541d1310d3e13efc9c2eadd035af5c6a7453c083688c8f42",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/compare_default.py",
+      "raw_sha256": "41876f2fa867799d274f86a5dd347af4f5546b58a6e2f4c9d40d1e006837e0a5",
+      "published_sha256": "41876f2fa867799d274f86a5dd347af4f5546b58a6e2f4c9d40d1e006837e0a5",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/compare_engines_tests.log",
+      "raw_sha256": "c9be8c5bedfb905964941321e1fd1dbdbb7120014bd05f955018721383cde149",
+      "published_sha256": "50daa962792f629978fd11d240a5e4e713d89050f7d1edc4ee9a2d599c45df4a",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/default-equivalence.json",
+      "raw_sha256": "7429bbc1ae8a7e02f82cf00dc5074562b780beefb34668349fd415975de66f45",
+      "published_sha256": "81a3133789c787ca4d31a25a16acc683ec89a162e9e942faef614e4dfdda58df",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/differential.log",
+      "raw_sha256": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "published_sha256": "add29c605360285d15f7937a2dcdf4390bb9f012c60951eae5c9daeee75be515",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/fresh-holdout.json",
+      "raw_sha256": "f6d64e179f6da3c19b94169ff76d12a5491d8648c8231c63d0f582f7d717445f",
+      "published_sha256": "3bbbcd99bcc45a08bde6d64eb68c8aa6f48c823713c9f3fec359cb68ae1e56a0",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/fresh-holdout.log",
+      "raw_sha256": "f6d64e179f6da3c19b94169ff76d12a5491d8648c8231c63d0f582f7d717445f",
+      "published_sha256": "3bbbcd99bcc45a08bde6d64eb68c8aa6f48c823713c9f3fec359cb68ae1e56a0",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/fresh_holdout.py",
+      "raw_sha256": "45deb22f0db397a4a6923a656b38ed4aac8b33235afdaa4993ce732e3a1f9a2c",
+      "published_sha256": "8096078cb03946affb1f770bc9b4fa82b78c77457a5238e4818ffced6ffe9d03",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/full-cycle.log",
+      "raw_sha256": "81b0922ba82750fdee3398cb9ad820fad3cbe69af8be8f77bcc15f6132d2feae",
+      "published_sha256": "2c3731cf2f9724675deeaa50091aeee02da8e08162b579a0017664866fb94bf6",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/game_archive_tests.log",
+      "raw_sha256": "06ec2cb2221a846b1dc7f4a57eb199b831a5f91e5fcda81f6143da44a7d29525",
+      "published_sha256": "682b265cb40d98aa1a45ebf6c7164e17002b62243c7f56979ae0107959551900",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/game_runner_tests.log",
+      "raw_sha256": "68a0086f7b2e7070299b84e14527ccce123f2e9cbb56c85722cece4b6af94782",
+      "published_sha256": "93f0a3f125bf872fe62a017d44884e1f39b7c6a36682fda150eb051c9bf7f775",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/godot_bootstrap_tests.log",
+      "raw_sha256": "614f9fd2a8b10a48a177b120a448a874a0a2e3be31491c4cec565fabfaaed9e2",
+      "published_sha256": "15cbb0227c2be804fc2c763eed8a13eaea3c67c9814f0e75fc0ae72be832ca38",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/godot_integration_tests.log",
+      "raw_sha256": "1d6bb8c40ead176a62bbf70bd2d67c29bef536d13950623e7de8882adadaeb04",
+      "published_sha256": "098efa319abce935abcad27858bf4e60b739d4edcc660f37eeacb88f0c4ea9e7",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/handicap_godot_tests.log",
+      "raw_sha256": "2bbfa1f4dfa8da5df3a5ba6eea4e8d1028722cb001ec6b1a823dcc086749bf19",
+      "published_sha256": "abfcfba46dfdc813369057193fd2c719c3eb2b7bede81762d6e21c26517fba54",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/handicap_play_tests.log",
+      "raw_sha256": "8cffef1fe23d2fd0b5e2c96e5326259a3afad2790faf4a44a8438a3739728769",
+      "published_sha256": "39d07986ef26cca9bf0320c3f7055966772280a7e3e9cfe67c2bbb0707201459",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/hint_godot_tests.log",
+      "raw_sha256": "a6ba9156770004dfb1f8ea5487e0d01ed9433c536d0d5b639cda238e71cf1353",
+      "published_sha256": "8acdb92e74702f54029812435778916b640e3520f6650dbf57f0a03741635504",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/hint_state_tests.log",
+      "raw_sha256": "21de0e03072a70cd25157ff8cb924e434c15911de84509f68abc01a94c00ad5e",
+      "published_sha256": "a4d35f40246eabb5c9a8dcfd71f863b8bf5b5829c5cdbd94ec108b5fc0883d9f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/human_play_tests.log",
+      "raw_sha256": "9654d1d7abdcbaa327dd768e1c26aef94f49ca73ee5fce2cdb04ac96f7e887e8",
+      "published_sha256": "45afa0e7ef4730faf3d5416efa0118fd5d40328af52e0cf48d83382dc3a2e2a5",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/independent-cycle-audit.json",
+      "raw_sha256": "f2581c5623cba8b0d2d8a174a1a27a8e7e0cc7408ead0b0a4787f0e93af3b6b8",
+      "published_sha256": "a8f963cac8bb169423f9c78ef45db2b46a5da552d78f63e7a4695e398f4576af",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/independent-cycle-audit.md",
+      "raw_sha256": "a470c8d279a85dd6827d6e192cf3741597a9b0947cf8df308c1c4bb8f48ea432",
+      "published_sha256": "00860fd644688166cdb14bbd84c2652011f2aeba76af5d7e5abd915ebd562f4f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/install-state.log",
+      "raw_sha256": "b88faaafffd90794a0b315b797e7beb6d95bd2aa3b3487ccd7bc72b0c23f51b9",
+      "published_sha256": "34ae61e4d3ee991911a9ae23c5a8acf116862360e2cccbccfd09c098bc958967",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/installed-runtime.log",
+      "raw_sha256": "113712636d4aae57040e4854992ae9d68920291a9793b59481d879f9a246716a",
+      "published_sha256": "3d3836ca38954c67024160f4fe2cdc5180d13682016e2280e1357f6b29d432a6",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/installed-trained-model-parity.json",
+      "raw_sha256": "94ae49aaab6377e083137f8c83bfb0094b5aae4e36bc6445d2080357bfaabd59",
+      "published_sha256": "09f760361c35816a5b9ea20faeb3dcb44ba6f8a6fda2ab5a6fed82e0a9d39e2b",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/installed-trained-model-parity.log",
+      "raw_sha256": "d82611504201b0e07682a789f1735d17996c83cd4a64f0d285942a452425f212",
+      "published_sha256": "efe6c8975f1f07b827b42c74aa4510b0a18e90798496d0cec2c6157c686faa0f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_arena_tests.log",
+      "raw_sha256": "d10c67c1f25e44e4d78504eff187f823e2733509a23666f49c7bae8ca3821fe5",
+      "published_sha256": "e44dd0f0ca1f9ff69a50f66230e82c8997b1ecc1f503b0d2e0ec9b4187519d57",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_corpus_tests.log",
+      "raw_sha256": "019e2c4227137081597dd767a2deb86025ea571630ed8de8959b200e80818242",
+      "published_sha256": "21b64c2093fbc016060aea4f5758d6a772040909dd0018d2b5a2c5395faa0f4a",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_cycle_tests-after-ci-fix.log",
+      "raw_sha256": "81a49633eacfb70a5b4c19a2bc111c15c84643898edd412532de15c5419de302",
+      "published_sha256": "85507a7b5465cceebd988d052d04d762235bbbb44719c708ddb88cfd68b13401",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_cycle_tests.log",
+      "raw_sha256": "c3584817b63f42e2222afe951dedb01c418a5337acde3b269107b8eeb56be941",
+      "published_sha256": "d3b90556e25a1a744062193816751069c46c671cce04f7ae6511dff070682bcf",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_data_tests.log",
+      "raw_sha256": "56175219b04b1d1c02f7669f26fb76e798dbf799c84a0e127701092818ac9b26",
+      "published_sha256": "c62b7fdd480d0bdc4ecc432207b440f5d97729701156e18dce552c6e56398c92",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_loss_analysis_tests.log",
+      "raw_sha256": "7ad2a552e9d391c49d02183c821a9c181be0d1410f9dfa9e89a79f6885f3ee6e",
+      "published_sha256": "fcb6742200655b372cd10e3af8ab218903ba3ce9536f376c6167b233a7a03fc0",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_registry_tests.log",
+      "raw_sha256": "685c217a2c04123e6369fe407051b71a92a71f33751e8213656d0ac8973b4eae",
+      "published_sha256": "df45cacc5860fbb48dabb808ca132b8c8bc9ee4e357ee43d1486de6eca02119b",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/learning_runtime_tests.log",
+      "raw_sha256": "f987e69403800255e7e7c99747ef6cd7fcfaa8a83456e16c129ea0fcbc48f43b",
+      "published_sha256": "b5112f8442a6cf58a1923da11d0aabf3749ab6db304945911eda6c0045f82cc5",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux-driver.log",
+      "raw_sha256": "69255e682494dff0a6fafa6f5e9f49f62eda9d0e545bba766301b58546fe1a61",
+      "published_sha256": "59fbda7ac8f7fac5dd2ce2c0b32b713158a0bcdfc25d52d5680452c6491511fd",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux-main-first.log",
+      "raw_sha256": "0a0e9e2ef444cf6b532cb14eac739be3c973adb46634fa3cbb27672d7b951e4b",
+      "published_sha256": "79aa07f66a997bf4e0721ff0cb92c616e79a2562ff2785ad3dc323879bfe03ba",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux-main.log",
+      "raw_sha256": "b51875f1ac632d6686c9bc570e0762b72f02505004127995ccaa8d01781b7972",
+      "published_sha256": "ceb689fb4608abd96e027109e180b839c0a2636b964d466871d92012cf676ac9",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/native-build.log",
+      "raw_sha256": "2ed1019c2595c2e6b5c63ca34b1ca2cc21be3e504ac56549d44881669f425a71",
+      "published_sha256": "50e323f6239944eefa1d6a993a2b583b79d489cec922218d581527a4a19e7d5a",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/neural-integration.log",
+      "raw_sha256": "f602db7000bbb246272489f168d8512c2bd452d0a38159620900eb1b41936061",
+      "published_sha256": "3eba9d5fc61cf19c1003e24bccbbfe59c65af1b1562fe9c6d1ca46fa16dcbee2",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/neural_integration_tests.log",
+      "raw_sha256": "53ab486c0761685c148bffb17692da046214264023eb2f321f78275205403738",
+      "published_sha256": "e7c2caf1dd75747fae089f36a795688baaa4dd4b2e76e9001e077abbc9b99361",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/neural_training_tests.log",
+      "raw_sha256": "b45f87cff3cbf04aed53d31b13bb264cf731b0fe07e37343879593dad9f92720",
+      "published_sha256": "08def4a626f507faa2b21d3cbfb7b53af8f4f380e11638185bfbe543ecc0f3e6",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/old-arena-speed.json",
+      "raw_sha256": "945976c643a48a39e16edca49fc3249e041047db00192131b20a84189587a65e",
+      "published_sha256": "55cd50a2f51993da3122a37bbe60e0917de923e1aeec6b2bc8a0977a3814589d",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/old-model-diagnostics.json",
+      "raw_sha256": "66171f4e16a15da1c76464118bb13b789ddf38f667d42cf5b0aeb355758e32b7",
+      "published_sha256": "66171f4e16a15da1c76464118bb13b789ddf38f667d42cf5b0aeb355758e32b7",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/old_model_diagnostics.py",
+      "raw_sha256": "e25a6afd2dc72e2eb7edf5c953ad3e19b586654005f588af741f4d3b6c8d62bb",
+      "published_sha256": "e25a6afd2dc72e2eb7edf5c953ad3e19b586654005f588af741f4d3b6c8d62bb",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/promotion-policy-unchanged.json",
+      "raw_sha256": "3cf21c2133323ef5c29ee15b54bcf56878fc9faed576ad3fc0b2a4fe820e996b",
+      "published_sha256": "623ead931df5ae06916b94c01dd4849755418b8a6f3f5c59408b6196c98405bf",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/public-reproduction.log",
+      "raw_sha256": "ae006bd60fff7594f4b46d89d93d01f31d1cb6a16acd1891125577fea07c16db",
+      "published_sha256": "9ae432ee931b5bd95e1ef5e0588496f16e25c54784928259ec669bff191da09e",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/python-validation.json",
+      "raw_sha256": "3dc69e3ae84eab4255fd85e00bfc1149940a1c8f819c949b47ce0a3bac497fe8",
+      "published_sha256": "45dec240733e518d3f504840fa32d3cff4b13ce8cf252a28603b36a99d275095",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/README.md",
+      "raw_sha256": "70ec230dbca2bdeefcd8c9459230507ead3790440ea900e77f1a6234a73790a7",
+      "published_sha256": "dcded8aa8ee41a0ff52848e5a266cf288b529086e3a5f80664d89cd9c6a5472c",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/run_validations.py",
+      "raw_sha256": "b69a00d5bb01c1866511e303cacece292ed028898ce3da548234abc4a9c115b2",
+      "published_sha256": "88ce47ff764427f99641e22e40244fb5f68b950b862efbd11adbc49dab196e3b",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/speed_aggregate.py",
+      "raw_sha256": "93abb1c21bc7e720b304602520cd6ad15c938b1bd26d6fee0ae287416382718c",
+      "published_sha256": "93abb1c21bc7e720b304602520cd6ad15c938b1bd26d6fee0ae287416382718c",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/trained_model_parity.py",
+      "raw_sha256": "40d188f1cdb5b5ee5a8bc319b83c155747e78dfe77b41ce7c40cd55dcda35581",
+      "published_sha256": "322dfa18bf8f5d1e70a726cd9931405187f6fe4891753be6b5d24af16e117c1a",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/uci-integration.log",
+      "raw_sha256": "3b28c346a673e9b212e348ca29106a039f79b0df6733abf25673b39821a90504",
+      "published_sha256": "b8210286c3bc3dd9f96b5b63731888833d4a0a1ec40b5e31c91c862af0f0f7fc",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/v1-bitcompat.json",
+      "raw_sha256": "a3e7a937b45c2e0eaddebff56d2c003018c12b8a7a997b4792cbf9d70576dfab",
+      "published_sha256": "a3e7a937b45c2e0eaddebff56d2c003018c12b8a7a997b4792cbf9d70576dfab",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/v1-failure-diagnosis.json",
+      "raw_sha256": "3c232980b2df907109d92fb8a21f5027d64df03ad9bb61dde48380c73286214c",
+      "published_sha256": "cfedd14f1aefc6642b9928435eb82b4b032ed00e5e779a66397c34c0d2074945",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/validate-linux-main.sh",
+      "raw_sha256": "04156788bc84e03241875e909633c3634cd2e12f1c4281dc460d13b336721a91",
+      "published_sha256": "b541f712e62b061fda38c11aa9d548aa509f1006da56db65159edaee3c5aedf3",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/validate-linux.sh",
+      "raw_sha256": "a6382950df49263c471899d10a506bd3ef35aec539e3a695d89c9e63efe819f4",
+      "published_sha256": "7576207fac59fb4f8c120f91b8f399e49956eaf10a11ecd28f316e6471cb7c41",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/validation-summary.json",
+      "raw_sha256": "ea44312f5caadc8c6800554e4ea357603ddd5a8360876dc4ae998c9500222ea3",
+      "published_sha256": "7b819696557717536a89feb754f00c03254189566bb7095c460b6dfaa6cd82b7",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    },
+    {
+      "path": "validation/verify_v1_bitcompat.py",
+      "raw_sha256": "f9992ab2194b0224356cc36f5809de203c53a9ea49f9e8257013e58866d4b17f",
+      "published_sha256": "f9992ab2194b0224356cc36f5809de203c53a9ea49f9e8257013e58866d4b17f",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/write_audit_inventory.py",
+      "raw_sha256": "8dfedf3e481318f7c6435ec9cd93622f142c10cff4caeab7d6fcc6fdd8f96a92",
+      "published_sha256": "8dfedf3e481318f7c6435ec9cd93622f142c10cff4caeab7d6fcc6fdd8f96a92",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux/linux-environment.txt",
+      "raw_sha256": "655cb0894793b5c864b8b247d13f88f7050fd50b656579e9437a2c067fe9266e",
+      "published_sha256": "655cb0894793b5c864b8b247d13f88f7050fd50b656579e9437a2c067fe9266e",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux/linux-native.log",
+      "raw_sha256": "8b4188152558ac1bb4a9adf5e034dae73edf1605c99d2d415aea3641f4380de0",
+      "published_sha256": "8b4188152558ac1bb4a9adf5e034dae73edf1605c99d2d415aea3641f4380de0",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/linux/linux-sanitizers.log",
+      "raw_sha256": "025cd58eb701df6ea235e15959c9356d1c6ca0db5bb3545f84da11e33db32739",
+      "published_sha256": "025cd58eb701df6ea235e15959c9356d1c6ca0db5bb3545f84da11e33db32739",
+      "transformation": "text path redaction and UTF-8/LF normalization"
+    },
+    {
+      "path": "validation/public-reproduction-report.json",
+      "raw_sha256": "3f3a186a037e74bccefe51b7187517e2ae0fbb85811fcbd336073f7365d1155a",
+      "published_sha256": "3f3a186a037e74bccefe51b7187517e2ae0fbb85811fcbd336073f7365d1155a",
+      "transformation": "json path redaction and UTF-8/LF serialization"
+    }
+  ],
+  "authored_files": [
+    {
+      "path": "deployment.json",
+      "sha256": "3225d9b6f41048d3a72ecd47c3af1c8c19425f3e28a7b1a580e5b181b2ce5fe4"
+    },
+    {
+      "path": "README.md",
+      "sha256": "1c71550ec7d1acd56b9c385a21d0486070108111da6f7bc2d49cff64d14bc12b"
+    }
+  ],
+  "related_documentation": [
+    {
+      "path": "docs/CONTINUAL_LEARNING.md",
+      "sha256": "437999ae08492754465f32485aeb6d8f3bac64b37ce831c84d57a75837484b9f"
+    },
+    {
+      "path": "docs/experiments/2026-10-19-neural-residual-plan.md",
+      "sha256": "30c7a4616576010d3d4f2fabac1b27330dde1a2c6497f8cc5f3cbdb186a68e11"
+    }
+  ]
+}

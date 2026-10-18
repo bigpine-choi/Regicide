@@ -1,0 +1,33 @@
+{
+  "schema": "regicide.neural.fresh-reporting-holdout.v1",
+  "status": "complete",
+  "candidate_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+  "old_model_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+  "data_sha256": "6f186d696d1b98a28343e4cfe51186b3907e67aa424510e58ae48c2bef86d66e",
+  "corpus_sha256": "d290d79b60745fcfa23596ca0e7a44bf6c90cf4d466f2badc54c031cc6f3b535",
+  "sample_count": 178,
+  "excluded_seen_exact_neural_inputs": 0,
+  "turn_counts": {
+    "w": 93,
+    "b": 85
+  },
+  "metrics": {
+    "classical": {
+      "mae_cp": 104.45505617977528,
+      "rmse_cp": 195.85394982721525,
+      "teacher_only_tanh_mse": 0.038710974511558874
+    },
+    "old_v1": {
+      "mae_cp": 155.48314606741573,
+      "rmse_cp": 227.5592773742726,
+      "teacher_only_tanh_mse": 0.050635427058341634
+    },
+    "new_v2": {
+      "mae_cp": 116.29775280898876,
+      "rmse_cp": 194.3095092713129,
+      "teacher_only_tanh_mse": 0.03643357301696468
+    }
+  },
+  "policy": "New collection validation/test families only; exclude exact neural inputs in any previous labeled source or current corpus. Read only after candidate selection and arena complete. Reporting only, no retraining or tuning follows. Same teacher cp target for all models; no old/new training-loss metric comparison.",
+  "limitations": "Finite 10000-node own-engine teacher, small correlated samples, no independent truth or playing-strength claim."
+}

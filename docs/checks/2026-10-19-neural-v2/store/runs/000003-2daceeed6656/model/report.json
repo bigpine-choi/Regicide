@@ -1,0 +1,884 @@
+{
+  "architecture": [
+    768,
+    32,
+    16,
+    1
+  ],
+  "baseline": "classical_cp_stm; pawn shield and pawn structure enabled",
+  "batch_size": 64,
+  "correction": "100*tanh(z)",
+  "correction_cap_cp": 100,
+  "dataset": {
+    "collector_exclusions": {
+      "diagnosed_labels_replaced": 17,
+      "diagnosed_positions_added": 48,
+      "duplicate_games_coalesced": 1,
+      "duplicate_train_neural_inputs_replaced": 20,
+      "later_holdout_games_ignored": 36,
+      "same_game_ply_labels_replaced": 15,
+      "unselected_source_samples": 561
+    },
+    "counts": {
+      "test": {
+        "families": 3,
+        "games": 6,
+        "samples": 125
+      },
+      "train": {
+        "families": 10,
+        "games": 79,
+        "samples": 1327
+      },
+      "validation": {
+        "families": 3,
+        "games": 6,
+        "samples": 96
+      }
+    },
+    "exclusions": {},
+    "family_splits": {
+      "alekhine": "test",
+      "budapest": "test",
+      "caro-kann": "train",
+      "dutch": "validation",
+      "english": "train",
+      "french": "train",
+      "italian": "train",
+      "kings-indian": "train",
+      "nimzo-indian": "test",
+      "pirc": "validation",
+      "queens-gambit": "train",
+      "ruy-lopez": "train",
+      "scandinavian": "validation",
+      "scotch": "train",
+      "sicilian": "train",
+      "slav": "train"
+    },
+    "model_version": 2,
+    "raw_sha256": {
+      "games": "4b09a8d07c087edc63db6fc602270dcca45ea49f83b25453c14202a8293ed703",
+      "manifest": "d290d79b60745fcfa23596ca0e7a44bf6c90cf4d466f2badc54c031cc6f3b535",
+      "positions": "52ed61820c3707a4b0cedfe5c106f56ab896010649fcda83b5359141a544c528"
+    },
+    "schema": "regicide.selfplay.dataset.v1",
+    "total_games": 91,
+    "turn_distribution": {
+      "test": {
+        "b": 0,
+        "w": 125
+      },
+      "train": {
+        "b": 188,
+        "w": 1139
+      },
+      "validation": {
+        "b": 0,
+        "w": 96
+      }
+    }
+  },
+  "environment": {
+    "arithmetic": "float64 CPU",
+    "blas": "{'name': 'scipy-openblas', 'found': True, 'version': '0.3.30', 'detection method': 'pkgconfig', 'include directory': 'C:/Users/runneradmin/AppData/Local/Temp/cibw-run-tire4up4/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/include', 'lib directory': 'C:/Users/runneradmin/AppData/Local/Temp/cibw-run-tire4up4/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/lib', 'openblas configuration': 'OpenBLAS 0.3.30  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Haswell MAX_THREADS=24', 'pc file directory': 'D:/a/numpy-release/numpy-release/.openblas'}",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.16",
+    "python_chess": "1.11.2",
+    "threads": 1
+  },
+  "epochs": 100,
+  "finished_utc": "2026-10-18T15:34:26.200334+00:00",
+  "history": [
+    {
+      "epoch": 0,
+      "train_l2_penalty": 0.004882340258654385,
+      "train_mse": 0.042224568616639195,
+      "train_total_loss": 0.04710690887529358,
+      "validation_mse": 0.04859568136537474
+    },
+    {
+      "epoch": 1,
+      "train_l2_penalty": 0.0019712553777971095,
+      "train_mse": 0.036420128281491784,
+      "train_total_loss": 0.038391383659288895,
+      "validation_mse": 0.042757564944287126
+    },
+    {
+      "epoch": 2,
+      "train_l2_penalty": 0.0014111142520518121,
+      "train_mse": 0.0353371906396471,
+      "train_total_loss": 0.03674830489169891,
+      "validation_mse": 0.04235914600032711
+    },
+    {
+      "epoch": 3,
+      "train_l2_penalty": 0.0013599630010491103,
+      "train_mse": 0.03374751771648543,
+      "train_total_loss": 0.03510748071753454,
+      "validation_mse": 0.04175042406594994
+    },
+    {
+      "epoch": 4,
+      "train_l2_penalty": 0.0014773571122258776,
+      "train_mse": 0.032224412842985495,
+      "train_total_loss": 0.033701769955211375,
+      "validation_mse": 0.04190835421613546
+    },
+    {
+      "epoch": 5,
+      "train_l2_penalty": 0.0015704562042308458,
+      "train_mse": 0.03120886180937538,
+      "train_total_loss": 0.03277931801360623,
+      "validation_mse": 0.042403323048007424
+    },
+    {
+      "epoch": 6,
+      "train_l2_penalty": 0.0016458276528032603,
+      "train_mse": 0.030598390990959397,
+      "train_total_loss": 0.03224421864376266,
+      "validation_mse": 0.042432926771791744
+    },
+    {
+      "epoch": 7,
+      "train_l2_penalty": 0.0017264327310681706,
+      "train_mse": 0.02977722937022591,
+      "train_total_loss": 0.03150366210129408,
+      "validation_mse": 0.042708715311670954
+    },
+    {
+      "epoch": 8,
+      "train_l2_penalty": 0.0017611796799526813,
+      "train_mse": 0.029654450501446623,
+      "train_total_loss": 0.031415630181399305,
+      "validation_mse": 0.04391165183862916
+    },
+    {
+      "epoch": 9,
+      "train_l2_penalty": 0.0017997889918770476,
+      "train_mse": 0.029046535618971695,
+      "train_total_loss": 0.03084632461084874,
+      "validation_mse": 0.04385717839754843
+    },
+    {
+      "epoch": 10,
+      "train_l2_penalty": 0.001844041228542639,
+      "train_mse": 0.028120835178425365,
+      "train_total_loss": 0.029964876406968002,
+      "validation_mse": 0.043988316783542265
+    },
+    {
+      "epoch": 11,
+      "train_l2_penalty": 0.0018600249538456085,
+      "train_mse": 0.027741436235603954,
+      "train_total_loss": 0.029601461189449563,
+      "validation_mse": 0.04334261873157017
+    },
+    {
+      "epoch": 12,
+      "train_l2_penalty": 0.001881004335748811,
+      "train_mse": 0.027968782612850202,
+      "train_total_loss": 0.029849786948599015,
+      "validation_mse": 0.04451847017477204
+    },
+    {
+      "epoch": 13,
+      "train_l2_penalty": 0.0018876461740174187,
+      "train_mse": 0.027250519535407677,
+      "train_total_loss": 0.029138165709425096,
+      "validation_mse": 0.04396797503713868
+    },
+    {
+      "epoch": 14,
+      "train_l2_penalty": 0.0019320136546681927,
+      "train_mse": 0.02740765898368958,
+      "train_total_loss": 0.029339672638357774,
+      "validation_mse": 0.04396730500171492
+    },
+    {
+      "epoch": 15,
+      "train_l2_penalty": 0.0019239118405994214,
+      "train_mse": 0.026827618567946996,
+      "train_total_loss": 0.028751530408546416,
+      "validation_mse": 0.04344928009212775
+    },
+    {
+      "epoch": 16,
+      "train_l2_penalty": 0.0018812583016873518,
+      "train_mse": 0.02667224865273903,
+      "train_total_loss": 0.02855350695442638,
+      "validation_mse": 0.04474293447129907
+    },
+    {
+      "epoch": 17,
+      "train_l2_penalty": 0.0018442309932366744,
+      "train_mse": 0.026545755360548928,
+      "train_total_loss": 0.028389986353785604,
+      "validation_mse": 0.044526286049912565
+    },
+    {
+      "epoch": 18,
+      "train_l2_penalty": 0.0018241026404702191,
+      "train_mse": 0.026308747947016816,
+      "train_total_loss": 0.028132850587487036,
+      "validation_mse": 0.045368730213475435
+    },
+    {
+      "epoch": 19,
+      "train_l2_penalty": 0.0018057698822331746,
+      "train_mse": 0.02617549575660543,
+      "train_total_loss": 0.027981265638838605,
+      "validation_mse": 0.045509882998203216
+    },
+    {
+      "epoch": 20,
+      "train_l2_penalty": 0.001785131429043226,
+      "train_mse": 0.02626827429735591,
+      "train_total_loss": 0.028053405726399135,
+      "validation_mse": 0.047268467612374
+    },
+    {
+      "epoch": 21,
+      "train_l2_penalty": 0.001792501371845934,
+      "train_mse": 0.026285502673339824,
+      "train_total_loss": 0.028078004045185758,
+      "validation_mse": 0.045258235173883034
+    },
+    {
+      "epoch": 22,
+      "train_l2_penalty": 0.0018353662493292902,
+      "train_mse": 0.026006664377529777,
+      "train_total_loss": 0.02784203062685907,
+      "validation_mse": 0.04453145471716315
+    },
+    {
+      "epoch": 23,
+      "train_l2_penalty": 0.001803611602905688,
+      "train_mse": 0.025898831334346544,
+      "train_total_loss": 0.02770244293725223,
+      "validation_mse": 0.04516593031063019
+    },
+    {
+      "epoch": 24,
+      "train_l2_penalty": 0.0017797250358158616,
+      "train_mse": 0.02591546128076212,
+      "train_total_loss": 0.02769518631657798,
+      "validation_mse": 0.04498865815223709
+    },
+    {
+      "epoch": 25,
+      "train_l2_penalty": 0.0017724351273948362,
+      "train_mse": 0.025768366737239094,
+      "train_total_loss": 0.02754080186463393,
+      "validation_mse": 0.04571608927025885
+    },
+    {
+      "epoch": 26,
+      "train_l2_penalty": 0.0017570019140336123,
+      "train_mse": 0.025883677830216043,
+      "train_total_loss": 0.027640679744249656,
+      "validation_mse": 0.043712899640415574
+    },
+    {
+      "epoch": 27,
+      "train_l2_penalty": 0.001748408797572581,
+      "train_mse": 0.025808514469714154,
+      "train_total_loss": 0.027556923267286735,
+      "validation_mse": 0.04499025513485646
+    },
+    {
+      "epoch": 28,
+      "train_l2_penalty": 0.0017692519887874817,
+      "train_mse": 0.026195288084980006,
+      "train_total_loss": 0.027964540073767488,
+      "validation_mse": 0.043735274418000965
+    },
+    {
+      "epoch": 29,
+      "train_l2_penalty": 0.0017765603241835825,
+      "train_mse": 0.025706275028650055,
+      "train_total_loss": 0.027482835352833638,
+      "validation_mse": 0.04435435701486939
+    },
+    {
+      "epoch": 30,
+      "train_l2_penalty": 0.0017699490910335104,
+      "train_mse": 0.02577930333830471,
+      "train_total_loss": 0.02754925242933822,
+      "validation_mse": 0.045326042344586724
+    },
+    {
+      "epoch": 31,
+      "train_l2_penalty": 0.0017443039016069837,
+      "train_mse": 0.025606105553105257,
+      "train_total_loss": 0.02735040945471224,
+      "validation_mse": 0.04289293773146922
+    },
+    {
+      "epoch": 32,
+      "train_l2_penalty": 0.0017394529164575477,
+      "train_mse": 0.02606975435683842,
+      "train_total_loss": 0.027809207273295968,
+      "validation_mse": 0.045910060057363866
+    },
+    {
+      "epoch": 33,
+      "train_l2_penalty": 0.00175647431164699,
+      "train_mse": 0.02570770267598673,
+      "train_total_loss": 0.02746417698763372,
+      "validation_mse": 0.04405882320031246
+    },
+    {
+      "epoch": 34,
+      "train_l2_penalty": 0.0017766697225372902,
+      "train_mse": 0.025498559529823415,
+      "train_total_loss": 0.027275229252360707,
+      "validation_mse": 0.0441336020265497
+    },
+    {
+      "epoch": 35,
+      "train_l2_penalty": 0.0017400822425659979,
+      "train_mse": 0.025429578638584905,
+      "train_total_loss": 0.027169660881150904,
+      "validation_mse": 0.04286594498671836
+    },
+    {
+      "epoch": 36,
+      "train_l2_penalty": 0.0017150035529858113,
+      "train_mse": 0.025623266034681316,
+      "train_total_loss": 0.02733826958766713,
+      "validation_mse": 0.042444999584758274
+    },
+    {
+      "epoch": 37,
+      "train_l2_penalty": 0.001689141804582432,
+      "train_mse": 0.025452166742459755,
+      "train_total_loss": 0.02714130854704219,
+      "validation_mse": 0.04361586877661155
+    },
+    {
+      "epoch": 38,
+      "train_l2_penalty": 0.0016783751252530477,
+      "train_mse": 0.025411331753906665,
+      "train_total_loss": 0.027089706879159712,
+      "validation_mse": 0.0421420693216796
+    },
+    {
+      "epoch": 39,
+      "train_l2_penalty": 0.0016734135849796915,
+      "train_mse": 0.0252981606509436,
+      "train_total_loss": 0.026971574235923293,
+      "validation_mse": 0.04328537229053003
+    },
+    {
+      "epoch": 40,
+      "train_l2_penalty": 0.0016634115969052943,
+      "train_mse": 0.02532642300080152,
+      "train_total_loss": 0.026989834597706812,
+      "validation_mse": 0.04368294388131697
+    },
+    {
+      "epoch": 41,
+      "train_l2_penalty": 0.0016467431002223944,
+      "train_mse": 0.025355728981739684,
+      "train_total_loss": 0.02700247208196208,
+      "validation_mse": 0.0448643061239948
+    },
+    {
+      "epoch": 42,
+      "train_l2_penalty": 0.001639527157630289,
+      "train_mse": 0.025262306632930415,
+      "train_total_loss": 0.026901833790560704,
+      "validation_mse": 0.042473429968309794
+    },
+    {
+      "epoch": 43,
+      "train_l2_penalty": 0.0016261177821870313,
+      "train_mse": 0.025435820591936106,
+      "train_total_loss": 0.027061938374123136,
+      "validation_mse": 0.04381413477199769
+    },
+    {
+      "epoch": 44,
+      "train_l2_penalty": 0.0016227320121896783,
+      "train_mse": 0.025230042952330275,
+      "train_total_loss": 0.026852774964519953,
+      "validation_mse": 0.043127378792573966
+    },
+    {
+      "epoch": 45,
+      "train_l2_penalty": 0.001615097740187375,
+      "train_mse": 0.025297549392413472,
+      "train_total_loss": 0.02691264713260085,
+      "validation_mse": 0.04234825118581916
+    },
+    {
+      "epoch": 46,
+      "train_l2_penalty": 0.001614526344524464,
+      "train_mse": 0.025313954447046854,
+      "train_total_loss": 0.026928480791571317,
+      "validation_mse": 0.04198017305549148
+    },
+    {
+      "epoch": 47,
+      "train_l2_penalty": 0.0016333300798756366,
+      "train_mse": 0.02527033546645005,
+      "train_total_loss": 0.026903665546325686,
+      "validation_mse": 0.042163937422157745
+    },
+    {
+      "epoch": 48,
+      "train_l2_penalty": 0.0016186813714287134,
+      "train_mse": 0.025372239089026943,
+      "train_total_loss": 0.026990920460455658,
+      "validation_mse": 0.042285365902428464
+    },
+    {
+      "epoch": 49,
+      "train_l2_penalty": 0.001618693145271903,
+      "train_mse": 0.02526762946069371,
+      "train_total_loss": 0.02688632260596561,
+      "validation_mse": 0.04250725929102348
+    },
+    {
+      "epoch": 50,
+      "train_l2_penalty": 0.0016277655668235139,
+      "train_mse": 0.02564236385983985,
+      "train_total_loss": 0.027270129426663365,
+      "validation_mse": 0.042101771354050695
+    },
+    {
+      "epoch": 51,
+      "train_l2_penalty": 0.001631751483129831,
+      "train_mse": 0.02529089187684369,
+      "train_total_loss": 0.026922643359973523,
+      "validation_mse": 0.04310426786712982
+    },
+    {
+      "epoch": 52,
+      "train_l2_penalty": 0.0016156674865283258,
+      "train_mse": 0.02525731428494487,
+      "train_total_loss": 0.026872981771473195,
+      "validation_mse": 0.04204248872181451
+    },
+    {
+      "epoch": 53,
+      "train_l2_penalty": 0.0016264679503079393,
+      "train_mse": 0.025400488716927364,
+      "train_total_loss": 0.027026956667235303,
+      "validation_mse": 0.04347839036525277
+    },
+    {
+      "epoch": 54,
+      "train_l2_penalty": 0.0016321546026463428,
+      "train_mse": 0.025327764046949988,
+      "train_total_loss": 0.02695991864959633,
+      "validation_mse": 0.042809386572953474
+    },
+    {
+      "epoch": 55,
+      "train_l2_penalty": 0.001628761038991923,
+      "train_mse": 0.02522160092131207,
+      "train_total_loss": 0.026850361960303992,
+      "validation_mse": 0.04163049985246348
+    },
+    {
+      "epoch": 56,
+      "train_l2_penalty": 0.001610862905000687,
+      "train_mse": 0.02516802703517554,
+      "train_total_loss": 0.026778889940176225,
+      "validation_mse": 0.04240125825359833
+    },
+    {
+      "epoch": 57,
+      "train_l2_penalty": 0.0015886775217958402,
+      "train_mse": 0.0251147742734971,
+      "train_total_loss": 0.02670345179529294,
+      "validation_mse": 0.041860068840781896
+    },
+    {
+      "epoch": 58,
+      "train_l2_penalty": 0.0015751073796182876,
+      "train_mse": 0.02515723975899887,
+      "train_total_loss": 0.026732347138617156,
+      "validation_mse": 0.043078441376245474
+    },
+    {
+      "epoch": 59,
+      "train_l2_penalty": 0.0015715511472665937,
+      "train_mse": 0.025174320010844776,
+      "train_total_loss": 0.02674587115811137,
+      "validation_mse": 0.04318014612021472
+    },
+    {
+      "epoch": 60,
+      "train_l2_penalty": 0.0015903113611971254,
+      "train_mse": 0.02544636983114335,
+      "train_total_loss": 0.027036681192340473,
+      "validation_mse": 0.045954401497415885
+    },
+    {
+      "epoch": 61,
+      "train_l2_penalty": 0.0016317931925629253,
+      "train_mse": 0.025292150344676075,
+      "train_total_loss": 0.026923943537239002,
+      "validation_mse": 0.04103797302463677
+    },
+    {
+      "epoch": 62,
+      "train_l2_penalty": 0.001620291775759844,
+      "train_mse": 0.025145633259010047,
+      "train_total_loss": 0.02676592503476989,
+      "validation_mse": 0.0428521813456472
+    },
+    {
+      "epoch": 63,
+      "train_l2_penalty": 0.001605756667617438,
+      "train_mse": 0.025211975380691747,
+      "train_total_loss": 0.026817732048309183,
+      "validation_mse": 0.04197358344270626
+    },
+    {
+      "epoch": 64,
+      "train_l2_penalty": 0.0015930503777350346,
+      "train_mse": 0.02518987368775831,
+      "train_total_loss": 0.026782924065493346,
+      "validation_mse": 0.042901406053844515
+    },
+    {
+      "epoch": 65,
+      "train_l2_penalty": 0.0016016484393737913,
+      "train_mse": 0.025278359528035768,
+      "train_total_loss": 0.02688000796740956,
+      "validation_mse": 0.041930866519232196
+    },
+    {
+      "epoch": 66,
+      "train_l2_penalty": 0.0015852639185207548,
+      "train_mse": 0.025112410045178602,
+      "train_total_loss": 0.026697673963699358,
+      "validation_mse": 0.04204244524751822
+    },
+    {
+      "epoch": 67,
+      "train_l2_penalty": 0.0015944979812125447,
+      "train_mse": 0.025116443041742056,
+      "train_total_loss": 0.026710941022954602,
+      "validation_mse": 0.0417427576600182
+    },
+    {
+      "epoch": 68,
+      "train_l2_penalty": 0.0015831154655967148,
+      "train_mse": 0.025210041800100284,
+      "train_total_loss": 0.026793157265696997,
+      "validation_mse": 0.044745158008604714
+    },
+    {
+      "epoch": 69,
+      "train_l2_penalty": 0.0015877610437329724,
+      "train_mse": 0.025387119857175316,
+      "train_total_loss": 0.02697488090090829,
+      "validation_mse": 0.04158301089077066
+    },
+    {
+      "epoch": 70,
+      "train_l2_penalty": 0.001609973261104746,
+      "train_mse": 0.025258330200827975,
+      "train_total_loss": 0.02686830346193272,
+      "validation_mse": 0.042429838479700686
+    },
+    {
+      "epoch": 71,
+      "train_l2_penalty": 0.0016210679120403286,
+      "train_mse": 0.02517423512851777,
+      "train_total_loss": 0.026795303040558098,
+      "validation_mse": 0.0435469906943759
+    },
+    {
+      "epoch": 72,
+      "train_l2_penalty": 0.0016698428390643629,
+      "train_mse": 0.02508216224856032,
+      "train_total_loss": 0.026752005087624684,
+      "validation_mse": 0.04234961199170517
+    },
+    {
+      "epoch": 73,
+      "train_l2_penalty": 0.0016404068989856633,
+      "train_mse": 0.02512841595889521,
+      "train_total_loss": 0.026768822857880875,
+      "validation_mse": 0.04158108653851588
+    },
+    {
+      "epoch": 74,
+      "train_l2_penalty": 0.0016152220839929633,
+      "train_mse": 0.025046594049885382,
+      "train_total_loss": 0.026661816133878347,
+      "validation_mse": 0.042725795747012664
+    },
+    {
+      "epoch": 75,
+      "train_l2_penalty": 0.0015990620034259685,
+      "train_mse": 0.02509806702977108,
+      "train_total_loss": 0.02669712903319705,
+      "validation_mse": 0.04204315191793052
+    },
+    {
+      "epoch": 76,
+      "train_l2_penalty": 0.0015922360749429662,
+      "train_mse": 0.025060266184999624,
+      "train_total_loss": 0.02665250225994259,
+      "validation_mse": 0.04425467591333552
+    },
+    {
+      "epoch": 77,
+      "train_l2_penalty": 0.0015687495793983517,
+      "train_mse": 0.025001467226652856,
+      "train_total_loss": 0.026570216806051206,
+      "validation_mse": 0.04255137505114656
+    },
+    {
+      "epoch": 78,
+      "train_l2_penalty": 0.001583044200530838,
+      "train_mse": 0.025036237409694004,
+      "train_total_loss": 0.02661928161022484,
+      "validation_mse": 0.0426184156430684
+    },
+    {
+      "epoch": 79,
+      "train_l2_penalty": 0.0015686358863682998,
+      "train_mse": 0.025076012277199425,
+      "train_total_loss": 0.026644648163567725,
+      "validation_mse": 0.04412168938804759
+    },
+    {
+      "epoch": 80,
+      "train_l2_penalty": 0.0015619276655850956,
+      "train_mse": 0.025024117645664597,
+      "train_total_loss": 0.026586045311249692,
+      "validation_mse": 0.04367336054460121
+    },
+    {
+      "epoch": 81,
+      "train_l2_penalty": 0.001555292449796155,
+      "train_mse": 0.02499449050336062,
+      "train_total_loss": 0.026549782953156777,
+      "validation_mse": 0.043333716266564036
+    },
+    {
+      "epoch": 82,
+      "train_l2_penalty": 0.001553870810827008,
+      "train_mse": 0.025031420598878692,
+      "train_total_loss": 0.0265852914097057,
+      "validation_mse": 0.044071973280971656
+    },
+    {
+      "epoch": 83,
+      "train_l2_penalty": 0.0015325568891156483,
+      "train_mse": 0.025147708161166335,
+      "train_total_loss": 0.02668026505028198,
+      "validation_mse": 0.04370365611885113
+    },
+    {
+      "epoch": 84,
+      "train_l2_penalty": 0.0015472079419683936,
+      "train_mse": 0.025196800281590666,
+      "train_total_loss": 0.02674400822355906,
+      "validation_mse": 0.043101080067872534
+    },
+    {
+      "epoch": 85,
+      "train_l2_penalty": 0.0015484468797128048,
+      "train_mse": 0.025063569168622804,
+      "train_total_loss": 0.02661201604833561,
+      "validation_mse": 0.04271432563614889
+    },
+    {
+      "epoch": 86,
+      "train_l2_penalty": 0.001559839624062675,
+      "train_mse": 0.02503773486003674,
+      "train_total_loss": 0.026597574484099412,
+      "validation_mse": 0.04254780464288899
+    },
+    {
+      "epoch": 87,
+      "train_l2_penalty": 0.001564063432552748,
+      "train_mse": 0.025016221157907526,
+      "train_total_loss": 0.026580284590460274,
+      "validation_mse": 0.04239761384698403
+    },
+    {
+      "epoch": 88,
+      "train_l2_penalty": 0.001554352699002081,
+      "train_mse": 0.025005667274823663,
+      "train_total_loss": 0.026560019973825743,
+      "validation_mse": 0.042000595788809915
+    },
+    {
+      "epoch": 89,
+      "train_l2_penalty": 0.001560732222864593,
+      "train_mse": 0.02504893395481439,
+      "train_total_loss": 0.026609666177678983,
+      "validation_mse": 0.04206537001344218
+    },
+    {
+      "epoch": 90,
+      "train_l2_penalty": 0.0015762020577579962,
+      "train_mse": 0.025152439942962124,
+      "train_total_loss": 0.02672864200072012,
+      "validation_mse": 0.041761168688490335
+    },
+    {
+      "epoch": 91,
+      "train_l2_penalty": 0.0015724456655708523,
+      "train_mse": 0.02501777500056038,
+      "train_total_loss": 0.02659022066613123,
+      "validation_mse": 0.042406455878392396
+    },
+    {
+      "epoch": 92,
+      "train_l2_penalty": 0.0015746453349893596,
+      "train_mse": 0.02494738500068886,
+      "train_total_loss": 0.02652203033567822,
+      "validation_mse": 0.04216476302850839
+    },
+    {
+      "epoch": 93,
+      "train_l2_penalty": 0.0015565991280593616,
+      "train_mse": 0.02496829169556858,
+      "train_total_loss": 0.02652489082362794,
+      "validation_mse": 0.043474918237276304
+    },
+    {
+      "epoch": 94,
+      "train_l2_penalty": 0.001554542163745601,
+      "train_mse": 0.02496619034077889,
+      "train_total_loss": 0.02652073250452449,
+      "validation_mse": 0.042529331522520496
+    },
+    {
+      "epoch": 95,
+      "train_l2_penalty": 0.0015540250312582426,
+      "train_mse": 0.024926050051236118,
+      "train_total_loss": 0.02648007508249436,
+      "validation_mse": 0.042778260621981944
+    },
+    {
+      "epoch": 96,
+      "train_l2_penalty": 0.0015354754601759064,
+      "train_mse": 0.02506516917170473,
+      "train_total_loss": 0.026600644631880634,
+      "validation_mse": 0.041554211797881234
+    },
+    {
+      "epoch": 97,
+      "train_l2_penalty": 0.001544988379955566,
+      "train_mse": 0.025126766672015275,
+      "train_total_loss": 0.026671755051970843,
+      "validation_mse": 0.04131349793659553
+    },
+    {
+      "epoch": 98,
+      "train_l2_penalty": 0.0015564869139454355,
+      "train_mse": 0.025066105043369834,
+      "train_total_loss": 0.02662259195731527,
+      "validation_mse": 0.04260574544453306
+    },
+    {
+      "epoch": 99,
+      "train_l2_penalty": 0.0015506102966237252,
+      "train_mse": 0.025136170037291707,
+      "train_total_loss": 0.026686780333915434,
+      "validation_mse": 0.043103682875973326
+    },
+    {
+      "epoch": 100,
+      "train_l2_penalty": 0.0015601759740936675,
+      "train_mse": 0.025035088226520716,
+      "train_total_loss": 0.026595264200614383,
+      "validation_mse": 0.042079609826344545
+    }
+  ],
+  "implementation_sha256": {
+    "classical_evaluation.py": "a0c3fd595489de48e84d6eb755bee7eb942f5edde7c1c46cd0165a0a0e5c19f4",
+    "neural_model.py": "636197921200439c5dcd2dc9a5e61a21600a42cfa56b304e9c38a4f36ae95268",
+    "train_neural.py": "c672b7b2e8d877f2c854c3e9f287d911ae204fbb556c9c9347bcaf01f8222dd5"
+  },
+  "initial_model_sha256": null,
+  "initialization": "seeded_random",
+  "l2": {
+    "biases_regularized": false,
+    "coefficient": 0.0001,
+    "formula": "0.5*coefficient*sum(weight_matrices^2)",
+    "matrices": [
+      "w1",
+      "w2",
+      "w3"
+    ]
+  },
+  "learning_rate": 0.003,
+  "loss": "mean((tanh((classical_cp_stm+100*tanh(z))/600)-target)^2)+matrix_only_L2",
+  "loss_components": {
+    "selected_l2_penalty": 0.0016317931925629253,
+    "selected_train_mse": 0.025292150344676075,
+    "selected_train_total": 0.026923943537239002,
+    "validation_selection": "MSE only; L2 is a training penalty"
+  },
+  "metrics": {
+    "test": {
+      "classical_only_mse": 0.03648879805425692,
+      "initial_mse": 0.03648879805425692,
+      "selected_mse": 0.036181570808213284
+    },
+    "train": {
+      "classical_only_mse": 0.042224568616639195,
+      "initial_mse": 0.042224568616639195,
+      "selected_mse": 0.025292150344676075
+    },
+    "validation": {
+      "classical_only_mse": 0.04859568136537474,
+      "initial_mse": 0.04859568136537474,
+      "selected_mse": 0.04103797302463677
+    }
+  },
+  "model_format": "REGICIDE_NN_V2",
+  "model_path": "small-v2.nn",
+  "model_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+  "model_version": 2,
+  "optimizer": {
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "checkpoint_policy": "weights only; moments and step counter reset each run",
+    "epsilon": 1e-08,
+    "gradient_norm_clip": 10,
+    "name": "Adam",
+    "state_reset": true
+  },
+  "parameter_count": 25153,
+  "parameters_per_training_sample": 18.954785229841747,
+  "rng": "NumPy default_rng PCG64",
+  "scale_cp": 600,
+  "schema": "regicide.neural.training.v1",
+  "seed": 20264045,
+  "selected_epoch": 61,
+  "selection": "lowest validation MSE; strict improvement; earliest tie; epoch 0 eligible",
+  "split_policy": "predeclared opening families; no cross-split games/families/canonical positions/exact neural inputs",
+  "started_utc": "2026-10-18T15:34:22.987203+00:00",
+  "status": "complete",
+  "strength_status": "unmeasured; validation loss is not playing-strength evidence",
+  "target": "tanh(teacher_cp_stm/600); outcomes retained for integrity checks only",
+  "test_policy": "one final assessment after validation selection; no tuning on test labels",
+  "turn_distribution": {
+    "test": {
+      "b": 0,
+      "w": 125
+    },
+    "train": {
+      "b": 188,
+      "w": 1139
+    },
+    "validation": {
+      "b": 0,
+      "w": 96
+    }
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "schema": "regicide.old-arena-throughput-diagnosis.v1",
+  "generated_utc": "2026-10-18T15:22:32.374921+00:00",
+  "scope": "Stored match aggregates on different positions; not an isolated inference benchmark, not a new strength experiment.",
+  "data_use": "Aggregate engineering diagnosis only; protected arena positions/moves/labels are not exported for training or development selection.",
+  "runs": [
+    {
+      "run": "000001-88bbee0e1ae3",
+      "source_path": "build/learning-cycle/runs/000001-88bbee0e1ae3/arena/arena.json",
+      "source_sha256": "d04be086d01674031ab56e730fb10fa29384f99d33929f35d60bc296730c5a72",
+      "attempt_index": 1,
+      "status": "failed",
+      "excluded_from_comparison": true,
+      "binary_sha256": "573804ed05e6b2d99addb7dceca61566f546da8f401586e310efcc4e6e19176c",
+      "candidate_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69",
+      "movetime_ms": 100,
+      "requested_pairs": 32,
+      "recorded_games": 34,
+      "resource_guard": {
+        "valid_for_comparison": false,
+        "contaminated": true,
+        "failure": {
+          "utc": "2026-10-18T13:59:49.462032+00:00",
+          "reason": "CPU sampling gap exceeded the fail-closed 2 second bound",
+          "kind": "sampling_gap",
+          "retry_allowed": true
+        },
+        "snapshot_count": 513,
+        "max_snapshot_gap_seconds": 339.23103830000036,
+        "external_cpu_increase_ticks": 0
+      }
+    },
+    {
+      "run": "000002-95a3500d5501",
+      "source_path": "build/learning-cycle/runs/000002-95a3500d5501/arena/arena.json",
+      "source_sha256": "ffbe3e44c0825189903eba7f1894864cd42b266b7577b81d59e8f08094316ecc",
+      "attempt_index": 2,
+      "status": "complete",
+      "excluded_from_comparison": false,
+      "binary_sha256": "573804ed05e6b2d99addb7dceca61566f546da8f401586e310efcc4e6e19176c",
+      "candidate_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+      "movetime_ms": 100,
+      "requested_pairs": 32,
+      "recorded_games": 64,
+      "resource_guard": {
+        "valid_for_comparison": true,
+        "contaminated": false,
+        "failure": null,
+        "snapshot_count": 1096,
+        "max_snapshot_gap_seconds": 0.529205600003479,
+        "external_cpu_increase_ticks": 0
+      },
+      "roles": {
+        "baseline": {
+          "moves": 2598,
+          "moves_with_nodes_and_time": 2598,
+          "reported_nodes": 136480029,
+          "transport_seconds": 264.151191,
+          "weighted_nodes_per_second": 516673.91119201883,
+          "median_move_nodes_per_second": 489229.3260021977,
+          "median_completed_depth": 4.0,
+          "mean_completed_depth": 4.434180138568129,
+          "depth_counts": {
+            "1": 1,
+            "2": 19,
+            "3": 470,
+            "4": 1033,
+            "5": 691,
+            "6": 257,
+            "7": 89,
+            "8": 23,
+            "9": 15
+          },
+          "mean_move_seconds": 0.1016748233256351
+        },
+        "candidate": {
+          "moves": 2579,
+          "moves_with_nodes_and_time": 2579,
+          "reported_nodes": 120459962,
+          "transport_seconds": 262.224192,
+          "weighted_nodes_per_second": 459377.7602335028,
+          "median_move_nodes_per_second": 431145.8251046686,
+          "median_completed_depth": 4,
+          "mean_completed_depth": 4.433889104303994,
+          "depth_counts": {
+            "1": 3,
+            "2": 20,
+            "3": 284,
+            "4": 1257,
+            "5": 696,
+            "6": 235,
+            "7": 57,
+            "8": 20,
+            "9": 7
+          },
+          "mean_move_seconds": 0.10167669329197364
+        }
+      },
+      "candidate_to_baseline_weighted_nps_ratio": 0.8891057788725425,
+      "piece_count_buckets": [
+        {
+          "bucket": "13-24 pieces",
+          "role": "baseline",
+          "moves": 1128,
+          "moves_with_nodes_and_time": 1128,
+          "reported_nodes": 58389378,
+          "transport_seconds": 114.69669,
+          "weighted_nodes_per_second": 509076.39967639867,
+          "median_move_nodes_per_second": 500044.4350410446,
+          "median_completed_depth": 4.0,
+          "mean_completed_depth": 4.345744680851064,
+          "depth_counts": {
+            "1": 1,
+            "2": 7,
+            "3": 218,
+            "4": 429,
+            "5": 345,
+            "6": 104,
+            "7": 24
+          },
+          "mean_move_seconds": 0.10168146276595745
+        },
+        {
+          "bucket": "13-24 pieces",
+          "role": "candidate",
+          "moves": 1132,
+          "moves_with_nodes_and_time": 1132,
+          "reported_nodes": 52101314,
+          "transport_seconds": 115.108704,
+          "weighted_nodes_per_second": 452627.05763762223,
+          "median_move_nodes_per_second": 445016.98534952215,
+          "median_completed_depth": 4.0,
+          "mean_completed_depth": 4.307420494699647,
+          "depth_counts": {
+            "1": 2,
+            "2": 11,
+            "3": 140,
+            "4": 544,
+            "5": 355,
+            "6": 79,
+            "7": 1
+          },
+          "mean_move_seconds": 0.10168613427561837
+        },
+        {
+          "bucket": "25-32 pieces",
+          "role": "baseline",
+          "moves": 894,
+          "moves_with_nodes_and_time": 894,
+          "reported_nodes": 39327964,
+          "transport_seconds": 90.799957,
+          "weighted_nodes_per_second": 433127.56194366916,
+          "median_move_nodes_per_second": 425248.41942856216,
+          "median_completed_depth": 4.0,
+          "mean_completed_depth": 3.972035794183445,
+          "depth_counts": {
+            "2": 12,
+            "3": 215,
+            "4": 471,
+            "5": 178,
+            "6": 18
+          },
+          "mean_move_seconds": 0.10156594742729307
+        },
+        {
+          "bucket": "25-32 pieces",
+          "role": "candidate",
+          "moves": 889,
+          "moves_with_nodes_and_time": 889,
+          "reported_nodes": 35343951,
+          "transport_seconds": 90.291983,
+          "weighted_nodes_per_second": 391440.63321768004,
+          "median_move_nodes_per_second": 388546.6530644275,
+          "median_completed_depth": 4,
+          "mean_completed_depth": 3.971878515185602,
+          "depth_counts": {
+            "1": 1,
+            "2": 9,
+            "3": 144,
+            "4": 600,
+            "5": 130,
+            "6": 5
+          },
+          "mean_move_seconds": 0.10156578515185602
+        },
+        {
+          "bucket": "<=12 pieces",
+          "role": "baseline",
+          "moves": 576,
+          "moves_with_nodes_and_time": 576,
+          "reported_nodes": 38762687,
+          "transport_seconds": 58.654544,
+          "weighted_nodes_per_second": 660864.1778887582,
+          "median_move_nodes_per_second": 621995.8914176722,
+          "median_completed_depth": 5.0,
+          "mean_completed_depth": 5.324652777777778,
+          "depth_counts": {
+            "3": 37,
+            "4": 133,
+            "5": 168,
+            "6": 135,
+            "7": 65,
+            "8": 23,
+            "9": 15
+          },
+          "mean_move_seconds": 0.10183080555555556
+        },
+        {
+          "bucket": "<=12 pieces",
+          "role": "candidate",
+          "moves": 558,
+          "moves_with_nodes_and_time": 558,
+          "reported_nodes": 33014697,
+          "transport_seconds": 56.823505,
+          "weighted_nodes_per_second": 581004.234075318,
+          "median_move_nodes_per_second": 554829.5179444482,
+          "median_completed_depth": 5.0,
+          "mean_completed_depth": 5.426523297491039,
+          "depth_counts": {
+            "4": 113,
+            "5": 211,
+            "6": 151,
+            "7": 56,
+            "8": 20,
+            "9": 7
+          },
+          "mean_move_seconds": 0.10183423835125448
+        }
+      ]
+    }
+  ]
+}

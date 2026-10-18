@@ -1,0 +1,543 @@
+{
+  "schema": "regicide.selfplay.dataset.v1",
+  "status": "complete",
+  "started_utc": "2026-10-18T15:31:46.016078+00:00",
+  "positions_path": "positions.jsonl",
+  "samples_path": "positions.jsonl",
+  "games_path": "games.jsonl",
+  "pgn_path": "games.pgn",
+  "seed": 20264045,
+  "games_requested": 32,
+  "limits": {
+    "selfplay_nodes": 1000,
+    "teacher_nodes": 10000,
+    "max_plies_total": 256,
+    "sample_every": 4,
+    "random_opening_plies": 2,
+    "communication_watchdog_seconds": 600,
+    "time_limit": null
+  },
+  "engine": {
+    "binary_name": "regicide.exe",
+    "sha256": "ec71a626b8124359fe2e47ab2876e9ea0bc342d42179869158c5aeda63fd921f",
+    "source_commit_caller_declared": null,
+    "build_source_verified": false,
+    "configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true
+    },
+    "selection": "Regicide only; identical binary for both colors and teacher",
+    "selfplay_model": {
+      "enabled": false,
+      "name": null,
+      "snapshot_path": null,
+      "sha256": null
+    },
+    "teacher_evaluation": "classical; neural disabled regardless of self-play model",
+    "uci_id": {
+      "name": "Regicide 0.6.2",
+      "author": "Regicide project"
+    },
+    "optional_options": {
+      "UseNeuralEvaluation": false
+    },
+    "selfplay_configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true,
+      "UseNeuralEvaluation": false,
+      "EvalFile": null
+    },
+    "teacher_configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true,
+      "UseNeuralEvaluation": false
+    },
+    "advertised_options": {
+      "Move Overhead": {
+        "type": "spin",
+        "default": 20,
+        "min": 0,
+        "max": 5000,
+        "var": []
+      },
+      "UsePositionalEvaluation": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuiescence": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseTranspositionTable": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "Hash": {
+        "type": "spin",
+        "default": 16,
+        "min": 1,
+        "max": 256,
+        "var": []
+      },
+      "Clear Hash": {
+        "type": "button",
+        "default": null,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseFastMoves": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuietMoveOrdering": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuiescenceChecks": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "PVS": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseSEE": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UsePawnShield": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UsePawnStructure": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseLMR": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "EvalFile": {
+        "type": "string",
+        "default": "<empty>",
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseNeuralEvaluation": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      }
+    }
+  },
+  "collector": {
+    "sha256": "68b7c4d4c5fe57ab70b07d929b58b156d32e931d8da85e738afaeb7d0c07da78",
+    "checkout": {
+      "commit": "6550d6cd9bf74f98b08bf1789a9ebbedf55c72ac",
+      "status_porcelain": "",
+      "scope": "collector checkout only; not proof of executable build origin"
+    },
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+    "python_chess": "1.11.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "openings": {
+    "name": "learning_openings_v1.json",
+    "sha256": "0d1b390fe782f74e923495180cb236273cb80b761d97e9ae1b119e751e05f071",
+    "definition": {
+      "schema": "regicide.learning.openings.v1",
+      "provenance": "Sixteen self-authored legal move sequences representing opening families. No game archive, external engine, book file, human game, or observed outcome was used. Splits were fixed before collection; this is a small engineering dataset, not a representative chess distribution.",
+      "split_policy": "Each family belongs to exactly one predefined split. All games and adjacent positions in a family retain that split. Positions whose canonical board/turn/castling/legal-en-passant key occurs across splits are excluded from all splits.",
+      "openings": [
+        {
+          "id": "italian",
+          "family": "italian",
+          "split": "train",
+          "name": "Italian bishop development",
+          "moves": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "f8c5",
+            "c2c3",
+            "g8f6"
+          ]
+        },
+        {
+          "id": "ruy-lopez",
+          "family": "ruy-lopez",
+          "split": "train",
+          "name": "Ruy Lopez bishop retreat",
+          "moves": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1b5",
+            "a7a6",
+            "b5a4",
+            "g8f6"
+          ]
+        },
+        {
+          "id": "scotch",
+          "family": "scotch",
+          "split": "train",
+          "name": "Scotch central exchange",
+          "moves": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "d2d4",
+            "e5d4",
+            "f3d4",
+            "g8f6"
+          ]
+        },
+        {
+          "id": "sicilian",
+          "family": "sicilian",
+          "split": "train",
+          "name": "Open Sicilian center",
+          "moves": [
+            "e2e4",
+            "c7c5",
+            "g1f3",
+            "d7d6",
+            "d2d4",
+            "c5d4",
+            "f3d4",
+            "g8f6"
+          ]
+        },
+        {
+          "id": "french",
+          "family": "french",
+          "split": "train",
+          "name": "French supported center",
+          "moves": [
+            "e2e4",
+            "e7e6",
+            "d2d4",
+            "d7d5",
+            "b1c3",
+            "g8f6",
+            "e4e5",
+            "f6d7"
+          ]
+        },
+        {
+          "id": "caro-kann",
+          "family": "caro-kann",
+          "split": "train",
+          "name": "Caro Kann advanced center",
+          "moves": [
+            "e2e4",
+            "c7c6",
+            "d2d4",
+            "d7d5",
+            "e4e5",
+            "c8f5",
+            "g1f3",
+            "e7e6"
+          ]
+        },
+        {
+          "id": "queens-gambit",
+          "family": "queens-gambit",
+          "split": "train",
+          "name": "Queen gambit declined center",
+          "moves": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6",
+            "b1c3",
+            "g8f6",
+            "c1g5",
+            "f8e7"
+          ]
+        },
+        {
+          "id": "slav",
+          "family": "slav",
+          "split": "train",
+          "name": "Slav central structure",
+          "moves": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "c7c6",
+            "g1f3",
+            "g8f6",
+            "b1c3",
+            "d5c4"
+          ]
+        },
+        {
+          "id": "kings-indian",
+          "family": "kings-indian",
+          "split": "train",
+          "name": "King Indian fianchetto",
+          "moves": [
+            "d2d4",
+            "g8f6",
+            "c2c4",
+            "g7g6",
+            "b1c3",
+            "f8g7",
+            "e2e4",
+            "d7d6"
+          ]
+        },
+        {
+          "id": "english",
+          "family": "english",
+          "split": "train",
+          "name": "English symmetrical wings",
+          "moves": [
+            "c2c4",
+            "c7c5",
+            "b1c3",
+            "b8c6",
+            "g2g3",
+            "g7g6",
+            "f1g2",
+            "f8g7"
+          ]
+        },
+        {
+          "id": "pirc",
+          "family": "pirc",
+          "split": "validation",
+          "name": "Pirc center and fianchetto",
+          "moves": [
+            "e2e4",
+            "d7d6",
+            "d2d4",
+            "g8f6",
+            "b1c3",
+            "g7g6",
+            "g1f3",
+            "f8g7"
+          ]
+        },
+        {
+          "id": "dutch",
+          "family": "dutch",
+          "split": "validation",
+          "name": "Dutch kingside development",
+          "moves": [
+            "d2d4",
+            "f7f5",
+            "g2g3",
+            "g8f6",
+            "f1g2",
+            "e7e6",
+            "g1f3",
+            "f8e7"
+          ]
+        },
+        {
+          "id": "scandinavian",
+          "family": "scandinavian",
+          "split": "validation",
+          "name": "Scandinavian queen retreat",
+          "moves": [
+            "e2e4",
+            "d7d5",
+            "e4d5",
+            "d8d5",
+            "b1c3",
+            "d5a5",
+            "d2d4",
+            "g8f6"
+          ]
+        },
+        {
+          "id": "alekhine",
+          "family": "alekhine",
+          "split": "test",
+          "name": "Alekhine center chase",
+          "moves": [
+            "e2e4",
+            "g8f6",
+            "e4e5",
+            "f6d5",
+            "d2d4",
+            "d7d6",
+            "g1f3",
+            "c8g4"
+          ]
+        },
+        {
+          "id": "nimzo-indian",
+          "family": "nimzo-indian",
+          "split": "test",
+          "name": "Nimzo Indian bishop pin",
+          "moves": [
+            "d2d4",
+            "g8f6",
+            "c2c4",
+            "e7e6",
+            "b1c3",
+            "f8b4",
+            "e2e3",
+            "e8g8"
+          ]
+        },
+        {
+          "id": "budapest",
+          "family": "budapest",
+          "split": "test",
+          "name": "Budapest central pawn offer",
+          "moves": [
+            "d2d4",
+            "g8f6",
+            "c2c4",
+            "e7e5",
+            "d4e5",
+            "f6g4",
+            "g1f3",
+            "b8c6"
+          ]
+        }
+      ]
+    }
+  },
+  "label_policy": {
+    "teacher": "own Regicide exact cp, side-to-move perspective; no mate conversion",
+    "outcome": "completed adjudicated games only; side-to-move perspective",
+    "draws": "claim every available current or announced-next-move draw",
+    "sampling": "actual-ply-block-alternating-offset-v2; post-opening+random augmentation; at most one actual position per N-ply block; offsets alternate 0/1 for even N, otherwise zero; root check/claim/terminal excluded",
+    "sampling_turns": "real legal game histories only; no synthetic turn flips or copied/sign-flipped teacher labels",
+    "teacher_context": "fresh logical UCI game per query; full history; no time budget",
+    "known_limit": "teacher imitates existing engine; outcome is small self-play evidence, not an independent truth"
+  },
+  "errors": [],
+  "checkpoint_utc": "2026-10-18T15:33:13.233247+00:00",
+  "games_finished": 32,
+  "completed_games": 32,
+  "unfinished_games": 0,
+  "positions": 506,
+  "positions_by_split": {
+    "validation": 84,
+    "train": 328,
+    "test": 94
+  },
+  "positions_by_turn": {
+    "w": 268,
+    "b": 238
+  },
+  "counts_by_turn": {
+    "train": {
+      "w": 175,
+      "b": 153
+    },
+    "validation": {
+      "w": 44,
+      "b": 40
+    },
+    "test": {
+      "w": 49,
+      "b": 45
+    }
+  },
+  "games_by_split": {
+    "validation": 6,
+    "train": 20,
+    "test": 6
+  },
+  "exclusions": {
+    "root_in_check": 54,
+    "teacher_mate_score": 23
+  },
+  "cross_split_exclusions": {
+    "canonical_groups": 0,
+    "neural_feature_groups": 0,
+    "canonical_excluded_positions": 0,
+    "neural_feature_excluded_positions": 0,
+    "excluded_positions": 0,
+    "policy": "exclude every occurrence of cross-split canonical positions or exact neural inputs from every split; never reassign families",
+    "neural_feature_key": "sorted channel*64+square; channels own PNBRQK then opponent PNBRQK; black turn square XOR 56; no rights/en-passant/clocks"
+  },
+  "files_sha256": {
+    "games.jsonl": "7f2e4900afba7c8b1cc31c077c58f405772d5a70ea928fd72cda9fc9921f1fcd",
+    "positions.jsonl": "6f186d696d1b98a28343e4cfe51186b3907e67aa424510e58ae48c2bef86d66e",
+    "games.pgn": "a868feab37ebe41d5761ea1290773b30a4434a60e52f05bc2917fa479b49558e"
+  },
+  "finished_utc": "2026-10-18T15:33:09.253212+00:00"
+}

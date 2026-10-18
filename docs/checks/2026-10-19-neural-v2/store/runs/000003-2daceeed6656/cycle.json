@@ -1,0 +1,187 @@
+{
+  "schema": "regicide.learning.cycle.v1",
+  "status": "complete",
+  "attempt_index": 3,
+  "started_utc": "2026-10-18T15:31:45.980873+00:00",
+  "seed": 20264045,
+  "stages": [
+    {
+      "name": "snapshot-and-champion",
+      "started_utc": "2026-10-18T15:31:45.980897+00:00"
+    },
+    {
+      "name": "self-play",
+      "started_utc": "2026-10-18T15:31:45.994537+00:00"
+    },
+    {
+      "name": "loss-analysis",
+      "started_utc": "2026-10-18T15:33:13.244995+00:00"
+    },
+    {
+      "name": "accumulated-replay",
+      "started_utc": "2026-10-18T15:34:17.713791+00:00"
+    },
+    {
+      "name": "retraining",
+      "started_utc": "2026-10-18T15:34:22.785891+00:00"
+    },
+    {
+      "name": "rule-regressions",
+      "started_utc": "2026-10-18T15:34:26.297720+00:00"
+    },
+    {
+      "name": "previous-champion-arena",
+      "started_utc": "2026-10-18T15:34:44.040339+00:00"
+    },
+    {
+      "name": "adoption-decision",
+      "started_utc": "2026-10-18T15:44:09.347959+00:00"
+    }
+  ],
+  "adopted": false,
+  "evaluation_design": {
+    "model_version": 2,
+    "format": "REGICIDE_NN_V2 768 32 16 600 100",
+    "score": "classical_cp_stm + 100*tanh(z)",
+    "residual_bound_cp": 100,
+    "target": "tanh(teacher_cp_stm/600); no game-outcome mixture",
+    "default_l2": 0.0001
+  },
+  "power_policy": {
+    "system_required_during_cycle": true,
+    "scope": "Thread-scoped Windows idle-sleep request restored on exit; does not override explicit user sleep or lid closure."
+  },
+  "policy": "Losses analyzed; accumulated training only; frozen bootstrap heldouts; reserved arena excluded; old champion kept unless strict paired arena passes.",
+  "initialization": {
+    "mode": "seeded_random",
+    "requested_model_version": 2,
+    "incumbent_model_version": null,
+    "initial_model_sha256": null,
+    "reason": "no_adopted_neural_model",
+    "incumbent_kept_for_selfplay_and_arena": false
+  },
+  "binary_sha256": "ec71a626b8124359fe2e47ab2876e9ea0bc342d42179869158c5aeda63fd921f",
+  "previous_model_sha256": null,
+  "implementation_sha256": {
+    "scripts/analyze_learning_losses.py": "591fb58ce39b70d37382e1dc77b390febd3e3ce090fe3f531e9a635c5cec4757",
+    "scripts/benchmark_search.py": "d5f2e374f524dbe5d823718490dc84a1bb9dd9ded60383362a507411a8dae15f",
+    "scripts/classical_evaluation.py": "a0c3fd595489de48e84d6eb755bee7eb942f5edde7c1c46cd0165a0a0e5c19f4",
+    "scripts/collect_learning_data.py": "68b7c4d4c5fe57ab70b07d929b58b156d32e931d8da85e738afaeb7d0c07da78",
+    "scripts/compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "scripts/game_archive.py": "94855ee439a4c0f59a762cc25af0bd8de5b7058bc88c9713f1695ab2af6d5f05",
+    "scripts/learning_arena.py": "7bc3e4a37c5438b1465fa0bac21784a4ce6c5c3ed5540923f360ced75ba8482f",
+    "scripts/learning_corpus.py": "347ae58cb546057cf21195daeed162b10f768d3ef1d46ed3064ce9c75747e2e7",
+    "scripts/learning_cycle.py": "ed79a5a798bb7e4de4ce6a2a9092be51f911fc55180ee1e6b33317fcfde05a4d",
+    "scripts/learning_registry.py": "da57e633edbe7b14d8f89a9c9dc3a8a12e2caec3c90e22881878f3f18ba3099b",
+    "scripts/lmr_experiment.py": "feae67dfd4960908d672d5d903eec6d636c4349058949de9d803550b7fbcc10d",
+    "scripts/move_hints.py": "7eee7138c02920cff4f0e65d327e4b8b9cc4a1cda953a79b4b17a8b4dd25932e",
+    "scripts/neural_model.py": "636197921200439c5dcd2dc9a5e61a21600a42cfa56b304e9c38a4f36ae95268",
+    "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+    "scripts/play_human.py": "01a66d162ffc07201f04ee414a23d19b26905afdbb360afcae9b4d73ae3e4ba6",
+    "scripts/probe_loss_search.py": "69466935217c2a51d8a0984b1d558172b03c1565ebdb03467982b330723fe885",
+    "scripts/reference_loss_scan.py": "bac71f2406c3069b289942ed7adf699cc204ed46fb79a9a4f97634e126a3428c",
+    "scripts/see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "scripts/train_neural.py": "c672b7b2e8d877f2c854c3e9f287d911ae204fbb556c9c9347bcaf01f8222dd5",
+    "tests/archive_godot_tests.py": "4c6cfc8ec36e60c094866c583063be5b9064c607a66424ef22b19b6aa3064e16",
+    "tests/audit_pvs_results.py": "fcf5b706c5bb1b880734befbad1cffec4f2e44ca27bcdc093808de140a1d073a",
+    "tests/audit_see_cost_results.py": "00f623dd86f89d69894397484a3308e9e2ef6ceb75ea3c59a49462ac2c0b1156",
+    "tests/audit_see_replication.py": "a42105e6de502dce76d7e6ed8df9d1d615fdd37ea086166f1932cd1b7578a7f4",
+    "tests/audit_see_results.py": "0ae9f0b988f72cabc18a467748d4ff352492410cf81e713c8405230acc78e01e",
+    "tests/benchmark_search_tests.py": "d57108406fcfd9317da8a5427e9e10a567142e6a3bd361d371227159a63a8605",
+    "tests/classical_evaluation_tests.py": "3494b33d3c0c1e93a01ba521ec3693353e9a03e7ca4944b710b76694721ffed6",
+    "tests/compare_engines_tests.py": "178462a0cbca5349cc411a9419bbf31c0ba18585a35aa353f71bfa5dfc3170d3",
+    "tests/differential.py": "74e96b2834ca39e7c8b14f85866d633c0d55f233d27aa4877ee65f593f850d42",
+    "tests/engine_integration.py": "5e501334f74c620de014950035da6036b7004776ccbfef949000b4dc60fdfb30",
+    "tests/evaluation_state_tests.py": "fa39ec3fdaff782d6f70731656cde472f828ec664a6761878119312473485aa2",
+    "tests/external_baseline_tests.py": "cc2efe3279854d8b3a6db232424ea3a70e050cd963509918d1d1c82a0295e95d",
+    "tests/game_archive_tests.py": "0fb88525d99a7d6f2c61251d96181ca6f6e4d4f1eed0f0b9201a7cc9e51a2a1f",
+    "tests/game_runner_tests.py": "7a84ef4423d556aac17ec5fb470862ab65df39f125a2d84856ae20df13c36337",
+    "tests/godot_bootstrap_tests.py": "68400aefa3198b5aafbfaecec840f55f6be1e32a0da5d7f9cd336429dbd6383c",
+    "tests/godot_integration_tests.py": "4616b5503ac3afe48ba9b3f5112f783043509e12196c930c853d2f61e9b149c1",
+    "tests/handicap_godot_tests.py": "efa6aea7fd7568661ffd67e2f02537caede7eb399b652b7ea357e2bc0cb0d60d",
+    "tests/handicap_play_tests.py": "d068f83de80e7bafddb1cd6bc2baa279c7497c53a34ee777585d30fad76ea53d",
+    "tests/hint_godot_tests.py": "551c437bd5d1846203d6e271393626b19c92277ec9e4ea81a9fefc2f7bfa19cb",
+    "tests/hint_state_tests.py": "fab99aa3d057de7d2c5e945c774f29b80f896b59e928aa6a83fe8109765cc51c",
+    "tests/human_play_tests.py": "3153895563a33e42ce2470a3ba0afab41d0c3f4d724c4214865aaead65651cc0",
+    "tests/learning_arena_tests.py": "4d0f09a6494d40169f6b9c24a3841bc6ade57304cd76eb464ab2f53c7848d4cf",
+    "tests/learning_corpus_tests.py": "795082e4c8fc8c658ada64619726b7946fc98c61ac5808ec211bb2401a62b507",
+    "tests/learning_cycle_tests.py": "00d435dade09f98c5f573c3da4ec893755af46777782556761876dab8c22a92f",
+    "tests/learning_data_tests.py": "74a353239c1b9e4a0ded9c957f63dca286ae6db85d7263d6469bfad7a251a22c",
+    "tests/learning_loss_analysis_tests.py": "c1e941a56fd4b4c07ee635d878f5b250087a510e39bab370fb7d23ea10fa3e7a",
+    "tests/learning_registry_tests.py": "e49f7f03f07a6d84c725f92ae5f1dbddc554b12627930ea5aabdb02d4fd7ec43",
+    "tests/learning_runtime_tests.py": "40e830a2c628b936e6c9e4244e76c406e4898c37d81b608fbdb8cff546b9015d",
+    "tests/loss_diagnosis_tests.py": "83649b0e90b0156eb013367c9fb3574e97dafb69103c3b03fc22764f0f42b299",
+    "tests/neural_integration_tests.py": "1953b3727608602aa18c0575ec047a1e447d13d6a6a8b5cd294e4d56f0182fb8",
+    "tests/neural_training_tests.py": "9f1fbf56fffe129cb9b1cebcfeecb69e5d67e6af7208e7145d41f808f2429e3b",
+    "tests/see_clean_guard_tests.py": "70fa378c66dc300dd2806ef89d4d184fb920b96c0087419cd5527b1ec0b79085",
+    "tests/data/learning_openings_v1.json": "0d1b390fe782f74e923495180cb236273cb80b761d97e9ae1b119e751e05f071",
+    "tests/data/learning_arena_openings_v1.json": "78e7e6aca52cee0bdcb65e938d0d5a94236b30a8790b283227ff9d435e51e4f0"
+  },
+  "collection": {
+    "completed_games": 32,
+    "positions": 506,
+    "unfinished_games": 0
+  },
+  "loss_analysis": {
+    "analyzed_positions": 216,
+    "training_corrections": 30
+  },
+  "corpus": {
+    "train": 1327,
+    "validation": 96,
+    "test": 125
+  },
+  "accumulated_datasets": 4,
+  "corpus_manifest_sha256": "d290d79b60745fcfa23596ca0e7a44bf6c90cf4d466f2badc54c031cc6f3b535",
+  "training": {
+    "model_version": 2,
+    "model_path": "small-v2.nn",
+    "target": "tanh(teacher_cp_stm/600); outcomes retained for integrity checks only",
+    "loss": "mean((tanh((classical_cp_stm+100*tanh(z))/600)-target)^2)+matrix_only_L2",
+    "regularization": null,
+    "l2": {
+      "biases_regularized": false,
+      "coefficient": 0.0001,
+      "formula": "0.5*coefficient*sum(weight_matrices^2)",
+      "matrices": [
+        "w1",
+        "w2",
+        "w3"
+      ]
+    }
+  },
+  "candidate_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+  "rules": {
+    "status": "passed",
+    "binary_sha256": "ec71a626b8124359fe2e47ab2876e9ea0bc342d42179869158c5aeda63fd921f",
+    "candidate_sha256": "1a7ec95c4062e7b448bf3582dc189a9c94c570708c98fce6882eb84ac0d717fe",
+    "checks": {
+      "independent_rules": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "native_neural_integration": "5958a5ce3558fb76a78a0377b5768ca354f6e5e5ab5b7c209c6df965a8a27824"
+    },
+    "scope": "Rule correctness and model wiring, not playing strength."
+  },
+  "arena_seed": 12080627684343312286,
+  "arena_seed_policy": "Fresh entropy drawn after the candidate weights were fixed; seed saved for replay.",
+  "arena": {
+    "status": "complete",
+    "decision": {
+      "policy": "pair-hoeffding-summable-alpha-v1",
+      "attempt_index": 3,
+      "familywise_alpha_budget": 0.05,
+      "attempt_alpha": 0.004166666666666667,
+      "minimum_pairs": 32,
+      "minimum_movetime_ms": 100,
+      "completed_pairs": 32,
+      "candidate_pair_score": 0.3125,
+      "one_sided_lower_bound": 0.019865444321388093,
+      "eligible": true,
+      "passed": false,
+      "criterion": "at least 32 complete clean independent opening pairs at >=100ms per move and one-sided lower bound > 0.5",
+      "scope": "Declared randomized reserved opening distribution and equal time control only; no Elo claim."
+    }
+  },
+  "selected_model_sha256": null,
+  "retained_reason": "The candidate did not pass the predeclared strength criterion.",
+  "finished_utc": "2026-10-18T15:44:09.359140+00:00"
+}

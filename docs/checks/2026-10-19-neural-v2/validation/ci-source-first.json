@@ -1,0 +1,38 @@
+{
+  "schema": "regicide.ci.diagnosis.v1",
+  "commit": "6550d6cd9bf74f98b08bf1789a9ebbedf55c72ac",
+  "run_id": 39140704850,
+  "job_id": 117714370065,
+  "url": "https://github.com/bigpine-choi/Regicide/actions/runs/39140704850/job/117714370065",
+  "environment": {
+    "os": "Windows Server 2025 GitHub-hosted runner",
+    "python": "3.12.10",
+    "temp_alias": "C:/Users/RUNNER~1/AppData/Local/Temp",
+    "temp_canonical": "C:/Users/runneradmin/AppData/Local/Temp"
+  },
+  "results": {
+    "native_ctest": "7/7 passed",
+    "cycle_unittest": {
+      "tests": 37,
+      "errors": 24,
+      "failures": 2
+    },
+    "failure_scope": "All 26 unsuccessful tests share the same short-versus-canonical temporary-path exception."
+  },
+  "root_cause": "CycleTests.setUp retains the Windows 8.3 temporary-directory alias, while dataset_reference resolves the manifest to the long path. pathlib.relative_to then sees different lexical parents for the same physical directory.",
+  "proposed_fix": {
+    "file": "tests/learning_cycle_tests.py",
+    "before": "self.root = Path(self.temporary.name)",
+    "after": "self.root = Path(self.temporary.name).resolve()",
+    "scope": "Test fixture normalization only; main() already resolves the real state directory.",
+    "applied": false
+  },
+  "active_experiment": {
+    "attempt": 3,
+    "source_frozen": true,
+    "source_or_test_files_modified": false,
+    "new_native_engines_started": false
+  },
+  "next_verification": "Apply after the actual arena and independent audit; rerun all 37 cycle unit tests, then run required Windows/Linux CI on the final fix commit. No new match is required for this fixture-only change if the diff remains exactly as described.",
+  "log_policy": "Compact relevant exception only; temporary-directory random names replaced with <TEST_TEMP>; no authentication or setup logs."
+}

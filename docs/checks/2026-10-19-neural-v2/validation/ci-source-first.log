@@ -1,0 +1,33 @@
+2026-10-18T15:31:05.0146634Z ERROR: test_accumulated_pgn_or_diagnosis_tampering_is_rejected (__main__.CycleTests.test_accumulated_pgn_or_diagnosis_tampering_is_rejected)
+2026-10-18T15:31:05.0147082Z ----------------------------------------------------------------------
+2026-10-18T15:31:05.0147390Z Traceback (most recent call last):
+2026-10-18T15:31:05.0151159Z   File "D:\a\Regicide\Regicide\tests\learning_cycle_tests.py", line 639, in test_accumulated_pgn_or_diagnosis_tampering_is_rejected
+2026-10-18T15:31:05.0151637Z     catalog = self.catalog()
+2026-10-18T15:31:05.0151890Z               ^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0152295Z   File "D:\a\Regicide\Regicide\tests\learning_cycle_tests.py", line 195, in catalog
+2026-10-18T15:31:05.0152608Z     return CYCLE.catalog_read(self.state)
+2026-10-18T15:31:05.0153086Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0153480Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 187, in catalog_read
+2026-10-18T15:31:05.0153792Z     "bootstrap": bootstrap_snapshot(state)}
+2026-10-18T15:31:05.0154061Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0154419Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 176, in bootstrap_snapshot
+2026-10-18T15:31:05.0154806Z     reference = dataset_reference(state, destination / "manifest.json")
+2026-10-18T15:31:05.0155130Z                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0155553Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T15:31:05.0155970Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T15:31:05.0156281Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0156728Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T15:31:05.0157177Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T15:31:05.0157799Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\<TEST_TEMP>\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\<TEST_TEMP>\\state'
+2026-10-18T15:31:05.0158206Z 
+2026-10-18T15:31:05.0158331Z ======================================================================
+2026-10-18T15:31:05.0158735Z ERROR: test_accumulated_selfplay_champion_snapshot_tampering_is_rejected (__main__.CycleTests.test_accumulated_selfplay_champion_snapshot_tampering_is_rejected)
+2026-10-18T15:31:05.0159114Z ----------------------------------------------------------------------
+2026-10-18T15:31:05.0159381Z Traceback (most recent call last):
+2026-10-18T15:31:05.0159893Z   File "D:\a\Regicide\Regicide\tests\learning_cycle_tests.py", line 656, in test_accumulated_selfplay_champion_snapshot_tampering_is_rejected
+2026-10-18T15:31:05.0160285Z     catalog = self.catalog()
+2026-10-18T15:31:05.0160542Z               ^^^^^^^^^^^^^^
+2026-10-18T15:31:05.0162354Z   File "D:\a\Regicide\Regicide\tests\learning_cycle_tests.py", line 195, in catalog
+2026-10-18T15:30:28.0988202Z 100% tests passed out of 7
+2026-10-18T15:31:05.0345861Z Ran 37 tests in 0.561s
+2026-10-18T15:31:05.0346041Z FAILED (failures=2, errors=24)

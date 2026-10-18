@@ -1,0 +1,124 @@
+{
+  "schema": "regicide.learning.cycle.v1",
+  "status": "complete",
+  "attempt_index": 2,
+  "started_utc": "2026-10-18T14:02:38.191856+00:00",
+  "seed": 20263036,
+  "stages": [
+    {
+      "name": "snapshot-and-champion",
+      "started_utc": "2026-10-18T14:02:38.191877+00:00"
+    },
+    {
+      "name": "self-play",
+      "started_utc": "2026-10-18T14:02:38.199452+00:00"
+    },
+    {
+      "name": "loss-analysis",
+      "started_utc": "2026-10-18T14:04:00.978633+00:00"
+    },
+    {
+      "name": "accumulated-replay",
+      "started_utc": "2026-10-18T14:04:43.666114+00:00"
+    },
+    {
+      "name": "retraining",
+      "started_utc": "2026-10-18T14:04:47.483850+00:00"
+    },
+    {
+      "name": "rule-regressions",
+      "started_utc": "2026-10-18T14:04:50.135802+00:00"
+    },
+    {
+      "name": "previous-champion-arena",
+      "started_utc": "2026-10-18T14:04:58.514801+00:00"
+    },
+    {
+      "name": "adoption-decision",
+      "started_utc": "2026-10-18T14:13:47.572608+00:00"
+    }
+  ],
+  "adopted": false,
+  "power_policy": {
+    "system_required_during_cycle": true,
+    "scope": "Thread-scoped Windows idle-sleep request restored on exit; does not override explicit user sleep or lid closure."
+  },
+  "policy": "Losses analyzed; accumulated training only; frozen bootstrap heldouts; reserved arena excluded; old champion kept unless strict paired arena passes.",
+  "binary_sha256": "573804ed05e6b2d99addb7dceca61566f546da8f401586e310efcc4e6e19176c",
+  "previous_model_sha256": null,
+  "implementation_sha256": {
+    "scripts/analyze_learning_losses.py": "591fb58ce39b70d37382e1dc77b390febd3e3ce090fe3f531e9a635c5cec4757",
+    "scripts/benchmark_search.py": "d5f2e374f524dbe5d823718490dc84a1bb9dd9ded60383362a507411a8dae15f",
+    "scripts/collect_learning_data.py": "5da58a0178610e161f641a4eddc68ca9252c11c4538cf9abd1c52450ed79b9e7",
+    "scripts/compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "scripts/game_archive.py": "94855ee439a4c0f59a762cc25af0bd8de5b7058bc88c9713f1695ab2af6d5f05",
+    "scripts/learning_arena.py": "7bc3e4a37c5438b1465fa0bac21784a4ce6c5c3ed5540923f360ced75ba8482f",
+    "scripts/learning_corpus.py": "347ae58cb546057cf21195daeed162b10f768d3ef1d46ed3064ce9c75747e2e7",
+    "scripts/learning_cycle.py": "65a728855a14a9e467d09870ef1c41a24ac7ab771e40467a81d19705d42178ce",
+    "scripts/learning_registry.py": "da57e633edbe7b14d8f89a9c9dc3a8a12e2caec3c90e22881878f3f18ba3099b",
+    "scripts/lmr_experiment.py": "feae67dfd4960908d672d5d903eec6d636c4349058949de9d803550b7fbcc10d",
+    "scripts/move_hints.py": "7eee7138c02920cff4f0e65d327e4b8b9cc4a1cda953a79b4b17a8b4dd25932e",
+    "scripts/neural_model.py": "950652b06427a3ae3d8a07718cec71372b3bd59076d68461f2b6dd8388d9b270",
+    "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+    "scripts/play_human.py": "01a66d162ffc07201f04ee414a23d19b26905afdbb360afcae9b4d73ae3e4ba6",
+    "scripts/probe_loss_search.py": "69466935217c2a51d8a0984b1d558172b03c1565ebdb03467982b330723fe885",
+    "scripts/reference_loss_scan.py": "bac71f2406c3069b289942ed7adf699cc204ed46fb79a9a4f97634e126a3428c",
+    "scripts/see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "scripts/train_neural.py": "59d2fb7aaf3d8c2e980df7699080cbecca05b0c8158bdcac9119a65c5f1370aa",
+    "tests/differential.py": "74e96b2834ca39e7c8b14f85866d633c0d55f233d27aa4877ee65f593f850d42",
+    "tests/neural_integration_tests.py": "37070acd0e476ed541eae190a2efcc99075cf6d6b0bd26036cd487f0bcc026ed",
+    "tests/engine_integration.py": "e19db0bf9778be134af00c5658034ce562d213754f051745acb1a4f775a32fce",
+    "tests/data/learning_openings_v1.json": "0d1b390fe782f74e923495180cb236273cb80b761d97e9ae1b119e751e05f071",
+    "tests/data/learning_arena_openings_v1.json": "78e7e6aca52cee0bdcb65e938d0d5a94236b30a8790b283227ff9d435e51e4f0"
+  },
+  "collection": {
+    "completed_games": 32,
+    "positions": 525,
+    "unfinished_games": 0
+  },
+  "loss_analysis": {
+    "analyzed_positions": 144,
+    "training_corrections": 12
+  },
+  "corpus": {
+    "train": 979,
+    "validation": 96,
+    "test": 125
+  },
+  "accumulated_datasets": 3,
+  "corpus_manifest_sha256": "ffabf8999dd5d3b34f4d0190b9e3d8d6065e79c807a9cbce24471e9fb10bf869",
+  "candidate_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+  "rules": {
+    "status": "passed",
+    "binary_sha256": "573804ed05e6b2d99addb7dceca61566f546da8f401586e310efcc4e6e19176c",
+    "candidate_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+    "checks": {
+      "independent_rules": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+      "native_neural_integration": "04c74edf1f76bf4b76e2dcabf772b1368b9de0041555de8642ffdeb3457b285d"
+    },
+    "scope": "Rule correctness and model wiring, not playing strength."
+  },
+  "arena_seed": 10427706587682629482,
+  "arena_seed_policy": "Fresh entropy drawn after the candidate weights were fixed; seed saved for replay.",
+  "arena": {
+    "status": "complete",
+    "decision": {
+      "policy": "pair-hoeffding-summable-alpha-v1",
+      "attempt_index": 2,
+      "familywise_alpha_budget": 0.05,
+      "attempt_alpha": 0.008333333333333333,
+      "minimum_pairs": 32,
+      "minimum_movetime_ms": 100,
+      "completed_pairs": 32,
+      "candidate_pair_score": 0.203125,
+      "one_sided_lower_bound": 0.0,
+      "eligible": true,
+      "passed": false,
+      "criterion": "at least 32 complete clean independent opening pairs at >=100ms per move and one-sided lower bound > 0.5",
+      "scope": "Declared randomized reserved opening distribution and equal time control only; no Elo claim."
+    }
+  },
+  "selected_model_sha256": null,
+  "retained_reason": "The candidate did not pass the predeclared strength criterion.",
+  "finished_utc": "2026-10-18T14:13:47.578100+00:00"
+}

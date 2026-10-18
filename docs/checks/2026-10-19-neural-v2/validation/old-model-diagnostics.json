@@ -1,0 +1,352 @@
+{
+  "architecture_observation": "V1 replaces all classical positional heuristics with material+600*z; no bounded residual or matrix regularization",
+  "baseline_caveat": "Material-only and classical-static diagnostics are not arena strength results; teacher labels are finite own-engine search estimates",
+  "capacity": {
+    "never_active_columns_are_unchanged_initial_random_weights": true,
+    "never_active_training_features": 218,
+    "parameters": 25153,
+    "parameters_per_training_sample": 25.692543411644536,
+    "training_games": 59,
+    "training_samples": 979
+  },
+  "color_caveat": "Features already identify own/opponent and rank-flip Black. Absolute color imbalance is not by itself proof of a color bug; real opposite-turn positions carry distinct tactical contexts",
+  "created_utc": "2026-10-18T15:22:47.990229+00:00",
+  "helper_sha256": "e25a6afd2dc72e2eb7edf5c953ad3e19b586654005f588af741f4d3b6c8d62bb",
+  "historical_training_curve": [
+    {
+      "epoch": 0,
+      "train_mse": 0.059143288303829755,
+      "validation_mse": 0.06827612321835923
+    },
+    {
+      "epoch": 1,
+      "train_mse": 0.04955816000613706,
+      "validation_mse": 0.07289897263661253
+    },
+    {
+      "epoch": 8,
+      "train_mse": 0.008738437293656554,
+      "validation_mse": 0.05391283508571427
+    },
+    {
+      "epoch": 10,
+      "train_mse": 0.005618597040220287,
+      "validation_mse": 0.05514094543351381
+    },
+    {
+      "epoch": 20,
+      "train_mse": 0.0014363910291555822,
+      "validation_mse": 0.06312458501463039
+    },
+    {
+      "epoch": 50,
+      "train_mse": 0.00041080420051509435,
+      "validation_mse": 0.06558354263064058
+    },
+    {
+      "epoch": 100,
+      "train_mse": 0.00044616839240703096,
+      "validation_mse": 0.06108550415900834
+    }
+  ],
+  "implementation_sha256": {
+    "scripts/classical_evaluation.py": "a0c3fd595489de48e84d6eb755bee7eb942f5edde7c1c46cd0165a0a0e5c19f4",
+    "scripts/neural_model.py": "636197921200439c5dcd2dc9a5e61a21600a42cfa56b304e9c38a4f36ae95268",
+    "scripts/train_neural.py": "c672b7b2e8d877f2c854c3e9f287d911ae204fbb556c9c9347bcaf01f8222dd5"
+  },
+  "input_sha256": {
+    "docs/checks/2026-10-18-learning-cycle/store/runs/000002-95a3500d5501/corpus/positions.jsonl": "dfe17ebe25ce773cc4bc3daa7fbeb8878aa322523addc951368f5a476f58e155",
+    "docs/checks/2026-10-18-learning-cycle/store/runs/000002-95a3500d5501/model/report.json": "b6192bd90d8993048d2bd7cca16000be6da1b0a699bc46db87f18fc79fd5e8f8",
+    "docs/checks/2026-10-18-learning-cycle/store/runs/000002-95a3500d5501/model/small-v1.nn": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256"
+  },
+  "mixed_target_examples": [
+    {
+      "implied_target_cp": 121.63953243244931,
+      "outcome_stm": 1,
+      "teacher_cp": 0
+    },
+    {
+      "implied_target_cp": -121.63953243244931,
+      "outcome_stm": -1,
+      "teacher_cp": 0
+    },
+    {
+      "implied_target_cp": 216.40566667266984,
+      "outcome_stm": -1,
+      "teacher_cp": 500
+    },
+    {
+      "implied_target_cp": 366.64867852642476,
+      "outcome_stm": -1,
+      "teacher_cp": 1000
+    }
+  ],
+  "sampling_observation": "Old even-ply openings and fixed every-four-ply sampling select one actual moving side; correction diagnoses supply a small number of Black positions",
+  "schema": "regicide.rejected-v1.diagnostics.v1",
+  "scope": "Descriptive post-rejection evidence; causal contribution of individual factors is not isolated; no hyperparameter/model sweep",
+  "splits": {
+    "test": {
+      "classical_static_cp_mae_from_teacher": 135.36,
+      "classical_static_mixed_target_mse": 0.051993826523915446,
+      "classical_static_teacher_tanh_mse": 0.03648879805425692,
+      "cp_mae_from_teacher": 187.3116642319067,
+      "early_ply_le32": {
+        "classical_static_cp_mae_from_teacher": 105.73529411764706,
+        "cp_mae_from_teacher": 167.38720635692755,
+        "material_cp_mae_from_teacher": 108.17647058823529,
+        "mixed_target_mse": 0.08552774908407518,
+        "samples": 34
+      },
+      "games": 6,
+      "has_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": 175.74193548387098,
+        "cp_mae_from_teacher": 188.8067760795723,
+        "material_cp_mae_from_teacher": 180.0,
+        "mixed_target_mse": 0.11093875821680325,
+        "samples": 31
+      },
+      "material_cp_mae_from_teacher": 148.944,
+      "material_mixed_target_mse": 0.05202590962522013,
+      "material_teacher_tanh_mse": 0.03619871506425944,
+      "mixed_target_cp_shift_abs_quantiles_50_90_100": [
+        78.7799239066494,
+        144.61586863397127,
+        340.57337062964257
+      ],
+      "mixed_target_mse": 0.06254612197117515,
+      "never_trained_feature_activations": 33,
+      "no_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": 122.04255319148936,
+        "cp_mae_from_teacher": 186.81859543108084,
+        "material_cp_mae_from_teacher": 138.70212765957447,
+        "mixed_target_mse": 0.04658684831570206,
+        "samples": 94
+      },
+      "pieces_le10": {
+        "classical_static_cp_mae_from_teacher": 203.57692307692307,
+        "cp_mae_from_teacher": 268.16251019897066,
+        "material_cp_mae_from_teacher": 259.7692307692308,
+        "mixed_target_mse": 0.01827104095924022,
+        "samples": 26
+      },
+      "positions_using_never_trained_features": 31,
+      "same_board_turn_flip_score_sum_abs_ge100": 65,
+      "same_board_turn_flip_score_sum_abs_quantiles_50_90_100": [
+        103.99607876176485,
+        281.92528227867405,
+        579.1043877558515
+      ],
+      "samples": 125,
+      "teacher_abs_cp_le100": {
+        "classical_static_cp_mae_from_teacher": 20.0,
+        "cp_mae_from_teacher": 92.50426495621818,
+        "material_cp_mae_from_teacher": 26.0,
+        "mixed_target_mse": 0.03265869058172783,
+        "samples": 13
+      },
+      "teacher_abs_cp_le300": {
+        "classical_static_cp_mae_from_teacher": 26.61111111111111,
+        "cp_mae_from_teacher": 87.3521494362002,
+        "material_cp_mae_from_teacher": 31.77777777777778,
+        "mixed_target_mse": 0.04876507915560034,
+        "samples": 18
+      },
+      "teacher_abs_cp_le600": {
+        "classical_static_cp_mae_from_teacher": 82.9493670886076,
+        "cp_mae_from_teacher": 144.3946652223826,
+        "material_cp_mae_from_teacher": 91.41772151898734,
+        "mixed_target_mse": 0.08530945656684237,
+        "samples": 79
+      },
+      "teacher_and_final_outcome_opposite_sign": 9,
+      "teacher_tanh_mse": 0.049665900998336274,
+      "turns": {
+        "b": 0,
+        "w": 125
+      },
+      "unbounded_residual_cp_quantiles_0_10_50_90_100": [
+        -247.67480641778286,
+        -143.08815877233235,
+        -6.23752960157384,
+        148.74413078963838,
+        372.3087489439604
+      ]
+    },
+    "train": {
+      "classical_static_cp_mae_from_teacher": 124.62921348314607,
+      "classical_static_mixed_target_mse": 0.05781485789171991,
+      "classical_static_teacher_tanh_mse": 0.04350601325993728,
+      "cp_mae_from_teacher": 138.28693304495684,
+      "early_ply_le32": {
+        "classical_static_cp_mae_from_teacher": 92.51142857142857,
+        "cp_mae_from_teacher": 110.8413101004458,
+        "material_cp_mae_from_teacher": 102.69428571428571,
+        "mixed_target_mse": 0.009649694540257764,
+        "samples": 350
+      },
+      "games": 59,
+      "has_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": null,
+        "cp_mae_from_teacher": null,
+        "material_cp_mae_from_teacher": null,
+        "mixed_target_mse": null,
+        "samples": 0
+      },
+      "material_cp_mae_from_teacher": 149.70275791624107,
+      "material_mixed_target_mse": 0.06129980464405245,
+      "material_teacher_tanh_mse": 0.047713984832907404,
+      "mixed_target_cp_shift_abs_quantiles_50_90_100": [
+        78.03045801640542,
+        200.53373443092156,
+        1650.0457255495423
+      ],
+      "mixed_target_mse": 0.008738437293656554,
+      "never_trained_feature_activations": 0,
+      "no_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": 124.62921348314607,
+        "cp_mae_from_teacher": 138.28693304495684,
+        "material_cp_mae_from_teacher": 149.70275791624107,
+        "mixed_target_mse": 0.008738437293656554,
+        "samples": 979
+      },
+      "pieces_le10": {
+        "classical_static_cp_mae_from_teacher": 225.1679389312977,
+        "cp_mae_from_teacher": 198.43255672179,
+        "material_cp_mae_from_teacher": 296.19083969465646,
+        "mixed_target_mse": 0.008747376640886241,
+        "samples": 131
+      },
+      "positions_using_never_trained_features": 0,
+      "same_board_turn_flip_score_sum_abs_ge100": 619,
+      "same_board_turn_flip_score_sum_abs_quantiles_50_90_100": [
+        139.69575581654522,
+        376.84392228910826,
+        1036.9385337778533
+      ],
+      "samples": 979,
+      "teacher_abs_cp_le100": {
+        "classical_static_cp_mae_from_teacher": 55.61409395973154,
+        "cp_mae_from_teacher": 76.3335637228143,
+        "material_cp_mae_from_teacher": 63.46979865771812,
+        "mixed_target_mse": 0.00919738870788907,
+        "samples": 298
+      },
+      "teacher_abs_cp_le300": {
+        "classical_static_cp_mae_from_teacher": 67.3360824742268,
+        "cp_mae_from_teacher": 81.41883919701054,
+        "material_cp_mae_from_teacher": 78.92371134020618,
+        "mixed_target_mse": 0.008955608106757029,
+        "samples": 485
+      },
+      "teacher_abs_cp_le600": {
+        "classical_static_cp_mae_from_teacher": 81.80875912408759,
+        "cp_mae_from_teacher": 98.21345170186083,
+        "material_cp_mae_from_teacher": 96.23795620437956,
+        "mixed_target_mse": 0.009899018986570977,
+        "samples": 685
+      },
+      "teacher_and_final_outcome_opposite_sign": 165,
+      "teacher_tanh_mse": 0.02488989269287903,
+      "turns": {
+        "b": 25,
+        "w": 954
+      },
+      "unbounded_residual_cp_quantiles_0_10_50_90_100": [
+        -469.2125163576375,
+        -146.1460550329091,
+        30.559723250384167,
+        339.24466710299083,
+        938.9474813999827
+      ]
+    },
+    "validation": {
+      "classical_static_cp_mae_from_teacher": 140.98958333333334,
+      "classical_static_mixed_target_mse": 0.06272580820392447,
+      "classical_static_teacher_tanh_mse": 0.04859568136537474,
+      "cp_mae_from_teacher": 180.81523128694718,
+      "early_ply_le32": {
+        "classical_static_cp_mae_from_teacher": 59.388888888888886,
+        "cp_mae_from_teacher": 89.4006349873304,
+        "material_cp_mae_from_teacher": 72.22222222222223,
+        "mixed_target_mse": 0.08552567323443379,
+        "samples": 36
+      },
+      "games": 6,
+      "has_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": 262.2,
+        "cp_mae_from_teacher": 286.85024581454695,
+        "material_cp_mae_from_teacher": 333.26666666666665,
+        "mixed_target_mse": 0.008879219120912404,
+        "samples": 15
+      },
+      "material_cp_mae_from_teacher": 182.86458333333334,
+      "material_mixed_target_mse": 0.06803179810025461,
+      "material_teacher_tanh_mse": 0.052022085173943154,
+      "mixed_target_cp_shift_abs_quantiles_50_90_100": [
+        79.96534143192872,
+        126.6727337951527,
+        240.67629673001952
+      ],
+      "mixed_target_mse": 0.05391283508571428,
+      "never_trained_feature_activations": 16,
+      "no_untrained_feature": {
+        "classical_static_cp_mae_from_teacher": 118.54320987654322,
+        "cp_mae_from_teacher": 161.1791174855398,
+        "material_cp_mae_from_teacher": 155.01234567901236,
+        "mixed_target_mse": 0.06225239359771462,
+        "samples": 81
+      },
+      "pieces_le10": {
+        "classical_static_cp_mae_from_teacher": 270.875,
+        "cp_mae_from_teacher": 379.75071465675956,
+        "material_cp_mae_from_teacher": 403.875,
+        "mixed_target_mse": 0.006471641871828123,
+        "samples": 8
+      },
+      "positions_using_never_trained_features": 15,
+      "same_board_turn_flip_score_sum_abs_ge100": 52,
+      "same_board_turn_flip_score_sum_abs_quantiles_50_90_100": [
+        111.5037033905268,
+        276.1369753816675,
+        508.08189394376143
+      ],
+      "samples": 96,
+      "teacher_abs_cp_le100": {
+        "classical_static_cp_mae_from_teacher": 43.57142857142857,
+        "cp_mae_from_teacher": 64.39475922075766,
+        "material_cp_mae_from_teacher": 48.607142857142854,
+        "mixed_target_mse": 0.0656107400859103,
+        "samples": 28
+      },
+      "teacher_abs_cp_le300": {
+        "classical_static_cp_mae_from_teacher": 51.14705882352941,
+        "cp_mae_from_teacher": 76.08245697601096,
+        "material_cp_mae_from_teacher": 60.5,
+        "mixed_target_mse": 0.05865684036072661,
+        "samples": 34
+      },
+      "teacher_abs_cp_le600": {
+        "classical_static_cp_mae_from_teacher": 67.18333333333334,
+        "cp_mae_from_teacher": 103.43056842820147,
+        "material_cp_mae_from_teacher": 84.51666666666667,
+        "mixed_target_mse": 0.061096518501300476,
+        "samples": 60
+      },
+      "teacher_and_final_outcome_opposite_sign": 16,
+      "teacher_tanh_mse": 0.04001778810466572,
+      "turns": {
+        "b": 0,
+        "w": 96
+      },
+      "unbounded_residual_cp_quantiles_0_10_50_90_100": [
+        -177.75786994876665,
+        -77.83882362835047,
+        26.768594510477186,
+        181.09798196203928,
+        397.20951534073686
+      ]
+    }
+  },
+  "status": "complete",
+  "turn_flip_caveat": "Same-board turn-flip probes change the right to move; their score sums are descriptive, not a required chess-rule identity or a source of synthetic/sign-flipped training labels"
+}

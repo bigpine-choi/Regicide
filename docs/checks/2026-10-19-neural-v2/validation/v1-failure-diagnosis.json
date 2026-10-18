@@ -1,0 +1,594 @@
+{
+  "schema": "regicide.neural-v1.readonly-diagnosis.v1",
+  "training_prohibited": true,
+  "scope": "Held-out arena outcomes/positions are descriptive evidence only, never labels or hyperparameter selection signals",
+  "source_sha256": {
+    "docs\\checks\\2026-10-18-neural-v1\\data\\positions.jsonl": "260005178e8e6189f21f76000d649984d9decc3c34c724aa5c0f751291179e55",
+    "build\\learning-cycle\\runs\\000001-88bbee0e1ae3\\data\\positions.jsonl": "fe711814a0c67e9d1db7d3acecf2a39f4537d2564a2ac18ef38c2ca49da50057",
+    "build\\learning-cycle\\runs\\000002-95a3500d5501\\data\\positions.jsonl": "40671b6a5e5d607fcf94cb5d7bbe8bf9494432017bb16819be3461d46ddc3697",
+    "build\\learning-cycle\\runs\\000002-95a3500d5501\\corpus\\positions.jsonl": "dfe17ebe25ce773cc4bc3daa7fbeb8878aa322523addc951368f5a476f58e155",
+    "build\\learning-cycle\\runs\\000002-95a3500d5501\\model\\small-v1.nn": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+    "build\\learning-cycle\\runs\\000002-95a3500d5501\\arena\\arena.json": "ffbe3e44c0825189903eba7f1894864cd42b266b7577b81d59e8f08094316ecc"
+  },
+  "coverage": {
+    "docs/checks/2026-10-18-neural-v1/data/positions.jsonl": {
+      "rows": 588,
+      "turns": {
+        "w": 588
+      },
+      "turns_by_split": {
+        "train": {
+          "w": 367
+        },
+        "validation": {
+          "w": 96
+        },
+        "test": {
+          "w": 125
+        }
+      },
+      "source_by_turn": {
+        "regular": {
+          "w": 588
+        }
+      }
+    },
+    "build/learning-cycle/runs/000001-88bbee0e1ae3/data/positions.jsonl": {
+      "rows": 477,
+      "turns": {
+        "w": 477
+      },
+      "turns_by_split": {
+        "train": {
+          "w": 294
+        },
+        "validation": {
+          "w": 88
+        },
+        "test": {
+          "w": 95
+        }
+      },
+      "source_by_turn": {
+        "regular": {
+          "w": 477
+        }
+      }
+    },
+    "build/learning-cycle/runs/000002-95a3500d5501/data/positions.jsonl": {
+      "rows": 525,
+      "turns": {
+        "w": 525
+      },
+      "turns_by_split": {
+        "train": {
+          "w": 325
+        },
+        "validation": {
+          "w": 82
+        },
+        "test": {
+          "w": 118
+        }
+      },
+      "source_by_turn": {
+        "regular": {
+          "w": 525
+        }
+      }
+    },
+    "build/learning-cycle/runs/000002-95a3500d5501/corpus/positions.jsonl": {
+      "rows": 1200,
+      "turns": {
+        "w": 1175,
+        "b": 25
+      },
+      "turns_by_split": {
+        "train": {
+          "w": 954,
+          "b": 25
+        },
+        "validation": {
+          "w": 96
+        },
+        "test": {
+          "w": 125
+        }
+      },
+      "source_by_turn": {
+        "loss_analysis": {
+          "b": 25,
+          "w": 10
+        },
+        "regular": {
+          "w": 1165
+        }
+      }
+    }
+  },
+  "label_and_static_prediction_diagnostics": {
+    "train": {
+      "rows": 979,
+      "games": 59,
+      "families": 10,
+      "stages": {
+        "high_20_24": {
+          "count": 358,
+          "teacher_depth": {
+            "count": 358,
+            "mean": 2.85195530726257,
+            "median": 3.0,
+            "min": 1,
+            "max": 5
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 358,
+            "mean": 105.68515973779127,
+            "median": 86.08455550892522,
+            "min": 0.6240092767467189,
+            "max": 665.3069702517981
+          },
+          "absolute_nn_material_residual": {
+            "count": 358,
+            "mean": 128.90479044347694,
+            "median": 94.08888962255256,
+            "min": 0.06722079261089675,
+            "max": 938.9474813999827
+          }
+        },
+        "middle_7_19": {
+          "count": 457,
+          "teacher_depth": {
+            "count": 457,
+            "mean": 3.2319474835886215,
+            "median": 3,
+            "min": 1,
+            "max": 7
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 457,
+            "mean": 152.98518633569412,
+            "median": 111.16416100233644,
+            "min": 0.6369384086139149,
+            "max": 1223.4119950110876
+          },
+          "absolute_nn_material_residual": {
+            "count": 457,
+            "mean": 174.49204237208752,
+            "median": 127.34327961476566,
+            "min": 0.09629970097734031,
+            "max": 926.226562738989
+          }
+        },
+        "low_0_6": {
+          "count": 164,
+          "teacher_depth": {
+            "count": 164,
+            "mean": 4.432926829268292,
+            "median": 4.0,
+            "min": 2,
+            "max": 10
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 164,
+            "mean": 168.49628115531254,
+            "median": 83.21364263020985,
+            "min": 0.3421340158370185,
+            "max": 1573.913416523122
+          },
+          "absolute_nn_material_residual": {
+            "count": 164,
+            "mean": 126.83561674870695,
+            "median": 91.83135943595838,
+            "min": 1.9723321121874733,
+            "max": 828.0655165820458
+          }
+        }
+      },
+      "legal_input_channels_never_active": 186,
+      "legal_input_channels_active_fewer_than_five_times": 410,
+      "teacher_outcome_strong_disagreements": 53,
+      "teacher_abs_cp_ge_1200": 91
+    },
+    "validation": {
+      "rows": 96,
+      "games": 6,
+      "families": 3,
+      "stages": {
+        "high_20_24": {
+          "count": 40,
+          "teacher_depth": {
+            "count": 40,
+            "mean": 2.9,
+            "median": 3.0,
+            "min": 1,
+            "max": 4
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 40,
+            "mean": 108.09212268740885,
+            "median": 63.409086081233156,
+            "min": 3.233289506309397,
+            "max": 756.3470065613506
+          },
+          "absolute_nn_material_residual": {
+            "count": 40,
+            "mean": 77.14144804144843,
+            "median": 61.4299041290566,
+            "min": 0.6084186291472223,
+            "max": 397.20951534073686
+          }
+        },
+        "middle_7_19": {
+          "count": 37,
+          "teacher_depth": {
+            "count": 37,
+            "mean": 3.108108108108108,
+            "median": 3,
+            "min": 2,
+            "max": 4
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 37,
+            "mean": 183.55262322759,
+            "median": 144.35335418648503,
+            "min": 7.796430169299981,
+            "max": 755.0401996673708
+          },
+          "absolute_nn_material_residual": {
+            "count": 37,
+            "mean": 95.48344821082877,
+            "median": 69.12774157565764,
+            "min": 4.181806916947096,
+            "max": 308.57823428894324
+          }
+        },
+        "low_0_6": {
+          "count": 19,
+          "teacher_depth": {
+            "count": 19,
+            "mean": 3.3684210526315788,
+            "median": 3,
+            "min": 2,
+            "max": 4
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 19,
+            "mean": 328.58580192788116,
+            "median": 296.68525932256784,
+            "min": 82.68139363410569,
+            "max": 875.0315876562549
+          },
+          "absolute_nn_material_residual": {
+            "count": 19,
+            "mean": 98.47661920415038,
+            "median": 84.56499995156264,
+            "min": 0.4962846049311338,
+            "max": 357.05508051198103
+          }
+        }
+      },
+      "legal_input_channels_never_active": 522,
+      "legal_input_channels_active_fewer_than_five_times": 642,
+      "teacher_outcome_strong_disagreements": 3,
+      "teacher_abs_cp_ge_1200": 17
+    },
+    "test": {
+      "rows": 125,
+      "games": 6,
+      "families": 3,
+      "stages": {
+        "high_20_24": {
+          "count": 24,
+          "teacher_depth": {
+            "count": 24,
+            "mean": 2.875,
+            "median": 3.0,
+            "min": 2,
+            "max": 4
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 24,
+            "mean": 151.3902260675679,
+            "median": 114.35908622372325,
+            "min": 17.96633202421333,
+            "max": 809.0172734021919
+          },
+          "absolute_nn_material_residual": {
+            "count": 24,
+            "mean": 82.04630205374613,
+            "median": 73.56823557216904,
+            "min": 1.5446791069855408,
+            "max": 184.28446063125307
+          }
+        },
+        "middle_7_19": {
+          "count": 79,
+          "teacher_depth": {
+            "count": 79,
+            "mean": 3.2531645569620253,
+            "median": 3,
+            "min": 2,
+            "max": 5
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 79,
+            "mean": 181.74977044564602,
+            "median": 148.8740875693228,
+            "min": 0.4783392625909073,
+            "max": 1058.211431137343
+          },
+          "absolute_nn_material_residual": {
+            "count": 79,
+            "mean": 101.92683483833824,
+            "median": 81.02733539963594,
+            "min": 5.464484986065713,
+            "max": 372.3087489439604
+          }
+        },
+        "low_0_6": {
+          "count": 22,
+          "teacher_depth": {
+            "count": 22,
+            "mean": 3.772727272727273,
+            "median": 4.0,
+            "min": 2,
+            "max": 5
+          },
+          "absolute_nn_teacher_cp_gap": {
+            "count": 22,
+            "mean": 246.47094264366677,
+            "median": 101.2726763541726,
+            "min": 15.950709532465567,
+            "max": 881.0948585722338
+          },
+          "absolute_nn_material_residual": {
+            "count": 22,
+            "mean": 51.19098723694368,
+            "median": 38.34922221461363,
+            "min": 0.4988677300282802,
+            "max": 152.1093767800553
+          }
+        }
+      },
+      "legal_input_channels_never_active": 477,
+      "legal_input_channels_active_fewer_than_five_times": 617,
+      "teacher_outcome_strong_disagreements": 7,
+      "teacher_abs_cp_ge_1200": 15
+    }
+  },
+  "paired_same_root_first_search": {
+    "pairs": 32,
+    "node_ratio": {
+      "count": 32,
+      "mean": 0.8846690346643952,
+      "median": 0.8836704592297697,
+      "min": 0.7434594082495263,
+      "max": 0.9700892268471716
+    },
+    "candidate_lower_depth": 8,
+    "candidate_equal_depth": 18,
+    "candidate_greater_depth": 6
+  },
+  "role_phase_material_patterns": {
+    "candidate": {
+      "high_20_24": {
+        "decisions_with_two_plies": 772,
+        "net_material_concessions_ge_300cp": 49,
+        "reported_negative_mate": 0
+      },
+      "middle_7_19": {
+        "decisions_with_two_plies": 1341,
+        "net_material_concessions_ge_300cp": 119,
+        "reported_negative_mate": 91
+      },
+      "low_0_6": {
+        "decisions_with_two_plies": 453,
+        "net_material_concessions_ge_300cp": 46,
+        "reported_negative_mate": 43
+      }
+    },
+    "baseline": {
+      "high_20_24": {
+        "decisions_with_two_plies": 771,
+        "net_material_concessions_ge_300cp": 52,
+        "reported_negative_mate": 0
+      },
+      "middle_7_19": {
+        "decisions_with_two_plies": 1325,
+        "net_material_concessions_ge_300cp": 74,
+        "reported_negative_mate": 16
+      },
+      "low_0_6": {
+        "decisions_with_two_plies": 451,
+        "net_material_concessions_ge_300cp": 13,
+        "reported_negative_mate": 3
+      }
+    }
+  },
+  "loss_material_states": {
+    "losses": 46,
+    "started_down_ge_300cp": 1,
+    "never_down_ge_300cp": 1,
+    "entered_low_material_phase": 32,
+    "candidate_ever_reported_cp_ge_100": 20
+  },
+  "terminal_material_by_candidate_points": {
+    "0.0": {
+      "count": 46,
+      "mean": -1739.5652173913043,
+      "median": -1720.0,
+      "min": -3150,
+      "max": 0
+    },
+    "0.5": {
+      "count": 10,
+      "mean": -233,
+      "median": -315.0,
+      "min": -1100,
+      "max": 420
+    },
+    "1.0": {
+      "count": 8,
+      "mean": 872.5,
+      "median": 1000.0,
+      "min": 0,
+      "max": 1330
+    }
+  },
+  "largest_material_concession_examples": [
+    {
+      "game": 1,
+      "ply": 18,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "d8d3",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 7,
+      "ply": 81,
+      "role": "candidate",
+      "phase": "middle_7_19",
+      "move": "d1e2",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 8,
+      "ply": 54,
+      "role": "candidate",
+      "phase": "high_20_24",
+      "move": "f7f6",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 12,
+      "ply": 53,
+      "role": "baseline",
+      "phase": "middle_7_19",
+      "move": "b1e4",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 13,
+      "ply": 63,
+      "role": "candidate",
+      "phase": "middle_7_19",
+      "move": "b4e4",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 14,
+      "ply": 84,
+      "role": "candidate",
+      "phase": "middle_7_19",
+      "move": "b2e5",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 17,
+      "ply": 51,
+      "role": "candidate",
+      "phase": "high_20_24",
+      "move": "f1d3",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 19,
+      "ply": 36,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "a4c6",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 20,
+      "ply": 61,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "e6g5",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 27,
+      "ply": 36,
+      "role": "baseline",
+      "phase": "middle_7_19",
+      "move": "e7f5",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 29,
+      "ply": 24,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "f6e6",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 30,
+      "ply": 16,
+      "role": "candidate",
+      "phase": "high_20_24",
+      "move": "e7e8",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 30,
+      "ply": 90,
+      "role": "candidate",
+      "phase": "middle_7_19",
+      "move": "b6c5",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 31,
+      "ply": 36,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "a4c6",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 32,
+      "ply": 61,
+      "role": "baseline",
+      "phase": "high_20_24",
+      "move": "e6g5",
+      "two_ply_material_concession_cp": 900
+    },
+    {
+      "game": 33,
+      "ply": 74,
+      "role": "baseline",
+      "phase": "middle_7_19",
+      "move": "b6b3",
+      "two_ply_material_concession_cp": 900
+    }
+  ],
+  "existing_training_metrics": {
+    "test": {
+      "initial_mse": 0.05013316369441141,
+      "material_only_mse": 0.05202590962522013,
+      "selected_mse": 0.06254612197117516
+    },
+    "train": {
+      "initial_mse": 0.059143288303829755,
+      "material_only_mse": 0.06129980464405245,
+      "selected_mse": 0.008738437293656554
+    },
+    "validation": {
+      "initial_mse": 0.06827612321835923,
+      "material_only_mse": 0.06803179810025463,
+      "selected_mse": 0.05391283508571427
+    }
+  },
+  "stage_definition": "Same nonpawn phase weights as the engine: N/B=1, R=2, Q=4, both colors sum capped24; descriptive buckets high20..24, middle7..19, low0..6",
+  "uncertainty": [
+    "Two-ply material concessions can be sound sacrifices; they are not engine-verified blunders.",
+    "Teacher cp is searched while the NN observation is static; their cp gap is not alone an evaluation-error proof.",
+    "Only paired first searches share exactly the same board. Later role-specific paths differ, so their aggregate node/depth rates are not controlled speed measurements.",
+    "Material phase is not a complete strategic definition of opening/middlegame/endgame.",
+    "No controlled ablation or new native engine search was performed by this helper."
+  ]
+}
