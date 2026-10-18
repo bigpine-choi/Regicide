@@ -242,7 +242,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.4", engine.id
+        assert engine.id.get("name") == "Regicide 0.5.5", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:

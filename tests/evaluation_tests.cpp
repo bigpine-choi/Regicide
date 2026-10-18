@@ -1,8 +1,10 @@
 #include "regicide/evaluation.hpp"
+#include "reference_evaluation_v054.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -118,6 +120,64 @@ void symmetric(const Board& board) {
                "changing turn must negate the evaluation exactly");
     }
     expect(board == saved, "evaluation changed the board or history");
+}
+
+// This corpus compares against an untouched release implementation. It does
+// not reproduce the optimized lookup tables or derive expected scores from
+// their internals, so an incorrect table, index, or rounding step is visible.
+int oracle_positions = 0;
+void compare_release_evaluation(const Board& board) {
+    const auto saved = board;
+    ++oracle_positions;
+    for (bool enabled : {false, true}) {
+        expect(evaluate_position(board, enabled) == evaluate_position_v054(board, enabled),
+               "v0.5.4 oracle mismatch (shield " + std::string(enabled ? "on): " : "off): ") +
+                   board.fen());
+    }
+    expect(board == saved, "release oracle comparison changed position, hashes, or history");
+}
+
+// Exercise evaluator inputs rather than simulate the evaluator. The FEN
+// reader checks each fixture, including the previously moving king's safety.
+// Home-square counts rotate across all 0..4 values; the king occupying one of
+// those squares makes four undeveloped minors impossible and naturally caps
+// that particular fixture at three.
+Board oracle_fixture(int king_square, int pawn_distance, int attacking_phase,
+                     int requested_home_minors, int& actual_home_minors) {
+    Position position;
+    position.squares.fill('.');
+    position.squares[king_square] = 'K';
+    actual_home_minors = 0;
+    for (const auto& [home, piece] : std::array<std::pair<int, char>, 4>{{
+             {1, 'N'}, {2, 'B'}, {5, 'B'}, {6, 'N'}}}) {
+        if (actual_home_minors == requested_home_minors) break;
+        if (position.squares[home] != '.') continue;
+        position.squares[home] = piece;
+        ++actual_home_minors;
+    }
+    const int pawn_rank = king_square / 8 + pawn_distance;
+    if (pawn_distance && pawn_rank >= 1 && pawn_rank <= 6) {
+        for (int file = std::max(0, king_square % 8 - 1);
+             file <= std::min(7, king_square % 8 + 1); ++file)
+            position.squares[pawn_rank * 8 + file] = 'P';
+    }
+    // Queens, rooks and knights supply exact material phases, including
+    // promoted armies beyond both the shelter and blended-phase clamps.
+    int remaining_phase = attacking_phase;
+    int next_square = 63;
+    while (remaining_phase) {
+        while (position.squares[next_square] != '.') --next_square;
+        const char piece = remaining_phase >= 4 ? 'q' : remaining_phase >= 2 ? 'r' : 'n';
+        position.squares[next_square--] = piece;
+        remaining_phase -= piece == 'q' ? 4 : piece == 'r' ? 2 : 1;
+    }
+    for (int candidate = 63; candidate >= 0; --candidate) {
+        if (position.squares[candidate] != '.') continue;
+        position.squares[candidate] = 'k';
+        try { return Board(fen(position)); }
+        catch (const std::invalid_argument&) { position.squares[candidate] = '.'; }
+    }
+    throw std::runtime_error("could not place a legal opposing king in oracle fixture");
 }
 } // namespace
 
@@ -306,6 +366,90 @@ int main() {
             expect(board == saved, "evaluation mode changed board, clocks, hashes, or history");
         }
     });
+    test("frozen v0.5.4 oracle across king squares pawn distances phases and home minors", [] {
+        std::array<int, 64> king_coverage{};
+        std::array<int, 5> distance_coverage{}, home_coverage{};
+        constexpr std::array<int, 17> phases{{
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 24, 28}};
+        std::array<int, phases.size()> phase_coverage{};
+        for (int king = 0; king < 64; ++king) {
+            for (int distance = 0; distance <= 4; ++distance) {
+                for (std::size_t phase_index = 0; phase_index < phases.size(); ++phase_index) {
+                    int actual_home = 0;
+                    const auto board = oracle_fixture(king, distance, phases[phase_index],
+                        (king + distance + static_cast<int>(phase_index)) % 5, actual_home);
+                    ++king_coverage[king];
+                    ++distance_coverage[distance];
+                    ++phase_coverage[phase_index];
+                    ++home_coverage[actual_home];
+                    compare_release_evaluation(board);
+                    compare_release_evaluation(reflected(board, true));
+                    if ((king + distance + static_cast<int>(phase_index)) % 4 == 0 &&
+                        !board.in_check()) {
+                        Position other_turn = board.position();
+                        other_turn.turn = opposite(other_turn.turn);
+                        compare_release_evaluation(Board(fen(other_turn)));
+                    }
+                }
+            }
+        }
+        for (int count : king_coverage) expect(count > 0, "an oracle king square was uncovered");
+        for (int count : distance_coverage) expect(count > 0, "an oracle pawn distance was uncovered");
+        for (int count : phase_coverage) expect(count > 0, "an oracle attacking phase was uncovered");
+        for (int count : home_coverage) expect(count > 0, "an oracle home-minor count was uncovered");
+    });
+    test("frozen v0.5.4 oracle on deterministic legal game walks with retained history", [] {
+        constexpr std::array<const char*, 8> starts{{
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+            "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+            "4k3/P7/8/8/8/8/7p/4K3 w - - 0 1",
+            "qqqqkqqq/qqqqqqqq/8/8/8/8/QQQQQQQQ/QQQQKQQQ w - - 0 1",
+            "7k/8/2n5/3P4/2K5/4B3/8/8 b - - 17 32",
+            "7k/8/8/8/8/5P2/5PPP/6K1 w - - 99 50",
+            "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1"}};
+        std::uint32_t random = 0x5a17d3e9U;
+        for (int game = 0; game < 100; ++game) {
+            Board board(starts[static_cast<std::size_t>(game) % starts.size()]);
+            for (int ply = 0; ply < 40; ++ply) {
+                compare_release_evaluation(board);
+                if (ply % 4 == 0) compare_release_evaluation(reflected(board, true));
+                const auto moves = board.legal_moves();
+                if (moves.empty()) break;
+                random ^= random << 13;
+                random ^= random >> 17;
+                random ^= random << 5;
+                board.play_generated(moves[random % moves.size()]);
+            }
+        }
+    });
+    test("frozen v0.5.4 oracle preserves special move and repetition histories", [] {
+        auto sequence = [](const char* source, std::initializer_list<const char*> moves) {
+            Board board(source);
+            compare_release_evaluation(board);
+            for (const char* move : moves) {
+                board.play(move);
+                compare_release_evaluation(board);
+            }
+            for (std::size_t remaining = moves.size(); remaining; --remaining) {
+                board.undo();
+                compare_release_evaluation(board);
+            }
+        };
+        sequence("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", {"e1g1", "e8c8"});
+        sequence("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", {"e5d6", "h8g8"});
+        sequence("4k3/P7/8/8/8/8/7p/4K3 w - - 0 1", {"a7a8q", "e8f7", "a8h8", "h2h1n"});
+        sequence("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                 {"g1f3", "g8f6", "f3g1", "f6g8", "g1f3", "g8f6", "f3g1", "f6g8"});
+        for (const Board& board : {
+                 shelter_position("g3", {"f4", "g2", "g4", "g6", "h4"}),
+                 shelter_position("g3", {"f2", "g2", "h2"}),
+                 shelter_position("a1", {"a2", "a4", "b2", "c2"})}) {
+            compare_release_evaluation(board);
+            compare_release_evaluation(reflected(board, true));
+        }
+    });
+    std::cout << oracle_positions << " frozen v0.5.4 oracle positions (each shield on/off)\n";
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;
 }
