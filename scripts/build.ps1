@@ -1,5 +1,6 @@
 param(
     [switch]$Test,
+    [switch]$EvaluationProbe,
     [ValidatePattern('^[A-Za-z0-9_-]+$')][string]$BuildDirectory = 'build'
 )
 $ErrorActionPreference = 'Stop'
@@ -13,6 +14,12 @@ $buildDir = Join-Path $repoRoot $BuildDirectory
 New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 # Keep compilation in one Windows shell so the compiler inherits its SDK environment.
 $batchFile = Join-Path $buildDir 'compile.cmd'
+$probeBuild = if ($EvaluationProbe) {
+@"
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\inspect_evaluation.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\inspect_evaluation.obj /Febuild\regicide_evaluation_probe.exe
+if errorlevel 1 exit /b 1
+"@
+} else { '' }
 $batch = @"
 @echo off
 chcp 65001 >nul
@@ -48,6 +55,8 @@ if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\transposition_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\transposition_tests.obj /Febuild\regicide_transposition_tests.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\see_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\see_tests.obj /Febuild\regicide_see_tests.exe
+if errorlevel 1 exit /b 1
+$probeBuild
 exit /b %errorlevel%
 "@
 $batch = $batch.Replace('build\', ($BuildDirectory + '\'))
