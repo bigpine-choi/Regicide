@@ -32,7 +32,7 @@
 - [x] v0.5.4 왕 앞 폰 방패의 자체 중반 평가·비교 옵션, 기존 규칙 포함 C++ 106그룹·54,209검사(Windows/Linux), OFF 고정 깊이 20쌍 일치, 기존 대국·추천 기능 연동과 로컬 배포. [기록](experiments/2026-10-18-pawn-shield.md). 일반 기력 향상은 미검증.
 - [x] v0.5.5 기물 분류·위치 수식의 constexpr 표, 방패 평가 효과 유지, Windows/Linux C++ 109그룹·104,880검사, 함수 단독·고정 깊이 비용 분리, 130쌍의 수·점수·노드·PV 일치. [기록](experiments/2026-10-18-shield-opt.md). 같은 시간 대국의 기력 향상은 미검증.
 - [x] v0.5.6 통과폰·겹친 폰·고립된 폰의 자체 평가와 독립 설정. [원리](PAWN_STRUCTURE.md)와 [검증·비용](experiments/2026-10-18-pawn-structure.md). 일반 기력 향상은 미검증.
-- [x] v0.5.7 폰 구조 반복 계산을 constexpr 표와 공유 파일 순회로 대체, v0.5.6 동결 참조·기존 scalar 참조의 동값 유지. [검증·비용](experiments/2026-10-18-pawn-opt.md). 일반 기력 향상은 미검증.
+- [x] v0.5.7 폰 구조 반복 계산을 압축 constexpr 표로 대체, v0.5.6 동결 참조·기존 scalar 참조의 동값 유지. [검증·비용](experiments/2026-10-18-pawn-opt.md). 일반 기력 향상은 미검증.
 
 재현 방법과 검증 수치는 [규칙 코어 문서](RULES_CORE.md), [첫 대국 엔진](ENGINE.md) 및 `experiments/`의 실행 기록에 남긴다. 아래 기술 방향 중 학습 방식·최종 엔진 구조는 계속 검토 사항이다.
 
