@@ -98,7 +98,12 @@ std::shared_ptr<const NeuralEvaluator> NeuralEvaluator::load(std::istream& input
 
     auto model = std::shared_ptr<NeuralEvaluator>(new NeuralEvaluator);
     model->classical_residual_ = classical_residual;
-    read_parameters(data, model->w1_);
+    // Keep the file format unchanged, but make the weights for one occupied
+    // feature contiguous. Loading does this once; evaluation uses that layout
+    // at every searched position.
+    for (std::size_t row = 0; row < hidden1_count; ++row)
+        for (std::size_t column = 0; column < input_count; ++column)
+            model->w1_[column * hidden1_count + row] = read_parameter(data);
     read_parameters(data, model->b1_);
     read_parameters(data, model->w2_);
     read_parameters(data, model->b2_);
@@ -112,29 +117,29 @@ std::shared_ptr<const NeuralEvaluator> NeuralEvaluator::load(std::istream& input
 int NeuralEvaluator::evaluate(const Board& board, bool king_pawn_shield, bool pawn_structure) const {
     const auto& position = board.position();
     const bool white_turn = position.turn == Color::white;
-    std::array<std::size_t, 64> active{};
-    std::size_t active_count = 0;
+    std::array<double, hidden1_count> h1 = b1_;
     int material = 0;
     for (std::size_t square = 0; square < position.squares.size(); ++square) {
         const char piece = position.squares[square];
         const int type = piece_type(piece);
         if (type < 0) continue;
         const bool own = (piece >= 'A' && piece <= 'Z') == white_turn;
-        material += (own ? 1 : -1) * material_values[static_cast<std::size_t>(type)];
+        if (!classical_residual_)
+            material += (own ? 1 : -1) * material_values[static_cast<std::size_t>(type)];
         const std::size_t relative_square = white_turn ? square : (square ^ 56);
         const auto channel = static_cast<std::size_t>(type + (own ? 0 : 6));
-        active[active_count++] = channel * 64 + relative_square;
+        const auto feature = channel * 64 + relative_square;
+        const double* weights = w1_.data() + feature * hidden1_count;
+        // Each neuron's additions still follow ascending board-square order,
+        // exactly as before. Only independent neurons run side by side, which
+        // permits contiguous loads and SIMD without reassociating any sum.
+        for (std::size_t row = 0; row < hidden1_count; ++row)
+            h1[row] += weights[row];
     }
 
-    // Sparse binary inputs: summing occupied feature columns gives the exact
-    // same network as a dense vector with 0/1 entries, without 768 multiplies.
-    std::array<double, hidden1_count> h1{};
-    for (std::size_t row = 0; row < hidden1_count; ++row) {
-        double value = b1_[row];
-        for (std::size_t index = 0; index < active_count; ++index)
-            value += w1_[row * input_count + active[index]];
-        h1[row] = std::max(0.0, value);
-    }
+    // Sparse binary inputs need additions for occupied features only. Apply
+    // ReLU after every feature has been accumulated, as in the original loop.
+    for (double& value : h1) value = std::max(0.0, value);
     std::array<double, hidden2_count> h2{};
     for (std::size_t row = 0; row < hidden2_count; ++row) {
         double value = b2_[row];

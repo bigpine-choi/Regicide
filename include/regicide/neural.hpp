@@ -39,6 +39,8 @@ public:
 private:
     NeuralEvaluator() = default;
     bool classical_residual_ = false;
+    // Runtime layout is [input feature][hidden neuron]. The model file keeps
+    // its original [hidden neuron][input feature] order; loading transposes it.
     std::array<double, input_count * hidden1_count> w1_{};
     std::array<double, hidden1_count> b1_{};
     std::array<double, hidden1_count * hidden2_count> w2_{};

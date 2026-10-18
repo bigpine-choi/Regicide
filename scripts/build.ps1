@@ -1,6 +1,7 @@
 param(
     [switch]$Test,
     [switch]$EvaluationProbe,
+    [switch]$NeuralProfile,
     [ValidatePattern('^[A-Za-z0-9_-]+$')][string]$BuildDirectory = 'build'
 )
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,12 @@ $batchFile = Join-Path $buildDir 'compile.cmd'
 $probeBuild = if ($EvaluationProbe) {
 @"
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\inspect_evaluation.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\inspect_evaluation.obj /Febuild\regicide_evaluation_probe.exe
+if errorlevel 1 exit /b 1
+"@
+} else { '' }
+$neuralProfileBuild = if ($NeuralProfile) {
+@"
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /GL- /DNDEBUG /Iinclude /Itests scripts\profile_neural.cpp build\reference_neural_v063.obj build\board.obj build\evaluation.obj build\search.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\profile_neural.obj /Febuild\regicide_profile_neural.exe
 if errorlevel 1 exit /b 1
 "@
 } else { '' }
@@ -42,6 +49,8 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\neural.cpp /Fobuild\neural.obj
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /GL- /DNDEBUG /Iinclude /c tests\reference_neural_v063.cpp /Fobuild\reference_neural_v063.obj
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\uci.cpp /Fobuild\uci.obj
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
@@ -58,9 +67,10 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude t
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\see_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\see_tests.obj /Febuild\regicide_see_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\board.obj build\evaluation.obj build\neural.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\reference_neural_v063.obj build\board.obj build\evaluation.obj build\neural.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
 if errorlevel 1 exit /b 1
 $probeBuild
+$neuralProfileBuild
 exit /b %errorlevel%
 "@
 $batch = $batch.Replace('build\', ($BuildDirectory + '\'))

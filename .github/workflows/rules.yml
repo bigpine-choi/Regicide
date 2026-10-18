@@ -26,6 +26,9 @@ jobs:
       - run: python tests/learning_cycle_tests.py
       - run: python tests/teacher_quality_tests.py
       - run: python tests/neural_cost_diagnostic_tests.py
+      - run: python tests/neural_inference_benchmark_tests.py
+      - name: Build neural cost diagnostic
+        run: cmake --build build --config Release --target regicide_profile_neural
       - if: runner.os == 'Linux'
         run: python tests/neural_integration_tests.py --binary build/regicide
       - if: runner.os == 'Windows'

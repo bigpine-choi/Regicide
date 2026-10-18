@@ -1,10 +1,12 @@
 #include "regicide/neural.hpp"
 #include "regicide/evaluation.hpp"
+#include "reference_neural_v063.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <functional>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -63,9 +65,173 @@ Parameters feature_path(std::size_t feature, double weight = 1.0) {
     parameters[w3] = 1;
     return parameters;
 }
+
+std::vector<Board> parity_positions() {
+    // Special rules, sparse/dense inputs, both orientations and histories are
+    // represented independently of whichever positions a benchmark selects.
+    const std::array<const char*, 12> seeds{{
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+        "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1",
+        "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1",
+        "4k3/P7/8/8/8/8/7p/4K3 w - - 0 1",
+        "7k/8/8/BB6/NN6/RR6/Q1QQ4/KQQQQQQ1 w - - 0 1",
+        "7k/6Q1/5K2/8/8/8/8/8 b - - 0 1",
+        "7k/5Q2/5K2/8/8/8/8/8 b - - 0 1",
+        "8/8/8/8/2k5/8/5K2/8 b - - 99 50",
+        "4k3/8/3p4/2pPp3/2P1P3/8/8/4K3 b - - 0 1",
+        "3k4/8/8/2r5/8/4R3/8/4K3 w - - 74 60",
+        "8/1b3pk1/2p2np1/p3p3/P3P3/2P2NP1/1B3PK1/8 b - - 0 20"}};
+    std::vector<Board> boards;
+    boards.reserve(1025);
+    for (const char* fen : seeds) boards.emplace_back(fen);
+    Board repeated;
+    for (const char* move : {"g1f3", "g8f6", "f3g1", "f6g8",
+                             "g1f3", "g8f6", "f3g1", "f6g8"}) repeated.play(move);
+    boards.push_back(repeated);
+    std::mt19937 rng(0x063064U);
+    Board board;
+    while (boards.size() < 1025) {
+        const auto moves = board.legal_moves();
+        if (moves.empty() || board.outcome() != Outcome::ongoing || board.history_size() >= 160)
+            board = Board(seeds[rng() % seeds.size()]);
+        else board.play_generated(moves[rng() % moves.size()]);
+        boards.push_back(board);
+    }
+    return boards;
+}
+
+void expect_parity(const Parameters& parameters, bool classical,
+                   const std::vector<Board>& boards, const std::string& label) {
+    const auto evaluator = model(parameters, classical ? "REGICIDE_NN_V2 768 32 16 600 100" :
+                                                       "REGICIDE_NN_V1 768 32 16 600");
+    const reference_v063::NeuralEvaluator reference(parameters, classical);
+    for (std::size_t index = 0; index < boards.size(); ++index) {
+        const Board saved = boards[index];
+        for (bool shield : {false, true}) {
+            for (bool structure : {false, true}) {
+                const int expected = reference.evaluate(boards[index], shield, structure);
+                expect(evaluator->evaluate(boards[index], shield, structure) == expected,
+                       label + " differs from frozen v0.6.3 at board " + std::to_string(index));
+            }
+        }
+        expect(boards[index] == saved, label + " changed full board or history");
+        if (saved.history_size() > 0) {
+            Board after_evaluation = boards[index];
+            Board expected_undo = saved;
+            after_evaluation.undo();
+            expected_undo.undo();
+            expect(after_evaluation == expected_undo, label + " changed subsequent undo");
+        }
+    }
+}
+
+std::filesystem::path source_fixture(const char* relative) {
+    const auto from_source = std::filesystem::path(__FILE__).parent_path().parent_path() / relative;
+    if (std::filesystem::is_regular_file(from_source)) return from_source;
+    for (auto root = std::filesystem::current_path(); !root.empty();) {
+        const auto candidate = root / relative;
+        if (std::filesystem::is_regular_file(candidate)) return candidate;
+        const auto parent = root.parent_path();
+        if (parent == root) break;
+        root = parent;
+    }
+    throw std::runtime_error("Cannot locate committed neural parity fixture: " + std::string(relative));
+}
 } // namespace
 
 int main() {
+    test("frozen v0.6.3 parity over seeded models both formats and legal histories", [] {
+        const auto boards = parity_positions();
+        std::mt19937 rng(2026063064);
+        std::uniform_real_distribution<double> random(-1.0, 1.0);
+        for (double first_layer_scale : {0.0, 0.001, 0.03, 0.3, 3.0}) {
+            auto parameters = zero();
+            for (std::size_t index = 0; index < b1; ++index)
+                parameters[index] = random(rng) * first_layer_scale;
+            for (std::size_t index = b1; index < w2; ++index)
+                parameters[index] = random(rng) * first_layer_scale;
+            for (std::size_t index = w2; index < b3; ++index)
+                parameters[index] = random(rng) * 0.1;
+            parameters[b3] = random(rng) * 0.001;
+            for (bool classical : {false, true})
+                expect_parity(parameters, classical, boards, "seeded model");
+        }
+    });
+    test("committed learned V2 models match frozen inference over legal histories", [] {
+        const auto boards = parity_positions();
+        for (const char* fixture : {
+                 "docs/checks/2026-10-19-neural-cost-quality/diagnostic/learned-v2.nn",
+                 "docs/checks/2026-10-19-neural-cost-quality/run/model/small-v2.nn"}) {
+            const auto path = source_fixture(fixture).string();
+            const auto evaluator = NeuralEvaluator::load(path);
+            const auto reference = reference_v063::NeuralEvaluator::load(path);
+            for (std::size_t index = 0; index < boards.size(); ++index) {
+                const Board saved = boards[index];
+                for (bool shield : {false, true}) {
+                    for (bool structure : {false, true})
+                        expect(evaluator->evaluate(boards[index], shield, structure) ==
+                                   reference->evaluate(boards[index], shield, structure),
+                               "learned model differs from frozen inference at board " + std::to_string(index));
+                }
+                expect(boards[index] == saved, "learned model mutated board or history");
+            }
+        }
+    });
+    test("cancellation and half-centipawn boundaries retain original accumulation order", [] {
+        const Board board;
+        const double epsilon = std::ldexp(1.0, -47);
+        const double below_half = std::nextafter(1.0 / 1200.0, 0.0);
+        for (int layer : {1, 2}) {
+            for (double sign : {-1.0, 1.0}) {
+                auto parameters = zero();
+                if (layer == 1) {
+                    parameters[3 * 64] = 100; // a1 rook, first occupied square.
+                    parameters[64 + 1] = -100; // b1 knight, second square.
+                    parameters[2 * 64 + 2] = epsilon; // c1 bishop follows cancellation.
+                    parameters[w2] = 100;
+                    parameters[w3] = sign * 100;
+                } else {
+                    parameters[b1] = 100;
+                    parameters[b1 + 1] = 100;
+                    parameters[b1 + 2] = epsilon;
+                    parameters[w2] = 1;
+                    parameters[w2 + 1] = -1;
+                    parameters[w2 + 2] = 1;
+                    parameters[w3] = sign * 100;
+                }
+                parameters[b3] = sign * below_half;
+                const reference_v063::NeuralEvaluator reference(parameters, false);
+                // Regrouping the three terms can erase epsilon and round to 0.
+                expect(reference.evaluate(board) == static_cast<int>(sign),
+                       "cancellation fixture no longer distinguishes half rounding");
+                for (double bias : {std::nextafter(parameters[b3], -1.0), parameters[b3],
+                                    std::nextafter(parameters[b3], 1.0)}) {
+                    parameters[b3] = bias;
+                    expect_parity(parameters, false, {board}, "cancellation boundary");
+                    expect_parity(parameters, true, {board}, "bounded cancellation boundary");
+                }
+            }
+        }
+    });
+    test("separate multiply and add semantics remain visible at rounding boundaries", [] {
+        auto parameters = zero();
+        parameters[b1] = 1.0 + std::ldexp(1.0, -27);
+        parameters[w2] = -(1.0 - std::ldexp(1.0, -27));
+        parameters[b2] = 1;
+        parameters[w3] = 100;
+        parameters[b3] = std::nextafter(1.0 / 1200.0, 0.0);
+        const reference_v063::NeuralEvaluator reference(parameters, false);
+        expect(reference.evaluate(Board()) == 0, "frozen scalar multiply/add fixture changed");
+        expect_parity(parameters, false, {Board()}, "multiply/add boundary");
+        expect_parity(parameters, true, {Board()}, "bounded multiply/add boundary");
+        for (double tiny : {std::ldexp(1.0, -500), std::ldexp(1.0, -1022), 0.0, -0.0}) {
+            parameters[b1] = tiny;
+            parameters[b2] = -tiny;
+            expect_parity(parameters, false, {Board()}, "tiny/signed-zero activation");
+            expect_parity(parameters, true, {Board()}, "bounded tiny/signed-zero activation");
+        }
+    });
     test("V2 zero correction preserves every classical option and board state", [] {
         const auto evaluator = model(zero(), "REGICIDE_NN_V2 768 32 16 600 100");
         std::mt19937 rng(20261019);
