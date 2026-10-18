@@ -1,0 +1,82 @@
+{
+  "schema": "regicide.selfplay.dataset.v1",
+  "status": "complete",
+  "games_path": "games.jsonl",
+  "positions_path": "positions.jsonl",
+  "samples_path": "positions.jsonl",
+  "teacher_quality_schema": "regicide.learning.teacher-quality.v1",
+  "source_manifest_sha256": "afba5e092de136f34db454ad64a122543537ee93ef74aaeec16750a2758fab92",
+  "source_files_sha256": {
+    "games.jsonl": "d16611a868ed3d5964f2d2d403aadb84759f7e18bc161d9283d97ee5dcb4a322",
+    "positions.jsonl": "1dfa3f8b7e4f80176cab968d4d385ae01c581f1c8ed41f48bc71fbbd7871ebb4",
+    "games.pgn": "dd169acdbe6395c8c821153d431cf67d2d63c3d0acc8caf7ec9559c66b69269a"
+  },
+  "quality_report_path": "quality-report.json",
+  "policy_sha256": "700f9e487b8647d400d7c00883f6ebb09df82c1d6d571e079779d395b029509e",
+  "holdout_policy": "input validation/test JSONL lines and every game/PGN byte preserved unchanged; no held-out teacher queries",
+  "test_policy": "reporting only; never a training, selection or promotion signal",
+  "family_splits": {
+    "caro-kann": "train",
+    "ruy-lopez": "train",
+    "scotch": "train",
+    "queens-gambit": "train",
+    "italian": "train",
+    "sicilian": "train",
+    "slav": "train",
+    "english": "train",
+    "french": "train",
+    "kings-indian": "train",
+    "budapest": "test",
+    "dutch": "validation",
+    "scandinavian": "validation",
+    "alekhine": "test",
+    "pirc": "validation",
+    "nimzo-indian": "test"
+  },
+  "errors": [],
+  "pgn_path": "games.pgn",
+  "trainable": true,
+  "positions": 1292,
+  "completed_games": 111,
+  "positions_by_split": {
+    "train": 1071,
+    "validation": 96,
+    "test": 125
+  },
+  "holdout_rows_sha256": {
+    "validation": "ebdda07879ebfb70d4fc89667b15be60ba11f50dad0da9a10e945e4e7b46a887",
+    "test": "64832f4b4c986cc620a6f7426292db82620d9c3982267fa773e1c1fbd17c13a4"
+  },
+  "holdout_raw_lines_sha256": {
+    "validation": "776d4067d131d76805623c5b376ef75de11a9f222625a13af20d37efbd36e670",
+    "test": "d74d62a69e6cc1fe6dd29913803cb71836540fe178a3ec184a99d9dbf8d8fa24"
+  },
+  "files_sha256": {
+    "games.jsonl": "d16611a868ed3d5964f2d2d403aadb84759f7e18bc161d9283d97ee5dcb4a322",
+    "positions.jsonl": "415a4b176c87a3facdfbf9b8d851eb8aa882b2b1dc395a01a6dba58549916fec",
+    "games.pgn": "dd169acdbe6395c8c821153d431cf67d2d63c3d0acc8caf7ec9559c66b69269a"
+  },
+  "quality_report_sha256": "8979ec1f48a40df64ffaae1b86d84a3e6959ff68926decc3262835f23bf6be98",
+  "quality_counts": {
+    "requested": 1681,
+    "accepted": 1071,
+    "excluded": 610
+  },
+  "validated_counts": {
+    "train": {
+      "samples": 1071,
+      "games": 99,
+      "families": 10
+    },
+    "validation": {
+      "samples": 96,
+      "games": 6,
+      "families": 3
+    },
+    "test": {
+      "samples": 125,
+      "games": 6,
+      "families": 3
+    }
+  }
+}

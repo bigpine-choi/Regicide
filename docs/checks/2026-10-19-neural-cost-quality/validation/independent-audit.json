@@ -1,0 +1,155 @@
+{
+  "schema": "regicide.neural.cost-quality.independent-audit.v1",
+  "finished_utc": "2026-10-18T16:33:33.085463+00:00",
+  "source_commit": "426830231d5291991a589cf73b058c88b653d1fe",
+  "baseline_commit": "25d37d8173da9e72bbc4b20178e2933ac4640911",
+  "run": "runs/000004-01d14f9c73af",
+  "passed": true,
+  "assertions": 537977,
+  "sections": [
+    {
+      "name": "Frozen implementation, history, attempt and derived artifacts",
+      "passed": true,
+      "assertions": 191,
+      "details": {
+        "protected_source_files": 16,
+        "historical_files_unchanged": 74,
+        "persistent_attempt_before": 3,
+        "persistent_attempt_after": 4,
+        "implementation_files": 57
+      }
+    },
+    {
+      "name": "Train-only teacher ladder, original provenance and immutable holdouts",
+      "passed": true,
+      "assertions": 394938,
+      "details": {
+        "requested_train_positions": 1681,
+        "accepted": 1071,
+        "excluded": {
+          "last_two_cp_unstable": 158,
+          "last_two_best_moves_differ": 384,
+          "stage_2_mate_score": 40,
+          "stage_3_mate_score": 23,
+          "insufficient_completed_depth": 5
+        },
+        "queries": 5043,
+        "legal_teacher_pv_plies": 26905,
+        "heldout_validation": 96,
+        "heldout_test": 125,
+        "limitation": "Agreement of finite own-engine searches is not ground truth or strength proof."
+      }
+    },
+    {
+      "name": "Zero-head control, exact work, balanced schedule and independent cost",
+      "passed": true,
+      "assertions": 22118,
+      "details": {
+        "triples": 216,
+        "timed_searches": 648,
+        "fixed_work_equal_pairs": 144,
+        "legal_pv_plies": 2910,
+        "independent_aggregates": {
+          "depth": {
+            "zero_v2": {
+              "median_paired_wall_ratio_over_hce": 1.1771989004990104,
+              "median_node_ratio_over_hce": 1.0
+            },
+            "learned_v2": {
+              "median_paired_wall_ratio_over_hce": 1.27645481417138,
+              "median_node_ratio_over_hce": 1.194318336346312
+            }
+          },
+          "nodes": {
+            "zero_v2": {
+              "median_paired_wall_ratio_over_hce": 1.202399052643282,
+              "median_node_ratio_over_hce": 1.0
+            },
+            "learned_v2": {
+              "median_paired_wall_ratio_over_hce": 1.1777018913638901,
+              "median_node_ratio_over_hce": 1.0
+            }
+          },
+          "time": {
+            "zero_v2": {
+              "median_paired_wall_ratio_over_hce": 0.998513492445831,
+              "median_node_ratio_over_hce": 0.827997646060584
+            },
+            "learned_v2": {
+              "median_paired_wall_ratio_over_hce": 0.9988353501950449,
+              "median_node_ratio_over_hce": 0.8475670093292809
+            }
+          }
+        },
+        "guard": {
+          "samples": 83,
+          "max_gap_seconds": 0.5261276999954134,
+          "max_snapshot_seconds": 0.016409200005000457
+        },
+        "limitation": "Zero/HCE fixed-work ratios isolate inference path cost; learned ratios include changed search graphs. No strength inference."
+      }
+    },
+    {
+      "name": "Conditional finite teacher ranks and regret",
+      "passed": true,
+      "assertions": 2054,
+      "details": {
+        "available_common_depth_rank_positions": 12,
+        "unavailable": 0,
+        "stable_move_and_cp_within_30": [
+          "Sheltered kings and central tension",
+          "Open king flank with black to move",
+          "Black defended pawn chain",
+          "Queen exchange choice",
+          "Rook activity after a history move",
+          "White outside passer",
+          "Black king enters pawn ending",
+          "Rooks behind advanced pawns",
+          "Minor piece and passed pawn race",
+          "Opposite bishops with split pawns",
+          "Queen and pawn checking threats"
+        ],
+        "unstable_or_mate_references": [
+          "Isolated center pawn and rooks"
+        ],
+        "limitation": "Conditional finite own-engine decision proxy among compared moves. Even stable agreement is not objective correctness or strength proof; unstable references require extra caution."
+      }
+    },
+    {
+      "name": "Full arena rules, resource evidence, independent promotion criterion",
+      "passed": true,
+      "assertions": 118233,
+      "details": {
+        "wins": 18,
+        "draws": 12,
+        "losses": 34,
+        "pair_score": 0.375,
+        "attempt_alpha": 0.0025,
+        "one_sided_lower_bound": 0.06903164616489793,
+        "strict_adopted": false,
+        "full_legal_game_plies": 6690,
+        "legal_reported_pv_plies": 32583,
+        "max_response_seconds": 0.111684,
+        "guard": {
+          "samples": 1242,
+          "max_gap_seconds": 0.5276048999803606,
+          "max_snapshot_seconds": 0.022971899976255372
+        }
+      }
+    },
+    {
+      "name": "Learning, development diagnostic and reserved-opening separation",
+      "passed": true,
+      "assertions": 440,
+      "details": {
+        "protected_board_keys": 3418,
+        "protected_neural_inputs": 3418,
+        "development_positions": 12,
+        "collisions": 0,
+        "limitation": "Checks exact supplied learning inputs and all declared arena seed continuations, not arbitrary future continuations."
+      }
+    }
+  ],
+  "independence": "No production acceptance, selection, statistics, replay, model-loader or promotion helpers imported. Raw replay uses python-chess; raw matrix parsing and zero control use NumPy. No engine search launched.",
+  "scope": "Consistency, rule legality, immutable identities, finite label policy, sampled resource evidence and declared adoption criterion. Does not prove teacher truth, representative strength or all-host load control."
+}

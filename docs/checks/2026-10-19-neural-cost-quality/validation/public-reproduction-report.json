@@ -1,0 +1,104 @@
+{
+  "schema": "regicide.neural.public-reproduction.v1",
+  "status": "pass",
+  "use": "post-experiment reproducibility verification only; no training/model settings changed",
+  "source_commit": "426830231d5291991a589cf73b058c88b653d1fe",
+  "public_dataset": "docs/checks/2026-10-19-neural-cost-quality/run/quality/manifest.json",
+  "public_input_sha256": {
+    "manifest": "5435241d8569e4e9dc8374d4a5ecc80da6ee0f18637aacece64f21c34e04abf0",
+    "positions": "415a4b176c87a3facdfbf9b8d851eb8aa882b2b1dc395a01a6dba58549916fec",
+    "games": "d16611a868ed3d5964f2d2d403aadb84759f7e18bc161d9283d97ee5dcb4a322"
+  },
+  "original_training_report_sha256": "d360a4c962477d50ff5d01d3598e5b4436a55b3110d60ad58596f26eaba1dbfa",
+  "reproduction_training_report_sha256": "9c60ce6b8c3ba196d86307f583912dcbc8e0e71f9b857a21d5022236d28dd6a0",
+  "model_sha256": "5b363fa05487d7707d943c26c8a8343c86122315ecd61f88003692ff449291b3",
+  "expected_model_sha256": "5b363fa05487d7707d943c26c8a8343c86122315ecd61f88003692ff449291b3",
+  "selected_epoch": 81,
+  "configuration": {
+    "model_version": 2,
+    "seed": 20265054,
+    "epochs": 100,
+    "batch_size": 64,
+    "learning_rate": 0.003,
+    "l2": {
+      "biases_regularized": false,
+      "coefficient": 0.0001,
+      "formula": "0.5*coefficient*sum(weight_matrices^2)",
+      "matrices": [
+        "w1",
+        "w2",
+        "w3"
+      ]
+    }
+  },
+  "dataset_counts": {
+    "test": {
+      "families": 3,
+      "games": 6,
+      "samples": 125
+    },
+    "train": {
+      "families": 10,
+      "games": 99,
+      "samples": 1071
+    },
+    "validation": {
+      "families": 3,
+      "games": 6,
+      "samples": 96
+    }
+  },
+  "metrics": {
+    "test": {
+      "classical_only_mse": 0.03648879805425692,
+      "initial_mse": 0.03648879805425692,
+      "selected_mse": 0.036589498125212734
+    },
+    "train": {
+      "classical_only_mse": 0.054414616608805394,
+      "initial_mse": 0.054414616608805394,
+      "selected_mse": 0.0316834371733787
+    },
+    "validation": {
+      "classical_only_mse": 0.04859568136537474,
+      "initial_mse": 0.04859568136537474,
+      "selected_mse": 0.04036828125513006
+    }
+  },
+  "semantic_training_fields_equal": {
+    "architecture": true,
+    "baseline": true,
+    "batch_size": true,
+    "correction": true,
+    "correction_cap_cp": true,
+    "epochs": true,
+    "history": true,
+    "implementation_sha256": true,
+    "initial_model_sha256": true,
+    "initialization": true,
+    "l2": true,
+    "learning_rate": true,
+    "loss": true,
+    "loss_components": true,
+    "metrics": true,
+    "model_format": true,
+    "model_version": true,
+    "optimizer": true,
+    "parameter_count": true,
+    "rng": true,
+    "scale_cp": true,
+    "seed": true,
+    "selected_epoch": true,
+    "target": true,
+    "turn_distribution": true
+  },
+  "checks": {
+    "model_sha256_matches_expected": true,
+    "model_bytes_equal_original": true,
+    "selected_epoch_is_81": true,
+    "dataset_counts_equal_original": true,
+    "public_inputs_unchanged_during_training": true,
+    "all_semantic_training_fields_equal": true
+  },
+  "provenance_note": "Public privacy redaction changes some JSON file hashes. Training reads and validates the public game histories/positions directly; the same deterministic training produces byte-identical model and numerical history/metrics."
+}

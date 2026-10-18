@@ -1,0 +1,317 @@
+{
+  "schema": "regicide.teacher-quality.postrun-analysis.v1",
+  "status": "complete",
+  "use": "post-run descriptive reporting only; never used for model, hyperparameter, policy or promotion selection",
+  "source_commit": "426830231d5291991a589cf73b058c88b653d1fe",
+  "run": "000004-01d14f9c73af",
+  "report_sha256": "8979ec1f48a40df64ffaae1b86d84a3e6959ff68926decc3262835f23bf6be98",
+  "manifest_sha256": "5435241d8569e4e9dc8374d4a5ecc80da6ee0f18637aacece64f21c34e04abf0",
+  "source_manifest_sha256": "afba5e092de136f34db454ad64a122543537ee93ef74aaeec16750a2758fab92",
+  "policy": {
+    "id": "fresh-classical-last-two-stable-v1",
+    "node_budgets": [
+      10000,
+      50000,
+      200000
+    ],
+    "max_last_two_cp_delta": 30,
+    "minimum_completed_depth": 3,
+    "selection": "both final searches exact finite cp, completed depth minimum, same legal best move, absolute cp difference within threshold; use final label only",
+    "all_stages": "mate, bound, missing score/depth/nodes/PV, non-exhausted budget or mate-range cp at any stage excludes the training label",
+    "stronger_than_original": "final requested node budget must exceed original teacher reported nodes",
+    "context": "new logical UCI game and Clear Hash for every position and budget; full original history; no time limit",
+    "teacher": "own Regicide; complete classical HCE; neural off; positional, pawn shield, pawn structure, quiescence and existing search options enabled",
+    "holdout": "never search, relabel, filter or reserialize validation/test rows",
+    "uncertainty": "finite-search agreement is not ground truth, optimal-play proof or evidence of playing strength"
+  },
+  "policy_sha256": "700f9e487b8647d400d7c00883f6ebb09df82c1d6d571e079779d395b029509e",
+  "counts": {
+    "requested": 1681,
+    "accepted": 1071,
+    "excluded": 610,
+    "acceptance_fraction": 0.637120761451517,
+    "queries_completed": 5043,
+    "trainable": true,
+    "source_by_split": {
+      "train": 1681,
+      "validation": 96,
+      "test": 125
+    },
+    "output_by_split": {
+      "train": 1071,
+      "validation": 96,
+      "test": 125
+    },
+    "accepted_games": 99,
+    "accepted_families": 10,
+    "accepted_turns": {
+      "w": 833,
+      "b": 238
+    },
+    "excluded_turns": {
+      "w": 488,
+      "b": 122
+    }
+  },
+  "exclusions": {
+    "last_two_cp_unstable": 158,
+    "last_two_best_moves_differ": 384,
+    "stage_2_mate_score": 40,
+    "stage_3_mate_score": 23,
+    "insufficient_completed_depth": 5
+  },
+  "accepted_label_change_cp_stm": {
+    "signed_final_minus_original": {
+      "count": 1071,
+      "mean": 7.560224089635854,
+      "median": 0,
+      "minimum": -650,
+      "maximum": 721,
+      "p90_nearest_rank": 28
+    },
+    "absolute_final_minus_original": {
+      "count": 1071,
+      "mean": 27.560224089635856,
+      "median": 8,
+      "minimum": 0,
+      "maximum": 721,
+      "p90_nearest_rank": 75
+    },
+    "unchanged": 136,
+    "absolute_at_most_30": 912,
+    "absolute_over_100": 89,
+    "original_best_move_unchanged": 829,
+    "original_best_move_changed": 242,
+    "original_vs_hce_absolute_gap": {
+      "count": 1071,
+      "mean": 118.53968253968254,
+      "median": 28,
+      "minimum": 0,
+      "maximum": 1260,
+      "p90_nearest_rank": 353
+    },
+    "final_vs_hce_absolute_gap": {
+      "count": 1071,
+      "mean": 139.4388422035481,
+      "median": 45,
+      "minimum": 0,
+      "maximum": 1301,
+      "p90_nearest_rank": 380
+    },
+    "interpretation": "Label changes or gaps from static HCE do not establish greater correctness or playing strength."
+  },
+  "accepted_completed_depth_change": {
+    "final_minus_original": {
+      "count": 1071,
+      "mean": 2.315592903828198,
+      "median": 2,
+      "minimum": 0,
+      "maximum": 6,
+      "p90_nearest_rank": 3
+    },
+    "deeper": 1065,
+    "same": 6,
+    "shallower": 0,
+    "original_depth": {
+      "count": 1071,
+      "mean": 3.387488328664799,
+      "median": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "p90_nearest_rank": 5
+    },
+    "final_depth": {
+      "count": 1071,
+      "mean": 5.703081232492997,
+      "median": 6,
+      "minimum": 3,
+      "maximum": 16,
+      "p90_nearest_rank": 7
+    },
+    "original_reported_nodes": {
+      "count": 1071,
+      "mean": 12352.941176470587,
+      "median": 10000,
+      "minimum": 10000,
+      "maximum": 50000,
+      "p90_nearest_rank": 10000
+    }
+  },
+  "metric_comparison_limit": "Train labels changed, so before/after train MSE is not an error reduction against one unchanged target. Validation/test retain their original labels. Actual strength requires the separate unchanged promotion arena.",
+  "last_two_cp_delta": {
+    "all_finite": {
+      "count": 1618,
+      "mean": 24.578491965389368,
+      "median": 7.0,
+      "minimum": 0,
+      "maximum": 914,
+      "p90_nearest_rank": 69
+    },
+    "accepted": {
+      "count": 1071,
+      "mean": 6.633986928104576,
+      "median": 5,
+      "minimum": 0,
+      "maximum": 30,
+      "p90_nearest_rank": 18
+    }
+  },
+  "depth_by_node_budget": {
+    "10000": {
+      "completed_depth_histogram_all": {
+        "1": 26,
+        "10": 1,
+        "2": 237,
+        "3": 901,
+        "4": 370,
+        "5": 116,
+        "6": 25,
+        "7": 2,
+        "8": 2,
+        "9": 1
+      },
+      "completed_depth_all": {
+        "count": 1681,
+        "mean": 3.2492563950029743,
+        "median": 3,
+        "minimum": 1,
+        "maximum": 10,
+        "p90_nearest_rank": 4
+      },
+      "completed_depth_accepted": {
+        "count": 1071,
+        "mean": 3.2978524743230624,
+        "median": 3,
+        "minimum": 1,
+        "maximum": 10,
+        "p90_nearest_rank": 4
+      },
+      "actual_nodes_all": {
+        "count": 1681,
+        "mean": 10000,
+        "median": 10000,
+        "minimum": 10000,
+        "maximum": 10000,
+        "p90_nearest_rank": 10000
+      },
+      "eligible_exact_cp_all": 1681,
+      "exclusions": {}
+    },
+    "50000": {
+      "completed_depth_histogram_all": {
+        "10": 2,
+        "11": 1,
+        "13": 1,
+        "2": 5,
+        "3": 205,
+        "4": 793,
+        "5": 447,
+        "6": 159,
+        "7": 54,
+        "8": 13,
+        "9": 1
+      },
+      "completed_depth_all": {
+        "count": 1681,
+        "mean": 4.4741225461035095,
+        "median": 4,
+        "minimum": 2,
+        "maximum": 13,
+        "p90_nearest_rank": 6
+      },
+      "completed_depth_accepted": {
+        "count": 1071,
+        "mean": 4.57609710550887,
+        "median": 4,
+        "minimum": 3,
+        "maximum": 13,
+        "p90_nearest_rank": 6
+      },
+      "actual_nodes_all": {
+        "count": 1681,
+        "mean": 50000,
+        "median": 50000,
+        "minimum": 50000,
+        "maximum": 50000,
+        "p90_nearest_rank": 50000
+      },
+      "eligible_exact_cp_all": 1641,
+      "exclusions": {
+        "mate_score": 40
+      }
+    },
+    "200000": {
+      "completed_depth_histogram_all": {
+        "10": 3,
+        "11": 1,
+        "12": 2,
+        "16": 1,
+        "3": 15,
+        "4": 142,
+        "5": 689,
+        "6": 561,
+        "7": 160,
+        "8": 83,
+        "9": 24
+      },
+      "completed_depth_all": {
+        "count": 1681,
+        "mean": 5.65437239738251,
+        "median": 5,
+        "minimum": 3,
+        "maximum": 16,
+        "p90_nearest_rank": 7
+      },
+      "completed_depth_accepted": {
+        "count": 1071,
+        "mean": 5.703081232492997,
+        "median": 6,
+        "minimum": 3,
+        "maximum": 16,
+        "p90_nearest_rank": 7
+      },
+      "actual_nodes_all": {
+        "count": 1681,
+        "mean": 200000,
+        "median": 200000,
+        "minimum": 200000,
+        "maximum": 200000,
+        "p90_nearest_rank": 200000
+      },
+      "eligible_exact_cp_all": 1618,
+      "exclusions": {
+        "mate_score": 63
+      }
+    }
+  },
+  "heldout_preservation": {
+    "validation": {
+      "original_rows": 96,
+      "derived_rows": 96,
+      "exact_lines_equal": true,
+      "original_raw_lines_sha256": "776d4067d131d76805623c5b376ef75de11a9f222625a13af20d37efbd36e670",
+      "derived_raw_lines_sha256": "776d4067d131d76805623c5b376ef75de11a9f222625a13af20d37efbd36e670",
+      "canonical_rows_equal": true,
+      "canonical_sha256": "ebdda07879ebfb70d4fc89667b15be60ba11f50dad0da9a10e945e4e7b46a887"
+    },
+    "test": {
+      "original_rows": 125,
+      "derived_rows": 125,
+      "exact_lines_equal": true,
+      "original_raw_lines_sha256": "d74d62a69e6cc1fe6dd29913803cb71836540fe178a3ec184a99d9dbf8d8fa24",
+      "derived_raw_lines_sha256": "d74d62a69e6cc1fe6dd29913803cb71836540fe178a3ec184a99d9dbf8d8fa24",
+      "canonical_rows_equal": true,
+      "canonical_sha256": "64832f4b4c986cc620a6f7426292db82620d9c3982267fa773e1c1fbd17c13a4"
+    }
+  },
+  "game_file_bytes_equal": true,
+  "pgn_bytes_equal": true,
+  "quality_wall_seconds": 842.46057,
+  "checks": {
+    "quality_report_hash_matches_manifest": true,
+    "report_source_hash_matches_corpus": true,
+    "expected_three_queries_per_training_position": true,
+    "accepted_rows_match_output_train_count": true,
+    "report_counts_match": true
+  }
+}
