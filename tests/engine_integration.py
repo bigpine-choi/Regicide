@@ -242,7 +242,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.3", engine.id
+        assert engine.id.get("name") == "Regicide 0.5.4", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -1049,6 +1049,118 @@ def test_see_option_lifecycle(binary):
                                 reuses=int(not allocation), hash_mb=size)
 
 
+def test_pawn_shield_protocol_and_cli(binary):
+    # An exposed g-file gives the moving side less cover in either color.
+    # A one-node budget independently selects the root fallback path, so the
+    # on/off score comparison cannot accidentally test only leaf evaluation.
+    exposed = chess.Board("r2q1rk1/ppp2ppp/2npbn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
+    assert exposed.is_valid() and not exposed.is_game_over()
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options.get("UsePawnShield")
+        assert option and option.type == "check" and option.default is True, client.options
+
+    def cli_query(board, go, enabled, positional=True):
+        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence",
+                   "--fen", board.fen(en_passant="fen")]
+        if go == "go nodes 1":
+            command += ["--nodes", "1"]
+        if not enabled:
+            command.append("--no-pawn-shield")
+        if not positional:
+            command.append("--no-position")
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                                timeout=TIMEOUT, check=True)
+        assert not result.stderr, result.stderr
+        fields = dict(line.split(":", 1) for line in result.stdout.splitlines())
+        fields = {name: value.strip() for name, value in fields.items()}
+        score_name = "score_mate" if "score_mate" in fields else "score_cp"
+        return (fields["bestmove"], ("mate" if score_name == "score_mate" else "cp",
+                                     fields[score_name]), int(fields["depth"]),
+                int(fields["nodes"]), tuple(fields["pv"].split()),
+                tuple(int(fields["tt_" + key]) for key in ["probes", "hits", "cutoffs", "stores"]))
+
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseQuiescence=False)
+        default = search_fingerprint(*engine.search(exposed, "go depth 2"))
+        configure(engine, UsePawnShield=True)
+        explicit = search_fingerprint(*engine.search(exposed, "go depth 2"))
+        assert default == explicit, (default, explicit)
+        for board in (exposed, exposed.mirror()):
+            before = board.copy(stack=True)
+            for go in ("go depth 2", "go nodes 1"):
+                scores = {}
+                for enabled in (False, True):
+                    configure(engine, UsePawnShield=enabled)
+                    actual = search_fingerprint(*engine.search(board, go))
+                    assert actual == cli_query(board, go, enabled), (board.fen(), go, enabled, actual)
+                    scores[enabled] = actual[1]
+                    if go == "go nodes 1":
+                        assert actual[2] == 0 and actual[3] <= 1, actual
+                if go == "go nodes 1":
+                    assert scores[False][0] == scores[True][0] == "cp", scores
+                    assert int(scores[True][1]) < int(scores[False][1]), scores
+
+            # Material-only analysis must ignore the new positional feature,
+            # including the no-completed-iteration cancellation fallback.
+            configure(engine, UsePositionalEvaluation=False)
+            for go in ("go depth 2", "go nodes 1"):
+                configure(engine, UsePawnShield=False)
+                off = search_fingerprint(*engine.search(board, go))
+                configure(engine, UsePawnShield=True)
+                on = search_fingerprint(*engine.search(board, go))
+                assert off == on == cli_query(board, go, True, positional=False), (go, off, on)
+            configure(engine, UsePositionalEvaluation=True)
+            assert board == before and board.move_stack == before.move_stack
+
+
+def test_pawn_shield_option_lifecycle(binary):
+    # Keep an actual repetition history live while options change. Matching a
+    # cold process with that same history verifies worker/TT isolation without
+    # replacing the tested position after a toggle.
+    board = chess.Board("r2q1rk1/ppp2ppp/2npbn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
+    for move in ("g1h1", "g8h8", "h1g1", "h8g8"):
+        board.push_uci(move)
+    assert board.is_repetition(2) and not board.is_game_over()
+    options = {"Hash": 1, "UseQuiescence": False, "UsePawnShield": False}
+    with UciProcess(binary) as engine:
+        configure(engine, **options)
+        first = search_history(engine, board, "go depth 2")
+        original = see_fingerprint(*first)
+        assert_table_memory(first[1], allocations=1, hash_mb=1)
+        for command in ["setoption name UsePawnShield value yes", "setoption name UsePawnShield",
+                        "setoption name UsePawnShield value", "setoption name UsePawnShield value false extra"]:
+            engine.send(command)
+            rejected = engine.ready()
+            assert any(line.startswith("info string ") for line in rejected), (command, rejected)
+            assert not any(line.startswith("bestmove ") for line in rejected), (command, rejected)
+        engine.send("go depth 2")
+        assert see_fingerprint(*engine.bestmove()) == original
+        engine.ready()
+
+        for enabled in (True, False, True, False):
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(f"setoption name UsePawnShield value {str(enabled).lower()}")
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (enabled, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in board.legal_moves, output
+            assert_legal_pvs(board, output)
+            engine.ready()  # A joined worker must not emit any late bestmove.
+            options["UsePawnShield"] = enabled
+            engine.send("go depth 2")
+            actual = engine.bestmove()
+            assert_legal_pvs(board, actual[1])
+            engine.ready()
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board, "go depth 2")
+            assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            if not enabled:
+                assert see_fingerprint(*actual) == original, (original, actual)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -1061,12 +1173,13 @@ def main():
               test_table_options_during_search, test_search_quality_option_lifecycle,
               test_search_quality_option_behavior, test_pvs_protocol_and_fixed_depth,
               test_pvs_option_lifecycle, test_see_protocol_and_fixed_depth,
-              test_see_option_lifecycle]
+              test_see_option_lifecycle, test_pawn_shield_protocol_and_cli,
+              test_pawn_shield_option_lifecycle]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS isolation/reuse")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS/shield isolation/reuse")
 
 
 if __name__ == "__main__":

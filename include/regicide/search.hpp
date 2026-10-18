@@ -36,6 +36,7 @@ struct SearchOptions {
     bool quiescence_checks = true; // One optional quiet check; all evasions remain.
     bool pvs = true; // Full first move, scout later moves; re-search improvements.
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
+    bool king_pawn_shield = true; // Middlegame shelter, scaled by opposing pieces.
 };
 
 struct SearchResult {

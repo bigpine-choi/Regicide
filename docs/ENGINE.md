@@ -1,4 +1,4 @@
-# 자체 대국 엔진 v0.2 → v0.5.3
+# 자체 대국 엔진 v0.2 → v0.5.4
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
@@ -13,6 +13,8 @@ v0.5.1 개발 후보는 [PVS](PVS.md)를 추가한다. 후속 후보를 좁은 �
 v0.5.2 개발 후보는 [SEE 교환 손익 추정](SEE.md)을 수 정렬에만 추가한다. 전이표/직전 PV 다음으로 손해 없는 교환을 우선하고 불리한 교환도 읽는다. UCI `UseSEE`, 콘솔 `--no-see`로 끌 수 있다. [비교 계획](experiments/2026-10-18-see-plan.md)을 구현 전에 고정했고, [첫 비용·대국 결과](experiments/2026-10-18-see.md)를 보존했다. 이후 [새 위치·외부 CPU 증가 0의 재현 비교](experiments/2026-10-18-see-replication.md)는 100ms 7승 5무 4패, 1초 3승 6무 7패여서 경기력 개선을 일관되게 재현하지 못했다. 계산 비용과 일반 강도를 구분한다.
 
 v0.5.3 개발 후보는 [1초 패배 분석과 SEE 비용 최적화](experiments/2026-10-18-see-cost.md)로 공격 경로를 미리 계산하고, 왕 안전 검사·공격자 선택·불필요한 정렬 계산을 줄인다. SEE 값과 수 순서는 유지해 고정 깊이 125쌍의 수·점수·노드·PV가 같았다. 함수 비용은 감소했지만 전체 시간 차이는 작고 혼재됐으며, 수정 전 v0.5.2와 새 위치 비교는 100ms 5승 3무 8패, 1초 5승 7무 4패였다. 일반적인 경기력 강화는 미확정이다.
+
+v0.5.4는 [왕 앞 폰 방패](PAWN_SHIELD.md)를 중반 평가에 추가한다. 가까운 자기 폰의 거리와 상대 잔여 기물에 따라 작은 감점을 적용하며 기존 국면 혼합을 유지한다. UCI `UsePawnShield`와 콘솔 `--no-pawn-shield`로 이전 평가를 선택할 수 있다. [계획](experiments/2026-10-18-pawn-shield-plan.md)과 [검증 기록](experiments/2026-10-18-pawn-shield.md)에 규칙·기능·비용 확인과 아직 측정하지 않은 일반 경기력을 구분한다.
 
 ## 원리와 작은 체스 예
 
@@ -80,6 +82,7 @@ setoption name Clear Hash
 setoption name UseFastMoves value true
 setoption name UseQuietMoveOrdering value true
 setoption name UseSEE value true
+setoption name UsePawnShield value true
 setoption name UseQuiescenceChecks value true
 ucinewgame
 position startpos moves e2e4 e7e5

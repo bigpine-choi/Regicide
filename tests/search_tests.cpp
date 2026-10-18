@@ -236,6 +236,55 @@ void same_completed(const SearchResult& interrupted, const SearchResult& complet
                interrupted.score == complete.score && interrupted.pv == complete.pv,
            "unfinished PVS pass replaced the last complete iteration");
 }
+
+// A separate exhaustive oracle for the configurable position evaluator. At
+// quiet frontiers it keeps every legal capture/promotion and every check
+// evasion, but has no alpha-beta windows, ordering, TT, budget, or SEE helper.
+int shelter_minimax(Board& board, int depth, bool shield, bool quiet, int ply = 0) {
+    const auto outcome = board.outcome();
+    if (outcome == Outcome::checkmate) return -mate_score + ply;
+    if (outcome != Outcome::ongoing) return 0;
+    expect(ply < 20, "shelter oracle fixture must have a finite short tactical frontier");
+    if (!depth && !quiet) return evaluate_position(board, shield);
+    const bool frontier = depth == 0;
+    const bool checked = board.in_check();
+    int best = frontier && !checked ? evaluate_position(board, shield) : -32000;
+    const auto position = board.position();
+    for (Move move : board.legal_moves()) {
+        const char piece = position.squares[move.from];
+        const bool capture = position.squares[move.to] != '.' ||
+            ((piece == 'P' || piece == 'p') && move.to == position.en_passant);
+        if (frontier && !checked && !capture && !move.promotion) continue;
+        board.play(move);
+        const int score = -shelter_minimax(board, std::max(0, depth - 1), shield, quiet, ply + 1);
+        board.undo();
+        best = std::max(best, score);
+    }
+    return best;
+}
+
+OptimalMoves shelter_optimal_moves(Board& board, int depth, bool shield, bool quiet) {
+    OptimalMoves result;
+    for (Move move : board.legal_moves()) {
+        board.play(move);
+        const int score = -shelter_minimax(board, depth - 1, shield, quiet, 1);
+        board.undo();
+        if (score > result.score) { result.score = score; result.moves.clear(); }
+        if (score == result.score) result.moves.push_back(move);
+    }
+    return result;
+}
+
+SearchOptions shelter_options(bool shield, bool quiet, bool table) {
+    SearchOptions options;
+    options.positional = true;
+    options.quiescence = quiet;
+    options.quiescence_checks = false;
+    options.transposition = table;
+    options.hash_mb = 1;
+    options.king_pawn_shield = shield;
+    return options;
+}
 } // namespace
 
 int main() {
@@ -1118,6 +1167,90 @@ int main() {
                 valid_pv(board, cancelled);
                 valid_pv(board, stopped);
             }
+        }
+    });
+    test("shelter ON and OFF search match exhaustive normal and tactical oracles", [] {
+        bool changed_value = false;
+        std::uint64_t tactical_nodes = 0;
+        for (const char* fen : {"3q3k/6pp/8/8/8/8/P5PP/4R1K1 w - - 0 1",
+                                "7k/8/4p3/3r4/8/8/5PPP/3Q2K1 w - - 0 1",
+                                "3q2k1/5ppp/8/8/3R4/4P3/8/7K b - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            for (bool quiet : {false, true}) {
+                const int depth = quiet ? 1 : 2;
+                const auto previous = shelter_optimal_moves(board, depth, false, quiet);
+                const auto current = shelter_optimal_moves(board, depth, true, quiet);
+                changed_value |= previous.score != current.score;
+                for (bool shield : {false, true}) for (bool table : {false, true}) {
+                    const auto& expected = shield ? current : previous;
+                    const auto result = search(board, {.depth = depth}, nullptr, {},
+                                               shelter_options(shield, quiet, table));
+                    expect(!result.stopped && result.depth == depth && result.score == expected.score,
+                           "shelter flag was not applied consistently to normal or tactical leaves");
+                    expect(result.best_move && std::find(expected.moves.begin(), expected.moves.end(),
+                                                         *result.best_move) != expected.moves.end(),
+                           "shelter search selected a move outside the exhaustive optimal set");
+                    expect(quiet ? result.qnodes > 0 : result.qnodes == 0,
+                           "shelter fixture did not exercise its requested frontier");
+                    tactical_nodes += result.qnodes;
+                    expect(board == saved, "shelter search or oracle changed board/history");
+                    valid_pv(board, result);
+                }
+            }
+        }
+        expect(changed_value && tactical_nodes > 0,
+               "new search fixtures must observe a real shelter-score difference and tactical work");
+    });
+    test("cancelled fallback uses the selected shelter evaluator before any completed iteration", [] {
+        Board board("3q3k/6pp/8/8/8/8/P5PP/4R1K1 w - - 0 1");
+        const auto saved = board;
+        expect(evaluate_position(board, true) != evaluate_position(board, false),
+               "fallback fixture must distinguish the two position evaluators");
+        for (bool shield : {false, true}) for (bool quiet : {false, true}) {
+            const auto options = shelter_options(shield, quiet, true);
+            std::atomic_bool stop{true};
+            const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+            expect(stopped.stopped && stopped.depth == 0 && !stopped.nodes &&
+                       stopped.score == evaluate_position(board, shield),
+                   "pre-stopped fallback lost the shelter mode or searched a node");
+            const auto limited = search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
+            expect(limited.stopped && limited.depth == 0 && limited.nodes == 1 &&
+                       limited.score == evaluate_position(board, shield),
+                   "node-limited fallback used a different static evaluator");
+            expect(board == saved, "shelter fallback changed board or history");
+            valid_pv(board, stopped); valid_pv(board, limited);
+        }
+    });
+    test("reused memory isolates shelter mode switches and material-only evaluation ignores them", [] {
+        Board repeated;
+        cycle(repeated); cycle(repeated);
+        SearchContext context;
+        for (const Board& board : {Board("3q3k/6pp/8/8/8/8/P5PP/4R1K1 w - - 0 1"), repeated}) {
+            const auto saved = board;
+            for (bool shield : {true, false, true}) for (bool quiet : {false, true}) {
+                auto options = shelter_options(shield, quiet, true);
+                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, reused);
+                options.king_pawn_shield = !shield;
+                const auto interrupted = search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
+                expect(interrupted.stopped && interrupted.nodes == 9,
+                       "shelter mode switch ignored the shared cancellation budget");
+                options.king_pawn_shield = shield;
+                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, restarted);
+                expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
+                       "old shelter scores or interrupted work leaked through retained storage");
+                valid_pv(board, restarted);
+            }
+            auto options = shelter_options(false, true, true);
+            options.positional = false;
+            const auto off = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            options.king_pawn_shield = true;
+            const auto on = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            same_graph(off, on);
+            expect(board == saved, "material-only shelter toggle changed input state/history");
         }
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";

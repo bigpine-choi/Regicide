@@ -125,7 +125,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.5.3");
+            send("id name Regicide 0.5.4");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -138,6 +138,7 @@ public:
             send("option name UseQuiescenceChecks type check default true");
             send("option name PVS type check default true");
             send("option name UseSEE type check default true");
+            send("option name UsePawnShield type check default true");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -173,7 +174,7 @@ private:
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
-            option != "UseSEE") return;
+            option != "UseSEE" && option != "UsePawnShield") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -191,7 +192,8 @@ private:
         else if (option == "UseQuietMoveOrdering") options_.quiet_ordering = text == "true";
         else if (option == "UseQuiescenceChecks") options_.quiescence_checks = text == "true";
         else if (option == "PVS") options_.pvs = text == "true";
-        else options_.see_ordering = text == "true";
+        else if (option == "UseSEE") options_.see_ordering = text == "true";
+        else options_.king_pawn_shield = text == "true";
     }
     void progress(const SearchResult& result) {
         std::ostringstream line;

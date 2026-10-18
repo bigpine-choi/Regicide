@@ -1,6 +1,7 @@
 #include "regicide/evaluation.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 
 namespace regicide {
@@ -47,6 +48,30 @@ int home_minors(const Position& position, bool is_white) {
 
 struct Bonus { int middlegame; int endgame; };
 
+struct ShieldInfo {
+    // Bits use the owner's relative ranks: bit zero is the home rank.
+    std::array<unsigned, 8> pawn_ranks{};
+    int king_file = -1;
+    int king_rank = 0;
+    int phase = 0;
+};
+
+int pawn_shield_penalty(const ShieldInfo& defender, int attacking_phase) {
+    if (!attacking_phase || defender.king_file < 0) return 0;
+    int penalty = 0;
+    for (int file = std::max(0, defender.king_file - 1);
+         file <= std::min(7, defender.king_file + 1); ++file) {
+        // Only pawns strictly ahead of the current king can shelter it. The
+        // nearest such pawn costs 0/4/8 cp at distances 1/2/3, then 12 cp.
+        const unsigned ahead = defender.pawn_ranks[file] >> (defender.king_rank + 1);
+        if (ahead & 1U) continue;
+        penalty += (ahead & 2U) ? 4 : (ahead & 4U) ? 8 : 12;
+    }
+    // This original, conservative heuristic estimates shelter, not attacks.
+    // Scale by the opponent's remaining pieces; pawn-only opposition costs 0.
+    return penalty * std::min(attacking_phase, full_phase / 2) / (full_phase / 2);
+}
+
 // These small formulas are Regicide's own initial heuristics. Files/ranks are
 // relative to the owner: rank zero is home, centrality is 0..3 on each axis.
 // No learned weights or third-party piece-square tables are used.
@@ -75,11 +100,12 @@ Bonus position_bonus(char piece, int file, int rank, int undeveloped) {
 }
 } // namespace
 
-int evaluate_position(const Board& board) {
+int evaluate_position(const Board& board, bool king_pawn_shield) {
     const auto& position = board.position();
     const int white_home = home_minors(position, true);
     const int black_home = home_minors(position, false);
     int material_score = 0, middlegame = 0, endgame = 0, phase = 0;
+    std::array<ShieldInfo, 2> shields;
     for (int square = 0; square < 64; ++square) {
         const char piece = position.squares[square];
         if (piece == '.') continue;
@@ -91,7 +117,21 @@ int evaluate_position(const Board& board) {
         material_score += sign * material(piece);
         middlegame += sign * bonus.middlegame;
         endgame += sign * bonus.endgame;
-        phase += phase_weight(piece);
+        const int weight = phase_weight(piece);
+        phase += weight;
+        if (king_pawn_shield) {
+            auto& shield = shields[is_white ? 0 : 1];
+            shield.phase += weight;
+            if (type(piece) == 'p') shield.pawn_ranks[square % 8] |= 1U << rank;
+            else if (type(piece) == 'k') {
+                shield.king_file = square % 8;
+                shield.king_rank = rank;
+            }
+        }
+    }
+    if (king_pawn_shield) {
+        middlegame += pawn_shield_penalty(shields[1], shields[0].phase) -
+                      pawn_shield_penalty(shields[0], shields[1].phase);
     }
     // Clamp promotions above opening material. Blend the color differences
     // before integer division so reflected positions have exact antisymmetry.
