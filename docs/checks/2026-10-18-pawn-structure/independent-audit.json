@@ -1,0 +1,2760 @@
+{
+  "schema": "regicide-pawn-structure-independent-audit-v1",
+  "audit_utc": "2026-10-18T10:50:20.224651+00:00",
+  "status": "passed_with_measurement_limits",
+  "scope": "Independent read-only re-analysis of frozen source identity, existing raw benchmark records and test logs; no fresh engine search, build, match, or source edits. Only this JSON report was written.",
+  "frozen_code_commit": "132f45451d0af68168cfe15507a3fdc069c86d9c",
+  "legacy_baseline_commit": "585710724e93329a8f8baddfbc82724db4a4ce2a",
+  "current_HEAD": "132f45451d0af68168cfe15507a3fdc069c86d9c",
+  "working_tree_status": "M godot/icon.svg.import",
+  "source_provenance": {
+    "frozen_git_blob_sha256": {
+      "include/regicide/evaluation.hpp": "c99c3500f20a11c298103445ad30008489648deeaf9d7d3dc795697abb613db2",
+      "include/regicide/search.hpp": "3ae6dab5e5c365fd073f410e78d01ae20f2e1422ee92586f6c8c9d394d7162da",
+      "src/evaluation.cpp": "abdc746fd10ef632ceac2ef306aab6487bbcc4575f707f26e78afbfa43325e64",
+      "src/search.cpp": "5915fa1dc4ff9c8c2836f9d995a74d156be4a9739df990e4f837dc944afd513c",
+      "src/uci.cpp": "814c714809584544e9a0db535d57da71da92cf26d67022788aea95eaad584c3b",
+      "src/main.cpp": "8d7efc10834e13e6d2b868fb5d9f5f601ef2a84385a2114c66f738454595bc16",
+      "scripts/profile_evaluation.cpp": "35823465f1ba8e6ea798875b5ac7b7ad86d60fe82b6c1f6186dd64d4ed755c85",
+      "scripts/benchmark_search.py": "36fad55103d667ec41e62733375f4f3435fb95aad0f3bffd58dd16d3e1bb3fe9",
+      "tests/engine_integration.py": "57352c4207e02064aab7a3ada81d09af60462c0d29bfa2f1c4d930991a994393",
+      "tests/evaluation_tests.cpp": "bf333c7f703422e09cec37f09d2281c13078b7ab15b4e01fabaa15878e3c62ec",
+      "tests/search_tests.cpp": "2a8d9623e65cdd0ab034e5f30c5247a87185183df0c489293667dbdcd2421a53",
+      "tests/data/pawn_structure_profile_2026_10_18.fens": "d666888af071673a14ab4998ec47575547aead4e33e55c032d8b664c44330d61",
+      "tests/data/profile_positions.json": "e0c395ad2d531646c7ccee9d3a156f7580500f59af62186a533a49989e440905"
+    },
+    "linux_final_manifest_entries": 21,
+    "linux_manifest_mismatches": [],
+    "limits": "Benchmark source commits are declared metadata, not cryptographic proof of how Windows binaries were compiled. Current executable bytes match every recorded hash; Linux final production/test source manifests match frozen Git blobs after newline normalization. A generated icon import is unrelated to engine compilation.",
+    "linux_raw_source_manifest_verification": [
+      {
+        "path": "include/regicide/board.hpp",
+        "linux_manifest_raw_sha256": "e3f24cb60ca85adcc159b3ca5930e2b4a1b6e3f9d61dccc45adb106c1867c93b",
+        "current_checkout_raw_sha256": "e3f24cb60ca85adcc159b3ca5930e2b4a1b6e3f9d61dccc45adb106c1867c93b",
+        "frozen_git_blob_LF_sha256": "82314803540f259b4483e70b499c4735f5ed5e9e33c8a2276681abca9c6ff5af",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "include/regicide/evaluation.hpp",
+        "linux_manifest_raw_sha256": "0eb64e67b45253e882de1f986afc1d4a44c8568800a763987e3f83b7b8bfd2bb",
+        "current_checkout_raw_sha256": "0eb64e67b45253e882de1f986afc1d4a44c8568800a763987e3f83b7b8bfd2bb",
+        "frozen_git_blob_LF_sha256": "c99c3500f20a11c298103445ad30008489648deeaf9d7d3dc795697abb613db2",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "include/regicide/search.hpp",
+        "linux_manifest_raw_sha256": "da213f062a3a49f116530e225d708a91663de181f082edbf6685abe4e3414451",
+        "current_checkout_raw_sha256": "da213f062a3a49f116530e225d708a91663de181f082edbf6685abe4e3414451",
+        "frozen_git_blob_LF_sha256": "3ae6dab5e5c365fd073f410e78d01ae20f2e1422ee92586f6c8c9d394d7162da",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "include/regicide/see.hpp",
+        "linux_manifest_raw_sha256": "8370c33685eefcc3738302f66ec7132b55f82c2b4124dcdf4e575ef24ee9965e",
+        "current_checkout_raw_sha256": "8370c33685eefcc3738302f66ec7132b55f82c2b4124dcdf4e575ef24ee9965e",
+        "frozen_git_blob_LF_sha256": "2f7a66098e9a95ddf7c3b9089394e6900010934805d9d90205a00984d35eb6d3",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "include/regicide/transposition.hpp",
+        "linux_manifest_raw_sha256": "0faef4062f17887a356deb37777d9e37182058e754e206cac4c3edf7989b0ca0",
+        "current_checkout_raw_sha256": "0faef4062f17887a356deb37777d9e37182058e754e206cac4c3edf7989b0ca0",
+        "frozen_git_blob_LF_sha256": "9bb619666060dbf583eea104109c6cd93b4676fa80ce04af4ec9fcbd00dba5e1",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "include/regicide/uci.hpp",
+        "linux_manifest_raw_sha256": "61b1bd6887383b9f98ae144643260450c7dfcc0a3f53ecd26a0e4fd901c9afa1",
+        "current_checkout_raw_sha256": "61b1bd6887383b9f98ae144643260450c7dfcc0a3f53ecd26a0e4fd901c9afa1",
+        "frozen_git_blob_LF_sha256": "0bb84a9d0e0f7c1b6d91a54c4cfe2ad6ddeda9beba4d5ff5ed941d323c581bf5",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/board.cpp",
+        "linux_manifest_raw_sha256": "d9ed58d162bafa36812ce959469737e5feec4f1b1d97c085d1180bb1404fc2d2",
+        "current_checkout_raw_sha256": "d9ed58d162bafa36812ce959469737e5feec4f1b1d97c085d1180bb1404fc2d2",
+        "frozen_git_blob_LF_sha256": "f2138847cc0a250ac363c1ec7874eed34c8114972cbe231fd29f08f45fba98e1",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/evaluation.cpp",
+        "linux_manifest_raw_sha256": "b630d98c1e7e3d5528697e9709afa5b1f16c113dba7c218b263072a08d5ece76",
+        "current_checkout_raw_sha256": "b630d98c1e7e3d5528697e9709afa5b1f16c113dba7c218b263072a08d5ece76",
+        "frozen_git_blob_LF_sha256": "abdc746fd10ef632ceac2ef306aab6487bbcc4575f707f26e78afbfa43325e64",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/main.cpp",
+        "linux_manifest_raw_sha256": "9a1d7372d5e695253497ead35b218176a93c8c29e53b9f53875f4d164960d8ac",
+        "current_checkout_raw_sha256": "9a1d7372d5e695253497ead35b218176a93c8c29e53b9f53875f4d164960d8ac",
+        "frozen_git_blob_LF_sha256": "8d7efc10834e13e6d2b868fb5d9f5f601ef2a84385a2114c66f738454595bc16",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/search.cpp",
+        "linux_manifest_raw_sha256": "4d6b80e7f0fd11ca7308271c56e78233294438b8995fda2488259e298cbc91e7",
+        "current_checkout_raw_sha256": "4d6b80e7f0fd11ca7308271c56e78233294438b8995fda2488259e298cbc91e7",
+        "frozen_git_blob_LF_sha256": "5915fa1dc4ff9c8c2836f9d995a74d156be4a9739df990e4f837dc944afd513c",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/see.cpp",
+        "linux_manifest_raw_sha256": "c60501778641fb165558a471c863af0c9bc7dc67977a595e3ff24a02d25e7b47",
+        "current_checkout_raw_sha256": "c60501778641fb165558a471c863af0c9bc7dc67977a595e3ff24a02d25e7b47",
+        "frozen_git_blob_LF_sha256": "3174e4a235165571158efa2c4d000594ac270488c03f377a09ed655812d8a6cb",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/transposition.cpp",
+        "linux_manifest_raw_sha256": "f37c205b1fabb037c481f980bbcff639672c7c0e0b677921e7540956834255f8",
+        "current_checkout_raw_sha256": "f37c205b1fabb037c481f980bbcff639672c7c0e0b677921e7540956834255f8",
+        "frozen_git_blob_LF_sha256": "6f2c44c6c9e4d0298d696fd381b50e1df892cc0ece9031c3ba05aa2221fe2054",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "src/uci.cpp",
+        "linux_manifest_raw_sha256": "10f50b41a088d514d3525ef7a57152a5e16bdf6194913f4113288d750d1e6e07",
+        "current_checkout_raw_sha256": "10f50b41a088d514d3525ef7a57152a5e16bdf6194913f4113288d750d1e6e07",
+        "frozen_git_blob_LF_sha256": "814c714809584544e9a0db535d57da71da92cf26d67022788aea95eaad584c3b",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/board_state_tests.cpp",
+        "linux_manifest_raw_sha256": "4041f4837e0042a1a4e19b9098f7459515e5187718a809cbf4403e43fa9cc07f",
+        "current_checkout_raw_sha256": "4041f4837e0042a1a4e19b9098f7459515e5187718a809cbf4403e43fa9cc07f",
+        "frozen_git_blob_LF_sha256": "ce64cb00df015cad437c142a0ee9569e62c0e662f94a61e9270bdbfeb629307a",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/evaluation_tests.cpp",
+        "linux_manifest_raw_sha256": "6cedcbc6a821b4897f0bee0973e95be38729c5fbacd0350840d84930328c90f7",
+        "current_checkout_raw_sha256": "6cedcbc6a821b4897f0bee0973e95be38729c5fbacd0350840d84930328c90f7",
+        "frozen_git_blob_LF_sha256": "bf333c7f703422e09cec37f09d2281c13078b7ab15b4e01fabaa15878e3c62ec",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/reference_evaluation_v054.cpp",
+        "linux_manifest_raw_sha256": "1bf2c9332d36a4b4b6201c7b6c50a966d79f8d8732c2cbfc90387581f483d93e",
+        "current_checkout_raw_sha256": "1bf2c9332d36a4b4b6201c7b6c50a966d79f8d8732c2cbfc90387581f483d93e",
+        "frozen_git_blob_LF_sha256": "a8701c9bb675b1ebc3da2e0df7bbbd7b35a262ff19cd338f001a9b32eccb2a64",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/reference_evaluation_v054.hpp",
+        "linux_manifest_raw_sha256": "d9fba10e3d44174737b95562e7733c646d7fee30cc671a8d5e622bdb7a4807d2",
+        "current_checkout_raw_sha256": "d9fba10e3d44174737b95562e7733c646d7fee30cc671a8d5e622bdb7a4807d2",
+        "frozen_git_blob_LF_sha256": "f50d13b078d4cbbd515aa7474731748d4e69d4d4db3f71ca4d03cb22bb79e19d",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/rules_tests.cpp",
+        "linux_manifest_raw_sha256": "7a5b71f3a37e48d8094385cf0fda8cff530dd92a609993bb2fede597b19beb61",
+        "current_checkout_raw_sha256": "7a5b71f3a37e48d8094385cf0fda8cff530dd92a609993bb2fede597b19beb61",
+        "frozen_git_blob_LF_sha256": "f77fb0d3124b1be08a16ce7bca4c905397121aa1580b40eb2f8b6250ffc1cab1",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/search_tests.cpp",
+        "linux_manifest_raw_sha256": "8d7bc19a4598779b1a129e4aafc53c9c86a123d70e0711031787356d03583762",
+        "current_checkout_raw_sha256": "8d7bc19a4598779b1a129e4aafc53c9c86a123d70e0711031787356d03583762",
+        "frozen_git_blob_LF_sha256": "2a8d9623e65cdd0ab034e5f30c5247a87185183df0c489293667dbdcd2421a53",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/see_tests.cpp",
+        "linux_manifest_raw_sha256": "8db63292b740bcbd15ae64b7c508b766d6b0a8282715e9f43b5c39cf1b8256db",
+        "current_checkout_raw_sha256": "8db63292b740bcbd15ae64b7c508b766d6b0a8282715e9f43b5c39cf1b8256db",
+        "frozen_git_blob_LF_sha256": "f04e219a286dacb6cfe6fa327e8f45376b612de1c5814e312e386e94ce6609fd",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      },
+      {
+        "path": "tests/transposition_tests.cpp",
+        "linux_manifest_raw_sha256": "f2daa96a435947538dfe9fd9f64ad53510a57f06c28fb29296ad5a016441497b",
+        "current_checkout_raw_sha256": "f2daa96a435947538dfe9fd9f64ad53510a57f06c28fb29296ad5a016441497b",
+        "frozen_git_blob_LF_sha256": "109888bbcdb92cd7730059bc70ec8d444cce91324181c4893ea4eacf3044f69b",
+        "raw_manifest_matches_checkout_and_LF_normalized_frozen_blob": true
+      }
+    ]
+  },
+  "binaries": {
+    "current_v056": {
+      "path": "build/regicide.exe",
+      "sha256": "7663c84b9aa21c6e56374985e8419426e44afb42cfac75503ef1ee2635cd0747"
+    },
+    "legacy_v055": {
+      "path": "build/pawn-structure-validation/regicide-v055.exe",
+      "sha256": "002b0875a3ecdc5298e060902f4e9578addbd3798242c7ff34dce054bf82aaa1"
+    },
+    "profile_driver": {
+      "path": "build-pawn-profile/profile_evaluation.exe",
+      "sha256": "76163e019f6b16ed6e4037bcb23b719f91ad34e1a8f6532585a6d6c8a4cb6982",
+      "identity_limit": "Profile JSON does not embed binary hash/commit; this audit records current driver bytes and verifies the frozen driver source and corpus."
+    }
+  },
+  "profile": {
+    "positions": 58,
+    "samples": 144,
+    "blocks": 9,
+    "calls_per_sample": 1939636,
+    "legacy_equivalence_comparisons": 116,
+    "legacy_equivalence_mismatches": 0,
+    "variant_checksums_stable": true,
+    "structure_ON_OFF_value_equality_required": false,
+    "medians_ns_per_call": {
+      "structure_off_shield_off": 52.324082972275,
+      "structure_off_shield_on": 72.030705761275,
+      "structure_on_shield_off": 77.000658886525,
+      "structure_on_shield_on": 88.85290848385
+    },
+    "median_paired_ratios": {
+      "structure_on_shield_on_over_structure_off_shield_on": 1.2365917977797973,
+      "structure_on_shield_off_over_structure_off_shield_off": 1.4527764663826712,
+      "structure_off_shield_on_over_structure_off_shield_off": 1.3737723049663617,
+      "structure_on_shield_on_over_structure_on_shield_off": 1.1622565963579878
+    },
+    "shield_on_structure_added_cost_percent": 23.659179777979734,
+    "scope_limit": "Evaluator-only cost on the predeclared 58-position corpus; excludes board construction and IO, and cannot infer whole-engine speed or playing strength. Final block showed slower absolute times in every variant; paired ratios mitigate but do not eliminate shared load/clock effects."
+  },
+  "fixed_depth_search": [
+    {
+      "file": "legacy-depth3.json",
+      "depth": 3,
+      "positions": 10,
+      "repeats": 3,
+      "pairs": 30,
+      "score_differences": 0,
+      "graph_differences": 0,
+      "graph_fields_compared": [
+        "score",
+        "move",
+        "depth",
+        "nodes",
+        "seldepth",
+        "pv",
+        "tt_counters"
+      ],
+      "differences_intentionally_allowed": false,
+      "median_paired_wall_speedup_baseline_over_candidate": 0.9889006901504116,
+      "median_paired_candidate_wall_over_baseline": 1.0112985549583018,
+      "median_paired_node_ratio_candidate_over_baseline": 1.0,
+      "total_nodes": {
+        "baseline": 155931,
+        "candidate": 155931
+      },
+      "paired_wall_speedup_range": [
+        0.7461191230610466,
+        1.4954639929867162
+      ],
+      "pairs_candidate_faster": 13,
+      "pairs_candidate_slower": 17,
+      "engine_time_resolution_note": "UCI milliseconds; zero/missing times are excluded from engine-time ratios. Wall includes UCI transaction and new-game reset."
+    },
+    {
+      "file": "legacy-depth4.json",
+      "depth": 4,
+      "positions": 10,
+      "repeats": 3,
+      "pairs": 30,
+      "score_differences": 0,
+      "graph_differences": 0,
+      "graph_fields_compared": [
+        "score",
+        "move",
+        "depth",
+        "nodes",
+        "seldepth",
+        "pv",
+        "tt_counters"
+      ],
+      "differences_intentionally_allowed": false,
+      "median_paired_wall_speedup_baseline_over_candidate": 0.9819637966046949,
+      "median_paired_candidate_wall_over_baseline": 1.018372501229889,
+      "median_paired_node_ratio_candidate_over_baseline": 1.0,
+      "total_nodes": {
+        "baseline": 559014,
+        "candidate": 559014
+      },
+      "paired_wall_speedup_range": [
+        0.47660721041683923,
+        1.2898788567290018
+      ],
+      "pairs_candidate_faster": 10,
+      "pairs_candidate_slower": 20,
+      "engine_time_resolution_note": "UCI milliseconds; zero/missing times are excluded from engine-time ratios. Wall includes UCI transaction and new-game reset."
+    },
+    {
+      "file": "structure-depth3.json",
+      "depth": 3,
+      "positions": 10,
+      "repeats": 3,
+      "pairs": 30,
+      "score_differences": 9,
+      "graph_differences": 27,
+      "graph_fields_compared": [
+        "score",
+        "move",
+        "depth",
+        "nodes",
+        "seldepth",
+        "pv",
+        "tt_counters"
+      ],
+      "differences_intentionally_allowed": true,
+      "median_paired_wall_speedup_baseline_over_candidate": 1.0036599224352956,
+      "median_paired_candidate_wall_over_baseline": 0.9963541543155663,
+      "median_paired_node_ratio_candidate_over_baseline": 1.0,
+      "total_nodes": {
+        "baseline": 155931,
+        "candidate": 144630
+      },
+      "paired_wall_speedup_range": [
+        0.7790612198821817,
+        1.3771893421171768
+      ],
+      "pairs_candidate_faster": 16,
+      "pairs_candidate_slower": 14,
+      "engine_time_resolution_note": "UCI milliseconds; zero/missing times are excluded from engine-time ratios. Wall includes UCI transaction and new-game reset."
+    }
+  ],
+  "legacy_OFF_exact_graph_pairs_total": 60,
+  "external_load_observations": [
+    {
+      "file": "profile-load.json",
+      "mode": "profile",
+      "samples": 42,
+      "covered_interval_seconds": 22.5297607,
+      "run_elapsed_seconds": 22.5324603,
+      "logical_cpus": 16,
+      "observed_cpu_seconds": {
+        "all_observed_cpu_seconds": 36.859375,
+        "target_cpu_seconds": 20.640625,
+        "monitor_cpu_seconds": 2.171875,
+        "browser_cpu_seconds": 2.75,
+        "regicide_cpu_seconds": 0.0
+      },
+      "observed_average_host_capacity_percent": {
+        "all_observed_cpu_seconds": 10.225190441103974,
+        "target_cpu_seconds": 5.725933265238809,
+        "monitor_cpu_seconds": 0.6025016834732736,
+        "browser_cpu_seconds": 0.7628798294337853,
+        "regicide_cpu_seconds": 0.0
+      },
+      "observed_remaining_cpu_seconds_after_target_monitor_and_search_engines": 14.046875,
+      "observed_remaining_average_host_capacity_percent": 3.896755492391892,
+      "caveats": [
+        "Samples include only processes present and readable at both endpoints; short-lived new/exited processes are omitted.",
+        "Search target is the parent wrapper, while regicide counters include benchmark engines and are not external interference.",
+        "No affinity, exclusivity, thermal, frequency, or complete whole-host CPU guarantee.",
+        "Subtraction cannot recover omitted children. Browser CPU is an overlapping subgroup of observed total.",
+        "Host normalization uses 16 logical CPUs; one saturated logical CPU represents 6.25 percent host capacity.",
+        "Residual includes unclassified benchmark child processes such as the Python harness. It cannot be interpreted as external interference alone; all regicide-named processes are grouped together, including benchmark engines."
+      ],
+      "remaining_is_not_a_precise_external_load_measure": true
+    },
+    {
+      "file": "search-load.json",
+      "mode": "search",
+      "samples": 14,
+      "covered_interval_seconds": 7.4017211,
+      "run_elapsed_seconds": 7.4048589,
+      "logical_cpus": 16,
+      "observed_cpu_seconds": {
+        "all_observed_cpu_seconds": 18.609375,
+        "target_cpu_seconds": 1.078125,
+        "monitor_cpu_seconds": 1.203125,
+        "browser_cpu_seconds": 1.109375,
+        "regicide_cpu_seconds": 2.875
+      },
+      "observed_average_host_capacity_percent": {
+        "all_observed_cpu_seconds": 15.7137228191427,
+        "target_cpu_seconds": 0.910366813199703,
+        "monitor_cpu_seconds": 1.015916588643147,
+        "browser_cpu_seconds": 0.9367542570605639,
+        "regicide_cpu_seconds": 2.427644835199208
+      },
+      "observed_remaining_cpu_seconds_after_target_monitor_and_search_engines": 13.453125,
+      "observed_remaining_average_host_capacity_percent": 11.359794582100642,
+      "caveats": [
+        "Samples include only processes present and readable at both endpoints; short-lived new/exited processes are omitted.",
+        "Search target is the parent wrapper, while regicide counters include benchmark engines and are not external interference.",
+        "No affinity, exclusivity, thermal, frequency, or complete whole-host CPU guarantee.",
+        "Subtraction cannot recover omitted children. Browser CPU is an overlapping subgroup of observed total.",
+        "Host normalization uses 16 logical CPUs; one saturated logical CPU represents 6.25 percent host capacity.",
+        "Residual includes unclassified benchmark child processes such as the Python harness. It cannot be interpreted as external interference alone; all regicide-named processes are grouped together, including benchmark engines."
+      ],
+      "remaining_is_not_a_precise_external_load_measure": true
+    }
+  ],
+  "correctness_evidence": {
+    "windows_native_final_groups": 119,
+    "windows_native_final_assertions": 216710,
+    "linux_native": {
+      "groups": 119,
+      "assertions": 216710,
+      "failures": 0,
+      "suites": {
+        "rules": 8325,
+        "search": 20853,
+        "evaluation": 159342,
+        "board_state": 18974,
+        "transposition": 97,
+        "see": 9119
+      }
+    },
+    "linux_sanitizers": {
+      "kind": "ASan+UBSan",
+      "options": "detect_leaks=1:halt_on_error=1; halt_on_error=1:print_stacktrace=1",
+      "groups": 72,
+      "assertions": 180195,
+      "failures": 0,
+      "suites": [
+        "evaluation",
+        "search"
+      ]
+    },
+    "frozen_release_oracle_positions": 16860,
+    "structure_oracle_positions": 13177,
+    "UCI_groups": 23,
+    "independent_rules_differential_cases": 2997,
+    "note": "Native logs initially contained the prior evaluation group. Final evaluation-only reruns add deterministic en passant/promotion/undo coverage. Final source hashes match frozen commit; merged counts use replacement, never double-count initial+final evaluation."
+  },
+  "conclusions": {
+    "legacy_equivalence": "All 60 declared fixed-depth pairs match the recorded exact graph fields with pawn structure disabled; this is sampled equivalence, not proof for every legal position.",
+    "evaluation_cost": "With pawn shield enabled, structure adds about 23.7 percent evaluator-only median paired cost in this corpus.",
+    "search_cost": "At depth 3, structure ON/OFF median paired wall ratio is approximately 1.00366 baseline-over-candidate (near parity), while nodes/PV/scores intentionally differ. Per-position and per-pair times vary. This is a short fixed-depth cost sample, not an equal-time strength test.",
+    "playing_strength": "No new self-play, Elo, win-rate, or strength improvement has been measured. Added correct heuristic behavior and passing rules do not establish stronger play.",
+    "external_load": "Observed non-target and browser load was nonzero. Do not claim idle host or CPU isolation. The aggregate is incomplete and cannot precisely attribute interference to each search sample."
+  },
+  "checks": [
+    {
+      "name": "current_HEAD_matches_frozen_code",
+      "passed": true,
+      "detail": "132f45451d0af68168cfe15507a3fdc069c86d9c"
+    },
+    {
+      "name": "only_generated_icon_import_is_dirty",
+      "passed": true,
+      "detail": "M godot/icon.svg.import"
+    },
+    {
+      "name": "frozen_blob:include/regicide/evaluation.hpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:include/regicide/search.hpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:src/evaluation.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:src/search.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:src/uci.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:src/main.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:scripts/profile_evaluation.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:scripts/benchmark_search.py",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:tests/engine_integration.py",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:tests/evaluation_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:tests/search_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:tests/data/pawn_structure_profile_2026_10_18.fens",
+      "passed": true
+    },
+    {
+      "name": "frozen_blob:tests/data/profile_positions.json",
+      "passed": true
+    },
+    {
+      "name": "linux_final_source_manifest_matches_frozen_git_blobs",
+      "passed": true,
+      "detail": {
+        "entries": 21,
+        "mismatches": [],
+        "method": "Linux sha256sum captured raw CRLF files in the Windows-mounted checkout. Compare manifest to current raw bytes, then normalize CRLF to LF and compare byte-for-byte with frozen Git blobs."
+      }
+    },
+    {
+      "name": "profile_scope_and_settings",
+      "passed": true
+    },
+    {
+      "name": "profile_sample_count",
+      "passed": true,
+      "detail": 144
+    },
+    {
+      "name": "profile_corpus_is_58_valid_unique_FENs",
+      "passed": true
+    },
+    {
+      "name": "per_variant_timed_checksums_stable_across_all_36_samples",
+      "passed": true,
+      "detail": {
+        "structure_off_shield_off": 1,
+        "structure_off_shield_on": 1,
+        "structure_on_shield_off": 1,
+        "structure_on_shield_on": 1
+      }
+    },
+    {
+      "name": "structure_on_and_off_checksums_intentionally_differ",
+      "passed": true
+    },
+    {
+      "name": "elapsed_ns_and_calls_recompute_ns_per_call",
+      "passed": true
+    },
+    {
+      "name": "profile_order_is_declared_balanced_rotation",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:0:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:0:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:0:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:0:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:1:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:1:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:1:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:1:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:2:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:2:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:2:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:2:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:3:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:3:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:3:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:3:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:4:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:4:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:4:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:4:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:5:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:5:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:5:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:5:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:6:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:6:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:6:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:6:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:7:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:7:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:7:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:7:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:8:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:8:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:8:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_block_mean:8:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_median:structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_median:structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_median:structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_median:structure_on_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_paired_ratio:structure_on_shield_on_over_structure_off_shield_on",
+      "passed": true
+    },
+    {
+      "name": "profile_paired_ratio:structure_on_shield_off_over_structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_paired_ratio:structure_off_shield_on_over_structure_off_shield_off",
+      "passed": true
+    },
+    {
+      "name": "profile_paired_ratio:structure_on_shield_on_over_structure_on_shield_off",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:completed_30_pairs",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:mode",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:16_logical_CPUs",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:harness_commit",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:positions_file_hash",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:binary_hash:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:declared_commit:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:Hash_and_overhead:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:binary_hash:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:declared_commit:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:Hash_and_overhead:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:pawn_option:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:0",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:1",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:2",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:3",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:4",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:5",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:6",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:7",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:8",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:9",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:10",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:11",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:12",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:13",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:14",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:15",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:16",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:17",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:18",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:19",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:20",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:21",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:22",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:23",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:24",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:25",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:26",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:27",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:28",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:record_flags:29",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:legal_PV:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:TT_reuse:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:exact_graph_all_records",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:recomputed_medians",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth3.json:recomputed_mismatch_counts",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:completed_30_pairs",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:mode",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:16_logical_CPUs",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:harness_commit",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:positions_file_hash",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:binary_hash:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:declared_commit:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:Hash_and_overhead:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:binary_hash:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:declared_commit:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:Hash_and_overhead:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:pawn_option:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:0",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:1",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:2",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:3",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:4",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:5",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:6",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:7",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:8",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:9",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:10",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:11",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:12",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:13",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:14",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:15",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:16",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:17",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:18",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:19",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:20",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:21",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:22",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:23",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:24",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:25",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:26",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:27",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:28",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:record_flags:29",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:legal_PV:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:TT_reuse:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:exact_graph_all_records",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:recomputed_medians",
+      "passed": true
+    },
+    {
+      "name": "legacy-depth4.json:recomputed_mismatch_counts",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:completed_30_pairs",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:mode",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:16_logical_CPUs",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:harness_commit",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:positions_file_hash",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:binary_hash:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:declared_commit:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:Hash_and_overhead:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:pawn_option:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:binary_hash:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:declared_commit:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:Hash_and_overhead:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:pawn_option:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:0",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:1",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:2",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:3",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:4",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:5",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:6",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:7",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:8",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:9",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:10",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:11",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:12",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:13",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:14",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:15",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:16",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:17",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:18",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:19",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:20",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:21",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:22",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:23",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:24",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:25",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:26",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:27",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:28",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:record_flags:29",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:legal_PV:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:TT_reuse:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:recomputed_medians",
+      "passed": true
+    },
+    {
+      "name": "structure-depth3.json:recomputed_mismatch_counts",
+      "passed": true
+    },
+    {
+      "name": "profile-load.json:monitor_success_16_logical_cpus",
+      "passed": true
+    },
+    {
+      "name": "search-load.json:monitor_success_16_logical_cpus",
+      "passed": true
+    },
+    {
+      "name": "windows_native_six_suite_logs_pass",
+      "passed": true
+    },
+    {
+      "name": "windows_final_totals_match_linux_native_summary",
+      "passed": true
+    },
+    {
+      "name": "UCI_23_groups_pass",
+      "passed": true
+    },
+    {
+      "name": "differential_2997_pass",
+      "passed": true
+    },
+    {
+      "name": "Linux_summary_native_sanitizer_pass",
+      "passed": true
+    },
+    {
+      "name": "linux-native.log:no_reported_failures",
+      "passed": true
+    },
+    {
+      "name": "linux-sanitizers.log:no_reported_failures",
+      "passed": true
+    },
+    {
+      "name": "linux-evaluation-final.log:no_reported_failures",
+      "passed": true
+    },
+    {
+      "name": "linux-evaluation-sanitizers-final.log:no_reported_failures",
+      "passed": true
+    }
+  ],
+  "failed_checks": [],
+  "evidence_sha256": {
+    "profile-windows.json": "0b2f32b5d06d643dedf23c501a04cf05e8372653dd3d4d2da8d84648f2b00d2a",
+    "legacy-depth3.json": "c969d5b1aa35f7a32a854a7f87790e3b77bd19231d4df71455ab1db48ba9a073",
+    "legacy-depth4.json": "bed1fff4db41ff118aebf423027119b75dc706efe3257bca255cfbe79b56aed9",
+    "structure-depth3.json": "2a3dcb9b1feb43ba986fd41d6b9ab8b50a5deb023fea8ca90694153ccb97081f",
+    "profile-load.json": "f6e3de1790111d3357f86b9a0143237ae07d9aa4dfcb6ba6c5dd5d77688cedd0",
+    "search-load.json": "62cc1005c23b3bedd4c7441fe104adf5bb399366a138d3eb7a992099e7052e6e",
+    "windows-native.log": "809413e2e0bfb23b74bcce10d7995d067c153635d5096f82f86d632fb6129675",
+    "windows-evaluation-final.log": "0f92f59cd4b3b66610f9039a9f371430b7c5f8f1ec3d42019b93ed3105bcefbb",
+    "engine_integration.log": "374589a16c6b39ab94df2ce06f0d2a1e2f34cc7e7a5898cc6de72c391b8c504e",
+    "differential.log": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773"
+  },
+  "linux_evidence_sha256": {
+    "summary.json": "9dcbf9c8a77a0d2b92ae810d66e5b72d185d0a1e909e57ad71a345c7759ead2a",
+    "linux-final-source-sha256.txt": "2d903601dfb26c42890438479d095226d7c9e5630a7a10c2de7224f40b691806",
+    "linux-native.log": "c8848f153a454db949c1f73498166607d3cacc2c5ecf3e35116c8f309e4e7bb8",
+    "linux-sanitizers.log": "7b426318d5babc07c3525d18f37c9655664e34490267f5d37eeb09ab64b4b72a",
+    "linux-evaluation-final.log": "af7888590f7561ccdad5cc79c048c7e88fc6a0bc63615e95fc027fd247da2cdc",
+    "linux-evaluation-sanitizers-final.log": "113116c8d98bfc403ff331789fca0b61c4e3991498f78d0864241b2f42a902fa"
+  },
+  "auditor_notes": [
+    "An initial audit comparison mistakenly compared raw-CRLF Linux manifest hashes directly with LF Git blob hashes. The corrected method verifies raw manifest bytes first and then normalized frozen-source equality; all 21 manifest files match. This correction changed only this audit JSON."
+  ]
+}

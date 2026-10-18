@@ -1,0 +1,30 @@
++ set -x
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include tests/evaluation_tests.cpp build/pawn-structure-linux/sanitized/board.o build/pawn-structure-linux/sanitized/search.o build/pawn-structure-linux/sanitized/evaluation.o build/pawn-structure-linux/sanitized/transposition.o build/pawn-structure-linux/sanitized/see.o build/pawn-structure-linux/sanitized/reference_evaluation_v054.o -o build/pawn-structure-linux/sanitized/evaluation_tests
++ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1
++ UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
++ build/pawn-structure-linux/sanitized/evaluation_tests
+PASS initial symmetry and color/rank reflections
+PASS opening development and center beat edge moves and retreat
+PASS bishops develop and queens wait for minor development
+PASS rook exposure loses time while minors remain home
+PASS king shelter in middlegame and activity in endgame
+PASS promotion-rich phase and very large material remain well behaved
+PASS disabled shelter preserves pinned pre-change evaluation values
+PASS nearby pawns shelter both wings and both colors without hiding their advance cost
+PASS edge shelter uses two files and ignores a third outside the king neighborhood
+PASS a pawn behind the king cannot shelter it and the closest forward pawn wins
+PASS shelter fades in pawn endings and uses the opponent's attacking material
+PASS promoted attacking armies clamp shelter rather than magnifying it without bound
+PASS shelter evaluation preserves repetition history hashes and turn antisymmetry
+PASS frozen v0.5.4 oracle across king squares pawn distances phases and home minors
+PASS frozen v0.5.4 oracle on deterministic legal game walks with retained history
+PASS frozen v0.5.4 oracle preserves special move and repetition histories
+PASS passed pawns gain promotion proximity and blocked rewards are halved for either color
+PASS enemy pawns block passage only ahead on the same or adjacent files including board edges
+PASS doubled and isolated costs combine while only the foremost pawn earns passage
+PASS pawn terms share one phase blend and preserve the independent king shield
+PASS independent pawn oracle exhausts legal two-pawn placements and retained game histories
+PASS pawn structure follows deterministic en passant promotions and their complete undo histories
+16860 frozen v0.5.4 oracle positions (each shield on/off)
+13177 independent pawn-structure oracle positions (all option combinations)
+22 groups, 159342 assertions, 0 failures

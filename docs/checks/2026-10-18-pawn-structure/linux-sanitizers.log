@@ -1,0 +1,102 @@
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c src/board.cpp -o build/pawn-structure-linux/sanitized/board.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c src/search.cpp -o build/pawn-structure-linux/sanitized/search.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c src/evaluation.cpp -o build/pawn-structure-linux/sanitized/evaluation.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c src/transposition.cpp -o build/pawn-structure-linux/sanitized/transposition.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c src/see.cpp -o build/pawn-structure-linux/sanitized/see.o
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include -c tests/reference_evaluation_v054.cpp -o build/pawn-structure-linux/sanitized/reference_evaluation_v054.o
++ for test in evaluation search
++ extra=()
++ [[ evaluation == evaluation ]]
++ extra+=("$out/sanitized/reference_evaluation_v054.o")
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include tests/evaluation_tests.cpp build/pawn-structure-linux/sanitized/board.o build/pawn-structure-linux/sanitized/search.o build/pawn-structure-linux/sanitized/evaluation.o build/pawn-structure-linux/sanitized/transposition.o build/pawn-structure-linux/sanitized/see.o build/pawn-structure-linux/sanitized/reference_evaluation_v054.o -o build/pawn-structure-linux/sanitized/evaluation_tests
++ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1
++ UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
++ build/pawn-structure-linux/sanitized/evaluation_tests
+PASS initial symmetry and color/rank reflections
+PASS opening development and center beat edge moves and retreat
+PASS bishops develop and queens wait for minor development
+PASS rook exposure loses time while minors remain home
+PASS king shelter in middlegame and activity in endgame
+PASS promotion-rich phase and very large material remain well behaved
+PASS disabled shelter preserves pinned pre-change evaluation values
+PASS nearby pawns shelter both wings and both colors without hiding their advance cost
+PASS edge shelter uses two files and ignores a third outside the king neighborhood
+PASS a pawn behind the king cannot shelter it and the closest forward pawn wins
+PASS shelter fades in pawn endings and uses the opponent's attacking material
+PASS promoted attacking armies clamp shelter rather than magnifying it without bound
+PASS shelter evaluation preserves repetition history hashes and turn antisymmetry
+PASS frozen v0.5.4 oracle across king squares pawn distances phases and home minors
+PASS frozen v0.5.4 oracle on deterministic legal game walks with retained history
+PASS frozen v0.5.4 oracle preserves special move and repetition histories
+PASS passed pawns gain promotion proximity and blocked rewards are halved for either color
+PASS enemy pawns block passage only ahead on the same or adjacent files including board edges
+PASS doubled and isolated costs combine while only the foremost pawn earns passage
+PASS pawn terms share one phase blend and preserve the independent king shield
+PASS independent pawn oracle exhausts legal two-pawn placements and retained game histories
+16860 frozen v0.5.4 oracle positions (each shield on/off)
+13150 independent pawn-structure oracle positions (all option combinations)
+21 groups, 159123 assertions, 0 failures
++ for test in evaluation search
++ extra=()
++ [[ search == evaluation ]]
++ g++ -std=c++20 -O1 -g -pthread -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I include tests/search_tests.cpp build/pawn-structure-linux/sanitized/board.o build/pawn-structure-linux/sanitized/search.o build/pawn-structure-linux/sanitized/evaluation.o build/pawn-structure-linux/sanitized/transposition.o build/pawn-structure-linux/sanitized/see.o -o build/pawn-structure-linux/sanitized/search_tests
++ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1
++ UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
++ build/pawn-structure-linux/sanitized/search_tests
+PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescence terminal and optional claim handling
+PASS quiescence shares exact node budgets and restores interrupted work
+PASS transposition scores agree with uncached fixed-depth search
+PASS transpositions reuse completed work and never publish a partial root
+PASS cached search keeps optional history-dependent claims
+PASS caller-owned memory reuse preserves every completed iteration graph
+PASS reused memory isolates options FENs history clocks and hash resize
+PASS disabled terminal and interrupted calls preserve reusable storage safely
+PASS quiet move ordering changes work without changing exact fixed-depth scores
+PASS one quiet-check qsearch matches an unpruned independent oracle
+PASS quiet checks recognize mate beyond the capture-only frontier
+PASS Caro-Kann loss regression sees the checking knight refutation
+PASS PVS and alpha-beta select oracle-optimal moves with and without TT
+PASS PVS preserves independently enumerated quiescence and quiet-check values
+PASS PVS scouts ties without re-search and re-searches a genuine improvement
+PASS PVS handles current intended and historical optional draw claims
+PASS an intended draw floor can require a PVS full-window re-search
+PASS PVS interruption at scout and re-search entry retains the completed iteration
+PASS reused PVS memory isolates modes histories options and interruption
+PASS SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode
+PASS a sole legal capture needs no exchange sort and still preserves its result
+PASS favorable captures precede losing captures without discarding either
+PASS negative SEE queen sacrifice remains available and produces the oracle mate
+PASS SEE preserves the independent bounded-check quiescence oracle
+PASS SEE mode changes and cancellation cannot leak through retained memory
+PASS shelter ON and OFF search match exhaustive normal and tactical oracles
+PASS cancelled fallback uses the selected shelter evaluator before any completed iteration
+PASS reused memory isolates shelter mode switches and material-only evaluation ignores them
+PASS pawn structure ON and OFF match exhaustive ordinary and tactical search
+PASS pawn structure defaults ON and remains selected in cancelled or one-node fallbacks
+PASS retained memory isolates pawn structure changes and material-only ignores both positional flags
+PASS pawn bonuses never override mate automatic draws or optional claims
+50 groups, 20853 assertions, 0 failures
++ set +x

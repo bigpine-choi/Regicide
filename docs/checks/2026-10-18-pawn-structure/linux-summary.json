@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "platform": "Ubuntu 24.04 WSL2 x86_64",
+  "compiler": "GCC 13.3.0",
+  "warning_flags": "-Wall -Wextra -Wpedantic -Werror",
+  "baseline_commit": "585710724e93329a8f8baddfbc82724db4a4ce2a",
+  "native": {
+    "groups": 119,
+    "assertions": 216710,
+    "failures": 0,
+    "suites": {
+      "rules": 8325,
+      "search": 20853,
+      "evaluation": 159342,
+      "board_state": 18974,
+      "transposition": 97,
+      "see": 9119
+    }
+  },
+  "sanitizers": {
+    "kind": "ASan+UBSan",
+    "options": "detect_leaks=1:halt_on_error=1; halt_on_error=1:print_stacktrace=1",
+    "groups": 72,
+    "assertions": 180195,
+    "failures": 0,
+    "suites": [
+      "evaluation",
+      "search"
+    ]
+  },
+  "frozen_release_oracle_positions": 16860,
+  "independent_structure_oracle_positions": 13177,
+  "evidence": [
+    "linux-native.log",
+    "linux-sanitizers.log",
+    "linux-evaluation-final.log",
+    "linux-evaluation-sanitizers-final.log",
+    "linux-environment.txt",
+    "linux-final-source-sha256.txt",
+    "validate-linux.sh",
+    "recheck-evaluation.sh"
+  ],
+  "note": "Initial full run passed. The final deterministic en passant/promotion/undo group changed evaluation_tests.cpp only, verified by source hash comparison. Final evaluation was rebuilt and rerun in native and sanitizer modes; other suites and production objects were unchanged."
+}
