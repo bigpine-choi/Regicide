@@ -135,9 +135,24 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
 // Restores board and repetition history, including when cancellation unwinds.
 class AppliedMove {
 public:
-    AppliedMove(Board& board, Move move, bool fast) : board_(board) {
-        if (fast) board_.play_generated(move);
-        else board_.play(move);
+    AppliedMove(Board& board, Move move, bool fast,
+                const NeuralEvaluator* neural = nullptr,
+                const NeuralEvaluator::Accumulator* parent = nullptr,
+                NeuralEvaluator::Accumulator* child = nullptr) : board_(board) {
+        if (neural) {
+            const Position before = board_.position();
+            if (fast) board_.play_generated(move);
+            else board_.play(move);
+            try {
+                *child = neural->update(*parent, before, board_.position());
+            } catch (...) {
+                board_.undo();
+                throw;
+            }
+        } else {
+            if (fast) board_.play_generated(move);
+            else board_.play(move);
+        }
     }
     ~AppliedMove() { board_.undo(); }
     AppliedMove(const AppliedMove&) = delete;
@@ -151,8 +166,17 @@ struct Interrupted {};
 class Searcher {
 public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
-             SearchOptions options, TranspositionTable* table)
-        : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {}
+             SearchOptions options, TranspositionTable* table, const Board& root)
+        : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {
+        if (nnue_enabled()) {
+            accumulators_.resize(max_search_ply + 1);
+            accumulators_[0] = options_.neural->refresh(root);
+        }
+    }
+
+    int root_evaluation(const Board& board) const {
+        return evaluation(board, 0);
+    }
 
     std::uint64_t nodes = 0;
     std::uint64_t qnodes = 0;
@@ -184,7 +208,7 @@ public:
         }
         const bool current_claim = claimable(board);
         if (depth == 0) {
-            const int score = static_evaluation(board);
+            const int score = static_evaluation(board, ply);
             if (score < 0 && (current_claim || intended_claim_available(board, moves))) return 0;
             return score;
         }
@@ -249,7 +273,9 @@ public:
                     killers_[ply][0] != move && killers_[ply][1] != move;
             }
             {
-                AppliedMove applied(board, move, options_.fast_moves);
+                AppliedMove applied(board, move, options_.fast_moves,
+                                    nnue_enabled() ? options_.neural.get() : nullptr,
+                                    accumulator_at(ply), accumulator_at(ply + 1));
                 const bool intended_claim = claimable(board);
                 if (options_.pvs && !first_move) {
                     // A one-point window first asks only whether this move can
@@ -344,13 +370,31 @@ private:
     TranspositionTable* table_;
     std::array<Killers, max_search_ply + 1> killers_{};
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
+    // Children copy the parent sum before applying their piece deltas. Undo
+    // simply returns to the untouched parent slot; re-searches reuse that child.
+    // Allocate only for NNUE searches; classical/float searches need no cache.
+    std::vector<NeuralEvaluator::Accumulator> accumulators_;
 
-    int static_evaluation(const Board& board) const {
-        const int score = options_.positional ? (options_.neural ? options_.neural->evaluate(
-                                                  board, options_.king_pawn_shield, options_.pawn_structure) :
-                                              evaluate_position(board, options_.king_pawn_shield,
-                                                                options_.pawn_structure)) :
-                                               evaluate_material(board);
+    bool nnue_enabled() const {
+        return options_.positional && options_.neural && options_.nnue;
+    }
+
+    NeuralEvaluator::Accumulator* accumulator_at(int ply) {
+        return nnue_enabled() ? &accumulators_[ply] : nullptr;
+    }
+
+    int evaluation(const Board& board, int ply) const {
+        if (!options_.positional) return evaluate_material(board);
+        if (!options_.neural)
+            return evaluate_position(board, options_.king_pawn_shield, options_.pawn_structure);
+        if (nnue_enabled())
+            return options_.neural->evaluate_nnue(board, accumulators_[ply],
+                                                options_.king_pawn_shield, options_.pawn_structure);
+        return options_.neural->evaluate(board, options_.king_pawn_shield, options_.pawn_structure);
+    }
+
+    int static_evaluation(const Board& board, int ply) const {
+        const int score = evaluation(board, ply);
         const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
         return std::clamp(score, -mate_score + reserved_plies + 1,
                           mate_score - reserved_plies - 1);
@@ -375,7 +419,7 @@ private:
 
         int best = -infinity;
         if (!checked) {
-            best = static_evaluation(board);
+            best = static_evaluation(board, ply);
             // A quiet intended move can permit a draw even though quiescence
             // otherwise searches only captures and promotions.
             if (best < 0 && (current_claim || intended_claim_available(board, moves))) best = 0;
@@ -399,7 +443,9 @@ private:
             const bool quiet = quiet_move(board, move);
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move, options_.fast_moves);
+                AppliedMove applied(board, move, options_.fast_moves,
+                                    nnue_enabled() ? options_.neural.get() : nullptr,
+                                    accumulator_at(ply), accumulator_at(ply + 1));
                 const bool intended_claim = claimable(board);
                 // Captures/promotions preserve the quiet-check budget. All
                 // check evasions remain legal candidates even at zero; a
@@ -459,6 +505,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         throw std::invalid_argument("search movetime cannot be negative");
     if (options.hash_mb < 1 || options.hash_mb > max_hash_mb)
         throw std::invalid_argument("hash size must be 1..256 MiB");
+    if (options.nnue && !options.neural)
+        throw std::invalid_argument("NNUE requires a neural model");
     const auto start = Clock::now();
     SearchResult result;
     Board board = input;
@@ -492,12 +540,6 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     order_moves(board, moves);
     result.best_move = moves.front();
     result.pv.push_back(moves.front());
-    result.score = options.positional ? (options.neural ? options.neural->evaluate(
-                                            board, options.king_pawn_shield, options.pawn_structure) :
-                                        evaluate_position(board, options.king_pawn_shield,
-                                                          options.pawn_structure)) :
-                                       evaluate_material(board);
-    if (claimable(board)) result.score = std::max(0, result.score);
     SearchContext one_shot_context;
     auto& active_context = context ? *context : one_shot_context;
     TranspositionTable* table = nullptr;
@@ -509,7 +551,9 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.tt_bytes = work.bytes;
         table = &active_context.table_;
     }
-    Searcher searcher(limits, stop, start, options, table);
+    Searcher searcher(limits, stop, start, options, table, board);
+    result.score = searcher.root_evaluation(board);
+    if (claimable(board)) result.score = std::max(0, result.score);
     for (int depth = 1; depth <= limits.depth; ++depth) {
         std::vector<Move> pv;
         int score;

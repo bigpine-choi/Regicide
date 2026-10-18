@@ -141,7 +141,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.6.5");
+            send("id name Regicide 0.6.6");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -159,6 +159,7 @@ public:
             send("option name UseLMR type check default true");
             send("option name EvalFile type string default <empty>");
             send("option name UseNeuralEvaluation type check default false");
+            send("option name UseNNUE type check default false");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -231,7 +232,7 @@ private:
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
             option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
-            option != "UseLMR") return;
+            option != "UseLMR" && option != "UseNNUE") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -252,6 +253,7 @@ private:
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";
         else if (option == "UsePawnStructure") options_.pawn_structure = text == "true";
+        else if (option == "UseNNUE") options_.nnue = text == "true";
         else options_.lmr = text == "true";
     }
     void progress(const SearchResult& result) {
@@ -283,6 +285,10 @@ private:
         stop_.store(false, std::memory_order_relaxed);
         const Board snapshot = board_;
         auto options = options_;
+        // UseNNUE chooses the inference mode of an enabled model. Keep that
+        // preference across neural on/off switches, while disabled neural
+        // evaluation continues to select the classical default.
+        options.nnue = options.nnue && static_cast<bool>(options.neural);
         options.root_moves = std::move(go.root_moves);
         worker_ = std::thread([this, snapshot, go, options] {
             try {

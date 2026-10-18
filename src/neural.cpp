@@ -111,6 +111,17 @@ std::shared_ptr<const NeuralEvaluator> NeuralEvaluator::load(std::istream& input
     model->b3_ = read_parameter(data);
     if (data >> extra) throw std::runtime_error("Extra data after neural model parameters.");
     if (data.bad()) throw std::runtime_error("Failed parsing neural model parameters.");
+
+    // Keep the original doubles and file formats intact. The optional path
+    // derives fixed-point first-layer parameters once; later layers retain
+    // their original arithmetic. Integer accumulation is order-independent.
+    for (std::size_t index = 0; index < model->w1_.size(); ++index)
+        model->nnue_w1_[index] = static_cast<std::int32_t>(
+            std::llround(model->w1_[index] * nnue_scale));
+    for (std::size_t row = 0; row < hidden1_count; ++row)
+        model->nnue_b1_[row] = static_cast<std::int32_t>(
+            std::llround(model->b1_[row] * nnue_scale));
+
     return model;
 }
 
@@ -137,6 +148,76 @@ int NeuralEvaluator::evaluate(const Board& board, bool king_pawn_shield, bool pa
             h1[row] += weights[row];
     }
 
+    return evaluate_hidden(board, h1, material, king_pawn_shield, pawn_structure);
+}
+
+void NeuralEvaluator::accumulate_piece(Accumulator& accumulator, char piece,
+                                      std::size_t square, int sign) const {
+    const int type = piece_type(piece);
+    if (type < 0) return;
+    const bool white_piece = piece >= 'A' && piece <= 'Z';
+    accumulator.material_white += sign * (white_piece ? 1 : -1) *
+                                  material_values[static_cast<std::size_t>(type)];
+    for (std::size_t perspective = 0; perspective < 2; ++perspective) {
+        const bool white_perspective = perspective == 0;
+        const bool own = white_piece == white_perspective;
+        const std::size_t relative_square = white_perspective ? square : (square ^ 56);
+        const auto channel = static_cast<std::size_t>(type + (own ? 0 : 6));
+        const auto feature = channel * 64 + relative_square;
+        const auto* weights = nnue_w1_.data() + feature * hidden1_count;
+        for (std::size_t row = 0; row < hidden1_count; ++row)
+            accumulator.hidden[perspective][row] +=
+                static_cast<std::int64_t>(weights[row]) * sign;
+    }
+}
+
+NeuralEvaluator::Accumulator NeuralEvaluator::refresh(const Board& board) const {
+    Accumulator accumulator;
+    for (auto& perspective : accumulator.hidden)
+        for (std::size_t row = 0; row < hidden1_count; ++row)
+            perspective[row] = nnue_b1_[row];
+    for (std::size_t square = 0; square < board.position().squares.size(); ++square)
+        accumulate_piece(accumulator, board.position().squares[square], square, 1);
+    return accumulator;
+}
+
+NeuralEvaluator::Accumulator NeuralEvaluator::update(const Accumulator& parent,
+                                                     const Position& before,
+                                                     const Position& after) const {
+    Accumulator accumulator = parent;
+    // Compare actual squares rather than reimplementing the rules here. This
+    // also covers both castling pieces, the remote en-passant capture square,
+    // and promotion/capture replacement, with no king-dependent refresh.
+    for (std::size_t square = 0; square < before.squares.size(); ++square) {
+        if (before.squares[square] == after.squares[square]) continue;
+        accumulate_piece(accumulator, before.squares[square], square, -1);
+        accumulate_piece(accumulator, after.squares[square], square, 1);
+    }
+    return accumulator;
+}
+
+int NeuralEvaluator::evaluate_nnue(const Board& board, const Accumulator& accumulator,
+                                  bool king_pawn_shield, bool pawn_structure) const {
+    const bool white_turn = board.position().turn == Color::white;
+    const auto& perspective = accumulator.hidden[white_turn ? 0 : 1];
+    std::array<double, hidden1_count> h1;
+    for (std::size_t row = 0; row < hidden1_count; ++row)
+        h1[row] = static_cast<double>(perspective[row]) / nnue_scale;
+    // Conversion is exact at the permitted magnitude, but the initial weight
+    // rounding differs from legacy inference. Its first-layer error is at
+    // most (occupied squares + 1) / (2 * nnue_scale); the tail can amplify it.
+    const int material = white_turn ? accumulator.material_white : -accumulator.material_white;
+    return evaluate_hidden(board, h1, material, king_pawn_shield, pawn_structure);
+}
+
+int NeuralEvaluator::evaluate_nnue_full(const Board& board, bool king_pawn_shield,
+                                       bool pawn_structure) const {
+    return evaluate_nnue(board, refresh(board), king_pawn_shield, pawn_structure);
+}
+
+int NeuralEvaluator::evaluate_hidden(const Board& board, std::array<double, hidden1_count>& h1,
+                                     int material, bool king_pawn_shield,
+                                     bool pawn_structure) const {
     // Sparse binary inputs need additions for occupied features only. Apply
     // ReLU after every feature has been accumulated, as in the original loop.
     for (double& value : h1) value = std::max(0.0, value);

@@ -40,10 +40,16 @@ jobs:
       - run: python tests/remote_arena_import_tests.py
       - name: Build neural cost diagnostic
         run: cmake --build build --config Release --target regicide_profile_neural
+      - name: Build NNUE cost diagnostic
+        run: cmake --build build --config Release --target regicide_profile_nnue
       - if: runner.os == 'Linux'
         run: python tests/neural_integration_tests.py --binary build/regicide
       - if: runner.os == 'Windows'
         run: python tests/neural_integration_tests.py --binary build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/nnue_integration_tests.py --binary build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/nnue_integration_tests.py --binary build/Release/regicide.exe
       - if: runner.os == 'Linux'
         run: python tests/learning_runtime_tests.py --binary build/regicide
       - if: runner.os == 'Windows'
