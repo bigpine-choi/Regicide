@@ -88,6 +88,33 @@ class StateLock(AbstractContextManager):
                 self.stream.close()
 
 
+def windows_execution_state(flags):
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    setter = kernel.SetThreadExecutionState
+    setter.argtypes, setter.restype = [wintypes.DWORD], wintypes.DWORD
+    result = setter(flags)
+    if not result:
+        raise OSError(ctypes.get_last_error(), "Could not hold the system awake during learning")
+    return result
+
+
+class KeepAwake(AbstractContextManager):
+    """Keep only the running learning thread's idle-sleep request, then restore it."""
+    def __enter__(self):
+        self.previous = windows_execution_state(0x80000001) if sys.platform == "win32" else None
+        return self
+
+    def __exit__(self, *_):
+        if self.previous is not None:
+            try:
+                windows_execution_state(self.previous | 0x80000000)
+            except OSError as error:
+                # Windows also releases thread execution requests on process exit.
+                print(f"Could not restore the idle-sleep request: {error}", file=sys.stderr)
+
+
 def contained(state, relative):
     if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
         raise ValueError("State paths must be nonempty relative paths.")
@@ -267,6 +294,8 @@ def run_round(args, state, catalog):
     report = {"schema": SCHEMA, "status": "running", "attempt_index": attempt,
               "started_utc": utc_now(), "seed": args.seed + attempt * 1009,
               "stages": [], "adopted": False,
+              "power_policy": {"system_required_during_cycle": sys.platform == "win32",
+                               "scope": "Thread-scoped Windows idle-sleep request restored on exit; does not override explicit user sleep or lid closure."},
               "policy": "Losses analyzed; accumulated training only; frozen bootstrap heldouts; reserved arena excluded; old champion kept unless strict paired arena passes."}
     report_path = run / "cycle.json"
 
@@ -410,7 +439,7 @@ def main(argv=None):
         argument_parser.error("engine binary is missing")
     state = args.state.resolve()
     try:
-        with StateLock(state):
+        with StateLock(state), KeepAwake():
             catalog = catalog_read(state)
             for _ in range(args.rounds):
                 run_round(args, state, catalog)

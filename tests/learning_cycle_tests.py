@@ -226,6 +226,39 @@ class CycleTests(unittest.TestCase):
         with CYCLE.StateLock(self.state):
             pass
 
+    def test_windows_keep_awake_restores_previous_flags_on_normal_or_exception_exit(self):
+        previous = 0x80000002
+        for fail in (False, True):
+            with self.subTest(exception_exit=fail):
+                with mock.patch.object(CYCLE.sys, "platform", "win32"):
+                    with mock.patch.object(CYCLE, "windows_execution_state", return_value=previous) as setter:
+                        if fail:
+                            with self.assertRaisesRegex(RuntimeError, "body failed"):
+                                with CYCLE.KeepAwake():
+                                    raise RuntimeError("body failed")
+                        else:
+                            with CYCLE.KeepAwake():
+                                pass
+                self.assertEqual(setter.call_args_list,
+                                 [mock.call(0x80000001), mock.call(previous | 0x80000000)])
+
+    def test_keep_awake_is_noop_outside_windows(self):
+        with mock.patch.object(CYCLE.sys, "platform", "linux"):
+            with mock.patch.object(CYCLE, "windows_execution_state") as setter:
+                with CYCLE.KeepAwake():
+                    pass
+        setter.assert_not_called()
+
+    def test_keep_awake_entry_failure_propagates_without_entering_body(self):
+        entered = False
+        with mock.patch.object(CYCLE.sys, "platform", "win32"):
+            with mock.patch.object(CYCLE, "windows_execution_state", side_effect=OSError("hold failed")) as setter:
+                with self.assertRaisesRegex(OSError, "hold failed"):
+                    with CYCLE.KeepAwake():
+                        entered = True
+        self.assertFalse(entered)
+        setter.assert_called_once_with(0x80000001)
+
     def test_actual_bootstrap_snapshot_keeps_original_source_and_heldout_hashes(self):
         self.assertEqual(CYCLE.BOOTSTRAP, ROOT / "docs/checks/2026-10-18-neural-v1/data/manifest.json")
         before = {path.name: CYCLE.sha256(path) for path in CYCLE.BOOTSTRAP.parent.iterdir() if path.is_file()}
@@ -433,6 +466,38 @@ class CycleTests(unittest.TestCase):
         self.assertEqual(stages.promotions, [])
         self.assertEqual((self.state / "champion.json").read_bytes(), original)
 
+    def test_candidate_change_before_arena_blocks_match_and_preserves_incumbent(self):
+        catalog = self.catalog()
+        champion = self.incumbent()
+        original = (self.state / "champion.json").read_bytes()
+        with MockStages(self.state, champion=champion, arena_pass=True) as stages:
+            def changed_candidate(binary, candidate, output):
+                result = stages.rules(binary, candidate, output)
+                Path(candidate).write_bytes(b"CHANGED CANDIDATE BEFORE ARENA")
+                return result
+            with mock.patch.object(CYCLE, "run_rule_checks", side_effect=changed_candidate):
+                with self.assertRaisesRegex(ValueError, "Candidate or frozen engine changed before the arena"):
+                    self.run_round(catalog)
+        self.assertEqual(stages.arenas, [])
+        self.assertEqual(stages.promotions, [])
+        self.assertEqual((self.state / "champion.json").read_bytes(), original)
+
+    def test_candidate_change_during_arena_blocks_adoption_and_preserves_incumbent(self):
+        catalog = self.catalog()
+        champion = self.incumbent()
+        original = (self.state / "champion.json").read_bytes()
+        with MockStages(self.state, champion=champion, arena_pass=True) as stages:
+            def changed_candidate(binary, candidate, champion, output, **options):
+                result = stages.arena(binary, candidate, champion, output, **options)
+                Path(candidate).write_bytes(b"CHANGED CANDIDATE DURING ARENA")
+                return result
+            with mock.patch.object(ARENA, "run_arena", side_effect=changed_candidate):
+                with self.assertRaisesRegex(ValueError, "Candidate or frozen engine changed during the arena"):
+                    self.run_round(catalog)
+        self.assertEqual(len(stages.arenas), 1)
+        self.assertEqual(stages.promotions, [])
+        self.assertEqual((self.state / "champion.json").read_bytes(), original)
+
     def test_accumulated_pgn_or_diagnosis_tampering_is_rejected(self):
         catalog = self.catalog()
         with MockStages(self.state):
@@ -468,8 +533,9 @@ class CycleTests(unittest.TestCase):
 
     def test_main_creates_state_and_uses_exclusive_context(self):
         state = self.root / "new-state"
-        with mock.patch.object(CYCLE, "run_round", return_value={}) as run:
-            self.assertEqual(CYCLE.main(["--binary", str(self.binary), "--state", str(state)]), 0)
+        with mock.patch.object(CYCLE, "windows_execution_state", return_value=0x80000000):
+            with mock.patch.object(CYCLE, "run_round", return_value={}) as run:
+                self.assertEqual(CYCLE.main(["--binary", str(self.binary), "--state", str(state)]), 0)
         self.assertTrue((state / "cycle.lock").is_file())
         self.assertEqual(run.call_count, 1)
 
