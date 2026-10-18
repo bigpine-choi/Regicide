@@ -1,0 +1,111 @@
+{
+  "bootstrap_manifest_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af",
+  "completed_games": 32,
+  "corpus_schema": "regicide.learning.corpus.v1",
+  "errors": [],
+  "exclusions": {
+    "diagnosed_labels_replaced": 2,
+    "diagnosed_positions_added": 2,
+    "duplicate_train_neural_inputs_replaced": 8
+  },
+  "family_splits": {
+    "alekhine": "test",
+    "budapest": "test",
+    "caro-kann": "train",
+    "dutch": "validation",
+    "english": "train",
+    "french": "train",
+    "italian": "train",
+    "kings-indian": "train",
+    "nimzo-indian": "test",
+    "pirc": "validation",
+    "queens-gambit": "train",
+    "ruy-lopez": "train",
+    "scandinavian": "validation",
+    "scotch": "train",
+    "sicilian": "train",
+    "slav": "train"
+  },
+  "files_sha256": {
+    "games.jsonl": "f674148f3ae74c8274e91bf02a473ffe92c11a692b880b02f495550e9a67f9bc",
+    "games.pgn": "45aacdbdfed8949639659b197401738f0ef47f5e9706a9de54b9cfb3527e4a83",
+    "positions.jsonl": "7215d9a0fda96cd594e6b1ffdba5510a247e7a5123e78482b91f81adce473b33"
+  },
+  "games_path": "games.jsonl",
+  "holdout_policy": "first dataset validation/test rows and labels fixed; later holdout games ignored; conflicting training inputs excluded",
+  "holdout_rows_sha256": {
+    "test": "64832f4b4c986cc620a6f7426292db82620d9c3982267fa773e1c1fbd17c13a4",
+    "validation": "ebdda07879ebfb70d4fc89667b15be60ba11f50dad0da9a10e945e4e7b46a887"
+  },
+  "pgn_path": "games.pgn",
+  "positions": 582,
+  "positions_by_split": {
+    "test": 125,
+    "train": 361,
+    "validation": 96
+  },
+  "positions_path": "positions.jsonl",
+  "samples_path": "positions.jsonl",
+  "schema": "regicide.selfplay.dataset.v1",
+  "source_datasets": [
+    {
+      "counts": {
+        "test": {
+          "families": 3,
+          "games": 6,
+          "samples": 125
+        },
+        "train": {
+          "families": 10,
+          "games": 20,
+          "samples": 367
+        },
+        "validation": {
+          "families": 3,
+          "games": 6,
+          "samples": 96
+        }
+      },
+      "files_sha256": {
+        "games.jsonl": "9ec6cc4d75aa2a1322974543d9df66a9c7299895134cbd64152e4d2d4ffa1cc5",
+        "games.pgn": "10e432cc7551f93432ed9805c67fb6b039b719f8ac0c087bcfc9c9b31e74d49a",
+        "positions.jsonl": "260005178e8e6189f21f76000d649984d9decc3c34c724aa5c0f751291179e55"
+      },
+      "manifest_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af"
+    }
+  ],
+  "source_diagnoses": [
+    {
+      "positions": 4,
+      "positions_sha256": "369a289d5162eab5394bb897f9b1066333dfecfefe3e1f6bae2f8a901d533fd7",
+      "report_sha256": "ffcc6fa6ecc9c9fcbaa7169742dcdd576283c7ff89a006ed0a08aab99bfd61bb",
+      "source_dataset_manifest_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af"
+    }
+  ],
+  "split_checks": {
+    "cross_split_canonical_positions": 0,
+    "cross_split_exact_neural_inputs": 0,
+    "family_split_conflicts": 0,
+    "validation_test_labels_from_bootstrap_only": true
+  },
+  "status": "complete",
+  "test_policy": "reporting only; never a model promotion or hyperparameter tuning signal",
+  "training_policy": "chronological datasets then diagnoses; latest same game/ply label; latest exact neural training input once",
+  "validated_counts": {
+    "test": {
+      "families": 3,
+      "games": 6,
+      "samples": 125
+    },
+    "train": {
+      "families": 10,
+      "games": 20,
+      "samples": 361
+    },
+    "validation": {
+      "families": 3,
+      "games": 6,
+      "samples": 96
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "schema": "regicide.learning.independent-cycle-audit.v1",
+  "finished_utc": "2026-10-18T14:15:11.253260+00:00",
+  "status": "passed",
+  "assertions": 527059,
+  "sections": [
+    {
+      "name": "frozen identities and epoch selection",
+      "passed": true,
+      "assertions": 59
+    },
+    {
+      "name": "source/corpus games, labels and PGNs",
+      "passed": true,
+      "assertions": 398893
+    },
+    {
+      "name": "same-root loss diagnoses and train corrections",
+      "passed": true,
+      "assertions": 27199
+    },
+    {
+      "name": "fixed holdouts and source provenance",
+      "passed": true,
+      "assertions": 1280
+    },
+    {
+      "name": "independent paired arena replay and statistics",
+      "passed": true,
+      "assertions": 88671
+    },
+    {
+      "name": "native resource evidence and registry decision",
+      "passed": true,
+      "assertions": 10952
+    },
+    {
+      "name": "prior invalid arenas excluded; data and candidate models preserved",
+      "passed": true,
+      "assertions": 5
+    }
+  ],
+  "metrics": {
+    "training_selected_epoch": 8,
+    "model_sha256": "4b9dc188bb289d83f6563e9a996c27eaca4aef886c3421a8125c06dd108c3256",
+    "attempt_index": 2,
+    "validated_sample_pv_plies": 11624,
+    "datasets": {
+      "bootstrap": {
+        "games": 32,
+        "samples": {
+          "train": 367,
+          "test": 125,
+          "validation": 96
+        }
+      },
+      "runs/000001-88bbee0e1ae3/data": {
+        "games": 32,
+        "samples": {
+          "test": 95,
+          "train": 294,
+          "validation": 88
+        }
+      },
+      "runs/000002-95a3500d5501/data": {
+        "games": 32,
+        "samples": {
+          "train": 325,
+          "validation": 82,
+          "test": 118
+        }
+      },
+      "runs/000002-95a3500d5501/corpus": {
+        "games": 71,
+        "samples": {
+          "train": 979,
+          "validation": 96,
+          "test": 125
+        }
+      }
+    },
+    "diagnostic_pv_plies": 1656,
+    "diagnosed_positions": 144,
+    "accepted_loss_corrections": 12,
+    "fixed_holdout_rows": {
+      "validation": 96,
+      "test": 125
+    },
+    "arena_pv_plies": 27414,
+    "arena_games": 64,
+    "arena_pairs": 32,
+    "arena_plies": 5945,
+    "arena_candidate_outcomes": {
+      "losses": 46,
+      "draws": 10,
+      "wins": 8
+    },
+    "candidate_pair_score": 0.203125,
+    "independent_alpha": 0.008333333333333333,
+    "independent_lower_bound": 0,
+    "independent_promotion_passed": false,
+    "maximum_response_seconds": 0.103462,
+    "resource_samples": 1096,
+    "maximum_resource_gap_seconds": 0.529205600003479,
+    "adopted": false,
+    "retained_model_sha256": null,
+    "previous_invalid_attempts_preserved_and_excluded": [
+      {
+        "attempt_index": 1,
+        "played_games": 34,
+        "status": "failed",
+        "adopted": false,
+        "resource_failure": {
+          "utc": "2026-10-18T13:59:49.462032+00:00",
+          "reason": "CPU sampling gap exceeded the fail-closed 2 second bound",
+          "kind": "sampling_gap",
+          "retry_allowed": true
+        },
+        "retained_dataset_manifest_sha256": "7abb0d946e776d7410852a5d274b399b5c9e3b30e20660bc4961aafd9aeb3d4b",
+        "retained_candidate_sha256": "9d6fe66578718042edd18023ffd6fa812daed5457f03df218ffed27aa6701a69"
+      }
+    ]
+  },
+  "audited_run": "runs/000002-95a3500d5501",
+  "catalog_sha256": "0e7724123cdb74d9c9abc307ba36e0c64a8ce5070cf69f38dc38319ad4f75aa0",
+  "bootstrap_manifest_sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af",
+  "method": "Independent Python chess-rule/history/PV/PGN replay and direct arithmetic; no native engine calls or implementation helper imports",
+  "scope": "Verifies saved evidence and consistency, not universal strength; external workload observation is limited to named processes sampled by the original guard",
+  "input_sha256": {
+    "cycle.json": "f6bc64ac42f684726a8669ea27bd0d9e677142f3091fc1d00d9f3dda679b5920",
+    "data/manifest.json": "1c4d9f4dd2663f927e4e7edaa853d897c6e864308c544c73a760d02f7c126d4e",
+    "corpus/manifest.json": "ffabf8999dd5d3b34f4d0190b9e3d8d6065e79c807a9cbce24471e9fb10bf869",
+    "loss-analysis/loss-report.json": "0169241a349b94d941c92b32cd8b9256a348aedd168e121301803404d5e6e8b6",
+    "model/report.json": "b6192bd90d8993048d2bd7cca16000be6da1b0a699bc46db87f18fc79fd5e8f8",
+    "arena/arena.json": "ffbe3e44c0825189903eba7f1894864cd42b266b7577b81d59e8f08094316ecc"
+  },
+  "audit_script_sha256": "7d08f1b5f75398666ea99a4b0b841af7b582b5106d2610d828c81eb014bd7bcf"
+}
