@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -72,8 +73,8 @@ Board reflected(const Board& board, bool swap_turn) {
     return Board(fen(result));
 }
 
-int white_score(const Board& board, bool shield = true) {
-    const int score = evaluate_position(board, shield);
+int white_score(const Board& board, bool shield = true, bool structure = true) {
+    const int score = evaluate_position(board, shield, structure);
     return board.position().turn == Color::white ? score : -score;
 }
 
@@ -130,7 +131,7 @@ void compare_release_evaluation(const Board& board) {
     const auto saved = board;
     ++oracle_positions;
     for (bool enabled : {false, true}) {
-        expect(evaluate_position(board, enabled) == evaluate_position_v054(board, enabled),
+        expect(evaluate_position(board, enabled, false) == evaluate_position_v054(board, enabled),
                "v0.5.4 oracle mismatch (shield " + std::string(enabled ? "on): " : "off): ") +
                    board.fen());
     }
@@ -178,6 +179,192 @@ Board oracle_fixture(int king_square, int pawn_distance, int attacking_phase,
         catch (const std::invalid_argument&) { position.squares[candidate] = '.'; }
     }
     throw std::runtime_error("could not place a legal opposing king in oracle fixture");
+}
+
+// Independent scalar specification. Every pawn is compared with every other
+// pawn, without the production rank masks, lookup tables, or file summaries.
+// Keep old and new middlegame/endgame terms unrounded until their one blend:
+// adding a separately rounded pawn delta to the release score is incorrect.
+struct PawnTerms { int middlegame = 0; int endgame = 0; };
+PawnTerms scalar_pawn_terms(const Board& board) {
+    PawnTerms result;
+    const auto& squares = board.position().squares;
+    for (int from = 0; from < 64; ++from) {
+        const char pawn = squares[from];
+        if (pawn != 'P' && pawn != 'p') continue;
+        const bool white = pawn == 'P';
+        const char enemy = white ? 'p' : 'P';
+        const int direction = white ? 1 : -1;
+        const int sign = white ? 1 : -1;
+        const int file = from % 8;
+        const int rank = white ? from / 8 : 7 - from / 8;
+        bool adjacent_friend = false, frontmost = true, passed = true;
+        bool previous_on_file = false;
+        for (int other = 0; other < 64; ++other) {
+            if (other == from) continue;
+            const int distance = std::abs(other % 8 - file);
+            const bool ahead = (other / 8 - from / 8) * direction > 0;
+            if (squares[other] == pawn) {
+                adjacent_friend |= distance == 1;
+                if (!distance) {
+                    frontmost &= !ahead;
+                    // Charge each extra pawn once, independent of direction.
+                    previous_on_file |= other < from;
+                }
+            } else if (squares[other] == enemy && distance <= 1 && ahead) {
+                passed = false;
+            }
+        }
+        int middle = 0, ending = 0;
+        if (!adjacent_friend) { middle -= 10; ending -= 12; }
+        if (previous_on_file) { middle -= 8; ending -= 12; }
+        if (passed && frontmost) {
+            // A specification expressed by rank cases rather than the
+            // production table: increasing rewards as promotion approaches.
+            switch (rank) {
+            case 2: middle += 5; ending += 10; break;
+            case 3: middle += 10; ending += 20; break;
+            case 4: middle += 20; ending += 40; break;
+            case 5: middle += 35; ending += 70; break;
+            case 6: middle += 60; ending += 120; break;
+            default: break;
+            }
+            const int forward = from + direction * 8;
+            if (forward >= 0 && forward < 64 && squares[forward] != '.') {
+                // Halve the reward only, never isolation/doubled costs.
+                int reward_middle = 0, reward_ending = 0;
+                switch (rank) {
+                case 2: reward_middle = 5; reward_ending = 10; break;
+                case 3: reward_middle = 10; reward_ending = 20; break;
+                case 4: reward_middle = 20; reward_ending = 40; break;
+                case 5: reward_middle = 35; reward_ending = 70; break;
+                case 6: reward_middle = 60; reward_ending = 120; break;
+                default: break;
+                }
+                middle -= reward_middle - reward_middle / 2;
+                ending -= reward_ending - reward_ending / 2;
+            }
+        }
+        result.middlegame += sign * middle;
+        result.endgame += sign * ending;
+    }
+    return result;
+}
+
+int scalar_position(const Board& board, bool shield, bool structure) {
+    const auto& squares = board.position().squares;
+    auto piece_type = [](char piece) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(piece)));
+    };
+    auto home = [&](bool white) {
+        int count = 0;
+        const int rank = white ? 0 : 56;
+        for (const auto& [file, piece] : std::array<std::pair<int, char>, 4>{{
+                 {1, 'n'}, {2, 'b'}, {5, 'b'}, {6, 'n'}}}) {
+            const char actual = squares[rank + file];
+            count += piece_type(actual) == piece &&
+                     static_cast<bool>(std::isupper(static_cast<unsigned char>(actual))) == white;
+        }
+        return count;
+    };
+    int material = 0, middle = 0, ending = 0, phase = 0;
+    int white_phase = 0, black_phase = 0;
+    for (int at = 0; at < 64; ++at) {
+        const char piece = squares[at];
+        if (piece == '.') continue;
+        const bool white = std::isupper(static_cast<unsigned char>(piece)) != 0;
+        const int sign = white ? 1 : -1;
+        const int rank = white ? at / 8 : 7 - at / 8;
+        const int file_center = std::min(at % 8, 7 - at % 8);
+        const int center = file_center + std::min(rank, 7 - rank);
+        int value = 0, mg = 0, eg = 0, weight = 0;
+        switch (piece_type(piece)) {
+        case 'p': {
+            value = 100;
+            const int advanced = std::max(0, rank - 3);
+            mg = 4 * rank + 3 * file_center + (rank >= 2 && rank <= 4 ? 3 * file_center : 0);
+            eg = 8 * rank + 2 * file_center + 4 * advanced * advanced;
+            break;
+        }
+        case 'n': value = 320; weight = 1; mg = 6 * center + (rank > 0 ? 12 : 0); eg = 4 * center; break;
+        case 'b': value = 330; weight = 1; mg = 4 * center + (rank > 0 ? 10 : 0); eg = 4 * center; break;
+        case 'r':
+            value = 500; weight = 2;
+            mg = 2 * file_center + (rank == 6 ? 18 : 0) -
+                 (rank > 0 && rank < 5 ? 3 * home(white) : 0);
+            eg = 2 * file_center + (rank == 6 ? 20 : 0); break;
+        case 'q': value = 900; weight = 4; mg = 2 * center - (rank > 0 ? 4 * home(white) : 0); eg = 3 * center; break;
+        case 'k': mg = -7 * center - 5 * rank + (rank == 0 && (at % 8 <= 2 || at % 8 >= 6) ? 25 : 0); eg = 8 * center; break;
+        default: break;
+        }
+        material += sign * value; middle += sign * mg; ending += sign * eg;
+        phase += weight;
+        (white ? white_phase : black_phase) += weight;
+    }
+    if (shield) {
+        for (int king = 0; king < 64; ++king) {
+            const char piece = squares[king];
+            if (piece != 'K' && piece != 'k') continue;
+            const bool white = piece == 'K';
+            const char pawn = white ? 'P' : 'p';
+            const int direction = white ? 1 : -1;
+            int cost = 0;
+            for (int file = std::max(0, king % 8 - 1); file <= std::min(7, king % 8 + 1); ++file) {
+                int nearest = 8;
+                for (int at = 0; at < 64; ++at) {
+                    const int distance = (at / 8 - king / 8) * direction;
+                    if (squares[at] == pawn && at % 8 == file && distance > 0)
+                        nearest = std::min(nearest, distance);
+                }
+                cost += nearest <= 3 ? (nearest - 1) * 4 : 12;
+            }
+            middle -= (white ? 1 : -1) * cost * std::min(white ? black_phase : white_phase, 12) / 12;
+        }
+    }
+    if (structure) {
+        const auto pawns = scalar_pawn_terms(board);
+        middle += pawns.middlegame;
+        ending += pawns.endgame;
+    }
+    phase = std::min(phase, 24);
+    const int score = material + (middle * phase + ending * (24 - phase)) / 24;
+    return board.position().turn == Color::white ? score : -score;
+}
+
+int structure_positions = 0;
+void compare_structure(const Board& board) {
+    ++structure_positions;
+    const auto saved = board;
+    for (bool shield : {false, true}) {
+        expect(scalar_position(board, shield, false) == evaluate_position_v054(board, shield),
+               "scalar baseline differs from untouched release oracle: " + board.fen());
+        for (bool structure : {false, true}) {
+            expect(evaluate_position(board, shield, structure) == scalar_position(board, shield, structure),
+                   "independent scalar pawn oracle mismatch: " + board.fen());
+        }
+    }
+    expect(evaluate_position(board) == evaluate_position(board, true, true),
+           "pawn structure must be enabled by default");
+    expect(board == saved, "pawn evaluation changed position, history, hashes or clocks");
+}
+
+Board pawn_fixture(std::initializer_list<std::pair<const char*, char>> pieces,
+                   int material_phase = 0) {
+    Position position;
+    position.squares.fill('.');
+    position.squares[square("h1")] = 'K';
+    position.squares[square("h8")] = 'k';
+    for (const auto& [at, piece] : pieces) position.squares[square(at)] = piece;
+    int remaining = material_phase;
+    for (int at : {56, 57, 58, 59, 60, 61, 62}) {
+        if (!remaining) break;
+        if (position.squares[at] != '.') continue;
+        const char piece = remaining >= 4 ? 'q' : remaining >= 2 ? 'r' : 'n';
+        position.squares[at] = piece;
+        remaining -= piece == 'q' ? 4 : piece == 'r' ? 2 : 1;
+    }
+    expect(remaining == 0, "pawn fixture did not supply requested phase");
+    return Board(fen(position));
 }
 } // namespace
 
@@ -268,7 +455,7 @@ int main() {
                  {"qqqqkqqq/qqqqqqqq/8/8/8/8/QQQQQQQQ/QQQQKQQQ w - - 0 1", 0}}}) {
             Board board(source);
             const auto saved = board;
-            expect(evaluate_position(board, false) == expected,
+            expect(evaluate_position(board, false, false) == expected,
                    "disabling shelter changed a frozen legacy evaluation");
             expect(board == saved, "disabled evaluation changed position or history");
         }
@@ -449,7 +636,173 @@ int main() {
             compare_release_evaluation(reflected(board, true));
         }
     });
+    test("passed pawns gain promotion proximity and blocked rewards are halved for either color", [] {
+        for (const auto& [at, expected] : std::array<std::pair<const char*, int>, 6>{{
+                 {"d2", -12}, {"d3", -2}, {"d4", 8}, {"d5", 28}, {"d6", 58}, {"d7", 108}}}) {
+            const auto board = pawn_fixture({{at, 'P'}});
+            expect(white_score(board, false, true) - white_score(board, false, false) == expected,
+                   "unopposed pawn has wrong endgame reward or isolation cost");
+            const auto black = reflected(board, false);
+            expect(white_score(black, false, true) - white_score(black, false, false) == -expected,
+                   "black promotion direction differs from white");
+            compare_structure(board); compare_structure(black);
+        }
+        for (char blocker : {'N', 'n', 'P'}) {
+            // d5 receives 40 in an ending. A non-pawn blocker halves that
+            // reward to 20 while its -12 isolation cost remains untouched.
+            // A friendly pawn instead owns the file's sole passed reward.
+            const auto board = pawn_fixture({{"d5", 'P'}, {"d6", blocker}});
+            compare_structure(board); compare_structure(reflected(board, true));
+            if (blocker != 'P') {
+                const auto free = pawn_fixture({{"d5", 'P'}, {"a6", blocker}});
+                const int blocked_delta = white_score(board, false, true) - white_score(board, false, false);
+                const int free_delta = white_score(free, false, true) - white_score(free, false, false);
+                expect(blocked_delta < free_delta, "occupied forward square failed to discount a passed pawn");
+            }
+        }
+        const auto unblocked = pawn_fixture({{"d7", 'P'}});
+        const auto promotion_blocked = pawn_fixture({{"d7", 'P'}, {"d8", 'n'}});
+        expect(white_score(unblocked, false, true) - white_score(unblocked, false, false) >
+                   white_score(promotion_blocked, false, true) - white_score(promotion_blocked, false, false),
+               "promotion square occupancy failed to reduce the passer reward");
+        compare_structure(promotion_blocked);
+    });
+    test("enemy pawns block passage only ahead on the same or adjacent files including board edges", [] {
+        for (const char* enemy : {"c6", "d6", "e6", "c5", "e5", "c4", "e4", "b6", "f6"}) {
+            const auto board = pawn_fixture({{"d5", 'P'}, {enemy, 'p'}});
+            compare_structure(board); compare_structure(reflected(board, true));
+        }
+        for (const char* enemy : {"a6", "b6", "h6", "b5", "b4"}) {
+            const auto board = pawn_fixture({{"a5", 'P'}, {enemy, 'p'}});
+            compare_structure(board); compare_structure(reflected(board, true));
+        }
+        // Moving the same enemy pawn from e6 to e5 opens the white passer.
+        // The black pawn's status also changes, but its lower relative rank
+        // earns a smaller reward. Check the exact whole score independently.
+        const auto stopped = pawn_fixture({{"d5", 'P'}, {"e6", 'p'}});
+        const auto same_rank = pawn_fixture({{"d5", 'P'}, {"e5", 'p'}});
+        expect(white_score(same_rank, false, true) - white_score(same_rank, false, false) >
+                   white_score(stopped, false, true) - white_score(stopped, false, false),
+               "same-rank enemy pawn was incorrectly considered ahead");
+    });
+    test("doubled and isolated costs combine while only the foremost pawn earns passage", [] {
+        for (const auto& [board, expected] : std::array<std::pair<Board, int>, 4>{{
+                 {pawn_fixture({{"c3", 'P'}, {"e3", 'P'}}), -4},
+                 {pawn_fixture({{"c3", 'P'}, {"d3", 'P'}}), 20},
+                 {pawn_fixture({{"d3", 'P'}, {"d5", 'P'}}), 4},
+                 {pawn_fixture({{"d2", 'P'}, {"d3", 'P'}, {"d5", 'P'}}), -20}}}) {
+            expect(white_score(board, false, true) - white_score(board, false, false) == expected,
+                   "isolated or doubled file costs, or frontmost-only passer reward, are wrong");
+            compare_structure(board); compare_structure(reflected(board, true));
+        }
+        // Same material: merely connecting files eliminates isolation. The
+        // two configurations have identical passed-rank rewards.
+        const auto isolated = pawn_fixture({{"c3", 'P'}, {"e3", 'P'}});
+        const auto connected = pawn_fixture({{"c3", 'P'}, {"d3", 'P'}});
+        expect((white_score(connected, false, true) - white_score(connected, false, false)) -
+                   (white_score(isolated, false, true) - white_score(isolated, false, false)) == 24,
+               "connected neighboring files did not remove one isolation cost per pawn");
+    });
+    test("pawn terms share one phase blend and preserve the independent king shield", [] {
+        bool fractional_blend_exercised = false;
+        for (int phase : {0, 1, 2, 3, 5, 7, 11, 12, 13, 16, 23, 24, 28}) {
+            const auto board = pawn_fixture({{"d3", 'P'}, {"d5", 'P'}, {"e6", 'p'}}, phase);
+            compare_structure(board); compare_structure(reflected(board, true));
+            const auto terms = scalar_pawn_terms(board);
+            fractional_blend_exercised |= (terms.middlegame * std::min(phase, 24) +
+                                          terms.endgame * (24 - std::min(phase, 24))) % 24 != 0;
+        }
+        expect(fractional_blend_exercised, "phase fixtures never tested truncation after a fractional pawn blend");
+        const auto intact = shelter_position("g1", {"f2", "g2", "h2"});
+        const auto broken = relocated(intact, "g2", "g4");
+        for (const Board& board : {intact, broken}) {
+            compare_structure(board);
+            for (bool structure : {false, true})
+                expect(white_score(board, true, structure) - white_score(board, false, structure) ==
+                           white_score(board, true, false) - white_score(board, false, false),
+                       "full-phase pawn structure changed the independent shield effect");
+        }
+        expect(shield_delta(broken) < shield_delta(intact), "new pawn terms hid the existing shelter distinction");
+    });
+    test("independent pawn oracle exhausts legal two-pawn placements and retained game histories", [] {
+        int accepted = 0;
+        for (int first = 8; first < 56; ++first) for (int second = 8; second < 56; ++second) {
+            if (first == second) continue;
+            Position position;
+            position.squares.fill('.');
+            position.squares[square("h1")] = 'K';
+            position.squares[square("h8")] = 'k';
+            position.squares[first] = 'P';
+            position.squares[second] = 'p';
+            try {
+                const Board board(fen(position));
+                ++accepted;
+                compare_structure(board);
+                if ((first + second) % 7 == 0) symmetric(board);
+            } catch (const std::invalid_argument&) {
+                // The strict FEN parser rejects the previously moving king
+                // left in check; these are not legal evaluation fixtures.
+            }
+        }
+        expect(accepted > 2000, "too few legal opposing-pawn configurations covered");
+        for (int first = 8; first < 56; ++first) for (int second = first + 1; second < 56; ++second) {
+            Position position;
+            position.squares.fill('.');
+            position.squares[square("h1")] = 'K';
+            position.squares[square("h8")] = 'k';
+            position.squares[first] = position.squares[second] = 'P';
+            try { compare_structure(Board(fen(position))); }
+            catch (const std::invalid_argument&) {}
+        }
+        constexpr std::array<const char*, 6> starts{{
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+            "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+            "4k3/P7/8/8/8/8/7p/4K3 w - - 0 1",
+            "7k/8/2n5/3P4/2K5/4B3/8/8 b - - 17 32",
+            "r3k2r/ppp2ppp/8/3pP3/2P5/8/PP3PPP/R3K2R w KQkq d6 0 20"}};
+        std::uint32_t random = 0x9284bc17U;
+        int walked = 0;
+        for (int game = 0; game < 96; ++game) {
+            Board board(starts[static_cast<std::size_t>(game) % starts.size()]);
+            for (int ply = 0; ply < 48; ++ply) {
+                compare_structure(board); ++walked;
+                if (ply % 8 == 0) { symmetric(board); compare_structure(reflected(board, true)); }
+                const auto moves = board.legal_moves();
+                if (moves.empty()) break;
+                random ^= random << 13; random ^= random >> 17; random ^= random << 5;
+                board.play_generated(moves[random % moves.size()]);
+            }
+            while (board.history_size()) { board.undo(); compare_structure(board); }
+        }
+        expect(walked > 3000, "independent pawn oracle needs thousands of legal history-carrying positions");
+    });
+    test("pawn structure follows deterministic en passant promotions and their complete undo histories", [] {
+        auto sequence = [](const char* source, std::initializer_list<const char*> moves) {
+            Board board(source);
+            const auto original = board;
+            compare_structure(board);
+            for (const char* move : moves) {
+                board.play(move);
+                compare_structure(board);
+                compare_structure(reflected(board, true));
+            }
+            for (std::size_t remaining = moves.size(); remaining; --remaining) {
+                board.undo();
+                compare_structure(board);
+            }
+            expect(board == original, "special pawn sequence failed to restore original position and history");
+        };
+        // En passant removes a pawn from a different square from the target;
+        // promotion removes a pawn from structure scoring and changes phase.
+        // Both colors and capture/quiet promotions are exercised explicitly.
+        sequence("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", {"e5d6", "h8g8"});
+        sequence("4k3/P7/8/8/8/8/7p/4K3 w - - 0 1",
+                 {"a7a8q", "e8f7", "a8h8", "h2h1n"});
+        sequence("1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1", {"a7b8q", "e8f7"});
+    });
     std::cout << oracle_positions << " frozen v0.5.4 oracle positions (each shield on/off)\n";
+    std::cout << structure_positions << " independent pawn-structure oracle positions (all option combinations)\n";
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;
 }

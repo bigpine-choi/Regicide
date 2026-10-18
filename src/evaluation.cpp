@@ -61,6 +61,72 @@ struct ShieldInfo {
     int phase = 0;
 };
 
+struct PawnMaskInfo {
+    unsigned char reversed = 0;
+    unsigned char count = 0;
+    unsigned char front_rank = 0; // Valid only for a nonzero mask.
+};
+
+constexpr auto make_pawn_masks() {
+    std::array<PawnMaskInfo, 256> result{};
+    for (unsigned mask = 0; mask < result.size(); ++mask) {
+        for (unsigned rank = 0; rank < 8; ++rank) {
+            if (!(mask & (1U << rank))) continue;
+            result[mask].reversed |= static_cast<unsigned char>(1U << (7 - rank));
+            ++result[mask].count;
+            result[mask].front_rank = static_cast<unsigned char>(rank);
+        }
+    }
+    return result;
+}
+
+constexpr auto pawn_masks = make_pawn_masks();
+constexpr std::array<int, 8> passed_middlegame{0, 0, 5, 10, 20, 35, 60, 0};
+constexpr std::array<int, 8> passed_endgame{0, 0, 10, 20, 40, 70, 120, 0};
+
+struct PawnScore {
+    int middlegame = 0;
+    int endgame = 0;
+};
+
+PawnScore pawn_structure_score(const Position& position, const ShieldInfo& own,
+                               const ShieldInfo& enemy, bool is_white) {
+    PawnScore result;
+    for (int file = 0; file < 8; ++file) {
+        const unsigned mask = own.pawn_ranks[file];
+        if (!mask) continue;
+        const auto& info = pawn_masks[mask];
+        const int doubled = info.count - 1;
+        const bool isolated = (file == 0 || !own.pawn_ranks[file - 1]) &&
+                              (file == 7 || !own.pawn_ranks[file + 1]);
+        result.middlegame -= doubled * 8 + (isolated ? info.count * 10 : 0);
+        result.endgame -= doubled * 12 + (isolated ? info.count * 12 : 0);
+
+        // Enemy masks use the enemy's perspective; reverse their ranks before
+        // comparing them with this pawn. Pawns level with or behind it do not
+        // stop it being passed. Only the foremost own pawn per file can score.
+        unsigned opposing = pawn_masks[enemy.pawn_ranks[file]].reversed;
+        if (file > 0) opposing |= pawn_masks[enemy.pawn_ranks[file - 1]].reversed;
+        if (file < 7) opposing |= pawn_masks[enemy.pawn_ranks[file + 1]].reversed;
+        const int rank = info.front_rank;
+        if (opposing >> (rank + 1)) continue;
+        int middlegame = passed_middlegame[rank];
+        int endgame = passed_endgame[rank];
+        // A blocked passed pawn retains half its bonus. This tests occupancy,
+        // not enemy attacks, king distance, or a guaranteed path to promotion.
+        if (rank < 7) {
+            const int next_rank = is_white ? rank + 1 : 6 - rank;
+            if (position.squares[next_rank * 8 + file] != '.') {
+                middlegame /= 2;
+                endgame /= 2;
+            }
+        }
+        result.middlegame += middlegame;
+        result.endgame += endgame;
+    }
+    return result;
+}
+
 int pawn_shield_penalty(const ShieldInfo& defender, int attacking_phase) {
     if (!attacking_phase || defender.king_file < 0) return 0;
     int penalty = 0;
@@ -125,10 +191,12 @@ constexpr bool valid_piece_info() {
 }
 
 static_assert(valid_piece_info());
-static_assert(sizeof(piece_info) + sizeof(position_bonuses) <= 15 * 1024);
+static_assert(pawn_masks[255].count == 8 && pawn_masks[1].reversed == 128 &&
+              pawn_masks[128].front_rank == 7);
+static_assert(sizeof(piece_info) + sizeof(position_bonuses) + sizeof(pawn_masks) <= 15 * 1024);
 } // namespace
 
-int evaluate_position(const Board& board, bool king_pawn_shield) {
+int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_structure) {
     const auto& position = board.position();
     const int white_home = home_minors(position, true);
     const int black_home = home_minors(position, false);
@@ -150,11 +218,12 @@ int evaluate_position(const Board& board, bool king_pawn_shield) {
         endgame += sign * bonus.endgame;
         const int weight = info.phase;
         phase += weight;
+        if ((king_pawn_shield || pawn_structure) && info.kind == PieceKind::pawn)
+            shields[is_white ? 0 : 1].pawn_ranks[square % 8] |= 1U << rank;
         if (king_pawn_shield) {
             auto& shield = shields[is_white ? 0 : 1];
             shield.phase += weight;
-            if (info.kind == PieceKind::pawn) shield.pawn_ranks[square % 8] |= 1U << rank;
-            else if (info.kind == PieceKind::king) {
+            if (info.kind == PieceKind::king) {
                 shield.king_file = square % 8;
                 shield.king_rank = rank;
             }
@@ -163,6 +232,12 @@ int evaluate_position(const Board& board, bool king_pawn_shield) {
     if (king_pawn_shield) {
         middlegame += pawn_shield_penalty(shields[1], shields[0].phase) -
                       pawn_shield_penalty(shields[0], shields[1].phase);
+    }
+    if (pawn_structure) {
+        const auto white = pawn_structure_score(position, shields[0], shields[1], true);
+        const auto black = pawn_structure_score(position, shields[1], shields[0], false);
+        middlegame += white.middlegame - black.middlegame;
+        endgame += white.endgame - black.endgame;
     }
     // Clamp promotions above opening material. Blend the color differences
     // before integer division so reflected positions have exact antisymmetry.

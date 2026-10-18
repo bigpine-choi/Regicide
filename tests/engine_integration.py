@@ -242,7 +242,7 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.5", engine.id
+        assert engine.id.get("name") == "Regicide 0.5.6", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -794,7 +794,9 @@ def test_search_quality_option_behavior(binary):
             option = engine.options[name]
             assert option.type == "check" and option.default is True, option
         engine.configure({"Hash": 1, "UseQuiescence": True, "UseQuietMoveOrdering": True,
-                          "UseSEE": False})  # Preserve the original ordering regression.
+                          "UseSEE": False, "UsePawnStructure": False})
+        # Preserve the original ordering/horizon fixture. The new evaluation's
+        # default and search lifecycle have independent coverage below.
         for board in (trap, trap.mirror()):
             engine.configure({"UseQuiescenceChecks": False})
             old_horizon = engine.play(board, chess.engine.Limit(depth=1), info=chess.engine.INFO_ALL)
@@ -1161,6 +1163,145 @@ def test_pawn_shield_option_lifecycle(binary):
                 assert see_fingerprint(*actual) == original, (original, actual)
 
 
+def test_pawn_structure_protocol_and_cli(binary):
+    # The pawn on d6 is passed in either color. Its advancement bonus exceeds
+    # the isolated-pawn cost; a one-node query independently reaches the root
+    # fallback without completing a normal evaluation iteration.
+    passed = chess.Board("4k3/8/3P4/8/8/8/8/4K3 w - - 0 1")
+    assert passed.is_valid() and not passed.is_game_over()
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options.get("UsePawnStructure")
+        assert option and option.type == "check" and option.default is True, client.options
+
+    def cli_query(board, go, enabled, positional=True, shield=True):
+        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence",
+                   "--fen", board.fen(en_passant="fen")]
+        if go == "go nodes 1":
+            command += ["--nodes", "1"]
+        if not enabled:
+            command.append("--no-pawn-structure")
+        if not positional:
+            command.append("--no-position")
+        if not shield:
+            command.append("--no-pawn-shield")
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                                timeout=TIMEOUT, check=True)
+        assert not result.stderr, result.stderr
+        fields = dict(line.split(":", 1) for line in result.stdout.splitlines())
+        fields = {name: value.strip() for name, value in fields.items()}
+        score_name = "score_mate" if "score_mate" in fields else "score_cp"
+        return (fields["bestmove"], ("mate" if score_name == "score_mate" else "cp",
+                                     fields[score_name]), int(fields["depth"]),
+                int(fields["nodes"]), tuple(fields["pv"].split()),
+                tuple(int(fields["tt_" + key]) for key in ["probes", "hits", "cutoffs", "stores"]))
+
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseQuiescence=False)
+        default = see_fingerprint(*engine.search(passed, "go depth 2"))
+        configure(engine, UsePawnStructure=True)
+        explicit = see_fingerprint(*engine.search(passed, "go depth 2"))
+        assert default == explicit, (default, explicit)
+        for board in (passed, passed.mirror()):
+            before = board.copy(stack=True)
+            for shield in (False, True):
+                configure(engine, UsePawnShield=shield)
+                for go in ("go depth 2", "go nodes 1"):
+                    scores = {}
+                    for enabled in (False, True):
+                        configure(engine, UsePawnStructure=enabled)
+                        actual = search_fingerprint(*engine.search(board, go))
+                        expected = cli_query(board, go, enabled, shield=shield)
+                        assert actual == expected, (board.fen(), go, shield, enabled, actual, expected)
+                        scores[enabled] = actual[1]
+                        if go == "go nodes 1":
+                            assert actual[2] == 0 and actual[3] <= 1, actual
+                    if go == "go nodes 1":
+                        assert scores[False][0] == scores[True][0] == "cp", scores
+                        assert int(scores[True][1]) > int(scores[False][1]), scores
+
+            # Positional evaluation is the containing switch. Its OFF state
+            # ignores both new-feature options even on a cancelled root.
+            configure(engine, UsePositionalEvaluation=False)
+            for shield in (False, True):
+                configure(engine, UsePawnShield=shield)
+                for go in ("go depth 2", "go nodes 1"):
+                    configure(engine, UsePawnStructure=False)
+                    off = search_fingerprint(*engine.search(board, go))
+                    configure(engine, UsePawnStructure=True)
+                    on = search_fingerprint(*engine.search(board, go))
+                    assert off == on == cli_query(board, go, True, positional=False,
+                                                  shield=shield), (go, shield, off, on)
+            configure(engine, UsePositionalEvaluation=True)
+            assert board == before and board.move_stack == before.move_stack
+
+
+def test_pawn_structure_option_lifecycle(binary):
+    # Toggle while a worker searches an actual repetition history, retaining
+    # that position across changes. Cold processes receive the identical full
+    # history; graph equality catches stale TT values and dropped move history.
+    board = chess.Board("4k3/8/3P4/8/8/8/8/4K3 w - - 0 1")
+    for move in ("e1f1", "e8f8", "f1e1", "f8e8"):
+        board.push_uci(move)
+    assert board.is_repetition(2) and not board.is_game_over()
+    options = {"Hash": 1, "UseQuiescence": False, "UsePawnStructure": False}
+    with UciProcess(binary) as engine:
+        configure(engine, **options)
+        first = search_history(engine, board, "go depth 2")
+        original = see_fingerprint(*first)
+        assert_table_memory(first[1], allocations=1, hash_mb=1)
+        for command in ["setoption name UsePawnStructure value yes",
+                        "setoption name UsePawnStructure",
+                        "setoption name UsePawnStructure value",
+                        "setoption name UsePawnStructure value false extra"]:
+            engine.send(command)
+            rejected = engine.ready()
+            assert any(line.startswith("info string ") for line in rejected), (command, rejected)
+            assert not any(line.startswith("bestmove ") for line in rejected), (command, rejected)
+        engine.send("go depth 2")
+        assert see_fingerprint(*engine.bestmove()) == original
+        engine.ready()
+
+        for enabled in (True, False, True, False):
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(f"setoption name UsePawnStructure value {str(enabled).lower()}")
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1, (enabled, output)
+            assert chess.Move.from_uci(bestmoves[0].split()[1]) in board.legal_moves, output
+            assert_legal_pvs(board, output)
+            engine.ready()  # No late worker output may cross this barrier.
+            options["UsePawnStructure"] = enabled
+            engine.send("go depth 2")
+            actual = engine.bestmove()
+            assert_legal_pvs(board, actual[1])
+            engine.ready()
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board, "go depth 2")
+            assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            if not enabled:
+                assert see_fingerprint(*actual) == original, (original, actual)
+
+        # Administrative TT lifecycle operations preserve the chosen OFF
+        # setting and retain lazy allocation/reuse behavior.
+        for command, size, allocation in [("ucinewgame", 1, 0),
+                                          ("setoption name Clear Hash", 1, 0),
+                                          ("setoption name Hash value 16", 16, 1),
+                                          ("setoption name Hash value 1", 1, 1)]:
+            engine.send(command)
+            engine.ready()
+            options["Hash"] = size
+            actual = search_history(engine, board, "go depth 2")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board, "go depth 2")
+            assert see_fingerprint(*actual) == see_fingerprint(*expected), (command, actual, expected)
+            assert_table_memory(actual[1], allocations=allocation,
+                                reuses=int(not allocation), hash_mb=size)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -1174,12 +1315,13 @@ def main():
               test_search_quality_option_behavior, test_pvs_protocol_and_fixed_depth,
               test_pvs_option_lifecycle, test_see_protocol_and_fixed_depth,
               test_see_option_lifecycle, test_pawn_shield_protocol_and_cli,
-              test_pawn_shield_option_lifecycle]
+              test_pawn_shield_option_lifecycle, test_pawn_structure_protocol_and_cli,
+              test_pawn_structure_option_lifecycle]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS/shield isolation/reuse")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS/shield/structure isolation/reuse")
 
 
 if __name__ == "__main__":

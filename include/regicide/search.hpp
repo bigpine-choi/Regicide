@@ -37,6 +37,7 @@ struct SearchOptions {
     bool pvs = true; // Full first move, scout later moves; re-search improvements.
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
     bool king_pawn_shield = true; // Middlegame shelter, scaled by opposing pieces.
+    bool pawn_structure = true; // Passed pawns, doubled files and isolated pawns.
 };
 
 struct SearchResult {

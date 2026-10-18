@@ -36,17 +36,45 @@ struct Variant {
     Evaluation evaluate;
     bool shield;
 };
-const std::array<Variant, 4> variants{{
+// Keep the original v0.5.4/v0.5.5 benchmark meaningful after the public
+// evaluator gains another positional feature. The old/new comparison must
+// explicitly disable pawn structure on the current implementation.
+int current_legacy(const regicide::Board& board, bool shield) {
+    return regicide::evaluate_position(board, shield, false);
+}
+
+int current_structure(const regicide::Board& board, bool shield) {
+    return regicide::evaluate_position(board, shield, true);
+}
+
+const std::array<Variant, 4> legacy_variants{{
     {"old_off", regicide::evaluate_position_v054, false},
     {"old_on", regicide::evaluate_position_v054, true},
-    {"new_off", regicide::evaluate_position, false},
-    {"new_on", regicide::evaluate_position, true}
+    {"new_off", current_legacy, false},
+    {"new_on", current_legacy, true}
+}};
+const std::array<Variant, 4> structure_variants{{
+    {"structure_off_shield_off", current_legacy, false},
+    {"structure_off_shield_on", current_legacy, true},
+    {"structure_on_shield_off", current_structure, false},
+    {"structure_on_shield_on", current_structure, true}
+}};
+constexpr std::array<const char*, 4> legacy_ratio_names{{
+    "new_on_over_old_on", "new_off_over_old_off",
+    "old_on_over_old_off", "new_on_over_new_off"
+}};
+constexpr std::array<const char*, 4> structure_ratio_names{{
+    "structure_on_shield_on_over_structure_off_shield_on",
+    "structure_on_shield_off_over_structure_off_shield_off",
+    "structure_off_shield_on_over_structure_off_shield_off",
+    "structure_on_shield_on_over_structure_on_shield_off"
 }};
 
 struct Options {
     std::string fen_file;
     std::string output;
     bool verify_only = false;
+    bool compare_pawn_structure = false;
     std::uint64_t calls = 0;
     double target_ms = 150.0;
 };
@@ -66,6 +94,10 @@ Options parse_options(int argc, char** argv) {
         const std::string argument = argv[i];
         if (argument == "--verify-only") {
             result.verify_only = true;
+            continue;
+        }
+        if (argument == "--compare-pawn-structure") {
+            result.compare_pawn_structure = true;
             continue;
         }
         if (i + 1 == argc) throw std::invalid_argument("Missing value for " + argument);
@@ -148,12 +180,14 @@ int run(const Options& options) {
     if (!options.output.empty() && std::filesystem::exists(options.output))
         throw std::runtime_error("Output already exists; choose a new output path");
     const auto boards = load_boards(options.fen_file);
+    const auto& variants = options.compare_pawn_structure ? structure_variants : legacy_variants;
+    const auto& ratio_names = options.compare_pawn_structure ? structure_ratio_names : legacy_ratio_names;
     std::ostringstream mismatches;
     std::size_t mismatch_count = 0;
     for (std::size_t i = 0; i < boards.size(); ++i) {
         for (const bool shield : {false, true}) {
             const int before = regicide::evaluate_position_v054(boards[i], shield);
-            const int after = regicide::evaluate_position(boards[i], shield);
+            const int after = current_legacy(boards[i], shield);
             if (before != after) {
                 if (mismatch_count++) mismatches << ',';
                 mismatches << "{\"position\":" << i << ",\"shield\":" << (shield ? "true" : "false")
@@ -164,9 +198,10 @@ int run(const Options& options) {
     std::ostringstream output;
     output << std::setprecision(12);
     output << "{\n  \"schema\":\"regicide-evaluation-profile-v1\",\n"
-           << "  \"mode\":\"" << (options.verify_only ? "verify" : "profile") << "\",\n"
+           << "  \"mode\":\"" << (options.compare_pawn_structure ? "pawn_structure_" : "")
+           << (options.verify_only ? "verify" : "profile") << "\",\n"
            << "  \"positions\":" << boards.size() << ",\n"
-           << "  \"equivalence\":{\"comparisons\":" << boards.size() * 2
+           << "  \"equivalence\":{\"scope\":\"structure_off_vs_frozen_v054_both_shield_settings\",\"comparisons\":" << boards.size() * 2
            << ",\"mismatch_count\":" << mismatch_count << ",\"mismatches\":[" << mismatches.str() << "]}";
     if (options.verify_only || mismatch_count != 0) {
         output << "\n}\n";
@@ -200,17 +235,22 @@ int run(const Options& options) {
         output << warmup_checksums[i];
     }
     output << "],\n  \"calls_per_sample\":" << calls << ",\n"
-           << "  \"calibration\":{\"variant\":\"old_on\",\"calls\":" << calibration_calls
+           << "  \"calibration\":{\"variant\":\"" << variants[1].name << "\",\"calls\":" << calibration_calls
            << ",\"elapsed_ns\":" << calibration.elapsed_ns << ",\"checksum\":" << calibration.checksum
            << ",\"target_ms\":" << options.target_ms << "},\n"
            << "  \"blocks\":" << block_count << ",\n"
            << "  \"orders_per_block\":[\"ABCD\",\"DCBA\",\"BADC\",\"CDAB\"],\n"
-           << "  \"variant_order\":[\"old_off\",\"old_on\",\"new_off\",\"new_on\"],\n"
-           << "  \"samples\":[\n";
+           << "  \"variant_order\":[";
+    for (std::size_t i = 0; i < variants.size(); ++i) {
+        if (i) output << ',';
+        output << '"' << variants[i].name << '"';
+    }
+    output << "],\n  \"samples\":[\n";
 
     std::array<std::vector<double>, 4> block_values;
     bool first_sample = true;
     bool checksums_match = true;
+    std::array<std::int64_t, 4> expected_checksums{};
     for (std::size_t block = 0; block < block_count; ++block) {
         std::array<double, 4> sums{};
         std::array<std::int64_t, 4> checksums{};
@@ -224,6 +264,9 @@ int run(const Options& options) {
                 sample.variant = variant;
                 sums[variant] += sample.ns_per_call;
                 if (round && checksums[variant] != sample.checksum) checksums_match = false;
+                if ((block || round) && expected_checksums[variant] != sample.checksum)
+                    checksums_match = false;
+                expected_checksums[variant] = sample.checksum;
                 checksums[variant] = sample.checksum;
                 if (!first_sample) output << ",\n";
                 first_sample = false;
@@ -233,38 +276,49 @@ int run(const Options& options) {
                        << ",\"checksum\":" << sample.checksum << '}';
             }
         }
-        checksums_match = checksums_match && checksums[0] == checksums[2] && checksums[1] == checksums[3];
+        // Structure ON intentionally changes values; require stable checksums
+        // for each variant, never equality between ON and OFF. The original
+        // reference/candidate mode still demands exact cross-variant equality.
+        if (!options.compare_pawn_structure) {
+            checksums_match = checksums_match && checksums[0] == checksums[2] && checksums[1] == checksums[3];
+        }
         for (std::size_t i = 0; i < variants.size(); ++i) block_values[i].push_back(sums[i] / 4.0);
     }
-    output << "\n  ],\n  \"timed_checksums_match\":" << (checksums_match ? "true" : "false")
+    output << "\n  ],\n  \"" << (options.compare_pawn_structure ? "timed_checksums_stable" : "timed_checksums_match")
+           << "\":" << (checksums_match ? "true" : "false")
+           << ",\n  \"cross_variant_checksum_equality_required\":"
+           << (options.compare_pawn_structure ? "false" : "true")
            << ",\n  \"block_means_ns_per_call\":[\n";
-    std::vector<double> on_ratios, off_ratios, old_overheads, new_overheads;
+    std::array<std::vector<double>, 4> ratios;
     for (std::size_t block = 0; block < block_count; ++block) {
         if (block) output << ",\n";
-        const double on_ratio = block_values[3][block] / block_values[1][block];
-        const double off_ratio = block_values[2][block] / block_values[0][block];
-        const double old_overhead = block_values[1][block] / block_values[0][block];
-        const double new_overhead = block_values[3][block] / block_values[2][block];
-        on_ratios.push_back(on_ratio);
-        off_ratios.push_back(off_ratio);
-        old_overheads.push_back(old_overhead);
-        new_overheads.push_back(new_overhead);
+        const std::array<double, 4> block_ratios{{
+            block_values[3][block] / block_values[1][block],
+            block_values[2][block] / block_values[0][block],
+            block_values[1][block] / block_values[0][block],
+            block_values[3][block] / block_values[2][block]
+        }};
         output << "    {\"block\":" << block;
         for (std::size_t i = 0; i < variants.size(); ++i) {
             output << ",\"" << variants[i].name << "\":" << block_values[i][block];
         }
-        output << ",\"new_on_over_old_on\":" << on_ratio << ",\"new_off_over_old_off\":" << off_ratio
-               << ",\"old_on_over_old_off\":" << old_overhead << ",\"new_on_over_new_off\":" << new_overhead << '}';
+        for (std::size_t i = 0; i < ratios.size(); ++i) {
+            ratios[i].push_back(block_ratios[i]);
+            output << ",\"" << ratio_names[i] << "\":" << block_ratios[i];
+        }
+        output << '}';
     }
     output << "\n  ],\n  \"medians\":{\"ns_per_call\":{";
     for (std::size_t i = 0; i < variants.size(); ++i) {
         if (i) output << ',';
         output << '"' << variants[i].name << "\":" << median(block_values[i]);
     }
-    output << "},\"paired_ratios\":{\"new_on_over_old_on\":" << median(on_ratios)
-           << ",\"new_off_over_old_off\":" << median(off_ratios)
-           << ",\"old_on_over_old_off\":" << median(old_overheads)
-           << ",\"new_on_over_new_off\":" << median(new_overheads) << "}}\n}\n";
+    output << "},\"paired_ratios\":{";
+    for (std::size_t i = 0; i < ratios.size(); ++i) {
+        if (i) output << ',';
+        output << '"' << ratio_names[i] << "\":" << median(ratios[i]);
+    }
+    output << "}}\n}\n";
     output_json(output.str(), options.output);
     return checksums_match ? 0 : 1;
 }

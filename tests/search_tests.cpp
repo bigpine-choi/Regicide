@@ -240,15 +240,16 @@ void same_completed(const SearchResult& interrupted, const SearchResult& complet
 // A separate exhaustive oracle for the configurable position evaluator. At
 // quiet frontiers it keeps every legal capture/promotion and every check
 // evasion, but has no alpha-beta windows, ordering, TT, budget, or SEE helper.
-int shelter_minimax(Board& board, int depth, bool shield, bool quiet, int ply = 0) {
+int shelter_minimax(Board& board, int depth, bool shield, bool quiet, int ply = 0,
+                    bool structure = false) {
     const auto outcome = board.outcome();
     if (outcome == Outcome::checkmate) return -mate_score + ply;
     if (outcome != Outcome::ongoing) return 0;
     expect(ply < 20, "shelter oracle fixture must have a finite short tactical frontier");
-    if (!depth && !quiet) return evaluate_position(board, shield);
+    if (!depth && !quiet) return evaluate_position(board, shield, structure);
     const bool frontier = depth == 0;
     const bool checked = board.in_check();
-    int best = frontier && !checked ? evaluate_position(board, shield) : -32000;
+    int best = frontier && !checked ? evaluate_position(board, shield, structure) : -32000;
     const auto position = board.position();
     for (Move move : board.legal_moves()) {
         const char piece = position.squares[move.from];
@@ -256,18 +257,19 @@ int shelter_minimax(Board& board, int depth, bool shield, bool quiet, int ply = 
             ((piece == 'P' || piece == 'p') && move.to == position.en_passant);
         if (frontier && !checked && !capture && !move.promotion) continue;
         board.play(move);
-        const int score = -shelter_minimax(board, std::max(0, depth - 1), shield, quiet, ply + 1);
+        const int score = -shelter_minimax(board, std::max(0, depth - 1), shield, quiet, ply + 1, structure);
         board.undo();
         best = std::max(best, score);
     }
     return best;
 }
 
-OptimalMoves shelter_optimal_moves(Board& board, int depth, bool shield, bool quiet) {
+OptimalMoves shelter_optimal_moves(Board& board, int depth, bool shield, bool quiet,
+                                   bool structure = false) {
     OptimalMoves result;
     for (Move move : board.legal_moves()) {
         board.play(move);
-        const int score = -shelter_minimax(board, depth - 1, shield, quiet, 1);
+        const int score = -shelter_minimax(board, depth - 1, shield, quiet, 1, structure);
         board.undo();
         if (score > result.score) { result.score = score; result.moves.clear(); }
         if (score == result.score) result.moves.push_back(move);
@@ -275,7 +277,7 @@ OptimalMoves shelter_optimal_moves(Board& board, int depth, bool shield, bool qu
     return result;
 }
 
-SearchOptions shelter_options(bool shield, bool quiet, bool table) {
+SearchOptions shelter_options(bool shield, bool quiet, bool table, bool structure = false) {
     SearchOptions options;
     options.positional = true;
     options.quiescence = quiet;
@@ -283,6 +285,7 @@ SearchOptions shelter_options(bool shield, bool quiet, bool table) {
     options.transposition = table;
     options.hash_mb = 1;
     options.king_pawn_shield = shield;
+    options.pawn_structure = structure;
     return options;
 }
 } // namespace
@@ -1205,18 +1208,18 @@ int main() {
     test("cancelled fallback uses the selected shelter evaluator before any completed iteration", [] {
         Board board("3q3k/6pp/8/8/8/8/P5PP/4R1K1 w - - 0 1");
         const auto saved = board;
-        expect(evaluate_position(board, true) != evaluate_position(board, false),
+        expect(evaluate_position(board, true, false) != evaluate_position(board, false, false),
                "fallback fixture must distinguish the two position evaluators");
         for (bool shield : {false, true}) for (bool quiet : {false, true}) {
             const auto options = shelter_options(shield, quiet, true);
             std::atomic_bool stop{true};
             const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
             expect(stopped.stopped && stopped.depth == 0 && !stopped.nodes &&
-                       stopped.score == evaluate_position(board, shield),
+                       stopped.score == evaluate_position(board, shield, false),
                    "pre-stopped fallback lost the shelter mode or searched a node");
             const auto limited = search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
             expect(limited.stopped && limited.depth == 0 && limited.nodes == 1 &&
-                       limited.score == evaluate_position(board, shield),
+                       limited.score == evaluate_position(board, shield, false),
                    "node-limited fallback used a different static evaluator");
             expect(board == saved, "shelter fallback changed board or history");
             valid_pv(board, stopped); valid_pv(board, limited);
@@ -1251,6 +1254,120 @@ int main() {
             const auto on = search(board, {.depth = 2}, nullptr, {}, options, &context);
             same_graph(off, on);
             expect(board == saved, "material-only shelter toggle changed input state/history");
+        }
+    });
+    test("pawn structure ON and OFF match exhaustive ordinary and tactical search", [] {
+        bool changed_value = false;
+        std::uint64_t tactical_nodes = 0;
+        for (const char* fen : {"7k/8/3p4/8/3P4/2P5/8/R5K1 w - - 0 1",
+                                "7k/8/4p3/3r4/8/8/5PPP/3Q2K1 w - - 0 1",
+                                "r5k1/8/2p5/3p4/8/3P4/8/7K b - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            for (bool shield : {false, true}) for (bool quiet : {false, true}) {
+                const int depth = quiet ? 1 : 2;
+                const auto previous = shelter_optimal_moves(board, depth, shield, quiet, false);
+                const auto current = shelter_optimal_moves(board, depth, shield, quiet, true);
+                changed_value |= previous.score != current.score;
+                for (bool structure : {false, true}) for (bool table : {false, true}) {
+                    const auto& expected = structure ? current : previous;
+                    const auto result = search(board, {.depth = depth}, nullptr, {},
+                                               shelter_options(shield, quiet, table, structure));
+                    expect(!result.stopped && result.depth == depth && result.score == expected.score,
+                           "pawn option did not reach every ordinary/tactical frontier");
+                    expect(result.best_move && std::find(expected.moves.begin(), expected.moves.end(),
+                                                         *result.best_move) != expected.moves.end(),
+                           "pawn search selected a move outside the exhaustive optimal set");
+                    expect(quiet ? result.qnodes > 0 : result.qnodes == 0,
+                           "pawn fixture did not exercise the selected frontier");
+                    tactical_nodes += result.qnodes;
+                    expect(board == saved, "pawn search or exhaustive oracle changed position/history");
+                    valid_pv(board, result);
+                }
+            }
+        }
+        expect(changed_value && tactical_nodes > 0,
+               "pawn search corpus must observe new scores and actual tactical work");
+    });
+    test("pawn structure defaults ON and remains selected in cancelled or one-node fallbacks", [] {
+        Board board("7k/8/8/3P4/8/8/8/6K1 w - - 0 1");
+        const auto saved = board;
+        expect(SearchOptions{}.pawn_structure, "new search must enable pawn structure by default");
+        expect(evaluate_position(board, true, true) != evaluate_position(board, true, false),
+               "fallback fixture must distinguish pawn structure modes");
+        const auto default_result = search(board, {.depth = 2});
+        auto explicit_on = SearchOptions{};
+        explicit_on.pawn_structure = true;
+        same_graph(default_result, search(board, {.depth = 2}, nullptr, {}, explicit_on));
+        for (bool structure : {false, true}) for (bool shield : {false, true}) for (bool quiet : {false, true}) {
+            const auto options = shelter_options(shield, quiet, true, structure);
+            std::atomic_bool stop{true};
+            const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+            expect(stopped.stopped && stopped.depth == 0 && !stopped.nodes &&
+                       stopped.score == evaluate_position(board, shield, structure),
+                   "pre-stopped fallback lost the selected pawn structure mode");
+            const auto limited = search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
+            expect(limited.stopped && limited.depth == 0 && limited.nodes == 1 &&
+                       limited.score == evaluate_position(board, shield, structure),
+                   "one-node fallback lost the selected pawn structure mode");
+            expect(board == saved, "pawn fallback changed position, clocks, hashes or history");
+            valid_pv(board, stopped); valid_pv(board, limited);
+        }
+    });
+    test("retained memory isolates pawn structure changes and material-only ignores both positional flags", [] {
+        Board repeated;
+        cycle(repeated); cycle(repeated);
+        SearchContext context;
+        for (const Board& board : {Board("7k/8/3p4/8/3P4/2P5/8/R5K1 w - - 0 1"), repeated}) {
+            const auto saved = board;
+            for (bool structure : {true, false, true}) for (bool quiet : {false, true}) {
+                auto options = shelter_options(true, quiet, true, structure);
+                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, reused);
+                options.pawn_structure = !structure;
+                const auto interrupted = search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
+                expect(interrupted.stopped && interrupted.nodes == 9 && legal(board, interrupted.best_move),
+                       "changing pawn modes bypassed cancellation or lost the legal fallback");
+                options.pawn_structure = structure;
+                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                same_graph(fresh, restarted);
+                expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
+                       "old pawn values or interrupted work leaked through retained memory");
+                valid_pv(board, restarted);
+            }
+            auto options = shelter_options(false, true, true, false);
+            options.positional = false;
+            const auto plain = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            for (bool shield : {false, true}) for (bool structure : {false, true}) {
+                options.king_pawn_shield = shield;
+                options.pawn_structure = structure;
+                same_graph(plain, search(board, {.depth = 2}, nullptr, {}, options, &context));
+            }
+            expect(board == saved, "material-only positional toggles changed board/history");
+        }
+    });
+    test("pawn bonuses never override mate automatic draws or optional claims", [] {
+        for (bool structure : {false, true}) {
+            const auto options = shelter_options(true, true, true, structure);
+            Board mate("7k/q4Q2/6K1/8/3P4/8/8/8 w - - 149 1");
+            const auto win = search(mate, {.depth = 1}, nullptr, {}, options);
+            expect(win.score == mate_score - 1 && legal(mate, win.best_move),
+                   "pawn terms overrode mate distance or mate-before-75-move priority");
+            mate.play(*win.best_move);
+            expect(mate.outcome() == Outcome::checkmate, "pawn search's chosen mate does not mate");
+            for (const char* fen : {"7k/5Q2/6K1/8/3P4/8/8/8 b - - 0 1",
+                                    "7k/8/8/3P4/8/8/8/6K1 w - - 150 1"}) {
+                const auto draw = search(Board(fen), {.depth = 2}, nullptr, {}, options);
+                expect(!draw.best_move && !draw.score && !draw.stopped,
+                       "static pawn advantage escaped a terminal draw");
+                no_memory_work(draw);
+            }
+            const Board losing("7k/8/8/3P4/8/8/q7/6K1 w - - 100 1");
+            const auto claim = search(losing, {.depth = 2}, nullptr, {}, options);
+            expect(claim.score == 0 && legal(losing, claim.best_move),
+                   "new pawn score suppressed a legal optional draw claim");
+            valid_pv(losing, claim);
         }
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";

@@ -1,4 +1,4 @@
-# 자체 대국 엔진 v0.2 → v0.5.5
+# 자체 대국 엔진 v0.2 → v0.5.6
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
@@ -17,6 +17,8 @@ v0.5.3 개발 후보는 [1초 패배 분석과 SEE 비용 최적화](experiments
 v0.5.4는 [왕 앞 폰 방패](PAWN_SHIELD.md)를 중반 평가에 추가한다. 가까운 자기 폰의 거리와 상대 잔여 기물에 따라 작은 감점을 적용하며 기존 국면 혼합을 유지한다. UCI `UsePawnShield`와 콘솔 `--no-pawn-shield`로 이전 평가를 선택할 수 있다. [계획](experiments/2026-10-18-pawn-shield-plan.md)과 [검증 기록](experiments/2026-10-18-pawn-shield.md)에 규칙·기능·비용 확인과 아직 측정하지 않은 일반 경기력을 구분한다.
 
 v0.5.5는 [동값 평가 최적화](experiments/2026-10-18-shield-opt.md)로 v0.5.4의 폰 방패 효과와 ON/OFF 점수를 유지한다. 기물 정보와 기존 위치 수식을 컴파일 시 작은 표로 계산하고 실행 시 조회한다. 규칙·탐색 가지·방패 계수는 바꾸지 않는다. 평가 함수 단독 비용 감소와 고정 깊이 전체 탐색의 시간 변화를 구분하며 기력 향상으로 환산하지 않는다.
+
+v0.5.6은 [통과폰·폰 구조](PAWN_STRUCTURE.md)를 추가한다. 앞의 같은/인접 파일에 적 폰이 없는 최전방 폰에 국면별 보너스를 주고, 겹친 폰과 고립된 폰에 감점을 준다. 기존 왕 앞 폰 방패와 독립적으로 켜고 끄며 `UsePawnStructure=false` 또는 `--no-pawn-structure`는 v0.5.5 평가를 재현한다. [검증·비용](experiments/2026-10-18-pawn-structure.md)과 아직 확인하지 않은 일반 기력을 구분한다.
 
 ## 원리와 작은 체스 예
 
@@ -85,6 +87,7 @@ setoption name UseFastMoves value true
 setoption name UseQuietMoveOrdering value true
 setoption name UseSEE value true
 setoption name UsePawnShield value true
+setoption name UsePawnStructure value true
 setoption name UseQuiescenceChecks value true
 ucinewgame
 position startpos moves e2e4 e7e5
