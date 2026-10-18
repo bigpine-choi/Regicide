@@ -1,0 +1,60 @@
+{
+  "binary": "build-neural-v4/regicide.exe",
+  "binary_sha256": "ff63e5c1bb1aaa863f6bdaa19bfaf61c660350b88a702916b40372249f22f4b1",
+  "original_failed_handicap_log": "handicap.log",
+  "original_failed_handicap_log_sha256": "e084468bfe20a041be027dbe5b41c1e393ff050301cb36e72c901d59a064a66b",
+  "failure_observed": "One loopback HTTP ConnectionAbortedError WinError 10053; engine-resumption check passed in that run.",
+  "policy": "Rerun the failed suite once without product/test changes; then run only the five remaining suites sequentially.",
+  "checks": [
+    {
+      "check": "handicap_rerun",
+      "script": "tests/handicap_play_tests.py",
+      "returncode": 0,
+      "seconds": 6.282236200000625,
+      "log": "handicap_rerun.log",
+      "log_sha256": "af025cc8dd1f421a74317a7021bdd29dbc50f29e1c03aaad3c8659b4cdd2c7ce"
+    },
+    {
+      "check": "archive",
+      "script": "tests/game_archive_tests.py",
+      "returncode": 0,
+      "seconds": 6.493754800001625,
+      "log": "archive.log",
+      "log_sha256": "45ccd81278d1fcbf3fa6f22a2c7eb39adb4aa3ddbbc12bcdfb2eb718b65a1880"
+    },
+    {
+      "check": "bootstrap",
+      "script": "tests/godot_bootstrap_tests.py",
+      "returncode": 0,
+      "seconds": 2.5873188999830745,
+      "log": "bootstrap.log",
+      "log_sha256": "a713da32c0c8d9be983dc66e9b816b7dcd8882b09bf05da4b2914b4520f46a35"
+    },
+    {
+      "check": "game_runner",
+      "script": "tests/game_runner_tests.py",
+      "returncode": 0,
+      "seconds": 7.0626989000011235,
+      "log": "game_runner.log",
+      "log_sha256": "68a0086f7b2e7070299b84e14527ccce123f2e9cbb56c85722cece4b6af94782"
+    },
+    {
+      "check": "compare",
+      "script": "tests/compare_engines_tests.py",
+      "returncode": 0,
+      "seconds": 4.00856560000102,
+      "log": "compare.log",
+      "log_sha256": "74600be6d9713ce05b5cc3ef4910c2e6748873af86e5ddbe38839a8fb15bbf5f"
+    },
+    {
+      "check": "benchmark",
+      "script": "tests/benchmark_search_tests.py",
+      "returncode": 0,
+      "seconds": 5.8385647000104655,
+      "log": "benchmark.log",
+      "log_sha256": "4a1be630f17f76e4bf49fc53f3156f756d9056fa110c6760d0257f30a62255b8"
+    }
+  ],
+  "all_completed_passed": true,
+  "complete": true
+}

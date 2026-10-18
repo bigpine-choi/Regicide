@@ -28,3 +28,5 @@ python scripts/benchmark_neural_inference.py OLD.exe NEW.exe --baseline-commit B
 ```
 
 [사전 계획](experiments/2026-10-19-neural-inference-opt-plan.md)에 조건과 한계를 기록한다. 기존 자동 학습/모델 채택은 [자동 학습 설명](CONTINUAL_LEARNING.md)을 따른다.
+
+실제 학습 V2의 정적 평가 호출 시간 약24%, 전체10,000노드 시간 약4~5% 감소와 고정 작업720쌍의 일치를 확인했다. [원자료·독립 감사·설치 결과](checks/2026-10-19-neural-inference-opt/README.md)에 표본·잡음·기력 검증과의 구분을 기록했다.

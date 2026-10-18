@@ -1,0 +1,817 @@
+{
+  "schema": "regicide.ci.audit.v1",
+  "repository": "bigpine-choi/Regicide",
+  "source_commit": "7ee14504ea9c87fff6cef8731c86d97f23efa4b7",
+  "branch": "perf/neural-evaluation-cost",
+  "run_id": 39147017476,
+  "run_url": "https://github.com/bigpine-choi/Regicide/actions/runs/39147017476",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "observed_utc": "2026-10-18 16:59:35 UTC",
+  "jobs": [
+    {
+      "id": 117732812099,
+      "name": "rules (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "job_url": "https://github.com/bigpine-choi/Regicide/actions/runs/39147017476/job/117732812099",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run cmake --build build --config Release",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run ctest --test-dir build -C Release --output-on-failure",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run python -m pip install -r requirements-test.txt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run python -m pip install -r requirements-learning.txt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run python tests/learning_data_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run python tests/neural_training_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Run python tests/learning_loss_analysis_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Run python tests/learning_corpus_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Run python tests/learning_arena_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Run python tests/learning_registry_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Run python tests/learning_cycle_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Run python tests/teacher_quality_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        },
+        {
+          "name": "Run python tests/neural_cost_diagnostic_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Run python tests/neural_inference_benchmark_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        },
+        {
+          "name": "Build neural cost diagnostic",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20
+        },
+        {
+          "name": "Run python tests/neural_integration_tests.py --binary build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        },
+        {
+          "name": "Run python tests/neural_integration_tests.py --binary build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 22
+        },
+        {
+          "name": "Run python tests/learning_runtime_tests.py --binary build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Run python tests/learning_runtime_tests.py --binary build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 24
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        },
+        {
+          "name": "Run node --check web/human-play/app.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26
+        },
+        {
+          "name": "Run node tests/web_hint_tests.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27
+        },
+        {
+          "name": "Run python tests/audit_pvs_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28
+        },
+        {
+          "name": "Run python tests/audit_see_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29
+        },
+        {
+          "name": "Run python tests/see_clean_guard_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 30
+        },
+        {
+          "name": "Run python tests/audit_see_replication.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 31
+        },
+        {
+          "name": "Run python tests/audit_see_cost_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 32
+        },
+        {
+          "name": "Build optional static evaluation diagnostic probe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 33
+        },
+        {
+          "name": "Run python tests/loss_diagnosis_tests.py --binary build/regicide --probe build/regicide_evaluation_probe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 34
+        },
+        {
+          "name": "Run python tests/loss_diagnosis_tests.py --binary build/Release/regicide.exe --probe build/Release/regicide_evaluation_probe.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 35
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py --probe build/regicide_evaluation_probe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 36
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py --probe build/Release/regicide_evaluation_probe.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 37
+        },
+        {
+          "name": "Run python tests/differential.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38
+        },
+        {
+          "name": "Run python tests/differential.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 39
+        },
+        {
+          "name": "Run python tests/engine_integration.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 40
+        },
+        {
+          "name": "Run python tests/engine_integration.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 41
+        },
+        {
+          "name": "Run python tests/game_runner_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42
+        },
+        {
+          "name": "Run python tests/game_runner_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 43
+        },
+        {
+          "name": "Run python tests/compare_engines_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 44
+        },
+        {
+          "name": "Run python tests/compare_engines_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 45
+        },
+        {
+          "name": "Run python tests/benchmark_search_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 46
+        },
+        {
+          "name": "Run python tests/benchmark_search_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 47
+        },
+        {
+          "name": "Run python tests/human_play_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 48
+        },
+        {
+          "name": "Run python tests/human_play_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 49
+        },
+        {
+          "name": "Run python tests/hint_state_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 50
+        },
+        {
+          "name": "Run python tests/hint_state_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 51
+        },
+        {
+          "name": "Run python tests/handicap_play_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 52
+        },
+        {
+          "name": "Run python tests/handicap_play_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 53
+        },
+        {
+          "name": "Run python tests/game_archive_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 54
+        },
+        {
+          "name": "Run python tests/game_archive_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 55
+        },
+        {
+          "name": "Run python tests/godot_bootstrap_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 56
+        },
+        {
+          "name": "Run python tests/godot_bootstrap_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 57
+        },
+        {
+          "name": "Install pinned official Godot for scene checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 58
+        },
+        {
+          "name": "Godot perspective and live engine checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 59
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 116
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 117
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 118
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 119
+        }
+      ],
+      "evidence": [
+        "2026-10-18T16:53:34.9639203Z 100% tests passed, 0 tests failed out of 7",
+        "2026-10-18T16:53:51.5036990Z Ran 7 tests in 0.007s",
+        "2026-10-18T16:54:46.4667363Z Godot orientation/input checks: 637, failures: 0",
+        "2026-10-18T16:54:46.4668435Z Godot evaluation-bar checks: 40, failures: 0",
+        "2026-10-18T16:54:46.4669756Z Godot live-scene checks: 82, failures: 0",
+        "2026-10-18T16:54:46.4671492Z Godot own-backend close case passed: ready",
+        "2026-10-18T16:54:46.4672496Z Godot own-backend close case passed: busy",
+        "2026-10-18T16:54:46.4673528Z Godot own-backend close case passed: pending",
+        "2026-10-18T16:54:54.7403457Z Godot handicap live-scene checks: 53, failures: 0",
+        "2026-10-18T16:54:59.9448454Z Godot archive live-scene checks: 78, failures: 0",
+        "2026-10-18T16:55:14.0178643Z Godot hint synthetic checks: 38, failures: 0",
+        "2026-10-18T16:55:14.0179709Z Godot hint live checks: 35, failures: 0"
+      ]
+    },
+    {
+      "id": 117732812166,
+      "name": "rules (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "job_url": "https://github.com/bigpine-choi/Regicide/actions/runs/39147017476/job/117732812166",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run cmake --build build --config Release",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run ctest --test-dir build -C Release --output-on-failure",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run python -m pip install -r requirements-test.txt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run python -m pip install -r requirements-learning.txt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run python tests/learning_data_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run python tests/neural_training_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Run python tests/learning_loss_analysis_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Run python tests/learning_corpus_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Run python tests/learning_arena_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Run python tests/learning_registry_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Run python tests/learning_cycle_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Run python tests/teacher_quality_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        },
+        {
+          "name": "Run python tests/neural_cost_diagnostic_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Run python tests/neural_inference_benchmark_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        },
+        {
+          "name": "Build neural cost diagnostic",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20
+        },
+        {
+          "name": "Run python tests/neural_integration_tests.py --binary build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 21
+        },
+        {
+          "name": "Run python tests/neural_integration_tests.py --binary build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Run python tests/learning_runtime_tests.py --binary build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 23
+        },
+        {
+          "name": "Run python tests/learning_runtime_tests.py --binary build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        },
+        {
+          "name": "Run node --check web/human-play/app.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26
+        },
+        {
+          "name": "Run node tests/web_hint_tests.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27
+        },
+        {
+          "name": "Run python tests/audit_pvs_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28
+        },
+        {
+          "name": "Run python tests/audit_see_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29
+        },
+        {
+          "name": "Run python tests/see_clean_guard_tests.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 30
+        },
+        {
+          "name": "Run python tests/audit_see_replication.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 31
+        },
+        {
+          "name": "Run python tests/audit_see_cost_results.py --self-test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 32
+        },
+        {
+          "name": "Build optional static evaluation diagnostic probe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 33
+        },
+        {
+          "name": "Run python tests/loss_diagnosis_tests.py --binary build/regicide --probe build/regicide_evaluation_probe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 34
+        },
+        {
+          "name": "Run python tests/loss_diagnosis_tests.py --binary build/Release/regicide.exe --probe build/Release/regicide_evaluation_probe.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 35
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py --probe build/regicide_evaluation_probe",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 36
+        },
+        {
+          "name": "Run python tests/classical_evaluation_tests.py --probe build/Release/regicide_evaluation_probe.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 37
+        },
+        {
+          "name": "Run python tests/differential.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 38
+        },
+        {
+          "name": "Run python tests/differential.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39
+        },
+        {
+          "name": "Run python tests/engine_integration.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 40
+        },
+        {
+          "name": "Run python tests/engine_integration.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 41
+        },
+        {
+          "name": "Run python tests/game_runner_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 42
+        },
+        {
+          "name": "Run python tests/game_runner_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43
+        },
+        {
+          "name": "Run python tests/compare_engines_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 44
+        },
+        {
+          "name": "Run python tests/compare_engines_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 45
+        },
+        {
+          "name": "Run python tests/benchmark_search_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 46
+        },
+        {
+          "name": "Run python tests/benchmark_search_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 47
+        },
+        {
+          "name": "Run python tests/human_play_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 48
+        },
+        {
+          "name": "Run python tests/human_play_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 49
+        },
+        {
+          "name": "Run python tests/hint_state_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 50
+        },
+        {
+          "name": "Run python tests/hint_state_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 51
+        },
+        {
+          "name": "Run python tests/handicap_play_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 52
+        },
+        {
+          "name": "Run python tests/handicap_play_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 53
+        },
+        {
+          "name": "Run python tests/game_archive_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 54
+        },
+        {
+          "name": "Run python tests/game_archive_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 55
+        },
+        {
+          "name": "Run python tests/godot_bootstrap_tests.py build/regicide",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 56
+        },
+        {
+          "name": "Run python tests/godot_bootstrap_tests.py build/Release/regicide.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 57
+        },
+        {
+          "name": "Install pinned official Godot for scene checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 58
+        },
+        {
+          "name": "Godot perspective and live engine checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 59
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 116
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 117
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 118
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 119
+        }
+      ],
+      "evidence": [
+        "2026-10-18T16:54:30.7420722Z 100% tests passed out of 7",
+        "2026-10-18T16:55:28.8947481Z Ran 7 tests in 0.023s",
+        "2026-10-18T16:57:48.9326477Z Godot orientation/input checks: 637, failures: 0",
+        "2026-10-18T16:57:48.9328254Z Godot evaluation-bar checks: 40, failures: 0",
+        "2026-10-18T16:57:48.9329947Z Godot live-scene checks: 82, failures: 0",
+        "2026-10-18T16:57:48.9332780Z Godot own-backend close case passed: ready",
+        "2026-10-18T16:57:48.9334440Z Godot own-backend close case passed: busy",
+        "2026-10-18T16:57:48.9336019Z Godot own-backend close case passed: pending",
+        "2026-10-18T16:58:01.4072620Z Godot handicap live-scene checks: 53, failures: 0",
+        "2026-10-18T16:58:10.8007238Z Godot archive live-scene checks: 78, failures: 0",
+        "2026-10-18T16:58:30.8454529Z Godot hint synthetic checks: 38, failures: 0",
+        "2026-10-18T16:58:30.8456296Z Godot hint live checks: 35, failures: 0"
+      ]
+    }
+  ],
+  "scope": "Remote GitHub-hosted Windows and Ubuntu correctness/regression jobs; these CI runs are not local performance evidence."
+}

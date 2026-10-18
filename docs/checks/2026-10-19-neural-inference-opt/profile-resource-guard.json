@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-18T16:53:06.248590+00:00",
+  "finished_utc": "2026-10-18T16:53:48.991149+00:00",
+  "monitor_root_pid": 13680,
+  "monitor_root_creation_ticks": 134368159858824063,
+  "poll_seconds": 0.5,
+  "max_allowed_snapshot_gap_seconds": 2.0,
+  "cpu_ticks_per_second": 10000000,
+  "external_cpu_tolerance_ticks": 0,
+  "engine_names": [
+    "chrome",
+    "chrome.exe",
+    "firefox",
+    "firefox.exe",
+    "lc0.exe",
+    "msedge",
+    "msedge.exe",
+    "opera",
+    "opera.exe",
+    "regicide.exe",
+    "stockfish.exe",
+    "whale",
+    "whale.exe"
+  ],
+  "new_or_disappearing_external_engine_is_failure": true,
+  "snapshot_count": 86,
+  "max_snapshot_gap_seconds": 0.5277647000038996,
+  "max_snapshot_duration_seconds": 0.015409099985845387,
+  "external_cpu_increase_ticks": 0,
+  "owned_engines": [
+    {
+      "pid": 31104,
+      "creation_ticks": 134368159912892825,
+      "parent_pid": 13680,
+      "name": "regicide_profile_neural.exe",
+      "ancestry_to_monitor": [
+        31104,
+        13680
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 31104,
+          "parent_pid": 13680,
+          "creation_ticks": 134368159912892825
+        },
+        {
+          "pid": 13680,
+          "parent_pid": 25024,
+          "creation_ticks": 134368159858824063
+        }
+      ]
+    }
+  ],
+  "transport_engines": {
+    "baseline": {
+      "pid": 31104,
+      "creation_ticks": 134368159912892825,
+      "parent_pid": 13680,
+      "name": "regicide_profile_neural.exe",
+      "ancestry_to_monitor": [
+        31104,
+        13680
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 31104,
+          "parent_pid": 13680,
+          "creation_ticks": 134368159912892825
+        },
+        {
+          "pid": 13680,
+          "parent_pid": 25024,
+          "creation_ticks": 134368159858824063
+        }
+      ],
+      "command": [
+        "<research>\\build-neural-v4\\regicide_profile_neural.exe",
+        "--fen-file",
+        "<research>\\tests\\data\\evaluation_profile_2026_10_18.fens",
+        "--output",
+        "<research>\\build\\neural-inference-opt\\profile.json",
+        "--model",
+        "<research>\\build\\neural-inference-opt\\models\\learned_v1.nn",
+        "--model",
+        "<research>\\build\\neural-inference-opt\\models\\previous_v2.nn",
+        "--model",
+        "<research>\\build\\neural-inference-opt\\models\\quality_v2.nn",
+        "--model",
+        "<research>\\build\\neural-inference-opt\\models\\zero_v2.nn"
+      ]
+    }
+  },
+  "external_engine_identities": [],
+  "observed_external_engine_cpu_increase": false,
+  "contaminated": false,
+  "valid_for_comparison": true,
+  "failure": null,
+  "completed_idle_seconds": 5.0286206000018865,
+  "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded."
+}
