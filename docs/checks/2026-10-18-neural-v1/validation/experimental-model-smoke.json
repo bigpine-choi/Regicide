@@ -1,0 +1,3831 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-18T13:06:26.481191+00:00",
+  "harness_checkout": {
+    "commit": "139f99fe666820e8855b8f24a068737c476694dd",
+    "status_porcelain": "M .github/workflows/rules.yml\n?? docs/checks/2026-10-18-neural-v1/\n?? models/\n?? tests/neural_integration_tests.py",
+    "scope": "harness checkout at match start; not proof of either binary's build source"
+  },
+  "engines": {
+    "baseline": {
+      "command": [
+        "<REPO>\\build-neural-validation\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "5e1091696a87cb738d5b1f91e7c0fa888ef0bab21aa3bbf48724c949043d11de",
+      "provided_source_commit": "139f99fe666820e8855b8f24a068737c476694dd",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {},
+      "validated_options": {},
+      "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+      "engine_id": {
+        "name": "Regicide 0.6.0",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UsePawnShield": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UsePawnStructure": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseLMR": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "EvalFile": {
+          "type": "string",
+          "default": "<empty>",
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseNeuralEvaluation": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    },
+    "candidate": {
+      "command": [
+        "<REPO>\\build-neural-validation\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "5e1091696a87cb738d5b1f91e7c0fa888ef0bab21aa3bbf48724c949043d11de",
+      "provided_source_commit": "139f99fe666820e8855b8f24a068737c476694dd",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {
+        "EvalFile": "<REPO>\\models\\regicide-small-v1.nn",
+        "UseNeuralEvaluation": true
+      },
+      "validated_options": {
+        "EvalFile": "<REPO>\\models\\regicide-small-v1.nn",
+        "UseNeuralEvaluation": true
+      },
+      "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+      "engine_id": {
+        "name": "Regicide 0.6.0",
+        "author": "Regicide project"
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UsePawnShield": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UsePawnStructure": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseLMR": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "EvalFile": {
+          "type": "string",
+          "default": "<empty>",
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseNeuralEvaluation": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    }
+  },
+  "python_version": "3.13.16",
+  "chess_version": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD",
+  "logical_cpus": 16,
+  "limits": {
+    "nodes": 2000,
+    "depth": null,
+    "movetime_ms": null
+  },
+  "max_plies": 256,
+  "draw_policy": "claim",
+  "draw_policy_detail": "Both players always claim an available threefold or 50-move draw, including an intended legal next move.",
+  "opening_source": "<REPO>\\tests\\data\\comparison_openings.json",
+  "opening_file_sha256": "86126fa3936967759205984b53bb4412056f2fb38ff6d7ba2b44175e444f31db",
+  "opening_document": {
+    "schema_version": 1,
+    "provenance": "Short lines chosen for this experiment by Regicide's developers; not downloaded opening data. Names describe opening families, not optimal play.",
+    "selection_policy": "The ordered opening list, prefix subsets, limits and color swaps are declared before observing match results.",
+    "openings": [
+      {
+        "name": "Initial position",
+        "moves": [],
+        "fen_after_opening": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      },
+      {
+        "name": "Open game",
+        "moves": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6"
+        ],
+        "fen_after_opening": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
+      },
+      {
+        "name": "Queen pawn game",
+        "moves": [
+          "d2d4",
+          "d7d5",
+          "g1f3",
+          "g8f6"
+        ],
+        "fen_after_opening": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3"
+      },
+      {
+        "name": "Sicilian family",
+        "moves": [
+          "e2e4",
+          "c7c5",
+          "g1f3",
+          "d7d6",
+          "d2d4",
+          "c5d4",
+          "f3d4",
+          "g8f6"
+        ],
+        "fen_after_opening": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5"
+      },
+      {
+        "name": "French family",
+        "moves": [
+          "e2e4",
+          "e7e6",
+          "d2d4",
+          "d7d5",
+          "b1c3",
+          "g8f6"
+        ],
+        "fen_after_opening": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4"
+      },
+      {
+        "name": "Caro-Kann family",
+        "moves": [
+          "e2e4",
+          "c7c6",
+          "d2d4",
+          "d7d5",
+          "b1c3",
+          "d5e4",
+          "c3e4",
+          "c8f5"
+        ],
+        "fen_after_opening": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5"
+      },
+      {
+        "name": "Queen's Gambit Declined family",
+        "moves": [
+          "d2d4",
+          "d7d5",
+          "c2c4",
+          "e7e6",
+          "b1c3",
+          "g8f6",
+          "g1f3",
+          "f8e7"
+        ],
+        "fen_after_opening": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5"
+      },
+      {
+        "name": "Reti-English family",
+        "moves": [
+          "g1f3",
+          "d7d5",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "f8e7"
+        ],
+        "fen_after_opening": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5"
+      }
+    ]
+  },
+  "selected_openings": [
+    {
+      "name": "Initial position",
+      "moves": [],
+      "fen_after_opening": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    }
+  ],
+  "opening_selection": "Ordered prefix fixed by invocation before results; both colors per opening.",
+  "pair_order": "Each opening: candidate White, then candidate Black; openings in file order.",
+  "backtrack_definition": "Adjacent engine-selected moves by the same side, both quiet non-pawn moves and neither a check evasion, form an opportunity. A->B then B->A by the same piece is a backtrack. Opening moves excluded. This is not a judgment that the reversal was unnecessary.",
+  "move_selection": "Supplied binaries only; deterministic opening and color schedule; no runner move randomness.",
+  "games_requested": 2,
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "opening": "Initial position",
+      "opening_uci_moves": [],
+      "opening_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "white": "candidate",
+      "black": "baseline",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "2k2b1r/4pppp/8/3K4/1p3PP1/2q4P/p5b1/8 w - - 8 43",
+      "uci_moves": [
+        "b2b4",
+        "b8c6",
+        "a2a3",
+        "a7a5",
+        "b4b5",
+        "c6d4",
+        "a3a4",
+        "g8f6",
+        "c2c3",
+        "d4f5",
+        "d1c2",
+        "d7d5",
+        "a1a2",
+        "c8e6",
+        "e1d1",
+        "d5d4",
+        "c3c4",
+        "c7c5",
+        "c1b2",
+        "f5d6",
+        "e2e3",
+        "f6e4",
+        "d1e1",
+        "d8b6",
+        "c2e4",
+        "d6e4",
+        "h2h3",
+        "e8c8",
+        "e3d4",
+        "c5d4",
+        "f1d3",
+        "e4c5",
+        "d3f1",
+        "d4d3",
+        "e1d1",
+        "e6c4",
+        "a2a3",
+        "c5a4",
+        "b2a1",
+        "b6b5",
+        "d1c1",
+        "a4c5",
+        "g1f3",
+        "c5b3",
+        "c1d1",
+        "b3d4",
+        "b1c3",
+        "b5b4",
+        "f3d4",
+        "b4a3",
+        "a1b2",
+        "a3b2",
+        "f1d3",
+        "b2a1",
+        "d3b1",
+        "d8d4",
+        "d1e1",
+        "b7b5",
+        "g2g3",
+        "a5a4",
+        "h1g1",
+        "a4a3",
+        "f2f4",
+        "b5b4",
+        "e1d1",
+        "d4d2",
+        "d1d2",
+        "a1c3",
+        "d2d1",
+        "c3d4",
+        "d1e1",
+        "d4g1",
+        "e1d2",
+        "g1b1",
+        "g3g4",
+        "a3a2",
+        "d2e3",
+        "b1e1",
+        "e3d4",
+        "e1c3",
+        "d4c5",
+        "c4f1",
+        "c5d5",
+        "f1g2"
+      ],
+      "plies": 84,
+      "search_moves": [
+        {
+          "ply": 1,
+          "role": "candidate",
+          "color": "white",
+          "move": "b2b4",
+          "fen_before": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "elapsed_seconds": 0.021096,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 7,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -4,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b2b4",
+            "h7h6",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 2,
+          "role": "baseline",
+          "color": "black",
+          "move": "b8c6",
+          "fen_before": "rnbqkbnr/pppppppp/8/8/1P6/8/P1PPPPPP/RNBQKBNR b KQkq b3 0 1",
+          "elapsed_seconds": 0.006852,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 11,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": 27,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b8c6",
+            "b4b5",
+            "c6d4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 3,
+          "role": "candidate",
+          "color": "white",
+          "move": "a2a3",
+          "fen_before": "r1bqkbnr/pppppppp/2n5/8/1P6/8/P1PPPPPP/RNBQKBNR w KQkq - 1 2",
+          "elapsed_seconds": 0.005116,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 4,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a2a3",
+            "b7b6",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 4,
+          "role": "baseline",
+          "color": "black",
+          "move": "a7a5",
+          "fen_before": "r1bqkbnr/pppppppp/2n5/8/1P6/P7/2PPPPPP/RNBQKBNR b KQkq - 0 2",
+          "elapsed_seconds": 0.004225,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 31,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a7a5",
+            "b4b5",
+            "c6d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 5,
+          "role": "candidate",
+          "color": "white",
+          "move": "b4b5",
+          "fen_before": "r1bqkbnr/1ppppppp/2n5/p7/1P6/P7/2PPPPPP/RNBQKBNR w KQkq a6 0 3",
+          "elapsed_seconds": 0.004188,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 6,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 78,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b4b5",
+            "c6b8",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 6,
+          "role": "baseline",
+          "color": "black",
+          "move": "c6d4",
+          "fen_before": "r1bqkbnr/1ppppppp/2n5/pP6/8/P7/2PPPPPP/RNBQKBNR b KQkq - 0 3",
+          "elapsed_seconds": 0.003841,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 8,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 16,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c6d4",
+            "e2e3",
+            "d4f5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 7,
+          "role": "candidate",
+          "color": "white",
+          "move": "a3a4",
+          "fen_before": "r1bqkbnr/1ppppppp/8/pP6/3n4/P7/2PPPPPP/RNBQKBNR w KQkq - 1 4",
+          "elapsed_seconds": 0.004507,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 9,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 85,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a3a4",
+            "d4f5",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 8,
+          "role": "baseline",
+          "color": "black",
+          "move": "g8f6",
+          "fen_before": "r1bqkbnr/1ppppppp/8/pP6/P2n4/8/2PPPPPP/RNBQKBNR b KQkq - 0 4",
+          "elapsed_seconds": 0.004311,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 28,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g8f6",
+            "g1f3",
+            "c7c5",
+            "f3d4",
+            "c5d4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 9,
+          "role": "candidate",
+          "color": "white",
+          "move": "c2c3",
+          "fen_before": "r1bqkb1r/1ppppppp/5n2/pP6/P2n4/8/2PPPPPP/RNBQKBNR w KQkq - 1 5",
+          "elapsed_seconds": 0.004787,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 9,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -4,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c2c3",
+            "d4f5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 10,
+          "role": "baseline",
+          "color": "black",
+          "move": "d4f5",
+          "fen_before": "r1bqkb1r/1ppppppp/5n2/pP6/P2n4/2P5/3PPPPP/RNBQKBNR b KQkq - 0 5",
+          "elapsed_seconds": 0.005444,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 9,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 25,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d4f5",
+            "g1f3",
+            "c7c5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 11,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1c2",
+          "fen_before": "r1bqkb1r/1ppppppp/5n2/pP3n2/P7/2P5/3PPPPP/RNBQKBNR w KQkq - 1 6",
+          "elapsed_seconds": 0.004687,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 7,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 48,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1c2",
+            "g7g6",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 12,
+          "role": "baseline",
+          "color": "black",
+          "move": "d7d5",
+          "fen_before": "r1bqkb1r/1ppppppp/5n2/pP3n2/P7/2P5/2QPPPPP/RNB1KBNR b KQkq - 2 6",
+          "elapsed_seconds": 0.004744,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 14,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 54,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d7d5",
+            "g1f3",
+            "c8e6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 13,
+          "role": "candidate",
+          "color": "white",
+          "move": "a1a2",
+          "fen_before": "r1bqkb1r/1pp1pppp/5n2/pP1p1n2/P7/2P5/2QPPPPP/RNB1KBNR w KQkq d6 0 7",
+          "elapsed_seconds": 0.005455,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 9,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 27,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a1a2",
+            "d8d6",
+            "b1a3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 14,
+          "role": "baseline",
+          "color": "black",
+          "move": "c8e6",
+          "fen_before": "r1bqkb1r/1pp1pppp/5n2/pP1p1n2/P7/2P5/R1QPPPPP/1NB1KBNR b Kkq - 1 7",
+          "elapsed_seconds": 0.004634,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 15,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 77,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c8e6",
+            "g1f3",
+            "c7c5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 15,
+          "role": "candidate",
+          "color": "white",
+          "move": "e1d1",
+          "fen_before": "r2qkb1r/1pp1pppp/4bn2/pP1p1n2/P7/2P5/R1QPPPPP/1NB1KBNR w Kkq - 2 8",
+          "elapsed_seconds": 0.005484,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 108,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1d1",
+            "d8d7"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 16,
+          "role": "baseline",
+          "color": "black",
+          "move": "d5d4",
+          "fen_before": "r2qkb1r/1pp1pppp/4bn2/pP1p1n2/P7/2P5/R1QPPPPP/1NBK1BNR b kq - 3 8",
+          "elapsed_seconds": 0.005105,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 92,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d5d4",
+            "a2a1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 17,
+          "role": "candidate",
+          "color": "white",
+          "move": "c3c4",
+          "fen_before": "r2qkb1r/1pp1pppp/4bn2/pP3n2/P2p4/2P5/R1QPPPPP/1NBK1BNR w kq - 0 9",
+          "elapsed_seconds": 0.005643,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 17,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 57,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c3c4",
+            "h7h6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 18,
+          "role": "baseline",
+          "color": "black",
+          "move": "c7c5",
+          "fen_before": "r2qkb1r/1pp1pppp/4bn2/pP3n2/P1Pp4/8/R1QPPPPP/1NBK1BNR b kq - 0 9",
+          "elapsed_seconds": 0.005115,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 81,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c7c5",
+            "g1f3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 19,
+          "role": "candidate",
+          "color": "white",
+          "move": "c1b2",
+          "fen_before": "r2qkb1r/1p2pppp/4bn2/pPp2n2/P1Pp4/8/R1QPPPPP/1NBK1BNR w kq c6 0 10",
+          "elapsed_seconds": 0.005833,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 107,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c1b2",
+            "h7h6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 20,
+          "role": "baseline",
+          "color": "black",
+          "move": "f5d6",
+          "fen_before": "r2qkb1r/1p2pppp/4bn2/pPp2n2/P1Pp4/8/RBQPPPPP/1N1K1BNR b kq - 1 10",
+          "elapsed_seconds": 0.00518,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 76,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f5d6",
+            "b1a3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 21,
+          "role": "candidate",
+          "color": "white",
+          "move": "e2e3",
+          "fen_before": "r2qkb1r/1p2pppp/3nbn2/pPp5/P1Pp4/8/RBQPPPPP/1N1K1BNR w kq - 2 11",
+          "elapsed_seconds": 0.006393,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 19,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": 149,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e2e3",
+            "f6g4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 22,
+          "role": "baseline",
+          "color": "black",
+          "move": "f6e4",
+          "fen_before": "r2qkb1r/1p2pppp/3nbn2/pPp5/P1Pp4/4P3/RBQP1PPP/1N1K1BNR b kq - 0 11",
+          "elapsed_seconds": 0.005884,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 18,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 104,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f6e4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 23,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1e1",
+          "fen_before": "r2qkb1r/1p2pppp/3nb3/pPp5/P1Ppn3/4P3/RBQP1PPP/1N1K1BNR w kq - 1 12",
+          "elapsed_seconds": 0.007287,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 20,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": 122,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1e1"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 24,
+          "role": "baseline",
+          "color": "black",
+          "move": "d8b6",
+          "fen_before": "r2qkb1r/1p2pppp/3nb3/pPp5/P1Ppn3/4P3/RBQP1PPP/1N2KBNR b kq - 2 12",
+          "elapsed_seconds": 0.006086,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 18,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": 92,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8b6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 25,
+          "role": "candidate",
+          "color": "white",
+          "move": "c2e4",
+          "fen_before": "r3kb1r/1p2pppp/1q1nb3/pPp5/P1Ppn3/4P3/RBQP1PPP/1N2KBNR w kq - 3 13",
+          "elapsed_seconds": 0.007624,
+          "nodes": 2000,
+          "depth": 0,
+          "seldepth": 13,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": 89,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c2e4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 26,
+          "role": "baseline",
+          "color": "black",
+          "move": "d6e4",
+          "fen_before": "r3kb1r/1p2pppp/1q1nb3/pPp5/P1PpQ3/4P3/RB1P1PPP/1N2KBNR b kq - 0 13",
+          "elapsed_seconds": 0.006435,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 594,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d6e4",
+            "g1f3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 27,
+          "role": "candidate",
+          "color": "white",
+          "move": "h2h3",
+          "fen_before": "r3kb1r/1p2pppp/1q2b3/pPp5/P1Ppn3/4P3/RB1P1PPP/1N2KBNR w kq - 0 14",
+          "elapsed_seconds": 0.00623,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 14,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -398,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "h2h3",
+            "d4e3",
+            "d2e3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 28,
+          "role": "baseline",
+          "color": "black",
+          "move": "e8c8",
+          "fen_before": "r3kb1r/1p2pppp/1q2b3/pPp5/P1Ppn3/4P2P/RB1P1PP1/1N2KBNR b kq - 0 14",
+          "elapsed_seconds": 0.006014,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 18,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 644,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e8c8"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 29,
+          "role": "candidate",
+          "color": "white",
+          "move": "e3d4",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPp5/P1Ppn3/4P2P/RB1P1PP1/1N2KBNR w - - 1 15",
+          "elapsed_seconds": 0.007512,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": -387,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e3d4",
+            "c5d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 30,
+          "role": "baseline",
+          "color": "black",
+          "move": "c5d4",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPp5/P1PPn3/7P/RB1P1PP1/1N2KBNR b - - 0 15",
+          "elapsed_seconds": 0.005167,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 619,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c5d4",
+            "g1f3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 31,
+          "role": "candidate",
+          "color": "white",
+          "move": "f1d3",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pP6/P1Ppn3/7P/RB1P1PP1/1N2KBNR w - - 0 16",
+          "elapsed_seconds": 0.00761,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": -403,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f1d3",
+            "e4f6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 32,
+          "role": "baseline",
+          "color": "black",
+          "move": "e4c5",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pP6/P1Ppn3/3B3P/RB1P1PP1/1N2K1NR b - - 1 16",
+          "elapsed_seconds": 0.006312,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 19,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 624,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e4c5",
+            "d3e2"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 33,
+          "role": "candidate",
+          "color": "white",
+          "move": "d3f1",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPn5/P1Pp4/3B3P/RB1P1PP1/1N2K1NR w - - 2 17",
+          "elapsed_seconds": 0.006988,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 18,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -453,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d3f1",
+            "c8c7"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": true
+        },
+        {
+          "ply": 34,
+          "role": "baseline",
+          "color": "black",
+          "move": "d4d3",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPn5/P1Pp4/7P/RB1P1PP1/1N2KBNR b - - 3 17",
+          "elapsed_seconds": 0.006336,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": 734,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d4d3",
+            "b1a3",
+            "c5a4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 35,
+          "role": "candidate",
+          "color": "white",
+          "move": "e1d1",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPn5/P1P5/3p3P/RB1P1PP1/1N2KBNR w - - 0 18",
+          "elapsed_seconds": 0.007758,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": -520,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1d1",
+            "e6c4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 36,
+          "role": "baseline",
+          "color": "black",
+          "move": "e6c4",
+          "fen_before": "2kr1b1r/1p2pppp/1q2b3/pPn5/P1P5/3p3P/RB1P1PP1/1N1K1BNR b - - 1 18",
+          "elapsed_seconds": 0.004887,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 899,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e6c4",
+            "a2a1",
+            "c5a4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 37,
+          "role": "candidate",
+          "color": "white",
+          "move": "a2a3",
+          "fen_before": "2kr1b1r/1p2pppp/1q6/pPn5/P1b5/3p3P/RB1P1PP1/1N1K1BNR w - - 0 19",
+          "elapsed_seconds": 0.007788,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 18,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": -675,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a2a3",
+            "c4b3",
+            "d1c1",
+            "b3a4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 38,
+          "role": "baseline",
+          "color": "black",
+          "move": "c5a4",
+          "fen_before": "2kr1b1r/1p2pppp/1q6/pPn5/P1b5/R2p3P/1B1P1PP1/1N1K1BNR b - - 1 19",
+          "elapsed_seconds": 0.005561,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1007,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c5a4",
+            "b2e5",
+            "b6b5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 39,
+          "role": "candidate",
+          "color": "white",
+          "move": "b2a1",
+          "fen_before": "2kr1b1r/1p2pppp/1q6/pP6/n1b5/R2p3P/1B1P1PP1/1N1K1BNR w - - 0 20",
+          "elapsed_seconds": 0.007218,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 19,
+          "engine_time_seconds": 0.006,
+          "score": {
+            "pov": "mover",
+            "cp": -782,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b2a1",
+            "c4b5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 40,
+          "role": "baseline",
+          "color": "black",
+          "move": "b6b5",
+          "fen_before": "2kr1b1r/1p2pppp/1q6/pP6/n1b5/R2p3P/3P1PP1/BN1K1BNR b - - 1 20",
+          "elapsed_seconds": 0.006082,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 19,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1039,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b6b5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 41,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1c1",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/n1b5/R2p3P/3P1PP1/BN1K1BNR w - - 0 21",
+          "elapsed_seconds": 0.007263,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -857,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1c1",
+            "b5b4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 42,
+          "role": "baseline",
+          "color": "black",
+          "move": "a4c5",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/n1b5/R2p3P/3P1PP1/BNK2BNR b - - 1 21",
+          "elapsed_seconds": 0.005423,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1033,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a4c5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 43,
+          "role": "candidate",
+          "color": "white",
+          "move": "g1f3",
+          "fen_before": "2kr1b1r/1p2pppp/8/pqn5/2b5/R2p3P/3P1PP1/BNK2BNR w - - 2 22",
+          "elapsed_seconds": 0.009659,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 22,
+          "engine_time_seconds": 0.008,
+          "score": {
+            "pov": "mover",
+            "cp": -822,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g1f3",
+            "b7b6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 44,
+          "role": "baseline",
+          "color": "black",
+          "move": "c5b3",
+          "fen_before": "2kr1b1r/1p2pppp/8/pqn5/2b5/R2p1N1P/3P1PP1/BNK2B1R b - - 3 22",
+          "elapsed_seconds": 0.005727,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1017,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c5b3",
+            "c1d1"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 45,
+          "role": "candidate",
+          "color": "white",
+          "move": "c1d1",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/2b5/Rn1p1N1P/3P1PP1/BNK2B1R w - - 4 23",
+          "elapsed_seconds": 0.006996,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -793,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c1d1",
+            "b7b6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 46,
+          "role": "baseline",
+          "color": "black",
+          "move": "b3d4",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/2b5/Rn1p1N1P/3P1PP1/BN1K1B1R b - - 5 23",
+          "elapsed_seconds": 0.005733,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1034,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b3d4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 47,
+          "role": "candidate",
+          "color": "white",
+          "move": "b1c3",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/2bn4/R2p1N1P/3P1PP1/BN1K1B1R w - - 6 24",
+          "elapsed_seconds": 0.006196,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -781,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b1c3",
+            "b5b4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 48,
+          "role": "baseline",
+          "color": "black",
+          "move": "b5b4",
+          "fen_before": "2kr1b1r/1p2pppp/8/pq6/2bn4/R1Np1N1P/3P1PP1/B2K1B1R b - - 7 24",
+          "elapsed_seconds": 0.005732,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1132,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b5b4",
+            "f3d4",
+            "b4a3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 49,
+          "role": "candidate",
+          "color": "white",
+          "move": "f3d4",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/1qbn4/R1Np1N1P/3P1PP1/B2K1B1R w - - 8 25",
+          "elapsed_seconds": 0.006049,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -897,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f3d4",
+            "b4a3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 50,
+          "role": "baseline",
+          "color": "black",
+          "move": "b4a3",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/1qbN4/R1Np3P/3P1PP1/B2K1B1R b - - 0 25",
+          "elapsed_seconds": 0.00603,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1465,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b4a3",
+            "a1b2",
+            "a3b2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 51,
+          "role": "candidate",
+          "color": "white",
+          "move": "a1b2",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/q1Np3P/3P1PP1/B2K1B1R w - - 0 26",
+          "elapsed_seconds": 0.00578,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1214,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a1b2",
+            "a3b2"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 52,
+          "role": "baseline",
+          "color": "black",
+          "move": "a3b2",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/q1Np3P/1B1P1PP1/3K1B1R b - - 1 26",
+          "elapsed_seconds": 0.005795,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1681,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a3b2",
+            "f1d3",
+            "b2a1",
+            "d3b1",
+            "d8d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 53,
+          "role": "candidate",
+          "color": "white",
+          "move": "f1d3",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/2Np3P/1q1P1PP1/3K1B1R w - - 0 27",
+          "elapsed_seconds": 0.005939,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -1445,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f1d3",
+            "b2a1",
+            "d3b1",
+            "d8d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 54,
+          "role": "baseline",
+          "color": "black",
+          "move": "b2a1",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/2NB3P/1q1P1PP1/3K3R b - - 0 27",
+          "elapsed_seconds": 0.004788,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 1681,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b2a1",
+            "d3b1",
+            "d8d4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 55,
+          "role": "candidate",
+          "color": "white",
+          "move": "d3b1",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/2NB3P/3P1PP1/q2K3R w - - 1 28",
+          "elapsed_seconds": 0.005426,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1445,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d3b1",
+            "d8d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 56,
+          "role": "baseline",
+          "color": "black",
+          "move": "d8d4",
+          "fen_before": "2kr1b1r/1p2pppp/8/p7/2bN4/2N4P/3P1PP1/qB1K3R b - - 2 28",
+          "elapsed_seconds": 0.005676,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1681,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 57,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1e1",
+          "fen_before": "2k2b1r/1p2pppp/8/p7/2br4/2N4P/3P1PP1/qB1K3R w - - 0 29",
+          "elapsed_seconds": 0.005867,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1626,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1e1",
+            "b7b6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 58,
+          "role": "baseline",
+          "color": "black",
+          "move": "b7b5",
+          "fen_before": "2k2b1r/1p2pppp/8/p7/2br4/2N4P/3P1PP1/qB2K2R b - - 1 29",
+          "elapsed_seconds": 0.005345,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1701,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b7b5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 59,
+          "role": "candidate",
+          "color": "white",
+          "move": "g2g3",
+          "fen_before": "2k2b1r/4pppp/8/pp6/2br4/2N4P/3P1PP1/qB2K2R w - b6 0 30",
+          "elapsed_seconds": 0.005819,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1644,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g2g3",
+            "d4d3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 60,
+          "role": "baseline",
+          "color": "black",
+          "move": "a5a4",
+          "fen_before": "2k2b1r/4pppp/8/pp6/2br4/2N3PP/3P1P2/qB2K2R b - - 0 30",
+          "elapsed_seconds": 0.005054,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 14,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 1715,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a5a4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 61,
+          "role": "candidate",
+          "color": "white",
+          "move": "h1g1",
+          "fen_before": "2k2b1r/4pppp/8/1p6/p1br4/2N3PP/3P1P2/qB2K2R w - - 0 31",
+          "elapsed_seconds": 0.005611,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1542,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "h1g1",
+            "h7h6"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 62,
+          "role": "baseline",
+          "color": "black",
+          "move": "a4a3",
+          "fen_before": "2k2b1r/4pppp/8/1p6/p1br4/2N3PP/3P1P2/qB2K1R1 b - - 1 31",
+          "elapsed_seconds": 0.006176,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 1745,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a4a3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 63,
+          "role": "candidate",
+          "color": "white",
+          "move": "f2f4",
+          "fen_before": "2k2b1r/4pppp/8/1p6/2br4/p1N3PP/3P1P2/qB2K1R1 w - - 0 32",
+          "elapsed_seconds": 0.005305,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 16,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1558,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f2f4",
+            "c4d5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 64,
+          "role": "baseline",
+          "color": "black",
+          "move": "b5b4",
+          "fen_before": "2k2b1r/4pppp/8/1p6/2br1P2/p1N3PP/3P4/qB2K1R1 b - f3 0 32",
+          "elapsed_seconds": 0.004836,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 16,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 1754,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b5b4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 65,
+          "role": "candidate",
+          "color": "white",
+          "move": "e1d1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbr1P2/p1N3PP/3P4/qB2K1R1 w - - 0 33",
+          "elapsed_seconds": 0.005721,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 17,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1706,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1d1",
+            "b4c3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 66,
+          "role": "baseline",
+          "color": "black",
+          "move": "d4d2",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbr1P2/p1N3PP/3P4/qB1K2R1 b - - 1 33",
+          "elapsed_seconds": 0.004824,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 16,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 2223,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d4d2",
+            "d1d2",
+            "a1c3",
+            "d2d1",
+            "c3d4",
+            "d1c2",
+            "d4g1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 67,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1d2",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p1N3PP/3r4/qB1K2R1 w - - 0 34",
+          "elapsed_seconds": 0.005142,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 13,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -1690,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1d2",
+            "a1c3",
+            "d2d1",
+            "c3d4",
+            "d1c2",
+            "d4g1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 68,
+          "role": "baseline",
+          "color": "black",
+          "move": "a1c3",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p1N3PP/3K4/qB4R1 b - - 0 34",
+          "elapsed_seconds": 0.004769,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 16,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 2223,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a1c3",
+            "d2d1",
+            "c3d4",
+            "d1c2",
+            "d4g1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 69,
+          "role": "candidate",
+          "color": "white",
+          "move": "d2d1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p1q3PP/3K4/1B4R1 w - - 0 35",
+          "elapsed_seconds": 0.004584,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -2099,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d2d1",
+            "c3d4",
+            "d1e1",
+            "d4g1",
+            "e1d2",
+            "g1b1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 70,
+          "role": "baseline",
+          "color": "black",
+          "move": "c3d4",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p1q3PP/8/1B1K2R1 b - - 1 35",
+          "elapsed_seconds": 0.004389,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 14,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 2557,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c3d4",
+            "d1c1",
+            "d4b2",
+            "c1d1",
+            "b2b1",
+            "d1d2",
+            "b1g1"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 71,
+          "role": "candidate",
+          "color": "white",
+          "move": "d1e1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbq1P2/p5PP/8/1B1K2R1 w - - 2 36",
+          "elapsed_seconds": 0.004717,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -2099,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1e1",
+            "d4g1",
+            "e1d2",
+            "g1b1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 72,
+          "role": "baseline",
+          "color": "black",
+          "move": "d4g1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbq1P2/p5PP/8/1B2K1R1 b - - 3 36",
+          "elapsed_seconds": 0.004259,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 13,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 2557,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d4g1",
+            "e1d2",
+            "g1b1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 73,
+          "role": "candidate",
+          "color": "white",
+          "move": "e1d2",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p5PP/8/1B2K1q1 w - - 0 37",
+          "elapsed_seconds": 0.004386,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -2220,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1d2",
+            "g1b1",
+            "d2e3",
+            "b1d3",
+            "e3f2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 74,
+          "role": "baseline",
+          "color": "black",
+          "move": "g1b1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p5PP/3K4/1B4q1 b - - 1 37",
+          "elapsed_seconds": 0.00372,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": 2566,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g1b1",
+            "d2e3",
+            "b1d3",
+            "e3f2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 75,
+          "role": "candidate",
+          "color": "white",
+          "move": "g3g4",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2P2/p5PP/3K4/1q6 w - - 0 38",
+          "elapsed_seconds": 0.004708,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -2359,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g3g4",
+            "b1d3",
+            "d2c1",
+            "d3h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 76,
+          "role": "baseline",
+          "color": "black",
+          "move": "a3a2",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2PP1/p6P/3K4/1q6 b - - 0 38",
+          "elapsed_seconds": 0.005392,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 3248,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a3a2",
+            "h3h4",
+            "b1d3",
+            "d2e1",
+            "a2a1q",
+            "e1f2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 77,
+          "role": "candidate",
+          "color": "white",
+          "move": "d2e3",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2PP1/7P/p2K4/1q6 w - - 0 39",
+          "elapsed_seconds": 0.004233,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -3088,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d2e3",
+            "a2a1q"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 78,
+          "role": "baseline",
+          "color": "black",
+          "move": "b1e1",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2PP1/4K2P/p7/1q6 b - - 1 39",
+          "elapsed_seconds": 0.003534,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": 3263,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b1e1",
+            "e3d4",
+            "e1c3",
+            "d4e4",
+            "a2a1q"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 79,
+          "role": "candidate",
+          "color": "white",
+          "move": "e3d4",
+          "fen_before": "2k2b1r/4pppp/8/8/1pb2PP1/4K2P/p7/4q3 w - - 2 40",
+          "elapsed_seconds": 0.004233,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": -3072,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e3d4",
+            "e1c3",
+            "d4c5",
+            "c4f1",
+            "c5b6",
+            "a2a1q"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 80,
+          "role": "baseline",
+          "color": "black",
+          "move": "e1c3",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbK1PP1/7P/p7/4q3 b - - 3 40",
+          "elapsed_seconds": 0.003611,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 11,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": 3285,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1c3",
+            "d4c5",
+            "e7e5",
+            "c5c6",
+            "a2a1q"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 81,
+          "role": "candidate",
+          "color": "white",
+          "move": "d4c5",
+          "fen_before": "2k2b1r/4pppp/8/8/1pbK1PP1/2q4P/p7/8 w - - 4 41",
+          "elapsed_seconds": 0.00398,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": -2,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d4c5",
+            "c4f1",
+            "c5d5",
+            "f1g2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 82,
+          "role": "baseline",
+          "color": "black",
+          "move": "c4f1",
+          "fen_before": "2k2b1r/4pppp/8/2K5/1pb2PP1/2q4P/p7/8 b - - 5 41",
+          "elapsed_seconds": 0.003512,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 10,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 2,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c4f1",
+            "c5d5",
+            "f1g2"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 83,
+          "role": "candidate",
+          "color": "white",
+          "move": "c5d5",
+          "fen_before": "2k2b1r/4pppp/8/2K5/1p3PP1/2q4P/p7/5b2 w - - 6 42",
+          "elapsed_seconds": 0.00375,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 13,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": -1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c5d5",
+            "f1g2"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 84,
+          "role": "baseline",
+          "color": "black",
+          "move": "f1g2",
+          "fen_before": "2k2b1r/4pppp/8/3K4/1p3PP1/2q4P/p7/5b2 b - - 7 42",
+          "elapsed_seconds": 0.003566,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f1g2"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 0.0,
+      "elapsed_seconds": 0.500922,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 10
+        },
+        "candidate": {
+          "count": 1,
+          "opportunities": 8
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 42,
+          "reported_nodes": 84000,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.216106
+        },
+        "candidate": {
+          "searched_moves": 42,
+          "reported_nodes": 84000,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.260568
+        }
+      }
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "opening": "Initial position",
+      "opening_uci_moves": [],
+      "opening_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "white": "baseline",
+      "black": "candidate",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "4k1nr/1bpp1p2/1pN4P/8/8/1PbPB3/2P1PPP1/qK1R1B1R w k - 1 18",
+      "uci_moves": [
+        "b1c3",
+        "h7h6",
+        "g1f3",
+        "b7b6",
+        "d2d3",
+        "a7a5",
+        "c1e3",
+        "a8a7",
+        "c3b5",
+        "b8c6",
+        "b5a7",
+        "c6a7",
+        "d1d2",
+        "a7c6",
+        "e1c1",
+        "a5a4",
+        "b2b3",
+        "a4b3",
+        "a2b3",
+        "g7g5",
+        "h2h4",
+        "c8b7",
+        "h4g5",
+        "d8a8",
+        "d2c3",
+        "a8a3",
+        "c1b1",
+        "e7e5",
+        "f3e5",
+        "f8g7",
+        "e5c6",
+        "g7c3",
+        "g5h6",
+        "a3a1"
+      ],
+      "plies": 34,
+      "search_moves": [
+        {
+          "ply": 1,
+          "role": "baseline",
+          "color": "white",
+          "move": "b1c3",
+          "fen_before": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "elapsed_seconds": 0.003816,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 30,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 2,
+          "role": "candidate",
+          "color": "black",
+          "move": "h7h6",
+          "fen_before": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+          "elapsed_seconds": 0.004451,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 6,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -34,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "h7h6",
+            "b2b3",
+            "b7b5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 3,
+          "role": "baseline",
+          "color": "white",
+          "move": "g1f3",
+          "fen_before": "rnbqkbnr/ppppppp1/7p/8/8/2N5/PPPPPPPP/R1BQKBNR w KQkq - 0 2",
+          "elapsed_seconds": 0.003482,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.002,
+          "score": {
+            "pov": "mover",
+            "cp": 38,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g1f3",
+            "b8c6",
+            "c3e4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 4,
+          "role": "candidate",
+          "color": "black",
+          "move": "b7b6",
+          "fen_before": "rnbqkbnr/ppppppp1/7p/8/8/2N2N2/PPPPPPPP/R1BQKB1R b KQkq - 1 2",
+          "elapsed_seconds": 0.003843,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 6,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 67,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b7b6",
+            "b2b3",
+            "a7a5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 5,
+          "role": "baseline",
+          "color": "white",
+          "move": "d2d3",
+          "fen_before": "rnbqkbnr/p1ppppp1/1p5p/8/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 0 3",
+          "elapsed_seconds": 0.004762,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 50,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d2d3",
+            "b8c6",
+            "c1e3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 6,
+          "role": "candidate",
+          "color": "black",
+          "move": "a7a5",
+          "fen_before": "rnbqkbnr/p1ppppp1/1p5p/8/8/2NP1N2/PPP1PPPP/R1BQKB1R b KQkq - 0 3",
+          "elapsed_seconds": 0.004636,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 8,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 107,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a7a5",
+            "e1d2",
+            "b8c6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 7,
+          "role": "baseline",
+          "color": "white",
+          "move": "c1e3",
+          "fen_before": "rnbqkbnr/2ppppp1/1p5p/p7/8/2NP1N2/PPP1PPPP/R1BQKB1R w KQkq a6 0 4",
+          "elapsed_seconds": 0.003968,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 9,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 54,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c1e3",
+            "b8c6",
+            "c3e4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 8,
+          "role": "candidate",
+          "color": "black",
+          "move": "a8a7",
+          "fen_before": "rnbqkbnr/2ppppp1/1p5p/p7/8/2NPBN2/PPP1PPPP/R2QKB1R b KQkq - 1 4",
+          "elapsed_seconds": 0.005266,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 8,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 88,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a8a7",
+            "b2b3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 9,
+          "role": "baseline",
+          "color": "white",
+          "move": "c3b5",
+          "fen_before": "1nbqkbnr/r1ppppp1/1p5p/p7/8/2NPBN2/PPP1PPPP/R2QKB1R w KQk - 2 5",
+          "elapsed_seconds": 0.004777,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 7,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 72,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c3b5",
+            "a7a8"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 10,
+          "role": "candidate",
+          "color": "black",
+          "move": "b8c6",
+          "fen_before": "1nbqkbnr/r1ppppp1/1p5p/pN6/8/3PBN2/PPP1PPPP/R2QKB1R b KQk - 3 5",
+          "elapsed_seconds": 0.005622,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 9,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 48,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b8c6",
+            "b5a7",
+            "c6a7"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 11,
+          "role": "baseline",
+          "color": "white",
+          "move": "b5a7",
+          "fen_before": "2bqkbnr/r1ppppp1/1pn4p/pN6/8/3PBN2/PPP1PPPP/R2QKB1R w KQk - 4 6",
+          "elapsed_seconds": 0.003511,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 9,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 201,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b5a7",
+            "c6a7"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 12,
+          "role": "candidate",
+          "color": "black",
+          "move": "c6a7",
+          "fen_before": "2bqkbnr/N1ppppp1/1pn4p/p7/8/3PBN2/PPP1PPPP/R2QKB1R b KQk - 0 6",
+          "elapsed_seconds": 0.004436,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 29,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c6a7",
+            "b2b3",
+            "g8f6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 13,
+          "role": "baseline",
+          "color": "white",
+          "move": "d1d2",
+          "fen_before": "2bqkbnr/n1ppppp1/1p5p/p7/8/3PBN2/PPP1PPPP/R2QKB1R w KQk - 0 7",
+          "elapsed_seconds": 0.003764,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 10,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 205,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d1d2",
+            "g8f6",
+            "e1c1"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 14,
+          "role": "candidate",
+          "color": "black",
+          "move": "a7c6",
+          "fen_before": "2bqkbnr/n1ppppp1/1p5p/p7/8/3PBN2/PPPQPPPP/R3KB1R b KQk - 1 7",
+          "elapsed_seconds": 0.005272,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -239,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a7c6",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 15,
+          "role": "baseline",
+          "color": "white",
+          "move": "e1c1",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/p7/8/3PBN2/PPPQPPPP/R3KB1R w KQk - 2 8",
+          "elapsed_seconds": 0.003897,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 7,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 197,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e1c1",
+            "g8f6",
+            "a2a4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 16,
+          "role": "candidate",
+          "color": "black",
+          "move": "a5a4",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/p7/8/3PBN2/PPPQPPPP/2KR1B1R b k - 3 8",
+          "elapsed_seconds": 0.005468,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 9,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -118,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a5a4",
+            "b2b4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 17,
+          "role": "baseline",
+          "color": "white",
+          "move": "b2b3",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/8/p7/3PBN2/PPPQPPPP/2KR1B1R w k - 0 9",
+          "elapsed_seconds": 0.004273,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 220,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "b2b3",
+            "a4a3",
+            "g2g4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 18,
+          "role": "candidate",
+          "color": "black",
+          "move": "a4b3",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/8/p7/1P1PBN2/P1PQPPPP/2KR1B1R b k - 0 9",
+          "elapsed_seconds": 0.004878,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 8,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": -49,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a4b3",
+            "a2b3",
+            "g8f6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 19,
+          "role": "baseline",
+          "color": "white",
+          "move": "a2b3",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/8/8/1p1PBN2/P1PQPPPP/2KR1B1R w k - 0 10",
+          "elapsed_seconds": 0.003912,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 210,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a2b3",
+            "g8f6",
+            "h2h4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 20,
+          "role": "candidate",
+          "color": "black",
+          "move": "g7g5",
+          "fen_before": "2bqkbnr/2ppppp1/1pn4p/8/8/1P1PBN2/2PQPPPP/2KR1B1R b k - 0 10",
+          "elapsed_seconds": 0.005557,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 12,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -169,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g7g5",
+            "h2h3"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 21,
+          "role": "baseline",
+          "color": "white",
+          "move": "h2h4",
+          "fen_before": "2bqkbnr/2pppp2/1pn4p/6p1/8/1P1PBN2/2PQPPPP/2KR1B1R w k g6 0 11",
+          "elapsed_seconds": 0.004228,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 12,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": 222,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "h2h4",
+            "g5g4",
+            "e3d4",
+            "c6d4",
+            "f3d4"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 22,
+          "role": "candidate",
+          "color": "black",
+          "move": "c8b7",
+          "fen_before": "2bqkbnr/2pppp2/1pn4p/6p1/7P/1P1PBN2/2PQPPP1/2KR1B1R b k h3 0 11",
+          "elapsed_seconds": 0.005123,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 14,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -112,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c8b7",
+            "h4g5"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 23,
+          "role": "baseline",
+          "color": "white",
+          "move": "h4g5",
+          "fen_before": "3qkbnr/1bpppp2/1pn4p/6p1/7P/1P1PBN2/2PQPPP1/2KR1B1R w k - 1 12",
+          "elapsed_seconds": 0.004876,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 13,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 344,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "h4g5",
+            "h6h5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 24,
+          "role": "candidate",
+          "color": "black",
+          "move": "d8a8",
+          "fen_before": "3qkbnr/1bpppp2/1pn4p/6P1/8/1P1PBN2/2PQPPP1/2KR1B1R b k - 0 12",
+          "elapsed_seconds": 0.005727,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -72,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d8a8",
+            "c1b2",
+            "f8g7",
+            "d3d4"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 25,
+          "role": "baseline",
+          "color": "white",
+          "move": "d2c3",
+          "fen_before": "q3kbnr/1bpppp2/1pn4p/6P1/8/1P1PBN2/2PQPPP1/2KR1B1R w k - 1 13",
+          "elapsed_seconds": 0.005311,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 15,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 355,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "d2c3"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 26,
+          "role": "candidate",
+          "color": "black",
+          "move": "a8a3",
+          "fen_before": "q3kbnr/1bpppp2/1pn4p/6P1/8/1PQPBN2/2P1PPP1/2KR1B1R b k - 2 13",
+          "elapsed_seconds": 0.005809,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 19,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": -96,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a8a3",
+            "c1d2"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": true,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 27,
+          "role": "baseline",
+          "color": "white",
+          "move": "c1b1",
+          "fen_before": "4kbnr/1bpppp2/1pn4p/6P1/8/qPQPBN2/2P1PPP1/2KR1B1R w k - 3 14",
+          "elapsed_seconds": 0.005392,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 19,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 357,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "c1b1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 28,
+          "role": "candidate",
+          "color": "black",
+          "move": "e7e5",
+          "fen_before": "4kbnr/1bpppp2/1pn4p/6P1/8/qPQPBN2/2P1PPP1/1K1R1B1R b k - 4 14",
+          "elapsed_seconds": 0.006344,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 11,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -144,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e7e5",
+            "g5h6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 29,
+          "role": "baseline",
+          "color": "white",
+          "move": "f3e5",
+          "fen_before": "4kbnr/1bpp1p2/1pn4p/4p1P1/8/qPQPBN2/2P1PPP1/1K1R1B1R w k e6 0 15",
+          "elapsed_seconds": 0.006195,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 18,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": 501,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f3e5"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 30,
+          "role": "candidate",
+          "color": "black",
+          "move": "f8g7",
+          "fen_before": "4kbnr/1bpp1p2/1pn4p/4N1P1/8/qPQPB3/2P1PPP1/1K1R1B1R b k - 0 15",
+          "elapsed_seconds": 0.006066,
+          "nodes": 2000,
+          "depth": 1,
+          "seldepth": 12,
+          "engine_time_seconds": 0.005,
+          "score": {
+            "pov": "mover",
+            "cp": -348,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "f8g7"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 31,
+          "role": "baseline",
+          "color": "white",
+          "move": "e5c6",
+          "fen_before": "4k1nr/1bpp1pb1/1pn4p/4N1P1/8/qPQPB3/2P1PPP1/1K1R1B1R w k - 1 16",
+          "elapsed_seconds": 0.006174,
+          "nodes": 2000,
+          "depth": 0,
+          "seldepth": 18,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": 489,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "e5c6"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 32,
+          "role": "candidate",
+          "color": "black",
+          "move": "g7c3",
+          "fen_before": "4k1nr/1bpp1pb1/1pN4p/6P1/8/qPQPB3/2P1PPP1/1K1R1B1R b k - 0 16",
+          "elapsed_seconds": 0.005167,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 7,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 2,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g7c3",
+            "g5h6",
+            "a3a1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 33,
+          "role": "baseline",
+          "color": "white",
+          "move": "g5h6",
+          "fen_before": "4k1nr/1bpp1p2/1pN4p/6P1/8/qPbPB3/2P1PPP1/1K1R1B1R w k - 0 17",
+          "elapsed_seconds": 0.00533,
+          "nodes": 2000,
+          "depth": 3,
+          "seldepth": 8,
+          "engine_time_seconds": 0.004,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": -1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "g5h6",
+            "a3a1"
+          ],
+          "quiet_nonpawn_not_in_check": false,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        },
+        {
+          "ply": 34,
+          "role": "candidate",
+          "color": "black",
+          "move": "a3a1",
+          "fen_before": "4k1nr/1bpp1p2/1pN4P/8/8/qPbPB3/2P1PPP1/1K1R1B1R b k - 0 17",
+          "elapsed_seconds": 0.004906,
+          "nodes": 2000,
+          "depth": 2,
+          "seldepth": 7,
+          "engine_time_seconds": 0.003,
+          "score": {
+            "pov": "mover",
+            "cp": null,
+            "mate": 1,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "pv": [
+            "a3a1"
+          ],
+          "quiet_nonpawn_not_in_check": true,
+          "backtrack_opportunity": false,
+          "immediate_backtrack": false
+        }
+      ],
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "candidate_points": 1.0,
+      "elapsed_seconds": 0.174993,
+      "error": null,
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 3
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 3
+        }
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 17,
+          "reported_nodes": 34000,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.077668
+        },
+        "candidate": {
+          "searched_moves": 17,
+          "reported_nodes": 34000,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 0.088571
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "total_elapsed_seconds": 1.052099,
+  "completed": true,
+  "summary": {
+    "candidate_wins": 1,
+    "candidate_draws": 0,
+    "candidate_losses": 1,
+    "completed_games": 2,
+    "incomplete_games": 0,
+    "unplayed_games": 0,
+    "scheduled_games": 2,
+    "attempted_games": 2,
+    "incomplete_scope": "incomplete_games counts attempted unfinished games; unplayed_games counts scheduled games never started after an error.",
+    "candidate_points": 1.0,
+    "candidate_score": 0.5,
+    "score_scope": "Finite match score among completed games only; no Elo estimate.",
+    "wilson95_descriptive": [
+      0.09453120573423074,
+      0.9054687942657693
+    ],
+    "wilson_interpretation": "Approximate descriptive Wilson interval with draws as half a success; independent Bernoulli assumptions do not hold for draws or paired openings and can overstate certainty.",
+    "paired_opening_bootstrap95_descriptive": null,
+    "pairs": [
+      {
+        "pair": 1,
+        "opening": "Initial position",
+        "games": [
+          1,
+          2
+        ],
+        "completed": true,
+        "results": [
+          "0-1",
+          "0-1"
+        ],
+        "candidate_points": 1.0,
+        "candidate_score": 0.5
+      }
+    ],
+    "backtracks": {
+      "baseline": {
+        "count": 0,
+        "opportunities": 13,
+        "rate": 0.0
+      },
+      "candidate": {
+        "count": 1,
+        "opportunities": 11,
+        "rate": 0.09090909090909091
+      }
+    },
+    "resources": {
+      "baseline": {
+        "searched_moves": 59,
+        "reported_nodes": 118000,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.293774
+      },
+      "candidate": {
+        "searched_moves": 59,
+        "reported_nodes": 118000,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0.349139
+      }
+    }
+  },
+  "exit_code": 0
+}
