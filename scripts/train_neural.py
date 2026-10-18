@@ -26,7 +26,7 @@ import chess
 import numpy as np
 
 from neural_model import (Adam, SCALE, encode_features, export_model, feature_key,
-                          initialize_model, loss_and_gradients,
+                          initialize_model, load_model, loss_and_gradients,
                           material_cp_stm, predict_z)
 
 SCHEMA = "regicide.selfplay.dataset.v1"
@@ -103,7 +103,7 @@ def position_key(board):
     return " ".join(board.fen(en_passant="fen").split()[:4])
 
 
-def load_dataset(manifest_path):
+def load_dataset(manifest_path, *, allow_empty_splits=False):
     manifest_path = Path(manifest_path).resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if not isinstance(manifest, dict) or manifest.get("schema") != SCHEMA:
@@ -133,7 +133,7 @@ def load_dataset(manifest_path):
         else:
             exclusions["incomplete_games"] += 1
         games[game_id] = game
-    if not games or not any(game["completed"] for game in games.values()):
+    if not games or (not allow_empty_splits and not any(game["completed"] for game in games.values())):
         raise ValueError("no completed games in dataset")
     rows = {split: [] for split in SPLITS}
     position_splits, feature_splits, seen_samples = {}, {}, set()
@@ -194,12 +194,12 @@ def load_dataset(manifest_path):
         rows[split].append({"features": encode_features(board), "material": material,
                             "target": target, "game_id": game_id, "family": sample["family"]})
     for split in SPLITS:
-        if not rows[split]:
+        if not rows[split] and not allow_empty_splits:
             raise ValueError(f"empty {split} split after exclusions")
     batches = {}
     counts = {}
     for split, samples in rows.items():
-        batches[split] = (np.stack([r["features"] for r in samples]),
+        batches[split] = (np.stack([r["features"] for r in samples]) if samples else np.empty((0, 768), dtype=np.float64),
                           np.array([r["material"] for r in samples], dtype=np.float64),
                           np.array([r["target"] for r in samples], dtype=np.float64))
         counts[split] = {"samples": len(samples),
@@ -227,10 +227,19 @@ def material_mse(batch):
     return float(np.mean((np.tanh(material / SCALE) - targets) ** 2))
 
 
-def train(batches, *, epochs, batch_size, seed, learning_rate=.003, progress=None):
+def train(batches, *, epochs, batch_size, seed, learning_rate=.003, progress=None,
+          initial_model=None):
     if epochs < 1 or batch_size < 1:
         raise ValueError("epochs and batch size must be positive")
-    initial = initialize_model(seed)
+    # A learning cycle carries forward weights, while each cycle starts a fresh
+    # Adam optimizer. Epoch 0 remains eligible so validation can retain those
+    # exact incumbent weights rather than force an inferior updated checkpoint.
+    if initial_model is None:
+        initial = initialize_model(seed)
+    elif isinstance(initial_model, (str, Path)):
+        initial = load_model(initial_model)
+    else:
+        initial = initial_model.validate().copy()
     model, selected = initial.copy(), initial.copy()
     optimizer = Adam(model, learning_rate)
     rng = np.random.default_rng(seed)
@@ -268,6 +277,8 @@ def main(argv=None):
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--seed", type=int, default=20261018)
     parser.add_argument("--learning-rate", type=float, default=.003)
+    parser.add_argument("--initial-model", type=Path,
+                        help="start from these weights; Adam state is reset; epoch 0 stays eligible")
     args = parser.parse_args(argv)
     if (args.epochs < 1 or args.batch_size < 1 or args.seed < 0
             or not math.isfinite(args.learning_rate) or args.learning_rate <= 0):
@@ -279,7 +290,11 @@ def main(argv=None):
               "seed": args.seed, "epochs": args.epochs, "batch_size": args.batch_size,
               "learning_rate": args.learning_rate,
               "optimizer": {"name": "Adam", "beta1": .9, "beta2": .999,
-                            "epsilon": 1e-8, "gradient_norm_clip": 10},
+                            "epsilon": 1e-8, "gradient_norm_clip": 10,
+                            "state_reset": True,
+                            "checkpoint_policy": "weights only; moments and step counter reset each run"},
+              "initialization": "warm_start" if args.initial_model is not None else "seeded_random",
+              "initial_model_sha256": None,
               "rng": "NumPy default_rng PCG64",
               "implementation_sha256": {
                   "train_neural.py": sha256(Path(__file__)),
@@ -296,6 +311,15 @@ def main(argv=None):
                               "blas": str(np.__config__.CONFIG.get("Build Dependencies", {}).get("blas", {}))}}
     write_json(report_path, report)
     try:
+        initial_model = None
+        if args.initial_model is not None:
+            # Read once before training. Model loading is strict and subsequent
+            # source-file replacement cannot alter this in-memory checkpoint.
+            before = sha256(args.initial_model)
+            initial_model = load_model(args.initial_model)
+            if sha256(args.initial_model) != before:
+                raise ValueError("initial model changed while being loaded")
+            report["initial_model_sha256"] = before
         batches, metadata = load_dataset(args.dataset)
         report["dataset"] = metadata
         def progress(epoch, selected_epoch):
@@ -303,7 +327,8 @@ def main(argv=None):
                 print(f"epoch {epoch['epoch']}/{args.epochs} train={epoch['train_mse']:.8f} "
                       f"validation={epoch['validation_mse']:.8f} selected={selected_epoch}", flush=True)
         model, result = train(batches, epochs=args.epochs, batch_size=args.batch_size,
-                              seed=args.seed, learning_rate=args.learning_rate, progress=progress)
+                              seed=args.seed, learning_rate=args.learning_rate, progress=progress,
+                              initial_model=initial_model)
         model_path = args.output / "small-v1.nn"
         export_model(model, model_path)
         report.update(result)

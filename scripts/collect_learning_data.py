@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import platform
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -326,8 +327,25 @@ def checkout_provenance():
 def collect(args):
     opening_data = load_openings(args.openings)
     binary = args.binary.expanduser().resolve(strict=True)
+    model_arg = getattr(args, "model", None)
+    model = Path(model_arg).expanduser().resolve(strict=True) if model_arg else None
+    if model is not None and (not model.is_file() or model.stat().st_size > 4 * 1024 * 1024):
+        raise ValueError("self-play model must be a file no larger than 4 MiB")
+    if model is not None:
+        from neural_model import load_model
+        load_model(model)
     jobs = seeded_jobs(opening_data["openings"], args.games_per_opening, args.seed)
     output = reserve_output(args.output)
+    model_copy = None
+    model_hash = None
+    if model is not None:
+        # A live champion may later be replaced. This collection reads one
+        # immutable byte snapshot, shared by both colors, for its entire run.
+        model_hash = sha256_file(model)
+        model_copy = output / "selfplay-model.nn"
+        shutil.copyfile(model, model_copy)
+        if sha256_file(model_copy) != model_hash:
+            raise ValueError("self-play model changed while taking its snapshot")
     exclusions = Counter()
     games, positions = [], []
     manifest = {"schema": SCHEMA, "status": "running", "started_utc": utc_now(),
@@ -341,7 +359,12 @@ def collect(args):
                 "engine": {"binary_name": binary.name, "sha256": sha256_file(binary),
                            "source_commit_caller_declared": args.source_commit,
                            "build_source_verified": False, "configured_options": OPTIONS,
-                           "selection": "Regicide only; identical binary for both colors and teacher"},
+                           "selection": "Regicide only; identical binary for both colors and teacher",
+                           "selfplay_model": {"enabled": model_copy is not None,
+                                              "name": model.name if model else None,
+                                              "snapshot_path": model_copy.name if model_copy else None,
+                                              "sha256": model_hash},
+                           "teacher_evaluation": "classical; neural disabled regardless of self-play model"},
                 "collector": {"sha256": sha256_file(__file__), "checkout": checkout_provenance(),
                               "python": sys.version, "python_chess": chess.__version__,
                               "platform": platform.platform()},
@@ -383,13 +406,24 @@ def collect(args):
                 if missing:
                     raise ValueError(f"Regicide omitted required options: {sorted(missing)}")
                 engine.configure(OPTIONS)
-                # A neural-enabled development binary must still generate this
-                # first corpus with its existing handcrafted teacher.
+                # Every label stays classical, even when the player has a
+                # champion model. The model does not label its own mistakes.
                 if "UseNeuralEvaluation" in engine.options:
                     engine.configure({"UseNeuralEvaluation": False})
+            if model_copy is not None:
+                required = {"EvalFile", "UseNeuralEvaluation"}
+                if not required.issubset(player.options):
+                    raise ValueError("self-play binary does not support neural evaluation")
+                player.configure({"EvalFile": str(model_copy), "UseNeuralEvaluation": True})
+                player.ping()
             manifest["engine"]["uci_id"] = player.id
             manifest["engine"]["optional_options"] = {
-                "UseNeuralEvaluation": False if "UseNeuralEvaluation" in player.options else "not advertised"}
+                "UseNeuralEvaluation": model_copy is not None if "UseNeuralEvaluation" in player.options else "not advertised"}
+            manifest["engine"]["selfplay_configured_options"] = {
+                **OPTIONS, "UseNeuralEvaluation": model_copy is not None,
+                "EvalFile": model_copy.name if model_copy else None}
+            manifest["engine"]["teacher_configured_options"] = {
+                **OPTIONS, "UseNeuralEvaluation": False}
             manifest["engine"]["advertised_options"] = {
                 name: {"type": option.type, "default": option.default,
                        "min": option.min, "max": option.max, "var": option.var}
@@ -443,7 +477,7 @@ def collect(args):
                        "result": result_text, "completed": completed,
                        "termination": outcome.termination.name if completed else "PLY_CAP_UNFINISHED",
                        "selfplay_searches": search_records, "pending_samples": len(pending),
-                       "accepted_teacher_samples": 0}
+                       "accepted_teacher_samples": 0, "selfplay_model_sha256": model_hash}
                 if not completed:
                     exclusions["unfinished_game_positions"] += len(pending)
                 else:
@@ -473,6 +507,9 @@ def collect(args):
                                      "Black": "Regicide", "Result": result_text, "GameId": game_id,
                                      "OpeningFamily": opening["family"], "Split": opening["split"],
                                      "Termination": row["termination"]})
+                game.headers["Evaluation"] = "neural" if model_copy else "classical"
+                if model_hash:
+                    game.headers["ModelSHA256"] = model_hash
                 pgn_games.append(str(game))
                 games.append(row)
                 manifest.pop("active_game", None)
@@ -501,6 +538,8 @@ def parse_args(argv=None):
     parser.add_argument("--teacher-nodes", type=positive_int, required=True)
     parser.add_argument("--openings", type=Path, default=DEFAULT_OPENINGS)
     parser.add_argument("--source-commit", help="caller-declared build source; recorded, not inferred from bytes")
+    parser.add_argument("--model", type=Path,
+                        help="optional champion model for both self-play colors; teacher stays classical")
     return parser.parse_args(argv)
 
 

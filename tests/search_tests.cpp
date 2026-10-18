@@ -1577,6 +1577,90 @@ int main() {
                "LMR suppressed an available optional draw claim");
         valid_pv(losing, claim);
     });
+    test("root restriction preserves every reply and the unrestricted default graph", [] {
+        const Board board;
+        const auto saved = board;
+        SearchOptions options;
+        options.lmr = false;
+        const auto unrestricted = search(board, {.depth = 3}, nullptr, {}, options);
+        options.root_moves = board.legal_moves();
+        const auto every_root = search(board, {.depth = 3}, nullptr, {}, options);
+        expect(unrestricted.best_move == every_root.best_move &&
+                   unrestricted.score == every_root.score && unrestricted.pv == every_root.pv,
+               "enumerating all root moves changed the position value or principal variation");
+        options.root_moves = std::vector<Move>{Move::from_uci("a2a3")};
+        const auto forced = search(board, {.depth = 3}, nullptr, {}, options);
+        expect(forced.best_move == Move::from_uci("a2a3") && forced.pv.size() >= 3,
+               "forced root did not retain normal descendant search");
+        valid_pv(board, forced);
+        SearchContext context;
+        (void)search(board, {.depth = 3}, nullptr, {}, options, &context);
+        options.root_moves.reset();
+        const auto reused = search(board, {.depth = 3}, nullptr, {}, options, &context);
+        same_graph(unrestricted, reused);
+        expect(board == saved, "restricted search changed board or repetition history");
+    });
+    test("root restriction rejects empty duplicate and illegal moves", [] {
+        const Board board;
+        SearchOptions options;
+        options.root_moves = std::vector<Move>{};
+        rejects([&] { (void)search(board, {.depth = 2}, nullptr, {}, options); },
+                "empty root restriction must fail closed");
+        options.root_moves = std::vector<Move>{Move::from_uci("e2e5")};
+        rejects([&] { (void)search(board, {.depth = 2}, nullptr, {}, options); },
+                "illegal root move must fail closed");
+        options.root_moves = std::vector<Move>{Move::from_uci("e2e4"), Move::from_uci("e2e4")};
+        rejects([&] { (void)search(board, {.depth = 2}, nullptr, {}, options); },
+                "duplicate root move must fail closed");
+    });
+    test("restricted fallback cancellation and every completed PV stay inside the list", [] {
+        const Board board;
+        SearchOptions options;
+        options.root_moves = std::vector<Move>{Move::from_uci("h2h3"), Move::from_uci("a2a3")};
+        std::atomic_bool stop{true};
+        for (const auto& result : {search(board, {.depth = 4}, &stop, {}, options),
+                                   search(board, {.depth = 4, .nodes = 1}, nullptr, {}, options)}) {
+            expect(result.stopped && result.depth == 0 && result.best_move &&
+                       std::find(options.root_moves->begin(), options.root_moves->end(), *result.best_move) !=
+                           options.root_moves->end(), "fallback escaped root restriction");
+            valid_pv(board, result);
+        }
+        int callbacks = 0;
+        (void)search(board, {.depth = 3}, nullptr, [&](const SearchResult& result) {
+            ++callbacks;
+            expect(std::find(options.root_moves->begin(), options.root_moves->end(), *result.best_move) !=
+                       options.root_moves->end(), "completed iteration escaped root restriction");
+            valid_pv(board, result);
+        }, options);
+        expect(callbacks == 3, "restricted search omitted completed iterations");
+    });
+    test("root restriction handles castling promotion and en passant", [] {
+        for (const auto& [fen, uci] : std::array<std::pair<const char*, const char*>, 3>{{
+                 {"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1g1"},
+                 {"7k/P7/8/8/8/8/8/6K1 w - - 0 1", "a7a8n"},
+                 {"7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", "e5d6"}}}) {
+            const Board board(fen);
+            SearchOptions options;
+            options.root_moves = std::vector<Move>{Move::from_uci(uci)};
+            const auto result = search(board, {.depth = 2}, nullptr, {}, options);
+            expect(result.best_move == Move::from_uci(uci), "special forced move was lost");
+            valid_pv(board, result);
+        }
+    });
+    test("root restriction preserves current draw claims and automatic adjudication", [] {
+        const Board automatic("7k/8/8/3P4/8/8/q7/6K1 w - - 150 1");
+        SearchOptions options;
+        options.root_moves = std::vector<Move>{automatic.legal_moves().front()};
+        const auto terminal = search(automatic, {.depth = 3}, nullptr, {}, options);
+        expect(!terminal.best_move && terminal.score == 0 && !terminal.nodes,
+               "root restriction bypassed automatic draw adjudication");
+        const Board claimable_board("7k/8/8/3P4/8/8/q7/6K1 w - - 100 1");
+        options.root_moves = std::vector<Move>{claimable_board.legal_moves().front()};
+        const auto claim = search(claimable_board, {.depth = 3}, nullptr, {}, options);
+        expect(claim.score == 0 && claim.best_move == options.root_moves->front(),
+               "root restriction suppressed a current optional claim");
+        valid_pv(claimable_board, claim);
+    });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;
 }

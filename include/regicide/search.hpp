@@ -45,6 +45,9 @@ struct SearchOptions {
     // Optional immutable experimental model. Null preserves the classical path;
     // positional=false still explicitly selects material-only evaluation.
     std::shared_ptr<const NeuralEvaluator> neural = {};
+    // Null searches every legal root move. A present list must be nonempty,
+    // legal and duplicate-free. Descendants always retain all legal moves.
+    std::optional<std::vector<Move>> root_moves = {};
 };
 
 struct SearchResult {

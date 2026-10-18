@@ -31,12 +31,33 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
 
 
+def runtime_evaluation(binary, explicit_model=None, learning_state=None, classical=False):
+    """Resolve one immutable adopted model at session start; corrupt state fails closed."""
+    if explicit_model is not None:
+        if classical:
+            raise ValueError("--classical cannot be combined with --neural-model")
+        return {"model": Path(explicit_model), "generation": None, "warning": None}
+    if classical:
+        return {"model": None, "generation": None, "warning": None}
+    state = Path(learning_state) if learning_state is not None else ROOT / "build/learning-cycle"
+    if not (state / "champion.json").exists():
+        return {"model": None, "generation": None, "warning": None}
+    try:
+        from learning_registry import load_champion
+        champion = load_champion(state, binary)
+        return {"model": Path(champion["model_path"]), "generation": champion["generation"], "warning": None}
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        return {"model": None, "generation": None,
+                "warning": f"채택 모델을 확인하지 못해 기존 평가를 사용합니다: {error}"}
+
+
 class RevisionError(ValueError):
     """A stale browser must refresh instead of applying its old action."""
 
 
 class HumanGame:
-    def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None):
+    def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
+                 neural_adopted_generation=None):
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -45,6 +66,11 @@ class HumanGame:
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10))
         self.neural_model = Path(neural_model).resolve(strict=True) if neural_model else None
+        if neural_adopted_generation is not None and (
+                type(neural_adopted_generation) is not int or neural_adopted_generation < 1 or not self.neural_model):
+            raise ValueError("An adopted generation requires a valid model and a positive integer.")
+        self.neural_adopted_generation = neural_adopted_generation
+        self.neural_evaluation_mode = "neural_champion" if neural_adopted_generation else "neural_experimental"
         self.neural_sha256 = None
         self._model_snapshot = None
         if self.neural_model:
@@ -100,7 +126,7 @@ class HumanGame:
             self._engine = self._factory(self.binary)
         self.engine_name = self._engine.id.get("name", "Regicide")
         if self.neural_model:
-            self.engine_name += " · 학습 평가 실험"
+            self.engine_name += " · 검증 통과 학습 평가" if self.neural_adopted_generation else " · 학습 평가 실험"
 
     def _reset(self, color, movetime_ms):
         if getattr(self, "_game_open", False):
@@ -265,8 +291,10 @@ class HumanGame:
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
-                               **({"evaluation": "neural_experimental", "model_sha256": self.neural_sha256,
-                                   "model_file": self.neural_model.name} if self.neural_model else {})}}
+                               **({"evaluation": self.neural_evaluation_mode, "model_sha256": self.neural_sha256,
+                                   "model_file": self.neural_model.name,
+                                   **({"model_generation": self.neural_adopted_generation}
+                                      if self.neural_adopted_generation else {})} if self.neural_model else {})}}
 
     def new_game(self, color, movetime_ms, revision):
         with self._lock:
@@ -491,9 +519,11 @@ class HumanGame:
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
             if self.neural_model:
-                game.headers.update({"Evaluation": "neural_experimental",
+                game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
                                      "ModelFile": self.neural_model.name})
+                if self.neural_adopted_generation:
+                    game.headers["ModelGeneration"] = str(self.neural_adopted_generation)
             for ply, node in enumerate(game.mainline(), 1):
                 if ply in forced_plies:
                     node.comment = "User-forced Regicide move (handicap)"
@@ -698,6 +728,8 @@ def main():
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--save-dir", type=Path, help="Override the persistent personal game library")
     parser.add_argument("--neural-model", type=Path, help="Optional experimental learned evaluation model")
+    parser.add_argument("--learning-state", type=Path, help="Adopted-model registry; default build/learning-cycle")
+    parser.add_argument("--classical", action="store_true", help="Explicitly use the classical evaluation")
     parser.add_argument("--import-games", type=Path, action="append", default=[],
                         help="Import an old local games directory without changing its originals")
     parser.add_argument("--startup-file", type=Path)
@@ -714,7 +746,11 @@ def main():
     if args.save_dir is None:
         imports.append(ROOT / "build/human-games")
     GameArchive(save_dir).import_legacy(imports)
-    game = HumanGame(args.binary, save_dir, neural_model=args.neural_model)
+    selected = runtime_evaluation(args.binary, args.neural_model, args.learning_state, args.classical)
+    if selected["warning"]:
+        print(selected["warning"], file=sys.stderr, flush=True)
+    game = HumanGame(args.binary, save_dir, neural_model=selected["model"],
+                     neural_adopted_generation=selected["generation"])
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),

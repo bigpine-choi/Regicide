@@ -243,7 +243,7 @@ def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
         engine.configure({"UseLMR": False})  # Keep the established fixture unchanged.
-        assert engine.id.get("name") == "Regicide 0.6.0", engine.id
+        assert engine.id.get("name") == "Regicide 0.6.1", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -421,7 +421,7 @@ def test_bad_commands(binary):
         engine.send("setoption name UnknownTestOption value ignored")
         engine.send("unknown_command")
         engine.ready()
-        for command in ["go searchmoves g6g7", "go ponder", "go mate 2", "go depth banana",
+        for command in ["go searchmoves g6g6", "go ponder", "go mate 2", "go depth banana",
                         "go depth", "go depth 65", "go nodes -1", "go movetime nope"]:
             engine.send(command)
             best, output = engine.bestmove()
@@ -435,6 +435,52 @@ def test_bad_commands(binary):
         board.push(move)
         assert board.is_checkmate(), output
         engine.ready()
+
+
+def test_searchmoves(binary):
+    """A forced root tests an actual alternative while descendants stay unrestricted."""
+    with UciProcess(binary) as engine:
+        start = chess.Board()
+        for command, allowed in (
+                ("go searchmoves a2a3 depth 3", {"a2a3"}),
+                ("go depth 3 searchmoves h2h3", {"h2h3"}),
+                ("go searchmoves e2e4 d2d4 depth 3 nodes 30000", {"e2e4", "d2d4"})):
+            engine.position(start)
+            engine.send(command)
+            best, output = engine.bestmove()
+            assert best in allowed, (command, output)
+            assert_legal_pvs(start, output)
+            engine.ready()
+        for command in ("go searchmoves", "go searchmoves depth 2", "go searchmoves e2e5 depth 2",
+                        "go depth 2 searchmoves e2e4 e2e4", "go searchmoves e2e4 bad"):
+            engine.position(start)
+            engine.send(command)
+            best, output = engine.bestmove()
+            assert best == "0000" and any(line.startswith("info string ") for line in output), output
+            engine.ready()
+        for fen, forced in (
+                ("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1g1"),
+                ("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1", "e5d6"),
+                ("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7a8n")):
+            board = chess.Board(fen)
+            engine.position(board)
+            engine.send("go depth 2 searchmoves " + forced)
+            best, output = engine.bestmove()
+            assert best == forced, (fen, output)
+            assert_legal_pvs(board, output)
+            engine.ready()
+        # Root restrictions must disappear on the next ordinary UCI request.
+        board = chess.Board(MATE_FEN)
+        engine.position(board)
+        engine.send("go depth 2")
+        best, output = engine.bestmove()
+        board.push_uci(best)
+        assert board.is_checkmate(), output
+        engine.ready()
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        board = chess.Board()
+        reply = client.play(board, chess.engine.Limit(depth=3), root_moves=[chess.Move.from_uci("a2a3")])
+        assert reply.move == chess.Move.from_uci("a2a3"), reply
 
 
 def test_shutdown(binary):
@@ -1520,7 +1566,7 @@ def main():
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     checks = [test_python_chess, test_history_and_terminal, test_limits,
-              test_interleaving, test_bad_commands, test_shutdown, test_evaluation_options,
+              test_interleaving, test_bad_commands, test_searchmoves, test_shutdown, test_evaluation_options,
               test_transposition_options, test_transposition_search, test_transposition_isolation,
               test_table_allocation_reuse, test_reused_table_context_isolation,
               test_table_options_during_search, test_search_quality_option_lifecycle,

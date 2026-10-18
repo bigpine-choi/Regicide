@@ -37,6 +37,7 @@ std::uint64_t number(const std::string& text, std::uint64_t maximum) {
 struct Go {
     SearchLimits limits;
     bool infinite = false;
+    std::optional<std::vector<Move>> root_moves;
 };
 Go parse_go(const std::vector<std::string>& tokens, Color turn, int overhead) {
     Go go;
@@ -47,7 +48,21 @@ Go parse_go(const std::vector<std::string>& tokens, Color turn, int overhead) {
     for (std::size_t i = 1; i < tokens.size(); ++i) {
         const auto& key = tokens[i];
         if (key == "infinite") { go.infinite = true; continue; }
-        if (key == "ponder" || key == "mate" || key == "searchmoves")
+        if (key == "searchmoves") {
+            if (go.root_moves) throw std::invalid_argument("duplicate searchmoves parameter");
+            go.root_moves.emplace();
+            while (i + 1 < tokens.size()) {
+                const auto& next = tokens[i + 1];
+                if (next == "depth" || next == "nodes" || next == "movetime" ||
+                    next == "wtime" || next == "btime" || next == "winc" ||
+                    next == "binc" || next == "movestogo" || next == "infinite" ||
+                    next == "ponder" || next == "mate" || next == "searchmoves") break;
+                go.root_moves->push_back(Move::from_uci(tokens[++i]));
+            }
+            if (go.root_moves->empty()) throw std::invalid_argument("searchmoves requires legal moves");
+            continue;
+        }
+        if (key == "ponder" || key == "mate")
             throw std::invalid_argument("unsupported go mode: " + key);
         if (key != "depth" && key != "nodes" && key != "movetime" && key != "wtime" &&
             key != "btime" && key != "winc" && key != "binc" && key != "movestogo")
@@ -126,7 +141,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.6.0");
+            send("id name Regicide 0.6.1");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -267,7 +282,8 @@ private:
     void start(Go go) {
         stop_.store(false, std::memory_order_relaxed);
         const Board snapshot = board_;
-        const auto options = options_;
+        auto options = options_;
+        options.root_moves = std::move(go.root_moves);
         worker_ = std::thread([this, snapshot, go, options] {
             try {
                 auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); }, options, &context_);

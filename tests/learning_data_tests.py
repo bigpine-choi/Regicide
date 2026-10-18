@@ -197,6 +197,7 @@ class FakeEngine:
                         for name in DATA.OPTIONS}
         self.protocol = SimpleNamespace(last_score_event=None)
         self.calls = []
+        self.configuration_calls = []
 
     def __enter__(self):
         return self
@@ -206,6 +207,10 @@ class FakeEngine:
 
     def configure(self, options):
         self.configured = options
+        self.configuration_calls.append(dict(options))
+
+    def ping(self):
+        pass
 
     def play(self, board, limit, **kwargs):
         self.calls.append({"history": list(board.move_stack), "limit": limit, **kwargs})
@@ -282,6 +287,37 @@ class CollectorContractTests(unittest.TestCase):
             self.assertEqual(report["games_finished"], 0)
             self.assertEqual(report["errors"][0]["type"], "RuntimeError")
             self.assertEqual((args.output / "positions.jsonl").read_text(), "")
+
+    def test_champion_snapshot_plays_both_colors_while_teacher_stays_classical(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = self.setup_args(temporary, ["f2f3", "e7e5", "g2g4"], 8)
+            args.model = ROOT / "models/regicide-small-v1.nn"
+            player, teacher = FakeEngine("d8h4"), FakeEngine("d8h4")
+            for engine in (player, teacher):
+                engine.options.update({name: SimpleNamespace(type="check", default=False, min=None,
+                                                            max=None, var=[])
+                                       for name in ("EvalFile", "UseNeuralEvaluation")})
+            report = self.run_mocked(args, player, teacher)
+            snapshot = args.output / "selfplay-model.nn"
+            digest = DATA.sha256_file(args.model)
+            self.assertEqual(DATA.sha256_file(snapshot), digest)
+            self.assertEqual(report["engine"]["selfplay_model"]["sha256"], digest)
+            self.assertTrue(report["engine"]["optional_options"]["UseNeuralEvaluation"])
+            self.assertIn({"EvalFile": str(snapshot), "UseNeuralEvaluation": True}, player.configuration_calls)
+            self.assertIn({"UseNeuralEvaluation": False}, teacher.configuration_calls)
+            self.assertNotIn({"EvalFile": str(snapshot), "UseNeuralEvaluation": True}, teacher.configuration_calls)
+            game = json.loads((args.output / "games.jsonl").read_text())
+            self.assertEqual(game["selfplay_model_sha256"], digest)
+            self.assertIn(digest, (args.output / "games.pgn").read_text())
+
+    def test_invalid_champion_is_rejected_before_reserving_output(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = self.setup_args(temporary, [], 1)
+            args.model = Path(temporary) / "bad.nn"
+            args.model.write_text("invalid", encoding="ascii")
+            with self.assertRaisesRegex(ValueError, "header"):
+                self.run_mocked(args, FakeEngine(), FakeEngine())
+            self.assertFalse(args.output.exists())
 
 
 if __name__ == "__main__":

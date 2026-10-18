@@ -176,6 +176,12 @@ public:
         // A mate on the last searched ply outranks material and draw counters.
         if (moves.empty()) return board.in_check() ? -mate_score + ply : 0;
         if (automatic_draw(board)) return 0;
+        if (ply == 0 && options_.root_moves) {
+            std::erase_if(moves, [this](Move move) {
+                return std::find(options_.root_moves->begin(), options_.root_moves->end(), move) ==
+                       options_.root_moves->end();
+            });
+        }
         const bool current_claim = claimable(board);
         if (depth == 0) {
             const int score = static_evaluation(board);
@@ -318,7 +324,9 @@ public:
         const int score = selective_upper ? alpha : current_claim ? std::max(0, best) : best;
         // Selective fail-low mixes horizons. Even a shallower TT depth would
         // not make this a proven fixed-horizon bound, so do not cache it.
-        if (table_ && !selective_upper) {
+        // A restricted root proves nothing about excluded moves. Never let
+        // that value masquerade as a full-position TT bound at a descendant.
+        if (table_ && !selective_upper && !(ply == 0 && options_.root_moves)) {
             const auto bound = score <= original_alpha ? TranspositionBound::upper :
                                score >= beta ? TranspositionBound::lower : TranspositionBound::exact;
             // Interrupted recursion unwinds before this point, so partial
@@ -454,6 +462,18 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     SearchResult result;
     Board board = input;
     auto moves = board.legal_moves();
+    if (options.root_moves) {
+        if (options.root_moves->empty())
+            throw std::invalid_argument("root move list must be nonempty");
+        std::vector<Move> seen;
+        for (Move move : *options.root_moves) {
+            if (std::find(moves.begin(), moves.end(), move) == moves.end())
+                throw std::invalid_argument("illegal root move: " + move.uci());
+            if (std::find(seen.begin(), seen.end(), move) != seen.end())
+                throw std::invalid_argument("duplicate root move: " + move.uci());
+            seen.push_back(move);
+        }
+    }
     const auto elapsed = [&] {
         return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start);
     };
@@ -461,6 +481,12 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.score = moves.empty() && board.in_check() ? -mate_score : 0;
         result.elapsed = elapsed();
         return result;
+    }
+    if (options.root_moves) {
+        std::erase_if(moves, [&options](Move move) {
+            return std::find(options.root_moves->begin(), options.root_moves->end(), move) ==
+                   options.root_moves->end();
+        });
     }
     order_moves(board, moves);
     result.best_move = moves.front();

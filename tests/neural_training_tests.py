@@ -169,6 +169,39 @@ class ModelTests(unittest.TestCase):
         for name in NN.SHAPES:
             np.testing.assert_array_equal(getattr(model_a, name), getattr(model_b, name))
 
+    def test_warm_start_preserves_epoch_zero_and_does_not_mutate_incumbent(self):
+        initial = NN.initialize_model(38)
+        before = initial.copy()
+        x = np.zeros((4, 768))
+        x[:, 0] = 1
+        material = np.zeros(4)
+        prediction = np.tanh(NN.predict_z(x, initial))
+        batches = {"train": (x, material, np.full(4, .8)),
+                   "validation": (x, material, prediction),
+                   "test": (x, material, prediction)}
+        selected, report = TRAIN.train(batches, epochs=3, batch_size=2, seed=99,
+                                       initial_model=initial)
+        self.assertEqual(report["selected_epoch"], 0)
+        self.assertEqual(report["metrics"]["validation"]["initial_mse"], 0)
+        for name in NN.SHAPES:
+            np.testing.assert_array_equal(getattr(selected, name), getattr(before, name))
+            np.testing.assert_array_equal(getattr(initial, name), getattr(before, name))
+
+    def test_warm_start_weights_path_and_model_are_equivalent(self):
+        x = np.zeros((4, 768))
+        x[:, 0] = 1
+        batch = (x, np.zeros(4), np.full(4, .3))
+        batches = {split: batch for split in TRAIN.SPLITS}
+        initial = NN.initialize_model(12)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "initial.nn"
+            NN.export_model(initial, path)
+            a, ar = TRAIN.train(batches, epochs=2, batch_size=2, seed=8, initial_model=initial)
+            b, br = TRAIN.train(batches, epochs=2, batch_size=2, seed=8, initial_model=path)
+        self.assertEqual(ar, br)
+        for name in NN.SHAPES:
+            np.testing.assert_array_equal(getattr(a, name), getattr(b, name))
+
 
 class DatasetTests(unittest.TestCase):
     def test_full_history_labels_splits_and_provenance_load(self):
@@ -298,6 +331,22 @@ class DatasetTests(unittest.TestCase):
             report = json.loads((directory / "failed/report.json").read_text())
             self.assertEqual(report["status"], "failed")
             self.assertFalse((directory / "failed/small-v1.nn").exists())
+
+    def test_cli_warm_start_hash_and_optimizer_reset_are_recorded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            fixture(directory)
+            initial = directory / "incumbent.nn"
+            NN.export_model(NN.initialize_model(71), initial)
+            args = ["--dataset", str(directory / "datasetmanifest.json"),
+                    "--output", str(directory / "warm"), "--epochs", "2",
+                    "--initial-model", str(initial)]
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(TRAIN.main(args), 0)
+            report = json.loads((directory / "warm/report.json").read_text())
+            self.assertEqual(report["initialization"], "warm_start")
+            self.assertEqual(report["initial_model_sha256"], TRAIN.sha256(initial))
+            self.assertTrue(report["optimizer"]["state_reset"])
 
 
 if __name__ == "__main__":
