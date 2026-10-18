@@ -1,0 +1,57 @@
+name: Remote learning arena
+on:
+  push:
+    paths:
+      - '**/remote-request.json'
+permissions:
+  contents: write
+concurrency:
+  group: regicide-remote-learning-arena
+  cancel-in-progress: false
+jobs:
+  arena:
+    if: github.run_attempt == 1 && !startsWith(github.ref, 'refs/heads/validation/')
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      BEFORE_SHA: ${{ github.event.before }}
+    steps:
+      - name: Preserve exact Git blob bytes
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned learning dependencies
+        run: python -m pip install -r requirements-learning.txt
+      - name: Find the unique fresh request
+        id: request
+        run: python scripts/remote_learning_arena.py discover --before "$env:BEFORE_SHA"
+      - name: Execute the frozen remote comparison
+        id: arena
+        run: python scripts/remote_learning_arena.py run --request "$env:REQUEST_PATH" --before "$env:BEFORE_SHA"
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.request }}
+      - name: Upload raw evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-learning-arena-${{ github.run_id }}
+          path: |
+            ${{ steps.arena.outputs.result_path }}
+            build/remote-arena-failure/**
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Publish only results on their unique validation branch
+        if: always() && steps.arena.outputs.result_path != ''
+        run: python scripts/remote_learning_arena.py publish --result "$env:RESULT_PATH"
+        env:
+          RESULT_PATH: ${{ steps.arena.outputs.result_path }}

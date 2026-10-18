@@ -6,6 +6,7 @@ time control; it is neither Elo nor a universal guarantee of chess strength.
 """
 
 import datetime
+import copy
 import hashlib
 import json
 import math
@@ -74,6 +75,76 @@ def promotion_decision(pair_scores, attempt_index, *, complete, clean, movetime_
             "eligible": eligible, "passed": bool(eligible and lower > .5),
             "criterion": "at least 32 complete clean independent opening pairs at >=100ms per move and one-sided lower bound > 0.5",
             "scope": "Declared randomized reserved opening distribution and equal time control only; no Elo claim."}
+
+
+def futility_certificate(pair_scores, planned_pairs, attempt_index, *, movetime_ms=100):
+    """Upper bound for the unchanged FIXED FINAL gate; never actual game evidence.
+
+    Filling unplayed pairs with wins can only increase the final fixed-N mean.
+    Early rejection therefore cannot create an additional passing outcome. The
+    observed prefix is not a complete match or an optional-stopping confidence
+    statement; it can never authorize promotion.
+    """
+    if (type(planned_pairs) is not int or planned_pairs < 32 or
+            type(movetime_ms) is not int or movetime_ms < 100):
+        raise ValueError("futility requires at least32 planned pairs and >=100ms")
+    scores = list(pair_scores)
+    if len(scores) > planned_pairs:
+        raise ValueError("observed pairs exceed the fixed planned count")
+    # Also validate every observed score and the persistent attempt index.
+    promotion_decision(scores, attempt_index, complete=False, clean=False, movetime_ms=movetime_ms)
+    remaining = planned_pairs - len(scores)
+    optimistic = promotion_decision(scores + [1] * remaining, attempt_index,
+                                    complete=True, clean=True, movetime_ms=movetime_ms)
+    return {"policy": "fixed-final-gate-impossibility-v1", "planned_pairs": planned_pairs,
+            "observed_pairs": len(scores), "unplayed_pairs": remaining,
+            "observed_pair_scores": scores, "optimistic_final_decision": optimistic,
+            "cannot_pass_final_gate": not optimistic["passed"],
+            "stop_early": bool(0 < len(scores) < planned_pairs and not optimistic["passed"]),
+            "hypothetical_only": "unplayed wins bound the final gate; no invented game or result is recorded",
+            "scope": "rejection only; shortened observed score is not a full-schedule strength estimate"}
+
+
+def verify_early_rejection(metadata):
+    """Replay the factual completed prefix and independently rederive futility.
+
+    A local copy presents just the completed prefix to the existing rule replay
+    verifier. The saved schedule, games, counts and incomplete decision remain
+    untouched. Registry promotion still rejects every incomplete arena.
+    """
+    guard = metadata.get("resource_guard", {})
+    games = metadata.get("games", [])
+    planned = metadata.get("requested_pairs")
+    if (metadata.get("status") != "rejected_early_futile" or metadata.get("completed") is not False or
+            metadata.get("stop_when_impossible") is not True or metadata.get("errors") or
+            metadata.get("valid_for_rejection") is not True or
+            metadata.get("eligible") is not False or metadata.get("promotion_passed") is not False or
+            guard.get("valid_for_comparison") is not False or guard.get("contaminated") or
+            guard.get("failure") is not None or guard.get("external_cpu_increase_ticks", 0) != 0 or
+            len(games) % 2 or not games or type(planned) is not int or not 0 < len(games) // 2 < planned):
+        raise ValueError("invalid, dirty or unfinished early-rejection evidence")
+    openings = metadata["opening_reserve"]["openings"]
+    if len(openings) != planned or any(not game.get("completed") for game in games):
+        raise ValueError("early rejection must retain the full schedule and complete observed pairs")
+    scores = [sum(game["candidate_points"] for game in games[index:index + 2]) / 2
+              for index in range(0, len(games), 2)]
+    prefix = copy.deepcopy(metadata)
+    prefix["completed"] = True
+    prefix["requested_pairs"] = len(scores)
+    prefix["opening_reserve"]["openings"] = prefix["opening_reserve"]["openings"][:len(scores)]
+    prefix["resource_guard"]["valid_for_comparison"] = True
+    prefix["decision"] = promotion_decision(scores, metadata["attempt_index"], complete=True, clean=True,
+                                             movetime_ms=metadata["movetime_ms"])
+    replayed = verify_match_records(prefix)
+    expected = promotion_decision(scores, metadata["attempt_index"], complete=False, clean=False,
+                                   movetime_ms=metadata["movetime_ms"])
+    if metadata.get("decision") != expected or replayed["passed"]:
+        raise ValueError("early rejection changed its actual incomplete promotion decision")
+    certificate = futility_certificate(scores, planned, metadata["attempt_index"],
+                                       movetime_ms=metadata["movetime_ms"])
+    if not certificate["stop_early"] or metadata.get("futility_certificate") != certificate:
+        raise ValueError("early rejection certificate does not match replayed outcomes")
+    return certificate
 
 
 def load_openings(path, count, seed):
@@ -256,11 +327,16 @@ def verify_match_records(metadata):
 
 
 def run_arena(binary, candidate_model, champion_model_or_none, output, *, pairs=32,
-              movetime_ms=100, seed=20261018, attempt_index=1, opening_data=None, max_plies=500):
+              movetime_ms=100, seed=20261018, attempt_index=1, opening_data=None, max_plies=500,
+              stop_when_impossible=False):
     if any(isinstance(value, bool) or not isinstance(value, int) or value <= 0
            for value in (pairs, movetime_ms, max_plies)):
         raise ValueError("pairs, movetime_ms and max_plies must be positive integers")
     promotion_decision([], attempt_index, complete=False, clean=False)
+    if type(stop_when_impossible) is not bool:
+        raise ValueError("stop_when_impossible must be boolean")
+    if stop_when_impossible:
+        futility_certificate([], pairs, attempt_index, movetime_ms=movetime_ms)
     binary, candidate = Path(binary).resolve(), Path(candidate_model).resolve()
     champion = Path(champion_model_or_none).resolve() if champion_model_or_none else None
     output = Path(output).resolve()
@@ -286,7 +362,9 @@ def run_arena(binary, candidate_model, champion_model_or_none, output, *, pairs=
                          "processor": platform.processor(), "logical_cpus": os.cpu_count(),
                          "python": platform.python_version(), "python_chess": chess.__version__},
                 "engines": {}, "games": [], "errors": [], "completed": False,
-                "resource_guard": {}, "decision": None}
+                "resource_guard": {}, "decision": None,
+                "stop_when_impossible": stop_when_impossible, "futility_certificate": None,
+                "valid_for_rejection": False}
     engines, guard = {}, None
     try:
         metadata["native_model_validation"]["candidate"] = validate_native_model(binary, snapshot)
@@ -330,11 +408,20 @@ def run_arena(binary, candidate_model, champion_model_or_none, output, *, pairs=
                 print(f"arena {len(metadata['games'])}/{pairs * 2}: {record['result']} ({record['termination']})", flush=True)
                 if not record["completed"]:
                     raise RuntimeError("unfinished arena game; no strength adoption is allowed")
+            if stop_when_impossible and pair < pairs:
+                guard.sample("after-complete-pair-before-futility")
+                guard.assert_clean()
+                observed = [sum(game["candidate_points"] for game in metadata["games"][index:index + 2]) / 2
+                            for index in range(0, len(metadata["games"]), 2)]
+                certificate = futility_certificate(observed, pairs, attempt_index, movetime_ms=movetime_ms)
+                if certificate["stop_early"]:
+                    metadata["futility_certificate"] = certificate
+                    break
         guard.assert_transports()
         if (sha256(binary) != metadata["binary_sha256"] or sha256(candidate) != metadata["candidate_sha256"]
                 or champion and sha256(champion) != metadata["champion_sha256"]):
             raise ValueError("input binary or model changed during the match")
-        metadata["completed"] = True
+        metadata["completed"] = len(metadata["games"]) == pairs * 2
     except (Exception, KeyboardInterrupt) as error:
         metadata["errors"].append(f"{type(error).__name__}: {error}")
     finally:
@@ -353,6 +440,8 @@ def run_arena(binary, candidate_model, champion_model_or_none, output, *, pairs=
                 "Arbitrary non-browser host workloads, thermal drift and unknown process names are not excluded.")
             metadata["resource_guard"]["valid_for_comparison"] = bool(
                 metadata["completed"] and not metadata["errors"] and not guard.summary["contaminated"])
+            metadata["valid_for_rejection"] = bool(metadata["futility_certificate"] is not None and
+                not metadata["completed"] and not metadata["errors"] and not guard.summary["contaminated"])
         scores = []
         for index in range(pairs):
             games = metadata["games"][index * 2:index * 2 + 2]
@@ -366,6 +455,14 @@ def run_arena(binary, candidate_model, champion_model_or_none, output, *, pairs=
             and metadata["resource_guard"].get("valid_for_comparison", False)) else "failed"
         metadata["eligible"] = metadata["decision"]["eligible"]
         metadata["promotion_passed"] = metadata["decision"]["passed"]
+        if metadata["valid_for_rejection"]:
+            metadata["status"] = "rejected_early_futile"
+            try:
+                verify_early_rejection(metadata)
+            except (KeyError, TypeError, ValueError) as error:
+                metadata["errors"].append("early-rejection replay failed: " + str(error))
+                metadata["status"] = "failed"
+                metadata["valid_for_rejection"] = False
         if metadata["decision"]["passed"]:
             verify_match_records(metadata)
         (output / "games.pgn").write_text(_pgn(metadata), encoding="utf-8")

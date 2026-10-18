@@ -99,6 +99,50 @@ class EndgameStudyTests(unittest.TestCase):
             for name, raw in before.items():
                 self.assertEqual(Path(name).read_bytes(), raw)
 
+    def test_combine_single_lf_custom_fen_pgn_boundary_preserves_original_streams(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            sources = []
+            definitions = (("train", "7k/8/5KQ1/8/8/8/8/8 w - - 0 1", "g6g7", 900),
+                           ("validation", "8/8/8/8/8/1qk5/8/K7 b - - 0 1", "b3b2", 900))
+            for split, fen, move, material in definitions:
+                board = DATA.replay_position(fen, [move])
+                game = {"game_id": split, "family": split, "split": split,
+                        "initial_fen": fen, "history": [move], "completed": True,
+                        "result": board.outcome(claim_draw=True).result()}
+                sample = {"game_id": split, "family": split, "split": split,
+                          "initial_fen": fen, "history": [], "fen": fen, "ply": 0,
+                          "turn": "w" if fen.split()[1] == "w" else "b", "teacher_cp_stm": 20,
+                          "material_cp_stm": material, "outcome_stm": 1,
+                          "teacher_depth": 2, "teacher_nodes": 100, "teacher_pv": [move]}
+                path = self.dataset(root / split, [game], [sample])
+                pgn_path = path.parent / "games.pgn"
+                pgn_path.write_bytes(pgn_path.read_bytes().rstrip(b"\r\n") + b"\n")
+                document = json.loads(path.read_text())
+                document["files_sha256"]["games.pgn"] = DATA.sha256_file(pgn_path)
+                DATA.checkpoint_json(path, document)
+                sources.append(path)
+            train, heldout = sources
+            before = {str(path): path.read_bytes() for parent in (train.parent, heldout.parent)
+                      for path in parent.iterdir()}
+            output = root / "combined"
+            STUDY.combine_quality(train, heldout, output)
+            expected = (heldout.parent / "games.pgn").read_bytes() + b"\n" + (train.parent / "games.pgn").read_bytes()
+            self.assertEqual((output / "games.pgn").read_bytes(), expected)
+            for name in ("positions.jsonl", "games.jsonl"):
+                self.assertEqual((output / name).read_bytes(),
+                                 (heldout.parent / name).read_bytes() + (train.parent / name).read_bytes())
+            for name, raw in before.items():
+                self.assertEqual(Path(name).read_bytes(), raw)
+            stream = io.StringIO(expected.decode())
+            for path, definition in ((heldout, definitions[1]), (train, definitions[0])):
+                parsed = chess.pgn.read_game(stream)
+                self.assertIsNotNone(parsed)
+                self.assertEqual(parsed.errors, [])
+                self.assertEqual(parsed.board().fen(en_passant="fen"), definition[1])
+                self.assertEqual([move.uci() for move in parsed.mainline_moves()], [definition[2]])
+            self.assertIsNone(chess.pgn.read_game(stream))
+
     def test_combine_refuses_existing_output_without_rewriting_it(self):
         with tempfile.TemporaryDirectory() as temporary:
             train, heldout, output, _, _ = self.composition_fixture(temporary)

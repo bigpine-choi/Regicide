@@ -22,6 +22,7 @@ jobs:
       - run: python tests/learning_loss_analysis_tests.py
       - run: python tests/learning_corpus_tests.py
       - run: python tests/learning_arena_tests.py
+      - run: python tests/learning_arena_futility_tests.py
       - run: python tests/learning_registry_tests.py
       - run: python tests/learning_cycle_tests.py
       - run: python tests/teacher_quality_tests.py
@@ -33,6 +34,10 @@ jobs:
       - run: python tests/endgame_learning_curve_tests.py
       - run: python tests/endgame_matches_tests.py
       - run: python tests/endgame_study_tests.py
+      - run: python tests/endgame_study_resume_tests.py
+      - run: python tests/endgame_remote_study_tests.py
+      - run: python tests/remote_learning_arena_tests.py
+      - run: python tests/remote_arena_import_tests.py
       - name: Build neural cost diagnostic
         run: cmake --build build --config Release --target regicide_profile_neural
       - if: runner.os == 'Linux'

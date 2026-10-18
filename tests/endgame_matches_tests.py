@@ -68,6 +68,7 @@ class Engine:
         self.options = {name: object() for name in (*OPTIONS, "EvalFile", "UseNeuralEvaluation")}
         self.id = {"name": "mock development engine"}
         self.configurations = []
+        self.search_limits = []
         self.closed = self.quit_called = False
 
     def configure(self, options):
@@ -77,6 +78,7 @@ class Engine:
         return None
 
     def play(self, board, limit, **kwargs):
+        self.search_limits.append(limit)
         move = chess.Move.from_uci(self.move)
         if move not in board.legal_moves:
             move = next(iter(board.legal_moves))
@@ -140,7 +142,7 @@ class DevelopmentMatchTests(unittest.TestCase):
             for key in OPTIONS:
                 self.assertEqual(report["engines"]["candidate"]["options"][key],
                                  report["engines"]["baseline"]["options"][key])
-            self.assertEqual(engines[1].configurations[0], {"EvalFile": str(files[-1] / "candidate.nn")})
+            self.assertEqual(engines[1].configurations[0], {"EvalFile": str((files[-1] / "candidate.nn").resolve())})
             self.assertEqual(MATCH.verify_records(report), report["summary"])
 
     def test_pgn_retains_custom_fen_and_full_legal_history(self):
@@ -269,6 +271,77 @@ class DevelopmentMatchTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 MATCH.run_matches(*files)
             self.assertEqual(marker.read_text(), "keep")
+
+    def test_fixed_nodes_uses_same_bounded_work_with_no_guard_or_time_budget(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            files = self.setup_files(temporary)
+            # A browser workload cannot contaminate a mode which makes no
+            # timing comparison; no clean-host claim is manufactured instead.
+            Guard.dirty = True
+            report, engines = self.run_mock(files, nodes=1000)
+            self.assertEqual(report["status"], "complete")
+            self.assertTrue(report["completed"] and report["valid_for_comparison"])
+            self.assertEqual(report["resource_mode"], "fixed_nodes")
+            self.assertEqual(report["nodes_per_move"], 1000)
+            self.assertIsNone(report["movetime_ms"])
+            self.assertIsNone(report["move_response_allowance_seconds"])
+            self.assertIsNone(report["resource_samples_sha256"])
+            self.assertEqual(report["resource_guard"]["required"], False)
+            self.assertEqual(report["resource_guard"]["performed"], False)
+            self.assertFalse(Guard.instances)
+            self.assertEqual(len(engines), 2)
+            self.assertTrue(all(engine.search_limits for engine in engines))
+            for engine in engines:
+                for limit in engine.search_limits:
+                    self.assertEqual(limit.nodes, 1000)
+                    self.assertIsNone(limit.time)
+                    self.assertIsNone(limit.depth)
+            self.assertIn("no equal-time strength inference", report["summary"]["scope"])
+            self.assertEqual(MATCH.verify_records(report), report["summary"])
+            pgn = chess.pgn.read_game(io.StringIO((files[-1] / "games.pgn").read_text()))
+            self.assertEqual(pgn.headers["RequestedNodes"], "1000")
+            self.assertNotIn("RequestedMoveTimeMS", pgn.headers)
+
+    def test_fixed_node_verifier_rejects_missing_or_overshot_node_counters(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            report, _ = self.run_mock(self.setup_files(temporary), nodes=1000)
+            for invalid in (None, 0, -1, True, 1.5, 1001):
+                item = copy.deepcopy(report)
+                item["games"][0]["search_moves"][0]["nodes"] = invalid
+                with self.subTest(nodes=invalid), self.assertRaisesRegex(ValueError, "node count"):
+                    MATCH.verify_records(item)
+            item = copy.deepcopy(report)
+            item["games"][0]["search_moves"][0]["elapsed_seconds"] = 3.0
+            self.assertEqual(MATCH.verify_records(item), report["summary"])
+
+    def test_fixed_node_wrapper_rejects_changed_limits_and_engine_overshoot(self):
+        wrapper = MATCH.FixedNodeEngine(Engine(), 1000)
+        for limit in (chess.engine.Limit(nodes=999), chess.engine.Limit(nodes=1000, time=.1),
+                      chess.engine.Limit(nodes=1000, depth=3)):
+            with self.subTest(limit=limit), self.assertRaisesRegex(ValueError, "limits changed"):
+                wrapper.play(chess.Board(FEN), limit)
+        bad = SimpleNamespace(play=lambda *_args, **_kwargs: SimpleNamespace(info={"nodes": 1001}))
+        wrapper = MATCH.FixedNodeEngine(bad, 1000)
+        with self.assertRaisesRegex(ValueError, "bounded node counter"):
+            wrapper.play(chess.Board(FEN), chess.engine.Limit(nodes=1000))
+
+    def test_fixed_node_ply_cap_still_cannot_become_draw_or_valid_comparison(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            Engine.move = "b6b8"
+            report, _ = self.run_mock(self.setup_files(temporary), nodes=1000, max_plies=1)
+            self.assertEqual(report["status"], "failed")
+            self.assertFalse(report["valid_for_comparison"])
+            self.assertIsNone(report["summary"])
+            self.assertEqual(report["games"][0]["result"], "*")
+            self.assertEqual(report["games"][0]["termination"], "ply_cap")
+
+    def test_fixed_node_invalid_budget_rejected_before_outputs(self):
+        for invalid in (0, -1, True, 1.5):
+            with self.subTest(nodes=invalid), tempfile.TemporaryDirectory() as temporary:
+                files = self.setup_files(temporary)
+                with self.assertRaisesRegex(ValueError, "node budget"):
+                    MATCH.run_matches(*files, nodes=invalid)
+                self.assertFalse(files[-1].exists())
 
 
 if __name__ == "__main__":

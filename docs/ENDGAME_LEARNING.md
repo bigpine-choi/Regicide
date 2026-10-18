@@ -32,3 +32,23 @@ v0.6.5는 학습용 패배의 종반을 진단하고, 독립적으로 구성한 
 검증 동안 알려진 브라우저·외부 엔진 CPU 또는 감시 공백이 있으면 비교를 무효 처리한다. 규칙·자료·모델·코드·실행 파일 변경도 채택을 막는다. 시도 번호는 준비 시작 전에 소비하며 실패해도 되돌리지 않는다. 실패한 후보는 기본 모델을 교체하지 않는다. Windows의 임시 절전 요청은 각 실행 종료 시 복원한다.
 
 세부 조건과 판단 기준은 [사전 계획](experiments/2026-10-19-endgame-learning-scale-plan.md)을 따른다.
+
+## PC 사용을 멈추지 않는 검증
+
+사용자 요청으로 [학습 전 수정 계획](experiments/2026-10-19-endgame-validation-revision.md)을 추가했다. `prepare --remote-validation`으로 고정한 연구는 `develop`에서 수당1,000노드로 규모별 실제 종반 대국을 비교하고, `export-remote`로 정확한 Windows 실행 파일·모델·소스 신원을 내보낸다. 이 두 단계에서 브라우저 종료를 요구하지 않는다. 고정 노드 결과를 같은 시간의 기력 증명으로 해석하지 않는다.
+
+새 `remote-request.json`을 GitHub에 커밋·푸시하면 별도 Windows Actions 작업이 수당100ms의 기존 예약 대국을 실행한다. 원격 장비에서 같은 실행 파일로 양쪽을 비교하므로 사용자 PC의 다른 작업은 이 측정에 섞이지 않는다. 원격 하드웨어의 결과를 사용자 PC의 절대 성능으로 표현하지 않는다.
+
+완료된 선후공 쌍마다 남은 모든 쌍에서 만점을 얻어도 기존 최종 채택 공식을 통과할 수 없는지 검사한다. 불가능하면 `rejected_early_futile`로 끝내며 실제 점수·기보에는 가상 승리를 넣지 않는다. 오염·미완료는 별도 실패다. 조기 채택은 없고, 통과 후보는 기존 최소32쌍·100ms와 모든 규칙·자원·통계 검사를 충족해야 한다.
+
+원격 실행기는 모델을 채택하지 않는다. 결과는 요청 커밋의 자식인 별도 검증 브랜치에 기록하며, API로 확인한 작업 신원·Git 이력·요청 해시·모든 파일·전체 기보와 자원 기록을 로컬에서 다시 확인한 뒤 `import-remote`가 기존 등록부를 사용한다. 원래 원격 근거를 보존하고, 설치 위치가 달라진 경로만 파생 로컬 명세에 치환한다. 점수·수순·옵션·시간·기준은 바꾸지 않는다.
+
+```powershell
+python scripts/endgame_study.py prepare --binary build/regicide.exe --remote-validation
+python scripts/endgame_study.py develop --binary build/regicide.exe --run runs/실제로_출력된_식별자
+python scripts/endgame_study.py export-remote --binary build/regicide.exe --run runs/실제로_출력된_식별자 --request-directory docs/checks/해당연구/remote-input
+# 출력된 요청과 입력을 커밋·푸시한 뒤, 원격 검증 브랜치와 작업 신원을 확인한다.
+python scripts/endgame_study.py import-remote --binary build/regicide.exe --run runs/실제로_출력된_식별자 --remote-results 원격결과폴더 --workflow-receipt 검증한작업신원.json
+```
+
+학습 전에 실패한 이전 시도의 완료 자료는 `prepare --reuse-data-run runs/이전식별자`로 신원·정답 정책·등록 해시를 다시 확인해 재사용할 수 있다. 이전 실패 자료나 시도 번호를 덮어쓰지 않으며, 이미 모델을 학습한 시도를 이 옵션으로 다시 고르지 못한다.

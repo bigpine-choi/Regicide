@@ -2,7 +2,9 @@
 
 These fixed held-out starts measure a declared narrow development distribution.
 They cannot select a candidate, modify a registry, or authorize model adoption.
-Incomplete games or resource contamination invalidate the entire comparison.
+Incomplete games invalidate the entire comparison. Equal-time comparisons also
+require the native resource guard. Optional fixed-node comparisons make no wall
+time or equal-time strength claim and do not restrict browser use.
 """
 
 import argparse
@@ -30,6 +32,21 @@ from train_neural import sha256, write_json
 SCHEMA = "regicide.endgame.development-match.v1"
 OPENINGS_SCHEMA = "regicide.endgame.development.openings.v1"
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class FixedNodeEngine:
+    """Reject missing/overshot work counters; elapsed time is not a budget."""
+    def __init__(self, engine, nodes):
+        self.engine, self.nodes = engine, nodes
+
+    def play(self, board, limit, **kwargs):
+        if limit.nodes != self.nodes or limit.time is not None or limit.depth is not None:
+            raise ValueError("fixed-node development search limits changed")
+        result = self.engine.play(board, limit, **kwargs)
+        nodes = result.info.get("nodes")
+        if type(nodes) is not int or not 1 <= nodes <= self.nodes:
+            raise ValueError("fixed-node development search is missing a valid bounded node counter")
+        return result
 
 
 def load_openings(path, pairs=None):
@@ -82,8 +99,12 @@ def _pgn(metadata):
             Result=record["result"], White=record["white"], Black=record["black"],
             Pair=str(record["pair"]), Opening=record["opening"],
             TerminationReason=record["termination"], DrawPolicy="claim",
-            RequestedMoveTimeMS=str(metadata["movetime_ms"]),
+            SearchBudgetMode=metadata.get("resource_mode", "equal_time"),
             BinarySHA256=metadata["binary_sha256"], CandidateModelSHA256=metadata["model_sha256"])
+        if metadata.get("resource_mode") == "fixed_nodes":
+            game.headers["RequestedNodes"] = str(metadata["nodes_per_move"])
+        else:
+            game.headers["RequestedMoveTimeMS"] = str(metadata["movetime_ms"])
         node = game
         for move in record["uci_moves"]:
             node = node.add_variation(chess.Move.from_uci(move))
@@ -96,16 +117,27 @@ def verify_records(metadata):
     if (metadata.get("schema") != SCHEMA or metadata.get("errors")
             or not metadata.get("completed") or metadata.get("draw_policy") != "claim"):
         raise ValueError("development match has errors, unfinished games or wrong schema")
-    guard = metadata.get("resource_guard", {})
-    if guard.get("contaminated") or not guard.get("valid_for_comparison"):
-        raise ValueError("development resource guard did not pass")
-    ms = metadata.get("movetime_ms")
-    if (type(ms) is not int or ms < 1 or metadata.get("hash_mb") != 16
-            or metadata.get("threads") != 1):
-        raise ValueError("invalid equal-time development resource settings")
-    allowance = ms / 1000 + max(.1, ms / 1000)
-    if metadata.get("move_response_allowance_seconds") != allowance:
-        raise ValueError("development response allowance differs from fixed policy")
+    mode, guard = metadata.get("resource_mode", "equal_time"), metadata.get("resource_guard", {})
+    if metadata.get("hash_mb") != 16 or metadata.get("threads") != 1:
+        raise ValueError("invalid shared development resource settings")
+    if mode == "equal_time":
+        if guard.get("contaminated") or not guard.get("valid_for_comparison"):
+            raise ValueError("development resource guard did not pass")
+        ms = metadata.get("movetime_ms")
+        if type(ms) is not int or ms < 1 or metadata.get("nodes_per_move") is not None:
+            raise ValueError("invalid equal-time development resource settings")
+        allowance = ms / 1000 + max(.1, ms / 1000)
+        if metadata.get("move_response_allowance_seconds") != allowance:
+            raise ValueError("development response allowance differs from fixed policy")
+    elif mode == "fixed_nodes":
+        nodes = metadata.get("nodes_per_move")
+        if (type(nodes) is not int or nodes < 1 or metadata.get("movetime_ms") is not None
+                or metadata.get("move_response_allowance_seconds") is not None
+                or guard.get("required") is not False or guard.get("performed") is not False):
+            raise ValueError("invalid fixed-node development resource settings")
+        allowance = None
+    else:
+        raise ValueError("unknown development search resource mode")
     openings = metadata["opening_data"]["openings"]
     games = metadata["games"]
     if (len(openings) != metadata.get("requested_pairs") or not 1 <= len(openings) <= 16
@@ -149,8 +181,12 @@ def verify_records(metadata):
                     if (evidence.get("move") != uci or evidence.get("role") != role
                             or evidence.get("fen_before") != board.fen(en_passant="fen")
                             or isinstance(elapsed, bool) or not isinstance(elapsed, (float, int))
-                            or not math.isfinite(elapsed) or elapsed < 0 or elapsed > allowance):
+                            or not math.isfinite(elapsed) or elapsed < 0
+                            or allowance is not None and elapsed > allowance):
                         raise ValueError("development move timing, role or position evidence mismatch")
+                    if mode == "fixed_nodes" and (type(evidence.get("nodes")) is not int
+                            or not 1 <= evidence["nodes"] <= metadata["nodes_per_move"]):
+                        raise ValueError("development node count is missing or exceeds the fixed budget")
                 move = chess.Move.from_uci(uci)
                 if move not in board.legal_moves:
                     raise ValueError("development history contains an illegal move")
@@ -170,12 +206,21 @@ def verify_records(metadata):
             "candidate_score": sum(points) / len(points), "complete_games": len(points),
             "complete_pairs": len(openings),
             "pair_scores": [(points[index] + points[index + 1]) / 2 for index in range(0, len(points), 2)],
-            "scope": "fixed synthetic endgame development starts; small dependent sample, no Elo or universal strength claim; cannot authorize adoption"}
+            "scope": ("fixed-node synthetic endgame development games; wall time uncontrolled, no equal-time strength inference; "
+                      if mode == "fixed_nodes" else "fixed synthetic endgame development starts; ") +
+                     "small dependent sample, no Elo or universal strength claim; cannot authorize adoption"}
 
 
-def run_matches(binary, model, openings_path, output, *, pairs=None, movetime_ms=100, max_plies=384):
-    if any(type(value) is not int or value < 1 for value in (movetime_ms, max_plies)):
-        raise ValueError("movetime and ply cap must be positive integers")
+def run_matches(binary, model, openings_path, output, *, pairs=None, movetime_ms=100, max_plies=384, nodes=None):
+    fixed_nodes = nodes is not None
+    if type(max_plies) is not int or max_plies < 1:
+        raise ValueError("ply cap must be a positive integer")
+    if fixed_nodes:
+        if type(nodes) is not int or nodes < 1:
+            raise ValueError("node budget must be a positive integer")
+        movetime_ms = None
+    elif type(movetime_ms) is not int or movetime_ms < 1:
+        raise ValueError("movetime must be a positive integer")
     binary, model, openings_path = (Path(path).resolve() for path in (binary, model, openings_path))
     output = Path(output).resolve()
     if output.exists():
@@ -197,8 +242,11 @@ def run_matches(binary, model, openings_path, output, *, pairs=None, movetime_ms
                 "finished_utc": None, "binary_sha256": hashes["binary"], "model_sha256": hashes["model"],
                 "opening_data": openings, "requested_pairs": len(openings["openings"]),
                 "implementation_sha256": code_hashes,
+                "resource_mode": "fixed_nodes" if fixed_nodes else "equal_time", "nodes_per_move": nodes,
                 "movetime_ms": movetime_ms, "hash_mb": 16, "threads": 1, "max_plies": max_plies,
-                "move_response_allowance_seconds": movetime_ms / 1000 + max(.1, movetime_ms / 1000),
+                "move_response_allowance_seconds": None if fixed_nodes else movetime_ms / 1000 + max(.1, movetime_ms / 1000),
+                "resource_scope": ("same maximum nodes per move; browser/host load may change elapsed time; no wall-time measurement or equal-time strength inference"
+                                   if fixed_nodes else "equal requested wall time with native browser/external-engine CPU guard"),
                 "draw_policy": "claim", "native_model_validation": None,
                 "host": {"platform": platform.platform(), "machine": platform.machine(),
                          "processor": platform.processor(), "logical_cpus": os.cpu_count(),
@@ -211,16 +259,21 @@ def run_matches(binary, model, openings_path, output, *, pairs=None, movetime_ms
         # The parser subprocess exits before native sampling starts, so exactly
         # two persistent transports participate in the guarded comparison.
         metadata["native_model_validation"] = validate_native_model(binary, snapshot)
-        provider = WindowsProcesses(engine_names=DEFAULT_ENGINE_NAMES | BROWSER_NAMES) if sys.platform == "win32" \
-            else LinuxProcesses() if sys.platform.startswith("linux") else None
-        if provider is None:
-            raise RuntimeError("native development guard supports Windows and Linux only")
-        guard = EngineCpuGuard(provider, output / "resource-samples.jsonl", interval=.5)
-        guard.start()
+        if not fixed_nodes:
+            provider = WindowsProcesses(engine_names=DEFAULT_ENGINE_NAMES | BROWSER_NAMES) if sys.platform == "win32" \
+                else LinuxProcesses() if sys.platform.startswith("linux") else None
+            if provider is None:
+                raise RuntimeError("native development guard supports Windows and Linux only")
+            guard = EngineCpuGuard(provider, output / "resource-samples.jsonl", interval=.5)
+            guard.start()
+        else:
+            metadata["resource_guard"] = {"required": False, "performed": False,
+                "scope": "fixed-node development only; external CPU was not measured; no equal-time comparison or clean-host claim"}
         for role, neural in (("baseline", False), ("candidate", True)):
             engine = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10)
             engines[role] = engine
-            guard.register_transport(engine.transport.get_pid(), role, [str(binary), "uci"])
+            if guard is not None:
+                guard.register_transport(engine.transport.get_pid(), role, [str(binary), "uci"])
             options = dict(OPTIONS, UseNeuralEvaluation=neural)
             if neural:
                 options["EvalFile"] = str(snapshot)
@@ -233,28 +286,33 @@ def run_matches(binary, model, openings_path, output, *, pairs=None, movetime_ms
             metadata["engines"][role] = {"id": dict(engine.id), "options": options,
                                          "binary_sha256": hashes["binary"],
                                          "model_sha256": hashes["model"] if neural else None}
-        guard.assert_transports()
-        wrapped = {role: GuardedEngine(engine, guard, movetime_ms) for role, engine in engines.items()}
-        args = SimpleNamespace(nodes=None, depth=None, movetime=movetime_ms,
+        if guard is not None:
+            guard.assert_transports()
+        wrapped = {role: FixedNodeEngine(engine, nodes) if fixed_nodes else GuardedEngine(engine, guard, movetime_ms)
+                   for role, engine in engines.items()}
+        args = SimpleNamespace(nodes=nodes, depth=None, movetime=movetime_ms,
                                max_plies=max_plies, draw_policy="claim")
         for pair, opening in enumerate(openings["openings"], 1):
             for candidate_white in (True, False):
-                guard.sample("before-game")
-                guard.assert_clean()
+                if guard is not None:
+                    guard.sample("before-game")
+                    guard.assert_clean()
                 record = comparison.new_record(len(metadata["games"]) + 1, pair, opening, candidate_white)
                 record["initial_fen"] = opening["fen"]
                 metadata["games"].append(record)
                 comparison.play_one(args, wrapped, record)
-                guard.sample("after-game")
-                guard.assert_clean()
+                if guard is not None:
+                    guard.sample("after-game")
+                    guard.assert_clean()
                 if not record["completed"]:
                     raise RuntimeError("unfinished development game; entire comparison invalid")
                 print(json.dumps({"development_game": len(metadata["games"]),
                                   "scheduled": len(openings["openings"]) * 2,
                                   "result": record["result"], "termination": record["termination"]}), flush=True)
-        guard.assert_transports()
-        guard.sample("after-all-games")
-        guard.assert_clean()
+        if guard is not None:
+            guard.assert_transports()
+            guard.sample("after-all-games")
+            guard.assert_clean()
         for name, path in (("binary", binary), ("model", model), ("openings", openings_path)):
             if sha256(path) != hashes[name]:
                 raise ValueError("development frozen input changed: " + name)
@@ -303,12 +361,15 @@ def main(argv=None):
     parser.add_argument("--openings", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--pairs", type=int)
-    parser.add_argument("--movetime", type=int, default=100)
+    limits = parser.add_mutually_exclusive_group()
+    limits.add_argument("--movetime", type=int, help="milliseconds per move; default100; native clean guard required")
+    limits.add_argument("--nodes", type=int, help="fixed maximum nodes per move; no wall-time strength inference or browser restriction")
     parser.add_argument("--max-plies", type=int, default=384)
     args = parser.parse_args(argv)
     try:
         result = run_matches(args.binary, args.model, args.openings, args.output,
-                             pairs=args.pairs, movetime_ms=args.movetime, max_plies=args.max_plies)
+                             pairs=args.pairs, movetime_ms=args.movetime if args.movetime is not None else 100,
+                             max_plies=args.max_plies, nodes=args.nodes)
         return 0 if result["status"] == "complete" else 1
     except (ValueError, OSError) as error:
         print(f"development match failed: {error}", file=sys.stderr)
