@@ -11,26 +11,27 @@ constexpr int full_phase = 24;
 enum class PieceKind : unsigned char { pawn, knight, bishop, rook, queen, king, none };
 
 struct PieceInfo {
-    int material = 0;
+    int material = 0; // Signed from White's perspective, outside the phase blend.
     unsigned char phase = 0;
     PieceKind kind = PieceKind::none;
     bool is_white = false;
+    unsigned char bonus_index = 0;
 };
 
 constexpr auto make_piece_info() {
     std::array<PieceInfo, 256> result{};
-    result['P'] = {100, 0, PieceKind::pawn, true};
-    result['N'] = {320, 1, PieceKind::knight, true};
-    result['B'] = {330, 1, PieceKind::bishop, true};
-    result['R'] = {500, 2, PieceKind::rook, true};
-    result['Q'] = {900, 4, PieceKind::queen, true};
-    result['K'] = {0, 0, PieceKind::king, true};
-    result['p'] = {100, 0, PieceKind::pawn, false};
-    result['n'] = {320, 1, PieceKind::knight, false};
-    result['b'] = {330, 1, PieceKind::bishop, false};
-    result['r'] = {500, 2, PieceKind::rook, false};
-    result['q'] = {900, 4, PieceKind::queen, false};
-    result['k'] = {0, 0, PieceKind::king, false};
+    result['P'] = {100, 0, PieceKind::pawn, true, 0};
+    result['N'] = {320, 1, PieceKind::knight, true, 1};
+    result['B'] = {330, 1, PieceKind::bishop, true, 2};
+    result['R'] = {500, 2, PieceKind::rook, true, 3};
+    result['Q'] = {900, 4, PieceKind::queen, true, 4};
+    result['K'] = {0, 0, PieceKind::king, true, 5};
+    result['p'] = {-100, 0, PieceKind::pawn, false, 6};
+    result['n'] = {-320, 1, PieceKind::knight, false, 7};
+    result['b'] = {-330, 1, PieceKind::bishop, false, 8};
+    result['r'] = {-500, 2, PieceKind::rook, false, 9};
+    result['q'] = {-900, 4, PieceKind::queen, false, 10};
+    result['k'] = {0, 0, PieceKind::king, false, 11};
     return result;
 }
 
@@ -156,7 +157,8 @@ int pawn_shield_penalty(const ShieldInfo& defender, int attacking_phase) {
 // relative to the owner: rank zero is home, centrality is 0..3 on each axis.
 // Evaluate them at compile time; no learned or third-party tables are used.
 // Only the home-minor count varies with the rest of the board, so its linear
-// coefficient is stored separately from the fixed square bonuses.
+// coefficient is stored separately from the fixed square bonuses. The lookup
+// below bakes color, actual board square and score sign into the same formulas.
 constexpr Bonus position_bonus(PieceKind kind, int file, int rank) {
     const int file_center = std::min(file, 7 - file);
     const int rank_center = std::min(rank, 7 - rank);
@@ -182,24 +184,35 @@ constexpr Bonus position_bonus(PieceKind kind, int file, int rank) {
 }
 
 constexpr auto make_position_bonuses() {
-    std::array<std::array<Bonus, 64>, 6> result{};
-    for (std::size_t kind = 0; kind < result.size(); ++kind)
-        for (int square = 0; square < 64; ++square)
-            result[kind][square] = position_bonus(static_cast<PieceKind>(kind),
-                                                 square % 8, square / 8);
+    std::array<std::array<Bonus, 64>, 12> result{};
+    for (std::size_t index = 0; index < result.size(); ++index) {
+        const bool is_white = index < 6;
+        const int sign = is_white ? 1 : -1;
+        const auto kind = static_cast<PieceKind>(index % 6);
+        for (int square = 0; square < 64; ++square) {
+            const int rank = is_white ? square / 8 : 7 - square / 8;
+            const auto bonus = position_bonus(kind, square % 8, rank);
+            result[index][square] = {sign * bonus.middlegame, sign * bonus.endgame,
+                                     sign * bonus.undeveloped_coefficient};
+        }
+    }
     return result;
 }
 
 constexpr auto position_bonuses = make_position_bonuses();
 
 constexpr bool valid_piece_info() {
-    for (const auto& info : piece_info)
-        if (info.kind != PieceKind::none &&
-            static_cast<std::size_t>(info.kind) >= position_bonuses.size()) return false;
+    for (const auto& info : piece_info) {
+        if (info.kind == PieceKind::none) continue;
+        const auto index = static_cast<std::size_t>(info.bonus_index);
+        const auto expected = static_cast<std::size_t>(info.kind) + (info.is_white ? 0U : 6U);
+        if (index >= position_bonuses.size() || index != expected) return false;
+    }
     return true;
 }
 
 static_assert(valid_piece_info());
+static_assert(sizeof(PieceInfo) == 8);
 static_assert(sizeof(PawnMaskInfo) == 8);
 static_assert(pawn_masks[255].doubled_middlegame == -56 &&
               pawn_masks[1].enemy_ahead == 127 && pawn_masks[128].enemy_ahead == 0);
@@ -219,24 +232,23 @@ int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_struc
         const auto& info = piece_info[static_cast<unsigned char>(piece)];
         if (info.kind == PieceKind::none) continue;
         const bool is_white = info.is_white;
-        const int sign = is_white ? 1 : -1;
-        const int rank = is_white ? square / 8 : 7 - square / 8;
-        const auto& bonus = position_bonuses[static_cast<std::size_t>(info.kind)]
-                                            [rank * 8 + square % 8];
-        material_score += sign * info.material;
-        middlegame += sign * (bonus.middlegame - bonus.undeveloped_coefficient *
-                                                   (is_white ? white_home : black_home));
-        endgame += sign * bonus.endgame;
+        const auto& bonus = position_bonuses[info.bonus_index][square];
+        material_score += info.material;
+        middlegame += bonus.middlegame - bonus.undeveloped_coefficient *
+                                            (is_white ? white_home : black_home);
+        endgame += bonus.endgame;
         const int weight = info.phase;
         phase += weight;
-        if ((king_pawn_shield || pawn_structure) && info.kind == PieceKind::pawn)
+        if ((king_pawn_shield || pawn_structure) && info.kind == PieceKind::pawn) {
+            const int rank = is_white ? square / 8 : 7 - square / 8;
             shields[is_white ? 0 : 1].pawn_ranks[square % 8] |= 1U << rank;
+        }
         if (king_pawn_shield) {
             auto& shield = shields[is_white ? 0 : 1];
             shield.phase += weight;
             if (info.kind == PieceKind::king) {
                 shield.king_file = square % 8;
-                shield.king_rank = rank;
+                shield.king_rank = is_white ? square / 8 : 7 - square / 8;
             }
         }
     }
