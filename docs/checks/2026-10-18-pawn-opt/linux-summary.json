@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "platform": "Ubuntu 24.04 WSL2 x86_64",
+  "compiler": "GCC 13.3.0",
+  "warning_flags": "-Wall -Wextra -Wpedantic -Werror",
+  "baseline_commit": "09090d0c35aed9ae1643fa1785203ac5b87e678e",
+  "actual_code_commit": "4ee6dde974c6e250c93d52d2ae812586d92f7dce",
+  "final_executable_code_target": "4ee6dde974c6e250c93d52d2ae812586d92f7dce",
+  "source_hashes_unchanged_during_validation": true,
+  "source_matches_final_candidate_commit": true,
+  "evaluation_cpp_raw_sha256": "78c8d7fb6d9fb00d722c06e093b43da91b244bb75a9369596c333575b023e64b",
+  "native": {
+    "groups": 121,
+    "assertions": 466139,
+    "failures": 0,
+    "suites": {
+      "rules": 8325,
+      "search": 20853,
+      "evaluation": 408771,
+      "board_state": 18974,
+      "transposition": 97,
+      "see": 9119
+    }
+  },
+  "sanitizers": {
+    "kind": "ASan+UBSan",
+    "options": "detect_leaks=1:halt_on_error=1; halt_on_error=1:print_stacktrace=1",
+    "groups": 74,
+    "assertions": 429624,
+    "failures": 0,
+    "suites": [
+      "evaluation",
+      "search"
+    ]
+  },
+  "frozen_v054_oracle_positions": 16860,
+  "structure_oracle_positions": 23929,
+  "frozen_v056_compared_position_visits": 40789,
+  "frozen_v056_option_combinations_per_position": 4,
+  "evidence": [
+    "linux-native.log",
+    "linux-sanitizers.log",
+    "linux-environment.txt",
+    "linux-final-source-sha256.txt",
+    "validate-linux.sh"
+  ],
+  "previous_pilot_evidence": [
+    "../pawn-opt-pilot1-linux",
+    "../pawn-opt-pilot2-linux"
+  ],
+  "note": "Final third candidate with signed actual-square position tables and compact 8-byte pawn tables. Full strict and sanitized validation reran from all fresh objects. Existing frozen v054 and independent scalar oracles preserved; frozen v056 compared in all four shield/structure modes. CPU validation complete before subsequent performance measurement."
+}

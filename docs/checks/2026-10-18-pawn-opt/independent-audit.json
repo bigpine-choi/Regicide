@@ -1,0 +1,6079 @@
+{
+  "schema": "regicide-pawn-optimization-final-independent-audit-v1",
+  "audit_utc": "2026-10-18T11:10:46.812089+00:00",
+  "status": "passed_with_measurement_limits",
+  "scope": "Independent saved-record recomputation and source/binary verification only. No engine/evaluator execution, build or new timing. Sole write: this final JSON. Prior 87943a6 audit unchanged.",
+  "frozen_commit": "4ee6dde974c6e250c93d52d2ae812586d92f7dce",
+  "baseline_v056_commit": "09090d0c35aed9ae1643fa1785203ac5b87e678e",
+  "observed_HEAD": "4ee6dde974c6e250c93d52d2ae812586d92f7dce",
+  "source_identity": {
+    "provenance_sources_verified": 19,
+    "Linux_source_manifest_verified": 23,
+    "method": "Raw source hashes matched current files; CRLF normalized to LF for exact comparison against frozen Git blobs. Added v056 reference files retain LF. Frozen v056 source differs from baseline only in include/function name.",
+    "limits": "Observed identities and declared compile provenance are verified; this is not a reproducible-build or cryptographic source-to-executable proof."
+  },
+  "executable_sha256": {
+    "baseline": "7663c84b9aa21c6e56374985e8419426e44afb42cfac75503ef1ee2635cd0747",
+    "candidate": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc",
+    "profile": "77a914a49ced043c99da337ff5318d1a5da2dee5c8bd3e375dcc9d305b4b9dac"
+  },
+  "micro_profile": {
+    "positions": 58,
+    "samples": 144,
+    "blocks": 9,
+    "calls_per_sample": 1671908,
+    "precheck_comparisons_v054_structure_off": 116,
+    "precheck_comparisons_v056_four_options": 232,
+    "all_precheck_values_and_timed_checksums_equal": true,
+    "median_ns_per_call": {
+      "old_v056_shield_off": 74.204322247425,
+      "old_v056_shield_on": 88.422763094625,
+      "new_shield_off": 59.70050385545,
+      "new_shield_on": 71.2044113671
+    },
+    "median_paired_new_over_old_ratios": {
+      "new_shield_on_over_old_v056_shield_on": 0.8042540411259538,
+      "new_shield_off_over_old_v056_shield_off": 0.8034615246051315,
+      "old_v056_shield_on_over_old_v056_shield_off": 1.1938586556215918,
+      "new_shield_on_over_new_shield_off": 1.1958183198586285
+    },
+    "ratio_definition": "Median of nine block ratios candidate ns/call divided by baseline ns/call, less than one favors candidate. Board construction, equivalence and IO untimed; identical calls/order and separate translation units/no LTO maintained."
+  },
+  "fixed_depth": {
+    "pairs": 220,
+    "exact_graph_pairs": 220,
+    "fields_compared": [
+      "score",
+      "move",
+      "depth",
+      "nodes",
+      "seldepth",
+      "pv",
+      "tt_counters"
+    ],
+    "conditions": [
+      {
+        "file": "default-depth3.json",
+        "depth": 3,
+        "repeats": 5,
+        "pairs": 50,
+        "exact_graph_pairs": 50,
+        "shield": true,
+        "structure": true,
+        "median_new_over_old_wall": 0.977919092784011,
+        "median_old_over_new_wall_speedup": 1.0225887189677798,
+        "median_new_wall_change_percent": -2.2080907215988987,
+        "median_engine_reported_old_over_new": 1.0,
+        "nonzero_engine_time_pairs": 40,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 241050,
+        "candidate_faster_pairs": 30,
+        "candidate_slower_pairs": 20,
+        "new_over_old_wall_range": [
+          0.8074590226789289,
+          1.3300378475903827
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 7930,
+              "hits": 2345,
+              "cutoffs": 550,
+              "stores": 7380
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 50,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 7930,
+              "hits": 2345,
+              "cutoffs": 550,
+              "stores": 7380
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 50,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      },
+      {
+        "file": "default-depth4.json",
+        "depth": 4,
+        "repeats": 5,
+        "pairs": 50,
+        "exact_graph_pairs": 50,
+        "shield": true,
+        "structure": true,
+        "median_new_over_old_wall": 0.982888191500829,
+        "median_old_over_new_wall_speedup": 1.0174099626951123,
+        "median_new_wall_change_percent": -1.7111808499171044,
+        "median_engine_reported_old_over_new": 1.0,
+        "nonzero_engine_time_pairs": 45,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 904070,
+        "candidate_faster_pairs": 35,
+        "candidate_slower_pairs": 15,
+        "new_over_old_wall_range": [
+          0.5139941155311131,
+          2.1607804721595216
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 64410,
+              "hits": 10895,
+              "cutoffs": 3980,
+              "stores": 60395
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 50,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 64410,
+              "hits": 10895,
+              "cutoffs": 3980,
+              "stores": 60395
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 50,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      },
+      {
+        "file": "default-depth5.json",
+        "depth": 5,
+        "repeats": 3,
+        "pairs": 30,
+        "exact_graph_pairs": 30,
+        "shield": true,
+        "structure": true,
+        "median_new_over_old_wall": 0.9731263895740475,
+        "median_old_over_new_wall_speedup": 1.0276169852000558,
+        "median_new_wall_change_percent": -2.6873610425952488,
+        "median_engine_reported_old_over_new": 1.0253085415692413,
+        "nonzero_engine_time_pairs": 30,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 2117415,
+        "candidate_faster_pairs": 26,
+        "candidate_slower_pairs": 4,
+        "new_over_old_wall_range": [
+          0.8590661962795898,
+          1.09671378880469
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 150159,
+              "hits": 48939,
+              "cutoffs": 14259,
+              "stores": 135684
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 150159,
+              "hits": 48939,
+              "cutoffs": 14259,
+              "stores": 135684
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      },
+      {
+        "file": "structure-off-depth3.json",
+        "depth": 3,
+        "repeats": 3,
+        "pairs": 30,
+        "exact_graph_pairs": 30,
+        "shield": true,
+        "structure": false,
+        "median_new_over_old_wall": 0.986474832408172,
+        "median_old_over_new_wall_speedup": 1.0137108848400493,
+        "median_new_wall_change_percent": -1.352516759182798,
+        "median_engine_reported_old_over_new": 1.0,
+        "nonzero_engine_time_pairs": 24,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 155931,
+        "candidate_faster_pairs": 20,
+        "candidate_slower_pairs": 10,
+        "new_over_old_wall_range": [
+          0.7568832522120154,
+          1.7490394038955404
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 4932,
+              "hits": 1497,
+              "cutoffs": 408,
+              "stores": 4524
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 4932,
+              "hits": 1497,
+              "cutoffs": 408,
+              "stores": 4524
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      },
+      {
+        "file": "shield-off-depth3.json",
+        "depth": 3,
+        "repeats": 3,
+        "pairs": 30,
+        "exact_graph_pairs": 30,
+        "shield": false,
+        "structure": true,
+        "median_new_over_old_wall": 0.9861181356688206,
+        "median_old_over_new_wall_speedup": 1.0141092159305383,
+        "median_new_wall_change_percent": -1.3881864331179439,
+        "median_engine_reported_old_over_new": 1.0,
+        "nonzero_engine_time_pairs": 24,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 148902,
+        "candidate_faster_pairs": 19,
+        "candidate_slower_pairs": 11,
+        "new_over_old_wall_range": [
+          0.6930990512803559,
+          1.236305522019519
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 5133,
+              "hits": 1611,
+              "cutoffs": 552,
+              "stores": 4575
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 5133,
+              "hits": 1611,
+              "cutoffs": 552,
+              "stores": 4575
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      },
+      {
+        "file": "both-off-depth3.json",
+        "depth": 3,
+        "repeats": 3,
+        "pairs": 30,
+        "exact_graph_pairs": 30,
+        "shield": false,
+        "structure": false,
+        "median_new_over_old_wall": 0.985573994336179,
+        "median_old_over_new_wall_speedup": 1.0146715689931287,
+        "median_new_wall_change_percent": -1.4426005663821018,
+        "median_engine_reported_old_over_new": 1.0,
+        "nonzero_engine_time_pairs": 24,
+        "median_node_ratio_new_over_old": 1.0,
+        "total_nodes_each_role": 132795,
+        "candidate_faster_pairs": 16,
+        "candidate_slower_pairs": 14,
+        "new_over_old_wall_range": [
+          0.7238236896651818,
+          1.3392660098252238
+        ],
+        "TT_totals": {
+          "baseline": {
+            "counters": {
+              "probes": 5037,
+              "hits": 1542,
+              "cutoffs": 507,
+              "stores": 4524
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          },
+          "candidate": {
+            "counters": {
+              "probes": 5037,
+              "hits": 1542,
+              "cutoffs": 507,
+              "stores": 4524
+            },
+            "memory": {
+              "allocations": 0,
+              "reuses": 30,
+              "clears": 0,
+              "bytes_max": 16777208
+            }
+          }
+        }
+      }
+    ],
+    "pooled_median_new_over_old_wall": 0.9809345312637787,
+    "ratio_definition": "new/old is candidate elapsed divided by baseline elapsed; below one is faster candidate. old/new speedup above one is faster candidate. Each median recomputed directly.",
+    "limits": "Wall includes UCI transaction and new-game reset, startup excluded. Engine milliseconds can be zero/quantized; zero samples excluded from engine-time ratios. Fixed-depth selected positions, not equal-time playing-strength tests."
+  },
+  "correctness": {
+    "Windows_native": {
+      "groups": 121,
+      "assertions": 466139,
+      "failures": 0
+    },
+    "Linux_native": {
+      "groups": 121,
+      "assertions": 466139,
+      "failures": 0,
+      "suites": {
+        "rules": 8325,
+        "search": 20853,
+        "evaluation": 408771,
+        "board_state": 18974,
+        "transposition": 97,
+        "see": 9119
+      }
+    },
+    "Linux_ASan_UBSan": {
+      "kind": "ASan+UBSan",
+      "options": "detect_leaks=1:halt_on_error=1; halt_on_error=1:print_stacktrace=1",
+      "groups": 74,
+      "assertions": 429624,
+      "failures": 0,
+      "suites": [
+        "evaluation",
+        "search"
+      ]
+    },
+    "frozen_v054_positions": 16860,
+    "independent_structure_positions": 23929,
+    "v056_compared_position_visits": 40789,
+    "v056_flag_combinations_each": 4,
+    "UCI_groups": 23,
+    "independent_rule_cases": 2997,
+    "unit_tests": {
+      "total": 102,
+      "passed": 101,
+      "skipped": 1,
+      "skip_reason": "Windows file-symlink creation privilege unavailable"
+    },
+    "tool_harness_cases": 40,
+    "GUI_by_kind": {
+      "orientation/input": 637,
+      "evaluation-bar": 40,
+      "live-scene": 82,
+      "handicap live-scene": 53,
+      "archive live-scene": 78,
+      "hint synthetic": 38,
+      "hint live": 35
+    },
+    "GUI_total": 963,
+    "GUI_close_cases": 3,
+    "counts_note": "Child unit suites counted once; GUI checks separate from native C++ assertion totals."
+  },
+  "nonfatal_log_observations": [
+    {
+      "file": "hint_godot_tests.log",
+      "event": "ConnectionAbortedError WinError10053 while test HTTP server wrote a response",
+      "result": "Nonfatal: synthetic38/live35 report zero failures and final lifecycle pass.",
+      "interpretation": "Consistent with delayed-response cancellation being exercised; inferred from test context, not reproduced. The log is not completely clean. Some local error-message bytes were decoded with UTF-8 replacement for this audit."
+    }
+  ],
+  "load": {
+    "monitors": [
+      {
+        "file": "profile-load.json",
+        "samples": 35,
+        "interval_seconds": 18.5130455,
+        "elapsed_seconds": 18.5153283,
+        "logical_CPUs": 16,
+        "observed_CPU_seconds": {
+          "all_observed_cpu_seconds": 26.453125,
+          "target_cpu_seconds": 17.0,
+          "monitor_cpu_seconds": 1.890625,
+          "browser_cpu_seconds": 0.328125,
+          "regicide_cpu_seconds": 0.0
+        },
+        "observed_average_host_capacity_percent": {
+          "all_observed_cpu_seconds": 8.930569054670125,
+          "target_cpu_seconds": 5.739196179256406,
+          "monitor_cpu_seconds": 0.6382745750827437,
+          "browser_cpu_seconds": 0.11077492625402989,
+          "regicide_cpu_seconds": 0.0
+        }
+      },
+      {
+        "file": "search-load.json",
+        "samples": 41,
+        "interval_seconds": 21.1752532,
+        "elapsed_seconds": 21.1915478,
+        "logical_CPUs": 16,
+        "observed_CPU_seconds": {
+          "all_observed_cpu_seconds": 31.75,
+          "target_cpu_seconds": 0.9375,
+          "monitor_cpu_seconds": 1.8125,
+          "browser_cpu_seconds": 0.59375,
+          "regicide_cpu_seconds": 13.125
+        },
+        "observed_average_host_capacity_percent": {
+          "all_observed_cpu_seconds": 9.37119845159632,
+          "target_cpu_seconds": 0.2767086156967417,
+          "monitor_cpu_seconds": 0.534969990347034,
+          "browser_cpu_seconds": 0.17524878994126974,
+          "regicide_cpu_seconds": 3.873920619754384
+        }
+      }
+    ],
+    "desktop_boundary": {
+      "known_desktop_engines_before": 0,
+      "matched_at_end": 0,
+      "matched_desktop_engine_cpu_seconds": 0.0,
+      "user_paused_game": true,
+      "limits": "Boundary cumulative CPU only for matching known desktop engines; excludes replaced/exited processes. Aggregate monitor has separate sampling limitations."
+    },
+    "limits": [
+      "Only processes readable at both sample endpoints counted; new, exited, replaced and inaccessible processes may be omitted.",
+      "Search target is a wrapper; regicide group includes benchmark engines. Remaining CPU includes unclassified benchmark children such as Python, not exact external interference.",
+      "Browser counts overlap aggregate. Host percentages use 16 logical CPUs; one saturated logical CPU is 6.25 percent host capacity.",
+      "Zero matching desktop processes at boundaries does not prove continuous absence and excludes exited/replaced processes. No thermal, clock, affinity or idle-host guarantee."
+    ]
+  },
+  "earlier_candidates": {
+    "first_shared_loop": {
+      "source_commit": "4db4d83d11a2070118ad5a5d9d1ffe63ca2a04b9",
+      "binary_sha256": "421d2e3a2432762b69ff4b45ba3b30365a6b1f63dd1e89bb1f2531a69e011aee",
+      "decision": "Rejected before deployment: exact scores but standalone evaluation slower",
+      "paired_new_over_old_shield_on": 1.05064315656,
+      "paired_new_over_old_shield_off": 1.07503749161,
+      "sample_and_coefficients_unchanged": true
+    },
+    "second_compact_table": {
+      "source_commit": "87943a6fb733323791f60cc83531fb49cd7d9030",
+      "binary_sha256": "8a202b88c6a2b760b801530869078c1faa9b9cf9b4438357877edf54461528af",
+      "decision": "Evaluate a further unchanged-score candidate: component faster, whole search improvement not demonstrated; not deployed",
+      "paired_new_over_old_shield_on": 0.936486104318,
+      "paired_new_over_old_shield_off": 0.917431948933,
+      "default_new_over_old_wall": {
+        "depth3": 1.0092990537262632,
+        "depth4": 1.004499083311835,
+        "depth5": 1.016622954777744
+      },
+      "exact_search_pairs": 220,
+      "sample_and_coefficients_unchanged": true
+    },
+    "second_audit_sha256": "eeeee22aefc1f4819f516bbb0eb9a84305aa95faf1888e5947eb9ad833ba4140",
+    "interpretation": "First pilot was slower and rejected. Second improved evaluator-only cost but did not demonstrate whole-search gain; neither was deployed. Final signed-square candidate is distinct and prior original measurements remain saved."
+  },
+  "conclusions": {
+    "score_and_search_preservation": "All 220 pairs strictly match the seven recorded graph fields, with legal PVs and TT totals/reuse independently validated. Extensive frozen/scalar/rule tests pass; this is sampled evidence, not a formal proof for every legal position.",
+    "evaluator_cost": "new/old cost 0.804254 with shield ON and 0.803462 with shield OFF: about 19.57 and 19.65 percent lower on 58 predeclared positions.",
+    "whole_search_cost": "new/old wall medians 0.977919/0.982888/0.973126 at default depths3/4/5: about 2.21/1.71/2.69 percent lower. Other flag modes are about 1.35 to 1.44 percent lower. Modest, condition-specific sampled gains do not guarantee universal speedup.",
+    "strength": "No Elo, win-rate or playing-strength gain measured; scores/search behavior are intentionally preserved.",
+    "load": "Nonzero browser/other observed CPU load remained; do not claim idle or CPU-isolated host."
+  },
+  "checks": [
+    {
+      "name": "HEAD_and_provenance",
+      "passed": true
+    },
+    {
+      "name": "frozen_source_tree_unchanged",
+      "passed": true
+    },
+    {
+      "name": "source:src/evaluation.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:src/board.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:src/search.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:src/uci.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:src/main.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:include/regicide/evaluation.hpp",
+      "passed": true
+    },
+    {
+      "name": "source:include/regicide/search.hpp",
+      "passed": true
+    },
+    {
+      "name": "source:scripts/profile_evaluation.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:scripts/profile_evaluation.ps1",
+      "passed": true
+    },
+    {
+      "name": "source:scripts/build.ps1",
+      "passed": true
+    },
+    {
+      "name": "source:scripts/benchmark_search.py",
+      "passed": true
+    },
+    {
+      "name": "source:tests/evaluation_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:tests/search_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:tests/reference_evaluation_v054.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:tests/reference_evaluation_v056.cpp",
+      "passed": true
+    },
+    {
+      "name": "source:tests/reference_evaluation_v056.hpp",
+      "passed": true
+    },
+    {
+      "name": "source:tests/data/pawn_structure_profile_2026_10_18.fens",
+      "passed": true
+    },
+    {
+      "name": "source:tests/data/profile_positions.json",
+      "passed": true
+    },
+    {
+      "name": "source:CMakeLists.txt",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/board.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/evaluation.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/search.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/see.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/transposition.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:include/regicide/uci.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/board.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/evaluation.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/main.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/search.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/see.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/transposition.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:src/uci.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/board_state_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/evaluation_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/reference_evaluation_v054.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/reference_evaluation_v054.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/reference_evaluation_v056.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/reference_evaluation_v056.hpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/rules_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/search_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/see_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest:tests/transposition_tests.cpp",
+      "passed": true
+    },
+    {
+      "name": "Linux_manifest_23_files",
+      "passed": true
+    },
+    {
+      "name": "frozen_reference_unchanged",
+      "passed": true
+    },
+    {
+      "name": "binary_provenance:baseline",
+      "passed": true
+    },
+    {
+      "name": "binary_provenance:candidate",
+      "passed": true
+    },
+    {
+      "name": "binary_provenance:profile",
+      "passed": true
+    },
+    {
+      "name": "expected_final_binary",
+      "passed": true
+    },
+    {
+      "name": "profile_corpus",
+      "passed": true
+    },
+    {
+      "name": "profile_dimensions",
+      "passed": true
+    },
+    {
+      "name": "precheck_all_four_flags",
+      "passed": true
+    },
+    {
+      "name": "all_timed_checksums",
+      "passed": true
+    },
+    {
+      "name": "warmup_checksums",
+      "passed": true
+    },
+    {
+      "name": "same_call_count_cost_recompute",
+      "passed": true
+    },
+    {
+      "name": "balanced_rotating_order",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:0:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:0:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:0:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:0:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:0:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:0:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:0:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:0:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:1:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:1:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:1:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:1:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:1:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:1:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:1:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:1:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:2:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:2:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:2:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:2:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:2:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:2:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:2:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:2:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:3:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:3:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:3:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:3:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:3:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:3:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:3:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:3:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:4:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:4:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:4:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:4:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:4:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:4:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:4:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:4:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:5:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:5:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:5:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:5:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:5:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:5:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:5:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:5:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:6:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:6:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:6:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:6:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:6:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:6:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:6:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:6:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:7:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:7:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:7:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:7:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:7:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:7:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:7:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:7:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:8:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:8:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:8:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_mean:8:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:8:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:8:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:8:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio:8:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_median:old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_median:old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_median:new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_median:new_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio_median:new_shield_on_over_old_v056_shield_on",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio_median:new_shield_off_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio_median:old_v056_shield_on_over_old_v056_shield_off",
+      "passed": true
+    },
+    {
+      "name": "micro_ratio_median:new_shield_on_over_new_shield_off",
+      "passed": true
+    },
+    {
+      "name": "separate_verify_pass",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:30",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:30:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:30:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:30:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:30:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:31",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:31:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:31:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:31:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:31:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:32",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:32:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:32:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:32:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:32:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:33",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:33:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:33:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:33:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:33:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:34",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:34:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:34:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:34:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:34:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:35",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:35:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:35:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:35:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:35:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:36",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:36:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:36:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:36:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:36:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:37",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:37:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:37:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:37:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:37:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:38",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:38:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:38:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:38:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:38:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:39",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:39:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:39:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:39:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:39:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:40",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:40:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:40:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:40:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:40:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:41",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:41:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:41:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:41:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:41:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:42",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:42:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:42:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:42:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:42:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:43",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:43:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:43:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:43:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:43:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:44",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:44:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:44:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:44:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:44:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:45",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:45:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:45:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:45:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:45:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:46",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:46:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:46:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:46:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:46:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:47",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:47:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:47:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:47:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:47:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:48",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:48:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:48:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:48:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:48:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:graph:49",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:49:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:49:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:legal_depth:49:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT:49:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth3.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:30",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:30:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:30:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:30:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:30:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:31",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:31:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:31:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:31:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:31:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:32",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:32:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:32:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:32:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:32:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:33",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:33:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:33:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:33:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:33:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:34",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:34:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:34:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:34:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:34:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:35",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:35:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:35:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:35:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:35:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:36",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:36:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:36:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:36:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:36:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:37",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:37:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:37:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:37:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:37:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:38",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:38:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:38:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:38:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:38:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:39",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:39:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:39:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:39:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:39:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:40",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:40:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:40:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:40:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:40:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:41",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:41:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:41:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:41:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:41:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:42",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:42:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:42:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:42:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:42:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:43",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:43:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:43:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:43:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:43:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:44",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:44:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:44:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:44:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:44:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:45",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:45:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:45:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:45:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:45:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:46",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:46:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:46:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:46:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:46:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:47",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:47:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:47:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:47:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:47:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:48",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:48:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:48:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:48:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:48:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:graph:49",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:49:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:49:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:legal_depth:49:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT:49:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth4.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "default-depth5.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "structure-off-depth3.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "shield-off-depth3.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:strict_complete",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:harness_and_data",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:all_positions",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:identity_options:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:identity_options:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:0",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:0:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:0:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:1",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:1:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:1:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:2",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:2:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:2:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:3",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:3:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:3:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:4",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:4:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:4:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:5",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:5:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:5:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:6",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:6:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:6:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:7",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:7:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:7:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:8",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:8:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:8:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:9",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:9:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:9:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:10",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:10:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:10:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:11",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:11:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:11:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:12",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:12:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:12:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:13",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:13:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:13:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:14",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:14:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:14:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:15",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:15:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:15:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:16",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:16:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:16:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:17",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:17:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:17:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:18",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:18:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:18:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:19",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:19:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:19:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:20",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:20:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:20:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:21",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:21:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:21:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:22",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:22:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:22:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:23",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:23:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:23:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:24",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:24:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:24:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:25",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:25:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:25:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:26",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:26:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:26:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:27",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:27:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:27:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:28",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:28:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:28:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:graph:29",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:29:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:legal_depth:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT:29:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:summary_recomputed",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT_totals:baseline",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:TT_totals:candidate",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:7",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:2",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:8",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:0",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:4",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:9",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:6",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:1",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:5",
+      "passed": true
+    },
+    {
+      "name": "both-off-depth3.json:position_summary:3",
+      "passed": true
+    },
+    {
+      "name": "all_220_exact_graph",
+      "passed": true
+    },
+    {
+      "name": "profile-load.json:monitor_pass",
+      "passed": true
+    },
+    {
+      "name": "search-load.json:monitor_pass",
+      "passed": true
+    },
+    {
+      "name": "desktop_boundary",
+      "passed": true
+    },
+    {
+      "name": "Linux_final_identity",
+      "passed": true
+    },
+    {
+      "name": "windows-native.log:totals",
+      "passed": true
+    },
+    {
+      "name": "linux-native.log:totals",
+      "passed": true
+    },
+    {
+      "name": "linux-sanitizers.log:totals",
+      "passed": true
+    },
+    {
+      "name": "UCI23",
+      "passed": true
+    },
+    {
+      "name": "differential2997",
+      "passed": true
+    },
+    {
+      "name": "tools_identity_counts",
+      "passed": true
+    },
+    {
+      "name": "tools_log:human_play_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:hint_state_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:handicap_play_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:game_archive_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:godot_bootstrap_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:external_baseline_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:evaluation_state_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:game_runner_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:compare_engines_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:benchmark_search_tests",
+      "passed": true
+    },
+    {
+      "name": "tools_log:web_hint_tests",
+      "passed": true
+    },
+    {
+      "name": "GUI:godot_integration_tests.log",
+      "passed": true
+    },
+    {
+      "name": "GUI:handicap_godot_tests.log",
+      "passed": true
+    },
+    {
+      "name": "GUI:archive_godot_tests.log",
+      "passed": true
+    },
+    {
+      "name": "GUI:hint_godot_tests.log",
+      "passed": true
+    },
+    {
+      "name": "GUI963_plus_close3",
+      "passed": true
+    },
+    {
+      "name": "prior_audit_preserved",
+      "passed": true
+    },
+    {
+      "name": "prior_candidates_not_deployed",
+      "passed": true
+    },
+    {
+      "name": "corpus_unchanged_across_candidates",
+      "passed": true
+    }
+  ],
+  "failed_checks": [],
+  "evidence_sha256": {
+    "provenance.json": "13a3a466d2b6d97bc138b9bf75f8bc332a7cfbddf84e702fe170f1223559d525",
+    "profile-windows.json": "f9a9257e6214af4eae6f02c8756acfa82f6e64dfbbf12a74dcacc85a31677ab8",
+    "profile-verify.json": "e91f57f60ea7b903d32bd416d9e82c52db34f1d8792473cf11543f1dbd57dfe9",
+    "profile-load.json": "a89c56012dd8ef20fd54552427b9093f1c7a41521fa92774f48ed28d3ab4021e",
+    "search-load.json": "1f5c30dee989e641562567e7bba0c2ec1de15c71b70f82648f289d5c72aed921",
+    "desktop-load-boundary.json": "f900d6ebfc4e2f871e9599f21ea80e58c80a468375748302b8e119c88684bded",
+    "windows-native.log": "8e0d31451b9a642d4afae0b8d275b96a499c54ddab006f9c7328fa0c698b6ea6",
+    "engine_integration.log": "374589a16c6b39ab94df2ce06f0d2a1e2f34cc7e7a5898cc6de72c391b8c504e",
+    "differential.log": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+    "tools-summary.json": "3b942d545244e2c0bf0eb0d0453bfda1b2bb937661e2527928efaa59a0769749",
+    "pilot-4db4d83-decision.json": "86b5950782849401903018b98c29c5ad5915b1ccf26315bb96a52afc88aedbbc",
+    "pilot-87943a6-decision.json": "fd6db6c307e28dba02dfdd33e9208708550ff8f5912885c1573997ba45a84d8a",
+    "independent-audit-87943a6.json": "eeeee22aefc1f4819f516bbb0eb9a84305aa95faf1888e5947eb9ad833ba4140",
+    "default-depth3.json": "3ac66851f1175536dbf7a43d5019537d399cea92bb7ceaafa8b492e83ae762f4",
+    "default-depth4.json": "7e30eca4da39ec10edd57309d7ff2ba49b1ae067f12d2c2423a0d2b20b477b5b",
+    "default-depth5.json": "8a8da5d34e349bf9083229293f761f63888f64e24f010c539380d49347adad28",
+    "structure-off-depth3.json": "9b757899f1fbdcc9a502a1273d20fea5067685693e4b353b3b30cba40b741f19",
+    "shield-off-depth3.json": "834ec0c611b347286a0c2012ff63003c146a72f06b961f23e6b384ca6939f77e",
+    "both-off-depth3.json": "8b3e0f87a52326e7dc2a67f0b8dc8385faff9fca39656186959cb062199c0a43",
+    "human_play_tests-real.log": "4a0eea2664205145fa17324e0d81da3f80eb39ca563094f4cf35cd7d3354b29f",
+    "hint_state_tests-real.log": "32e1c5bd71a1c60628588d467c6167c7af28426e429debf00b8e3ebcf6d6d0fd",
+    "handicap_play_tests-real.log": "c88be445a0766c68786c04f8fb93d744b602af8f54ee404390cc657396ee4bc9",
+    "game_archive_tests-real.log": "a740087d0f05cf2e3689be417eaca2830ec473d03692defa5c07c987efeb97ee",
+    "godot_bootstrap_tests-real.log": "09836ebdff38f5a3ff99696fddbad814059102e0a0c398de56bda83642b9c36b",
+    "external_baseline_tests-real.log": "3bd5ecc72e17499570c43b9103dea739864b49d81a67d4c7c4dfe244f7d0c0bc",
+    "evaluation-state-tools.log": "c1499ee89cf7454f068aab763e454066c4de5399902d46e83172d213fe2331ae",
+    "game-runner-tools.log": "68a0086f7b2e7070299b84e14527ccce123f2e9cbb56c85722cece4b6af94782",
+    "compare-engines-tools.log": "ff078ad7969ebe162013db17781358f42aca0de59ba76ca7e3811a2ab739bb91",
+    "benchmark-search-tools.log": "4a1be630f17f76e4bf49fc53f3156f756d9056fa110c6760d0257f30a62255b8",
+    "web-hint-tools.log": "035709d880bf83f35af2e6adb4b5c805916be747d50e1d79a876b96fd79c2dac",
+    "godot_integration_tests.log": "1d6bb8c40ead176a62bbf70bd2d67c29bef536d13950623e7de8882adadaeb04",
+    "handicap_godot_tests.log": "2bbfa1f4dfa8da5df3a5ba6eea4e8d1028722cb001ec6b1a823dcc086749bf19",
+    "archive_godot_tests.log": "4ae33269e14f71da90b52d281bfa85cbbc6f9e55acddd7af98a486260baef398",
+    "hint_godot_tests.log": "747b0b98a12c15141d183e5d3a12722cf3f3d25938f9ceaf7a781efb74785a1e"
+  },
+  "Linux_evidence_sha256": {
+    "summary.json": "2598acd93a0e8e398e5ec999713b9caf92c2ae480501ebd9a8546858ddff210e",
+    "linux-native.log": "39bebf9d1574c03b4bb7edd2c7c92c54901fc58f5d66021849a921973ab5c0c5",
+    "linux-sanitizers.log": "e6f6021de34a66b6911b1855d33717c87eb0d6d744dc6ca847a1cb3dede5f2b6",
+    "linux-final-source-sha256.txt": "5908817b9b884ed7db47c3488e085a9ebc485fa0f93f96c2c6f1ccb546d702cf",
+    "linux-environment.txt": "ab518cf4e837a3b9d8d296e591a6210508bf965c90e82d9ef71e9666a9dde9fa",
+    "validate-linux.sh": "a1c2f0bf8cb1bc7044b7780b9c19ad0d2fa5863fa77f36c440395a9d45093227"
+  }
+}

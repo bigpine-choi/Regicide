@@ -1,0 +1,36 @@
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 59737)
+Traceback (most recent call last):
+  File "$PYTHON_HOME\Lib\socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$PYTHON_HOME\Lib\socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$PYTHON_HOME\Lib\socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "$PYTHON_HOME\Lib\http\server.py", line 451, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "$PYTHON_HOME\Lib\http\server.py", line 439, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "$REPO\tests\hint_godot_tests.py", line 38, in do_GET
+    self._send(200, snapshot)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "$REPO\scripts\play_human.py", line 538, in _send
+    self.wfile.write(data)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "$PYTHON_HOME\Lib\socketserver.py", line 845, in write
+    self._sock.sendall(b)
+    ~~~~~~~~~~~~~~~~~~^^^
+ConnectionAbortedError: [WinError 10053] ���� ������ ������� ȣ��Ʈ �ý����� ����Ʈ������ ���� �ߴܵǾ����ϴ�
+----------------------------------------
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+Godot hint synthetic checks: 38, failures: 0
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+Godot hint live checks: 35, failures: 0
+Godot recommendation OFF/ON, both colors, cancellation, independent controls and lifecycle passed.
