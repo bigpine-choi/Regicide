@@ -44,7 +44,7 @@ def write_summary(run, report):
                   f"- 채택 기준 통과: {decision.get('passed')}"]
     if report.get("error"):
         lines += ["", "실패: " + report["error"]]
-    lines += ["", "상세 근거: cycle.json, diagnosis/, endgame-train/, endgame-train-quality/,", 
+    lines += ["", "상세 근거: cycle.json, diagnosis/, endgame-train/, endgame-train-quality/,",
               "endgame-heldout-quality/, curve/, compute-control/, development-*/, arena/", "",
               "규칙 정확성·정답 일치·개발 대국·채택 판정을 구분한다. 기존 모델은 기준 통과 때만 바꾼다.", ""]
     (Path(run) / "summary.md").write_text("\n".join(lines), encoding="utf-8")
