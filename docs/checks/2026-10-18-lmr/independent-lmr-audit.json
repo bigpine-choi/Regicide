@@ -1,0 +1,361 @@
+{
+  "schema": "regicide-independent-lmr-audit-v1",
+  "audit_utc": "2026-10-18T11:40:06.760480+00:00",
+  "code_commit": "157305d804bc1828641a7e8d9b9b793b7746bcc3",
+  "candidate_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+  "checks": 13222,
+  "failed_checks": [],
+  "status": "passed_with_small_sample_limits",
+  "fixed_depth": [
+    {
+      "file": "off-equivalence-depth3",
+      "pairs": 30,
+      "LMR_ON": false,
+      "score_differences": 0,
+      "graph_differences": 0,
+      "median_new_over_old_wall": 0.994147187234363,
+      "median_new_over_old_nodes": 1.0,
+      "sidecar": {
+        "plays": 62,
+        "per_role": {
+          "baseline": 31,
+          "candidate": 31
+        },
+        "reductions": {
+          "candidate": 0
+        },
+        "researches": {
+          "candidate": 0
+        }
+      }
+    },
+    {
+      "file": "off-equivalence-depth4",
+      "pairs": 30,
+      "LMR_ON": false,
+      "score_differences": 0,
+      "graph_differences": 0,
+      "median_new_over_old_wall": 0.9942922763212547,
+      "median_new_over_old_nodes": 1.0,
+      "sidecar": {
+        "plays": 62,
+        "per_role": {
+          "baseline": 31,
+          "candidate": 31
+        },
+        "reductions": {
+          "candidate": 0
+        },
+        "researches": {
+          "candidate": 0
+        }
+      }
+    },
+    {
+      "file": "off-equivalence-depth5",
+      "pairs": 30,
+      "LMR_ON": false,
+      "score_differences": 0,
+      "graph_differences": 0,
+      "median_new_over_old_wall": 0.9985056920555295,
+      "median_new_over_old_nodes": 1.0,
+      "sidecar": {
+        "plays": 62,
+        "per_role": {
+          "baseline": 31,
+          "candidate": 31
+        },
+        "reductions": {
+          "candidate": 0
+        },
+        "researches": {
+          "candidate": 0
+        }
+      }
+    },
+    {
+      "file": "on-cost-depth5",
+      "pairs": 30,
+      "LMR_ON": true,
+      "score_differences": 0,
+      "graph_differences": 15,
+      "median_new_over_old_wall": 0.9984347841065336,
+      "median_new_over_old_nodes": 1.0,
+      "sidecar": {
+        "plays": 62,
+        "per_role": {
+          "baseline": 31,
+          "candidate": 31
+        },
+        "reductions": {
+          "baseline": 0,
+          "candidate": 232
+        },
+        "researches": {
+          "baseline": 0,
+          "candidate": 21
+        }
+      }
+    },
+    {
+      "file": "on-cost-depth6",
+      "pairs": 30,
+      "LMR_ON": true,
+      "score_differences": 0,
+      "graph_differences": 27,
+      "median_new_over_old_wall": 0.8186910785367685,
+      "median_new_over_old_nodes": 0.7982398623124298,
+      "sidecar": {
+        "plays": 62,
+        "per_role": {
+          "baseline": 31,
+          "candidate": 31
+        },
+        "reductions": {
+          "baseline": 0,
+          "candidate": 14157
+        },
+        "researches": {
+          "baseline": 0,
+          "candidate": 310
+        }
+      }
+    }
+  ],
+  "OFF_exact_pairs": 90,
+  "ON_cost_pairs": 60,
+  "match": {
+    "completed": 16,
+    "unfinished": 0,
+    "WDL": [
+      4,
+      6,
+      6
+    ],
+    "runner_exit_code": 0,
+    "completed_game_score": 0.4375,
+    "sidecar": {
+      "plays": 1446,
+      "per_role": {
+        "candidate": 723,
+        "baseline": 723
+      },
+      "reductions": {
+        "candidate": 84420
+      },
+      "researches": {
+        "candidate": 649
+      }
+    },
+    "strength_limit": "Only eight fixed paired starts/16 scheduled games; no universal strength or Elo estimate."
+  },
+  "CPU_observations": [
+    {
+      "file": "search-load.json",
+      "samples": 138,
+      "covered_seconds": 71.32929809999999,
+      "CPU_seconds": {
+        "all_observed_cpu_seconds": 113.171875,
+        "target_cpu_seconds": 1.046875,
+        "monitor_cpu_seconds": 3.515625,
+        "browser_cpu_seconds": 6.328125,
+        "regicide_cpu_seconds": 62.25
+      },
+      "host_capacity_percent": {
+        "all_observed_cpu_seconds": 9.91632102924058,
+        "target_cpu_seconds": 0.09172904997364612,
+        "monitor_cpu_seconds": 0.3080453170756773,
+        "browser_cpu_seconds": 0.5544815707362191,
+        "regicide_cpu_seconds": 5.454455747686659
+      }
+    },
+    {
+      "file": "match-load.json",
+      "samples": 513,
+      "covered_seconds": 270.4006083,
+      "CPU_seconds": {
+        "all_observed_cpu_seconds": 1633.015625,
+        "target_cpu_seconds": 0.078125,
+        "monitor_cpu_seconds": 9.078125,
+        "browser_cpu_seconds": 1265.140625,
+        "regicide_cpu_seconds": 225.859375
+      },
+      "host_capacity_percent": {
+        "all_observed_cpu_seconds": 37.74528363829128,
+        "target_cpu_seconds": 0.00180576979123608,
+        "monitor_cpu_seconds": 0.20983044974163248,
+        "browser_cpu_seconds": 29.242274845318832,
+        "regicide_cpu_seconds": 5.220480466463507
+      }
+    }
+  ],
+  "validation_binary_scope": {
+    "frozen": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+    "pre_freeze_same_source": "563114f5dc963c333d3c2f84cf99e5a1f8d25064180b7951a69291a91a1c9605",
+    "build_note": "Same final source rebuilt after commit; PE/link metadata can change binary hash. Frozen binary native/differential/UCI checks rerun. Earlier broad GUI/backend tests used pre-freeze link from the same source."
+  },
+  "observed_executable_byte_checks": [
+    {
+      "label": "off-equivalence-depth3baseline",
+      "bytes_available": true,
+      "observed_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc",
+      "expected_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc"
+    },
+    {
+      "label": "off-equivalence-depth3candidate",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "off-equivalence-depth4baseline",
+      "bytes_available": true,
+      "observed_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc",
+      "expected_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc"
+    },
+    {
+      "label": "off-equivalence-depth4candidate",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "off-equivalence-depth5baseline",
+      "bytes_available": true,
+      "observed_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc",
+      "expected_sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc"
+    },
+    {
+      "label": "off-equivalence-depth5candidate",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "on-cost-depth5baseline",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "on-cost-depth5candidate",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "on-cost-depth6baseline",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    },
+    {
+      "label": "on-cost-depth6candidate",
+      "bytes_available": true,
+      "observed_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+      "expected_sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1"
+    }
+  ],
+  "frozen_correctness": {
+    "native_suites": {
+      "tests": {
+        "groups": 20,
+        "assertions": 8325,
+        "failures": 0
+      },
+      "search_tests": {
+        "groups": 56,
+        "assertions": 21304,
+        "failures": 0
+      },
+      "evaluation_tests": {
+        "groups": 24,
+        "assertions": 408771,
+        "failures": 0
+      },
+      "board_state_tests": {
+        "groups": 10,
+        "assertions": 18974,
+        "failures": 0
+      },
+      "transposition_tests": {
+        "groups": 8,
+        "assertions": 97,
+        "failures": 0
+      },
+      "see_tests": {
+        "groups": 9,
+        "assertions": 9119,
+        "failures": 0
+      }
+    },
+    "native_assertions": 466590,
+    "UCI_groups": 26,
+    "differential_cases": 2997
+  },
+  "broad_same_source_compatibility": {
+    "unit_passed": 101,
+    "unit_skipped": 1,
+    "harness_and_Node_cases": 40,
+    "scope": "Not added to native assertion totals; child suites counted once."
+  },
+  "limits": [
+    "CPU aggregates omit processes absent/inaccessible at either endpoint; no idle, affinity, frequency or thermal guarantee.",
+    "Regicide group includes benchmark engines; wrapper CPU excludes some descendants. Remaining load is not exact external interference.",
+    "LMR final counters/identity are matched per returned play; monotonic-line checks rely on the saved sidecar capture error flags, not a separately retained full raw UCI stream.",
+    "Broad backend/Godot compatibility used the pre-freeze same-source link; frozen native/rules/UCI confirmations are separate. Binary identity is not a reproducible-build guarantee.",
+    "OFF graph equality, ON fixed-depth cost, and equal-time small-match score are distinct evidence. Unfinished '*' games never count as draws."
+  ],
+  "input_hash_scope": "Hashes below identify the exact current evidence copy. Redacted public bytes differ from raw evidence hashes; declared engine/source hashes remain identities of original bytes.",
+  "public_manifest_sha256": null,
+  "evidence_sha256": {
+    "frozen-differential.log": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+    "frozen-engine-integration.log": "b4b89727ab46034a4891af84f3123c4f281f4d55c3ac39404986490e537e6971",
+    "frozen-regicide_board_state_tests.log": "f5b2a4c8ee732e8ae399bcf638efd84aa10b165658fde782c42135ae88a8e4f9",
+    "frozen-regicide_evaluation_tests.log": "e313cb6797f32bd265d6015d86fc4b15f35cc1d5bfeda092ff1b40f44fe2a7c0",
+    "frozen-regicide_search_tests.log": "6538e20d579856dd05265268808be3573c715e07dc39a9b6769abb3e9c866c85",
+    "frozen-regicide_see_tests.log": "d89a7f96368fcc17ed90d6901f498277970e47d01cc5c89f44534a480a4d38ed",
+    "frozen-regicide_tests.log": "00100d12fe0ed3ad4af606036ba199d50c1cb643b2e6180d27f3b958bc952fd8",
+    "frozen-regicide_transposition_tests.log": "83d3c903e06ec596fb8898dc363db0247e8299bf7ebd795ba0828b1fcf06a72d",
+    "match-200ms-lmr.json": "b1abb4e3450392b0727c8bcb5d77769db01b2c54fada2ccc9fdbe84cb12a189b",
+    "match-200ms.json": "7eaa9053bf502e6cbb069410635a148930ca795b7bd985f3ea9460507ae7e067",
+    "match-200ms.pgn": "73d05be5917db02d5bdc9a7eb0546e2f6611cbc0d1fa0a43eef7a1cae627af26",
+    "match-load.json": "0ac86a88b7901e7f4a85a8997eae1bf02025ad5a40de19b076199d66a20db826",
+    "off-equivalence-depth3-lmr.json": "1b097d7567a3fbf691db2aa626bd413057528e9dc6d27392f5426c03e6e62227",
+    "off-equivalence-depth3.json": "4ce97f3a4b442e81fa7c947a2187ce54737a56c72c4ff61f00beaf73e5924cd8",
+    "off-equivalence-depth4-lmr.json": "c35052c316e76fc52e22a694107c69f00b8bec4e56a85c0f55567339cba5f0d8",
+    "off-equivalence-depth4.json": "d88981ec655de4c1d8c5c8520601168aa1dda4f30880118714bfb31e592693c0",
+    "off-equivalence-depth5-lmr.json": "2fa53acc7ac44839c9c98baa5d8791e4c76a0cd8aff1ca4d35b8834676ed5526",
+    "off-equivalence-depth5.json": "2a477d338a240187e9906f7bc24edfbb63057b47684f20be59b7ca2aff22ae11",
+    "on-cost-depth5-lmr.json": "4b9e943c8ee20f4cb8ecbd43444ff412bb45650b8de6e30a35fc615e9cf27c0c",
+    "on-cost-depth5.json": "0a8cb41e94a49db69f0c809ff8a62b8947e768ea227d0165d5c67290d384faf5",
+    "on-cost-depth6-lmr.json": "9ade73c35b486bbfc15293024073abe98ecbbd3cddc4d2a60e80ef6f44824525",
+    "on-cost-depth6.json": "96053832b9ae82a4c71b83d51bf36af8a537c774ef467567de7b43b49d5f5860",
+    "protocol-tools-summary.json": "5dcaf686231f95fbf6c83cf929897b6d3d083462388fc127ce111f88111ffe42",
+    "provenance.json": "61191572ab95f169aa16e86e3f5bf07e1b51b3241fb71b272351ca7729a040e8",
+    "search-load.json": "f6275c60213638bf2b2f1a14d00cad92762127a4ed89d10f8ad6a48788f8ba6d"
+  },
+  "load_interpretation": [
+    {
+      "file": "search-load.json",
+      "observed_browser_CPU_seconds": 6.328125,
+      "observed_browser_average_logical_CPU_equivalents": 0.08871705131779505,
+      "observed_browser_average_host_capacity_percent": 0.5544815707362191,
+      "interpretation": "Nonzero observed shared load; incomplete process sampling cannot prove isolation or attribute outcome differences."
+    },
+    {
+      "file": "match-load.json",
+      "observed_browser_CPU_seconds": 1265.140625,
+      "observed_browser_average_logical_CPU_equivalents": 4.678763975251013,
+      "observed_browser_average_host_capacity_percent": 29.242274845318832,
+      "interpretation": "Nonzero observed shared load; incomplete process sampling cannot prove isolation or attribute outcome differences."
+    }
+  ],
+  "audit_script_sha256": "f09a0ea26e9b8e4b58e71daef625fd609b91704dc1298762f14b51dc31d8329d",
+  "conclusions": {
+    "OFF": "90 recorded search pairs preserve the seven exact graph fields with LMR disabled.",
+    "ON_cost": "60 fixed-depth pairs measure selective search cost only; score differences are allowed. Lower nodes or shorter fixed-depth time are not a playing-strength result.",
+    "match": "Observed W/D/L [4, 6, 6] in 16 completed games, score 43.75%; 0 unfinished excluded. This small fixed sample and shared load do not establish general superiority.",
+    "confounding_load": "The match monitor observed 1265.14 browser CPU-seconds, about 29.24% of 16-logical-CPU capacity on average. The observed browser load must be considered. This was not an idle or fully controlled host. Neither an intrinsic LMR advantage/disadvantage nor attribution to browser interference is established."
+  }
+}

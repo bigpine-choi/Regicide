@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "platform": "Ubuntu 24.04 WSL2 x86_64",
+  "compiler": "GCC 13.3.0",
+  "warning_flags": "-Wall -Wextra -Wpedantic -Werror",
+  "baseline_commit": "5b5b5deedbef96133836609ec00229c7a548a15a",
+  "tested_source_state": "uncommitted v0.5.8 conservative LMR snapshot with unverified selective-upper TT stores skipped; source SHA256 list identifies exact tested files",
+  "source_hashes_unchanged_during_validation": true,
+  "selective_upper_tt_policy": "Do not store unverified mixed-horizon selective-upper bounds at any depth",
+  "search_cpp_raw_sha256": "75261bb06e717e4fa225dc66368e945a94bef71956766f518f25bbeaaaafbcea",
+  "search_tests_cpp_raw_sha256": "a4cbd20e43a3bc96f0a45be285868b113d78c4673f2a7fb7d2da3954f02e715d",
+  "native": {
+    "groups": 127,
+    "assertions": 466590,
+    "failures": 0,
+    "suites": {
+      "rules": 8325,
+      "search": 21304,
+      "evaluation": 408771,
+      "board_state": 18974,
+      "transposition": 97,
+      "see": 9119
+    }
+  },
+  "sanitizers": {
+    "kind": "ASan+UBSan",
+    "options": "detect_leaks=1:halt_on_error=1; halt_on_error=1:print_stacktrace=1",
+    "groups": 80,
+    "assertions": 430075,
+    "failures": 0,
+    "suites": [
+      "evaluation",
+      "search"
+    ]
+  },
+  "frozen_v054_oracle_positions": 16860,
+  "structure_oracle_positions": 23929,
+  "frozen_v056_compared_position_visits": 40789,
+  "frozen_v056_option_combinations_per_position": 4,
+  "evidence": [
+    "linux-native.log",
+    "linux-sanitizers.log",
+    "linux-environment.txt",
+    "linux-final-source-sha256.txt",
+    "validate-linux.sh"
+  ],
+  "superseded_evidence": "../lmr-before-selective-tt-fix-linux",
+  "note": "Full Linux rebuild and rerun after removing unsafe selective-upper TT stores. Pre-LMR graph/oracle groups explicitly disable LMR; six new groups cover gates, king/pawn protection, actual reductions/verification, legal deterministic PVs, interruption, reuse, claims and tactical/terminal precedence. No performance or playing-strength conclusion is implied."
+}
