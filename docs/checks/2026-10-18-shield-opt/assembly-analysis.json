@@ -1,0 +1,41 @@
+{
+  "compiler": "Microsoft (R) Optimizing Compiler Version 19.51.36260.0",
+  "flags": "/std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /GL- /FAs",
+  "compile_commands": "compile-assembly.cmd",
+  "compile_output": "compile-assembly.log",
+  "reference_assembly": "reference_evaluation_v054.asm",
+  "candidate_assembly": "candidate_evaluation.asm",
+  "reference": {
+    "source_type_call_sites": 5,
+    "source_contexts": [
+      "position_bonus",
+      "material",
+      "phase_weight",
+      "shield pawn test",
+      "shield non-pawn king test"
+    ],
+    "whole_translation_unit_direct_tolower_call_sites": 7,
+    "whole_translation_unit_tail_tolower_jumps": 1,
+    "evaluate_function_direct_tolower_call_lines": [
+      801,
+      873,
+      929,
+      946
+    ],
+    "called_position_bonus_tolower_call_line": 1700,
+    "shield_off_calls_per_nonempty_square_from_control_flow": 3,
+    "shield_on_calls_per_pawn_from_control_flow": 4,
+    "shield_on_calls_per_nonpawn_from_control_flow": 5,
+    "starting_position_off_calls_from_control_flow": 96,
+    "starting_position_on_calls_from_control_flow": 144,
+    "interpretation": "Counts derived from retained assembly call sites and branches, not a sampled dynamic call trace. Whole-TU counts include emitted helper copies and must not be used as per-piece call counts."
+  },
+  "candidate": {
+    "whole_translation_unit_direct_tolower_call_sites": 0,
+    "whole_translation_unit_tail_tolower_jumps": 0,
+    "tolower_symbols_or_source_mentions": 0,
+    "runtime_position_bonus_call_sites": 0,
+    "interpretation": "No tolower reference remains. Fixed square formulas are emitted as read-only tables; the home-minor multiplier and pawn-shield accumulation/penalties remain runtime work."
+  },
+  "timings_performed": false
+}

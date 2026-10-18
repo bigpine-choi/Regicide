@@ -1,0 +1,20 @@
++ for unit in src/board.cpp src/evaluation.cpp tests/reference_evaluation_v054.cpp scripts/profile_evaluation.cpp
+++ basename src/board.cpp .cpp
++ name=board
++ g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -fno-lto -Iinclude -Itests -c src/board.cpp -o build/shield-opt-linux/profile/board.o
++ for unit in src/board.cpp src/evaluation.cpp tests/reference_evaluation_v054.cpp scripts/profile_evaluation.cpp
+++ basename src/evaluation.cpp .cpp
++ name=evaluation
++ g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -fno-lto -Iinclude -Itests -c src/evaluation.cpp -o build/shield-opt-linux/profile/evaluation.o
++ for unit in src/board.cpp src/evaluation.cpp tests/reference_evaluation_v054.cpp scripts/profile_evaluation.cpp
+++ basename tests/reference_evaluation_v054.cpp .cpp
++ name=reference_evaluation_v054
++ g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -fno-lto -Iinclude -Itests -c tests/reference_evaluation_v054.cpp -o build/shield-opt-linux/profile/reference_evaluation_v054.o
++ for unit in src/board.cpp src/evaluation.cpp tests/reference_evaluation_v054.cpp scripts/profile_evaluation.cpp
+++ basename scripts/profile_evaluation.cpp .cpp
++ name=profile_evaluation
++ g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -fno-lto -Iinclude -Itests -c scripts/profile_evaluation.cpp -o build/shield-opt-linux/profile/profile_evaluation.o
++ g++ -fno-lto build/shield-opt-linux/profile/profile_evaluation.o build/shield-opt-linux/profile/reference_evaluation_v054.o build/shield-opt-linux/profile/evaluation.o build/shield-opt-linux/profile/board.o -o build/shield-opt-linux/profile_evaluation
++ sha256sum build/shield-opt-linux/profile_evaluation
+e592de173f1f9f1cb971bb5cd5da47b95d4dab0217b15e7e5003e8119c1fca8c  build/shield-opt-linux/profile_evaluation
++ set +x
