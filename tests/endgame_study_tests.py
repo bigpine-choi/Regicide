@@ -39,7 +39,7 @@ class EndgameStudyTests(unittest.TestCase):
         return directory / "manifest.json"
 
     def composition_fixture(self, temporary):
-        root = Path(temporary)
+        root = Path(temporary).resolve()
         original = root / "original"
         original.mkdir()
         _, games, rows = fixture(original)
@@ -69,11 +69,11 @@ class EndgameStudyTests(unittest.TestCase):
         return curve, {**candidate, "model_path": "curve/" + candidate["model_path"]}
 
     def validation_fixture(self, temporary):
-        state = Path(temporary) / "state"
+        state = Path(temporary).resolve() / "state"
         run_relative = "runs/000005-fixture"
         run = state / run_relative
         run.mkdir(parents=True)
-        binary = Path(temporary) / "installed-engine"
+        binary = Path(temporary).resolve() / "installed-engine"
         binary.write_bytes(b"fixture engine")
         snapshot = run / ("regicide.exe" if sys.platform == "win32" else "regicide")
         snapshot.write_bytes(binary.read_bytes())
@@ -101,7 +101,7 @@ class EndgameStudyTests(unittest.TestCase):
 
     def test_combine_single_lf_custom_fen_pgn_boundary_preserves_original_streams(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             sources = []
             definitions = (("train", "7k/8/5KQ1/8/8/8/8/8 w - - 0 1", "g6g7", 900),
                            ("validation", "8/8/8/8/8/1qk5/8/K7 b - - 0 1", "b3b2", 900))
@@ -164,7 +164,7 @@ class EndgameStudyTests(unittest.TestCase):
             train, heldout, output, games, rows = self.composition_fixture(temporary)
             train_game, train_row = copy.deepcopy(games[0]), copy.deepcopy(rows[0])
             train_game["game_id"] = train_row["game_id"] = games[1]["game_id"]
-            collision = self.dataset(Path(temporary) / "collision", [train_game], [train_row])
+            collision = self.dataset(Path(temporary).resolve() / "collision", [train_game], [train_row])
             with self.assertRaisesRegex(ValueError, "IDs collide"):
                 STUDY.combine_quality(collision, heldout, output)
             self.assertFalse(output.exists())
@@ -174,7 +174,7 @@ class EndgameStudyTests(unittest.TestCase):
             _, heldout, output, games, rows = self.composition_fixture(temporary)
             train_game, train_row = copy.deepcopy(games[0]), copy.deepcopy(rows[0])
             train_game["family"] = train_row["family"] = games[1]["family"]
-            collision = self.dataset(Path(temporary) / "collision", [train_game], [train_row])
+            collision = self.dataset(Path(temporary).resolve() / "collision", [train_game], [train_row])
             with self.assertRaisesRegex(ValueError, "family crosses split"):
                 STUDY.combine_quality(collision, heldout, output)
             self.assertFalse((output / "manifest.json").exists())
@@ -185,7 +185,7 @@ class EndgameStudyTests(unittest.TestCase):
             train_game, train_row = copy.deepcopy(games[1]), copy.deepcopy(rows[1])
             for row in (train_game, train_row):
                 row.update(game_id="new-id", family="new-train-family", split="train")
-            collision = self.dataset(Path(temporary) / "collision", [train_game], [train_row])
+            collision = self.dataset(Path(temporary).resolve() / "collision", [train_game], [train_row])
             with self.assertRaisesRegex(ValueError, "canonical position|neural feature"):
                 STUDY.combine_quality(collision, heldout, output)
             self.assertFalse(output.exists())
@@ -195,14 +195,14 @@ class EndgameStudyTests(unittest.TestCase):
     def test_label_free_game_of_wrong_split_is_also_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             _, heldout, output, games, rows = self.composition_fixture(temporary)
-            mixed = self.dataset(Path(temporary) / "mixed", games[:2], rows[:1])
+            mixed = self.dataset(Path(temporary).resolve() / "mixed", games[:2], rows[:1])
             with self.assertRaisesRegex(ValueError, "game split"):
                 STUDY.combine_quality(mixed, heldout, output)
             self.assertFalse(output.exists())
 
     def test_fixed_candidate_ignores_better_test_metrics_or_alternative_seed(self):
         with tempfile.TemporaryDirectory() as temporary:
-            run = Path(temporary)
+            run = Path(temporary).resolve()
             curve, candidate = self.curve_fixture(run)
             chosen = STUDY.fixed_candidate(curve, {"candidate": candidate}, run)
             self.assertEqual(chosen, run / candidate["model_path"])
@@ -211,7 +211,7 @@ class EndgameStudyTests(unittest.TestCase):
     def test_fixed_candidate_rederivation_rejects_report_curve_and_seed_forgery(self):
         for mutation in ("report", "curve", "second_seed", "seed_order"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
-                run = Path(temporary)
+                run = Path(temporary).resolve()
                 curve, candidate = self.curve_fixture(run)
                 report = {"candidate": candidate}
                 if mutation == "report":
@@ -227,7 +227,7 @@ class EndgameStudyTests(unittest.TestCase):
 
     def test_candidate_bytes_or_path_escape_cannot_pass(self):
         with tempfile.TemporaryDirectory() as temporary:
-            run = Path(temporary)
+            run = Path(temporary).resolve()
             curve, candidate = self.curve_fixture(run)
             (run / candidate["model_path"]).write_bytes(b"changed model")
             with self.assertRaisesRegex(ValueError, "bytes changed"):
@@ -246,7 +246,7 @@ class EndgameStudyTests(unittest.TestCase):
     def test_preregistered_arm_order_and_feasible_sizes_cannot_be_rewritten(self):
         for mutation in ("order", "feasible", "target"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
-                run = Path(temporary)
+                run = Path(temporary).resolve()
                 curve, candidate = self.curve_fixture(run)
                 if mutation == "order":
                     curve["arms"] = list(reversed(curve["arms"]))
@@ -298,7 +298,7 @@ class EndgameStudyTests(unittest.TestCase):
     def test_validation_wrong_engine_identity_blocks_matches_and_promotion(self):
         with tempfile.TemporaryDirectory() as temporary:
             args, state, run, _, catalog, _ = self.validation_fixture(temporary)
-            wrong = Path(temporary) / "different-engine"
+            wrong = Path(temporary).resolve() / "different-engine"
             wrong.write_bytes(b"different")
             args.binary = wrong
             with patch.object(STUDY, "verify_frozen"), patch("endgame_matches.run_matches") as matches, patch("learning_arena.run_arena") as arena:
@@ -348,14 +348,14 @@ class EndgameStudyTests(unittest.TestCase):
 
     def test_prepare_failure_consumes_attempt_and_persists_failure_without_model(self):
         with tempfile.TemporaryDirectory() as temporary:
-            state = Path(temporary) / "state"
+            state = Path(temporary).resolve() / "state"
             state.mkdir()
-            baseline = Path(temporary) / "baseline.json"
+            baseline = Path(temporary).resolve() / "baseline.json"
             baseline.write_bytes(b"fixture source")
             bootstrap = state / "bootstrap/manifest.json"
             bootstrap.parent.mkdir()
             bootstrap.write_bytes(b"fixture bootstrap")
-            binary = Path(temporary) / "regicide"
+            binary = Path(temporary).resolve() / "regicide"
             binary.write_bytes(b"fixture engine")
             catalog = {"attempts_started": 4, "runs": [], "bootstrap": {"manifest": "bootstrap/manifest.json"}, "datasets": []}
             args = SimpleNamespace(baseline=baseline, binary=binary, seed=123, train_repeats=4)
@@ -372,9 +372,9 @@ class EndgameStudyTests(unittest.TestCase):
             self.assertFalse((state / "champion.json").exists())
 
     def catalog_fixture(self, temporary):
-        state = Path(temporary) / "state"
+        state = Path(temporary).resolve() / "state"
         state.mkdir()
-        original = Path(temporary) / "original"
+        original = Path(temporary).resolve() / "original"
         original.mkdir()
         _, games, rows = fixture(original)
         bootstrap = self.dataset(state / "bootstrap", games, rows)
