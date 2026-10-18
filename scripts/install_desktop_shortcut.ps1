@@ -1,10 +1,12 @@
 param(
-    [string]$RepositoryPath = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepositoryPath = (Split-Path -Parent $PSScriptRoot),
+    [ValidateSet('Default', 'Neural', 'Learning')][string]$Mode = 'Default'
 )
 
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath $RepositoryPath).Path
 $launcherPath = Join-Path $repo 'scripts/play_godot.ps1'
+if ($Mode -eq 'Learning') { $launcherPath = Join-Path $repo 'scripts/learn.ps1' }
 $iconPath = Join-Path $repo 'assets/regicide.ico'
 foreach ($required in @($launcherPath, $iconPath)) {
     if (!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -15,9 +17,22 @@ $desktopPath = [Environment]::GetFolderPath('DesktopDirectory')
 if (!$desktopPath -or !(Test-Path -LiteralPath $desktopPath -PathType Container)) {
     throw 'Could not locate the Windows desktop directory.'
 }
-$linkPath = Join-Path $desktopPath 'Regicide.lnk'
+$shortcutName = switch ($Mode) {
+    'Neural' { 'Regicide - Neural Experiment.lnk' }
+    'Learning' { 'Regicide - Collect and Learn.lnk' }
+    default { 'Regicide.lnk' }
+}
+$linkPath = Join-Path $desktopPath $shortcutName
 $powershellPath = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
 $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $launcherPath + '"'
+if ($Mode -eq 'Neural') {
+    $modelPath = Join-Path $repo 'models/regicide-small-v1.nn'
+    if (!(Test-Path -LiteralPath $modelPath -PathType Leaf)) { throw 'The experiment model is missing.' }
+    $arguments += ' -NeuralModel "' + $modelPath + '"'
+}
+if ($Mode -eq 'Learning') {
+    $arguments = '-NoLogo -NoProfile -NoExit -ExecutionPolicy Bypass -File "' + $launcherPath + '"'
+}
 $shell = New-Object -ComObject WScript.Shell
 if (Test-Path -LiteralPath $linkPath) {
     $existing = $shell.CreateShortcut($linkPath)

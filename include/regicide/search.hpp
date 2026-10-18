@@ -44,7 +44,7 @@ struct SearchOptions {
     bool lmr = true; // Late N/B/R/Q quiet reduction; requires PVS and quiet ordering.
     // Optional immutable experimental model. Null preserves the classical path;
     // positional=false still explicitly selects material-only evaluation.
-    std::shared_ptr<const NeuralEvaluator> neural;
+    std::shared_ptr<const NeuralEvaluator> neural = {};
 };
 
 struct SearchResult {

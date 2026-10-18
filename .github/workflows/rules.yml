@@ -15,6 +15,13 @@ jobs:
       - run: cmake --build build --config Release
       - run: ctest --test-dir build -C Release --output-on-failure
       - run: python -m pip install -r requirements-test.txt
+      - run: python -m pip install -r requirements-learning.txt
+      - run: python tests/learning_data_tests.py
+      - run: python tests/neural_training_tests.py
+      - if: runner.os == 'Linux'
+        run: python tests/neural_integration_tests.py --binary build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/neural_integration_tests.py --binary build/Release/regicide.exe
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

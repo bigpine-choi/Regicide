@@ -1,4 +1,4 @@
-param(
+﻿param(
     [int]$GamesPerOpening = 2,
     [int]$Nodes = 1000,
     [int]$TeacherNodes = 10000,
