@@ -1053,7 +1053,7 @@ def test_pawn_shield_protocol_and_cli(binary):
     # An exposed g-file gives the moving side less cover in either color.
     # A one-node budget independently selects the root fallback path, so the
     # on/off score comparison cannot accidentally test only leaf evaluation.
-    exposed = chess.Board("r2q1rk1/ppp2ppp/2npbn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
+    exposed = chess.Board("r2q1rk1/ppp2ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
     assert exposed.is_valid() and not exposed.is_game_over()
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
         option = client.options.get("UsePawnShield")
@@ -1117,7 +1117,7 @@ def test_pawn_shield_option_lifecycle(binary):
     # Keep an actual repetition history live while options change. Matching a
     # cold process with that same history verifies worker/TT isolation without
     # replacing the tested position after a toggle.
-    board = chess.Board("r2q1rk1/ppp2ppp/2npbn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
+    board = chess.Board("r2q1rk1/ppp2ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
     for move in ("g1h1", "g8h8", "h1g1", "h8g8"):
         board.push_uci(move)
     assert board.is_repetition(2) and not board.is_game_over()
