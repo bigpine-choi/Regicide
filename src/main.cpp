@@ -1,5 +1,6 @@
 #include "regicide/board.hpp"
 #include "regicide/search.hpp"
+#include "regicide/neural.hpp"
 #include "regicide/uci.hpp"
 
 #include <algorithm>
@@ -61,12 +62,14 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.5.8\n"
+            std::cout << "Regicide 0.6.0\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
                          "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure --no-lmr\n"
+                         "    --eval-file MODEL (experimental neural evaluation; default remains classical)\n"
+                         "regicide eval --eval-file MODEL [--fen \"FEN\"] [--play ...] (static cp only)\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -79,7 +82,7 @@ int main(int argc, char** argv) {
             if (argc != 2) throw std::invalid_argument("uci takes no arguments");
             return regicide::run_uci(std::cin, std::cout);
         }
-        if (command != "moves" && command != "inspect" && command != "perft" && command != "divide" && command != "search")
+        if (command != "moves" && command != "inspect" && command != "perft" && command != "divide" && command != "search" && command != "eval")
             throw std::invalid_argument("unknown command; see --help");
         int arg = 2, depth = 0;
         if (command == "perft" || command == "divide") {
@@ -95,6 +98,8 @@ int main(int argc, char** argv) {
         while (arg < argc) {
             const std::string option = argv[arg++];
             if (option == "--fen" && arg < argc) fen = argv[arg++];
+            else if ((command == "search" || command == "eval") && option == "--eval-file" && arg < argc)
+                search_options.neural = regicide::NeuralEvaluator::load(argv[arg++]);
             else if (command == "search" && option == "--no-position") search_options.positional = false;
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;
@@ -125,7 +130,10 @@ int main(int argc, char** argv) {
         }
         Board board(fen);
         for (const auto& move : moves) board.play(move);
-        if (command == "search") {
+        if (command == "eval") {
+            if (!search_options.neural) throw std::invalid_argument("eval requires --eval-file MODEL");
+            std::cout << "score_cp: " << search_options.neural->evaluate(board) << '\n';
+        } else if (command == "search") {
             const auto result = regicide::search(board, limits, nullptr, {}, search_options);
             std::cout << "bestmove: " << (result.best_move ? result.best_move->uci() : "0000")
                       << '\n';

@@ -7,10 +7,13 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <vector>
 
 namespace regicide {
+
+class NeuralEvaluator;
 
 inline constexpr int mate_score = 30000;
 inline constexpr int max_search_depth = 64;
@@ -39,6 +42,9 @@ struct SearchOptions {
     bool king_pawn_shield = true; // Middlegame shelter, scaled by opposing pieces.
     bool pawn_structure = true; // Passed pawns, doubled files and isolated pawns.
     bool lmr = true; // Late N/B/R/Q quiet reduction; requires PVS and quiet ordering.
+    // Optional immutable experimental model. Null preserves the classical path;
+    // positional=false still explicitly selects material-only evaluation.
+    std::shared_ptr<const NeuralEvaluator> neural;
 };
 
 struct SearchResult {

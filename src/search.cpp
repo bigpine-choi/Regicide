@@ -1,4 +1,5 @@
 #include "regicide/search.hpp"
+#include "regicide/neural.hpp"
 #include "regicide/evaluation.hpp"
 #include "regicide/see.hpp"
 #include "regicide/transposition.hpp"
@@ -337,8 +338,9 @@ private:
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
 
     int static_evaluation(const Board& board) const {
-        const int score = options_.positional ? evaluate_position(board, options_.king_pawn_shield,
-                                                                  options_.pawn_structure) :
+        const int score = options_.positional ? (options_.neural ? options_.neural->evaluate(board) :
+                                              evaluate_position(board, options_.king_pawn_shield,
+                                                                options_.pawn_structure)) :
                                                evaluate_material(board);
         const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
         return std::clamp(score, -mate_score + reserved_plies + 1,
@@ -463,8 +465,9 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     order_moves(board, moves);
     result.best_move = moves.front();
     result.pv.push_back(moves.front());
-    result.score = options.positional ? evaluate_position(board, options.king_pawn_shield,
-                                                         options.pawn_structure) :
+    result.score = options.positional ? (options.neural ? options.neural->evaluate(board) :
+                                        evaluate_position(board, options.king_pawn_shield,
+                                                          options.pawn_structure)) :
                                        evaluate_material(board);
     if (claimable(board)) result.score = std::max(0, result.score);
     SearchContext one_shot_context;

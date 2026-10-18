@@ -1,5 +1,6 @@
 #include "regicide/uci.hpp"
 #include "regicide/search.hpp"
+#include "regicide/neural.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -120,12 +121,12 @@ public:
         std::lock_guard lock(output_mutex_);
         output_ << text << '\n' << std::flush;
     }
-    void handle(const std::vector<std::string>& tokens) {
+    void handle(const std::vector<std::string>& tokens, const std::string& raw_line) {
         if (tokens.empty()) return;
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.5.8");
+            send("id name Regicide 0.6.0");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -141,6 +142,8 @@ public:
             send("option name UsePawnShield type check default true");
             send("option name UsePawnStructure type check default true");
             send("option name UseLMR type check default true");
+            send("option name EvalFile type string default <empty>");
+            send("option name UseNeuralEvaluation type check default false");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -148,7 +151,7 @@ public:
         else if (command == "setoption") {
             // Options are changed only after a current search has been joined.
             stop();
-            set_option(tokens);
+            set_option(tokens, raw_line);
         } else if (command == "go") {
             stop();
             try {
@@ -161,7 +164,7 @@ public:
             send("info string unknown command: " + command);
     }
 private:
-    void set_option(const std::vector<std::string>& tokens) {
+    void set_option(const std::vector<std::string>& tokens, const std::string& raw_line) {
         if (tokens.size() < 3 || tokens[1] != "name") return;
         const auto value = std::find(tokens.begin() + 2, tokens.end(), "value");
         std::string option;
@@ -172,6 +175,42 @@ private:
         if (option == "Clear Hash") {
             if (value != tokens.end()) throw std::invalid_argument("Clear Hash is a button without a value");
             context_.clear(); return;
+        }
+        if (option == "EvalFile") {
+            if (value == tokens.end() || value + 1 == tokens.end())
+                throw std::invalid_argument("EvalFile requires a model path");
+            // UCI string values can contain consecutive spaces. Reading the
+            // untouched value preserves filenames that token joining changes.
+            std::istringstream raw(raw_line);
+            std::string token, path;
+            for (int i = 0; i < 4; ++i) raw >> token;
+            std::getline(raw, path);
+            const auto first = path.find_first_not_of(" \t");
+            path = first == std::string::npos ? std::string{} : path.substr(first);
+            if (!path.empty() && path.back() == '\r') path.pop_back();
+            if (path.empty()) throw std::invalid_argument("EvalFile requires a model path");
+            if (path == "<empty>") {
+                loaded_model_.reset();
+                options_.neural.reset();
+                neural_enabled_ = false;
+            } else {
+                // Validate completely before replacing any live option.
+                auto replacement = NeuralEvaluator::load(path);
+                loaded_model_ = std::move(replacement);
+                if (neural_enabled_) options_.neural = loaded_model_;
+            }
+            return;
+        }
+        if (option == "UseNeuralEvaluation") {
+            if (value == tokens.end() || tokens.end() - value != 2 ||
+                (*(value + 1) != "true" && *(value + 1) != "false"))
+                throw std::invalid_argument("UseNeuralEvaluation requires true or false");
+            const bool enabled = *(value + 1) == "true";
+            if (enabled && !loaded_model_)
+                throw std::invalid_argument("load a valid EvalFile before enabling neural evaluation");
+            neural_enabled_ = enabled;
+            options_.neural = enabled ? loaded_model_ : nullptr;
+            return;
         }
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
@@ -252,6 +291,8 @@ private:
     std::thread worker_;
     int overhead_ = 20;
     SearchOptions options_;
+    std::shared_ptr<const NeuralEvaluator> loaded_model_;
+    bool neural_enabled_ = false;
     SearchContext context_; // Accessed only after joining any prior search worker.
 };
 } // namespace
@@ -262,7 +303,7 @@ int run_uci(std::istream& input, std::ostream& output) {
     while (std::getline(input, line)) {
         const auto tokens = words(line);
         if (!tokens.empty() && tokens[0] == "quit") break;
-        try { session.handle(tokens); }
+        try { session.handle(tokens, line); }
         catch (const std::exception& e) { session.send(std::string("info string ") + e.what()); }
     }
     session.stop();

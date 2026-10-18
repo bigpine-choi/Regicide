@@ -1,6 +1,7 @@
 ﻿param(
     [switch]$NoOpen,
-    [string]$GodotPath
+    [string]$GodotPath,
+    [string]$NeuralModel
 )
 
 $ErrorActionPreference = 'Stop'
@@ -139,6 +140,10 @@ try {
         '--startup-file', (Quote-ProcessPath $startupFile),
         '--no-browser', '--desktop-client'
     )
+    if ($NeuralModel) {
+        $modelPath = (Resolve-Path -LiteralPath $NeuralModel -ErrorAction Stop).Path
+        $serverArguments += @('--neural-model', (Quote-ProcessPath $modelPath))
+    }
     $serverProcess = Start-Process -FilePath $pythonExecutable -ArgumentList $serverArguments `
         -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile

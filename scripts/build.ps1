@@ -16,7 +16,7 @@ New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 $batchFile = Join-Path $buildDir 'compile.cmd'
 $probeBuild = if ($EvaluationProbe) {
 @"
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\inspect_evaluation.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\inspect_evaluation.obj /Febuild\regicide_evaluation_probe.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\inspect_evaluation.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\inspect_evaluation.obj /Febuild\regicide_evaluation_probe.exe
 if errorlevel 1 exit /b 1
 "@
 } else { '' }
@@ -40,21 +40,25 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\see.cpp /Fobuild\see.obj
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\neural.cpp /Fobuild\neural.obj
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude /c src\uci.cpp /Fobuild\uci.obj
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude src\main.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\uci.obj /Fobuild\main.obj /Febuild\regicide.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\rules_tests.cpp build\board.obj /Fobuild\rules_tests.obj /Febuild\regicide_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\search_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\search_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\search_tests.obj /Febuild\regicide_search_tests.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\evaluation_tests.cpp build\board.obj build\evaluation.obj build\reference_evaluation_v054.obj build\reference_evaluation_v056.obj /Fobuild\evaluation_tests.obj /Febuild\regicide_evaluation_tests.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\board_state_tests.cpp build\board.obj /Fobuild\board_state_tests.obj /Febuild\regicide_board_state_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\transposition_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\transposition_tests.obj /Febuild\regicide_transposition_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\transposition_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\transposition_tests.obj /Febuild\regicide_transposition_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\see_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj /Fobuild\see_tests.obj /Febuild\regicide_see_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\see_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\see_tests.obj /Febuild\regicide_see_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\board.obj build\neural.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
 if errorlevel 1 exit /b 1
 $probeBuild
 exit /b %errorlevel%
@@ -76,4 +80,6 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Transposition tests failed.' }
     & (Join-Path $buildDir 'regicide_see_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'SEE tests failed.' }
+    & (Join-Path $buildDir 'regicide_neural_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Neural tests failed.' }
 }

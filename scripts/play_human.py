@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import subprocess
 import sys
 import tempfile
 import threading
@@ -35,7 +36,7 @@ class RevisionError(ValueError):
 
 
 class HumanGame:
-    def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None):
+    def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None):
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -43,6 +44,42 @@ class HumanGame:
         self.source = source_version()
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10))
+        self.neural_model = Path(neural_model).resolve(strict=True) if neural_model else None
+        self.neural_sha256 = None
+        self._model_snapshot = None
+        if self.neural_model:
+            # One immutable session copy is shared by opponent and advice
+            # engines, even if the original candidate is replaced later.
+            self._model_snapshot = tempfile.TemporaryDirectory(prefix="regicide-model-")
+            session_model = Path(self._model_snapshot.name) / "session.nn"
+            try:
+                with self.neural_model.open("rb") as model_stream:
+                    payload = model_stream.read(4 * 1024 * 1024)
+                if len(payload) >= 4 * 1024 * 1024:
+                    raise ValueError("학습 모델 파일은 4MiB보다 작아야 합니다.")
+                session_model.write_bytes(payload)
+                self.neural_sha256 = hashlib.sha256(payload).hexdigest()
+                checked = subprocess.run([str(self.binary), "eval", "--eval-file", str(session_model)],
+                                         capture_output=True, text=True, timeout=15, check=False)
+                if checked.returncode != 0:
+                    raise ValueError("학습 모델을 읽을 수 없습니다: " + checked.stderr.strip())
+            except Exception:
+                self._model_snapshot.cleanup()
+                self._model_snapshot = None
+                raise
+            def configured(factory):
+                def start(binary):
+                    engine = factory(binary)
+                    try:
+                        engine.configure({"EvalFile": str(session_model), "UseNeuralEvaluation": True})
+                    except Exception:
+                        engine.close()
+                        raise
+                    return engine
+                return start
+            self._factory = configured(self._factory)
+            hint_engine_factory = configured(hint_engine_factory or (
+                lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
         self._lock = threading.RLock()
         # Evaluation polling must not wait for the game lock held by a search.
         self._evaluation_lock = threading.Lock()
@@ -62,6 +99,8 @@ class HumanGame:
         if self._engine is None:
             self._engine = self._factory(self.binary)
         self.engine_name = self._engine.id.get("name", "Regicide")
+        if self.neural_model:
+            self.engine_name += " · 학습 평가 실험"
 
     def _reset(self, color, movetime_ms):
         if getattr(self, "_game_open", False):
@@ -225,7 +264,9 @@ class HumanGame:
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
                                "source_commit": self.source["commit"],
-                               "binary_sha256": self.binary_sha256}}
+                               "binary_sha256": self.binary_sha256,
+                               **({"evaluation": "neural_experimental", "model_sha256": self.neural_sha256,
+                                   "model_file": self.neural_model.name} if self.neural_model else {})}}
 
     def new_game(self, color, movetime_ms, revision):
         with self._lock:
@@ -449,6 +490,10 @@ class HumanGame:
                                  "Termination": "unterminated" if result == "*" else "normal",
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
+            if self.neural_model:
+                game.headers.update({"Evaluation": "neural_experimental",
+                                     "ModelSHA256": self.neural_sha256,
+                                     "ModelFile": self.neural_model.name})
             for ply, node in enumerate(game.mainline(), 1):
                 if ply in forced_plies:
                     node.comment = "User-forced Regicide move (handicap)"
@@ -505,6 +550,9 @@ class HumanGame:
                     except Exception:
                         self._engine.close()
                     self._engine = None
+                if self._model_snapshot is not None:
+                    self._model_snapshot.cleanup()
+                    self._model_snapshot = None
 
 
 class HumanServer(ThreadingHTTPServer):
@@ -649,6 +697,7 @@ def main():
     parser.add_argument("--binary", type=Path, default=ROOT / ("build/regicide.exe" if sys.platform == "win32" else "build/regicide"))
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--save-dir", type=Path, help="Override the persistent personal game library")
+    parser.add_argument("--neural-model", type=Path, help="Optional experimental learned evaluation model")
     parser.add_argument("--import-games", type=Path, action="append", default=[],
                         help="Import an old local games directory without changing its originals")
     parser.add_argument("--startup-file", type=Path)
@@ -665,7 +714,7 @@ def main():
     if args.save_dir is None:
         imports.append(ROOT / "build/human-games")
     GameArchive(save_dir).import_legacy(imports)
-    game = HumanGame(args.binary, save_dir)
+    game = HumanGame(args.binary, save_dir, neural_model=args.neural_model)
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),
