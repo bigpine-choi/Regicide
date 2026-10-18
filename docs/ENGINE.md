@@ -1,4 +1,4 @@
-# 자체 대국 엔진 v0.2 → v0.5.7
+# 자체 대국 엔진 v0.2 → v0.5.8
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
@@ -21,6 +21,8 @@ v0.5.5는 [동값 평가 최적화](experiments/2026-10-18-shield-opt.md)로 v0.
 v0.5.6은 [통과폰·폰 구조](PAWN_STRUCTURE.md)를 추가한다. 앞의 같은/인접 파일에 적 폰이 없는 최전방 폰에 국면별 보너스를 주고, 겹친 폰과 고립된 폰에 감점을 준다. 기존 왕 앞 폰 방패와 독립적으로 켜고 끄며 `UsePawnStructure=false` 또는 `--no-pawn-structure`는 v0.5.5 평가를 재현한다. [검증·비용](experiments/2026-10-18-pawn-structure.md)과 아직 확인하지 않은 일반 기력을 구분한다.
 
 v0.5.7은 [폰 구조 평가 동값 최적화](experiments/2026-10-18-pawn-opt.md)다. 파일별 폰 감점·통과폰 보너스·전방 조건을 압축 표에 미리 계산하고, 기물 위치 표에 색·실제 칸·부호를 포함한다. 계수·반올림·방패 효과·수 정렬과 탐색 규칙은 바꾸지 않는다. v0.5.6 동결 참조와 네 옵션 조합 모두 대조하며 함수 비용 감소를 일반 기력 향상으로 환산하지 않는다.
+
+v0.5.8은 [보수적인 LMR](LMR.md)을 추가한다. 뒤쪽 일반 기물 수에 한 반수 감축을 적용하고 유망하면 정상 깊이로 재검색한다. 루트·PV·체크·포획·승격·폰/킹 이동·우선수·killer 수·무승부 청구·메이트 점수 창은 보호한다. 기본 켬이며 UCI `UseLMR=false`, 콘솔 `--no-lmr`로 이전 탐색을 선택할 수 있다. 규칙과 평가식은 유지하지만 같은 깊이의 점수 일치를 보장하는 최적화는 아니다.
 
 ## 원리와 작은 체스 예
 
@@ -90,6 +92,7 @@ setoption name UseQuietMoveOrdering value true
 setoption name UseSEE value true
 setoption name UsePawnShield value true
 setoption name UsePawnStructure value true
+setoption name UseLMR value true
 setoption name UseQuiescenceChecks value true
 ucinewgame
 position startpos moves e2e4 e7e5

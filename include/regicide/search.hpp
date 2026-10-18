@@ -38,6 +38,7 @@ struct SearchOptions {
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
     bool king_pawn_shield = true; // Middlegame shelter, scaled by opposing pieces.
     bool pawn_structure = true; // Passed pawns, doubled files and isolated pawns.
+    bool lmr = true; // Late N/B/R/Q quiet reduction; requires PVS and quiet ordering.
 };
 
 struct SearchResult {
@@ -54,9 +55,11 @@ struct SearchResult {
     std::uint64_t tt_reuses = 0; // Existing same-size buffer reused this call.
     std::uint64_t tt_clears = 0; // Physical full clears on generation wrap.
     std::uint64_t tt_bytes = 0; // Active table storage, zero if disabled/terminal.
-    std::uint64_t pvs_probes = 0; // Later-move null-window searches, including unfinished work.
+    std::uint64_t pvs_probes = 0; // Later-move null-window calls, including LMR retries/unfinished work.
     std::uint64_t pvs_researches = 0; // Probes needing a full-window re-search.
     std::uint64_t see_calls = 0; // Tactical candidates needing an exchange key; no sole/preferred move work.
+    std::uint64_t lmr_reductions = 0; // Reduced scouts attempted, including unfinished work.
+    std::uint64_t lmr_researches = 0; // Reduced improvements rechecked by a full-depth scout.
     int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;

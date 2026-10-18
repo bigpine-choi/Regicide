@@ -125,7 +125,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.5.7");
+            send("id name Regicide 0.5.8");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -140,6 +140,7 @@ public:
             send("option name UseSEE type check default true");
             send("option name UsePawnShield type check default true");
             send("option name UsePawnStructure type check default true");
+            send("option name UseLMR type check default true");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -175,7 +176,8 @@ private:
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
-            option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure") return;
+            option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
+            option != "UseLMR") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -195,7 +197,8 @@ private:
         else if (option == "PVS") options_.pvs = text == "true";
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";
-        else options_.pawn_structure = text == "true";
+        else if (option == "UsePawnStructure") options_.pawn_structure = text == "true";
+        else options_.lmr = text == "true";
     }
     void progress(const SearchResult& result) {
         std::ostringstream line;
@@ -215,6 +218,8 @@ private:
         send("info string pvs probes " + std::to_string(result.pvs_probes) +
              " researches " + std::to_string(result.pvs_researches));
         send("info string see calls " + std::to_string(result.see_calls));
+        send("info string lmr reductions " + std::to_string(result.lmr_reductions) +
+             " researches " + std::to_string(result.lmr_researches));
         send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
              " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores) +
              " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +

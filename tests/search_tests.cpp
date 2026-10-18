@@ -3,6 +3,7 @@
 #include "regicide/see.hpp"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <functional>
 #include <iostream>
@@ -11,6 +12,17 @@
 
 using namespace regicide;
 namespace {
+// Every pre-LMR regression retains the full-depth search it was written for.
+// LMR is selective, so its dedicated tests below verify the new contract
+// without weakening exhaustive-oracle or exact search-graph assertions.
+SearchResult reference_search(const Board& board, const SearchLimits& limits,
+                              const std::atomic_bool* stop = nullptr,
+                              SearchCallback callback = {}, SearchOptions options = {},
+                              SearchContext* context = nullptr) {
+    options.lmr = false;
+    return search(board, limits, stop, std::move(callback), options, context);
+}
+
 // Keep every pre-PVS/SEE regression on its original full-window search graph.
 // Dedicated tests below exercise both modes without relaxing old invariants.
 SearchResult alpha_beta_search(const Board& board, const SearchLimits& limits,
@@ -19,7 +31,7 @@ SearchResult alpha_beta_search(const Board& board, const SearchLimits& limits,
                                SearchContext* context = nullptr) {
     options.pvs = false;
     options.see_ordering = false;
-    return search(board, limits, stop, std::move(callback), options, context);
+    return reference_search(board, limits, stop, std::move(callback), options, context);
 }
 SearchResult legacy_search(const Board& board, const SearchLimits& limits,
                            const std::atomic_bool* stop = nullptr,
@@ -74,7 +86,8 @@ void same_graph(const SearchResult& left, const SearchResult& right) {
                left.tt_probes == right.tt_probes && left.tt_hits == right.tt_hits &&
                left.tt_cutoffs == right.tt_cutoffs && left.tt_stores == right.tt_stores &&
                left.pvs_probes == right.pvs_probes && left.pvs_researches == right.pvs_researches &&
-               left.see_calls == right.see_calls,
+               left.see_calls == right.see_calls && left.lmr_reductions == right.lmr_reductions &&
+               left.lmr_researches == right.lmr_researches,
            "reused memory changed the search graph or transposition work");
 }
 void no_memory_work(const SearchResult& result) {
@@ -287,6 +300,26 @@ SearchOptions shelter_options(bool shield, bool quiet, bool table, bool structur
     options.king_pawn_shield = shield;
     options.pawn_structure = structure;
     return options;
+}
+
+SearchOptions lmr_options(bool enabled, bool table = true) {
+    SearchOptions options;
+    options.hash_mb = 1;
+    options.quiescence = false;
+    options.quiescence_checks = false;
+    options.transposition = table;
+    options.lmr = enabled;
+    return options;
+}
+
+constexpr const char* lmr_quiet_fixture =
+    "4k3/8/2n2n2/3p4/3P4/2N2N2/8/4K3 w - - 0 1";
+
+void lmr_counts(const SearchResult& result) {
+    expect(result.lmr_researches <= result.lmr_reductions,
+           "one reduced scout cannot require more than one normal-depth verification");
+    expect(result.pvs_probes >= result.lmr_reductions + result.lmr_researches,
+           "LMR reduced and verification scouts must be included in actual PVS work");
 }
 } // namespace
 
@@ -860,7 +893,7 @@ int main() {
                 expect(!expected.moves.empty(), "oracle requires a nonterminal fixture");
                 expected.moves.size() == 1 ? ++unique : ++tied;
                 for (bool table : {false, true}) for (bool enabled : {false, true}) {
-                    const auto result = search(board, {.depth = 2}, nullptr, {},
+                    const auto result = reference_search(board, {.depth = 2}, nullptr, {},
                                                pvs_options(enabled, table, positional));
                     expect(result.depth == 2 && !result.stopped && result.score == expected.score,
                            "PVS/TT changed the independent fixed-depth minimax score");
@@ -891,7 +924,7 @@ int main() {
             CheckOracleCoverage coverage;
             const int expected = check_minimax(board, 1, 1, coverage);
             for (bool table : {false, true}) for (bool enabled : {false, true}) {
-                const auto result = search(board, {.depth = 1}, nullptr, {},
+                const auto result = reference_search(board, {.depth = 1}, nullptr, {},
                                            pvs_options(enabled, table, false, true, true));
                 expect(!result.stopped && result.depth == 1 && result.score == expected,
                        "PVS changed the independent bounded-check tactical value");
@@ -905,10 +938,10 @@ int main() {
     test("PVS scouts ties without re-search and re-searches a genuine improvement", [] {
         Board board;
         const auto saved = board;
-        const auto tied = search(board, {.depth = 3}, nullptr, {}, pvs_options(true, false));
+        const auto tied = reference_search(board, {.depth = 3}, nullptr, {}, pvs_options(true, false));
         expect(tied.score == 0 && tied.pvs_probes > 0 && tied.pvs_researches == 0,
                "equal material leaves should exercise scouts without full-window re-search");
-        const auto developed = search(board, {.depth = 1}, nullptr, {}, pvs_options(true, false, true));
+        const auto developed = reference_search(board, {.depth = 1}, nullptr, {}, pvs_options(true, false, true));
         const auto expected = optimal_moves(board, 1, true);
         expect(developed.score == expected.score && developed.pvs_researches > 0,
                "later superior knight development must trigger a full-window re-search");
@@ -934,7 +967,7 @@ int main() {
             const auto saved = board;
             const int expected = claim_minimax(board, 2, false);
             for (bool table : {false, true}) for (bool enabled : {false, true}) {
-                const auto result = search(board, {.depth = 2}, nullptr, {}, pvs_options(enabled, table));
+                const auto result = reference_search(board, {.depth = 2}, nullptr, {}, pvs_options(enabled, table));
                 expect(!result.stopped && result.depth == 2 && result.score == expected,
                        "PVS lost an optional claim or mate precedence");
                 expect(board == saved, "draw-claim scout/re-search changed repetition history");
@@ -951,7 +984,7 @@ int main() {
         for (bool table : {false, true}) {
             auto options = pvs_options(true, table);
             options.quiet_ordering = false;
-            const auto result = search(board, {.depth = 1}, nullptr, {}, options);
+            const auto result = reference_search(board, {.depth = 1}, nullptr, {}, options);
             expect(result.score == expected && result.best_move != Move::from_uci("d1d5"),
                    "intended claim must improve on the first negative capture score");
             expect(result.pvs_researches > 0,
@@ -966,8 +999,8 @@ int main() {
         const auto saved = board;
         for (bool table : {false, true}) {
             const auto options = pvs_options(true, table, true);
-            const auto one = search(board, {.depth = 1}, nullptr, {}, options);
-            const auto two = search(board, {.depth = 2}, nullptr, {}, options);
+            const auto one = reference_search(board, {.depth = 1}, nullptr, {}, options);
+            const auto two = reference_search(board, {.depth = 2}, nullptr, {}, options);
             expect(two.pvs_probes > one.pvs_probes && two.pvs_researches > one.pvs_researches,
                    "second iteration must exercise new scouts and re-searches");
             for (bool research : {false, true}) {
@@ -979,12 +1012,12 @@ int main() {
                 std::uint64_t low = one.nodes + 1, high = two.nodes - 1;
                 while (low < high) {
                     const auto middle = low + (high - low) / 2;
-                    const auto prefix = search(board, {.depth = 2, .nodes = middle}, nullptr, {}, options);
+                    const auto prefix = reference_search(board, {.depth = 2, .nodes = middle}, nullptr, {}, options);
                     if (count(prefix) > count(one)) high = middle;
                     else low = middle + 1;
                 }
                 std::vector<SearchResult> published;
-                const auto interrupted = search(board, {.depth = 2, .nodes = low}, nullptr,
+                const auto interrupted = reference_search(board, {.depth = 2, .nodes = low}, nullptr,
                     [&](const SearchResult& result) { published.push_back(result); }, options);
                 expect(interrupted.stopped && interrupted.nodes == low && count(interrupted) > count(one),
                        "node cancellation must actually enter the selected PVS pass");
@@ -994,11 +1027,11 @@ int main() {
                 expect(board == saved, "cancelled PVS pass changed complete board/history");
                 valid_pv(board, interrupted);
             }
-            const auto exact = search(board, {.depth = 2, .nodes = two.nodes}, nullptr, {}, options);
+            const auto exact = reference_search(board, {.depth = 2, .nodes = two.nodes}, nullptr, {}, options);
             same_graph(exact, two);
             expect(!exact.stopped, "an exact complete PVS node budget must finish");
             std::atomic_bool stop{true};
-            const auto fallback = search(board, {.depth = 3}, &stop, {}, options);
+            const auto fallback = reference_search(board, {.depth = 3}, &stop, {}, options);
             expect(fallback.stopped && fallback.depth == 0 && !fallback.nodes &&
                        !fallback.pvs_probes && !fallback.pvs_researches,
                    "preexisting stop must prevent entering either PVS pass");
@@ -1016,12 +1049,12 @@ int main() {
             const auto saved = board;
             for (bool enabled : {true, false, true}) for (bool quiet : {false, true}) {
                 const auto options = pvs_options(enabled, true, true, quiet, quiet);
-                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
-                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto fresh = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, reused);
-                (void)search(board, {.depth = 3, .nodes = 7}, nullptr, {},
+                (void)reference_search(board, {.depth = 3, .nodes = 7}, nullptr, {},
                              pvs_options(!enabled, true, false, !quiet), &context);
-                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto restarted = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, restarted);
                 expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
                        "PVS mode or incomplete prior search leaked through retained storage");
@@ -1041,7 +1074,7 @@ int main() {
             const auto expected = optimal_moves(board, 2, false);
             for (bool enabled : {false, true}) for (bool pvs : {false, true})
                 for (bool table : {false, true}) {
-                    const auto result = search(board, {.depth = 2}, nullptr, {},
+                    const auto result = reference_search(board, {.depth = 2}, nullptr, {},
                                                see_options(enabled, pvs, table));
                     expect(result.depth == 2 && !result.stopped && result.score == expected.score,
                            "SEE sorting changed the full minimax value");
@@ -1063,8 +1096,8 @@ int main() {
         expect(moves.size() == 1 && moves.front() == Move::from_uci("a1a2"),
                "fixture must have exactly one legal capture evasion");
         for (bool pvs : {false, true}) for (bool table : {false, true}) {
-            const auto result = search(board, {.depth = 2}, nullptr, {}, see_options(true, pvs, table));
-            const auto old_order = search(board, {.depth = 2}, nullptr, {}, see_options(false, pvs, table));
+            const auto result = reference_search(board, {.depth = 2}, nullptr, {}, see_options(true, pvs, table));
+            const auto old_order = reference_search(board, {.depth = 2}, nullptr, {}, see_options(false, pvs, table));
             expect(result.depth == 2 && !result.stopped && result.score == 0 &&
                        result.best_move == moves.front() && !result.see_calls,
                    "forced capture should be searched without SEE work");
@@ -1084,8 +1117,8 @@ int main() {
         old_options.quiet_ordering = false;
         auto new_options = old_options;
         new_options.see_ordering = true;
-        const auto old = search(board, {.depth = 1}, nullptr, {}, old_options);
-        const auto ordered = search(board, {.depth = 1}, nullptr, {}, new_options);
+        const auto old = reference_search(board, {.depth = 1}, nullptr, {}, old_options);
+        const auto ordered = reference_search(board, {.depth = 1}, nullptr, {}, new_options);
         // At a deliberately unextended material horizon the poisoned rook is
         // worth more. It must still be searched after the favorable pawn and
         // improve the first candidate, triggering a full-window PVS re-search.
@@ -1107,13 +1140,13 @@ int main() {
                    std::find(expected.moves.begin(), expected.moves.end(), sacrifice) != expected.moves.end(),
                "unpruned oracle must see the sacrifice's forced mate");
         for (bool pvs : {false, true}) for (bool table : {false, true}) {
-            const auto result = search(board, {.depth = 3}, nullptr, {}, see_options(true, pvs, table));
+            const auto result = reference_search(board, {.depth = 3}, nullptr, {}, see_options(true, pvs, table));
             expect(result.score == expected.score && result.best_move &&
                        std::find(expected.moves.begin(), expected.moves.end(), *result.best_move) != expected.moves.end(),
                    "negative SEE suppressed the mating sacrifice in normal search");
             // The capture-only/quiet-check frontier also must retain the
             // negative capture; it is an ordering hint, never a qsearch filter.
-            const auto tactical = search(board, {.depth = 1}, nullptr, {},
+            const auto tactical = reference_search(board, {.depth = 1}, nullptr, {},
                                          see_options(true, pvs, table, true, true));
             expect(tactical.score == mate_score - 3 && tactical.best_move == sacrifice,
                    "negative SEE suppressed the mating sacrifice at the tactical frontier");
@@ -1132,7 +1165,7 @@ int main() {
             CheckOracleCoverage coverage;
             const int expected = check_minimax(board, 1, 1, coverage);
             for (bool pvs : {false, true}) for (bool table : {false, true}) {
-                const auto result = search(board, {.depth = 1}, nullptr, {},
+                const auto result = reference_search(board, {.depth = 1}, nullptr, {},
                                            see_options(true, pvs, table, true, true));
                 expect(!result.stopped && result.depth == 1 && result.score == expected,
                        "SEE ordering changed independent tactical/check-evasion value");
@@ -1150,20 +1183,20 @@ int main() {
             const auto saved = board;
             for (bool enabled : {true, false, true}) for (bool pvs : {false, true}) {
                 auto options = see_options(enabled, pvs, true, true, true);
-                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
-                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto fresh = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, reused);
                 options.see_ordering = !enabled;
-                const auto cancelled = search(board, {.depth = 4, .nodes = 20}, nullptr, {}, options, &context);
+                const auto cancelled = reference_search(board, {.depth = 4, .nodes = 20}, nullptr, {}, options, &context);
                 expect(cancelled.stopped && cancelled.nodes == 20 && legal(board, cancelled.best_move),
                        "SEE ordering bypassed the shared cancellation budget");
                 options.see_ordering = enabled;
-                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto restarted = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, restarted);
                 expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
                        "SEE change or incomplete search leaked through retained memory");
                 std::atomic_bool stop{true};
-                const auto stopped = search(board, {.depth = 3}, &stop, {}, options, &context);
+                const auto stopped = reference_search(board, {.depth = 3}, &stop, {}, options, &context);
                 expect(stopped.stopped && !stopped.nodes && !stopped.see_calls,
                        "preexisting stop should avoid SEE work in fallback ordering");
                 valid_pv(board, reused);
@@ -1187,7 +1220,7 @@ int main() {
                 changed_value |= previous.score != current.score;
                 for (bool shield : {false, true}) for (bool table : {false, true}) {
                     const auto& expected = shield ? current : previous;
-                    const auto result = search(board, {.depth = depth}, nullptr, {},
+                    const auto result = reference_search(board, {.depth = depth}, nullptr, {},
                                                shelter_options(shield, quiet, table));
                     expect(!result.stopped && result.depth == depth && result.score == expected.score,
                            "shelter flag was not applied consistently to normal or tactical leaves");
@@ -1213,11 +1246,11 @@ int main() {
         for (bool shield : {false, true}) for (bool quiet : {false, true}) {
             const auto options = shelter_options(shield, quiet, true);
             std::atomic_bool stop{true};
-            const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+            const auto stopped = reference_search(board, {.depth = 3}, &stop, {}, options);
             expect(stopped.stopped && stopped.depth == 0 && !stopped.nodes &&
                        stopped.score == evaluate_position(board, shield, false),
                    "pre-stopped fallback lost the shelter mode or searched a node");
-            const auto limited = search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
+            const auto limited = reference_search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
             expect(limited.stopped && limited.depth == 0 && limited.nodes == 1 &&
                        limited.score == evaluate_position(board, shield, false),
                    "node-limited fallback used a different static evaluator");
@@ -1233,15 +1266,15 @@ int main() {
             const auto saved = board;
             for (bool shield : {true, false, true}) for (bool quiet : {false, true}) {
                 auto options = shelter_options(shield, quiet, true);
-                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
-                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto fresh = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, reused);
                 options.king_pawn_shield = !shield;
-                const auto interrupted = search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
+                const auto interrupted = reference_search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
                 expect(interrupted.stopped && interrupted.nodes == 9,
                        "shelter mode switch ignored the shared cancellation budget");
                 options.king_pawn_shield = shield;
-                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto restarted = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, restarted);
                 expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
                        "old shelter scores or interrupted work leaked through retained storage");
@@ -1249,9 +1282,9 @@ int main() {
             }
             auto options = shelter_options(false, true, true);
             options.positional = false;
-            const auto off = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            const auto off = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
             options.king_pawn_shield = true;
-            const auto on = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            const auto on = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
             same_graph(off, on);
             expect(board == saved, "material-only shelter toggle changed input state/history");
         }
@@ -1271,7 +1304,7 @@ int main() {
                 changed_value |= previous.score != current.score;
                 for (bool structure : {false, true}) for (bool table : {false, true}) {
                     const auto& expected = structure ? current : previous;
-                    const auto result = search(board, {.depth = depth}, nullptr, {},
+                    const auto result = reference_search(board, {.depth = depth}, nullptr, {},
                                                shelter_options(shield, quiet, table, structure));
                     expect(!result.stopped && result.depth == depth && result.score == expected.score,
                            "pawn option did not reach every ordinary/tactical frontier");
@@ -1295,18 +1328,18 @@ int main() {
         expect(SearchOptions{}.pawn_structure, "new search must enable pawn structure by default");
         expect(evaluate_position(board, true, true) != evaluate_position(board, true, false),
                "fallback fixture must distinguish pawn structure modes");
-        const auto default_result = search(board, {.depth = 2});
+        const auto default_result = reference_search(board, {.depth = 2});
         auto explicit_on = SearchOptions{};
         explicit_on.pawn_structure = true;
-        same_graph(default_result, search(board, {.depth = 2}, nullptr, {}, explicit_on));
+        same_graph(default_result, reference_search(board, {.depth = 2}, nullptr, {}, explicit_on));
         for (bool structure : {false, true}) for (bool shield : {false, true}) for (bool quiet : {false, true}) {
             const auto options = shelter_options(shield, quiet, true, structure);
             std::atomic_bool stop{true};
-            const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+            const auto stopped = reference_search(board, {.depth = 3}, &stop, {}, options);
             expect(stopped.stopped && stopped.depth == 0 && !stopped.nodes &&
                        stopped.score == evaluate_position(board, shield, structure),
                    "pre-stopped fallback lost the selected pawn structure mode");
-            const auto limited = search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
+            const auto limited = reference_search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
             expect(limited.stopped && limited.depth == 0 && limited.nodes == 1 &&
                        limited.score == evaluate_position(board, shield, structure),
                    "one-node fallback lost the selected pawn structure mode");
@@ -1322,15 +1355,15 @@ int main() {
             const auto saved = board;
             for (bool structure : {true, false, true}) for (bool quiet : {false, true}) {
                 auto options = shelter_options(true, quiet, true, structure);
-                const auto fresh = search(board, {.depth = 2}, nullptr, {}, options);
-                const auto reused = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto fresh = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                const auto reused = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, reused);
                 options.pawn_structure = !structure;
-                const auto interrupted = search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
+                const auto interrupted = reference_search(board, {.depth = 3, .nodes = 9}, nullptr, {}, options, &context);
                 expect(interrupted.stopped && interrupted.nodes == 9 && legal(board, interrupted.best_move),
                        "changing pawn modes bypassed cancellation or lost the legal fallback");
                 options.pawn_structure = structure;
-                const auto restarted = search(board, {.depth = 2}, nullptr, {}, options, &context);
+                const auto restarted = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
                 same_graph(fresh, restarted);
                 expect(restarted.tt_reuses == 1 && !restarted.tt_allocations && board == saved,
                        "old pawn values or interrupted work leaked through retained memory");
@@ -1338,11 +1371,11 @@ int main() {
             }
             auto options = shelter_options(false, true, true, false);
             options.positional = false;
-            const auto plain = search(board, {.depth = 2}, nullptr, {}, options, &context);
+            const auto plain = reference_search(board, {.depth = 2}, nullptr, {}, options, &context);
             for (bool shield : {false, true}) for (bool structure : {false, true}) {
                 options.king_pawn_shield = shield;
                 options.pawn_structure = structure;
-                same_graph(plain, search(board, {.depth = 2}, nullptr, {}, options, &context));
+                same_graph(plain, reference_search(board, {.depth = 2}, nullptr, {}, options, &context));
             }
             expect(board == saved, "material-only positional toggles changed board/history");
         }
@@ -1351,24 +1384,198 @@ int main() {
         for (bool structure : {false, true}) {
             const auto options = shelter_options(true, true, true, structure);
             Board mate("7k/q4Q2/6K1/8/3P4/8/8/8 w - - 149 1");
-            const auto win = search(mate, {.depth = 1}, nullptr, {}, options);
+            const auto win = reference_search(mate, {.depth = 1}, nullptr, {}, options);
             expect(win.score == mate_score - 1 && legal(mate, win.best_move),
                    "pawn terms overrode mate distance or mate-before-75-move priority");
             mate.play(*win.best_move);
             expect(mate.outcome() == Outcome::checkmate, "pawn search's chosen mate does not mate");
             for (const char* fen : {"7k/5Q2/6K1/8/3P4/8/8/8 b - - 0 1",
                                     "7k/8/8/3P4/8/8/8/6K1 w - - 150 1"}) {
-                const auto draw = search(Board(fen), {.depth = 2}, nullptr, {}, options);
+                const auto draw = reference_search(Board(fen), {.depth = 2}, nullptr, {}, options);
                 expect(!draw.best_move && !draw.score && !draw.stopped,
                        "static pawn advantage escaped a terminal draw");
                 no_memory_work(draw);
             }
             const Board losing("7k/8/8/3P4/8/8/q7/6K1 w - - 100 1");
-            const auto claim = search(losing, {.depth = 2}, nullptr, {}, options);
+            const auto claim = reference_search(losing, {.depth = 2}, nullptr, {}, options);
             expect(claim.score == 0 && legal(losing, claim.best_move),
                    "new pawn score suppressed a legal optional draw claim");
             valid_pv(losing, claim);
         }
+    });
+    test("LMR OFF retains full-depth reference graphs and shallow ON never reduces", [] {
+        expect(SearchOptions{}.lmr, "LMR must be enabled in the requested default configuration");
+        for (const char* fen : {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                                lmr_quiet_fixture,
+                                "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+                                "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+                                "4k3/P7/8/8/8/8/7p/4K3 w - - 0 1"}) {
+            const Board board(fen);
+            const auto saved = board;
+            for (bool table : {false, true}) {
+                const auto options = lmr_options(true, table);
+                const auto previous = reference_search(board, {.depth = 4}, nullptr, {}, options);
+                const auto enabled = search(board, {.depth = 4}, nullptr, {}, options);
+                same_graph(previous, enabled);
+                expect(!enabled.stopped && enabled.depth == 4 &&
+                           !enabled.lmr_reductions && !enabled.lmr_researches,
+                       "root protection and minimum remaining depth must disable all shallow reductions");
+                expect(board == saved, "shallow LMR mode changed board, keys or repetition history");
+                valid_pv(board, enabled);
+            }
+        }
+    });
+    test("LMR requires both PVS and learned quiet ordering and never reduces pawn or king moves", [] {
+        const Board board(lmr_quiet_fixture);
+        const auto saved = board;
+        for (bool disable_pvs : {false, true}) {
+            auto options = lmr_options(true);
+            options.pvs = !disable_pvs;
+            options.quiet_ordering = disable_pvs;
+            const auto previous = reference_search(board, {.depth = 5}, nullptr, {}, options);
+            const auto enabled = search(board, {.depth = 5}, nullptr, {}, options);
+            same_graph(previous, enabled);
+            expect(!enabled.stopped && enabled.depth == 5 && !enabled.lmr_reductions &&
+                       !enabled.lmr_researches,
+                   "PVS OFF or quiet ordering OFF must make LMR an exact no-op");
+            valid_pv(board, enabled);
+        }
+        for (const char* fen : {"7k/8/8/3P4/8/8/8/6K1 w - - 0 1",
+                                "6k1/8/8/8/3p4/8/8/7K b - - 0 1"}) {
+            const Board ending(fen);
+            const auto original = ending;
+            const auto enabled = search(ending, {.depth = 5}, nullptr, {}, lmr_options(true));
+            const auto previous = reference_search(ending, {.depth = 5}, nullptr, {}, lmr_options(false));
+            same_graph(previous, enabled);
+            expect(!enabled.stopped && !enabled.lmr_reductions && !enabled.lmr_researches,
+                   "pawn pushes, king moves and king-pawn endings must remain full depth");
+            expect(ending == original, "protected king-pawn search changed input state/history");
+            valid_pv(ending, enabled);
+        }
+        expect(board == saved, "disabled-LMR gate checks changed board/history");
+    });
+    test("LMR really reduces and verifies late quiet scouts while publishing legal deterministic lines", [] {
+        const Board board(lmr_quiet_fixture);
+        const auto saved = board;
+        int callbacks = 0;
+        std::uint64_t reductions = 0, researches = 0, nodes = 0;
+        const auto options = lmr_options(true);
+        const auto result = search(board, {.depth = 5}, nullptr, [&](const SearchResult& iteration) {
+            ++callbacks;
+            expect(iteration.depth == callbacks && iteration.nodes > nodes && !iteration.stopped,
+                   "LMR must publish complete iterations in order");
+            expect(iteration.lmr_reductions >= reductions && iteration.lmr_researches >= researches,
+                   "LMR work counters decreased across completed iterations");
+            if (iteration.depth <= 4)
+                expect(!iteration.lmr_reductions && !iteration.lmr_researches,
+                       "LMR ran before a non-root depth-four node could exist");
+            reductions = iteration.lmr_reductions;
+            researches = iteration.lmr_researches;
+            nodes = iteration.nodes;
+            lmr_counts(iteration);
+            valid_pv(board, iteration);
+        }, options);
+        expect(!result.stopped && result.depth == 5 && callbacks == 5,
+               "deterministic LMR fixture failed to complete depth five");
+        expect(result.lmr_reductions > 0 && result.lmr_researches > 0,
+               "fixture must exercise actual late reductions and normal-depth verification");
+        const auto repeated = search(board, {.depth = 5}, nullptr, {}, options);
+        same_graph(result, repeated);
+        const auto previous = reference_search(board, {.depth = 5}, nullptr, {}, options);
+        expect(!previous.lmr_reductions && !previous.lmr_researches,
+               "LMR OFF performed selective work");
+        // Selective search can change a same-depth score or tied move. Verify
+        // each legal PV, rather than requiring equivalence to full minimax.
+        valid_pv(board, previous); valid_pv(board, result);
+        expect(board == saved, "LMR selected or restored the wrong input position/history");
+    });
+    test("LMR interruption retains the last full iteration and its reusable memory stays isolated", [] {
+        const Board board(lmr_quiet_fixture);
+        const auto saved = board;
+        const auto options = lmr_options(true);
+        const auto shallow = search(board, {.depth = 4}, nullptr, {}, options);
+        const auto complete = search(board, {.depth = 5}, nullptr, {}, options);
+        expect(complete.lmr_reductions > 0 && complete.nodes > shallow.nodes + 1,
+               "cancellation fixture must enter selective work after a complete shallow iteration");
+        SearchContext context;
+        const auto interrupted = search(board, {.depth = 5, .nodes = complete.nodes - 1},
+                                        nullptr, {}, options, &context);
+        expect(interrupted.stopped && interrupted.nodes == complete.nodes - 1,
+               "LMR must share the exact ordinary node budget");
+        same_completed(interrupted, shallow);
+        expect(interrupted.lmr_reductions > 0,
+               "cancelled iteration must actually include reduced search work");
+        lmr_counts(interrupted); valid_pv(board, interrupted);
+        auto previous_options = options;
+        previous_options.lmr = false;
+        const auto fresh_off = search(board, {.depth = 5}, nullptr, {}, previous_options);
+        const auto reused_off = search(board, {.depth = 5}, nullptr, {}, previous_options, &context);
+        same_graph(fresh_off, reused_off);
+        const auto restarted = search(board, {.depth = 5}, nullptr, {}, options, &context);
+        same_graph(complete, restarted);
+        expect(restarted.tt_reuses == 1 && !restarted.tt_allocations,
+               "LMR toggles should reuse storage while discarding previous bounds and reduced work");
+        // An unverified reduced fail-low must never become a published best
+        // line or a stored TT bound: mixed horizons do not prove a shallower
+        // bound either. Restarting after partial work must reproduce a fresh
+        // search, including its legal PV.
+        valid_pv(board, restarted); valid_pv(board, reused_off);
+        std::atomic_bool stop{true};
+        const auto stopped = search(board, {.depth = 5}, &stop, {}, options, &context);
+        expect(stopped.stopped && !stopped.nodes && !stopped.lmr_reductions && !stopped.lmr_researches,
+               "preexisting stop must avoid LMR work and preserve a legal fallback");
+        valid_pv(board, stopped);
+        expect(board == saved, "LMR cancellation or option changes damaged board/history");
+    });
+    test("LMR protects current and intended draw claims before reducing any late knight move", [] {
+        for (int clock : {98, 99, 100}) {
+            const Board board("6nk/8/8/8/8/8/8/KN6 w - - " + std::to_string(clock) + " 51");
+            const auto saved = board;
+            const auto options = lmr_options(true, false);
+            const auto previous = reference_search(board, {.depth = 5}, nullptr, {}, options);
+            const auto enabled = search(board, {.depth = 5}, nullptr, {}, options);
+            same_graph(previous, enabled);
+            expect(!enabled.stopped && !enabled.lmr_reductions && !enabled.lmr_researches,
+                   "current or intended fifty-move claims at eligible depth must forbid reductions");
+            expect(board == saved, "LMR draw-claim protection changed clocks or repetition state");
+            valid_pv(board, enabled);
+        }
+    });
+    test("LMR preserves quiet checking mates sacrifices terminal results and optional claims", [] {
+        for (const auto& [fen, expected] : std::array<std::pair<const char*, int>, 2>{{
+                 {"7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1", -mate_score + 2},
+                 {"5rnk/6pp/7N/3Q4/8/8/8/K7 w - - 0 1", mate_score - 3}}}) {
+            const Board board(fen);
+            const auto saved = board;
+            auto options = lmr_options(true, false);
+            options.quiescence = true;
+            options.quiescence_checks = true;
+            const auto result = search(board, {.depth = 5}, nullptr, {}, options);
+            expect(!result.stopped && result.depth == 5 && result.score == expected,
+                   "LMR lost the protected quiet checking mate or forced sacrifice");
+            valid_pv(board, result); lmr_counts(result);
+            Board line = board;
+            for (Move move : result.pv) line.play(move);
+            expect(line.outcome() == Outcome::checkmate,
+                   "LMR's reported mate line does not reach checkmate on the actual board");
+            expect(board == saved, "LMR mate regression changed the original position/history");
+        }
+        for (const char* fen : {"7k/6Q1/6K1/8/8/8/8/8 b - - 150 1",
+                                "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1",
+                                "7k/8/8/3P4/8/8/8/6K1 w - - 150 1"}) {
+            const Board board(fen);
+            const auto enabled = search(board, {.depth = 5}, nullptr, {}, lmr_options(true));
+            const auto previous = reference_search(board, {.depth = 5}, nullptr, {}, lmr_options(false));
+            same_graph(previous, enabled);
+            expect(!enabled.best_move && !enabled.lmr_reductions && !enabled.lmr_researches,
+                   "terminal mate/draw must precede selective work and return no move");
+            no_memory_work(enabled);
+        }
+        const Board losing("7k/8/8/3P4/8/8/q7/6K1 w - - 100 1");
+        const auto claim = search(losing, {.depth = 5}, nullptr, {}, lmr_options(true));
+        expect(claim.score == 0 && legal(losing, claim.best_move),
+               "LMR suppressed an available optional draw claim");
+        valid_pv(losing, claim);
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

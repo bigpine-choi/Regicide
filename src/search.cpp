@@ -158,10 +158,12 @@ public:
     std::uint64_t tt_probes = 0, tt_hits = 0, tt_cutoffs = 0, tt_stores = 0;
     std::uint64_t pvs_probes = 0, pvs_researches = 0;
     std::uint64_t see_calls = 0;
+    std::uint64_t lmr_reductions = 0, lmr_researches = 0;
     int seldepth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
-                std::vector<Move>& pv, const std::optional<Move>& preferred = {}) {
+                std::vector<Move>& pv, bool pv_node,
+                const std::optional<Move>& preferred = {}) {
         // A horizon position belongs to exactly one node, even when extended.
         if (depth == 0 && options_.quiescence)
             return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0, alpha, beta, pv);
@@ -207,6 +209,11 @@ public:
             alpha = std::max(alpha, 0);
             if (alpha >= beta) return 0;
         }
+        // Reductions belong only to non-PV sibling scouts. Keep every root,
+        // principal-variation node, check evasion and current draw claim full.
+        const bool lmr_node = options_.lmr && options_.pvs && options_.quiet_ordering &&
+                              !pv_node && ply > 0 && depth >= 4 && beta == alpha + 1 &&
+                              !current_claim && !board.in_check();
         const auto color = board.position().turn == Color::white ? 0U : 1U;
         if (options_.see_ordering)
             order_moves_with_see(board, moves, ordered_preferred,
@@ -218,10 +225,22 @@ public:
         else order_moves(board, moves, ordered_preferred);
         int best = -infinity;
         bool first_move = true;
+        std::size_t move_index = 0;
+        bool reduced_fail_low = false;
         for (Move move : moves) {
             poll(false);
             int score;
+            bool unverified_reduction = false;
             std::vector<Move> child_pv;
+            bool reduce_candidate = false;
+            if (lmr_node && move_index >= 4 && alpha > -mate_score + max_search_ply &&
+                beta < mate_score - max_search_ply) {
+                const char piece = board.position().squares[move.from];
+                reduce_candidate = piece != 'P' && piece != 'p' && piece != 'K' && piece != 'k' &&
+                    quiet_move(board, move) && (!preferred || move != *preferred) &&
+                    (!ordered_preferred || move != *ordered_preferred) &&
+                    killers_[ply][0] != move && killers_[ply][1] != move;
+            }
             {
                 AppliedMove applied(board, move, options_.fast_moves);
                 const bool intended_claim = claimable(board);
@@ -230,16 +249,36 @@ public:
                     // improve alpha. An improvement below beta needs a normal
                     // search before publishing its score or principal variation.
                     ++pvs_probes;
-                    score = -negamax(board, depth - 1, ply + 1, -alpha - 1, -alpha, child_pv);
+                    if (reduce_candidate && !intended_claim && !board.in_check()) {
+                        ++lmr_reductions;
+                        // The reduced child receives its actual depth, so any
+                        // child TT entry can advertise only that searched depth.
+                        score = -negamax(board, depth - 2, ply + 1, -alpha - 1, -alpha,
+                                         child_pv, false);
+                        if (score > alpha) {
+                            ++lmr_researches;
+                            ++pvs_probes;
+                            score = -negamax(board, depth - 1, ply + 1, -alpha - 1, -alpha,
+                                             child_pv, false);
+                        } else {
+                            // A shallow fail-low is only a decision not to
+                            // improve alpha. It is never an exact move score or
+                            // a principal variation, even if above old best.
+                            unverified_reduction = true;
+                        }
+                    } else {
+                        score = -negamax(board, depth - 1, ply + 1, -alpha - 1, -alpha,
+                                         child_pv, false);
+                    }
                     // The mover's intended claim belongs to this move's value,
                     // so account for it before deciding whether to re-search.
                     if (intended_claim) score = std::max(0, score);
                     if (score > alpha && score < beta) {
                         ++pvs_researches;
-                        score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
+                        score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv, pv_node);
                     }
                 } else {
-                    score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv);
+                    score = -negamax(board, depth - 1, ply + 1, -beta, -alpha, child_pv, pv_node);
                 }
                 // The mover may claim before an intended move that creates a
                 // third repetition or completes 50 moves, even if the opponent
@@ -247,6 +286,11 @@ public:
                 if (intended_claim) score = std::max(0, score);
             }
             first_move = false;
+            ++move_index;
+            if (unverified_reduction) {
+                reduced_fail_low = true;
+                continue;
+            }
             if (score > best) {
                 best = score;
                 pv.clear();
@@ -265,8 +309,15 @@ public:
                 break;
             }
         }
-        const int score = current_claim ? std::max(0, best) : best;
-        if (table_) {
+        // A non-PV fail-low with unverified late moves supplies alpha as an
+        // upper bound, not their shallow scores. The retained PV starts with a
+        // full-depth searched move. A verified cutoff is unaffected by earlier
+        // reduced siblings because that full-depth move proves the lower bound.
+        const bool selective_upper = reduced_fail_low && best < beta;
+        const int score = selective_upper ? alpha : current_claim ? std::max(0, best) : best;
+        // Selective fail-low mixes horizons. Even a shallower TT depth would
+        // not make this a proven fixed-horizon bound, so do not cache it.
+        if (table_ && !selective_upper) {
             const auto bound = score <= original_alpha ? TranspositionBound::upper :
                                score >= beta ? TranspositionBound::lower : TranspositionBound::exact;
             // Interrupted recursion unwinds before this point, so partial
@@ -438,7 +489,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
             // The disabled path preserves the previous version's exact order.
             const auto preferred = depth == 1 && options.see_ordering ?
                                    std::optional<Move>{} : result.best_move;
-            score = searcher.negamax(board, depth, 0, -infinity, infinity, pv, preferred);
+            score = searcher.negamax(board, depth, 0, -infinity, infinity, pv, true, preferred);
         } catch (const Interrupted&) {
             result.stopped = true;
             break;
@@ -456,6 +507,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.pvs_probes = searcher.pvs_probes;
         result.pvs_researches = searcher.pvs_researches;
         result.see_calls = searcher.see_calls;
+        result.lmr_reductions = searcher.lmr_reductions;
+        result.lmr_researches = searcher.lmr_researches;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -469,6 +522,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.pvs_probes = searcher.pvs_probes;
     result.pvs_researches = searcher.pvs_researches;
     result.see_calls = searcher.see_calls;
+    result.lmr_reductions = searcher.lmr_reductions;
+    result.lmr_researches = searcher.lmr_researches;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

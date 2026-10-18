@@ -242,7 +242,8 @@ def search_history(engine, board, go="go depth 3"):
 def test_python_chess(binary):
     """A separate, established UCI client must be able to use this engine."""
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
-        assert engine.id.get("name") == "Regicide 0.5.7", engine.id
+        engine.configure({"UseLMR": False})  # Keep the established fixture unchanged.
+        assert engine.id.get("name") == "Regicide 0.5.8", engine.id
         engine.ping()
         for root, expect_mate in [(chess.Board(MATE_FEN), True),
                                   (chess.Board(CAPTURE_FEN), False)]:
@@ -273,6 +274,7 @@ def test_history_and_terminal(binary):
         ("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7a8n", chess.Termination.INSUFFICIENT_MATERIAL),
     ]
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         for fen, move_uci, expected in special:
             original = chess.Board(fen)
             move = chess.Move.from_uci(move_uci)
@@ -320,6 +322,7 @@ def test_history_and_terminal(binary):
 def test_limits(binary):
     board = chess.Board()
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         _, output = engine.search(board, "go depth 2")
         depths = info_values(output, "depth")
         assert depths and max(depths) == 2, output
@@ -345,6 +348,7 @@ def test_limits(binary):
 def test_interleaving(binary):
     board = chess.Board()
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         engine.position(board)
         engine.send("go infinite")
         engine.await_search_started()
@@ -397,6 +401,7 @@ def test_interleaving(binary):
 def test_bad_commands(binary):
     board = chess.Board(MATE_FEN)
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         engine.position(board)
         for command in ["position fen not-a-fen",
                         "position startpos moves e2e4 e7e5 g1f3 invalid",
@@ -435,6 +440,7 @@ def test_bad_commands(binary):
 def test_shutdown(binary):
     for end in ["quit", "eof"]:
         with UciProcess(binary) as engine:
+            configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
             engine.send("position startpos")
             engine.send("go infinite")
             engine.await_search_started()
@@ -456,6 +462,7 @@ def test_evaluation_options(binary):
     # not with a position-table adjustment or an arbitrary move blacklist.
     board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        engine.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         for option in ["UsePositionalEvaluation", "UseQuiescence", "UseQuietMoveOrdering", "UseQuiescenceChecks"]:
             assert option in engine.options and engine.options[option].default is True, engine.options
         engine.configure({"UsePositionalEvaluation": False, "UseQuiescence": False})
@@ -472,6 +479,7 @@ def test_evaluation_options(binary):
 
 def test_transposition_options(binary):
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        engine.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         for name in ["UseTranspositionTable", "UseFastMoves"]:
             option = engine.options.get(name)
             assert option and option.type == "check" and option.default is True, engine.options
@@ -485,6 +493,8 @@ def test_transposition_options(binary):
         assert result.move in chess.Board().legal_moves, result
 
     with UciProcess(binary) as engine:
+
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         # Both booleans and the advertised memory endpoints must parse. The
         # maximum is reset before searching, so this is not a 256 MiB load test.
         for enabled in [False, True]:
@@ -524,6 +534,7 @@ def test_transposition_search(binary):
     ]
     saw_hit = False
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1)
         for board in fixtures:
             configure(engine, UseTranspositionTable=False, UseFastMoves=True)
@@ -546,6 +557,7 @@ def test_transposition_isolation(binary):
     # counts and TT counters: stale entries accidentally reused change these.
     board = chess.Board()
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1, UseTranspositionTable=True, UseFastMoves=True)
         original = search_fingerprint(*engine.search(board, "go depth 4"))
         repeated = search_fingerprint(*engine.search(board, "go depth 4"))
@@ -574,6 +586,7 @@ def test_table_allocation_reuse(binary):
     board = chess.Board()
     terminal = chess.Board("7k/6Q1/5K2/8/8/8/8/8 b - - 0 1")
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1)
         first = engine.search(board, "go depth 2")
         original = search_fingerprint(*first)
@@ -647,9 +660,11 @@ def test_reused_table_context_isolation(binary):
                 "UseTranspositionTable": True, "UseFastMoves": True,
                 "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True, "PVS": True}
     with UciProcess(binary) as reused:
+        configure(reused, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(reused, **defaults)
         for index, board in enumerate(fixtures):
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **defaults)
                 expected = search_history(cold, board)
                 assert_table_memory(expected[1], allocations=1, hash_mb=1)
@@ -666,6 +681,7 @@ def test_reused_table_context_isolation(binary):
             options = defaults | change
             board = chess.Board("7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = search_history(cold, board)
             configure(reused, **options)
@@ -680,6 +696,7 @@ def test_reused_table_context_isolation(binary):
 def test_table_options_during_search(binary):
     board = chess.Board()
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1)
         original = engine.search(board, "go depth 3")
         assert_table_memory(original[1], allocations=1, hash_mb=1)
@@ -730,6 +747,7 @@ def test_search_quality_option_lifecycle(binary):
     defaults = {"Hash": 1, "UseQuietMoveOrdering": True, "UseQuiescenceChecks": True}
     board = chess.Board(CAPTURE_FEN)
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, **defaults)
         original = search_fingerprint(*engine.search(board, "go depth 2"))
         for name in ("UseQuietMoveOrdering", "UseQuiescenceChecks"):
@@ -762,6 +780,7 @@ def test_search_quality_option_lifecycle(binary):
             options[name] = enabled
             actual = engine.search(board, "go depth 2")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 2")
             assert search_fingerprint(*actual) == search_fingerprint(*expected), (options, actual, expected)
@@ -779,6 +798,7 @@ def test_search_quality_option_lifecycle(binary):
             options["Hash"] = size
             actual = engine.search(board, "go depth 2")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 2")
             assert search_fingerprint(*actual) == search_fingerprint(*expected), (command, actual, expected)
@@ -790,6 +810,7 @@ def test_search_quality_option_behavior(binary):
     # replay verifies the checking continuation, rather than trusting a CP shift.
     trap = chess.Board("7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1")
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as engine:
+        engine.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         for name in ("UseQuietMoveOrdering", "UseQuiescenceChecks"):
             option = engine.options[name]
             assert option.type == "check" and option.default is True, option
@@ -830,6 +851,7 @@ def test_pvs_protocol_and_fixed_depth(binary):
     # Validate the advertised default using a separate UCI client. On/off
     # comparisons below demand equal exact values, not identical tied moves.
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        client.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         option = client.options.get("PVS")
         assert option and option.type == "check" and option.default is True, client.options
     capture = chess.Board("7k/8/8/8/8/8/q7/R5K1 w - - 0 1")
@@ -837,6 +859,7 @@ def test_pvs_protocol_and_fixed_depth(binary):
                 (chess.Board(MATE_FEN), None),
                 (chess.Board("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"), None)]
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False, UseSEE=False)
         for board, unique in fixtures:
             expected_score = None
@@ -877,6 +900,7 @@ def test_pvs_option_lifecycle(binary):
     board = chess.Board()
     options = {"Hash": 1, "PVS": True, "UseQuiescence": False, "UseSEE": False}
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, **options)
         original = pvs_fingerprint(*engine.search(board, "go depth 3"))
         assert original[1][0] > 0, original
@@ -905,6 +929,7 @@ def test_pvs_option_lifecycle(binary):
             options["PVS"] = enabled
             actual = engine.search(board, "go depth 3")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 3")
             assert pvs_fingerprint(*actual) == pvs_fingerprint(*expected), (enabled, actual, expected)
@@ -927,6 +952,7 @@ def test_pvs_option_lifecycle(binary):
             options["Hash"] = size
             actual = engine.search(board, "go depth 3")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 3")
             assert pvs_fingerprint(*actual) == pvs_fingerprint(*expected), (command, actual, expected)
@@ -955,6 +981,7 @@ def see_fingerprint(move, output):
 
 def test_see_protocol_and_fixed_depth(binary):
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        client.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         option = client.options.get("UseSEE")
         assert option and option.type == "check" and option.default is True, client.options
     fixtures = [chess.Board(CAPTURE_FEN),
@@ -962,6 +989,7 @@ def test_see_protocol_and_fixed_depth(binary):
                 chess.Board("3r3k/8/8/3pP3/8/8/8/3R2K1 w - d6 0 1"),
                 chess.Board("1rr5/P6k/8/8/8/8/8/7K w - - 0 1")]
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1, UseQuiescence=False, UsePositionalEvaluation=False)
         for board in fixtures:
             expected = None
@@ -998,6 +1026,7 @@ def test_see_option_lifecycle(binary):
     board = chess.Board("7k/8/4p3/3r4/p7/8/8/R2Q2K1 w - - 0 1")
     options = {"Hash": 1, "PVS": True, "UseQuiescence": False, "UseSEE": True}
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, **options)
         original = see_fingerprint(*engine.search(board, "go depth 2"))
         assert original[-1] > 0, original
@@ -1025,6 +1054,7 @@ def test_see_option_lifecycle(binary):
             options["UseSEE"] = enabled
             actual = engine.search(board, "go depth 2")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 2")
             assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
@@ -1043,6 +1073,7 @@ def test_see_option_lifecycle(binary):
             options["Hash"] = size
             actual = engine.search(board, "go depth 2")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = cold.search(board, "go depth 2")
             assert see_fingerprint(*actual) == see_fingerprint(*expected), (command, actual, expected)
@@ -1058,11 +1089,12 @@ def test_pawn_shield_protocol_and_cli(binary):
     exposed = chess.Board("r2q1rk1/ppp2ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPP2P1P/R2Q1RK1 w - - 0 10")
     assert exposed.is_valid() and not exposed.is_game_over()
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        client.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         option = client.options.get("UsePawnShield")
         assert option and option.type == "check" and option.default is True, client.options
 
     def cli_query(board, go, enabled, positional=True):
-        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence",
+        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence", "--no-lmr",
                    "--fen", board.fen(en_passant="fen")]
         if go == "go nodes 1":
             command += ["--nodes", "1"]
@@ -1082,6 +1114,8 @@ def test_pawn_shield_protocol_and_cli(binary):
                 tuple(int(fields["tt_" + key]) for key in ["probes", "hits", "cutoffs", "stores"]))
 
     with UciProcess(binary) as engine:
+
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1, UseQuiescence=False)
         default = search_fingerprint(*engine.search(exposed, "go depth 2"))
         configure(engine, UsePawnShield=True)
@@ -1125,6 +1159,7 @@ def test_pawn_shield_option_lifecycle(binary):
     assert board.is_repetition(2) and not board.is_game_over()
     options = {"Hash": 1, "UseQuiescence": False, "UsePawnShield": False}
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, **options)
         first = search_history(engine, board, "go depth 2")
         original = see_fingerprint(*first)
@@ -1155,6 +1190,7 @@ def test_pawn_shield_option_lifecycle(binary):
             assert_legal_pvs(board, actual[1])
             engine.ready()
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = search_history(cold, board, "go depth 2")
             assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
@@ -1170,11 +1206,12 @@ def test_pawn_structure_protocol_and_cli(binary):
     passed = chess.Board("4k3/8/3P4/8/8/8/8/4K3 w - - 0 1")
     assert passed.is_valid() and not passed.is_game_over()
     with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        client.configure({"UseLMR": False})  # Keep the established fixture unchanged.
         option = client.options.get("UsePawnStructure")
         assert option and option.type == "check" and option.default is True, client.options
 
     def cli_query(board, go, enabled, positional=True, shield=True):
-        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence",
+        command = [str(binary), "search", "2", "--hash", "1", "--no-quiescence", "--no-lmr",
                    "--fen", board.fen(en_passant="fen")]
         if go == "go nodes 1":
             command += ["--nodes", "1"]
@@ -1196,6 +1233,8 @@ def test_pawn_structure_protocol_and_cli(binary):
                 tuple(int(fields["tt_" + key]) for key in ["probes", "hits", "cutoffs", "stores"]))
 
     with UciProcess(binary) as engine:
+
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, Hash=1, UseQuiescence=False)
         default = see_fingerprint(*engine.search(passed, "go depth 2"))
         configure(engine, UsePawnStructure=True)
@@ -1245,6 +1284,7 @@ def test_pawn_structure_option_lifecycle(binary):
     assert board.is_repetition(2) and not board.is_game_over()
     options = {"Hash": 1, "UseQuiescence": False, "UsePawnStructure": False}
     with UciProcess(binary) as engine:
+        configure(engine, UseLMR=False)  # Preserve the pre-LMR regression graph.
         configure(engine, **options)
         first = search_history(engine, board, "go depth 2")
         original = see_fingerprint(*first)
@@ -1277,6 +1317,7 @@ def test_pawn_structure_option_lifecycle(binary):
             assert_legal_pvs(board, actual[1])
             engine.ready()
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = search_history(cold, board, "go depth 2")
             assert see_fingerprint(*actual) == see_fingerprint(*expected), (enabled, actual, expected)
@@ -1295,11 +1336,182 @@ def test_pawn_structure_option_lifecycle(binary):
             options["Hash"] = size
             actual = search_history(engine, board, "go depth 2")
             with UciProcess(binary) as cold:
+                configure(cold, UseLMR=False)  # Preserve the pre-LMR regression graph.
                 configure(cold, **options)
                 expected = search_history(cold, board, "go depth 2")
             assert see_fingerprint(*actual) == see_fingerprint(*expected), (command, actual, expected)
             assert_table_memory(actual[1], allocations=allocation,
                                 reuses=int(not allocation), hash_mb=size)
+
+
+def lmr_statistics(output):
+    records = []
+    for line in output:
+        if line.startswith("info string lmr "):
+            fields = line.split()[3:]
+            assert len(fields) == 4 and fields[::2] == ["reductions", "researches"], line
+            reductions, researches = map(int, fields[1::2])
+            assert 0 <= researches <= reductions, line
+            records.append((reductions, researches))
+    assert records, output
+    for earlier, later in zip(records, records[1:]):
+        assert all(a <= b for a, b in zip(earlier, later)), records
+    return records
+
+
+def lmr_fingerprint(move, output):
+    return search_fingerprint(move, output), see_statistics(output)[-1], lmr_statistics(output)[-1]
+
+
+def lmr_cli_query(binary, board, depth, enabled, nodes=None):
+    command = [str(binary), "search", str(depth), "--hash", "1", "--no-quiescence",
+               "--fen", board.fen(en_passant="fen")]
+    if not enabled:
+        command.append("--no-lmr")
+    if nodes is not None:
+        command += ["--nodes", str(nodes)]
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                            timeout=TIMEOUT, check=True)
+    assert not result.stderr, result.stderr
+    fields = {key: value.strip() for key, value in
+              (line.split(":", 1) for line in result.stdout.splitlines())}
+    score_name = "score_mate" if "score_mate" in fields else "score_cp"
+    graph = (fields["bestmove"], ("mate" if score_name == "score_mate" else "cp",
+                                fields[score_name]), int(fields["depth"]),
+             int(fields["nodes"]), tuple(fields["pv"].split()),
+             tuple(int(fields["tt_" + key]) for key in ["probes", "hits", "cutoffs", "stores"]))
+    return graph, int(fields["see_calls"]), (int(fields["lmr_reductions"]),
+                                            int(fields["lmr_researches"]))
+
+
+def test_lmr_protocol_cli_and_gates(binary):
+    # These are fixed positions, not generated or selected from strength data.
+    # ON changes selective search, so only legality/completed limits are
+    # required between modes; CLI and UCI with the same mode must agree fully.
+    fixtures = [chess.Board("4k3/8/2n2n2/3p4/3P4/2N2N2/8/4K3 w - - 0 1"),
+                chess.Board("r2q1rk1/ppp2ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPP2PPP/R2Q1RK1 w - - 0 10")]
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options.get("UseLMR")
+        assert option and option.type == "check" and option.default is True, client.options
+    saw_reduction = False
+    saw_research = False
+    with UciProcess(binary) as engine:
+        configure(engine, Hash=1, UseQuiescence=False)
+        default = lmr_fingerprint(*engine.search(fixtures[0], "go depth 5"))
+        configure(engine, UseLMR=True)
+        assert lmr_fingerprint(*engine.search(fixtures[0], "go depth 5")) == default
+        for original in fixtures:
+            for board in (original, original.mirror()):
+                before = board.copy(stack=True)
+                for enabled in (False, True):
+                    configure(engine, UseLMR=enabled)
+                    actual = lmr_fingerprint(*engine.search(board, "go depth 5"))
+                    assert actual == lmr_cli_query(binary, board, 5, enabled), (board.fen(), enabled, actual)
+                    assert actual[0][2] == 5, actual
+                    if enabled:
+                        saw_reduction |= actual[-1][0] > 0
+                        saw_research |= actual[-1][1] > 0
+                    else:
+                        assert actual[-1] == (0, 0), actual
+                # At depth four the root is protected and every child is too
+                # shallow. At one node no iteration can reduce a late move.
+                for go, depth, nodes in [("go depth 4", 4, None), ("go nodes 1", 5, 1)]:
+                    configure(engine, UseLMR=False)
+                    off = lmr_fingerprint(*engine.search(board, go))
+                    configure(engine, UseLMR=True)
+                    on = lmr_fingerprint(*engine.search(board, go))
+                    assert off == on == lmr_cli_query(binary, board, depth, True, nodes), (go, off, on)
+                    assert on[-1] == (0, 0), on
+                # PVS and learned quiet ordering are both required. Disabling
+                # either is a strict no-op, not a different reduction policy.
+                for required in ("PVS", "UseQuietMoveOrdering"):
+                    configure(engine, **{required: False, "UseLMR": False})
+                    off = lmr_fingerprint(*engine.search(board, "go depth 5"))
+                    configure(engine, UseLMR=True)
+                    on = lmr_fingerprint(*engine.search(board, "go depth 5"))
+                    assert off == on and on[-1] == (0, 0), (board.fen(), required, off, on)
+                    configure(engine, **{required: True})
+                assert board == before and board.move_stack == before.move_stack
+    assert saw_reduction, "fixed depth-five corpus never exercised an actual LMR reduction"
+    assert saw_research, "fixed corpus never promoted an improving reduced result to full depth"
+
+
+def test_lmr_option_lifecycle(binary):
+    board = chess.Board("4k3/8/2n2n2/3p4/3P4/2N2N2/8/4K3 w - - 0 1")
+    for move in ("e1f1", "e8f8", "f1e1", "f8e8"):
+        board.push_uci(move)
+    assert board.is_repetition(2) and not board.is_game_over()
+    options = {"Hash": 1, "UseQuiescence": False, "UseLMR": False}
+    with UciProcess(binary) as engine:
+        configure(engine, **options)
+        first = search_history(engine, board, "go depth 5")
+        original = lmr_fingerprint(*first)
+        assert_table_memory(first[1], allocations=1, hash_mb=1)
+        for command in ["setoption name UseLMR value yes", "setoption name UseLMR value 1",
+                        "setoption name UseLMR", "setoption name UseLMR value",
+                        "setoption name UseLMR value TRUE", "setoption name UseLMR value false extra"]:
+            engine.send(command)
+            output = engine.ready()
+            assert any(line.startswith("info string ") for line in output), (command, output)
+        engine.send("go depth 5")
+        assert lmr_fingerprint(*engine.bestmove()) == original
+        engine.ready()
+        for enabled in (True, False, True, False):
+            engine.send("go infinite")
+            engine.await_search_started()
+            engine.send(f"setoption name UseLMR value {str(enabled).lower()}")
+            output = engine.ready(allow_bestmove=True)
+            bestmoves = [line for line in output if line.startswith("bestmove ")]
+            assert len(bestmoves) == 1 and chess.Move.from_uci(bestmoves[0].split()[1]) in board.legal_moves, output
+            assert_legal_pvs(board, output)
+            lmr_statistics(output)
+            engine.ready()  # Joined workers cannot leak late output.
+            options["UseLMR"] = enabled
+            engine.send("go depth 5")
+            actual = engine.bestmove()
+            assert_legal_pvs(board, actual[1])
+            engine.ready()
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board, "go depth 5")
+            assert lmr_fingerprint(*actual) == lmr_fingerprint(*expected), (enabled, actual, expected)
+            assert_table_memory(actual[1], reuses=1, hash_mb=1)
+            if not enabled:
+                assert lmr_fingerprint(*actual) == original
+        # Keep ON across administrative actions, then compare to fresh workers.
+        configure(engine, UseLMR=True)
+        options["UseLMR"] = True
+        for command, size, allocation in [("ucinewgame", 1, 0),
+                                          ("setoption name Clear Hash", 1, 0),
+                                          ("setoption name Hash value 16", 16, 1),
+                                          ("setoption name Hash value 1", 1, 1)]:
+            engine.send(command)
+            engine.ready()
+            options["Hash"] = size
+            actual = search_history(engine, board, "go depth 5")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = search_history(cold, board, "go depth 5")
+            assert lmr_fingerprint(*actual) == lmr_fingerprint(*expected), (command, actual, expected)
+            assert_table_memory(actual[1], allocations=allocation, reuses=int(not allocation), hash_mb=size)
+
+
+def test_lmr_default_client_compatibility(binary):
+    # The desktop game and human-turn hint helper both use python-chess UCI
+    # clients. Default ON must remain usable with short budgets and both colors.
+    original = chess.Board("r2q1rk1/ppp2ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPP2PPP/R2Q1RK1 w - - 0 10")
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        assert client.options["UseLMR"].default is True
+        for board in (original, original.mirror()):
+            before = board.copy(stack=True)
+            result = client.play(board, chess.engine.Limit(time=0.1), info=chess.engine.INFO_ALL)
+            assert result.move in board.legal_moves, result
+            continuation = board.copy(stack=True)
+            for move in result.info.get("pv", []):
+                assert move in continuation.legal_moves, result
+                continuation.push(move)
+            assert board == before and board.move_stack == before.move_stack
+            client.ping()
 
 
 def main():
@@ -1316,12 +1528,13 @@ def main():
               test_pvs_option_lifecycle, test_see_protocol_and_fixed_depth,
               test_see_option_lifecycle, test_pawn_shield_protocol_and_cli,
               test_pawn_shield_option_lifecycle, test_pawn_structure_protocol_and_cli,
-              test_pawn_structure_option_lifecycle]
+              test_pawn_structure_option_lifecycle, test_lmr_protocol_cli_and_gates,
+              test_lmr_option_lifecycle, test_lmr_default_client_compatibility]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)
     print(f"PASS engine integration: {len(checks)} groups; chess={chess.__version__}; "
-          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS/shield/structure isolation/reuse")
+          "legal moves, tactical choices, special history, limits, concurrency, shutdown, TT/PVS/shield/structure/LMR isolation/reuse")
 
 
 if __name__ == "__main__":

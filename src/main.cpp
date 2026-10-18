@@ -61,12 +61,12 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.5.7\n"
+            std::cout << "Regicide 0.5.8\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
-                         "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure\n"
+                         "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure --no-lmr\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
             else if (command == "search" && option == "--no-see") search_options.see_ordering = false;
             else if (command == "search" && option == "--no-pawn-shield") search_options.king_pawn_shield = false;
             else if (command == "search" && option == "--no-pawn-structure") search_options.pawn_structure = false;
+            else if (command == "search" && option == "--no-lmr") search_options.lmr = false;
             else if (command == "search" && option == "--hash" && arg < argc) {
                 const int amount = depth_arg(argv[arg++]);
                 if (amount < 1 || amount > 256) throw std::invalid_argument("hash must be 1..256 MiB");
@@ -140,6 +141,8 @@ int main(int argc, char** argv) {
                       << "\ntt_allocations: " << result.tt_allocations << "\ntt_reuses: " << result.tt_reuses
                       << "\ntt_clears: " << result.tt_clears << "\ntt_bytes: " << result.tt_bytes
                       << "\nsee_calls: " << result.see_calls
+                      << "\nlmr_reductions: " << result.lmr_reductions
+                      << "\nlmr_researches: " << result.lmr_researches
                       << "\nstopped: " << result.stopped << "\npv:";
             for (auto move : result.pv) std::cout << ' ' << move.uci();
             std::cout << '\n';
