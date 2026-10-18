@@ -1,0 +1,579 @@
+2026-10-18T17:18:31.5532879Z Current runner version: '2.337.0'
+2026-10-18T17:18:31.5595954Z ##[group]Runner Image Provisioner
+2026-10-18T17:18:31.5631675Z Hosted Compute Agent
+2026-10-18T17:18:31.5632613Z Version: 20261002.596
+2026-10-18T17:18:31.5635002Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-18T17:18:31.5636151Z Build Date: 2026-10-02T22:28:27Z
+2026-10-18T17:18:31.5637228Z Worker ID: {9e5f268a-0411-4243-8ffe-e1734c6667a6}
+2026-10-18T17:18:31.5638362Z Region: westus
+2026-10-18T17:18:31.5639154Z Cloud: Azure
+2026-10-18T17:18:31.5639948Z ##[endgroup]
+2026-10-18T17:18:31.5642357Z ##[group]Operating System
+2026-10-18T17:18:31.5643369Z Microsoft Windows Server 2025
+2026-10-18T17:18:31.5644362Z 10.0.26100
+2026-10-18T17:18:31.5645112Z Datacenter
+2026-10-18T17:18:31.5645925Z ##[endgroup]
+2026-10-18T17:18:31.5646737Z ##[group]Runner Image
+2026-10-18T17:18:31.5647596Z Image: windows-2025-vs2026
+2026-10-18T17:18:31.5648526Z Version: 20261007.264.1
+2026-10-18T17:18:31.5650930Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+2026-10-18T17:18:31.5653825Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+2026-10-18T17:18:31.5655433Z ##[endgroup]
+2026-10-18T17:18:31.5657388Z ##[group]GITHUB_TOKEN Permissions
+2026-10-18T17:18:31.5662478Z Contents: read
+2026-10-18T17:18:31.5663442Z Metadata: read
+2026-10-18T17:18:31.5664305Z Packages: read
+2026-10-18T17:18:31.5665111Z ##[endgroup]
+2026-10-18T17:18:31.5668025Z Secret source: Actions
+2026-10-18T17:18:31.5669345Z Cache mode: write
+2026-10-18T17:18:31.5670395Z Prepare workflow directory
+2026-10-18T17:18:31.6841706Z Prepare all required actions
+2026-10-18T17:18:31.7329802Z Getting action download info
+2026-10-18T17:18:33.6732492Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-18T17:18:33.8901117Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-10-18T17:18:34.1310030Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-18T17:18:34.5029661Z Complete job name: rules (windows-latest)
+2026-10-18T17:18:34.7387508Z ##[group]Run actions/checkout@v4
+2026-10-18T17:18:34.7388913Z with:
+2026-10-18T17:18:34.7389906Z   repository: bigpine-choi/Regicide
+2026-10-18T17:18:34.7397429Z   token: ***
+2026-10-18T17:18:34.7398306Z   ssh-strict: true
+2026-10-18T17:18:34.7399021Z   ssh-user: git
+2026-10-18T17:18:34.7399747Z   persist-credentials: true
+2026-10-18T17:18:34.7400531Z   clean: true
+2026-10-18T17:18:34.7401259Z   sparse-checkout-cone-mode: true
+2026-10-18T17:18:34.7402123Z   fetch-depth: 1
+2026-10-18T17:18:34.7402839Z   fetch-tags: false
+2026-10-18T17:18:34.7403575Z   show-progress: true
+2026-10-18T17:18:34.7404293Z   lfs: false
+2026-10-18T17:18:34.7404960Z   submodules: false
+2026-10-18T17:18:34.7405689Z   set-safe-directory: true
+2026-10-18T17:18:34.7406509Z   allow-unsafe-pr-checkout: false
+2026-10-18T17:18:34.7407675Z ##[endgroup]
+2026-10-18T17:18:34.9240870Z Syncing repository: bigpine-choi/Regicide
+2026-10-18T17:18:34.9247218Z ##[group]Getting Git version info
+2026-10-18T17:18:34.9251063Z Working directory is 'D:\a\Regicide\Regicide'
+2026-10-18T17:18:35.0529808Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T17:18:36.7612255Z git version 2.56.0.windows.2
+2026-10-18T17:18:36.7616016Z ##[endgroup]
+2026-10-18T17:18:36.7624224Z Temporarily overriding HOME='D:\a\_temp\af179296-646c-486c-afe3-fbad706bb480' before making global git config changes
+2026-10-18T17:18:36.7625654Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T17:18:36.7626925Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Regicide\Regicide
+2026-10-18T17:18:36.7628906Z Deleting the contents of 'D:\a\Regicide\Regicide'
+2026-10-18T17:18:36.7629886Z ##[group]Initializing the repository
+2026-10-18T17:18:36.7634426Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Regicide\Regicide
+2026-10-18T17:18:36.7635406Z Initialized empty Git repository in D:/a/Regicide/Regicide/.git/
+2026-10-18T17:18:36.7637764Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/bigpine-choi/Regicide
+2026-10-18T17:18:36.8137831Z ##[endgroup]
+2026-10-18T17:18:36.8138891Z ##[group]Disabling automatic garbage collection
+2026-10-18T17:18:36.8140209Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-18T17:18:36.8856800Z ##[endgroup]
+2026-10-18T17:18:36.8857760Z ##[group]Setting up auth
+2026-10-18T17:18:36.8964018Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T17:18:36.9507956Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T17:18:40.1614288Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T17:18:40.2071815Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T17:18:40.9274169Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T17:18:40.9721170Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T17:18:42.3618750Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-18T17:18:42.3620775Z ##[endgroup]
+2026-10-18T17:18:42.3621423Z ##[group]Fetching the repository
+2026-10-18T17:18:42.3623217Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +b5f0af8713971f13d1da202eb62dee016d0c80f2:refs/remotes/origin/feat/endgame-learning-scale
+2026-10-18T17:18:44.5505739Z From https://github.com/bigpine-choi/Regicide
+2026-10-18T17:18:44.5507575Z  * [new ref]         b5f0af8713971f13d1da202eb62dee016d0c80f2 -> origin/feat/endgame-learning-scale
+2026-10-18T17:18:44.5595626Z ##[endgroup]
+2026-10-18T17:18:44.5597055Z ##[group]Determining the checkout info
+2026-10-18T17:18:44.5608974Z ##[endgroup]
+2026-10-18T17:18:44.5613250Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-18T17:18:44.6174424Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-18T17:18:44.6692061Z ##[group]Checking out the ref
+2026-10-18T17:18:44.6787453Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B feat/endgame-learning-scale refs/remotes/origin/feat/endgame-learning-scale
+2026-10-18T17:18:45.5305456Z Switched to a new branch 'feat/endgame-learning-scale'
+2026-10-18T17:18:45.5369839Z branch 'feat/endgame-learning-scale' set up to track 'origin/feat/endgame-learning-scale'.
+2026-10-18T17:18:45.5552818Z ##[endgroup]
+2026-10-18T17:18:45.6372555Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-18T17:18:45.6776769Z b5f0af8713971f13d1da202eb62dee016d0c80f2
+2026-10-18T17:18:45.7328576Z ##[group]Run actions/setup-python@v5
+2026-10-18T17:18:45.7328939Z with:
+2026-10-18T17:18:45.7329146Z   python-version: 3.12
+2026-10-18T17:18:45.7329371Z   check-latest: false
+2026-10-18T17:18:45.7331946Z   token: ***
+2026-10-18T17:18:45.7332147Z   update-environment: true
+2026-10-18T17:18:45.7332383Z   allow-prereleases: false
+2026-10-18T17:18:45.7332621Z   freethreaded: false
+2026-10-18T17:18:45.7332851Z ##[endgroup]
+2026-10-18T17:18:45.9248459Z ##[group]Installed versions
+2026-10-18T17:18:45.9528564Z (node:3872) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-18T17:18:45.9560392Z Successfully set up CPython (3.12.10)
+2026-10-18T17:18:45.9567662Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-18T17:18:45.9568689Z ##[endgroup]
+2026-10-18T17:18:45.9944116Z ##[group]Run cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+2026-10-18T17:18:45.9944688Z [36;1mcmake -S . -B build -DCMAKE_BUILD_TYPE=Release[0m
+2026-10-18T17:18:46.0865132Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:18:46.0865668Z env:
+2026-10-18T17:18:46.0866072Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:18:46.0866772Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:18:46.0867376Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:18:46.0867907Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:18:46.0868474Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:18:46.0868899Z ##[endgroup]
+2026-10-18T17:18:58.3725405Z -- Building for: Visual Studio 18 2026
+2026-10-18T17:18:58.3726292Z -- The CXX compiler identification is MSVC 19.51.36260.0
+2026-10-18T17:18:58.5166983Z -- Detecting CXX compiler ABI info
+2026-10-18T17:18:59.6765598Z -- Detecting CXX compiler ABI info - done
+2026-10-18T17:18:59.7108117Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+2026-10-18T17:18:59.7124865Z -- Detecting CXX compile features
+2026-10-18T17:18:59.7140252Z -- Detecting CXX compile features - done
+2026-10-18T17:18:59.7898241Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-10-18T17:19:01.3955667Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+2026-10-18T17:19:01.3957495Z -- Looking for pthread_create in pthreads
+2026-10-18T17:19:02.1435813Z -- Looking for pthread_create in pthreads - not found
+2026-10-18T17:19:02.1436788Z -- Looking for pthread_create in pthread
+2026-10-18T17:19:02.8471687Z -- Looking for pthread_create in pthread - not found
+2026-10-18T17:19:02.8591383Z -- Found Threads: TRUE
+2026-10-18T17:19:02.9641158Z -- Configuring done (15.8s)
+2026-10-18T17:19:03.0937711Z CMake Warning (unused-cli):
+2026-10-18T17:19:03.0938282Z -- Generating done (0.1s)
+2026-10-18T17:19:03.0939325Z   Manually-specified variables were not used by the project:
+2026-10-18T17:19:03.0939784Z 
+2026-10-18T17:19:03.0939922Z     CMAKE_BUILD_TYPE
+2026-10-18T17:19:03.0940155Z 
+2026-10-18T17:19:03.0940163Z 
+2026-10-18T17:19:03.0950626Z -- Build files have been written to: D:/a/Regicide/Regicide/build
+2026-10-18T17:19:03.2514015Z ##[group]Run cmake --build build --config Release
+2026-10-18T17:19:03.2514470Z [36;1mcmake --build build --config Release[0m
+2026-10-18T17:19:03.2592811Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:19:03.2593181Z env:
+2026-10-18T17:19:03.2593486Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:19:03.2593952Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:19:03.2594407Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:19:03.2594820Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:19:03.2595224Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:19:03.2595549Z ##[endgroup]
+2026-10-18T17:19:03.8236379Z MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+2026-10-18T17:19:03.8610632Z 
+2026-10-18T17:19:04.1793103Z   1>Checking Build System
+2026-10-18T17:19:04.3774389Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:04.6087241Z   board.cpp
+2026-10-18T17:19:08.6584774Z   regicide_core.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_core.lib
+2026-10-18T17:19:08.7546866Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:08.8536244Z   search.cpp
+2026-10-18T17:19:11.3719617Z   evaluation.cpp
+2026-10-18T17:19:12.2235681Z   transposition.cpp
+2026-10-18T17:19:14.3159474Z   see.cpp
+2026-10-18T17:19:15.1666720Z   neural.cpp
+2026-10-18T17:19:16.4934742Z   Generating Code...
+2026-10-18T17:19:19.3562215Z   regicide_search.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_search.lib
+2026-10-18T17:19:19.4022577Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:19.4883714Z   main.cpp
+2026-10-18T17:19:21.7117823Z   uci.cpp
+2026-10-18T17:19:23.9825082Z   Generating Code...
+2026-10-18T17:19:27.8668379Z   regicide.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide.exe
+2026-10-18T17:19:27.9476022Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:28.0326090Z   board_state_tests.cpp
+2026-10-18T17:19:30.5495842Z   regicide_board_state_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_board_state_tests.exe
+2026-10-18T17:19:30.6191184Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:30.7138515Z   evaluation_tests.cpp
+2026-10-18T17:19:32.1316600Z   reference_evaluation_v054.cpp
+2026-10-18T17:19:32.8746817Z   reference_evaluation_v056.cpp
+2026-10-18T17:19:33.6660227Z   Generating Code...
+2026-10-18T17:19:35.9787381Z   regicide_evaluation_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_evaluation_tests.exe
+2026-10-18T17:19:36.0513466Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:36.1290289Z   neural_tests.cpp
+2026-10-18T17:19:38.7175334Z   reference_neural_v063.cpp
+2026-10-18T17:19:40.0159231Z   Generating Code...
+2026-10-18T17:19:43.7224161Z   regicide_neural_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_neural_tests.exe
+2026-10-18T17:19:43.7922812Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:43.8812694Z   search_tests.cpp
+2026-10-18T17:19:53.8385609Z   regicide_search_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_search_tests.exe
+2026-10-18T17:19:53.9077664Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:54.0486088Z   see_tests.cpp
+2026-10-18T17:19:56.1968677Z   regicide_see_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_see_tests.exe
+2026-10-18T17:19:56.2625284Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:56.3394920Z   rules_tests.cpp
+2026-10-18T17:19:59.6850578Z   regicide_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_tests.exe
+2026-10-18T17:19:59.7658284Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:19:59.8462335Z   transposition_tests.cpp
+2026-10-18T17:20:02.8723596Z   regicide_transposition_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_transposition_tests.exe
+2026-10-18T17:20:02.9368991Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T17:20:03.1575067Z ##[group]Run ctest --test-dir build -C Release --output-on-failure
+2026-10-18T17:20:03.1576385Z [36;1mctest --test-dir build -C Release --output-on-failure[0m
+2026-10-18T17:20:03.1657485Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:03.1657845Z env:
+2026-10-18T17:20:03.1658123Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:03.1658600Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:03.1659057Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:03.1659463Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:03.1659863Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:03.1660235Z ##[endgroup]
+2026-10-18T17:20:04.1461218Z Test project D:/a/Regicide/Regicide/build
+2026-10-18T17:20:04.1958988Z     Start 1: rules
+2026-10-18T17:20:05.7565679Z 1/7 Test #1: rules ............................   Passed    1.56 sec
+2026-10-18T17:20:05.7645884Z     Start 2: search
+2026-10-18T17:20:07.8617470Z 2/7 Test #2: search ...........................   Passed    2.10 sec
+2026-10-18T17:20:07.8618505Z     Start 3: evaluation
+2026-10-18T17:20:09.7368459Z 3/7 Test #3: evaluation .......................   Passed    1.87 sec
+2026-10-18T17:20:09.7374686Z     Start 4: board_state
+2026-10-18T17:20:09.7911645Z 4/7 Test #4: board_state ......................   Passed    0.05 sec
+2026-10-18T17:20:09.7917784Z     Start 5: transposition
+2026-10-18T17:20:09.8071340Z 5/7 Test #5: transposition ....................   Passed    0.01 sec
+2026-10-18T17:20:09.8076364Z     Start 6: see
+2026-10-18T17:20:09.8576042Z 6/7 Test #6: see ..............................   Passed    0.05 sec
+2026-10-18T17:20:09.8581931Z     Start 7: neural
+2026-10-18T17:20:11.9529588Z 7/7 Test #7: neural ...........................   Passed    2.09 sec
+2026-10-18T17:20:11.9540516Z 
+2026-10-18T17:20:11.9541072Z 100% tests passed out of 7
+2026-10-18T17:20:11.9541721Z 
+2026-10-18T17:20:11.9542131Z Total Test time (real) =   7.80 sec
+2026-10-18T17:20:12.1276335Z ##[group]Run python -m pip install -r requirements-test.txt
+2026-10-18T17:20:12.1277166Z [36;1mpython -m pip install -r requirements-test.txt[0m
+2026-10-18T17:20:12.1372052Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:12.1372421Z env:
+2026-10-18T17:20:12.1372689Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:12.1373144Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:12.1373630Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:12.1374038Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:12.1374444Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:12.1374762Z ##[endgroup]
+2026-10-18T17:20:17.5248931Z Collecting chess==1.11.2 (from -r requirements-test.txt (line 2))
+2026-10-18T17:20:17.7443213Z   Downloading chess-1.11.2.tar.gz (6.1 MB)
+2026-10-18T17:20:17.9834154Z      ---------------------------------------- 6.1/6.1 MB 75.2 MB/s  0:00:00
+2026-10-18T17:20:18.5973378Z   Installing build dependencies: started
+2026-10-18T17:20:21.7215876Z   Installing build dependencies: finished with status 'done'
+2026-10-18T17:20:21.7218661Z   Getting requirements to build wheel: started
+2026-10-18T17:20:22.5765837Z   Getting requirements to build wheel: finished with status 'done'
+2026-10-18T17:20:22.5799765Z   Preparing metadata (pyproject.toml): started
+2026-10-18T17:20:22.9888519Z   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-10-18T17:20:22.9940130Z Building wheels for collected packages: chess
+2026-10-18T17:20:22.9971184Z   Building wheel for chess (pyproject.toml): started
+2026-10-18T17:20:23.5300028Z   Building wheel for chess (pyproject.toml): finished with status 'done'
+2026-10-18T17:20:23.5327635Z   Created wheel for chess: filename=chess-1.11.2-py3-none-any.whl size=147920 sha256=d6b1cfda25351e6ea5f9da2a6613f0dee18a3c595b371540a866ad494697902f
+2026-10-18T17:20:23.5329961Z   Stored in directory: c:\users\runneradmin\appdata\local\pip\cache\wheels\83\1f\4e\8f4300f7dd554eb8de70ddfed96e94d3d030ace10c5b53d447
+2026-10-18T17:20:23.5376809Z Successfully built chess
+2026-10-18T17:20:23.5743474Z Installing collected packages: chess
+2026-10-18T17:20:23.8193223Z Successfully installed chess-1.11.2
+2026-10-18T17:20:24.2075393Z ##[group]Run python -m pip install -r requirements-learning.txt
+2026-10-18T17:20:24.2076258Z [36;1mpython -m pip install -r requirements-learning.txt[0m
+2026-10-18T17:20:24.2182591Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:24.2183228Z env:
+2026-10-18T17:20:24.2183698Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:24.2184331Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:24.2184799Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:24.2186195Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:24.2186629Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:24.2186965Z ##[endgroup]
+2026-10-18T17:20:25.8056420Z Requirement already satisfied: chess==1.11.2 in C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages (from -r D:\a\Regicide\Regicide\requirements-test.txt (line 2)) (1.11.2)
+2026-10-18T17:20:26.4546185Z Collecting numpy==2.3.5 (from -r requirements-learning.txt (line 2))
+2026-10-18T17:20:26.6551891Z   Downloading numpy-2.3.5-cp312-cp312-win_amd64.whl.metadata (60 kB)
+2026-10-18T17:20:26.7634177Z Downloading numpy-2.3.5-cp312-cp312-win_amd64.whl (12.8 MB)
+2026-10-18T17:20:26.9263647Z    ---------------------------------------- 12.8/12.8 MB 113.8 MB/s  0:00:00
+2026-10-18T17:20:27.0216656Z Installing collected packages: numpy
+2026-10-18T17:20:31.5174264Z Successfully installed numpy-2.3.5
+2026-10-18T17:20:31.7119030Z ##[group]Run python tests/learning_data_tests.py
+2026-10-18T17:20:31.7119835Z [36;1mpython tests/learning_data_tests.py[0m
+2026-10-18T17:20:31.7198477Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:31.7198832Z env:
+2026-10-18T17:20:31.7199107Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:31.7199570Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:31.7200032Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:31.7200439Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:31.7200875Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:31.7201204Z ##[endgroup]
+2026-10-18T17:20:32.9474430Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T17:20:32.9801784Z game 1/1 0-1 CHECKMATE samples 1
+2026-10-18T17:20:33.0360182Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T17:20:33.0586763Z game 1/1 0-1 CHECKMATE samples 1
+2026-10-18T17:20:33.1419515Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T17:20:33.1838922Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T17:20:33.2210719Z game 1/1 1-0 CHECKMATE samples 3
+2026-10-18T17:20:33.3130653Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T17:20:33.3365908Z game 1/1 * PLY_CAP_UNFINISHED samples 0
+2026-10-18T17:20:33.6401376Z ....................
+2026-10-18T17:20:33.6402484Z ----------------------------------------------------------------------
+2026-10-18T17:20:33.6403294Z Ran 20 tests in 0.936s
+2026-10-18T17:20:33.6415491Z 
+2026-10-18T17:20:33.6415839Z OK
+2026-10-18T17:20:33.8053129Z ##[group]Run python tests/neural_training_tests.py
+2026-10-18T17:20:33.8053850Z [36;1mpython tests/neural_training_tests.py[0m
+2026-10-18T17:20:33.8157624Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:33.8158209Z env:
+2026-10-18T17:20:33.8158649Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:33.8159468Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:33.8160281Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:33.8160987Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:33.8161686Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:33.8162226Z ##[endgroup]
+2026-10-18T17:20:36.0443636Z ..............................
+2026-10-18T17:20:36.0444553Z ----------------------------------------------------------------------
+2026-10-18T17:20:36.0445329Z Ran 30 tests in 1.655s
+2026-10-18T17:20:36.0445691Z 
+2026-10-18T17:20:36.0445937Z OK
+2026-10-18T17:20:36.1907937Z ##[group]Run python tests/classical_evaluation_tests.py
+2026-10-18T17:20:36.1908677Z [36;1mpython tests/classical_evaluation_tests.py[0m
+2026-10-18T17:20:36.1992519Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:36.1992883Z env:
+2026-10-18T17:20:36.1993378Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.1993848Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:36.1994304Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.1994707Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.1995103Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.1995425Z ##[endgroup]
+2026-10-18T17:20:36.7485951Z s..........
+2026-10-18T17:20:36.7486769Z ----------------------------------------------------------------------
+2026-10-18T17:20:36.7487644Z Ran 11 tests in 0.015s
+2026-10-18T17:20:36.7488045Z 
+2026-10-18T17:20:36.7488304Z OK (skipped=1)
+2026-10-18T17:20:36.8851353Z ##[group]Run python tests/learning_loss_analysis_tests.py
+2026-10-18T17:20:36.8852122Z [36;1mpython tests/learning_loss_analysis_tests.py[0m
+2026-10-18T17:20:36.8942865Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:36.8943512Z env:
+2026-10-18T17:20:36.8943981Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.8944827Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:36.8945660Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.8946398Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.8947136Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:36.8947712Z ##[endgroup]
+2026-10-18T17:20:37.5342315Z loss fools-mate ply 2: cp_loss=50 training=below_loss_threshold
+2026-10-18T17:20:37.6007280Z loss fools-mate ply 2: cp_loss=-100 training=below_loss_threshold
+2026-10-18T17:20:37.7122863Z loss fools-mate ply 2: cp_loss=400 training=no_better_alternative_found
+2026-10-18T17:20:37.8291151Z loss fools-mate ply 2: cp_loss=400 training=held_out_family
+2026-10-18T17:20:37.9099462Z loss fools-mate ply 2: cp_loss=400 training=held_out_family
+2026-10-18T17:20:38.0450786Z loss fools-mate ply 2: cp_loss=None training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.1178394Z loss fools-mate ply 2: cp_loss=None training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.1887610Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.2612699Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.3327106Z loss fools-mate ply 2: cp_loss=400 training=accepted
+2026-10-18T17:20:38.4024481Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.4663769Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.5318896Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T17:20:38.6291126Z ................
+2026-10-18T17:20:38.6292004Z ----------------------------------------------------------------------
+2026-10-18T17:20:38.6292809Z Ran 16 tests in 1.151s
+2026-10-18T17:20:38.6293186Z 
+2026-10-18T17:20:38.6293467Z OK
+2026-10-18T17:20:38.7815978Z ##[group]Run python tests/learning_corpus_tests.py
+2026-10-18T17:20:38.7816642Z [36;1mpython tests/learning_corpus_tests.py[0m
+2026-10-18T17:20:38.7920452Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:38.7921018Z env:
+2026-10-18T17:20:38.7921449Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:38.7922236Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:38.7923018Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:38.7923711Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:38.7924401Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:38.7924938Z ##[endgroup]
+2026-10-18T17:20:44.8669177Z ...................
+2026-10-18T17:20:44.8785770Z ----------------------------------------------------------------------
+2026-10-18T17:20:44.8787535Z Ran 19 tests in 5.408s
+2026-10-18T17:20:44.8798174Z 
+2026-10-18T17:20:44.8800258Z OK
+2026-10-18T17:20:45.0495413Z ##[group]Run python tests/learning_arena_tests.py
+2026-10-18T17:20:45.0495858Z [36;1mpython tests/learning_arena_tests.py[0m
+2026-10-18T17:20:45.0571162Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:45.0571513Z env:
+2026-10-18T17:20:45.0571783Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:45.0572239Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:45.0572696Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:45.0573093Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:45.0573480Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:45.0573790Z ##[endgroup]
+2026-10-18T17:20:46.2315543Z ..................
+2026-10-18T17:20:46.2316384Z ----------------------------------------------------------------------
+2026-10-18T17:20:46.2317207Z Ran 18 tests in 0.590s
+2026-10-18T17:20:46.2317680Z 
+2026-10-18T17:20:46.2317954Z OK
+2026-10-18T17:20:46.3868322Z ##[group]Run python tests/learning_registry_tests.py
+2026-10-18T17:20:46.3868797Z [36;1mpython tests/learning_registry_tests.py[0m
+2026-10-18T17:20:46.3949529Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:46.3949887Z env:
+2026-10-18T17:20:46.3950155Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:46.3950607Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:46.3951056Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:46.3951460Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:46.3951856Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:46.3952190Z ##[endgroup]
+2026-10-18T17:20:47.8457673Z ..................
+2026-10-18T17:20:47.8458518Z ----------------------------------------------------------------------
+2026-10-18T17:20:47.8459366Z Ran 18 tests in 0.876s
+2026-10-18T17:20:47.8459769Z 
+2026-10-18T17:20:47.8460054Z OK
+2026-10-18T17:20:47.9970355Z ##[group]Run python tests/learning_cycle_tests.py
+2026-10-18T17:20:47.9971029Z [36;1mpython tests/learning_cycle_tests.py[0m
+2026-10-18T17:20:48.0067993Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:48.0068345Z env:
+2026-10-18T17:20:48.0068607Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:48.0069065Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:48.0069579Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:48.0069988Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:48.0070402Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:48.0070715Z ##[endgroup]
+2026-10-18T17:20:55.6758809Z .........................................
+2026-10-18T17:20:55.6759738Z ----------------------------------------------------------------------
+2026-10-18T17:20:55.6760540Z Ran 41 tests in 7.003s
+2026-10-18T17:20:55.6760909Z 
+2026-10-18T17:20:55.6761152Z OK
+2026-10-18T17:20:55.8360170Z ##[group]Run python tests/teacher_quality_tests.py
+2026-10-18T17:20:55.8360861Z [36;1mpython tests/teacher_quality_tests.py[0m
+2026-10-18T17:20:55.8484576Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:20:55.8485193Z env:
+2026-10-18T17:20:55.8485656Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:55.8486475Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:20:55.8487268Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:55.8488015Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:55.8488422Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:20:55.8488747Z ##[endgroup]
+2026-10-18T17:21:08.0553623Z ...............s.......
+2026-10-18T17:21:08.0554968Z ----------------------------------------------------------------------
+2026-10-18T17:21:08.0555804Z Ran 23 tests in 11.521s
+2026-10-18T17:21:08.0556174Z 
+2026-10-18T17:21:08.0556439Z OK (skipped=1)
+2026-10-18T17:21:08.1980117Z ##[group]Run python tests/neural_cost_diagnostic_tests.py
+2026-10-18T17:21:08.1980613Z [36;1mpython tests/neural_cost_diagnostic_tests.py[0m
+2026-10-18T17:21:08.2054032Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:08.2054385Z env:
+2026-10-18T17:21:08.2054651Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:08.2055106Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:08.2055575Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:08.2055975Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:08.2056375Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:08.2056703Z ##[endgroup]
+2026-10-18T17:21:10.2454469Z ......................
+2026-10-18T17:21:10.2479249Z ----------------------------------------------------------------------
+2026-10-18T17:21:10.2482604Z Ran 22 tests in 1.374s
+2026-10-18T17:21:10.2483062Z 
+2026-10-18T17:21:10.2483317Z OK
+2026-10-18T17:21:10.3961798Z ##[group]Run python tests/neural_inference_benchmark_tests.py
+2026-10-18T17:21:10.3962623Z [36;1mpython tests/neural_inference_benchmark_tests.py[0m
+2026-10-18T17:21:10.4051138Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:10.4051476Z env:
+2026-10-18T17:21:10.4051744Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:10.4052201Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:10.4052689Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:10.4053085Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:10.4053478Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:10.4053792Z ##[endgroup]
+2026-10-18T17:21:11.0388685Z .......
+2026-10-18T17:21:11.0389525Z ----------------------------------------------------------------------
+2026-10-18T17:21:11.0390412Z Ran 7 tests in 0.022s
+2026-10-18T17:21:11.0390795Z 
+2026-10-18T17:21:11.0391055Z OK
+2026-10-18T17:21:11.1890486Z ##[group]Run python tests/endgame_diagnosis_tests.py
+2026-10-18T17:21:11.1890957Z [36;1mpython tests/endgame_diagnosis_tests.py[0m
+2026-10-18T17:21:11.1963355Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:11.1963718Z env:
+2026-10-18T17:21:11.1964003Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:11.1964486Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:11.1964952Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:11.1965365Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:11.1965767Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:11.1966086Z ##[endgroup]
+2026-10-18T17:21:12.8987076Z endgame endgame-fixture ply 0: unconfirmed
+2026-10-18T17:21:13.4219215Z ........................
+2026-10-18T17:21:13.4220172Z ----------------------------------------------------------------------
+2026-10-18T17:21:13.4220917Z Ran 24 tests in 1.680s
+2026-10-18T17:21:13.4221292Z 
+2026-10-18T17:21:13.4221558Z OK
+2026-10-18T17:21:13.5845648Z ##[group]Run python tests/endgame_data_tests.py
+2026-10-18T17:21:13.5846325Z [36;1mpython tests/endgame_data_tests.py[0m
+2026-10-18T17:21:13.5950077Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:13.5951424Z env:
+2026-10-18T17:21:13.5951783Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:13.5952262Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:13.5952732Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:13.5953130Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:13.5953523Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:13.5953839Z ##[endgroup]
+2026-10-18T17:21:15.0975504Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T17:21:15.1182985Z game 1/2 1-0 CHECKMATE samples 1
+2026-10-18T17:21:15.1184091Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T17:21:15.1388279Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T17:21:15.5842222Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T17:21:15.5998891Z game 1/2 1-0 CHECKMATE samples 0
+2026-10-18T17:21:15.5999833Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T17:21:15.6199523Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T17:21:16.0697079Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T17:21:16.0887680Z game 1/2 1-0 CHECKMATE samples 1
+2026-10-18T17:21:16.0888594Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T17:21:16.1095126Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T17:21:17.1830315Z ..............
+2026-10-18T17:21:17.1831473Z ----------------------------------------------------------------------
+2026-10-18T17:21:17.1832227Z Ran 14 tests in 2.932s
+2026-10-18T17:21:17.1832610Z 
+2026-10-18T17:21:17.1832871Z OK
+2026-10-18T17:21:17.3378121Z ##[group]Run python tests/endgame_holdout_quality_tests.py
+2026-10-18T17:21:17.3378892Z [36;1mpython tests/endgame_holdout_quality_tests.py[0m
+2026-10-18T17:21:17.3481464Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:17.3481823Z env:
+2026-10-18T17:21:17.3482088Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:17.3482578Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:17.3483045Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:17.3483463Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:17.3483856Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:17.3484163Z ##[endgroup]
+2026-10-18T17:21:20.5903632Z ..........
+2026-10-18T17:21:20.5904460Z ----------------------------------------------------------------------
+2026-10-18T17:21:20.5905297Z Ran 10 tests in 2.595s
+2026-10-18T17:21:20.5905701Z 
+2026-10-18T17:21:20.5905972Z OK
+2026-10-18T17:21:20.7639260Z ##[group]Run python tests/endgame_learning_curve_tests.py
+2026-10-18T17:21:20.7639949Z [36;1mpython tests/endgame_learning_curve_tests.py[0m
+2026-10-18T17:21:20.7715105Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:20.7715486Z env:
+2026-10-18T17:21:20.7715759Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:20.7716219Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:20.7716679Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:20.7717081Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:20.7717480Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:20.7717789Z ##[endgroup]
+2026-10-18T17:21:27.0234036Z ...................
+2026-10-18T17:21:27.0235436Z ----------------------------------------------------------------------
+2026-10-18T17:21:27.0236277Z Ran 19 tests in 5.616s
+2026-10-18T17:21:27.0236680Z 
+2026-10-18T17:21:27.0236946Z OK
+2026-10-18T17:21:27.1792704Z ##[group]Run python tests/endgame_matches_tests.py
+2026-10-18T17:21:27.1793163Z [36;1mpython tests/endgame_matches_tests.py[0m
+2026-10-18T17:21:27.1868217Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T17:21:27.1868791Z env:
+2026-10-18T17:21:27.1869063Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:27.1869514Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T17:21:27.1869983Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:27.1870395Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:27.1870795Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T17:21:27.1871116Z ##[endgroup]
+2026-10-18T17:21:28.1018069Z ..........F
+2026-10-18T17:21:28.1018884Z ======================================================================
+2026-10-18T17:21:28.1020379Z FAIL: test_two_real_rule_games_color_swap_and_no_adoption_fields (__main__.DevelopmentMatchTests.test_two_real_rule_games_color_swap_and_no_adoption_fields)
+2026-10-18T17:21:28.1021877Z ----------------------------------------------------------------------
+2026-10-18T17:21:28.1022618Z Traceback (most recent call last):
+2026-10-18T17:21:28.1031039Z   File "D:\a\Regicide\Regicide\tests\endgame_matches_tests.py", line 143, in test_two_real_rule_games_color_swap_and_no_adoption_fields
+2026-10-18T17:21:28.1032690Z     self.assertEqual(engines[1].configurations[0], {"EvalFile": str(files[-1] / "candidate.nn")})
+2026-10-18T17:21:28.1034308Z AssertionError: {'Eva[15 chars]ers\\runneradmin\\AppData\\Local\\Temp\\tmp2kz[23 chars].nn'} != {'Eva[15 chars]ers\\RUNNER~1\\AppData\\Local\\Temp\\tmp2kznp6[20 chars].nn'}
+2026-10-18T17:21:28.1035833Z - {'EvalFile': 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp2kznp6oy\\match\\candidate.nn'}
+2026-10-18T17:21:28.1036677Z ?                          ^^^^^^^^^^^
+2026-10-18T17:21:28.1037064Z 
+2026-10-18T17:21:28.1037837Z + {'EvalFile': 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmp2kznp6oy\\match\\candidate.nn'}
+2026-10-18T17:21:28.1038653Z ?                          ^^^^^^^^
+2026-10-18T17:21:28.1039060Z 
+2026-10-18T17:21:28.1039194Z 
+2026-10-18T17:21:28.1039540Z ----------------------------------------------------------------------
+2026-10-18T17:21:28.1040169Z Ran 11 tests in 0.281s
+2026-10-18T17:21:28.1040511Z 
+2026-10-18T17:21:28.1040749Z FAILED (failures=1)
+2026-10-18T17:21:28.2401461Z ##[error]Process completed with exit code 1.
+2026-10-18T17:21:28.2842858Z Post job cleanup.
+2026-10-18T17:21:28.5399625Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T17:21:28.5807764Z git version 2.56.0.windows.2
+2026-10-18T17:21:28.5903096Z Temporarily overriding HOME='D:\a\_temp\8dcf90dc-dfea-4ba6-a161-ba6048ccbf59' before making global git config changes
+2026-10-18T17:21:28.5904484Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T17:21:28.5915570Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Regicide\Regicide
+2026-10-18T17:21:28.6371080Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T17:21:28.6932647Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T17:21:29.4543845Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T17:21:29.4939713Z http.https://github.com/.extraheader
+2026-10-18T17:21:29.5182466Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-18T17:21:29.5558471Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T17:21:30.2478199Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T17:21:30.2908356Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T17:21:30.9973156Z Cleaning up orphan processes
+2026-10-18T17:21:31.0309096Z Terminate orphan process: pid (4684) (vctip)
+2026-10-18T17:21:31.0500964Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

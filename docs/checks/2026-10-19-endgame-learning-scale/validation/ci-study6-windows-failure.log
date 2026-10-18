@@ -1,0 +1,869 @@
+2026-10-18T18:02:04.5385634Z Current runner version: '2.337.0'
+2026-10-18T18:02:04.5422440Z ##[group]Runner Image Provisioner
+2026-10-18T18:02:04.5423856Z Hosted Compute Agent
+2026-10-18T18:02:04.5425220Z Version: 20261002.596
+2026-10-18T18:02:04.5426303Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-18T18:02:04.5427529Z Build Date: 2026-10-02T22:28:27Z
+2026-10-18T18:02:04.5428695Z Worker ID: {38e4d542-bf2b-4f3d-b089-e7f2b932b214}
+2026-10-18T18:02:04.5429977Z Region: westus
+2026-10-18T18:02:04.5430846Z Cloud: Azure
+2026-10-18T18:02:04.5431720Z ##[endgroup]
+2026-10-18T18:02:04.5434051Z ##[group]Operating System
+2026-10-18T18:02:04.5435157Z Microsoft Windows Server 2025
+2026-10-18T18:02:04.5436323Z 10.0.26100
+2026-10-18T18:02:04.5437198Z Datacenter
+2026-10-18T18:02:04.5438073Z ##[endgroup]
+2026-10-18T18:02:04.5438983Z ##[group]Runner Image
+2026-10-18T18:02:04.5439992Z Image: windows-2025-vs2026
+2026-10-18T18:02:04.5441032Z Version: 20261007.264.1
+2026-10-18T18:02:04.5443597Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+2026-10-18T18:02:04.5446994Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+2026-10-18T18:02:04.5448893Z ##[endgroup]
+2026-10-18T18:02:04.5450979Z ##[group]GITHUB_TOKEN Permissions
+2026-10-18T18:02:04.5453584Z Contents: read
+2026-10-18T18:02:04.5454589Z Metadata: read
+2026-10-18T18:02:04.5455477Z Packages: read
+2026-10-18T18:02:04.5456314Z ##[endgroup]
+2026-10-18T18:02:04.5459461Z Secret source: Actions
+2026-10-18T18:02:04.5460996Z Cache mode: write
+2026-10-18T18:02:04.5462679Z Prepare workflow directory
+2026-10-18T18:02:04.5987677Z Prepare all required actions
+2026-10-18T18:02:04.6062469Z Getting action download info
+2026-10-18T18:02:05.0045131Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-18T18:02:05.2207944Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-10-18T18:02:05.3883033Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-18T18:02:05.7828056Z Complete job name: rules (windows-latest)
+2026-10-18T18:02:05.9978736Z ##[group]Run actions/checkout@v4
+2026-10-18T18:02:05.9980267Z with:
+2026-10-18T18:02:05.9981451Z   repository: bigpine-choi/Regicide
+2026-10-18T18:02:05.9991606Z   token: ***
+2026-10-18T18:02:05.9992366Z   ssh-strict: true
+2026-10-18T18:02:05.9993118Z   ssh-user: git
+2026-10-18T18:02:05.9993901Z   persist-credentials: true
+2026-10-18T18:02:05.9994749Z   clean: true
+2026-10-18T18:02:05.9995536Z   sparse-checkout-cone-mode: true
+2026-10-18T18:02:05.9996474Z   fetch-depth: 1
+2026-10-18T18:02:05.9997216Z   fetch-tags: false
+2026-10-18T18:02:05.9997988Z   show-progress: true
+2026-10-18T18:02:05.9998768Z   lfs: false
+2026-10-18T18:02:05.9999483Z   submodules: false
+2026-10-18T18:02:06.0000270Z   set-safe-directory: true
+2026-10-18T18:02:06.0001150Z   allow-unsafe-pr-checkout: false
+2026-10-18T18:02:06.0002576Z ##[endgroup]
+2026-10-18T18:02:06.7994748Z Syncing repository: bigpine-choi/Regicide
+2026-10-18T18:02:06.7998620Z ##[group]Getting Git version info
+2026-10-18T18:02:06.7999425Z Working directory is 'D:\a\Regicide\Regicide'
+2026-10-18T18:02:06.8001773Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T18:02:06.8002529Z git version 2.56.0.windows.2
+2026-10-18T18:02:06.8009697Z ##[endgroup]
+2026-10-18T18:02:06.8015533Z Temporarily overriding HOME='D:\a\_temp\ecaf954d-d93d-4433-b685-230c2c590222' before making global git config changes
+2026-10-18T18:02:06.8017397Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T18:02:06.8018885Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Regicide\Regicide
+2026-10-18T18:02:07.8600783Z Deleting the contents of 'D:\a\Regicide\Regicide'
+2026-10-18T18:02:07.8601835Z ##[group]Initializing the repository
+2026-10-18T18:02:07.8605316Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Regicide\Regicide
+2026-10-18T18:02:07.8606358Z Initialized empty Git repository in D:/a/Regicide/Regicide/.git/
+2026-10-18T18:02:07.8608478Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/bigpine-choi/Regicide
+2026-10-18T18:02:07.8612019Z ##[endgroup]
+2026-10-18T18:02:07.8612831Z ##[group]Disabling automatic garbage collection
+2026-10-18T18:02:07.8613630Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-18T18:02:07.8615456Z ##[endgroup]
+2026-10-18T18:02:07.8616186Z ##[group]Setting up auth
+2026-10-18T18:02:07.8617026Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T18:02:07.8619361Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T18:02:08.6931572Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T18:02:08.7615218Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T18:02:09.4524720Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T18:02:09.4985853Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T18:02:10.1184211Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-18T18:02:10.1769400Z ##[endgroup]
+2026-10-18T18:02:10.1770438Z ##[group]Fetching the repository
+2026-10-18T18:02:10.1790430Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +fee60f4e23155a0c4e2b15f83a922411d9e62b3a:refs/remotes/origin/feat/endgame-learning-scale
+2026-10-18T18:02:12.2169778Z From https://github.com/bigpine-choi/Regicide
+2026-10-18T18:02:12.2171215Z  * [new ref]         fee60f4e23155a0c4e2b15f83a922411d9e62b3a -> origin/feat/endgame-learning-scale
+2026-10-18T18:02:12.2266003Z ##[endgroup]
+2026-10-18T18:02:12.2284165Z ##[group]Determining the checkout info
+2026-10-18T18:02:12.2286477Z ##[endgroup]
+2026-10-18T18:02:12.2293531Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-18T18:02:12.2812096Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-18T18:02:12.3250061Z ##[group]Checking out the ref
+2026-10-18T18:02:12.3255637Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B feat/endgame-learning-scale refs/remotes/origin/feat/endgame-learning-scale
+2026-10-18T18:02:13.3985007Z Updating files:  71% (1126/1571)
+2026-10-18T18:02:13.4046675Z Updating files:  72% (1132/1571)
+2026-10-18T18:02:13.4163410Z Updating files:  73% (1147/1571)
+2026-10-18T18:02:13.4207527Z Updating files:  74% (1163/1571)
+2026-10-18T18:02:13.4261027Z Updating files:  75% (1179/1571)
+2026-10-18T18:02:13.4739579Z Updating files:  76% (1194/1571)
+2026-10-18T18:02:13.4760842Z Updating files:  77% (1210/1571)
+2026-10-18T18:02:13.4782741Z Updating files:  78% (1226/1571)
+2026-10-18T18:02:13.4785234Z Updating files:  79% (1242/1571)
+2026-10-18T18:02:13.4846485Z Updating files:  80% (1257/1571)
+2026-10-18T18:02:13.4900335Z Updating files:  81% (1273/1571)
+2026-10-18T18:02:13.4962280Z Updating files:  82% (1289/1571)
+2026-10-18T18:02:13.5002528Z Updating files:  83% (1304/1571)
+2026-10-18T18:02:13.5054109Z Updating files:  84% (1320/1571)
+2026-10-18T18:02:13.5107729Z Updating files:  85% (1336/1571)
+2026-10-18T18:02:13.5237633Z Updating files:  86% (1352/1571)
+2026-10-18T18:02:13.5280698Z Updating files:  87% (1367/1571)
+2026-10-18T18:02:13.5350177Z Updating files:  88% (1383/1571)
+2026-10-18T18:02:13.5391440Z Updating files:  89% (1399/1571)
+2026-10-18T18:02:13.5432352Z Updating files:  90% (1414/1571)
+2026-10-18T18:02:13.5502025Z Updating files:  91% (1430/1571)
+2026-10-18T18:02:13.5551788Z Updating files:  92% (1446/1571)
+2026-10-18T18:02:13.5600778Z Updating files:  93% (1462/1571)
+2026-10-18T18:02:13.5649867Z Updating files:  94% (1477/1571)
+2026-10-18T18:02:13.5704454Z Updating files:  95% (1493/1571)
+2026-10-18T18:02:13.5746395Z Updating files:  96% (1509/1571)
+2026-10-18T18:02:13.5799378Z Updating files:  97% (1524/1571)
+2026-10-18T18:02:13.5852837Z Updating files:  98% (1540/1571)
+2026-10-18T18:02:13.5900978Z Updating files:  99% (1556/1571)
+2026-10-18T18:02:13.5901764Z Updating files: 100% (1571/1571)
+2026-10-18T18:02:13.5902234Z Updating files: 100% (1571/1571), done.
+2026-10-18T18:02:13.6063141Z Switched to a new branch 'feat/endgame-learning-scale'
+2026-10-18T18:02:13.6122110Z branch 'feat/endgame-learning-scale' set up to track 'origin/feat/endgame-learning-scale'.
+2026-10-18T18:02:13.6211315Z ##[endgroup]
+2026-10-18T18:02:13.6747527Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-18T18:02:13.7121755Z fee60f4e23155a0c4e2b15f83a922411d9e62b3a
+2026-10-18T18:02:13.7661699Z ##[group]Run actions/setup-python@v5
+2026-10-18T18:02:13.7662043Z with:
+2026-10-18T18:02:13.7662249Z   python-version: 3.12
+2026-10-18T18:02:13.7662469Z   check-latest: false
+2026-10-18T18:02:13.7665201Z   token: ***
+2026-10-18T18:02:13.7665397Z   update-environment: true
+2026-10-18T18:02:13.7665620Z   allow-prereleases: false
+2026-10-18T18:02:13.7665825Z   freethreaded: false
+2026-10-18T18:02:13.7666008Z ##[endgroup]
+2026-10-18T18:02:13.9451136Z ##[group]Installed versions
+2026-10-18T18:02:13.9667974Z (node:3492) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-18T18:02:13.9669793Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-18T18:02:13.9671057Z Successfully set up CPython (3.12.10)
+2026-10-18T18:02:13.9672374Z ##[endgroup]
+2026-10-18T18:02:14.0030681Z ##[group]Run cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+2026-10-18T18:02:14.0031471Z [36;1mcmake -S . -B build -DCMAKE_BUILD_TYPE=Release[0m
+2026-10-18T18:02:14.0871197Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:02:14.0871755Z env:
+2026-10-18T18:02:14.0872178Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:14.0872938Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:02:14.0873670Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:14.0874323Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:14.0874969Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:14.0875499Z ##[endgroup]
+2026-10-18T18:02:25.1698751Z -- Building for: Visual Studio 18 2026
+2026-10-18T18:02:25.1699597Z -- The CXX compiler identification is MSVC 19.51.36260.0
+2026-10-18T18:02:25.2926667Z -- Detecting CXX compiler ABI info
+2026-10-18T18:02:26.3543277Z -- Detecting CXX compiler ABI info - done
+2026-10-18T18:02:26.3878373Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+2026-10-18T18:02:26.3893408Z -- Detecting CXX compile features
+2026-10-18T18:02:26.3908153Z -- Detecting CXX compile features - done
+2026-10-18T18:02:26.4741595Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-10-18T18:02:28.0063954Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+2026-10-18T18:02:28.0065346Z -- Looking for pthread_create in pthreads
+2026-10-18T18:02:28.6713478Z -- Looking for pthread_create in pthreads - not found
+2026-10-18T18:02:28.6715334Z -- Looking for pthread_create in pthread
+2026-10-18T18:02:29.3048437Z -- Looking for pthread_create in pthread - not found
+2026-10-18T18:02:29.3149394Z -- Found Threads: TRUE
+2026-10-18T18:02:29.4271006Z -- Configuring done (14.3s)
+2026-10-18T18:02:29.5536898Z CMake Warning (unused-cli):
+2026-10-18T18:02:29.5537442Z -- Generating done (0.1s)
+2026-10-18T18:02:29.5538445Z   Manually-specified variables were not used by the project:
+2026-10-18T18:02:29.5539278Z 
+2026-10-18T18:02:29.5539439Z     CMAKE_BUILD_TYPE
+2026-10-18T18:02:29.5539667Z 
+2026-10-18T18:02:29.5539676Z 
+2026-10-18T18:02:29.5549656Z -- Build files have been written to: D:/a/Regicide/Regicide/build
+2026-10-18T18:02:29.6835136Z ##[group]Run cmake --build build --config Release
+2026-10-18T18:02:29.6835577Z [36;1mcmake --build build --config Release[0m
+2026-10-18T18:02:29.6911100Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:02:29.6911663Z env:
+2026-10-18T18:02:29.6911940Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:29.6912431Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:02:29.6912900Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:29.6913306Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:29.6913702Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:02:29.6914016Z ##[endgroup]
+2026-10-18T18:02:30.1863035Z MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+2026-10-18T18:02:30.2206480Z 
+2026-10-18T18:02:30.5265337Z   1>Checking Build System
+2026-10-18T18:02:30.7270779Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:02:30.9477154Z   board.cpp
+2026-10-18T18:02:34.8607192Z   regicide_core.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_core.lib
+2026-10-18T18:02:34.9445783Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:02:35.0319381Z   search.cpp
+2026-10-18T18:02:37.3924640Z   evaluation.cpp
+2026-10-18T18:02:38.2081800Z   transposition.cpp
+2026-10-18T18:02:40.1519202Z   see.cpp
+2026-10-18T18:02:40.9362163Z   neural.cpp
+2026-10-18T18:02:42.2242999Z   Generating Code...
+2026-10-18T18:02:44.9988957Z   regicide_search.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_search.lib
+2026-10-18T18:02:45.0428553Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:02:45.1240837Z   main.cpp
+2026-10-18T18:02:47.2167090Z   uci.cpp
+2026-10-18T18:02:49.3896516Z   Generating Code...
+2026-10-18T18:02:53.0561944Z   regicide.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide.exe
+2026-10-18T18:02:53.1191906Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:02:53.2112538Z   board_state_tests.cpp
+2026-10-18T18:02:55.6970065Z   regicide_board_state_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_board_state_tests.exe
+2026-10-18T18:02:55.7663447Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:02:55.8450369Z   evaluation_tests.cpp
+2026-10-18T18:02:57.2238404Z   reference_evaluation_v054.cpp
+2026-10-18T18:02:57.9026102Z   reference_evaluation_v056.cpp
+2026-10-18T18:02:58.6810434Z   Generating Code...
+2026-10-18T18:03:01.0787697Z   regicide_evaluation_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_evaluation_tests.exe
+2026-10-18T18:03:01.1470121Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:01.2284577Z   neural_tests.cpp
+2026-10-18T18:03:03.8621718Z   reference_neural_v063.cpp
+2026-10-18T18:03:05.1598911Z   Generating Code...
+2026-10-18T18:03:09.2220158Z   regicide_neural_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_neural_tests.exe
+2026-10-18T18:03:09.2221133Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:09.2221686Z   search_tests.cpp
+2026-10-18T18:03:19.1464344Z   regicide_search_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_search_tests.exe
+2026-10-18T18:03:19.2104005Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:19.2981045Z   see_tests.cpp
+2026-10-18T18:03:21.4220601Z   regicide_see_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_see_tests.exe
+2026-10-18T18:03:21.4887757Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:21.5680252Z   rules_tests.cpp
+2026-10-18T18:03:24.9021050Z   regicide_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_tests.exe
+2026-10-18T18:03:24.9693454Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:25.0613504Z   transposition_tests.cpp
+2026-10-18T18:03:28.0219058Z   regicide_transposition_tests.vcxproj -> D:\a\Regicide\Regicide\build\Release\regicide_transposition_tests.exe
+2026-10-18T18:03:28.0754714Z   Building Custom Rule D:/a/Regicide/Regicide/CMakeLists.txt
+2026-10-18T18:03:28.2775604Z ##[group]Run ctest --test-dir build -C Release --output-on-failure
+2026-10-18T18:03:28.2776497Z [36;1mctest --test-dir build -C Release --output-on-failure[0m
+2026-10-18T18:03:28.2857209Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:03:28.2857558Z env:
+2026-10-18T18:03:28.2857829Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:28.2858285Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:03:28.2858726Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:28.2859357Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:28.2859761Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:28.2860083Z ##[endgroup]
+2026-10-18T18:03:29.2018861Z Test project D:/a/Regicide/Regicide/build
+2026-10-18T18:03:29.2469673Z     Start 1: rules
+2026-10-18T18:03:30.8752454Z 1/7 Test #1: rules ............................   Passed    1.63 sec
+2026-10-18T18:03:30.8763412Z     Start 2: search
+2026-10-18T18:03:33.0118837Z 2/7 Test #2: search ...........................   Passed    2.13 sec
+2026-10-18T18:03:33.0124117Z     Start 3: evaluation
+2026-10-18T18:03:34.8706443Z 3/7 Test #3: evaluation .......................   Passed    1.86 sec
+2026-10-18T18:03:34.8712087Z     Start 4: board_state
+2026-10-18T18:03:34.9233391Z 4/7 Test #4: board_state ......................   Passed    0.05 sec
+2026-10-18T18:03:34.9238533Z     Start 5: transposition
+2026-10-18T18:03:34.9384876Z 5/7 Test #5: transposition ....................   Passed    0.01 sec
+2026-10-18T18:03:34.9390750Z     Start 6: see
+2026-10-18T18:03:35.0117268Z 6/7 Test #6: see ..............................   Passed    0.07 sec
+2026-10-18T18:03:35.0122836Z     Start 7: neural
+2026-10-18T18:03:37.0793069Z 7/7 Test #7: neural ...........................   Passed    2.07 sec
+2026-10-18T18:03:37.0803711Z 
+2026-10-18T18:03:37.0804078Z 100% tests passed out of 7
+2026-10-18T18:03:37.0804646Z 
+2026-10-18T18:03:37.0804995Z Total Test time (real) =   7.87 sec
+2026-10-18T18:03:37.2688727Z ##[group]Run python -m pip install -r requirements-test.txt
+2026-10-18T18:03:37.2689610Z [36;1mpython -m pip install -r requirements-test.txt[0m
+2026-10-18T18:03:37.2792015Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:03:37.2792380Z env:
+2026-10-18T18:03:37.2792652Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:37.2793115Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:03:37.2793592Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:37.2794003Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:37.2794404Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:37.2794723Z ##[endgroup]
+2026-10-18T18:03:42.4738288Z Collecting chess==1.11.2 (from -r requirements-test.txt (line 2))
+2026-10-18T18:03:42.7594975Z   Downloading chess-1.11.2.tar.gz (6.1 MB)
+2026-10-18T18:03:43.0072216Z      ---------------------------------------- 6.1/6.1 MB 47.0 MB/s  0:00:00
+2026-10-18T18:03:43.5981491Z   Installing build dependencies: started
+2026-10-18T18:03:46.6165275Z   Installing build dependencies: finished with status 'done'
+2026-10-18T18:03:46.6183441Z   Getting requirements to build wheel: started
+2026-10-18T18:03:47.7530669Z   Getting requirements to build wheel: finished with status 'done'
+2026-10-18T18:03:47.7564314Z   Preparing metadata (pyproject.toml): started
+2026-10-18T18:03:48.1672098Z   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-10-18T18:03:48.1782773Z Building wheels for collected packages: chess
+2026-10-18T18:03:48.1784584Z   Building wheel for chess (pyproject.toml): started
+2026-10-18T18:03:48.6589248Z   Building wheel for chess (pyproject.toml): finished with status 'done'
+2026-10-18T18:03:48.6614379Z   Created wheel for chess: filename=chess-1.11.2-py3-none-any.whl size=147920 sha256=3f5591db731cb2d338b211bce44a0e0dde8edda1784665b168f9d6543e20d05d
+2026-10-18T18:03:48.6617008Z   Stored in directory: c:\users\runneradmin\appdata\local\pip\cache\wheels\83\1f\4e\8f4300f7dd554eb8de70ddfed96e94d3d030ace10c5b53d447
+2026-10-18T18:03:48.6664173Z Successfully built chess
+2026-10-18T18:03:48.7030600Z Installing collected packages: chess
+2026-10-18T18:03:48.8874973Z Successfully installed chess-1.11.2
+2026-10-18T18:03:49.2829377Z ##[group]Run python -m pip install -r requirements-learning.txt
+2026-10-18T18:03:49.2830245Z [36;1mpython -m pip install -r requirements-learning.txt[0m
+2026-10-18T18:03:49.2954820Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:03:49.2955435Z env:
+2026-10-18T18:03:49.2955897Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:49.2956761Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:03:49.2957594Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:49.2958359Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:49.2959104Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:49.2959646Z ##[endgroup]
+2026-10-18T18:03:50.8752629Z Requirement already satisfied: chess==1.11.2 in C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages (from -r D:\a\Regicide\Regicide\requirements-test.txt (line 2)) (1.11.2)
+2026-10-18T18:03:51.5236657Z Collecting numpy==2.3.5 (from -r requirements-learning.txt (line 2))
+2026-10-18T18:03:51.7317515Z   Downloading numpy-2.3.5-cp312-cp312-win_amd64.whl.metadata (60 kB)
+2026-10-18T18:03:51.8527505Z Downloading numpy-2.3.5-cp312-cp312-win_amd64.whl (12.8 MB)
+2026-10-18T18:03:52.0489954Z    ---------------------------------------- 12.8/12.8 MB 88.8 MB/s  0:00:00
+2026-10-18T18:03:52.1445538Z Installing collected packages: numpy
+2026-10-18T18:03:56.7639332Z Successfully installed numpy-2.3.5
+2026-10-18T18:03:56.9582297Z ##[group]Run python tests/learning_data_tests.py
+2026-10-18T18:03:56.9582801Z [36;1mpython tests/learning_data_tests.py[0m
+2026-10-18T18:03:56.9658609Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:03:56.9659544Z env:
+2026-10-18T18:03:56.9660013Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:56.9660864Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:03:56.9661716Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:56.9662469Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:56.9663262Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:56.9663864Z ##[endgroup]
+2026-10-18T18:03:58.1078951Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T18:03:58.1260068Z game 1/1 0-1 CHECKMATE samples 1
+2026-10-18T18:03:58.2076757Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T18:03:58.2319964Z game 1/1 0-1 CHECKMATE samples 1
+2026-10-18T18:03:58.2875644Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T18:03:58.3334778Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T18:03:58.3606831Z game 1/1 1-0 CHECKMATE samples 3
+2026-10-18T18:03:58.4271272Z game 1/1 g0001-fixture-r1 train start
+2026-10-18T18:03:58.4429245Z game 1/1 * PLY_CAP_UNFINISHED samples 0
+2026-10-18T18:03:58.7444618Z ....................
+2026-10-18T18:03:58.7446202Z ----------------------------------------------------------------------
+2026-10-18T18:03:58.7458520Z Ran 20 tests in 0.878s
+2026-10-18T18:03:58.7458996Z 
+2026-10-18T18:03:58.7459269Z OK
+2026-10-18T18:03:58.8969660Z ##[group]Run python tests/neural_training_tests.py
+2026-10-18T18:03:58.8970333Z [36;1mpython tests/neural_training_tests.py[0m
+2026-10-18T18:03:58.9050964Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:03:58.9051311Z env:
+2026-10-18T18:03:58.9051574Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:58.9052014Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:03:58.9052478Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:58.9052864Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:58.9053255Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:03:58.9053569Z ##[endgroup]
+2026-10-18T18:04:01.1861867Z ..............................
+2026-10-18T18:04:01.1863054Z ----------------------------------------------------------------------
+2026-10-18T18:04:01.1863864Z Ran 30 tests in 1.720s
+2026-10-18T18:04:01.1864226Z 
+2026-10-18T18:04:01.1864458Z OK
+2026-10-18T18:04:01.3322305Z ##[group]Run python tests/classical_evaluation_tests.py
+2026-10-18T18:04:01.3322798Z [36;1mpython tests/classical_evaluation_tests.py[0m
+2026-10-18T18:04:01.3396333Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:01.3396684Z env:
+2026-10-18T18:04:01.3396957Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:01.3397434Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:01.3397884Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:01.3398284Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:01.3398682Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:01.3399001Z ##[endgroup]
+2026-10-18T18:04:01.9003575Z s..........
+2026-10-18T18:04:01.9004389Z ----------------------------------------------------------------------
+2026-10-18T18:04:01.9005329Z Ran 11 tests in 0.014s
+2026-10-18T18:04:01.9005725Z 
+2026-10-18T18:04:01.9006037Z OK (skipped=1)
+2026-10-18T18:04:02.0565269Z ##[group]Run python tests/learning_loss_analysis_tests.py
+2026-10-18T18:04:02.0566041Z [36;1mpython tests/learning_loss_analysis_tests.py[0m
+2026-10-18T18:04:02.0687787Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:02.0688382Z env:
+2026-10-18T18:04:02.0688875Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:02.0689697Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:02.0690514Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:02.0691223Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:02.0691949Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:02.0692537Z ##[endgroup]
+2026-10-18T18:04:02.6967187Z loss fools-mate ply 2: cp_loss=50 training=below_loss_threshold
+2026-10-18T18:04:02.7648134Z loss fools-mate ply 2: cp_loss=-100 training=below_loss_threshold
+2026-10-18T18:04:02.8681945Z loss fools-mate ply 2: cp_loss=400 training=no_better_alternative_found
+2026-10-18T18:04:02.9803463Z loss fools-mate ply 2: cp_loss=400 training=held_out_family
+2026-10-18T18:04:03.0514220Z loss fools-mate ply 2: cp_loss=400 training=held_out_family
+2026-10-18T18:04:03.1789052Z loss fools-mate ply 2: cp_loss=None training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.2470283Z loss fools-mate ply 2: cp_loss=None training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.3156541Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.3896286Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.4682642Z loss fools-mate ply 2: cp_loss=400 training=accepted
+2026-10-18T18:04:03.5396654Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.6142293Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.6872038Z loss fools-mate ply 2: cp_loss=400 training=unreliable_or_nonfinite_comparison
+2026-10-18T18:04:03.7851998Z ................
+2026-10-18T18:04:03.7852798Z ----------------------------------------------------------------------
+2026-10-18T18:04:03.7853509Z Ran 16 tests in 1.150s
+2026-10-18T18:04:03.7853918Z 
+2026-10-18T18:04:03.7854198Z OK
+2026-10-18T18:04:03.9254052Z ##[group]Run python tests/learning_corpus_tests.py
+2026-10-18T18:04:03.9254518Z [36;1mpython tests/learning_corpus_tests.py[0m
+2026-10-18T18:04:03.9326548Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:03.9327032Z env:
+2026-10-18T18:04:03.9327392Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:03.9327998Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:03.9328570Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:03.9329064Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:03.9329577Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:03.9329987Z ##[endgroup]
+2026-10-18T18:04:09.9593083Z ...................
+2026-10-18T18:04:09.9593907Z ----------------------------------------------------------------------
+2026-10-18T18:04:09.9594755Z Ran 19 tests in 5.372s
+2026-10-18T18:04:09.9595122Z 
+2026-10-18T18:04:09.9595369Z OK
+2026-10-18T18:04:10.1100829Z ##[group]Run python tests/learning_arena_tests.py
+2026-10-18T18:04:10.1101284Z [36;1mpython tests/learning_arena_tests.py[0m
+2026-10-18T18:04:10.1173639Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:10.1173980Z env:
+2026-10-18T18:04:10.1174253Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:10.1174712Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:10.1175165Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:10.1175566Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:10.1175967Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:10.1176286Z ##[endgroup]
+2026-10-18T18:04:11.2807388Z ..................
+2026-10-18T18:04:11.2808289Z ----------------------------------------------------------------------
+2026-10-18T18:04:11.2809580Z Ran 18 tests in 0.571s
+2026-10-18T18:04:11.2810055Z 
+2026-10-18T18:04:11.2810306Z OK
+2026-10-18T18:04:11.4419197Z ##[group]Run python tests/learning_arena_futility_tests.py
+2026-10-18T18:04:11.4419694Z [36;1mpython tests/learning_arena_futility_tests.py[0m
+2026-10-18T18:04:11.4493492Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:11.4494125Z env:
+2026-10-18T18:04:11.4494393Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:11.4494842Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:11.4495282Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:11.4495671Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:11.4496071Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:11.4496398Z ##[endgroup]
+2026-10-18T18:04:12.5767875Z ............
+2026-10-18T18:04:12.5768704Z ----------------------------------------------------------------------
+2026-10-18T18:04:12.5769533Z Ran 12 tests in 0.587s
+2026-10-18T18:04:12.5769902Z 
+2026-10-18T18:04:12.5770157Z OK
+2026-10-18T18:04:12.7194297Z ##[group]Run python tests/learning_registry_tests.py
+2026-10-18T18:04:12.7194999Z [36;1mpython tests/learning_registry_tests.py[0m
+2026-10-18T18:04:12.7288525Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:12.7288871Z env:
+2026-10-18T18:04:12.7289134Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:12.7289594Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:12.7290056Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:12.7290458Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:12.7290849Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:12.7291166Z ##[endgroup]
+2026-10-18T18:04:14.1839400Z ..................
+2026-10-18T18:04:14.1840245Z ----------------------------------------------------------------------
+2026-10-18T18:04:14.1841081Z Ran 18 tests in 0.861s
+2026-10-18T18:04:14.1841472Z 
+2026-10-18T18:04:14.1841752Z OK
+2026-10-18T18:04:14.3287323Z ##[group]Run python tests/learning_cycle_tests.py
+2026-10-18T18:04:14.3288001Z [36;1mpython tests/learning_cycle_tests.py[0m
+2026-10-18T18:04:14.3410511Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:14.3411081Z env:
+2026-10-18T18:04:14.3411518Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:14.3412334Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:14.3413130Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:14.3413833Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:14.3414291Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:14.3414630Z ##[endgroup]
+2026-10-18T18:04:22.0110386Z .........................................
+2026-10-18T18:04:22.0111250Z ----------------------------------------------------------------------
+2026-10-18T18:04:22.0112080Z Ran 41 tests in 7.039s
+2026-10-18T18:04:22.0112435Z 
+2026-10-18T18:04:22.0112680Z OK
+2026-10-18T18:04:22.1618114Z ##[group]Run python tests/teacher_quality_tests.py
+2026-10-18T18:04:22.1618558Z [36;1mpython tests/teacher_quality_tests.py[0m
+2026-10-18T18:04:22.1692259Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:22.1692610Z env:
+2026-10-18T18:04:22.1692881Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:22.1693357Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:22.1694090Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:22.1694518Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:22.1694919Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:22.1695247Z ##[endgroup]
+2026-10-18T18:04:33.4382914Z ...............s.......
+2026-10-18T18:04:33.4383761Z ----------------------------------------------------------------------
+2026-10-18T18:04:33.4384563Z Ran 23 tests in 10.658s
+2026-10-18T18:04:33.4384935Z 
+2026-10-18T18:04:33.4385204Z OK (skipped=1)
+2026-10-18T18:04:33.5885470Z ##[group]Run python tests/neural_cost_diagnostic_tests.py
+2026-10-18T18:04:33.5886229Z [36;1mpython tests/neural_cost_diagnostic_tests.py[0m
+2026-10-18T18:04:33.5978265Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:33.5978601Z env:
+2026-10-18T18:04:33.5978864Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:33.5979310Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:33.5980635Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:33.5981062Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:33.5981778Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:33.5982105Z ##[endgroup]
+2026-10-18T18:04:35.6384461Z ......................
+2026-10-18T18:04:35.6385259Z ----------------------------------------------------------------------
+2026-10-18T18:04:35.6386011Z Ran 22 tests in 1.388s
+2026-10-18T18:04:35.6386358Z 
+2026-10-18T18:04:35.6386593Z OK
+2026-10-18T18:04:35.7915455Z ##[group]Run python tests/neural_inference_benchmark_tests.py
+2026-10-18T18:04:35.7915990Z [36;1mpython tests/neural_inference_benchmark_tests.py[0m
+2026-10-18T18:04:35.7987866Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:35.7988216Z env:
+2026-10-18T18:04:35.7988488Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:35.7988944Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:35.7989418Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:35.7989820Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:35.7990214Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:35.7990527Z ##[endgroup]
+2026-10-18T18:04:36.4255545Z .......
+2026-10-18T18:04:36.4256330Z ----------------------------------------------------------------------
+2026-10-18T18:04:36.4257276Z Ran 7 tests in 0.022s
+2026-10-18T18:04:36.4257609Z 
+2026-10-18T18:04:36.4257842Z OK
+2026-10-18T18:04:36.5840367Z ##[group]Run python tests/endgame_diagnosis_tests.py
+2026-10-18T18:04:36.5840818Z [36;1mpython tests/endgame_diagnosis_tests.py[0m
+2026-10-18T18:04:36.5994834Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:36.5995404Z env:
+2026-10-18T18:04:36.5995829Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:36.5996635Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:36.5997410Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:36.5998374Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:36.5999075Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:36.5999620Z ##[endgroup]
+2026-10-18T18:04:38.3800213Z endgame endgame-fixture ply 0: unconfirmed
+2026-10-18T18:04:38.8773406Z ........................
+2026-10-18T18:04:38.8774272Z ----------------------------------------------------------------------
+2026-10-18T18:04:38.8774990Z Ran 24 tests in 1.668s
+2026-10-18T18:04:38.8775336Z 
+2026-10-18T18:04:38.8775586Z OK
+2026-10-18T18:04:39.0180151Z ##[group]Run python tests/endgame_data_tests.py
+2026-10-18T18:04:39.0181091Z [36;1mpython tests/endgame_data_tests.py[0m
+2026-10-18T18:04:39.0283112Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:39.0283457Z env:
+2026-10-18T18:04:39.0283724Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:39.0284169Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:39.0284615Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:39.0285034Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:39.0285429Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:39.0285735Z ##[endgroup]
+2026-10-18T18:04:40.4677420Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T18:04:40.4935483Z game 1/2 1-0 CHECKMATE samples 1
+2026-10-18T18:04:40.4936349Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T18:04:40.5139398Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T18:04:40.9513697Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T18:04:40.9661729Z game 1/2 1-0 CHECKMATE samples 0
+2026-10-18T18:04:40.9663024Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T18:04:40.9884237Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T18:04:41.4184873Z game 1/2 g0001-mate-test-01-r1 train start
+2026-10-18T18:04:41.4463504Z game 1/2 1-0 CHECKMATE samples 1
+2026-10-18T18:04:41.4465020Z game 2/2 g0002-mate-test-02-r1 train start
+2026-10-18T18:04:41.4685270Z game 2/2 0-1 CHECKMATE samples 1
+2026-10-18T18:04:42.5473685Z ..............
+2026-10-18T18:04:42.5474443Z ----------------------------------------------------------------------
+2026-10-18T18:04:42.5475250Z Ran 14 tests in 2.904s
+2026-10-18T18:04:42.5475619Z 
+2026-10-18T18:04:42.5475860Z OK
+2026-10-18T18:04:42.7085815Z ##[group]Run python tests/endgame_holdout_quality_tests.py
+2026-10-18T18:04:42.7086304Z [36;1mpython tests/endgame_holdout_quality_tests.py[0m
+2026-10-18T18:04:42.7159241Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:42.7159576Z env:
+2026-10-18T18:04:42.7159838Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:42.7160309Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:42.7160743Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:42.7161129Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:42.7161533Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:42.7161860Z ##[endgroup]
+2026-10-18T18:04:46.1139852Z ..........
+2026-10-18T18:04:46.1140650Z ----------------------------------------------------------------------
+2026-10-18T18:04:46.1141492Z Ran 10 tests in 2.783s
+2026-10-18T18:04:46.1141888Z 
+2026-10-18T18:04:46.1142183Z OK
+2026-10-18T18:04:46.2602048Z ##[group]Run python tests/endgame_learning_curve_tests.py
+2026-10-18T18:04:46.2602525Z [36;1mpython tests/endgame_learning_curve_tests.py[0m
+2026-10-18T18:04:46.2676166Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:46.2676512Z env:
+2026-10-18T18:04:46.2676790Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:46.2677242Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:46.2677700Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:46.2678102Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:46.2678501Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:46.2678811Z ##[endgroup]
+2026-10-18T18:04:52.1930014Z ...................
+2026-10-18T18:04:52.1931158Z ----------------------------------------------------------------------
+2026-10-18T18:04:52.1931963Z Ran 19 tests in 5.320s
+2026-10-18T18:04:52.1932317Z 
+2026-10-18T18:04:52.1932543Z OK
+2026-10-18T18:04:52.3407704Z ##[group]Run python tests/endgame_matches_tests.py
+2026-10-18T18:04:52.3408158Z [36;1mpython tests/endgame_matches_tests.py[0m
+2026-10-18T18:04:52.3484927Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:52.3485312Z env:
+2026-10-18T18:04:52.3485593Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:52.3486089Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:52.3486578Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:52.3487009Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:52.3487437Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:52.3487773Z ##[endgroup]
+2026-10-18T18:04:53.3449637Z ................
+2026-10-18T18:04:53.3450403Z ----------------------------------------------------------------------
+2026-10-18T18:04:53.3451091Z Ran 16 tests in 0.390s
+2026-10-18T18:04:53.3451534Z 
+2026-10-18T18:04:53.3452107Z OK
+2026-10-18T18:04:53.4899567Z ##[group]Run python tests/endgame_study_tests.py
+2026-10-18T18:04:53.4900017Z [36;1mpython tests/endgame_study_tests.py[0m
+2026-10-18T18:04:53.4971203Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T18:04:53.4971555Z env:
+2026-10-18T18:04:53.4971827Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:53.4972313Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-18T18:04:53.4972772Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:53.4973175Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:53.4973591Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-18T18:04:53.4973913Z ##[endgroup]
+2026-10-18T18:04:55.9962676Z FEEEEE.......EFE..E.FFFF.FFF
+2026-10-18T18:04:55.9963575Z ======================================================================
+2026-10-18T18:04:55.9965339Z ERROR: test_catalog_keeps_new_holdout_hashes_and_builds_membership_only_exclusion (__main__.EndgameStudyTests.test_catalog_keeps_new_holdout_hashes_and_builds_membership_only_exclusion)
+2026-10-18T18:04:55.9966924Z ----------------------------------------------------------------------
+2026-10-18T18:04:55.9967502Z Traceback (most recent call last):
+2026-10-18T18:04:55.9976251Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 393, in test_catalog_keeps_new_holdout_hashes_and_builds_membership_only_exclusion
+2026-10-18T18:04:55.9977808Z     state, _, expected, rows = self.catalog_fixture(temporary)
+2026-10-18T18:04:55.9978362Z                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:55.9979110Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 386, in catalog_fixture
+2026-10-18T18:04:55.9979953Z     "bootstrap": STUDY.CYCLE.dataset_reference(state, bootstrap),
+2026-10-18T18:04:55.9980510Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:55.9981249Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T18:04:55.9982194Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T18:04:55.9982860Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:55.9983607Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T18:04:55.9984589Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T18:04:55.9986026Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmpht3tgv_q\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpht3tgv_q\\state'
+2026-10-18T18:04:55.9987156Z 
+2026-10-18T18:04:55.9987327Z ======================================================================
+2026-10-18T18:04:55.9988572Z ERROR: test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout (__main__.EndgameStudyTests.test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout) (mutation='bytes')
+2026-10-18T18:04:55.9989885Z ----------------------------------------------------------------------
+2026-10-18T18:04:55.9990423Z Traceback (most recent call last):
+2026-10-18T18:04:55.9991376Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 407, in test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout
+2026-10-18T18:04:55.9992390Z     state, heldout, catalog, _ = self.catalog_fixture(temporary)
+2026-10-18T18:04:55.9992917Z                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:55.9993609Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 386, in catalog_fixture
+2026-10-18T18:04:55.9994390Z     "bootstrap": STUDY.CYCLE.dataset_reference(state, bootstrap),
+2026-10-18T18:04:55.9994938Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:55.9998360Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T18:04:55.9999357Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T18:04:56.0000258Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0000987Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T18:04:56.0001934Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T18:04:56.0003276Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp9uyvmqz0\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmp9uyvmqz0\\state'
+2026-10-18T18:04:56.0004389Z 
+2026-10-18T18:04:56.0004555Z ======================================================================
+2026-10-18T18:04:56.0005833Z ERROR: test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout (__main__.EndgameStudyTests.test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout) (mutation='duplicate')
+2026-10-18T18:04:56.0007089Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0007581Z Traceback (most recent call last):
+2026-10-18T18:04:56.0008550Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 407, in test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout
+2026-10-18T18:04:56.0009552Z     state, heldout, catalog, _ = self.catalog_fixture(temporary)
+2026-10-18T18:04:56.0010090Z                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0010785Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 386, in catalog_fixture
+2026-10-18T18:04:56.0011563Z     "bootstrap": STUDY.CYCLE.dataset_reference(state, bootstrap),
+2026-10-18T18:04:56.0012081Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0012760Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T18:04:56.0013667Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T18:04:56.0014292Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0014976Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T18:04:56.0015879Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T18:04:56.0017309Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmpes1pzxlu\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpes1pzxlu\\state'
+2026-10-18T18:04:56.0018642Z 
+2026-10-18T18:04:56.0018813Z ======================================================================
+2026-10-18T18:04:56.0020083Z ERROR: test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout (__main__.EndgameStudyTests.test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout) (mutation='role')
+2026-10-18T18:04:56.0021366Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0021883Z Traceback (most recent call last):
+2026-10-18T18:04:56.0022843Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 407, in test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout
+2026-10-18T18:04:56.0023885Z     state, heldout, catalog, _ = self.catalog_fixture(temporary)
+2026-10-18T18:04:56.0024431Z                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0025153Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 386, in catalog_fixture
+2026-10-18T18:04:56.0025941Z     "bootstrap": STUDY.CYCLE.dataset_reference(state, bootstrap),
+2026-10-18T18:04:56.0026489Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0027201Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T18:04:56.0028134Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T18:04:56.0029566Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0030349Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T18:04:56.0031495Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T18:04:56.0032891Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmpp5dn28pa\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpp5dn28pa\\state'
+2026-10-18T18:04:56.0034022Z 
+2026-10-18T18:04:56.0034192Z ======================================================================
+2026-10-18T18:04:56.0035483Z ERROR: test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout (__main__.EndgameStudyTests.test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout) (mutation='malformed')
+2026-10-18T18:04:56.0036854Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0037381Z Traceback (most recent call last):
+2026-10-18T18:04:56.0038674Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 407, in test_catalog_refuses_mutated_duplicate_or_wrong_role_holdout
+2026-10-18T18:04:56.0039751Z     state, heldout, catalog, _ = self.catalog_fixture(temporary)
+2026-10-18T18:04:56.0040302Z                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0041002Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 386, in catalog_fixture
+2026-10-18T18:04:56.0041800Z     "bootstrap": STUDY.CYCLE.dataset_reference(state, bootstrap),
+2026-10-18T18:04:56.0042348Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0043092Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 151, in dataset_reference
+2026-10-18T18:04:56.0044005Z     return {"manifest": manifest.relative_to(state).as_posix(), "files_sha256": hashes}
+2026-10-18T18:04:56.0044695Z                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0045446Z   File "C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\pathlib.py", line 682, in relative_to
+2026-10-18T18:04:56.0046422Z     raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+2026-10-18T18:04:56.0047696Z ValueError: 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp0w_w0vrp\\state\\bootstrap\\manifest.json' is not in the subpath of 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmp0w_w0vrp\\state'
+2026-10-18T18:04:56.0048657Z 
+2026-10-18T18:04:56.0048803Z ======================================================================
+2026-10-18T18:04:56.0050027Z ERROR: test_development_scores_never_choose_another_model_or_authorize_adoption (__main__.EndgameStudyTests.test_development_scores_never_choose_another_model_or_authorize_adoption)
+2026-10-18T18:04:56.0051441Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0051975Z Traceback (most recent call last):
+2026-10-18T18:04:56.0053118Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 332, in test_development_scores_never_choose_another_model_or_authorize_adoption
+2026-10-18T18:04:56.0054192Z     result = STUDY.validate(args, state, catalog)
+2026-10-18T18:04:56.0054645Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0055290Z   File "D:\a\Regicide\Regicide\scripts\endgame_study.py", line 531, in validate
+2026-10-18T18:04:56.0055976Z     run = CYCLE.contained(state, args.run)
+2026-10-18T18:04:56.0056392Z           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0057027Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 123, in contained
+2026-10-18T18:04:56.0058111Z     raise ValueError("State artifact path escapes its directory.")
+2026-10-18T18:04:56.0058777Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0059161Z 
+2026-10-18T18:04:56.0059330Z ======================================================================
+2026-10-18T18:04:56.0060827Z ERROR: test_fixed_candidate_ignores_better_test_metrics_or_alternative_seed (__main__.EndgameStudyTests.test_fixed_candidate_ignores_better_test_metrics_or_alternative_seed)
+2026-10-18T18:04:56.0062162Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0062890Z Traceback (most recent call last):
+2026-10-18T18:04:56.0063939Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 207, in test_fixed_candidate_ignores_better_test_metrics_or_alternative_seed
+2026-10-18T18:04:56.0065146Z     chosen = STUDY.fixed_candidate(curve, {"candidate": candidate}, run)
+2026-10-18T18:04:56.0065784Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0066509Z   File "D:\a\Regicide\Regicide\scripts\endgame_study.py", line 158, in fixed_candidate
+2026-10-18T18:04:56.0067262Z     model = CYCLE.contained(run, expected["model_path"])
+2026-10-18T18:04:56.0067773Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0068478Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 123, in contained
+2026-10-18T18:04:56.0069317Z     raise ValueError("State artifact path escapes its directory.")
+2026-10-18T18:04:56.0069997Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0070397Z 
+2026-10-18T18:04:56.0070561Z ======================================================================
+2026-10-18T18:04:56.0071907Z ERROR: test_prepare_failure_consumes_attempt_and_persists_failure_without_model (__main__.EndgameStudyTests.test_prepare_failure_consumes_attempt_and_persists_failure_without_model)
+2026-10-18T18:04:56.0073354Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0073903Z Traceback (most recent call last):
+2026-10-18T18:04:56.0075018Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 364, in test_prepare_failure_consumes_attempt_and_persists_failure_without_model
+2026-10-18T18:04:56.0076111Z     STUDY.prepare(args, state, catalog)
+2026-10-18T18:04:56.0076795Z   File "D:\a\Regicide\Regicide\scripts\endgame_study.py", line 454, in prepare
+2026-10-18T18:04:56.0077640Z     datasets = [CYCLE.contained(state, catalog["bootstrap"]["manifest"]),
+2026-10-18T18:04:56.0078628Z                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0079372Z   File "D:\a\Regicide\Regicide\scripts\learning_cycle.py", line 123, in contained
+2026-10-18T18:04:56.0080252Z     raise ValueError("State artifact path escapes its directory.")
+2026-10-18T18:04:56.0080953Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0081346Z 
+2026-10-18T18:04:56.0081523Z ======================================================================
+2026-10-18T18:04:56.0082577Z FAIL: test_candidate_bytes_or_path_escape_cannot_pass (__main__.EndgameStudyTests.test_candidate_bytes_or_path_escape_cannot_pass)
+2026-10-18T18:04:56.0083699Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0084324Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0084714Z 
+2026-10-18T18:04:56.0085035Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0085507Z 
+2026-10-18T18:04:56.0085673Z Traceback (most recent call last):
+2026-10-18T18:04:56.0086623Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 233, in test_candidate_bytes_or_path_escape_cannot_pass
+2026-10-18T18:04:56.0087608Z     with self.assertRaisesRegex(ValueError, "bytes changed"):
+2026-10-18T18:04:56.0088127Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0088817Z AssertionError: "bytes changed" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0089373Z 
+2026-10-18T18:04:56.0090083Z ======================================================================
+2026-10-18T18:04:56.0091501Z FAIL: test_dirty_development_comparison_blocks_reserved_arena (__main__.EndgameStudyTests.test_dirty_development_comparison_blocks_reserved_arena)
+2026-10-18T18:04:56.0093045Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0093766Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0094406Z 
+2026-10-18T18:04:56.0094802Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0095367Z 
+2026-10-18T18:04:56.0096301Z Traceback (most recent call last):
+2026-10-18T18:04:56.0098660Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 345, in test_dirty_development_comparison_blocks_reserved_arena
+2026-10-18T18:04:56.0099962Z     with self.assertRaisesRegex(ValueError, "contaminated"):
+2026-10-18T18:04:56.0100741Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0101645Z AssertionError: "contaminated" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0102362Z 
+2026-10-18T18:04:56.0102698Z ======================================================================
+2026-10-18T18:04:56.0104364Z FAIL: test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work (__main__.EndgameStudyTests.test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work) (mutation='status')
+2026-10-18T18:04:56.0106066Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0106870Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0107426Z 
+2026-10-18T18:04:56.0107886Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0108516Z 
+2026-10-18T18:04:56.0108833Z Traceback (most recent call last):
+2026-10-18T18:04:56.0110075Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 290, in test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work
+2026-10-18T18:04:56.0111462Z     with self.assertRaisesRegex(ValueError, "current untouched prepared"):
+2026-10-18T18:04:56.0112302Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0113325Z AssertionError: "current untouched prepared" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0114181Z 
+2026-10-18T18:04:56.0114515Z ======================================================================
+2026-10-18T18:04:56.0116457Z FAIL: test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work (__main__.EndgameStudyTests.test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work) (mutation='attempt')
+2026-10-18T18:04:56.0118183Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0118963Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0119547Z 
+2026-10-18T18:04:56.0120039Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0120650Z 
+2026-10-18T18:04:56.0120944Z Traceback (most recent call last):
+2026-10-18T18:04:56.0122182Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 290, in test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work
+2026-10-18T18:04:56.0123575Z     with self.assertRaisesRegex(ValueError, "current untouched prepared"):
+2026-10-18T18:04:56.0124382Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0125373Z AssertionError: "current untouched prepared" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0126218Z 
+2026-10-18T18:04:56.0126531Z ======================================================================
+2026-10-18T18:04:56.0128132Z FAIL: test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work (__main__.EndgameStudyTests.test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work) (mutation='policy')
+2026-10-18T18:04:56.0129816Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0130600Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0131134Z 
+2026-10-18T18:04:56.0132543Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0133266Z 
+2026-10-18T18:04:56.0133580Z Traceback (most recent call last):
+2026-10-18T18:04:56.0134842Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 290, in test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work
+2026-10-18T18:04:56.0136804Z     with self.assertRaisesRegex(ValueError, "current untouched prepared"):
+2026-10-18T18:04:56.0137635Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0138719Z AssertionError: "current untouched prepared" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0139576Z 
+2026-10-18T18:04:56.0139897Z ======================================================================
+2026-10-18T18:04:56.0141459Z FAIL: test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work (__main__.EndgameStudyTests.test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work) (mutation='run')
+2026-10-18T18:04:56.0143146Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0143936Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0144474Z 
+2026-10-18T18:04:56.0144915Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0145545Z 
+2026-10-18T18:04:56.0145847Z Traceback (most recent call last):
+2026-10-18T18:04:56.0147285Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 290, in test_validate_rejects_wrong_status_attempt_policy_and_run_before_any_work
+2026-10-18T18:04:56.0148697Z     with self.assertRaisesRegex(ValueError, "current untouched prepared"):
+2026-10-18T18:04:56.0149599Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0150705Z AssertionError: "current untouched prepared" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0151598Z 
+2026-10-18T18:04:56.0151932Z ======================================================================
+2026-10-18T18:04:56.0153385Z FAIL: test_validation_wrong_engine_identity_blocks_matches_and_promotion (__main__.EndgameStudyTests.test_validation_wrong_engine_identity_blocks_matches_and_promotion)
+2026-10-18T18:04:56.0154884Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0155697Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0156594Z 
+2026-10-18T18:04:56.0157048Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0157702Z 
+2026-10-18T18:04:56.0157996Z Traceback (most recent call last):
+2026-10-18T18:04:56.0159260Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 305, in test_validation_wrong_engine_identity_blocks_matches_and_promotion
+2026-10-18T18:04:56.0160592Z     with self.assertRaisesRegex(ValueError, "differs from prepared"):
+2026-10-18T18:04:56.0161406Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0162373Z AssertionError: "differs from prepared" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0163110Z 
+2026-10-18T18:04:56.0163407Z ======================================================================
+2026-10-18T18:04:56.0164937Z FAIL: test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation (__main__.EndgameStudyTests.test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation) (mutation='artifact')
+2026-10-18T18:04:56.0166657Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0167480Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0168004Z 
+2026-10-18T18:04:56.0168399Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0168973Z 
+2026-10-18T18:04:56.0169256Z Traceback (most recent call last):
+2026-10-18T18:04:56.0170667Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 272, in test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation
+2026-10-18T18:04:56.0172481Z     with patch.object(STUDY, "frozen_sources", return_value=actual_sources), self.assertRaisesRegex(ValueError, "changed"):
+2026-10-18T18:04:56.0174731Z                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0175817Z AssertionError: "changed" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0176912Z 
+2026-10-18T18:04:56.0177232Z ======================================================================
+2026-10-18T18:04:56.0178740Z FAIL: test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation (__main__.EndgameStudyTests.test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation) (mutation='engine')
+2026-10-18T18:04:56.0180257Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0180937Z ValueError: State artifact path escapes its directory.
+2026-10-18T18:04:56.0181476Z 
+2026-10-18T18:04:56.0181936Z During handling of the above exception, another exception occurred:
+2026-10-18T18:04:56.0182575Z 
+2026-10-18T18:04:56.0182882Z Traceback (most recent call last):
+2026-10-18T18:04:56.0184164Z   File "D:\a\Regicide\Regicide\tests\endgame_study_tests.py", line 272, in test_verify_frozen_blocks_source_artifact_and_installed_engine_mutation
+2026-10-18T18:04:56.0185884Z     with patch.object(STUDY, "frozen_sources", return_value=actual_sources), self.assertRaisesRegex(ValueError, "changed"):
+2026-10-18T18:04:56.0187160Z                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-18T18:04:56.0188193Z AssertionError: "changed" does not match "State artifact path escapes its directory."
+2026-10-18T18:04:56.0188960Z 
+2026-10-18T18:04:56.0189334Z ----------------------------------------------------------------------
+2026-10-18T18:04:56.0190045Z Ran 21 tests in 1.887s
+2026-10-18T18:04:56.0190412Z 
+2026-10-18T18:04:56.0190713Z FAILED (failures=9, errors=8)
+2026-10-18T18:04:56.1323220Z ##[error]Process completed with exit code 1.
+2026-10-18T18:04:56.1757036Z Post job cleanup.
+2026-10-18T18:04:56.4285873Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T18:04:56.4949510Z git version 2.56.0.windows.2
+2026-10-18T18:04:56.5140581Z Temporarily overriding HOME='D:\a\_temp\ce7e5b71-a0e3-4278-b0c6-e22ebc2ea65b' before making global git config changes
+2026-10-18T18:04:56.5144552Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T18:04:56.5258110Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Regicide\Regicide
+2026-10-18T18:04:56.5679515Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T18:04:56.6099946Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T18:04:57.2303340Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T18:04:57.2662820Z http.https://github.com/.extraheader
+2026-10-18T18:04:57.2713367Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-18T18:04:57.3116508Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T18:04:57.9166330Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T18:04:57.9582875Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T18:04:58.6822597Z Cleaning up orphan processes
+2026-10-18T18:04:58.7002553Z Terminate orphan process: pid (3400) (vctip)
+2026-10-18T18:04:58.7251291Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -1,0 +1,192 @@
+{
+  "status": "partial-passed",
+  "remaining": "Training quality and final augmentation are still running; this report is not final audit.",
+  "heldout_quality": {
+    "original": 221,
+    "accepted": 130,
+    "rejected": 91,
+    "queries": 663,
+    "exclusions": {
+      "last_two_cp_unstable": 28,
+      "last_two_best_moves_differ": 43,
+      "stage_2_mate_score": 14,
+      "stage_3_mate_score": 6
+    },
+    "independent_selection_replay": true
+  },
+  "collisions": {
+    "raw_train/new_full_heldout": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "raw_train/bootstrap_full_heldout": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "quality_heldout/bootstrap_full_heldout": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "raw_train/baseline_all_samples": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "quality_heldout/baseline_all_samples": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "raw_train/reserved_arena": {
+      "canonical": 0,
+      "neural": 0
+    },
+    "quality_heldout/reserved_arena": {
+      "canonical": 0,
+      "neural": 0
+    }
+  },
+  "datasets": {
+    "raw_heldout": {
+      "games": 16,
+      "completed": 16,
+      "outcomes": {
+        "0-1": 5,
+        "1/2-1/2": 7,
+        "1-0": 4
+      },
+      "game_families": {
+        "endgame-v1-bishop-pawn-deflection": 2,
+        "endgame-v1-defended-passer": 2,
+        "endgame-v1-king-route-tempo": 2,
+        "endgame-v1-knight-pawn-tactics": 2,
+        "endgame-v1-minor-color-complex": 2,
+        "endgame-v1-queen-supported-passer": 2,
+        "endgame-v1-rook-connected": 2,
+        "endgame-v1-rook-seventh": 2
+      },
+      "sample_families": {
+        "endgame-v1-bishop-pawn-deflection": 21,
+        "endgame-v1-defended-passer": 24,
+        "endgame-v1-king-route-tempo": 39,
+        "endgame-v1-knight-pawn-tactics": 35,
+        "endgame-v1-minor-color-complex": 26,
+        "endgame-v1-queen-supported-passer": 7,
+        "endgame-v1-rook-connected": 48,
+        "endgame-v1-rook-seventh": 21
+      },
+      "positions": 221,
+      "splits": {
+        "validation": 78,
+        "test": 143
+      },
+      "actual_turns": {
+        "w": 109,
+        "b": 112
+      },
+      "sampled_games": 16,
+      "unique_canonical": 212,
+      "unique_neural": 212
+    },
+    "quality_heldout": {
+      "games": 16,
+      "completed": 16,
+      "outcomes": {
+        "0-1": 5,
+        "1/2-1/2": 7,
+        "1-0": 4
+      },
+      "game_families": {
+        "endgame-v1-bishop-pawn-deflection": 2,
+        "endgame-v1-defended-passer": 2,
+        "endgame-v1-king-route-tempo": 2,
+        "endgame-v1-knight-pawn-tactics": 2,
+        "endgame-v1-minor-color-complex": 2,
+        "endgame-v1-queen-supported-passer": 2,
+        "endgame-v1-rook-connected": 2,
+        "endgame-v1-rook-seventh": 2
+      },
+      "sample_families": {
+        "endgame-v1-bishop-pawn-deflection": 14,
+        "endgame-v1-defended-passer": 16,
+        "endgame-v1-king-route-tempo": 27,
+        "endgame-v1-knight-pawn-tactics": 14,
+        "endgame-v1-minor-color-complex": 15,
+        "endgame-v1-queen-supported-passer": 2,
+        "endgame-v1-rook-connected": 26,
+        "endgame-v1-rook-seventh": 16
+      },
+      "positions": 130,
+      "splits": {
+        "validation": 49,
+        "test": 81
+      },
+      "actual_turns": {
+        "w": 64,
+        "b": 66
+      },
+      "sampled_games": 15,
+      "unique_canonical": 125,
+      "unique_neural": 125
+    },
+    "raw_train": {
+      "games": 128,
+      "completed": 128,
+      "outcomes": {
+        "1/2-1/2": 83,
+        "1-0": 30,
+        "0-1": 15
+      },
+      "game_families": {
+        "endgame-v1-bishop-pawn-chain": 8,
+        "endgame-v1-connected-passers": 8,
+        "endgame-v1-knight-blockade": 8,
+        "endgame-v1-loose-minor": 8,
+        "endgame-v1-loose-rook": 8,
+        "endgame-v1-near-opposition": 8,
+        "endgame-v1-outside-passer": 8,
+        "endgame-v1-rook-activity": 8,
+        "endgame-v1-rook-behind-passer": 8,
+        "endgame-v1-rook-checking-distance": 8,
+        "endgame-v1-rook-king-cutoff": 8,
+        "endgame-v1-rook-minor": 8,
+        "endgame-v1-rook-pawn-contacts": 8,
+        "endgame-v1-rook-pawn-race": 8,
+        "endgame-v1-rook-wing-pressure": 8,
+        "endgame-v1-split-pawn-race": 8
+      },
+      "sample_families": {
+        "endgame-v1-bishop-pawn-chain": 107,
+        "endgame-v1-connected-passers": 108,
+        "endgame-v1-knight-blockade": 120,
+        "endgame-v1-loose-minor": 151,
+        "endgame-v1-loose-rook": 82,
+        "endgame-v1-near-opposition": 74,
+        "endgame-v1-outside-passer": 94,
+        "endgame-v1-rook-activity": 144,
+        "endgame-v1-rook-behind-passer": 114,
+        "endgame-v1-rook-checking-distance": 142,
+        "endgame-v1-rook-king-cutoff": 104,
+        "endgame-v1-rook-minor": 137,
+        "endgame-v1-rook-pawn-contacts": 145,
+        "endgame-v1-rook-pawn-race": 76,
+        "endgame-v1-rook-wing-pressure": 134,
+        "endgame-v1-split-pawn-race": 145
+      },
+      "positions": 1877,
+      "splits": {
+        "train": 1877
+      },
+      "actual_turns": {
+        "b": 940,
+        "w": 937
+      },
+      "sampled_games": 128,
+      "unique_canonical": 1719,
+      "unique_neural": 1713
+    }
+  },
+  "checks": {
+    "assertions": 34164,
+    "actual_game_plies": 6551,
+    "teacher_pv_plies": 4486
+  }
+}

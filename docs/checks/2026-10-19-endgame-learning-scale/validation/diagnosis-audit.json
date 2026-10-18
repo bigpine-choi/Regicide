@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "source_commit": "b5f0af8713971f13d1da202eb62dee016d0c80f2",
+  "run": "runs/000005-1cf7521bd5dc",
+  "report_sha256": "fa7cf4ac931e50dd99995009fd5d8e17274e1de7bb1445f14229dcf231648428",
+  "audit_script_sha256": "c7aa5695f3f0c287c9248e9429b286f847857967294cf9ad1b464aea4f5f0ea4",
+  "conditions_checked": 5341,
+  "queries": 144,
+  "positions": 24,
+  "games": 12,
+  "legal_pv_plies": 892,
+  "bounded_teacher_supported_positions": 2,
+  "supported": [
+    {
+      "game_id": "g0004-french-r1",
+      "unique_game_sha256": "f6709575c55817ae45f003ff9c20c30fbd4b3dcaff99ca95bda74edd4b15f5ad",
+      "family": "french",
+      "ply": 56,
+      "played": "a2a4",
+      "same_depth_alternative": "f2f3",
+      "loss_cp_by_budget": [
+        315,
+        210,
+        212
+      ],
+      "already_severely_unfavourable_under_teacher": false
+    },
+    {
+      "game_id": "g0015-french-r1",
+      "unique_game_sha256": "df7160ceada6c04341d4e5ac069c731d06985d44fbb9fb4695b1f38b287a4174",
+      "family": "french",
+      "ply": 71,
+      "played": "d6c6",
+      "same_depth_alternative": "e5d7",
+      "loss_cp_by_budget": [
+        128,
+        144,
+        143
+      ],
+      "already_severely_unfavourable_under_teacher": true
+    }
+  ],
+  "failure_reasons_position_counts": {
+    "deeper_best_move_unstable": 4,
+    "loss_not_consistently_above_threshold": 20,
+    "played_move_not_consistently_inferior": 8,
+    "nonfinite_bound_or_missing_score": 12,
+    "deeper_best_score_unstable": 4,
+    "deeper_played_score_unstable": 3
+  },
+  "claim_limit": "Two bounded teacher-supported losses, both French training games and both rook/pawn contexts; one already below -500cp. No causal or broad strength conclusion."
+}

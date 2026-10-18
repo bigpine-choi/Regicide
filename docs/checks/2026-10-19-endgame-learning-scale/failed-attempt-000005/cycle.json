@@ -1,0 +1,172 @@
+{
+  "schema": "regicide.learning.cycle.v1",
+  "study_schema": "regicide.endgame.study.v1",
+  "policy": "endgame-scale-first-seed-largest-preregistered-arm-v1",
+  "status": "failed",
+  "attempt_index": 5,
+  "started_utc": "2026-10-18T17:18:51.085507+00:00",
+  "checkout": {
+    "commit": "b5f0af8713971f13d1da202eb62dee016d0c80f2",
+    "status_porcelain": "",
+    "scope": "collector checkout only; not proof of executable build origin"
+  },
+  "stages": [
+    {
+      "name": "snapshot-and-previous-champion",
+      "started_utc": "2026-10-18T17:18:51.305707+00:00"
+    },
+    {
+      "name": "training-loss-endgame-diagnosis",
+      "started_utc": "2026-10-18T17:18:51.327243+00:00"
+    },
+    {
+      "name": "collect-independent-endgame-heldout",
+      "started_utc": "2026-10-18T17:19:22.824911+00:00"
+    },
+    {
+      "name": "freeze-trusted-new-heldout-labels",
+      "started_utc": "2026-10-18T17:19:42.899761+00:00"
+    },
+    {
+      "name": "collect-diverse-endgame-training",
+      "started_utc": "2026-10-18T17:21:50.193521+00:00"
+    },
+    {
+      "name": "trusted-training-labels",
+      "started_utc": "2026-10-18T17:27:02.305132+00:00"
+    },
+    {
+      "name": "immutable-augmentation",
+      "started_utc": "2026-10-18T17:38:22.393508+00:00"
+    }
+  ],
+  "adopted": false,
+  "binary_sha256": "e2b218e7b22f3f4f166d999f011ed08cb66120cc6a6f3265448537d72b8254e3",
+  "installed_binary": "<research>\\build-neural-v5\\regicide.exe",
+  "previous_model_sha256": null,
+  "implementation_sha256": {
+    "include/regicide/board.hpp": "e3f24cb60ca85adcc159b3ca5930e2b4a1b6e3f9d61dccc45adb106c1867c93b",
+    "include/regicide/evaluation.hpp": "0eb64e67b45253e882de1f986afc1d4a44c8568800a763987e3f83b7b8bfd2bb",
+    "include/regicide/neural.hpp": "439fc6f22ee3b02568923a3cf4c4ab80e04f6ecd154724372f859b9a3d868a34",
+    "include/regicide/search.hpp": "fb461f3a6e45c958bb1e6390ac0418e72b56fef2e04bd0363d989f5009f840db",
+    "include/regicide/see.hpp": "8370c33685eefcc3738302f66ec7132b55f82c2b4124dcdf4e575ef24ee9965e",
+    "include/regicide/transposition.hpp": "0faef4062f17887a356deb37777d9e37182058e754e206cac4c3edf7989b0ca0",
+    "include/regicide/uci.hpp": "61b1bd6887383b9f98ae144643260450c7dfcc0a3f53ecd26a0e4fd901c9afa1",
+    "scripts/analyze_learning_losses.py": "591fb58ce39b70d37382e1dc77b390febd3e3ce090fe3f531e9a635c5cec4757",
+    "scripts/benchmark_neural_inference.py": "6034c5fc53e2ce77ec19c79008c0d4f279c3b3a753c1c7c8a6cc59592456282a",
+    "scripts/benchmark_search.py": "d5f2e374f524dbe5d823718490dc84a1bb9dd9ded60383362a507411a8dae15f",
+    "scripts/classical_evaluation.py": "a0c3fd595489de48e84d6eb755bee7eb942f5edde7c1c46cd0165a0a0e5c19f4",
+    "scripts/collect_endgame_data.py": "19473bb50c1259170081ebd308d4af1791ddbfc6fa50e30f343b5c0b57860c25",
+    "scripts/collect_learning_data.py": "2efc9f3f75530e4d37f7e2943df7a6cd01089a3eddc3edd0c137062c0f5b22ba",
+    "scripts/compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "scripts/diagnose_endgames.py": "1edb5c81aa1dcfc09097db53f5d63aaaebc503ba6267cef1b9b334974b0dfff4",
+    "scripts/diagnose_neural_cost.py": "259c1819ce5dacc794f7a439f05296ff938522567b4e6ba9c8f3d5744c91bfc1",
+    "scripts/endgame_learning_curve.py": "85dc3cd55ec40f61456e62e40eedbfb40bada7e61936d8dfb463ebae106a8f4b",
+    "scripts/endgame_matches.py": "40eb0379fe1b70612509aabc4bbed2795bfe7f4a88989b44d269e08f32b43a7c",
+    "scripts/endgame_study.py": "fe565aadfc282357e8101e7abe5780c27dc1f102d523755b41ffd570265d97d5",
+    "scripts/game_archive.py": "94855ee439a4c0f59a762cc25af0bd8de5b7058bc88c9713f1695ab2af6d5f05",
+    "scripts/learning_arena.py": "7bc3e4a37c5438b1465fa0bac21784a4ce6c5c3ed5540923f360ced75ba8482f",
+    "scripts/learning_corpus.py": "885a2d766d0c93b0ac0c44e1d4c70c62d5ed9493de0543f597fcdd1b97fc833f",
+    "scripts/learning_cycle.py": "35901257c9ce5cab29ef6ab09289dc928718a785d04942ddb793488824976156",
+    "scripts/learning_registry.py": "da57e633edbe7b14d8f89a9c9dc3a8a12e2caec3c90e22881878f3f18ba3099b",
+    "scripts/lmr_experiment.py": "feae67dfd4960908d672d5d903eec6d636c4349058949de9d803550b7fbcc10d",
+    "scripts/move_hints.py": "7eee7138c02920cff4f0e65d327e4b8b9cc4a1cda953a79b4b17a8b4dd25932e",
+    "scripts/neural_model.py": "636197921200439c5dcd2dc9a5e61a21600a42cfa56b304e9c38a4f36ae95268",
+    "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+    "scripts/play_human.py": "01a66d162ffc07201f04ee414a23d19b26905afdbb360afcae9b4d73ae3e4ba6",
+    "scripts/probe_loss_search.py": "69466935217c2a51d8a0984b1d558172b03c1565ebdb03467982b330723fe885",
+    "scripts/profile_neural_audit.py": "7bd403c434a03ea1e6ad139921358ca742205bf2ee1f01414c92c92a7e5520ca",
+    "scripts/reference_loss_scan.py": "bac71f2406c3069b289942ed7adf699cc204ed46fb79a9a4f97634e126a3428c",
+    "scripts/refine_endgame_holdout.py": "e7a8efdcb4253026c8462160a47c413730dec949422682e05271c28cf0659c0a",
+    "scripts/see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "scripts/teacher_quality.py": "77250ada764703546284f8b1e7778c3c5d0d01a0c68a9691c59e5553698e3da0",
+    "scripts/train_neural.py": "c672b7b2e8d877f2c854c3e9f287d911ae204fbb556c9c9347bcaf01f8222dd5",
+    "src/board.cpp": "d9ed58d162bafa36812ce959469737e5feec4f1b1d97c085d1180bb1404fc2d2",
+    "src/evaluation.cpp": "78c8d7fb6d9fb00d722c06e093b43da91b244bb75a9369596c333575b023e64b",
+    "src/main.cpp": "1bccb7d4483fc67bf56b6df45782fca7a81d9a6c8bf7ccca0a443261e50db15d",
+    "src/neural.cpp": "fb02b008bafad05fc57b0831ec3ff7250ab46c8e2070eeebd622a10cb1292b80",
+    "src/search.cpp": "a01dc7619fc541558d551d2e3fc4343e563ed8473bbb42815a1aa61223a319ac",
+    "src/see.cpp": "c60501778641fb165558a471c863af0c9bc7dc67977a595e3ff24a02d25e7b47",
+    "src/transposition.cpp": "f37c205b1fabb037c481f980bbcff639672c7c0e0b677921e7540956834255f8",
+    "src/uci.cpp": "8770e1c6799708fdbcb00953076a29f58bd9cef38580e2d907df5bd2327cdb29",
+    "tests/archive_godot_tests.py": "4c6cfc8ec36e60c094866c583063be5b9064c607a66424ef22b19b6aa3064e16",
+    "tests/audit_pvs_results.py": "fcf5b706c5bb1b880734befbad1cffec4f2e44ca27bcdc093808de140a1d073a",
+    "tests/audit_see_cost_results.py": "00f623dd86f89d69894397484a3308e9e2ef6ceb75ea3c59a49462ac2c0b1156",
+    "tests/audit_see_replication.py": "a42105e6de502dce76d7e6ed8df9d1d615fdd37ea086166f1932cd1b7578a7f4",
+    "tests/audit_see_results.py": "0ae9f0b988f72cabc18a467748d4ff352492410cf81e713c8405230acc78e01e",
+    "tests/benchmark_search_tests.py": "d57108406fcfd9317da8a5427e9e10a567142e6a3bd361d371227159a63a8605",
+    "tests/classical_evaluation_tests.py": "3494b33d3c0c1e93a01ba521ec3693353e9a03e7ca4944b710b76694721ffed6",
+    "tests/compare_engines_tests.py": "178462a0cbca5349cc411a9419bbf31c0ba18585a35aa353f71bfa5dfc3170d3",
+    "tests/data/endgame_learning_seeds_v1.json": "010c11d726f8d7677195c288842139312d555c133dff470f15744e5e863a20cb",
+    "tests/data/learning_arena_openings_v1.json": "78e7e6aca52cee0bdcb65e938d0d5a94236b30a8790b283227ff9d435e51e4f0",
+    "tests/data/learning_openings_v1.json": "0d1b390fe782f74e923495180cb236273cb80b761d97e9ae1b119e751e05f071",
+    "tests/differential.py": "74e96b2834ca39e7c8b14f85866d633c0d55f233d27aa4877ee65f593f850d42",
+    "tests/endgame_data_tests.py": "a642d5085a1ae4c0806f7badf15ad0072ff055e00ba9712f17c9021ea13b7c43",
+    "tests/endgame_diagnosis_tests.py": "916b91d281841ffa109753a61710c4b5e7b30b206f6c1da85ed7c33294769cf0",
+    "tests/endgame_holdout_quality_tests.py": "3e89254f65514684f1e6bc9bff2256f2496d0f29ac710838ad9fde34af58a40e",
+    "tests/endgame_learning_curve_tests.py": "e86739f4e520d7052ee91d0a5690a00da76581f1272878532d38524140d1e9e6",
+    "tests/endgame_matches_tests.py": "5f76c812ba5b523811245794b5cf4d185b4c4d21c85cdca2b9d7be7be57a57fd",
+    "tests/endgame_study_tests.py": "b58d70ca979d8a21ccd369da611cac829eb3b3c53508df4aefdce1265c3c8d6d",
+    "tests/engine_integration.py": "7ed5592eb6b0aadcf58d58a200be3ea6e32fa0e1ff3b386fff44b2808c3fde18",
+    "tests/evaluation_state_tests.py": "fa39ec3fdaff782d6f70731656cde472f828ec664a6761878119312473485aa2",
+    "tests/external_baseline_tests.py": "cc2efe3279854d8b3a6db232424ea3a70e050cd963509918d1d1c82a0295e95d",
+    "tests/game_archive_tests.py": "0fb88525d99a7d6f2c61251d96181ca6f6e4d4f1eed0f0b9201a7cc9e51a2a1f",
+    "tests/game_runner_tests.py": "7a84ef4423d556aac17ec5fb470862ab65df39f125a2d84856ae20df13c36337",
+    "tests/godot_bootstrap_tests.py": "68400aefa3198b5aafbfaecec840f55f6be1e32a0da5d7f9cd336429dbd6383c",
+    "tests/godot_integration_tests.py": "4616b5503ac3afe48ba9b3f5112f783043509e12196c930c853d2f61e9b149c1",
+    "tests/handicap_godot_tests.py": "efa6aea7fd7568661ffd67e2f02537caede7eb399b652b7ea357e2bc0cb0d60d",
+    "tests/handicap_play_tests.py": "d068f83de80e7bafddb1cd6bc2baa279c7497c53a34ee777585d30fad76ea53d",
+    "tests/hint_godot_tests.py": "551c437bd5d1846203d6e271393626b19c92277ec9e4ea81a9fefc2f7bfa19cb",
+    "tests/hint_state_tests.py": "fab99aa3d057de7d2c5e945c774f29b80f896b59e928aa6a83fe8109765cc51c",
+    "tests/human_play_tests.py": "3153895563a33e42ce2470a3ba0afab41d0c3f4d724c4214865aaead65651cc0",
+    "tests/learning_arena_tests.py": "4d0f09a6494d40169f6b9c24a3841bc6ade57304cd76eb464ab2f53c7848d4cf",
+    "tests/learning_corpus_tests.py": "ab90effd783eeab4cdd2252fdbe644aa6cabb64928a7b13fd2faeaef9b439c6c",
+    "tests/learning_cycle_tests.py": "63c502d73eb1c686397cbe96478b133d0bf4f178f2fff6b04725ba5519a50784",
+    "tests/learning_data_tests.py": "74a353239c1b9e4a0ded9c957f63dca286ae6db85d7263d6469bfad7a251a22c",
+    "tests/learning_loss_analysis_tests.py": "c1e941a56fd4b4c07ee635d878f5b250087a510e39bab370fb7d23ea10fa3e7a",
+    "tests/learning_registry_tests.py": "e49f7f03f07a6d84c725f92ae5f1dbddc554b12627930ea5aabdb02d4fd7ec43",
+    "tests/learning_runtime_tests.py": "40e830a2c628b936e6c9e4244e76c406e4898c37d81b608fbdb8cff546b9015d",
+    "tests/loss_diagnosis_tests.py": "83649b0e90b0156eb013367c9fb3574e97dafb69103c3b03fc22764f0f42b299",
+    "tests/neural_cost_diagnostic_tests.py": "57ff643d685402d30c3710bd80be534913d4764e23e639f95b1581932c399f81",
+    "tests/neural_inference_benchmark_tests.py": "b2203190dc6ffefcb13589929ce3d84d048c16604968a3a751e9f3a2d61eae11",
+    "tests/neural_integration_tests.py": "1953b3727608602aa18c0575ec047a1e447d13d6a6a8b5cd294e4d56f0182fb8",
+    "tests/neural_training_tests.py": "9f1fbf56fffe129cb9b1cebcfeecb69e5d67e6af7208e7145d41f808f2429e3b",
+    "tests/see_clean_guard_tests.py": "70fa378c66dc300dd2806ef89d4d184fb920b96c0087419cd5527b1ec0b79085",
+    "tests/teacher_quality_tests.py": "e6059b1a20d3f19b17a8882bf79cf9e87aa75faec4bb43c53f8f09dd3a3fe11e"
+  },
+  "candidate_policy": "first declared seed, largest feasible preregistered added-data count; never selected using test/development games/arena",
+  "configuration": {
+    "seed": 2026101950,
+    "train_repeats": 4,
+    "add_counts": [
+      0,
+      128,
+      512,
+      1024
+    ],
+    "training_seeds": [
+      2026101901,
+      2026101902
+    ],
+    "teacher_quality_nodes": [
+      10000,
+      50000,
+      200000
+    ],
+    "quality_cp_delta": 30,
+    "quality_min_depth": 3,
+    "epochs": 100,
+    "batch_size": 64,
+    "development_pairs": 16,
+    "arena_pairs": 32,
+    "movetime_ms": 100
+  },
+  "diagnosis": {
+    "available_endgame_games": 45,
+    "queries_completed": 144,
+    "summary": null
+  },
+  "error_type": "ValueError",
+  "error": "source PGN is missing a game or contains illegal moves",
+  "finished_utc": "2026-10-18T17:38:24.869341+00:00"
+}

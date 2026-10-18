@@ -1,0 +1,853 @@
+{
+  "schema": "regicide.selfplay.dataset.v1",
+  "status": "complete",
+  "started_utc": "2026-10-18T17:21:53.344819+00:00",
+  "positions_path": "positions.jsonl",
+  "samples_path": "positions.jsonl",
+  "games_path": "games.jsonl",
+  "pgn_path": "games.pgn",
+  "seed": 2026101951,
+  "games_requested": 128,
+  "limits": {
+    "selfplay_nodes": 1000,
+    "teacher_nodes": 10000,
+    "max_plies_total": 384,
+    "sample_every": 2,
+    "random_opening_plies": 2,
+    "communication_watchdog_seconds": 600,
+    "time_limit": null
+  },
+  "engine": {
+    "binary_name": "regicide.exe",
+    "sha256": "e2b218e7b22f3f4f166d999f011ed08cb66120cc6a6f3265448537d72b8254e3",
+    "source_commit_caller_declared": null,
+    "build_source_verified": false,
+    "configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true
+    },
+    "selection": "Regicide only; identical binary for both colors and teacher",
+    "selfplay_model": {
+      "enabled": false,
+      "name": null,
+      "snapshot_path": null,
+      "sha256": null
+    },
+    "teacher_evaluation": "classical; neural disabled regardless of self-play model",
+    "uci_id": {
+      "name": "Regicide 0.6.5",
+      "author": "Regicide project"
+    },
+    "optional_options": {
+      "UseNeuralEvaluation": false
+    },
+    "selfplay_configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true,
+      "UseNeuralEvaluation": false,
+      "EvalFile": null
+    },
+    "teacher_configured_options": {
+      "Hash": 16,
+      "Move Overhead": 0,
+      "UsePositionalEvaluation": true,
+      "UseQuiescence": true,
+      "UseTranspositionTable": true,
+      "UseFastMoves": true,
+      "UseQuietMoveOrdering": true,
+      "UseQuiescenceChecks": true,
+      "PVS": true,
+      "UseSEE": true,
+      "UsePawnShield": true,
+      "UsePawnStructure": true,
+      "UseLMR": true,
+      "UseNeuralEvaluation": false
+    },
+    "advertised_options": {
+      "Move Overhead": {
+        "type": "spin",
+        "default": 20,
+        "min": 0,
+        "max": 5000,
+        "var": []
+      },
+      "UsePositionalEvaluation": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuiescence": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseTranspositionTable": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "Hash": {
+        "type": "spin",
+        "default": 16,
+        "min": 1,
+        "max": 256,
+        "var": []
+      },
+      "Clear Hash": {
+        "type": "button",
+        "default": null,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseFastMoves": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuietMoveOrdering": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseQuiescenceChecks": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "PVS": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseSEE": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UsePawnShield": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UsePawnStructure": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseLMR": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "EvalFile": {
+        "type": "string",
+        "default": "<empty>",
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UseNeuralEvaluation": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      }
+    }
+  },
+  "collector": {
+    "sha256": "2efc9f3f75530e4d37f7e2943df7a6cd01089a3eddc3edd0c137062c0f5b22ba",
+    "checkout": {
+      "commit": "b5f0af8713971f13d1da202eb62dee016d0c80f2",
+      "status_porcelain": "",
+      "scope": "collector checkout only; not proof of executable build origin"
+    },
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+    "python_chess": "1.11.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "openings": {
+    "name": "endgame-train.endgame-openings.json",
+    "sha256": "197c588dbc9351a47f7ad5395d355b935b63a6e6003b77d16f30367511f5d1bb",
+    "definition": {
+      "schema": "regicide.learning.openings.v1",
+      "provenance": "Forty-eight individually specified legal FEN placements authored for Regicide. No external games, engine, tablebase, downloaded position, reserved loss or reserved score used to construct these boards. Both starting turns have separately specified boards; no turn-swapped or sign-flipped labels.",
+      "split_policy": "preassigned constructed families; no family or start reassignment from outcomes",
+      "openings": [
+        {
+          "id": "near-opposition-01",
+          "family": "endgame-v1-near-opposition",
+          "split": "train",
+          "name": "pawn opposition and king access / authored start 1",
+          "initial_fen": "8/8/3pkp2/8/8/3PKP2/8/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "near-opposition-02",
+          "family": "endgame-v1-near-opposition",
+          "split": "train",
+          "name": "pawn opposition and king access / authored start 2",
+          "initial_fen": "8/8/3kp3/2p5/4P3/2PK4/8/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-checking-distance-01",
+          "family": "endgame-v1-rook-checking-distance",
+          "split": "train",
+          "name": "rook checking distance and king routes / authored start 1",
+          "initial_fen": "8/7r/5k1p/4p3/2P5/4K1P1/R7/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-checking-distance-02",
+          "family": "endgame-v1-rook-checking-distance",
+          "split": "train",
+          "name": "rook checking distance and king routes / authored start 2",
+          "initial_fen": "8/1r6/2k3p1/1p6/7P/4PK2/7R/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "outside-passer-01",
+          "family": "endgame-v1-outside-passer",
+          "split": "train",
+          "name": "outside passed pawn and king diversion / authored start 1",
+          "initial_fen": "8/8/3kpp2/8/P2KP3/8/8/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "outside-passer-02",
+          "family": "endgame-v1-outside-passer",
+          "split": "train",
+          "name": "outside passed pawn and king diversion / authored start 2",
+          "initial_fen": "8/8/4k3/1p2p3/6P1/4KP2/8/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "connected-passers-01",
+          "family": "endgame-v1-connected-passers",
+          "split": "train",
+          "name": "connected passed pawns and king support / authored start 1",
+          "initial_fen": "8/8/5kpp/8/3PP3/2K5/8/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "connected-passers-02",
+          "family": "endgame-v1-connected-passers",
+          "split": "train",
+          "name": "connected passed pawns and king support / authored start 2",
+          "initial_fen": "8/8/2k5/4pp2/PP6/5K2/8/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "split-pawn-race-01",
+          "family": "endgame-v1-split-pawn-race",
+          "split": "train",
+          "name": "opposite-wing pawn races / authored start 1",
+          "initial_fen": "8/6k1/p6p/8/P6P/8/1K6/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "split-pawn-race-02",
+          "family": "endgame-v1-split-pawn-race",
+          "split": "train",
+          "name": "opposite-wing pawn races / authored start 2",
+          "initial_fen": "8/5k2/1p6/6p1/1P6/6P1/2K5/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-pawn-contacts-01",
+          "family": "endgame-v1-rook-pawn-contacts",
+          "split": "train",
+          "name": "rook defense during pawn contacts and breaks / authored start 1",
+          "initial_fen": "7r/6k1/3ppp2/8/3PPP2/8/1K6/R7 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-pawn-contacts-02",
+          "family": "endgame-v1-rook-pawn-contacts",
+          "split": "train",
+          "name": "rook defense during pawn contacts and breaks / authored start 2",
+          "initial_fen": "r7/1k6/8/2ppp3/8/2PPP3/6K1/7R b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-behind-passer-01",
+          "family": "endgame-v1-rook-behind-passer",
+          "split": "train",
+          "name": "rook placement behind distant passed pawns / authored start 1",
+          "initial_fen": "7r/8/5k1p/P5p1/5P2/5K2/8/R7 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-behind-passer-02",
+          "family": "endgame-v1-rook-behind-passer",
+          "split": "train",
+          "name": "rook placement behind distant passed pawns / authored start 2",
+          "initial_fen": "1r6/8/2k5/5p2/6Pp/1PK5/7R/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-king-cutoff-01",
+          "family": "endgame-v1-rook-king-cutoff",
+          "split": "train",
+          "name": "rook cutoff of the defending king / authored start 1",
+          "initial_fen": "7r/8/5pkp/3R4/4P3/4K3/8/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-king-cutoff-02",
+          "family": "endgame-v1-rook-king-cutoff",
+          "split": "train",
+          "name": "rook cutoff of the defending king / authored start 2",
+          "initial_fen": "8/8/3k4/3p4/4r3/PKP5/8/R7 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-activity-01",
+          "family": "endgame-v1-rook-activity",
+          "split": "train",
+          "name": "active rook versus passive pawn defense / authored start 1",
+          "initial_fen": "r7/6k1/5p1p/2R5/8/5PP1/7K/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-activity-02",
+          "family": "endgame-v1-rook-activity",
+          "split": "train",
+          "name": "active rook versus passive pawn defense / authored start 2",
+          "initial_fen": "8/k7/1pp5/8/5r2/P1P5/1K6/6R1 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-pawn-race-01",
+          "family": "endgame-v1-rook-pawn-race",
+          "split": "train",
+          "name": "rooks stopping opposing pawn races / authored start 1",
+          "initial_fen": "r7/5k2/8/P7/7p/8/4K3/7R w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-pawn-race-02",
+          "family": "endgame-v1-rook-pawn-race",
+          "split": "train",
+          "name": "rooks stopping opposing pawn races / authored start 2",
+          "initial_fen": "6r1/3k4/8/8/1p4P1/8/2K5/1R6 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "knight-blockade-01",
+          "family": "endgame-v1-knight-blockade",
+          "split": "train",
+          "name": "knight blockade and king penetration / authored start 1",
+          "initial_fen": "8/6k1/4n2p/5p2/1P1N4/2K2P2/8/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "knight-blockade-02",
+          "family": "endgame-v1-knight-blockade",
+          "split": "train",
+          "name": "knight blockade and king penetration / authored start 2",
+          "initial_fen": "8/8/1k6/p3p3/2n5/2P3P1/3N1K2/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "bishop-pawn-chain-01",
+          "family": "endgame-v1-bishop-pawn-chain",
+          "split": "train",
+          "name": "bishop mobility behind pawn chains / authored start 1",
+          "initial_fen": "8/8/3b2k1/2p1Pp2/3P4/4K3/2B5/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "bishop-pawn-chain-02",
+          "family": "endgame-v1-bishop-pawn-chain",
+          "split": "train",
+          "name": "bishop mobility behind pawn chains / authored start 2",
+          "initial_fen": "8/4b3/3k4/2p5/1P1p4/4P3/1K6/5B2 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "loose-rook-01",
+          "family": "endgame-v1-loose-rook",
+          "split": "train",
+          "name": "undefended rooks and pawn attack tempos / authored start 1",
+          "initial_fen": "8/8/2r2k2/2pp4/5P2/4K1P1/2R5/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "loose-rook-02",
+          "family": "endgame-v1-loose-rook",
+          "split": "train",
+          "name": "undefended rooks and pawn attack tempos / authored start 2",
+          "initial_fen": "8/8/5k2/5pp1/P2r4/1KP5/4R3/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-minor-01",
+          "family": "endgame-v1-rook-minor",
+          "split": "train",
+          "name": "rook versus minor piece coordination / authored start 1",
+          "initial_fen": "8/8/2n2k2/1p4p1/3P4/4KP2/8/1R6 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-minor-02",
+          "family": "endgame-v1-rook-minor",
+          "split": "train",
+          "name": "rook versus minor piece coordination / authored start 2",
+          "initial_fen": "7r/8/4k1p1/3p4/1P6/2K1PN2/8/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "loose-minor-01",
+          "family": "endgame-v1-loose-minor",
+          "split": "train",
+          "name": "undefended minor pieces and pawn attacks / authored start 1",
+          "initial_fen": "8/6k1/2b2p1p/8/2PN4/5P2/6K1/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "loose-minor-02",
+          "family": "endgame-v1-loose-minor",
+          "split": "train",
+          "name": "undefended minor pieces and pawn attacks / authored start 2",
+          "initial_fen": "8/5k2/8/3pn2p/8/2PB2P1/1K6/8 b - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-wing-pressure-01",
+          "family": "endgame-v1-rook-wing-pressure",
+          "split": "train",
+          "name": "active rooks and wing pawn pressure / authored start 1",
+          "initial_fen": "8/6k1/1p5r/7p/8/1R3PP1/6K1/8 w - - 0 1",
+          "moves": []
+        },
+        {
+          "id": "rook-wing-pressure-02",
+          "family": "endgame-v1-rook-wing-pressure",
+          "split": "train",
+          "name": "active rooks and wing pawn pressure / authored start 2",
+          "initial_fen": "8/5k2/r3p3/6p1/8/P1P5/1K2R3/8 b - - 0 1",
+          "moves": []
+        }
+      ]
+    }
+  },
+  "label_policy": {
+    "teacher": "own Regicide exact cp, side-to-move perspective; no mate conversion",
+    "outcome": "completed adjudicated games only; side-to-move perspective",
+    "draws": "claim every available current or announced-next-move draw",
+    "sampling": "actual-ply-block-alternating-offset-v2; post-opening+random augmentation; at most one actual position per N-ply block; offsets alternate 0/1 for even N, otherwise zero; root check/claim/terminal excluded",
+    "sampling_turns": "real legal game histories only; no synthetic turn flips or copied/sign-flipped teacher labels",
+    "teacher_context": "fresh logical UCI game per query; full history; no time budget",
+    "known_limit": "teacher imitates existing engine; outcome is small self-play evidence, not an independent truth"
+  },
+  "errors": [],
+  "checkpoint_utc": "2026-10-18T17:26:58.576713+00:00",
+  "games_finished": 128,
+  "completed_games": 128,
+  "unfinished_games": 0,
+  "positions": 1877,
+  "positions_by_split": {
+    "train": 1877
+  },
+  "positions_by_turn": {
+    "b": 940,
+    "w": 937
+  },
+  "counts_by_turn": {
+    "train": {
+      "w": 937,
+      "b": 940
+    },
+    "validation": {
+      "w": 0,
+      "b": 0
+    },
+    "test": {
+      "w": 0,
+      "b": 0
+    }
+  },
+  "games_by_split": {
+    "train": 128
+  },
+  "exclusions": {
+    "root_in_check": 285,
+    "teacher_mate_score": 84,
+    "reserved_neural_input": 15,
+    "reserved_canonical_input": 38
+  },
+  "cross_split_exclusions": {
+    "canonical_groups": 0,
+    "neural_feature_groups": 0,
+    "canonical_excluded_positions": 0,
+    "neural_feature_excluded_positions": 0,
+    "excluded_positions": 0,
+    "policy": "exclude every occurrence of cross-split canonical positions or exact neural inputs from every split; never reassign families",
+    "neural_feature_key": "sorted channel*64+square; channels own PNBRQK then opponent PNBRQK; black turn square XOR 56; no rights/en-passant/clocks"
+  },
+  "files_sha256": {
+    "games.jsonl": "621d1636521ec5d2079712f3767cee7f558998ab6112f9034798e768faee48e9",
+    "positions.jsonl": "2f0c13a98fff979ad8455dc70324a9af12ad95f08aac46f492d87bd5b8af1738",
+    "games.pgn": "9a5185acaf193f764a0bba12d5c103488e7c2f8ef34834bdc936d0b316ba9617"
+  },
+  "finished_utc": "2026-10-18T17:26:54.993935+00:00",
+  "endgame": {
+    "schema": "regicide.endgame.collection.v1",
+    "seed_definition": {
+      "schema": "regicide.endgame.seeds.v1",
+      "provenance": "Forty-eight individually specified legal FEN placements authored for Regicide. No external games, engine, tablebase, downloaded position, reserved loss or reserved score used to construct these boards. Both starting turns have separately specified boards; no turn-swapped or sign-flipped labels.",
+      "split_policy": "Family assignments fixed before games or labels. Sixteen train, four validation and four test families. New heldouts supplement and never replace the immutable bootstrap holdouts.",
+      "scope": "Constructed endgame distribution, not a claim about normal-game frequency or verified theoretical WDL.",
+      "families": [
+        {
+          "id": "near-opposition",
+          "split": "train",
+          "theme": "pawn opposition and king access",
+          "starts": [
+            "8/8/3pkp2/8/8/3PKP2/8/8 w - - 0 1",
+            "8/8/3kp3/2p5/4P3/2PK4/8/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-checking-distance",
+          "split": "train",
+          "theme": "rook checking distance and king routes",
+          "starts": [
+            "8/7r/5k1p/4p3/2P5/4K1P1/R7/8 w - - 0 1",
+            "8/1r6/2k3p1/1p6/7P/4PK2/7R/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "outside-passer",
+          "split": "train",
+          "theme": "outside passed pawn and king diversion",
+          "starts": [
+            "8/8/3kpp2/8/P2KP3/8/8/8 w - - 0 1",
+            "8/8/4k3/1p2p3/6P1/4KP2/8/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "connected-passers",
+          "split": "train",
+          "theme": "connected passed pawns and king support",
+          "starts": [
+            "8/8/5kpp/8/3PP3/2K5/8/8 w - - 0 1",
+            "8/8/2k5/4pp2/PP6/5K2/8/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "split-pawn-race",
+          "split": "train",
+          "theme": "opposite-wing pawn races",
+          "starts": [
+            "8/6k1/p6p/8/P6P/8/1K6/8 w - - 0 1",
+            "8/5k2/1p6/6p1/1P6/6P1/2K5/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-pawn-contacts",
+          "split": "train",
+          "theme": "rook defense during pawn contacts and breaks",
+          "starts": [
+            "7r/6k1/3ppp2/8/3PPP2/8/1K6/R7 w - - 0 1",
+            "r7/1k6/8/2ppp3/8/2PPP3/6K1/7R b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-behind-passer",
+          "split": "train",
+          "theme": "rook placement behind distant passed pawns",
+          "starts": [
+            "7r/8/5k1p/P5p1/5P2/5K2/8/R7 w - - 0 1",
+            "1r6/8/2k5/5p2/6Pp/1PK5/7R/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-king-cutoff",
+          "split": "train",
+          "theme": "rook cutoff of the defending king",
+          "starts": [
+            "7r/8/5pkp/3R4/4P3/4K3/8/8 w - - 0 1",
+            "8/8/3k4/3p4/4r3/PKP5/8/R7 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-activity",
+          "split": "train",
+          "theme": "active rook versus passive pawn defense",
+          "starts": [
+            "r7/6k1/5p1p/2R5/8/5PP1/7K/8 w - - 0 1",
+            "8/k7/1pp5/8/5r2/P1P5/1K6/6R1 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-pawn-race",
+          "split": "train",
+          "theme": "rooks stopping opposing pawn races",
+          "starts": [
+            "r7/5k2/8/P7/7p/8/4K3/7R w - - 0 1",
+            "6r1/3k4/8/8/1p4P1/8/2K5/1R6 b - - 0 1"
+          ]
+        },
+        {
+          "id": "knight-blockade",
+          "split": "train",
+          "theme": "knight blockade and king penetration",
+          "starts": [
+            "8/6k1/4n2p/5p2/1P1N4/2K2P2/8/8 w - - 0 1",
+            "8/8/1k6/p3p3/2n5/2P3P1/3N1K2/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "bishop-pawn-chain",
+          "split": "train",
+          "theme": "bishop mobility behind pawn chains",
+          "starts": [
+            "8/8/3b2k1/2p1Pp2/3P4/4K3/2B5/8 w - - 0 1",
+            "8/4b3/3k4/2p5/1P1p4/4P3/1K6/5B2 b - - 0 1"
+          ]
+        },
+        {
+          "id": "loose-rook",
+          "split": "train",
+          "theme": "undefended rooks and pawn attack tempos",
+          "starts": [
+            "8/8/2r2k2/2pp4/5P2/4K1P1/2R5/8 w - - 0 1",
+            "8/8/5k2/5pp1/P2r4/1KP5/4R3/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-minor",
+          "split": "train",
+          "theme": "rook versus minor piece coordination",
+          "starts": [
+            "8/8/2n2k2/1p4p1/3P4/4KP2/8/1R6 w - - 0 1",
+            "7r/8/4k1p1/3p4/1P6/2K1PN2/8/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "loose-minor",
+          "split": "train",
+          "theme": "undefended minor pieces and pawn attacks",
+          "starts": [
+            "8/6k1/2b2p1p/8/2PN4/5P2/6K1/8 w - - 0 1",
+            "8/5k2/8/3pn2p/8/2PB2P1/1K6/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-wing-pressure",
+          "split": "train",
+          "theme": "active rooks and wing pawn pressure",
+          "starts": [
+            "8/6k1/1p5r/7p/8/1R3PP1/6K1/8 w - - 0 1",
+            "8/5k2/r3p3/6p1/8/P1P5/1K2R3/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "defended-passer",
+          "split": "validation",
+          "theme": "defended passer with separated king routes",
+          "starts": [
+            "8/5k2/5pp1/2P5/1K1P4/8/8/8 w - - 0 1",
+            "8/8/8/2k1p3/3p4/PP6/5K2/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-seventh",
+          "split": "validation",
+          "theme": "rook on seventh rank with asymmetric pawns",
+          "starts": [
+            "5r1k/1R6/p6p/8/6P1/8/5P2/6K1 w - - 0 1",
+            "5k2/8/4p1p1/8/2r5/1P1P4/K7/4R3 b - - 0 1"
+          ]
+        },
+        {
+          "id": "minor-color-complex",
+          "split": "validation",
+          "theme": "bishop versus knight on distant color complexes",
+          "starts": [
+            "8/5k2/2n5/5p1p/1P2P3/4B3/2K5/8 w - - 0 1",
+            "8/1k6/5bp1/3p4/P7/2P5/4NK2/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "queen-supported-passer",
+          "split": "validation",
+          "theme": "queen support of advanced passed pawn",
+          "starts": [
+            "7k/4q3/6p1/1P6/2Q5/8/K7/8 w - - 0 1",
+            "8/1k6/8/5q2/p7/2P5/3Q4/6K1 b - - 0 1"
+          ]
+        },
+        {
+          "id": "king-route-tempo",
+          "split": "test",
+          "theme": "king route and pawn reserve tempo",
+          "starts": [
+            "8/4k3/1p3p2/8/5P2/1P1K3P/8/8 w - - 0 1",
+            "8/8/2k3p1/p3p3/8/P2P4/4K3/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "rook-connected",
+          "split": "test",
+          "theme": "rook-supported connected passed pawns",
+          "starts": [
+            "2r5/1k6/p7/3PP3/8/8/5K2/7R w - - 0 1",
+            "r7/6k1/8/8/4pp2/1P6/2K5/3R4 b - - 0 1"
+          ]
+        },
+        {
+          "id": "knight-pawn-tactics",
+          "split": "test",
+          "theme": "knight forks during pawn conversion",
+          "starts": [
+            "8/5k2/4p1n1/3N3p/P1P5/1K6/8/8 w - - 0 1",
+            "8/2k5/3p4/pn6/7P/4NP2/6K1/8 b - - 0 1"
+          ]
+        },
+        {
+          "id": "bishop-pawn-deflection",
+          "split": "test",
+          "theme": "bishop defense and pawn deflection",
+          "starts": [
+            "8/6k1/5b1p/4p3/2P3P1/1B6/3K4/8 w - - 0 1",
+            "8/8/1k6/2p3p1/P3b3/4P3/5K2/3B4 b - - 0 1"
+          ]
+        }
+      ]
+    },
+    "seed_file_sha256": "010c11d726f8d7677195c288842139312d555c133dff470f15744e5e863a20cb",
+    "wrapper_sha256": "19473bb50c1259170081ebd308d4af1791ddbfc6fa50e30f343b5c0b57860c25",
+    "selected_split": "train",
+    "reserved_input_inventory": {
+      "sources": [
+        {
+          "path": "<research>\\tests\\data\\learning_arena_openings_v1.json",
+          "sha256": "78e7e6aca52cee0bdcb65e938d0d5a94236b30a8790b283227ff9d435e51e4f0",
+          "kind": "reserved_opening_input_inventory"
+        },
+        {
+          "path": "<research>\\docs\\checks\\2026-10-19-neural-cost-quality\\run\\quality\\manifest.json",
+          "sha256": "5435241d8569e4e9dc8374d4a5ecc80da6ee0f18637aacece64f21c34e04abf0",
+          "kind": "dataset_manifest",
+          "heldout_only": false
+        },
+        {
+          "path": "<research>\\docs\\checks\\2026-10-19-neural-cost-quality\\run\\quality\\games.jsonl",
+          "sha256": "d16611a868ed3d5964f2d2d403aadb84759f7e18bc161d9283d97ee5dcb4a322",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000005-1cf7521bd5dc\\endgame-heldout\\manifest.json",
+          "sha256": "c651391348a6206b65c80fb2f94b299dfd61ca1154fd2c4285a9dcbe8a75db96",
+          "kind": "dataset_manifest",
+          "heldout_only": false
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000005-1cf7521bd5dc\\endgame-heldout\\games.jsonl",
+          "sha256": "1a040ccce01e0194e7c8e4602c47e7c46ad07a2b07741cdff96efbc512120f3c",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\bootstrap\\manifest.json",
+          "sha256": "9cdf5ad763321e91b390eb23e51147e1e4b98f28f4d9436a5467aa44fd63c8af",
+          "kind": "dataset_manifest",
+          "heldout_only": true
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\bootstrap\\games.jsonl",
+          "sha256": "9ec6cc4d75aa2a1322974543d9df66a9c7299895134cbd64152e4d2d4ffa1cc5",
+          "kind": "complete_trajectory_inventory",
+          "splits": [
+            "test",
+            "validation"
+          ]
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000001-88bbee0e1ae3\\arena\\arena.json",
+          "sha256": "d04be086d01674031ab56e730fb10fa29384f99d33929f35d60bc296730c5a72",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000002-95a3500d5501\\arena\\arena.json",
+          "sha256": "ffbe3e44c0825189903eba7f1894864cd42b266b7577b81d59e8f08094316ecc",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000003-2daceeed6656\\arena\\arena.json",
+          "sha256": "db2ddf7b6190910ad4fe1f8f50bd69ac111c56e7be07f345fe57360913f09dd4",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        },
+        {
+          "path": "<research>\\build\\learning-cycle\\runs\\000004-01d14f9c73af\\arena\\arena.json",
+          "sha256": "654ed8d046a2c5a5c1ccfad4abb67713f107e276f9c2375e47a1408eee6bd50e",
+          "kind": "complete_trajectory_inventory",
+          "splits": "all"
+        }
+      ],
+      "canonical_keys": 25326,
+      "neural_keys": 25312,
+      "policy": "membership exclusion before teacher sampling; no reserved score, result or move is a training target"
+    },
+    "full_trajectory_split_exclusion": {
+      "crossed_canonical_trajectory_keys": 0,
+      "crossed_neural_trajectory_keys": 0,
+      "excluded_samples": {},
+      "policy": "exclude every sample intersecting any opposite-split complete trajectory; never change family splits"
+    },
+    "scope": "independent constructed starting families; actual legal self-play with actual rule outcomes"
+  }
+}
