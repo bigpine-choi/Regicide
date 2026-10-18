@@ -12,7 +12,7 @@ $buildDir = Join-Path $repoRoot $BuildDirectory
 New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 $batchFile = Join-Path $buildDir 'compile-profile.cmd'
 # Every source has its own object. Explicit /GL- disables whole-program
-# optimization, preserving real repeated calls into both evaluation versions.
+# optimization, preserving real repeated calls into every evaluation version.
 $batch = @"
 @echo off
 chcp 65001 >nul
@@ -25,9 +25,11 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /GL- /Iincl
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /GL- /Iinclude /Itests /c tests\reference_evaluation_v054.cpp /Fo"$buildDir\reference_evaluation_v054.obj"
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /GL- /Iinclude /Itests /c tests\reference_evaluation_v056.cpp /Fo"$buildDir\reference_evaluation_v056.obj"
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /GL- /Iinclude /Itests /c scripts\profile_evaluation.cpp /Fo"$buildDir\profile_evaluation.obj"
 if errorlevel 1 exit /b 1
-link /nologo "$buildDir\profile_evaluation.obj" "$buildDir\board.obj" "$buildDir\evaluation.obj" "$buildDir\reference_evaluation_v054.obj" /OUT:"$buildDir\profile_evaluation.exe"
+link /nologo "$buildDir\profile_evaluation.obj" "$buildDir\board.obj" "$buildDir\evaluation.obj" "$buildDir\reference_evaluation_v054.obj" "$buildDir\reference_evaluation_v056.obj" /OUT:"$buildDir\profile_evaluation.exe"
 exit /b %errorlevel%
 "@
 [System.IO.File]::WriteAllText($batchFile, $batch, [System.Text.UTF8Encoding]::new($false))

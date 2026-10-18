@@ -29,3 +29,5 @@ v0.5.6은 폰이 어디까지 전진했는지에 더해, 앞길을 막을 적 �
 기본 켬이다. UCI `setoption name UsePawnStructure value false` 또는 콘솔 `search 3 --no-pawn-structure`로 새 구조 항목만 끌 수 있다. C++에서는 `evaluate_position(board, shield, false)` 또는 `SearchOptions::pawn_structure=false`다. `UsePawnShield`와 독립이며 `UsePositionalEvaluation=false`에서는 두 항목을 사용하지 않는다.
 
 실제 대국과 추천 수 모두 자체 Regicide의 새 평가를 사용한다. [개발 계획](experiments/2026-10-18-pawn-structure-plan.md)과 [검증 기록](experiments/2026-10-18-pawn-structure.md)에 수행한 검사·비용·미검증 기력을 구분한다.
+
+v0.5.7은 위 점수와 설정을 그대로 유지하며 폰 파일의 반복 계산을 줄인다. [동값 최적화 기록](experiments/2026-10-18-pawn-opt.md)에 수정 전 함수·독립 참조와의 점수 대조 및 비용 측정을 남긴다.

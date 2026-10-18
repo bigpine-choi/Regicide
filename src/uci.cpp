@@ -125,7 +125,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.5.6");
+            send("id name Regicide 0.5.7");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");

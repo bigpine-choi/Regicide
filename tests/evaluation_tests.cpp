@@ -1,5 +1,6 @@
 #include "regicide/evaluation.hpp"
 #include "reference_evaluation_v054.hpp"
+#include "reference_evaluation_v056.hpp"
 
 #include <algorithm>
 #include <array>
@@ -134,6 +135,10 @@ void compare_release_evaluation(const Board& board) {
         expect(evaluate_position(board, enabled, false) == evaluate_position_v054(board, enabled),
                "v0.5.4 oracle mismatch (shield " + std::string(enabled ? "on): " : "off): ") +
                    board.fen());
+        for (bool structure : {false, true})
+            expect(evaluate_position(board, enabled, structure) ==
+                       evaluate_position_v056(board, enabled, structure),
+                   "v0.5.6 oracle mismatch in the preserved release corpus: " + board.fen());
     }
     expect(board == saved, "release oracle comparison changed position, hashes, or history");
 }
@@ -341,6 +346,8 @@ void compare_structure(const Board& board) {
         for (bool structure : {false, true}) {
             expect(evaluate_position(board, shield, structure) == scalar_position(board, shield, structure),
                    "independent scalar pawn oracle mismatch: " + board.fen());
+            expect(evaluate_position(board, shield, structure) == evaluate_position_v056(board, shield, structure),
+                   "frozen v0.5.6 oracle mismatch: " + board.fen());
         }
     }
     expect(evaluate_position(board) == evaluate_position(board, true, true),
@@ -365,6 +372,23 @@ Board pawn_fixture(std::initializer_list<std::pair<const char*, char>> pieces,
     }
     expect(remaining == 0, "pawn fixture did not supply requested phase");
     return Board(fen(position));
+}
+
+// Input generation only: place kings on empty home-rank squares accepted by
+// the strict FEN parser. No evaluator internals or derived scores are used.
+Board legal_pawn_layout(const Position& input) {
+    for (int white_file = 0; white_file < 8; ++white_file) {
+        if (input.squares[white_file] != '.') continue;
+        for (int black_file = 7; black_file >= 0; --black_file) {
+            if (input.squares[56 + black_file] != '.') continue;
+            Position position = input;
+            position.squares[white_file] = 'K';
+            position.squares[56 + black_file] = 'k';
+            try { return Board(fen(position)); }
+            catch (const std::invalid_argument&) {}
+        }
+    }
+    throw std::runtime_error("no legal kings for pawn-mask corpus fixture");
 }
 } // namespace
 
@@ -800,6 +824,89 @@ int main() {
         sequence("4k3/P7/8/8/8/8/7p/4K3 w - - 0 1",
                  {"a7a8q", "e8f7", "a8h8", "h2h1n"});
         sequence("1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1", {"a7b8q", "e8f7"});
+    });
+    test("frozen v0.5.6 matches all file-presence patterns with enemy and blocked-pawn inputs", [] {
+        std::array<bool, 256> coverage{};
+        for (unsigned pattern = 0; pattern < coverage.size(); ++pattern) {
+            Position position;
+            position.squares.fill('.');
+            for (int file = 0; file < 8; ++file) {
+                if (!(pattern & (1U << file))) continue;
+                const int rank = 1 + (file + static_cast<int>(pattern)) % 6;
+                position.squares[rank * 8 + file] = 'P';
+            }
+            const auto unopposed = legal_pawn_layout(position);
+            compare_structure(unopposed);
+            compare_structure(reflected(unopposed, true));
+            coverage[pattern] = true;
+
+            Position contested = position;
+            const unsigned enemy_files = ((pattern << 1) | (pattern >> 7)) & 255U;
+            for (int file = 0; file < 8; ++file) {
+                if (!(enemy_files & (1U << file))) continue;
+                int rank = 1 + (file * 5 + static_cast<int>(pattern / 8)) % 6;
+                if (contested.squares[rank * 8 + file] != '.') rank = 1 + rank % 6;
+                contested.squares[rank * 8 + file] = 'p';
+            }
+            const auto opposition = legal_pawn_layout(contested);
+            compare_structure(opposition);
+            compare_structure(reflected(opposition, true));
+
+            // Occupancy is independent of pawn attacks. Force a same-color
+            // or enemy piece directly in front of one pawn, including on a
+            // promotion square, without asserting implementation details.
+            for (int from = 8; from < 56; ++from) {
+                if (position.squares[from] != 'P' || position.squares[from + 8] != '.') continue;
+                position.squares[from + 8] = pattern % 2 ? 'N' : 'n';
+                break;
+            }
+            const auto blocked = legal_pawn_layout(position);
+            compare_structure(blocked);
+            compare_structure(reflected(blocked, true));
+        }
+        for (bool covered : coverage) expect(covered, "a legal file-presence pattern was not evaluated");
+    });
+    test("frozen v0.5.6 matches every legal single-file rank mask at edges and center", [] {
+        int legal_masks = 0;
+        for (unsigned mask = 0; mask < 256; ++mask) {
+            // The strict rules parser forbids pawns on ranks one/eight, so
+            // only 64 of the abstract 256 rank masks are valid board inputs.
+            // We evaluate every one, rather than bypassing board validation
+            // or adding a production-only test hook for impossible masks.
+            if (mask & 129U) continue;
+            ++legal_masks;
+            for (int file : {0, 3, 7}) {
+                for (int enemy_case = 0; enemy_case < 4; ++enemy_case) {
+                    for (bool neighbor : {false, true}) for (int blocker = 0; blocker < 3; ++blocker) {
+                        Position position;
+                        position.squares.fill('.');
+                        int front_rank = 0;
+                        for (int rank = 1; rank <= 6; ++rank) {
+                            if (!(mask & (1U << rank))) continue;
+                            position.squares[rank * 8 + file] = 'P';
+                            front_rank = rank;
+                        }
+                        const int adjacent = file == 7 ? 6 : file + 1;
+                        if (enemy_case) {
+                            // Ahead / level / behind at an adjacent file.
+                            // Edge ranks naturally clamp to legal pawn ranks.
+                            const int enemy_rank = std::clamp(front_rank + 2 - enemy_case, 1, 6);
+                            position.squares[enemy_rank * 8 + adjacent] = 'p';
+                        }
+                        if (neighbor) {
+                            const int rank = position.squares[8 + adjacent] == '.' ? 1 : 2;
+                            position.squares[rank * 8 + adjacent] = 'P';
+                        }
+                        if (blocker && front_rank)
+                            position.squares[(front_rank + 1) * 8 + file] = blocker == 1 ? 'N' : 'n';
+                        const auto board = legal_pawn_layout(position);
+                        compare_structure(board);
+                        compare_structure(reflected(board, true));
+                    }
+                }
+            }
+        }
+        expect(legal_masks == 64, "the strict-FEN rank-mask corpus is incomplete");
     });
     std::cout << oracle_positions << " frozen v0.5.4 oracle positions (each shield on/off)\n";
     std::cout << structure_positions << " independent pawn-structure oracle positions (all option combinations)\n";

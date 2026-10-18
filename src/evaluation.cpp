@@ -61,68 +61,91 @@ struct ShieldInfo {
     int phase = 0;
 };
 
-struct PawnMaskInfo {
-    unsigned char reversed = 0;
-    unsigned char count = 0;
-    unsigned char front_rank = 0; // Valid only for a nonzero mask.
-};
-
-constexpr auto make_pawn_masks() {
-    std::array<PawnMaskInfo, 256> result{};
-    for (unsigned mask = 0; mask < result.size(); ++mask) {
-        for (unsigned rank = 0; rank < 8; ++rank) {
-            if (!(mask & (1U << rank))) continue;
-            result[mask].reversed |= static_cast<unsigned char>(1U << (7 - rank));
-            ++result[mask].count;
-            result[mask].front_rank = static_cast<unsigned char>(rank);
-        }
-    }
-    return result;
-}
-
-constexpr auto pawn_masks = make_pawn_masks();
-constexpr std::array<int, 8> passed_middlegame{0, 0, 5, 10, 20, 35, 60, 0};
-constexpr std::array<int, 8> passed_endgame{0, 0, 10, 20, 40, 70, 120, 0};
-
 struct PawnScore {
     int middlegame = 0;
     int endgame = 0;
 };
 
-PawnScore pawn_structure_score(const Position& position, const ShieldInfo& own,
-                               const ShieldInfo& enemy, bool is_white) {
+struct PawnMaskInfo {
+    PawnScore doubled;
+    PawnScore isolated;
+    unsigned passed_middlegame = 0;
+    unsigned passed_endgame = 0;
+    unsigned enemy_ahead = 0;
+    int next_white_rank = 0;
+};
+
+constexpr std::array<int, 8> passed_middlegame{0, 0, 5, 10, 20, 35, 60, 0};
+constexpr std::array<int, 8> passed_endgame{0, 0, 10, 20, 40, 70, 120, 0};
+
+constexpr auto make_pawn_masks() {
+    std::array<PawnMaskInfo, 256> result{};
+    for (unsigned mask = 1; mask < result.size(); ++mask) {
+        int count = 0, front = 0;
+        for (int rank = 0; rank < 8; ++rank) {
+            if (!(mask & (1U << rank))) continue;
+            ++count;
+            front = rank;
+        }
+        auto& info = result[mask];
+        info.doubled = {-(count - 1) * 8, -(count - 1) * 12};
+        info.isolated = {-count * 10, -count * 12};
+        info.passed_middlegame = static_cast<unsigned>(passed_middlegame[front]);
+        info.passed_endgame = static_cast<unsigned>(passed_endgame[front]);
+        // In the opponent's coordinates, ranks below 7-front are ahead of us.
+        info.enemy_ahead = (1U << (7 - front)) - 1;
+        info.next_white_rank = (front + 1) * 8;
+    }
+    return result;
+}
+
+constexpr auto pawn_masks = make_pawn_masks();
+
+template<bool is_white>
+PawnScore pawn_file_score(const Position& position, unsigned mask, unsigned adjacent,
+                          unsigned opposing, int file) {
+    if (!mask) return {};
+    const auto& info = pawn_masks[mask];
+    PawnScore result = info.doubled;
+    if (!adjacent) {
+        result.middlegame += info.isolated.middlegame;
+        result.endgame += info.isolated.endgame;
+    }
+    // Only the foremost pawn can score. Zero bonuses include ranks 0, 1 and 7,
+    // so no forward-square lookup is needed or made for a terminal rank.
+    if (!info.passed_endgame || (opposing & info.enemy_ahead)) return result;
+    const int next_rank = is_white ? info.next_white_rank : 56 - info.next_white_rank;
+    const unsigned blocked = static_cast<unsigned>(position.squares[next_rank + file] != '.');
+    // The nonnegative bonuses make a one-bit shift exactly the old /2 rule.
+    result.middlegame += static_cast<int>(info.passed_middlegame >> blocked);
+    result.endgame += static_cast<int>(info.passed_endgame >> blocked);
+    return result;
+}
+
+PawnScore pawn_structure_score(const Position& position,
+                               const std::array<ShieldInfo, 2>& shields) {
     PawnScore result;
     for (int file = 0; file < 8; ++file) {
-        const unsigned mask = own.pawn_ranks[file];
-        if (!mask) continue;
-        const auto& info = pawn_masks[mask];
-        const int doubled = info.count - 1;
-        const bool isolated = (file == 0 || !own.pawn_ranks[file - 1]) &&
-                              (file == 7 || !own.pawn_ranks[file + 1]);
-        result.middlegame -= doubled * 8 + (isolated ? info.count * 10 : 0);
-        result.endgame -= doubled * 12 + (isolated ? info.count * 12 : 0);
-
-        // Enemy masks use the enemy's perspective; reverse their ranks before
-        // comparing them with this pawn. Pawns level with or behind it do not
-        // stop it being passed. Only the foremost own pawn per file can score.
-        unsigned opposing = pawn_masks[enemy.pawn_ranks[file]].reversed;
-        if (file > 0) opposing |= pawn_masks[enemy.pawn_ranks[file - 1]].reversed;
-        if (file < 7) opposing |= pawn_masks[enemy.pawn_ranks[file + 1]].reversed;
-        const int rank = info.front_rank;
-        if (opposing >> (rank + 1)) continue;
-        int middlegame = passed_middlegame[rank];
-        int endgame = passed_endgame[rank];
-        // A blocked passed pawn retains half its bonus. This tests occupancy,
-        // not enemy attacks, king distance, or a guaranteed path to promotion.
-        if (rank < 7) {
-            const int next_rank = is_white ? rank + 1 : 6 - rank;
-            if (position.squares[next_rank * 8 + file] != '.') {
-                middlegame /= 2;
-                endgame /= 2;
-            }
+        const unsigned white_mask = shields[0].pawn_ranks[file];
+        const unsigned black_mask = shields[1].pawn_ranks[file];
+        if (!(white_mask | black_mask)) continue;
+        unsigned white_adjacent = 0, black_adjacent = 0;
+        if (file > 0) {
+            white_adjacent = shields[0].pawn_ranks[file - 1];
+            black_adjacent = shields[1].pawn_ranks[file - 1];
         }
-        result.middlegame += middlegame;
-        result.endgame += endgame;
+        if (file < 7) {
+            white_adjacent |= shields[0].pawn_ranks[file + 1];
+            black_adjacent |= shields[1].pawn_ranks[file + 1];
+        }
+        // One adjacency union serves both friendly isolation and enemy passage
+        // checks. Keep enemy ranks in their own coordinates; no reversal table.
+        const auto white = pawn_file_score<true>(position, white_mask, white_adjacent,
+                                                 black_mask | black_adjacent, file);
+        const auto black = pawn_file_score<false>(position, black_mask, black_adjacent,
+                                                  white_mask | white_adjacent, file);
+        result.middlegame += white.middlegame - black.middlegame;
+        result.endgame += white.endgame - black.endgame;
     }
     return result;
 }
@@ -191,9 +214,10 @@ constexpr bool valid_piece_info() {
 }
 
 static_assert(valid_piece_info());
-static_assert(pawn_masks[255].count == 8 && pawn_masks[1].reversed == 128 &&
-              pawn_masks[128].front_rank == 7);
-static_assert(sizeof(piece_info) + sizeof(position_bonuses) + sizeof(pawn_masks) <= 15 * 1024);
+static_assert(pawn_masks[255].doubled.middlegame == -56 &&
+              pawn_masks[1].enemy_ahead == 127 && pawn_masks[128].enemy_ahead == 0);
+static_assert(sizeof(piece_info) + sizeof(position_bonuses) + sizeof(pawn_masks) +
+              sizeof(passed_middlegame) + sizeof(passed_endgame) <= 15 * 1024);
 } // namespace
 
 int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_structure) {
@@ -234,10 +258,9 @@ int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_struc
                       pawn_shield_penalty(shields[0], shields[1].phase);
     }
     if (pawn_structure) {
-        const auto white = pawn_structure_score(position, shields[0], shields[1], true);
-        const auto black = pawn_structure_score(position, shields[1], shields[0], false);
-        middlegame += white.middlegame - black.middlegame;
-        endgame += white.endgame - black.endgame;
+        const auto structure = pawn_structure_score(position, shields);
+        middlegame += structure.middlegame;
+        endgame += structure.endgame;
     }
     // Clamp promotions above opening material. Blend the color differences
     // before integer division so reflected positions have exact antisymmetry.

@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.5.6\n"
+            std::cout << "Regicide 0.5.7\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"

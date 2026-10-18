@@ -1,5 +1,6 @@
 #include "regicide/evaluation.hpp"
 #include "reference_evaluation_v054.hpp"
+#include "reference_evaluation_v056.hpp"
 
 #include <algorithm>
 #include <array>
@@ -47,6 +48,10 @@ int current_structure(const regicide::Board& board, bool shield) {
     return regicide::evaluate_position(board, shield, true);
 }
 
+int old_structure(const regicide::Board& board, bool shield) {
+    return regicide::evaluate_position_v056(board, shield, true);
+}
+
 const std::array<Variant, 4> legacy_variants{{
     {"old_off", regicide::evaluate_position_v054, false},
     {"old_on", regicide::evaluate_position_v054, true},
@@ -59,6 +64,12 @@ const std::array<Variant, 4> structure_variants{{
     {"structure_on_shield_off", current_structure, false},
     {"structure_on_shield_on", current_structure, true}
 }};
+const std::array<Variant, 4> optimization_variants{{
+    {"old_v056_shield_off", old_structure, false},
+    {"old_v056_shield_on", old_structure, true},
+    {"new_shield_off", current_structure, false},
+    {"new_shield_on", current_structure, true}
+}};
 constexpr std::array<const char*, 4> legacy_ratio_names{{
     "new_on_over_old_on", "new_off_over_old_off",
     "old_on_over_old_off", "new_on_over_new_off"
@@ -69,12 +80,19 @@ constexpr std::array<const char*, 4> structure_ratio_names{{
     "structure_off_shield_on_over_structure_off_shield_off",
     "structure_on_shield_on_over_structure_on_shield_off"
 }};
+constexpr std::array<const char*, 4> optimization_ratio_names{{
+    "new_shield_on_over_old_v056_shield_on",
+    "new_shield_off_over_old_v056_shield_off",
+    "old_v056_shield_on_over_old_v056_shield_off",
+    "new_shield_on_over_new_shield_off"
+}};
 
 struct Options {
     std::string fen_file;
     std::string output;
     bool verify_only = false;
     bool compare_pawn_structure = false;
+    bool compare_pawn_optimization = false;
     std::uint64_t calls = 0;
     double target_ms = 150.0;
 };
@@ -100,6 +118,10 @@ Options parse_options(int argc, char** argv) {
             result.compare_pawn_structure = true;
             continue;
         }
+        if (argument == "--compare-pawn-optimization") {
+            result.compare_pawn_optimization = true;
+            continue;
+        }
         if (i + 1 == argc) throw std::invalid_argument("Missing value for " + argument);
         const std::string value = argv[++i];
         if (argument == "--fen-file") result.fen_file = value;
@@ -120,6 +142,8 @@ Options parse_options(int argc, char** argv) {
             }
         } else throw std::invalid_argument("Unknown option " + argument);
     }
+    if (result.compare_pawn_structure && result.compare_pawn_optimization)
+        throw std::invalid_argument("Choose only one comparison mode");
     if (result.fen_file.empty()) throw std::invalid_argument("--fen-file is required");
     return result;
 }
@@ -180,8 +204,10 @@ int run(const Options& options) {
     if (!options.output.empty() && std::filesystem::exists(options.output))
         throw std::runtime_error("Output already exists; choose a new output path");
     const auto boards = load_boards(options.fen_file);
-    const auto& variants = options.compare_pawn_structure ? structure_variants : legacy_variants;
-    const auto& ratio_names = options.compare_pawn_structure ? structure_ratio_names : legacy_ratio_names;
+    const auto& variants = options.compare_pawn_optimization ? optimization_variants :
+                           options.compare_pawn_structure ? structure_variants : legacy_variants;
+    const auto& ratio_names = options.compare_pawn_optimization ? optimization_ratio_names :
+                              options.compare_pawn_structure ? structure_ratio_names : legacy_ratio_names;
     std::ostringstream mismatches;
     std::size_t mismatch_count = 0;
     for (std::size_t i = 0; i < boards.size(); ++i) {
@@ -195,18 +221,43 @@ int run(const Options& options) {
             }
         }
     }
+    std::ostringstream optimization_mismatches;
+    std::size_t optimization_mismatch_count = 0;
+    if (options.compare_pawn_optimization) {
+        // Untimed per-position checks, including structure OFF, detect value
+        // changes that a summed checksum could accidentally conceal.
+        for (std::size_t i = 0; i < boards.size(); ++i) {
+            for (const bool shield : {false, true}) for (const bool structure : {false, true}) {
+                const int before = regicide::evaluate_position_v056(boards[i], shield, structure);
+                const int after = regicide::evaluate_position(boards[i], shield, structure);
+                if (before != after) {
+                    if (optimization_mismatch_count++) optimization_mismatches << ',';
+                    optimization_mismatches << "{\"position\":" << i << ",\"shield\":"
+                        << (shield ? "true" : "false") << ",\"structure\":"
+                        << (structure ? "true" : "false") << ",\"old\":" << before
+                        << ",\"new\":" << after << '}';
+                }
+            }
+        }
+    }
     std::ostringstream output;
     output << std::setprecision(12);
     output << "{\n  \"schema\":\"regicide-evaluation-profile-v1\",\n"
-           << "  \"mode\":\"" << (options.compare_pawn_structure ? "pawn_structure_" : "")
+           << "  \"mode\":\"" << (options.compare_pawn_optimization ? "pawn_optimization_" :
+                                     options.compare_pawn_structure ? "pawn_structure_" : "")
            << (options.verify_only ? "verify" : "profile") << "\",\n"
            << "  \"positions\":" << boards.size() << ",\n"
            << "  \"equivalence\":{\"scope\":\"structure_off_vs_frozen_v054_both_shield_settings\",\"comparisons\":" << boards.size() * 2
            << ",\"mismatch_count\":" << mismatch_count << ",\"mismatches\":[" << mismatches.str() << "]}";
-    if (options.verify_only || mismatch_count != 0) {
+    if (options.compare_pawn_optimization) {
+        output << ",\n  \"optimization_equivalence\":{\"scope\":\"all_four_option_combinations_vs_frozen_v056\",\"comparisons\":"
+               << boards.size() * 4 << ",\"mismatch_count\":" << optimization_mismatch_count
+               << ",\"mismatches\":[" << optimization_mismatches.str() << "]}";
+    }
+    if (options.verify_only || mismatch_count != 0 || optimization_mismatch_count != 0) {
         output << "\n}\n";
         output_json(output.str(), options.output);
-        return mismatch_count == 0 ? 0 : 1;
+        return mismatch_count == 0 && optimization_mismatch_count == 0 ? 0 : 1;
     }
 
     std::array<std::int64_t, 4> warmup_checksums{};
@@ -278,7 +329,8 @@ int run(const Options& options) {
         }
         // Structure ON intentionally changes values; require stable checksums
         // for each variant, never equality between ON and OFF. The original
-        // reference/candidate mode still demands exact cross-variant equality.
+        // reference/candidate modes still demand exact cross-variant equality
+        // for each shield setting, including the structure-ON optimization.
         if (!options.compare_pawn_structure) {
             checksums_match = checksums_match && checksums[0] == checksums[2] && checksums[1] == checksums[3];
         }
