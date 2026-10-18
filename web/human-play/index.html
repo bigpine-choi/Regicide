@@ -12,7 +12,7 @@
 <body>
   <div class="page-shell">
     <header class="page-header">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">♜</span><div><p class="eyebrow">우리의 체스 엔진</p><h1>Regicide <span class="version">v0.5.0</span></h1></div></div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">♜</span><div><p class="eyebrow">우리의 체스 엔진</p><h1>Regicide <span class="version" id="header-engine-version"></span></h1></div></div>
       <span class="local-badge"><span aria-hidden="true"></span><small id="connection-label">내 컴퓨터에서 대국 중</small></span>
     </header>
 
@@ -32,6 +32,11 @@
           <div class="evaluation-reading"><span class="evaluation-title">형세</span><strong id="evaluation-label">분석 대기 중</strong><span id="evaluation-score">—</span></div>
           <p id="evaluation-detail">Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다.</p>
         </div>
+        <section id="hint-panel" class="hint-panel" aria-label="내 다음 수 추천">
+          <div class="hint-heading"><h2>내 다음 수</h2><button id="hint-toggle" class="hint-toggle" type="button" aria-pressed="false" aria-describedby="hint-note" disabled>추천 수: 끔</button></div>
+          <p id="hint-text" class="hint-text" aria-live="polite" aria-atomic="true">켜면 내 차례에 추천 수를 표시합니다.</p>
+          <p id="hint-note" class="hint-note">Regicide 자체 엔진의 추천입니다. 출발 → 도착 칸을 보고 직접 두세요.</p>
+        </section>
         <div class="player-strip"><div class="avatar human-avatar" aria-hidden="true">♙</div><div><p class="player-name">나</p><p class="player-detail" id="human-detail">기물을 누르고 이동할 칸을 눌러주세요.</p></div><span class="player-color" id="human-color">백</span></div>
         <div class="status-panel" aria-live="polite" aria-atomic="true"><span class="status-dot" id="status-dot" aria-hidden="true"></span><div><p id="status-text">체스판을 준비하고 있어요.</p><p id="status-detail">잠시만 기다려주세요.</p></div></div>
         <div class="error-panel" id="error-panel" role="alert" hidden><p id="error-text"></p></div>

@@ -17,6 +17,18 @@
   let renderedMoveCount = -1;
   let evaluation = null;
   let evaluationPollInFlight = false;
+  let hint = null;
+  let hintEnabled = false;
+  let hintPreferenceLoaded = false;
+  let hintEpoch = 0;
+  let hintPollInFlight = false;
+  let hintToggleInFlight = false;
+  let hintToggleDirty = false;
+
+  function clearHint() {
+    hintEpoch++;
+    hint = null;
+  }
 
   function showError(message) {
     errorMessage = message || "";
@@ -48,8 +60,16 @@
   }
 
   function applyState(next) {
-    if (!samePosition(state, next)) evaluation = null;
+    if (!samePosition(state, next)) {
+      evaluation = null;
+      clearHint();
+    }
+    if (!hintPreferenceLoaded) {
+      hintEnabled = next.hint_enabled === true;
+      hintPreferenceLoaded = true;
+    }
     state = next;
+    if (state.result !== "*" || state.error) clearHint();
     if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
     selected = null;
     render();
@@ -141,6 +161,79 @@
     }
   }
 
+  function currentHintMove() {
+    return !closed && !busy && hintEnabled && state?.human_to_move && state.result === "*" && !state.error &&
+      hint?.enabled === true && hint.status === "ready" && samePosition(state, hint) &&
+      (state.legal_moves || []).includes(hint.move) ? hint.move : null;
+  }
+
+  function renderHint() {
+    const button = byId("hint-toggle");
+    button.textContent = `추천 수: ${hintEnabled ? "켬" : "끔"}`;
+    button.setAttribute("aria-pressed", String(hintEnabled));
+    // This setting stays available while the opponent is thinking.
+    button.disabled = !state || closed;
+    const move = currentHintMove();
+    let text = "켜면 내 차례에 추천 수를 표시합니다.";
+    if (closed) text = "대국 프로그램을 종료했습니다.";
+    else if (hintEnabled && state?.result !== "*") text = "대국이 끝났습니다. 새 대국에서 추천을 이어갑니다.";
+    else if (hintEnabled && (state?.error || (samePosition(state, hint) && (hint?.status === "unavailable" || hint?.enabled === false)))) text = "추천 수를 불러오지 못했습니다. 버튼을 껐다 켜서 다시 시도하세요. 대국은 계속할 수 있습니다.";
+    else if (hintEnabled && !state?.human_to_move) text = "내 차례가 되면 추천 수를 찾습니다.";
+    else if (move) {
+      const promotion = move[4] ? ` · ${pieceNames[move[4]]}으로 승격` : "";
+      text = `${hint.san || move} · ${move.slice(0,2)} → ${move.slice(2,4)}${promotion}`;
+    } else if (hintEnabled) text = "다음 수를 생각하고 있어요…";
+    byId("hint-text").textContent = text;
+    byId("hint-panel").classList.toggle("hint-active", Boolean(move));
+  }
+
+  function acceptHint(next, position, epoch) {
+    if (closed || !hintEnabled || epoch !== hintEpoch || !samePosition(state, position) || !samePosition(state, next)) return;
+    hint = next;
+    renderHint();
+    renderBoard();
+  }
+
+  async function pollHint() {
+    if (hintPollInFlight || hintToggleInFlight || closed || !hintEnabled || !state || state.result !== "*" || state.error ||
+      !state.human_to_move || busy) return;
+    hintPollInFlight = true;
+    const epoch = hintEpoch;
+    const position = {game_id:state.game_id, revision:state.revision, fen:state.fen};
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      acceptHint(await request("/api/hint", undefined, controller.signal), position, epoch);
+    } catch (_) {
+      acceptHint({...position, enabled:true, status:"unavailable"}, position, epoch);
+    } finally {
+      clearTimeout(timeout);
+      hintPollInFlight = false;
+    }
+  }
+
+  async function syncHintToggle() {
+    if (hintToggleInFlight || closed) return;
+    hintToggleInFlight = true;
+    try {
+      while (hintToggleDirty && !closed) {
+        hintToggleDirty = false;
+        const enabled = hintEnabled;
+        const epoch = hintEpoch;
+        const position = state && {game_id:state.game_id, revision:state.revision, fen:state.fen};
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        try {
+          const next = await request("/api/hint", {enabled}, controller.signal);
+          acceptHint(next, position, epoch);
+        } catch (_) {
+          acceptHint({...position, enabled:true, status:"unavailable"}, position, epoch);
+        } finally { clearTimeout(timeout); }
+      }
+    } finally { hintToggleInFlight = false; }
+    void pollHint();
+  }
+
   function renderBoard() {
     const blackView = state?.human_color === "black";
     const files = blackView ? "hgfedcba" : "abcdefgh";
@@ -148,6 +241,7 @@
     const legal = state?.legal_moves || [];
     const destinations = new Set(selected ? legal.filter((move) => move.slice(0,2) === selected).map((move) => move.slice(2,4)) : []);
     const lastSquares = state?.last_move ? [state.last_move.slice(0,2), state.last_move.slice(2,4)] : [];
+    const hintMove = currentHintMove();
     const focusedSquare = document.activeElement?.dataset?.square;
     const fragment = document.createDocumentFragment();
     for (const rank of ranks) {
@@ -161,12 +255,14 @@
         if ((file.charCodeAt(0) - 97 + Number(rank)) % 2 === 1) button.classList.add("dark");
         if (lastSquares.includes(square)) button.classList.add("last-move");
         if (square === selected) button.classList.add("selected");
+        const hintRole = hintMove && (square === hintMove.slice(0,2) ? "from" : square === hintMove.slice(2,4) ? "to" : null);
+        if (hintRole) button.classList.add(`hint-${hintRole}`);
         if (destinations.has(square)) button.classList.add("legal-target");
         if (piece) button.classList.add("occupied");
         const pieceColor = piece && piece === piece.toUpperCase() ? "white" : "black";
         if (state?.in_check && piece?.toLowerCase() === "k" && pieceColor === state.turn) button.classList.add("in-check");
         const label = piece ? `${square}, ${colorName(pieceColor)} ${pieceNames[piece.toLowerCase()]}` : `${square}, 빈 칸`;
-        button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : ""));
+        button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : "") + (hintRole ? `, 추천 수 ${hintRole === "from" ? "출발" : "도착"}` : ""));
         button.setAttribute("aria-pressed", String(square === selected));
         button.disabled = busy || closed || !state?.human_to_move;
         if (piece) {
@@ -189,6 +285,13 @@
           coordinate.textContent = file;
           coordinate.setAttribute("aria-hidden", "true");
           button.append(coordinate);
+        }
+        if (hintRole) {
+          const marker = document.createElement("span");
+          marker.className = "hint-square-label";
+          marker.textContent = hintRole === "from" ? "출발" : "도착";
+          marker.setAttribute("aria-hidden", "true");
+          button.append(marker);
         }
         fragment.append(button);
       }
@@ -229,6 +332,7 @@
     renderBoard();
     renderMoves();
     renderEvaluation();
+    renderHint();
     const ready = Boolean(state) && !closed;
     const active = ready && state.result === "*";
     const humanColor = state?.human_color || "white";
@@ -238,7 +342,9 @@
       const ms = state.engine.movetime_ms;
       const seconds = Number(ms) / 1000;
       byId("opponent-detail").textContent = `한 수에 ${seconds}초 생각 · ${colorName(humanColor === "white" ? "black" : "white")}`;
-      byId("engine-version").textContent = state.engine.name || "Regicide v0.5.0";
+      const engineName = state.engine.name || "Regicide";
+      byId("engine-version").textContent = engineName;
+      byId("header-engine-version").textContent = engineName.startsWith("Regicide ") ? "v" + engineName.slice("Regicide ".length) : "";
       byId("human-detail").textContent = active ? `${colorName(humanColor)}으로 두고 있어요. 기물과 도착 칸을 눌러주세요.` : "이번 대국이 끝났습니다.";
     }
     byId("new-game").disabled = !ready || busy;
@@ -267,11 +373,15 @@
     busy = true;
     showError("");
     selected = null;
+    clearHint();
     render();
     try {
       applyState(await request(path, {...payload, revision: state.revision}));
       await engineMove();
-    } catch (error) { showError(error.message); }
+    } catch (error) {
+      clearHint();
+      showError(error.message);
+    }
     finally { busy = false; render(); }
   }
 
@@ -329,16 +439,27 @@
   });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
   byId("resign").addEventListener("click", () => { void mutate("/api/resign"); });
+  byId("hint-toggle").addEventListener("click", () => {
+    if (closed || !state) return;
+    hintEnabled = !hintEnabled;
+    clearHint();
+    hintToggleDirty = true;
+    renderHint();
+    renderBoard();
+    void syncHintToggle();
+  });
   byId("shutdown").addEventListener("click", async () => {
     if (busy || closed || !state) return;
     busy = true;
     showError("");
+    clearHint();
     render();
     try {
       const result = await request("/api/shutdown", {revision: state.revision});
       if (result.closed !== true) throw new Error("종료를 확인하지 못했습니다. 다시 시도해주세요.");
       closed = true;
       selected = null;
+      clearHint();
     } catch (error) { showError(error.message); }
     finally { busy = false; render(); }
   });
@@ -369,6 +490,12 @@
   }
   // Analysis polling has its own request and keeps running while /api/engine waits.
   const evaluationTimer = setInterval(() => { void pollEvaluation(); }, 200);
-  window.addEventListener("pagehide", () => clearInterval(evaluationTimer));
+  const hintTimer = setInterval(() => { void pollHint(); }, 300);
+  window.addEventListener("pagehide", () => {
+    closed = true;
+    clearHint();
+    clearInterval(evaluationTimer);
+    clearInterval(hintTimer);
+  });
   void initialize();
 })();

@@ -32,11 +32,23 @@ var _live_pending_promotions: Array[String] = []
 var _library_games: Array = []
 var evaluation: Dictionary = {}
 var evaluation_in_flight: bool = false
+var hint: Dictionary = {}
+var hint_enabled: bool = false
+var hint_in_flight: bool = false
+var hint_control_in_flight: bool = false
+var _hint_epoch: int = 0
+var _hint_toggle_version: int = 0
+var _hint_sent_version: int = 0
+var _hint_connection_error: String = ""
+var _hint_control_failed: bool = false
 
 var board: ChessBoard
 var evaluation_bar: EvaluationBar
 var evaluation_summary: Label
 var evaluation_detail: Label
+var hint_button: Button
+var hint_summary: Label
+var hint_detail: Label
 var flip_button: Button
 var view_label: Label
 var status_label: Label
@@ -79,6 +91,9 @@ var save_dialog: FileDialog
 var http: HTTPRequest
 var evaluation_http: HTTPRequest
 var evaluation_timer: Timer
+var hint_http: HTTPRequest
+var hint_control_http: HTTPRequest
+var hint_timer: Timer
 
 
 func _ready() -> void:
@@ -248,6 +263,18 @@ func _build_ui() -> void:
 	status_detail = _label("잠시만 기다려 주세요.", 13, "a3b6c8")
 	status_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_detail)
+	hint_button = _button("추천 수: 끔", _on_hint_pressed)
+	hint_button.name = "ToggleMoveHint"
+	hint_button.tooltip_text = "Regicide가 당신의 다음 수를 추천합니다. 추천만 표시하며 직접 착수하지 않습니다."
+	sidebar.add_child(hint_button)
+	hint_summary = _label("", 15, "9bd7ca")
+	hint_summary.name = "MoveHintSummary"
+	hint_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sidebar.add_child(hint_summary)
+	hint_detail = _label("", 12, "a3b6c8")
+	hint_detail.name = "MoveHintDetail"
+	hint_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sidebar.add_child(hint_detail)
 	error_label = _label("", 13, "ffb4a1")
 	error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(error_label)
@@ -324,6 +351,18 @@ func _build_ui() -> void:
 	evaluation_timer.timeout.connect(_poll_evaluation)
 	add_child(evaluation_timer)
 	evaluation_timer.start()
+	# A slow main-engine response must never prevent the user from disabling hints.
+	hint_http = HTTPRequest.new()
+	hint_http.timeout = 3.0
+	add_child(hint_http)
+	hint_control_http = HTTPRequest.new()
+	hint_control_http.timeout = 5.0
+	add_child(hint_control_http)
+	hint_timer = Timer.new()
+	hint_timer.wait_time = 0.2
+	hint_timer.timeout.connect(_poll_hint)
+	add_child(hint_timer)
+	hint_timer.start()
 	save_dialog = FileDialog.new()
 	save_dialog.title = "기보 저장"
 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
@@ -566,6 +605,7 @@ func _open_selected_record() -> void:
 			review_summary = detail.get("summary", {}).duplicate(true)
 			review_pgn = str(detail.get("pgn", ""))
 			review_mode = true
+			_clear_hint()
 			review_ply = 0
 			board_model.selected_square = ""
 			board_model.pending_promotions.clear()
@@ -652,8 +692,12 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest = 
 
 func accept_state(next: Dictionary) -> void:
 	state = next.duplicate(true)
+	if _hint_toggle_version == 0 and state.has("hint_enabled"):
+		hint_enabled = bool(state.hint_enabled)
 	if not _evaluation_matches(evaluation, state):
 		evaluation.clear()
+	if not _evaluation_matches(hint, state) or not _hint_position_available():
+		_clear_hint()
 	if not review_mode:
 		board_model.apply_state(state)
 	_render()
@@ -716,6 +760,140 @@ func _render_evaluation() -> void:
 	evaluation_detail.tooltip_text = evaluation_bar.tooltip_text
 
 
+func _hint_position_available() -> bool:
+	return not review_mode and not closing and not request_in_flight and not engine_thinking \
+		and not state.is_empty() and state.get("human_to_move", false) \
+		and not state.get("handicap_mode", false) and state.get("result", "*") == "*" \
+		and state.get("error") == null and not state.get("legal_moves", []).is_empty()
+
+
+func _clear_hint() -> void:
+	# Invalidate already-dispatched polls even if an undo later restores this FEN.
+	_hint_epoch += 1
+	hint.clear()
+	if board != null:
+		board.hint_move = ""
+		board.queue_redraw()
+
+
+func accept_hint(value: Dictionary) -> bool:
+	if not hint_enabled or not _hint_position_available() or not _evaluation_matches(value, state) \
+		or not value.get("enabled", false):
+		return false
+	var move: String = str(value.get("move", "")) if value.get("move") != null else ""
+	if value.get("status", "") == "ready" and not state.get("legal_moves", []).has(move):
+		return false
+	hint = value.duplicate(true)
+	if not _hint_control_failed:
+		_hint_connection_error = ""
+	_render_hint()
+	return true
+
+
+func _on_hint_pressed() -> void:
+	if closing or review_mode or state.is_empty() or backend_url.is_empty():
+		return
+	hint_enabled = not hint_enabled
+	_hint_toggle_version += 1
+	_hint_connection_error = ""
+	_hint_control_failed = false
+	_clear_hint()
+	_render_hint()
+	_flush_hint_toggle()
+
+
+func _flush_hint_toggle() -> void:
+	if hint_control_in_flight or offline_mode or closing:
+		return
+	hint_control_in_flight = true
+	# Serialize control requests, coalescing rapid clicks to the latest preference.
+	# Poll replies have a separate generation barrier and cannot turn hints on.
+	while _hint_sent_version != _hint_toggle_version and not closing:
+		var version: int = _hint_toggle_version
+		var epoch: int = _hint_epoch
+		var desired: bool = hint_enabled
+		var response: Dictionary = await _send_request("/api/hint", {"enabled": desired}, hint_control_http)
+		_hint_sent_version = version
+		if version != _hint_toggle_version:
+			continue
+		if response.get("ok", false):
+			_hint_connection_error = ""
+			_hint_control_failed = false
+			if epoch == _hint_epoch:
+				accept_hint(response.data)
+		else:
+			_hint_control_failed = true
+			_hint_connection_error = "추천 수에 연결할 수 없습니다. 버튼을 껐다 켜서 다시 시도하세요."
+	hint_control_in_flight = false
+	_render_hint()
+
+
+func _poll_hint() -> void:
+	if not hint_enabled or hint_in_flight or hint_control_in_flight or offline_mode \
+		or closing or review_mode or backend_url.is_empty() or state.is_empty():
+		return
+	hint_in_flight = true
+	var epoch: int = _hint_epoch
+	var position: Dictionary = state.duplicate(true)
+	var response: Dictionary = await _send_request("/api/hint", null, hint_http)
+	hint_in_flight = false
+	if epoch != _hint_epoch or not hint_enabled or not _evaluation_matches(position, state) \
+		or review_mode or closing:
+		return
+	if response.get("ok", false):
+		# Keep a failed toggle visible until it is successfully retried.
+		accept_hint(response.data)
+	else:
+		hint.clear()
+		_hint_connection_error = "추천 수에 연결할 수 없습니다. 대국은 계속할 수 있습니다."
+	_render_hint()
+
+
+func _render_hint() -> void:
+	if hint_button == null:
+		return
+	hint_button.text = "추천 수: 켬" if hint_enabled else "추천 수: 끔"
+	# Deliberately independent of request_in_flight and engine_thinking.
+	hint_button.disabled = closing or review_mode or state.is_empty() or backend_url.is_empty()
+	hint_summary.visible = hint_enabled and not review_mode
+	hint_detail.visible = hint_enabled and not review_mode
+	board.hint_move = ""
+	if not hint_enabled or review_mode:
+		hint_summary.text = ""
+		hint_detail.text = ""
+	elif not _hint_connection_error.is_empty():
+		hint_summary.text = "Regicide 추천 · 연결 확인 필요"
+		hint_detail.text = _hint_connection_error
+	elif state.get("result", "*") != "*":
+		hint_summary.text = "Regicide 추천 · 대국 종료"
+		hint_detail.text = "새 대국에서 다시 추천합니다."
+	elif state.get("handicap_mode", false):
+		hint_summary.text = "Regicide 추천 · 대기"
+		hint_detail.text = "Regicide의 수를 바꾸는 동안 추천을 쉽니다."
+	elif not _hint_position_available():
+		hint_summary.text = "Regicide 추천 · 대기"
+		hint_detail.text = "당신의 차례가 되면 다음 수를 추천합니다."
+	elif not _evaluation_matches(hint, state) or hint.get("status", "") in ["waiting", "disabled"]:
+		hint_summary.text = "Regicide 추천 · 준비 중"
+		hint_detail.text = "현재 위치의 추천 수를 기다리고 있습니다."
+	elif hint.get("status", "") == "searching":
+		hint_summary.text = "Regicide 추천 · 생각 중"
+		hint_detail.text = "현재 위치에서 다음 수를 계산하고 있습니다."
+	elif hint.get("status", "") == "ready" and state.get("legal_moves", []).has(hint.get("move")):
+		var move: String = str(hint.move)
+		board.hint_move = move
+		var san: String = str(hint.get("san", ""))
+		hint_summary.text = "Regicide 추천 · " + (san if not san.is_empty() else move)
+		var promotion_text: String = ""
+		if move.length() == 5:
+			promotion_text = " · %s 승격" % {"q": "퀸", "r": "룩", "b": "비숍", "n": "나이트"}.get(move.substr(4), move.substr(4))
+		hint_detail.text = "%s → %s%s\n표시된 수는 직접 선택해서 두세요." % [move.substr(0, 2), move.substr(2, 2), promotion_text]
+	else:
+		hint_summary.text = "Regicide 추천 · 분석 없음"
+		hint_detail.text = str(hint.get("message", "추천 수를 얻지 못했습니다. 대국은 계속할 수 있습니다."))
+	board.queue_redraw()
+
+
 func _handle_response(response: Dictionary) -> bool:
 	if not response.get("ok", false):
 		if response.get("state", {}) is Dictionary and not response.get("state", {}).is_empty():
@@ -746,6 +924,7 @@ func _mutate(path: String, payload: Dictionary = {}) -> void:
 	_notice_message = ""
 	board_model.selected_square = ""
 	board_model.pending_promotions.clear()
+	_clear_hint()
 	# JSON numbers are decoded as floats by Godot. The host requires integers.
 	payload["revision"] = int(state.revision)
 	_render()
@@ -759,6 +938,7 @@ func _play_engine_if_needed() -> void:
 	if closing or review_mode or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
 		return
 	engine_thinking = true
+	_clear_hint()
 	_render()
 	_handle_response(await _send_request("/api/engine", {"revision": int(state.revision)}))
 	engine_thinking = false
@@ -907,6 +1087,7 @@ func _render() -> void:
 	board.state = shown
 	board.queue_redraw()
 	_render_evaluation()
+	_render_hint()
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = false
 	var human_color: String = str(shown.get("human_color", "white"))

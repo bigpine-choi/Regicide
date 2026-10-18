@@ -24,6 +24,7 @@ import chess.pgn
 
 from play_game import source_version
 from game_archive import GameArchive, default_game_directory
+from move_hints import MoveHints
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
@@ -34,7 +35,7 @@ class RevisionError(ValueError):
 
 
 class HumanGame:
-    def __init__(self, binary, save_dir, engine_factory=None):
+    def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None):
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -47,9 +48,11 @@ class HumanGame:
         self._evaluation_lock = threading.Lock()
         self._evaluation = {}
         self._engine = None
+        self._hints = None
         self.revision = 0
         try:
             self._ensure_engine()
+            self._hints = MoveHints(self.binary, hint_engine_factory)
             self._reset("white", 1000)
         except Exception:
             self.close()
@@ -97,6 +100,13 @@ class HumanGame:
         with self._evaluation_lock:
             return dict(self._evaluation)
 
+    def hint(self):
+        """Advice preference and polling never wait for opponent search."""
+        return self._hints.snapshot()
+
+    def set_hint_enabled(self, enabled):
+        return self._hints.set_enabled(enabled)
+
     def _sync_evaluation(self, keep_search=False, status="waiting"):
         """Called under the game lock after a position or revision changes."""
         result, termination = self._outcome()
@@ -122,6 +132,11 @@ class HumanGame:
             snapshot.update(status="ready", source="previous_search")
         with self._evaluation_lock:
             self._evaluation = snapshot
+        self._hints.update_position(
+            game_id=self.game_id, revision=self.revision, board=self.board,
+            human_color=self.human_color, movetime_ms=self.movetime_ms,
+            engine_name=self.engine_name, active=result == "*" and not self.error,
+            handicap_mode=self._handicap_backup is not None)
 
     def _publish_evaluation(self, info):
         """Publish completed-depth UCI scores in White's point of view."""
@@ -199,6 +214,7 @@ class HumanGame:
                     "turn": "white" if self.board.turn else "black",
                     "human_color": "white" if self.human_color else "black",
                     "human_to_move": bool(human_turn), "engine_to_move": bool(engine_turn),
+                    "hint_enabled": self.hint()["enabled"],
                     "legal_moves": [move.uci() for move in self.board.legal_moves]
                     if human_turn or handicap_mode else [],
                     "moves": moves, "status": status, "result": result, "termination": termination,
@@ -471,6 +487,8 @@ class HumanGame:
             temporary.replace(target)
 
     def close(self):
+        if self._hints is not None:
+            self._hints.close()
         with self._lock:
             try:
                 if getattr(self, "_game_open", False):
@@ -539,6 +557,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.game.state())
         elif self.path == "/api/evaluation":
             self._send(200, self.server.game.evaluation())
+        elif self.path == "/api/hint":
+            self._send(200, self.server.game.hint())
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
         elif self.path == "/api/games" or self.path.startswith("/api/games/"):
@@ -592,6 +612,12 @@ class HumanHandler(BaseHTTPRequestHandler):
                 raise ValueError("올바른 요청이 필요합니다.")
             revision = data.get("revision")
             game = self.server.game
+            if self.path == "/api/hint":
+                try:
+                    self._send(200, game.set_hint_enabled(data.get("enabled")))
+                except ValueError as exc:
+                    self._send(400, {"error": str(exc), "hint": game.hint()})
+                return
             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),
                        "/api/engine": lambda: game.engine_move(revision),

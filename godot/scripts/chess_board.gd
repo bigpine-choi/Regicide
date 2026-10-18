@@ -11,6 +11,7 @@ var state: Dictionary = {}
 var piece_textures: Dictionary = {}
 var label_font: Font
 var pressed_square: String = ""
+var hint_move: String = ""
 
 
 func _ready() -> void:
@@ -87,6 +88,7 @@ func _draw() -> void:
 					draw_circle(bounds.get_center(), cell * 0.11, Color(0.08, 0.23, 0.25, 0.45))
 				else:
 					draw_arc(bounds.get_center(), cell * 0.43, 0, TAU, 48, Color(0.06, 0.25, 0.27, 0.7), cell * 0.055, true)
+	_draw_hint(area, cell)
 	var font_size: int = clampi(int(cell * 0.20), 12, 18)
 	for index in range(8):
 		var x: float = area.position.x + (index + 0.5) * cell
@@ -95,6 +97,39 @@ func _draw() -> void:
 		_center_text(model.file_label(index), Vector2(x, area.position.y - 12.0), font_size)
 		_center_text(model.rank_label(index), Vector2(area.position.x - 19.0, y + font_size * 0.35), font_size)
 		_center_text(model.rank_label(index), Vector2(area.end.x + 19.0, y + font_size * 0.35), font_size)
+
+
+func hint_centers() -> PackedVector2Array:
+	# Use the exact same square mapping as clicks, including the flipped view.
+	if hint_move.length() < 4:
+		return PackedVector2Array()
+	var source := model.square_to_display(hint_move.substr(0, 2))
+	var target := model.square_to_display(hint_move.substr(2, 2))
+	if source.x < 0 or target.x < 0 or source == target:
+		return PackedVector2Array()
+	var area := get_board_rect()
+	var cell: float = area.size.x / 8.0
+	return PackedVector2Array([area.position + (Vector2(source) + Vector2.ONE * 0.5) * cell,
+		area.position + (Vector2(target) + Vector2.ONE * 0.5) * cell])
+
+
+func _draw_hint(_area: Rect2, cell: float) -> void:
+	var points := hint_centers()
+	if points.size() != 2:
+		return
+	var source: Vector2 = points[0]
+	var target: Vector2 = points[1]
+	var direction: Vector2 = (target - source).normalized()
+	var cross := Vector2(-direction.y, direction.x)
+	var tip: Vector2 = target - direction * cell * 0.08
+	var neck: Vector2 = tip - direction * cell * 0.29
+	# Painted directly onto this Control: no overlay can consume click or drag.
+	var tint := Color(0.18, 0.78, 0.96, 0.87)
+	draw_circle(source, cell * 0.22, Color(0.06, 0.22, 0.31, 0.8))
+	draw_arc(source, cell * 0.22, 0.0, TAU, 40, tint, cell * 0.055, true)
+	draw_line(source, neck, Color(0.04, 0.17, 0.22, 0.9), cell * 0.17, true)
+	draw_line(source, neck, tint, cell * 0.11, true)
+	draw_colored_polygon(PackedVector2Array([tip, neck + cross * cell * 0.19, neck - cross * cell * 0.19]), tint)
 
 
 func _center_text(value: String, baseline: Vector2, font_size: int) -> void:

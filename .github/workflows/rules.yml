@@ -15,6 +15,11 @@ jobs:
       - run: cmake --build build --config Release
       - run: ctest --test-dir build -C Release --output-on-failure
       - run: python -m pip install -r requirements-test.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check web/human-play/app.js
+      - run: node tests/web_hint_tests.js
       - run: python tests/audit_pvs_results.py --self-test
       - run: python tests/audit_see_results.py --self-test
       - run: python tests/see_clean_guard_tests.py
@@ -45,6 +50,10 @@ jobs:
       - if: runner.os == 'Windows'
         run: python tests/human_play_tests.py build/Release/regicide.exe
       - if: runner.os == 'Linux'
+        run: python tests/hint_state_tests.py build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/hint_state_tests.py build/Release/regicide.exe
+      - if: runner.os == 'Linux'
         run: python tests/handicap_play_tests.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/handicap_play_tests.py build/Release/regicide.exe
@@ -68,4 +77,7 @@ jobs:
           python tests/handicap_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/archive_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/hint_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
