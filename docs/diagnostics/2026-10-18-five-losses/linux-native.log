@@ -1,0 +1,189 @@
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c src/board.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/board.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c src/search.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/search.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c src/evaluation.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/evaluation.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c src/transposition.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/transposition.o
++ for unit in board search evaluation transposition see
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c src/see.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/see.o
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c tests/reference_evaluation_v054.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/reference_evaluation_v054.o
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include -c tests/reference_evaluation_v056.cpp -o build/lmr-loss-diagnosis-20261018/linux/native/reference_evaluation_v056.o
++ for test in rules board_state
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/rules_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o -o build/lmr-loss-diagnosis-20261018/linux/native/rules_tests
++ for test in rules board_state
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/board_state_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o -o build/lmr-loss-diagnosis-20261018/linux/native/board_state_tests
++ for test in search evaluation transposition see
++ extra=()
++ [[ search == evaluation ]]
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/search_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o build/lmr-loss-diagnosis-20261018/linux/native/search.o build/lmr-loss-diagnosis-20261018/linux/native/evaluation.o build/lmr-loss-diagnosis-20261018/linux/native/transposition.o build/lmr-loss-diagnosis-20261018/linux/native/see.o -o build/lmr-loss-diagnosis-20261018/linux/native/search_tests
++ for test in search evaluation transposition see
++ extra=()
++ [[ evaluation == evaluation ]]
++ extra+=("$out/native/reference_evaluation_v054.o" "$out/native/reference_evaluation_v056.o")
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/evaluation_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o build/lmr-loss-diagnosis-20261018/linux/native/search.o build/lmr-loss-diagnosis-20261018/linux/native/evaluation.o build/lmr-loss-diagnosis-20261018/linux/native/transposition.o build/lmr-loss-diagnosis-20261018/linux/native/see.o build/lmr-loss-diagnosis-20261018/linux/native/reference_evaluation_v054.o build/lmr-loss-diagnosis-20261018/linux/native/reference_evaluation_v056.o -o build/lmr-loss-diagnosis-20261018/linux/native/evaluation_tests
++ for test in search evaluation transposition see
++ extra=()
++ [[ transposition == evaluation ]]
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/transposition_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o build/lmr-loss-diagnosis-20261018/linux/native/search.o build/lmr-loss-diagnosis-20261018/linux/native/evaluation.o build/lmr-loss-diagnosis-20261018/linux/native/transposition.o build/lmr-loss-diagnosis-20261018/linux/native/see.o -o build/lmr-loss-diagnosis-20261018/linux/native/transposition_tests
++ for test in search evaluation transposition see
++ extra=()
++ [[ see == evaluation ]]
++ g++ -std=c++20 -O2 -pthread -Wall -Wextra -Wpedantic -Werror -I include tests/see_tests.cpp build/lmr-loss-diagnosis-20261018/linux/native/board.o build/lmr-loss-diagnosis-20261018/linux/native/search.o build/lmr-loss-diagnosis-20261018/linux/native/evaluation.o build/lmr-loss-diagnosis-20261018/linux/native/transposition.o build/lmr-loss-diagnosis-20261018/linux/native/see.o -o build/lmr-loss-diagnosis-20261018/linux/native/see_tests
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/rules_tests
+PASS exact initial moves and FEN
+  depth 5 nodes 4865609
+PASS perft start
+  depth 4 nodes 4085603
+PASS perft kiwipete
+  depth 5 nodes 674624
+PASS perft rook-pawn-endgame
+  depth 4 nodes 422333
+PASS perft promotion-castling
+  depth 4 nodes 2103487
+PASS perft promotion-check
+  depth 4 nodes 3894594
+PASS perft middlegame
+PASS castling moves and exact restoration
+PASS castling through attack and blocked queenside
+PASS castling rights lost on move or capture
+PASS en passant both colors, expiration, restoration
+PASS en passant king safety and check evasion
+PASS all promotions and capture promotions
+PASS pinned piece attacks and double check
+PASS checkmate, stalemate and 75-move priority
+PASS 50-move claim vs automatic 75-move draw
+PASS threefold claims, fivefold draw and history undo
+PASS repetition identity: en passant legality and castling
+PASS conservative dead-material classification
+PASS invalid moves and malformed FEN leave state intact
+20 groups, 8325 assertions, 0 failures
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/search_tests
+PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescence terminal and optional claim handling
+PASS quiescence shares exact node budgets and restores interrupted work
+PASS transposition scores agree with uncached fixed-depth search
+PASS transpositions reuse completed work and never publish a partial root
+PASS cached search keeps optional history-dependent claims
+PASS caller-owned memory reuse preserves every completed iteration graph
+PASS reused memory isolates options FENs history clocks and hash resize
+PASS disabled terminal and interrupted calls preserve reusable storage safely
+PASS quiet move ordering changes work without changing exact fixed-depth scores
+PASS one quiet-check qsearch matches an unpruned independent oracle
+PASS quiet checks recognize mate beyond the capture-only frontier
+PASS Caro-Kann loss regression sees the checking knight refutation
+PASS PVS and alpha-beta select oracle-optimal moves with and without TT
+PASS PVS preserves independently enumerated quiescence and quiet-check values
+PASS PVS scouts ties without re-search and re-searches a genuine improvement
+PASS PVS handles current intended and historical optional draw claims
+PASS an intended draw floor can require a PVS full-window re-search
+PASS PVS interruption at scout and re-search entry retains the completed iteration
+PASS reused PVS memory isolates modes histories options and interruption
+PASS SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode
+PASS a sole legal capture needs no exchange sort and still preserves its result
+PASS favorable captures precede losing captures without discarding either
+PASS negative SEE queen sacrifice remains available and produces the oracle mate
+PASS SEE preserves the independent bounded-check quiescence oracle
+PASS SEE mode changes and cancellation cannot leak through retained memory
+PASS shelter ON and OFF search match exhaustive normal and tactical oracles
+PASS cancelled fallback uses the selected shelter evaluator before any completed iteration
+PASS reused memory isolates shelter mode switches and material-only evaluation ignores them
+PASS pawn structure ON and OFF match exhaustive ordinary and tactical search
+PASS pawn structure defaults ON and remains selected in cancelled or one-node fallbacks
+PASS retained memory isolates pawn structure changes and material-only ignores both positional flags
+PASS pawn bonuses never override mate automatic draws or optional claims
+PASS LMR OFF retains full-depth reference graphs and shallow ON never reduces
+PASS LMR requires both PVS and learned quiet ordering and never reduces pawn or king moves
+PASS LMR really reduces and verifies late quiet scouts while publishing legal deterministic lines
+PASS LMR interruption retains the last full iteration and its reusable memory stays isolated
+PASS LMR protects current and intended draw claims before reducing any late knight move
+PASS LMR preserves quiet checking mates sacrifices terminal results and optional claims
+56 groups, 21304 assertions, 0 failures
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/evaluation_tests
+PASS initial symmetry and color/rank reflections
+PASS opening development and center beat edge moves and retreat
+PASS bishops develop and queens wait for minor development
+PASS rook exposure loses time while minors remain home
+PASS king shelter in middlegame and activity in endgame
+PASS promotion-rich phase and very large material remain well behaved
+PASS disabled shelter preserves pinned pre-change evaluation values
+PASS nearby pawns shelter both wings and both colors without hiding their advance cost
+PASS edge shelter uses two files and ignores a third outside the king neighborhood
+PASS a pawn behind the king cannot shelter it and the closest forward pawn wins
+PASS shelter fades in pawn endings and uses the opponent's attacking material
+PASS promoted attacking armies clamp shelter rather than magnifying it without bound
+PASS shelter evaluation preserves repetition history hashes and turn antisymmetry
+PASS frozen v0.5.4 oracle across king squares pawn distances phases and home minors
+PASS frozen v0.5.4 oracle on deterministic legal game walks with retained history
+PASS frozen v0.5.4 oracle preserves special move and repetition histories
+PASS passed pawns gain promotion proximity and blocked rewards are halved for either color
+PASS enemy pawns block passage only ahead on the same or adjacent files including board edges
+PASS doubled and isolated costs combine while only the foremost pawn earns passage
+PASS pawn terms share one phase blend and preserve the independent king shield
+PASS independent pawn oracle exhausts legal two-pawn placements and retained game histories
+PASS pawn structure follows deterministic en passant promotions and their complete undo histories
+PASS frozen v0.5.6 matches all file-presence patterns with enemy and blocked-pawn inputs
+PASS frozen v0.5.6 matches every legal single-file rank mask at edges and center
+16860 frozen v0.5.4 oracle positions (each shield on/off)
+23929 independent pawn-structure oracle positions (all option combinations)
+24 groups, 408771 assertions, 0 failures
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/board_state_tests
+PASS position identity includes pieces turn and rights, excludes clocks
+PASS canonical EP uses legal captures including pins and check evasion
+PASS history digest retains counts and all reversible past positions
+PASS history digest is independent of order when exact position counts agree
+PASS repetition candidate is conservative and restores across undo
+PASS castling-right loss resets context without resetting halfmove clock
+PASS generated moves and incremental hashes roundtrip normal special positions
+PASS failed external moves leave keys and history unchanged
+PASS generated check prediction handles direct discovered and special checks
+PASS all generated check predictions match full play and preserve repetition history
+10 groups, 18974 assertions, 0 failures
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/transposition_tests
+PASS bounded allocation and empty slots
+PASS exact, lower and upper bound windows
+PASS mate distance is normalized from either side
+PASS index collisions verify every key field and prefer deeper work
+PASS history and halfmove distinguish otherwise identical queries
+PASS same-size prepare reuses backing memory but no old entries
+PASS resizing changes storage budget and invalid arguments preserve a table
+PASS generation wrap physically removes old generation-one records once
+8 groups, 97 assertions, 0 failures
++ for test in rules search evaluation board_state transposition see
++ build/lmr-loss-diagnosis-20261018/linux/native/see_tests
+PASS free material, poisoned capture and optional stopping
+PASS updated occupancy reveals both black and white x-ray attackers
+PASS absolute pins exclude illegal recaptures
+PASS kings may recapture only onto unattacked squares
+PASS en passant removes the off-target pawn and recomputes pins and rays
+PASS initial promotions and promotion recaptures include material increments
+SEE differential: 45 positions, 1442 moves, 57 losing exchanges, 8 promotions, 1 en passant
+PASS LVA agrees with independent legal-move recursion on varied legal positions
+PASS repeated calls preserve castling repetition and undo history
+Compact SEE differential: 80 positions, 2525 moves, 86 losing exchanges
+PASS compact attack lists agree with legal recursion across deterministic walks
+9 groups, 9119 assertions, 0 failures
++ set +x

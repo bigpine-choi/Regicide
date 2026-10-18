@@ -1,0 +1,3038 @@
+{
+  "schema_version": 1,
+  "phase": "depth-control",
+  "status": "complete",
+  "started_utc": "2026-10-18T12:44:18.154940+00:00",
+  "finished_utc": "2026-10-18T12:44:29.823789+00:00",
+  "purpose": "finite external reference evidence; not a proof of the best move or an evaluation bug",
+  "loss_game_ids": [
+    1,
+    3,
+    9,
+    13,
+    16
+  ],
+  "selection_policy": {
+    "version": 1,
+    "significant_cp_gap": 100,
+    "minimum_unrestricted_cp": -300,
+    "earliest": "earliest cp gap >=100 with best cp >=-300, or best nonlosing to forced losing mate",
+    "nonlosing_for_mate_transition": "best cp >=0 or best mate >0; forced mate <0; no bound scores",
+    "largest": "largest finite cp gap with best cp >=-300; if none, largest finite gap as fallback",
+    "ties": "earliest ply",
+    "deduplicate": true,
+    "maximum_primary_positions_per_game": 2,
+    "no_finite_fallback": "fail rather than invent a position or convert mate to cp"
+  },
+  "screen_nodes_per_query": 50000,
+  "confirm_nodes_per_query": [
+    1000000,
+    4000000
+  ],
+  "limits_note": "Common depth 16/20 with a 4000000-node safety cap per query, no time limit. A comparison is complete_depth only when every query reports the requested depth without a bound. Actual reported nodes may overshoot. Engine communication timeout is 600 seconds.",
+  "table_policy": "Clear Hash before every query and a fresh python-chess game object per query",
+  "score_bounds_policy": "cp/mate and bounds come from the same last primary score-bearing raw info event; accumulated python-chess bounds are replaced after score equality validation",
+  "source": {
+    "path": "docs\\matches\\2026-10-18-lmr-idle-rematch\\match-200ms.json",
+    "sha256": "bd8b540ba276ea4673dfaabbb8f0bab09910735e0c30e310832d814d042dd38a",
+    "engine_provenance_caller_declared_by_match": {
+      "baseline": {
+        "command": [
+          "$REPO\\build\\lmr-validation\\regicide-v057.exe",
+          "uci"
+        ],
+        "sha256": "b9a7c733388714f4b11d4678f270cc56d8c68e4bc015992e6e08a7b4bf2ab6dc",
+        "provided_source_commit": "5b5b5deedbef96133836609ec00229c7a548a15a",
+        "source_commit_object_verified": true,
+        "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+        "requested_options": {
+          "Hash": 16,
+          "Move Overhead": 20
+        },
+        "validated_options": {
+          "Hash": 16,
+          "Move Overhead": 20
+        },
+        "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+        "engine_id": {
+          "name": "Regicide 0.5.7",
+          "author": "Regicide project"
+        },
+        "advertised_options": {
+          "Move Overhead": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "UsePositionalEvaluation": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuiescence": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseTranspositionTable": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseFastMoves": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuietMoveOrdering": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuiescenceChecks": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "PVS": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseSEE": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UsePawnShield": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UsePawnStructure": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "candidate": {
+        "command": [
+          "$REPO\\build\\regicide.exe",
+          "uci"
+        ],
+        "sha256": "17b079ba319ba7ce8a94c0a78a201d40840b57cda452c9965d5a3d0039400ed1",
+        "provided_source_commit": "157305d804bc1828641a7e8d9b9b793b7746bcc3",
+        "source_commit_object_verified": true,
+        "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+        "requested_options": {
+          "Hash": 16,
+          "Move Overhead": 20,
+          "UseLMR": true
+        },
+        "validated_options": {
+          "Hash": 16,
+          "Move Overhead": 20,
+          "UseLMR": true
+        },
+        "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+        "engine_id": {
+          "name": "Regicide 0.5.8",
+          "author": "Regicide project"
+        },
+        "advertised_options": {
+          "Move Overhead": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "UsePositionalEvaluation": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuiescence": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseTranspositionTable": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseFastMoves": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuietMoveOrdering": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseQuiescenceChecks": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "PVS": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseSEE": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UsePawnShield": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UsePawnStructure": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UseLMR": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      }
+    },
+    "limits": {
+      "nodes": null,
+      "depth": null,
+      "movetime_ms": 200
+    }
+  },
+  "screen_input": {
+    "path": "build\\lmr-loss-diagnosis-20261018\\reference-screen.json",
+    "sha256": "5aca7afa4eefd73e434af59a58498412f8e35d40b3ff27681890110285c46ebd"
+  },
+  "reference": {
+    "command": [
+      "wsl",
+      "-d",
+      "Ubuntu-24.04",
+      "--",
+      "/mnt/c/USER/.codex/.chatgpt-projects/g-p-6a8b058617088191ac7cb44895558f31/Regicide/build/loss-analysis/stockfish/extracted/usr/games/stockfish"
+    ],
+    "binary_path": "<USER>\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\loss-analysis\\stockfish\\extracted\\usr\\games\\stockfish",
+    "binary_sha256": "00628bd9c9855c1b7ff93d7f8d51b413586cdc6336fe637f9a14a61531a05aca",
+    "requested_options": {
+      "Threads": 1,
+      "Hash": 32,
+      "Use NNUE": true,
+      "UCI_LimitStrength": false,
+      "SyzygyProbeLimit": 0
+    },
+    "command_binary_relationship": "caller-declared; hashing the supplied file does not prove the command executes that exact file",
+    "origin": {
+      "upstream_release_url": "https://github.com/official-stockfish/Stockfish/releases/tag/sf_16",
+      "license": "GPL-3.0",
+      "distribution_build": "Ubuntu 16-1build1",
+      "status": "caller-declared attribution; not independently established by this script or by the UCI engine ID"
+    },
+    "engine_id": {
+      "name": "Stockfish 16",
+      "author": "the Stockfish developers (see AUTHORS file)"
+    },
+    "advertised_options": {
+      "Debug Log File": {
+        "type": "string",
+        "default": "",
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "Threads": {
+        "type": "spin",
+        "default": 1,
+        "min": 1,
+        "max": 1024,
+        "var": []
+      },
+      "Hash": {
+        "type": "spin",
+        "default": 16,
+        "min": 1,
+        "max": 33554432,
+        "var": []
+      },
+      "Clear Hash": {
+        "type": "button",
+        "default": null,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "Ponder": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "MultiPV": {
+        "type": "spin",
+        "default": 1,
+        "min": 1,
+        "max": 500,
+        "var": []
+      },
+      "Skill Level": {
+        "type": "spin",
+        "default": 20,
+        "min": 0,
+        "max": 20,
+        "var": []
+      },
+      "Move Overhead": {
+        "type": "spin",
+        "default": 10,
+        "min": 0,
+        "max": 5000,
+        "var": []
+      },
+      "Slow Mover": {
+        "type": "spin",
+        "default": 100,
+        "min": 10,
+        "max": 1000,
+        "var": []
+      },
+      "nodestime": {
+        "type": "spin",
+        "default": 0,
+        "min": 0,
+        "max": 10000,
+        "var": []
+      },
+      "UCI_Chess960": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UCI_AnalyseMode": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UCI_LimitStrength": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "UCI_Elo": {
+        "type": "spin",
+        "default": 1320,
+        "min": 1320,
+        "max": 3190,
+        "var": []
+      },
+      "UCI_ShowWDL": {
+        "type": "check",
+        "default": false,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "SyzygyPath": {
+        "type": "string",
+        "default": "<empty>",
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "SyzygyProbeDepth": {
+        "type": "spin",
+        "default": 1,
+        "min": 1,
+        "max": 100,
+        "var": []
+      },
+      "Syzygy50MoveRule": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "SyzygyProbeLimit": {
+        "type": "spin",
+        "default": 7,
+        "min": 0,
+        "max": 7,
+        "var": []
+      },
+      "Use NNUE": {
+        "type": "check",
+        "default": true,
+        "min": null,
+        "max": null,
+        "var": []
+      },
+      "EvalFile": {
+        "type": "string",
+        "default": "nn-5af11540bbfe.nnue",
+        "min": null,
+        "max": null,
+        "var": []
+      }
+    },
+    "validated_options": {
+      "Threads": 1,
+      "Hash": 32,
+      "Use NNUE": true,
+      "UCI_LimitStrength": false,
+      "SyzygyProbeLimit": 0
+    },
+    "configuration_note": "Values were validated against advertised option types/ranges and configure returned. UCI has no general readback; this is not independent verification of engine internals. python-chess manages MultiPV/Ponder/UCI_Chess960/UCI_Variant."
+  },
+  "runtime": {
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+    "python_chess": "1.11.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "queries_completed": 26,
+  "active_query": {
+    "record_id": "pair2-p74",
+    "requested_nodes": 4000000,
+    "forced_move": "f3f2",
+    "started_utc": "2026-10-18T12:44:29.385589+00:00",
+    "status": "complete",
+    "requested_depth": 20,
+    "finished_utc": "2026-10-18T12:44:29.792663+00:00"
+  },
+  "records": [
+    {
+      "id": "g1-p49",
+      "game": 1,
+      "ply": 49,
+      "opening": "LMR Italian restrained center",
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "c2c3",
+        "g8f6",
+        "d2d3",
+        "d7d6",
+        "e1g1",
+        "e8g8",
+        "b2b4",
+        "c5b6",
+        "b4b5",
+        "c6a5",
+        "b1d2",
+        "c7c5",
+        "a2a4",
+        "g8h8",
+        "c1b2",
+        "a5c4",
+        "d2c4",
+        "c8e6",
+        "a4a5",
+        "b6c7",
+        "f3d2",
+        "d8e8",
+        "b5b6",
+        "a7b6",
+        "a5b6",
+        "a8a1",
+        "d1a1",
+        "c7d8",
+        "f2f4",
+        "e5f4",
+        "f1f4",
+        "e8c6",
+        "a1a7",
+        "d6d5",
+        "c4e5",
+        "c6b5",
+        "a7a3",
+        "g7g5",
+        "f4f1",
+        "b5b6",
+        "c3c4",
+        "d5c4"
+      ],
+      "fen": "3b1r1k/1p3p1p/1q2bn2/2p1N1p1/2p1P3/Q2P4/1B1N2PP/5RK1 w - - 0 25",
+      "candidate_color": "w",
+      "played": "d2c4",
+      "san": "Ndxc4",
+      "archived_search": {
+        "ply": 49,
+        "role": "candidate",
+        "color": "white",
+        "move": "d2c4",
+        "fen_before": "3b1r1k/1p3p1p/1q2bn2/2p1N1p1/2p1P3/Q2P4/1B1N2PP/5RK1 w - - 0 25",
+        "elapsed_seconds": 0.18161,
+        "nodes": 87514,
+        "depth": 3,
+        "seldepth": 23,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": -100,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d2c4",
+          "e6c4",
+          "e5c4"
+        ],
+        "quiet_nonpawn_not_in_check": false,
+        "backtrack_opportunity": false,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "screen_analysis": {
+        "best": {
+          "move": "e5c4",
+          "pv": [
+            "e5c4",
+            "e6c4",
+            "d2c4",
+            "b6c6",
+            "f1f5",
+            "h7h5",
+            "a3a1",
+            "h8g7",
+            "f5g5",
+            "g7h7",
+            "g5f5",
+            "b7b5",
+            "b2f6",
+            "b5c4",
+            "f6d8"
+          ],
+          "score": {
+            "cp": 327,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50018,
+          "depth": 16,
+          "seldepth": 16,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 16 seldepth 16 multipv 1 score cp 327 nodes 50018 nps 877508 hashfull 9 tbhits 0 time 57 pv e5c4 e6c4 d2c4 b6c6 f1f5 h7h5 a3a1 h8g7 f5g5 g7h7 g5f5 b7b5 b2f6 b5c4 f6d8",
+            "multipv": 1,
+            "score": {
+              "cp": 327,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 16,
+          "engine_time_seconds": 0.057,
+          "wall_time_seconds": 0.05909819999942556,
+          "started_utc": "2026-10-18T12:41:27.074443+00:00",
+          "finished_utc": "2026-10-18T12:41:27.146466+00:00"
+        },
+        "forced_played": {
+          "move": "d2c4",
+          "pv": [
+            "d2c4",
+            "b6b4",
+            "a3a1",
+            "h8g8",
+            "b2a3",
+            "b4b5",
+            "f1b1",
+            "b5a6",
+            "a3c5",
+            "e6c4",
+            "a1d4",
+            "c4e6",
+            "c5f8"
+          ],
+          "score": {
+            "cp": 94,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50033,
+          "depth": 15,
+          "seldepth": 21,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 15 seldepth 21 multipv 1 score cp 94 nodes 50033 nps 820213 hashfull 9 tbhits 0 time 61 pv d2c4 b6b4 a3a1 h8g8 b2a3 b4b5 f1b1 b5a6 a3c5 e6c4 a1d4 c4e6 c5f8",
+            "multipv": 1,
+            "score": {
+              "cp": 94,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 15,
+          "engine_time_seconds": 0.061,
+          "wall_time_seconds": 0.061448899999959394,
+          "started_utc": "2026-10-18T12:41:27.160736+00:00",
+          "finished_utc": "2026-10-18T12:41:27.235617+00:00"
+        },
+        "cp_gap": 233
+      },
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "e5c4",
+            "pv": [
+              "e5c4",
+              "b6c7",
+              "b2f6",
+              "d8f6",
+              "f1f6",
+              "h8g8",
+              "f6f2",
+              "f8d8",
+              "c4e3",
+              "b7b5",
+              "e3d5",
+              "e6d5",
+              "e4d5",
+              "d8d5",
+              "d2e4"
+            ],
+            "score": {
+              "cp": 325,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 60083,
+            "depth": 16,
+            "seldepth": 20,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 20 multipv 1 score cp 325 nodes 60083 nps 667588 hashfull 12 tbhits 0 time 90 pv e5c4 b6c7 b2f6 d8f6 f1f6 h8g8 f6f2 f8d8 c4e3 b7b5 e3d5 e6d5 e4d5 d8d5 d2e4",
+              "multipv": 1,
+              "score": {
+                "cp": 325,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.09,
+            "wall_time_seconds": 0.10429709998425096,
+            "started_utc": "2026-10-18T12:44:21.955245+00:00",
+            "finished_utc": "2026-10-18T12:44:22.061708+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "d2c4",
+            "pv": [
+              "d2c4",
+              "b6b4",
+              "a3a1",
+              "h8g8",
+              "f1b1",
+              "b4b5",
+              "b2d4",
+              "b5a6",
+              "a1a6",
+              "b7a6",
+              "d4c5",
+              "f8e8",
+              "b1b7",
+              "h7h6",
+              "b7a7"
+            ],
+            "score": {
+              "cp": 97,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 94271,
+            "depth": 16,
+            "seldepth": 21,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 21 multipv 1 score cp 97 nodes 94271 nps 798906 hashfull 19 tbhits 0 time 118 pv d2c4 b6b4 a3a1 h8g8 f1b1 b4b5 b2d4 b5a6 a1a6 b7a6 d4c5 f8e8 b1b7 h7h6 b7a7",
+              "multipv": 1,
+              "score": {
+                "cp": 97,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.118,
+            "wall_time_seconds": 0.1199233999941498,
+            "started_utc": "2026-10-18T12:44:22.064586+00:00",
+            "finished_utc": "2026-10-18T12:44:22.186607+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 228,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "e5c4",
+            "pv": [
+              "e5c4",
+              "b6c7",
+              "b2f6",
+              "d8f6",
+              "f1f6",
+              "f8d8",
+              "f6f2",
+              "b7b5",
+              "a3b2",
+              "h8g8",
+              "b2b5",
+              "d8d3",
+              "d2f1",
+              "h7h6",
+              "c4e3",
+              "c5c4",
+              "e3d5",
+              "e6d5",
+              "e4d5",
+              "g8g7",
+              "b5c6"
+            ],
+            "score": {
+              "cp": 335,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 473706,
+            "depth": 20,
+            "seldepth": 30,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 30 multipv 1 score cp 335 nodes 473706 nps 797484 hashfull 108 tbhits 0 time 594 pv e5c4 b6c7 b2f6 d8f6 f1f6 f8d8 f6f2 b7b5 a3b2 h8g8 b2b5 d8d3 d2f1 h7h6 c4e3 c5c4 e3d5 e6d5 e4d5 g8g7 b5c6",
+              "multipv": 1,
+              "score": {
+                "cp": 335,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.594,
+            "wall_time_seconds": 0.5901650000014342,
+            "started_utc": "2026-10-18T12:44:22.190418+00:00",
+            "finished_utc": "2026-10-18T12:44:22.782969+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "d2c4",
+            "pv": [
+              "d2c4",
+              "b6b4",
+              "a3a1",
+              "h8g8",
+              "f1b1",
+              "e6c4",
+              "b2c3",
+              "c4d3",
+              "b1b4",
+              "c5b4",
+              "c3b4",
+              "d8b6",
+              "g1h1",
+              "f8d8",
+              "b4e7",
+              "f6e4",
+              "e5d3",
+              "d8d3",
+              "a1a8",
+              "g8g7",
+              "a8f8",
+              "g7g6",
+              "g2g4",
+              "b6d4",
+              "f8g8",
+              "d4g7"
+            ],
+            "score": {
+              "cp": 135,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 248295,
+            "depth": 20,
+            "seldepth": 26,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 26 multipv 1 score cp 135 nodes 248295 nps 841677 hashfull 44 tbhits 0 time 295 pv d2c4 b6b4 a3a1 h8g8 f1b1 e6c4 b2c3 c4d3 b1b4 c5b4 c3b4 d8b6 g1h1 f8d8 b4e7 f6e4 e5d3 d8d3 a1a8 g8g7 a8f8 g7g6 g2g4 b6d4 f8g8 d4g7",
+              "multipv": 1,
+              "score": {
+                "cp": 135,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.295,
+            "wall_time_seconds": 0.29740370000945404,
+            "started_utc": "2026-10-18T12:44:22.786001+00:00",
+            "finished_utc": "2026-10-18T12:44:23.086063+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 200,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    },
+    {
+      "id": "g3-p65",
+      "game": 3,
+      "ply": 65,
+      "opening": "LMR exchanged queen pawns and developed bishop",
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "g8f6",
+        "c4d5",
+        "e6d5",
+        "c1g5",
+        "f8e7",
+        "e2e3",
+        "e8g8",
+        "g1f3",
+        "b8c6",
+        "g5f6",
+        "e7f6",
+        "f1d3",
+        "c8e6",
+        "e1g1",
+        "a7a5",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "c6b4",
+        "g1h1",
+        "c7c5",
+        "g2g3",
+        "g7g5",
+        "d1b1",
+        "h7h5",
+        "d3h7",
+        "g8h8",
+        "h7d3",
+        "g5g4",
+        "f3e5",
+        "f6e5",
+        "d4e5",
+        "d5d4",
+        "c3e2",
+        "b4d3",
+        "b1d3",
+        "d8d5",
+        "h1g1",
+        "e6c8",
+        "e3d4",
+        "c8b7",
+        "f2f3",
+        "g4f3",
+        "e2f4",
+        "d5d4",
+        "d3d4",
+        "c5d4",
+        "h2h4",
+        "a8d8",
+        "f4h5",
+        "f8e8",
+        "a1e1",
+        "d4d3",
+        "e1e3",
+        "d3d2",
+        "f1d1",
+        "d8d4",
+        "h5f4",
+        "e8g8"
+      ],
+      "fen": "6rk/1b3p2/1p6/p3P3/P2r1N1P/1P2RpP1/3p4/3R2K1 w - - 4 33",
+      "candidate_color": "w",
+      "played": "g1h2",
+      "san": "Kh2",
+      "archived_search": {
+        "ply": 65,
+        "role": "candidate",
+        "color": "white",
+        "move": "g1h2",
+        "fen_before": "6rk/1b3p2/1p6/p3P3/P2r1N1P/1P2RpP1/3p4/3R2K1 w - - 4 33",
+        "elapsed_seconds": 0.181723,
+        "nodes": 84163,
+        "depth": 5,
+        "seldepth": 19,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": -158,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "g1h2",
+          "b7e4",
+          "e5e6",
+          "e4c2",
+          "e6f7",
+          "c2d1",
+          "f7g8q",
+          "h8g8"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "backtrack_opportunity": true,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "screen_analysis": {
+        "best": {
+          "move": "g1f2",
+          "pv": [
+            "g1f2",
+            "d4f4",
+            "d1d2",
+            "f4g4",
+            "d2d7",
+            "b7a8",
+            "e5e6",
+            "f7e6",
+            "e3e6",
+            "g4g6",
+            "e6g6",
+            "g8g6",
+            "h4h5",
+            "g6g8",
+            "d7d6",
+            "h8h7",
+            "d6b6",
+            "g8c8",
+            "g3g4",
+            "c8c2",
+            "f2f1",
+            "c2g2"
+          ],
+          "score": {
+            "cp": -233,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50038,
+          "depth": 17,
+          "seldepth": 22,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 17 seldepth 22 multipv 1 score cp -233 nodes 50038 nps 807064 hashfull 7 tbhits 0 time 62 pv g1f2 d4f4 d1d2 f4g4 d2d7 b7a8 e5e6 f7e6 e3e6 g4g6 e6g6 g8g6 h4h5 g6g8 d7d6 h8h7 d6b6 g8c8 g3g4 c8c2 f2f1 c2g2",
+            "multipv": 1,
+            "score": {
+              "cp": -233,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 17,
+          "engine_time_seconds": 0.062,
+          "wall_time_seconds": 0.06006420002086088,
+          "started_utc": "2026-10-18T12:41:38.369363+00:00",
+          "finished_utc": "2026-10-18T12:41:38.447244+00:00"
+        },
+        "forced_played": {
+          "move": "g1h2",
+          "pv": [
+            "g1h2",
+            "d4f4",
+            "g3f4",
+            "g8g2",
+            "h2h3",
+            "b7c8",
+            "e5e6",
+            "c8e6",
+            "e3e6",
+            "f7e6",
+            "d1f1",
+            "h8g7",
+            "f1f3",
+            "g2g1",
+            "f3g3",
+            "g1g3",
+            "h3g3",
+            "g7g6",
+            "g3f3",
+            "d2d1q",
+            "f3f2",
+            "g6f5"
+          ],
+          "score": {
+            "cp": -487,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50093,
+          "depth": 18,
+          "seldepth": 26,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 18 seldepth 26 multipv 1 score cp -487 nodes 50093 nps 963326 hashfull 8 tbhits 0 time 52 pv g1h2 d4f4 g3f4 g8g2 h2h3 b7c8 e5e6 c8e6 e3e6 f7e6 d1f1 h8g7 f1f3 g2g1 f3g3 g1g3 h3g3 g7g6 g3f3 d2d1q f3f2 g6f5",
+            "multipv": 1,
+            "score": {
+              "cp": -487,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 18,
+          "engine_time_seconds": 0.052,
+          "wall_time_seconds": 0.05049180000787601,
+          "started_utc": "2026-10-18T12:41:38.465408+00:00",
+          "finished_utc": "2026-10-18T12:41:38.533639+00:00"
+        },
+        "cp_gap": 254
+      },
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "g1f2",
+            "pv": [
+              "g1f2",
+              "d4f4",
+              "d1d2",
+              "f4g4",
+              "d2d7",
+              "b7a8",
+              "e5e6",
+              "f7e6",
+              "e3e6",
+              "g4g6",
+              "e6g6",
+              "g8g6",
+              "h4h5",
+              "g6g8",
+              "d7d6",
+              "h8h7",
+              "d6b6",
+              "g8c8",
+              "g3g4",
+              "c8c2",
+              "f2f1",
+              "c2g2"
+            ],
+            "score": {
+              "cp": -233,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 40746,
+            "depth": 16,
+            "seldepth": 22,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 22 multipv 1 score cp -233 nodes 40746 nps 831551 hashfull 5 tbhits 0 time 49 pv g1f2 d4f4 d1d2 f4g4 d2d7 b7a8 e5e6 f7e6 e3e6 g4g6 e6g6 g8g6 h4h5 g6g8 d7d6 h8h7 d6b6 g8c8 g3g4 c8c2 f2f1 c2g2",
+              "multipv": 1,
+              "score": {
+                "cp": -233,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.049,
+            "wall_time_seconds": 0.05113579999306239,
+            "started_utc": "2026-10-18T12:44:23.093981+00:00",
+            "finished_utc": "2026-10-18T12:44:23.147868+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "g1h2",
+            "pv": [
+              "g1h2",
+              "d4f4",
+              "g3f4",
+              "g8g2",
+              "h2h3",
+              "b7c8",
+              "e5e6",
+              "c8e6",
+              "e3e6",
+              "f7e6",
+              "d1f1",
+              "h8g7",
+              "f1f3",
+              "g2g1",
+              "f3d3",
+              "d2d1q",
+              "d3d1",
+              "g1d1"
+            ],
+            "score": {
+              "cp": -489,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 24679,
+            "depth": 16,
+            "seldepth": 23,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 23 multipv 1 score cp -489 nodes 24679 nps 881392 hashfull 3 tbhits 0 time 28 pv g1h2 d4f4 g3f4 g8g2 h2h3 b7c8 e5e6 c8e6 e3e6 f7e6 d1f1 h8g7 f1f3 g2g1 f3d3 d2d1q d3d1 g1d1",
+              "multipv": 1,
+              "score": {
+                "cp": -489,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.028,
+            "wall_time_seconds": 0.03025150002213195,
+            "started_utc": "2026-10-18T12:44:23.151491+00:00",
+            "finished_utc": "2026-10-18T12:44:23.184777+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 256,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "g1f2",
+            "pv": [
+              "g1f2",
+              "d4f4",
+              "d1d2",
+              "f4g4",
+              "d2d7",
+              "b7c6",
+              "d7d6",
+              "c6e4",
+              "d6d7",
+              "g8f8",
+              "e3c3",
+              "e4f5",
+              "d7d6",
+              "f8b8",
+              "d6f6",
+              "f5e6",
+              "c3c7",
+              "g4b4",
+              "f6h6",
+              "h8g8",
+              "h6e6"
+            ],
+            "score": {
+              "cp": -322,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 314780,
+            "depth": 20,
+            "seldepth": 31,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 31 multipv 1 score cp -322 nodes 314780 nps 837180 hashfull 65 tbhits 0 time 376 pv g1f2 d4f4 d1d2 f4g4 d2d7 b7c6 d7d6 c6e4 d6d7 g8f8 e3c3 e4f5 d7d6 f8b8 d6f6 f5e6 c3c7 g4b4 f6h6 h8g8 h6e6",
+              "multipv": 1,
+              "score": {
+                "cp": -322,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.376,
+            "wall_time_seconds": 0.3737435000075493,
+            "started_utc": "2026-10-18T12:44:23.188913+00:00",
+            "finished_utc": "2026-10-18T12:44:23.564818+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "g1h2",
+            "pv": [
+              "g1h2",
+              "d4f4",
+              "e3d3",
+              "f4f5",
+              "d3d2",
+              "f5e5",
+              "g3g4",
+              "g8g4",
+              "d1g1",
+              "g4h4",
+              "h2g3",
+              "e5g5",
+              "g3h4",
+              "g5g1",
+              "d2d7",
+              "b7e4",
+              "d7f7",
+              "e4d5",
+              "f7f8",
+              "h8g7",
+              "f8d8"
+            ],
+            "score": {
+              "cp": -524,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 296604,
+            "depth": 20,
+            "seldepth": 22,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 22 multipv 1 score cp -524 nodes 296604 nps 985395 hashfull 62 tbhits 0 time 301 pv g1h2 d4f4 e3d3 f4f5 d3d2 f5e5 g3g4 g8g4 d1g1 g4h4 h2g3 e5g5 g3h4 g5g1 d2d7 b7e4 d7f7 e4d5 f7f8 h8g7 f8d8",
+              "multipv": 1,
+              "score": {
+                "cp": -524,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.301,
+            "wall_time_seconds": 0.2999771000177134,
+            "started_utc": "2026-10-18T12:44:23.567811+00:00",
+            "finished_utc": "2026-10-18T12:44:23.870774+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 202,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    },
+    {
+      "id": "g9-p23",
+      "game": 9,
+      "ply": 23,
+      "opening": "LMR Ruy Lopez central preparation",
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "e1g1",
+        "f8e7",
+        "f1e1",
+        "b7b5",
+        "a4b3",
+        "e8g8",
+        "c2c3",
+        "d7d6",
+        "d2d3",
+        "c8g4",
+        "b1d2",
+        "g8h8",
+        "a2a4",
+        "a8c8"
+      ],
+      "fen": "2rq1r1k/2p1bppp/p1np1n2/1p2p3/P3P1b1/1BPP1N2/1P1N1PPP/R1BQR1K1 w - - 1 12",
+      "candidate_color": "w",
+      "played": "b3d5",
+      "san": "Bd5",
+      "archived_search": {
+        "ply": 23,
+        "role": "candidate",
+        "color": "white",
+        "move": "b3d5",
+        "fen_before": "2rq1r1k/2p1bppp/p1np1n2/1p2p3/P3P1b1/1BPP1N2/1P1N1PPP/R1BQR1K1 w - - 1 12",
+        "elapsed_seconds": 0.181874,
+        "nodes": 80553,
+        "depth": 4,
+        "seldepth": 24,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": -23,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b3d5",
+          "f6d5",
+          "e4d5",
+          "g4f3",
+          "d2f3"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "backtrack_opportunity": false,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "screen_analysis": {
+        "best": {
+          "move": "h2h3",
+          "pv": [
+            "h2h3",
+            "g4h5",
+            "a4b5",
+            "a6b5",
+            "d2f1",
+            "h5g6",
+            "f1g3",
+            "c8a8",
+            "a1a8",
+            "d8a8",
+            "f3h4",
+            "b5b4",
+            "h4g6",
+            "f7g6"
+          ],
+          "score": {
+            "cp": 96,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50079,
+          "depth": 15,
+          "seldepth": 17,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 15 seldepth 17 multipv 1 score cp 96 nodes 50079 nps 715414 hashfull 8 tbhits 0 time 70 pv h2h3 g4h5 a4b5 a6b5 d2f1 h5g6 f1g3 c8a8 a1a8 d8a8 f3h4 b5b4 h4g6 f7g6",
+            "multipv": 1,
+            "score": {
+              "cp": 96,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 15,
+          "engine_time_seconds": 0.07,
+          "wall_time_seconds": 0.06684829998994246,
+          "started_utc": "2026-10-18T12:41:41.615378+00:00",
+          "finished_utc": "2026-10-18T12:41:41.705276+00:00"
+        },
+        "forced_played": {
+          "move": "b3d5",
+          "pv": [
+            "b3d5",
+            "f6d5",
+            "e4d5",
+            "c6b8",
+            "a4b5",
+            "a6b5",
+            "d3d4",
+            "e5d4",
+            "h2h3",
+            "g4h5",
+            "c3d4",
+            "b8d7",
+            "d1e2",
+            "e7f6",
+            "e2b5",
+            "d7b6"
+          ],
+          "score": {
+            "cp": 19,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50050,
+          "depth": 15,
+          "seldepth": 18,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 15 seldepth 18 multipv 1 score cp 19 nodes 50050 nps 794444 hashfull 11 tbhits 0 time 63 pv b3d5 f6d5 e4d5 c6b8 a4b5 a6b5 d3d4 e5d4 h2h3 g4h5 c3d4 b8d7 d1e2 e7f6 e2b5 d7b6",
+            "multipv": 1,
+            "score": {
+              "cp": 19,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 15,
+          "engine_time_seconds": 0.063,
+          "wall_time_seconds": 0.0601631999888923,
+          "started_utc": "2026-10-18T12:41:41.731828+00:00",
+          "finished_utc": "2026-10-18T12:41:41.810817+00:00"
+        },
+        "cp_gap": 77
+      },
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "h2h3",
+            "pv": [
+              "h2h3",
+              "g4h5",
+              "d2f1",
+              "c6a5",
+              "b3a2",
+              "c7c5",
+              "f1g3",
+              "h5g6",
+              "f3h4",
+              "c5c4",
+              "a4b5",
+              "a6b5",
+              "h4f5",
+              "h7h6",
+              "a2b1"
+            ],
+            "score": {
+              "cp": 90,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 117279,
+            "depth": 16,
+            "seldepth": 18,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 18 multipv 1 score cp 90 nodes 117279 nps 792425 hashfull 22 tbhits 0 time 148 pv h2h3 g4h5 d2f1 c6a5 b3a2 c7c5 f1g3 h5g6 f3h4 c5c4 a4b5 a6b5 h4f5 h7h6 a2b1",
+              "multipv": 1,
+              "score": {
+                "cp": 90,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.148,
+            "wall_time_seconds": 0.14843680002377369,
+            "started_utc": "2026-10-18T12:44:23.881429+00:00",
+            "finished_utc": "2026-10-18T12:44:24.032810+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "b3d5",
+            "pv": [
+              "b3d5",
+              "f6d5",
+              "e4d5",
+              "c6b8",
+              "a4b5",
+              "a6b5",
+              "d3d4",
+              "e5d4",
+              "c3d4",
+              "b8d7",
+              "h2h3",
+              "g4h5",
+              "d1e2",
+              "e7h4",
+              "e2b5",
+              "d7b6",
+              "a1a7"
+            ],
+            "score": {
+              "cp": 7,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 105628,
+            "depth": 16,
+            "seldepth": 21,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 21 multipv 1 score cp 7 nodes 105628 nps 918504 hashfull 20 tbhits 0 time 115 pv b3d5 f6d5 e4d5 c6b8 a4b5 a6b5 d3d4 e5d4 c3d4 b8d7 h2h3 g4h5 d1e2 e7h4 e2b5 d7b6 a1a7",
+              "multipv": 1,
+              "score": {
+                "cp": 7,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.115,
+            "wall_time_seconds": 0.11586910000187345,
+            "started_utc": "2026-10-18T12:44:24.036413+00:00",
+            "finished_utc": "2026-10-18T12:44:24.155333+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 83,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "a4b5",
+            "pv": [
+              "a4b5",
+              "a6b5",
+              "h2h3",
+              "g4h5",
+              "d2f1",
+              "c8a8",
+              "a1a8",
+              "d8a8",
+              "f1g3",
+              "h5g6",
+              "f3h4",
+              "b5b4",
+              "h4f5",
+              "b4c3",
+              "b2c3",
+              "h7h6",
+              "h3h4",
+              "e7d8",
+              "h4h5",
+              "g6h7",
+              "b3c4",
+              "c6e7"
+            ],
+            "score": {
+              "cp": 81,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 652508,
+            "depth": 20,
+            "seldepth": 28,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 28 multipv 1 score cp 81 nodes 652508 nps 781446 hashfull 135 tbhits 0 time 835 pv a4b5 a6b5 h2h3 g4h5 d2f1 c8a8 a1a8 d8a8 f1g3 h5g6 f3h4 b5b4 h4f5 b4c3 b2c3 h7h6 h3h4 e7d8 h4h5 g6h7 b3c4 c6e7",
+              "multipv": 1,
+              "score": {
+                "cp": 81,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.835,
+            "wall_time_seconds": 0.8280747999961022,
+            "started_utc": "2026-10-18T12:44:24.161325+00:00",
+            "finished_utc": "2026-10-18T12:44:24.992453+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "b3d5",
+            "pv": [
+              "b3d5",
+              "f6d5",
+              "e4d5",
+              "c6b8",
+              "a4b5",
+              "a6b5",
+              "d1b3",
+              "g4d7",
+              "d3d4",
+              "f7f6",
+              "h2h3",
+              "d7e8",
+              "d2f1",
+              "c7c6",
+              "d5c6",
+              "b8c6",
+              "f1g3",
+              "f6f5",
+              "d4e5",
+              "d6e5",
+              "f3e5",
+              "c6e5"
+            ],
+            "score": {
+              "cp": 14,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 284811,
+            "depth": 20,
+            "seldepth": 25,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 25 multipv 1 score cp 14 nodes 284811 nps 818422 hashfull 57 tbhits 0 time 348 pv b3d5 f6d5 e4d5 c6b8 a4b5 a6b5 d1b3 g4d7 d3d4 f7f6 h2h3 d7e8 d2f1 c7c6 d5c6 b8c6 f1g3 f6f5 d4e5 d6e5 f3e5 c6e5",
+              "multipv": 1,
+              "score": {
+                "cp": 14,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.348,
+            "wall_time_seconds": 0.34747870001592673,
+            "started_utc": "2026-10-18T12:44:24.995228+00:00",
+            "finished_utc": "2026-10-18T12:44:25.345356+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 67,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    },
+    {
+      "id": "g13-p81",
+      "game": 13,
+      "ply": 81,
+      "opening": "LMR Caro bishop retreat and flank space",
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "c7c6",
+        "d2d4",
+        "d7d5",
+        "b1d2",
+        "d5e4",
+        "d2e4",
+        "c8f5",
+        "e4g3",
+        "f5g6",
+        "g1f3",
+        "b8d7",
+        "h2h4",
+        "g8f6",
+        "f1e2",
+        "e7e6",
+        "h4h5",
+        "g6e4",
+        "e1g1",
+        "f8d6",
+        "g3e4",
+        "f6e4",
+        "e2d3",
+        "e4f6",
+        "c1g5",
+        "d8b6",
+        "c2c4",
+        "b6b2",
+        "c4c5",
+        "d6b8",
+        "h5h6",
+        "g7h6",
+        "g5h6",
+        "b7b5",
+        "h6g7",
+        "h8g8",
+        "g7f6",
+        "d7f6",
+        "g1h1",
+        "b8c7",
+        "g2g3",
+        "e8c8",
+        "a1b1",
+        "b2a3",
+        "d1b3",
+        "a3a5",
+        "f3e5",
+        "c7e5",
+        "d4e5",
+        "f6g4",
+        "d3h7",
+        "g8h8",
+        "b3c2",
+        "f7f5",
+        "e5f6",
+        "g4f6",
+        "h1g1",
+        "h8h7",
+        "f1e1",
+        "h7e7",
+        "c2g6",
+        "a5c3",
+        "e1e3",
+        "c3d4",
+        "b1e1",
+        "f6g4",
+        "e3e2",
+        "a7a5",
+        "g6e4",
+        "d4e4",
+        "e2e4",
+        "g4f6",
+        "e4e6",
+        "e7e6",
+        "e1e6",
+        "d8d1",
+        "g1g2",
+        "f6g4",
+        "e6c6",
+        "c8d7"
+      ],
+      "fen": "8/3k4/2R5/ppP5/6n1/6P1/P4PK1/3r4 w - - 1 41",
+      "candidate_color": "w",
+      "played": "c6g6",
+      "san": "Rg6",
+      "archived_search": {
+        "ply": 81,
+        "role": "candidate",
+        "color": "white",
+        "move": "c6g6",
+        "fen_before": "8/3k4/2R5/ppP5/6n1/6P1/P4PK1/3r4 w - - 1 41",
+        "elapsed_seconds": 0.182089,
+        "nodes": 125335,
+        "depth": 7,
+        "seldepth": 15,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": -109,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c6g6",
+          "g4e5",
+          "g6b6",
+          "b5b4",
+          "f2f4",
+          "d1d2",
+          "g2f1"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "backtrack_opportunity": false,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "screen_analysis": {
+        "best": {
+          "move": "c6b6",
+          "pv": [
+            "c6b6",
+            "b5b4",
+            "b6a6",
+            "d1d2",
+            "c5c6",
+            "d7d6",
+            "a6a5",
+            "d2f2",
+            "g2h3",
+            "g4e3",
+            "a5a6",
+            "e3d5",
+            "g3g4",
+            "f2f3",
+            "h3h4"
+          ],
+          "score": {
+            "cp": -172,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50045,
+          "depth": 15,
+          "seldepth": 18,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 15 seldepth 18 multipv 1 score cp -172 nodes 50045 nps 794365 hashfull 13 tbhits 0 time 63 pv c6b6 b5b4 b6a6 d1d2 c5c6 d7d6 a6a5 d2f2 g2h3 g4e3 a5a6 e3d5 g3g4 f2f3 h3h4",
+            "multipv": 1,
+            "score": {
+              "cp": -172,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 15,
+          "engine_time_seconds": 0.063,
+          "wall_time_seconds": 0.07063769997330382,
+          "started_utc": "2026-10-18T12:41:55.675905+00:00",
+          "finished_utc": "2026-10-18T12:41:55.778905+00:00"
+        },
+        "forced_played": {
+          "move": "c6g6",
+          "pv": [
+            "c6g6",
+            "g4e5",
+            "g6g5",
+            "d1g1",
+            "g2g1",
+            "e5f3",
+            "g1g2",
+            "f3g5",
+            "f2f4",
+            "g5e4",
+            "g2f3",
+            "e4c5",
+            "f3e3",
+            "d7d6",
+            "e3d4"
+          ],
+          "score": {
+            "cp": -259,
+            "mate": null,
+            "pov": "w"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50027,
+          "depth": 15,
+          "seldepth": 18,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 15 seldepth 18 multipv 1 score cp -259 nodes 50027 nps 806887 hashfull 10 tbhits 0 time 62 pv c6g6 g4e5 g6g5 d1g1 g2g1 e5f3 g1g2 f3g5 f2f4 g5e4 g2f3 e4c5 f3e3 d7d6 e3d4",
+            "multipv": 1,
+            "score": {
+              "cp": -259,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 15,
+          "engine_time_seconds": 0.062,
+          "wall_time_seconds": 0.06859029998304322,
+          "started_utc": "2026-10-18T12:41:55.807313+00:00",
+          "finished_utc": "2026-10-18T12:41:55.899413+00:00"
+        },
+        "cp_gap": 87
+      },
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "c6a6",
+            "pv": [
+              "c6a6",
+              "a5a4",
+              "f2f4",
+              "d1d3",
+              "a6b6",
+              "g4e3",
+              "g2f2",
+              "d3a3",
+              "b6b5",
+              "d7c6",
+              "b5b8",
+              "c6c5",
+              "b8a8",
+              "e3d1",
+              "f2e1",
+              "d1c3"
+            ],
+            "score": {
+              "cp": -175,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 174568,
+            "depth": 16,
+            "seldepth": 24,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 24 multipv 1 score cp -175 nodes 174568 nps 808185 hashfull 37 tbhits 0 time 216 pv c6a6 a5a4 f2f4 d1d3 a6b6 g4e3 g2f2 d3a3 b6b5 d7c6 b5b8 c6c5 b8a8 e3d1 f2e1 d1c3",
+              "multipv": 1,
+              "score": {
+                "cp": -175,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.216,
+            "wall_time_seconds": 0.21594150000601076,
+            "started_utc": "2026-10-18T12:44:25.355090+00:00",
+            "finished_utc": "2026-10-18T12:44:25.574009+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "c6g6",
+            "pv": [
+              "c6g6",
+              "g4e5",
+              "g6a6",
+              "a5a4",
+              "f2f4",
+              "d1d2",
+              "g2h3",
+              "e5c6",
+              "g3g4",
+              "d2a2",
+              "g4g5",
+              "a2a3",
+              "h3g4",
+              "b5b4",
+              "g5g6",
+              "a3a1"
+            ],
+            "score": {
+              "cp": -260,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 114671,
+            "depth": 16,
+            "seldepth": 25,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 25 multipv 1 score cp -260 nodes 114671 nps 837014 hashfull 23 tbhits 0 time 137 pv c6g6 g4e5 g6a6 a5a4 f2f4 d1d2 g2h3 e5c6 g3g4 d2a2 g4g5 a2a3 h3g4 b5b4 g5g6 a3a1",
+              "multipv": 1,
+              "score": {
+                "cp": -260,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.137,
+            "wall_time_seconds": 0.1388460000162013,
+            "started_utc": "2026-10-18T12:44:25.577921+00:00",
+            "finished_utc": "2026-10-18T12:44:25.719887+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 85,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "c6a6",
+            "pv": [
+              "c6a6",
+              "a5a4",
+              "f2f4",
+              "d1d3",
+              "a6b6",
+              "g4e3",
+              "g2f2",
+              "d3a3",
+              "b6b5",
+              "d7c6",
+              "b5a5",
+              "e3c4",
+              "a5a7",
+              "a3a2",
+              "f2f3",
+              "a4a3",
+              "g3g4",
+              "a2a1",
+              "g4g5",
+              "a3a2",
+              "f3g2",
+              "c4e3",
+              "g2f2",
+              "c6c5",
+              "g5g6",
+              "a1f1",
+              "f2e3",
+              "a2a1q"
+            ],
+            "score": {
+              "cp": -187,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 731569,
+            "depth": 20,
+            "seldepth": 32,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 32 multipv 1 score cp -187 nodes 731569 nps 821987 hashfull 142 tbhits 0 time 890 pv c6a6 a5a4 f2f4 d1d3 a6b6 g4e3 g2f2 d3a3 b6b5 d7c6 b5a5 e3c4 a5a7 a3a2 f2f3 a4a3 g3g4 a2a1 g4g5 a3a2 f3g2 c4e3 g2f2 c6c5 g5g6 a1f1 f2e3 a2a1q",
+              "multipv": 1,
+              "score": {
+                "cp": -187,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.89,
+            "wall_time_seconds": 0.882118100009393,
+            "started_utc": "2026-10-18T12:44:25.727065+00:00",
+            "finished_utc": "2026-10-18T12:44:26.612407+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "c6g6",
+            "pv": [
+              "c6g6",
+              "g4e5",
+              "g6g5",
+              "d1g1",
+              "g2h3",
+              "g1h1",
+              "h3g2",
+              "h1h2",
+              "g2f1",
+              "e5c4",
+              "g3g4",
+              "h2h8",
+              "g5g6",
+              "h8c8",
+              "f2f4",
+              "c8c5",
+              "f4f5",
+              "c5e5",
+              "g6g7",
+              "d7d6"
+            ],
+            "score": {
+              "cp": -248,
+              "mate": null,
+              "pov": "w"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 761306,
+            "depth": 20,
+            "seldepth": 26,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 26 multipv 1 score cp -248 nodes 761306 nps 868079 hashfull 149 tbhits 0 time 877 pv c6g6 g4e5 g6g5 d1g1 g2h3 g1h1 h3g2 h1h2 g2f1 e5c4 g3g4 h2h8 g5g6 h8c8 f2f4 c8c5 f4f5 c5e5 g6g7 d7d6",
+              "multipv": 1,
+              "score": {
+                "cp": -248,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.877,
+            "wall_time_seconds": 0.8693850999989081,
+            "started_utc": "2026-10-18T12:44:26.616825+00:00",
+            "finished_utc": "2026-10-18T12:44:27.489173+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 61,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    },
+    {
+      "id": "g16-p50",
+      "game": 16,
+      "ply": 50,
+      "opening": "LMR kingside fianchetto and locked center",
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "g7g6",
+        "b1c3",
+        "f8g7",
+        "e2e4",
+        "d7d6",
+        "g1f3",
+        "e8g8",
+        "f1e2",
+        "e7e5",
+        "e1g1",
+        "b8c6",
+        "d4d5",
+        "c6e7",
+        "c1e3",
+        "c7c5",
+        "g1h1",
+        "c8g4",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "g8h8",
+        "a1c1",
+        "a7a5",
+        "e2d3",
+        "a8c8",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "f6d7",
+        "c3b5",
+        "d7f6",
+        "g2g4",
+        "d8d7",
+        "f3g3",
+        "f6e8",
+        "f2f4",
+        "f7f5",
+        "e4f5",
+        "g6f5",
+        "f4e5",
+        "g7e5",
+        "e3f4",
+        "e5f4",
+        "g3f4",
+        "f8f6",
+        "f4g5"
+      ],
+      "fen": "2r1n2k/3qn2p/1p1p1r2/pNpP1pQ1/P1P3P1/1P1B3P/8/2R2R1K b - - 2 25",
+      "candidate_color": "b",
+      "played": "h7h6",
+      "san": "h6",
+      "archived_search": {
+        "ply": 50,
+        "role": "candidate",
+        "color": "black",
+        "move": "h7h6",
+        "fen_before": "2r1n2k/3qn2p/1p1p1r2/pNpP1pQ1/P1P3P1/1P1B3P/8/2R2R1K b - - 2 25",
+        "elapsed_seconds": 0.181266,
+        "nodes": 82545,
+        "depth": 4,
+        "seldepth": 26,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": -158,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "h7h6",
+          "g5h4",
+          "c8d8",
+          "g4f5"
+        ],
+        "quiet_nonpawn_not_in_check": false,
+        "backtrack_opportunity": false,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "screen_analysis": {
+        "best": {
+          "move": "f6f7",
+          "pv": [
+            "f6f7",
+            "d3f5",
+            "e7f5",
+            "f1f5",
+            "f7f5",
+            "g5f5",
+            "d7f5",
+            "g4f5",
+            "c8d8",
+            "c1e1",
+            "e8g7",
+            "f5f6",
+            "g7f5",
+            "f6f7",
+            "d8f8",
+            "e1e6",
+            "f8f7",
+            "b5d6"
+          ],
+          "score": {
+            "cp": -267,
+            "mate": null,
+            "pov": "b"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50062,
+          "depth": 16,
+          "seldepth": 21,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 16 seldepth 21 multipv 1 score cp -267 nodes 50062 nps 834366 hashfull 8 tbhits 0 time 60 pv f6f7 d3f5 e7f5 f1f5 f7f5 g5f5 d7f5 g4f5 c8d8 c1e1 e8g7 f5f6 g7f5 f6f7 d8f8 e1e6 f8f7 b5d6",
+            "multipv": 1,
+            "score": {
+              "cp": -267,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 16,
+          "engine_time_seconds": 0.06,
+          "wall_time_seconds": 0.057972800015704706,
+          "started_utc": "2026-10-18T12:42:07.190204+00:00",
+          "finished_utc": "2026-10-18T12:42:07.276889+00:00"
+        },
+        "forced_played": {
+          "move": "h7h6",
+          "pv": [
+            "h7h6",
+            "g5h4",
+            "e7g8",
+            "d3f5",
+            "d7f7",
+            "c1e1",
+            "c8d8",
+            "f5d3",
+            "f7g7",
+            "h1g2",
+            "f6f1",
+            "e1f1",
+            "e8f6"
+          ],
+          "score": {
+            "cp": -383,
+            "mate": null,
+            "pov": "b"
+          },
+          "requested_nodes": 50000,
+          "nodes": 50012,
+          "depth": 16,
+          "seldepth": 16,
+          "upperbound": false,
+          "lowerbound": false,
+          "final_score_event": {
+            "raw_info": "info depth 16 seldepth 16 multipv 1 score cp -383 nodes 50012 nps 714457 hashfull 10 tbhits 0 time 70 pv h7h6 g5h4 e7g8 d3f5 d7f7 c1e1 c8d8 f5d3 f7g7 h1g2 f6f1 e1f1 e8f6",
+            "multipv": 1,
+            "score": {
+              "cp": -383,
+              "mate": null
+            },
+            "upperbound": false,
+            "lowerbound": false
+          },
+          "score_events_observed": 16,
+          "engine_time_seconds": 0.07,
+          "wall_time_seconds": 0.06725990000995807,
+          "started_utc": "2026-10-18T12:42:07.306548+00:00",
+          "finished_utc": "2026-10-18T12:42:07.400485+00:00"
+        },
+        "cp_gap": 116
+      },
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "f6f7",
+            "pv": [
+              "f6f7",
+              "d3f5",
+              "e7f5",
+              "f1f5",
+              "f7f5",
+              "g5f5",
+              "d7f5",
+              "g4f5",
+              "c8d8",
+              "c1e1",
+              "e8g7",
+              "f5f6",
+              "g7f5",
+              "f6f7",
+              "d8f8",
+              "e1e6",
+              "f8f7",
+              "b5d6",
+              "f5d6",
+              "e6d6"
+            ],
+            "score": {
+              "cp": -267,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 55775,
+            "depth": 16,
+            "seldepth": 21,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 21 multipv 1 score cp -267 nodes 55775 nps 914344 hashfull 9 tbhits 0 time 61 pv f6f7 d3f5 e7f5 f1f5 f7f5 g5f5 d7f5 g4f5 c8d8 c1e1 e8g7 f5f6 g7f5 f6f7 d8f8 e1e6 f8f7 b5d6 f5d6 e6d6",
+              "multipv": 1,
+              "score": {
+                "cp": -267,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.061,
+            "wall_time_seconds": 0.06318729999475181,
+            "started_utc": "2026-10-18T12:44:27.499827+00:00",
+            "finished_utc": "2026-10-18T12:44:27.566453+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "h7h6",
+            "pv": [
+              "h7h6",
+              "g5h4",
+              "e7g8",
+              "d3f5",
+              "d7f7",
+              "h4g3",
+              "c8d8",
+              "h1g2",
+              "e8c7",
+              "b5c7",
+              "f7c7"
+            ],
+            "score": {
+              "cp": -382,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 74410,
+            "depth": 16,
+            "seldepth": 18,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 18 multipv 1 score cp -382 nodes 74410 nps 751616 hashfull 14 tbhits 0 time 99 pv h7h6 g5h4 e7g8 d3f5 d7f7 h4g3 c8d8 h1g2 e8c7 b5c7 f7c7",
+              "multipv": 1,
+              "score": {
+                "cp": -382,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.099,
+            "wall_time_seconds": 0.10034549998817965,
+            "started_utc": "2026-10-18T12:44:27.570902+00:00",
+            "finished_utc": "2026-10-18T12:44:27.674326+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 115,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "f6g6",
+            "pv": [
+              "f6g6",
+              "d3f5",
+              "e7f5",
+              "g5f5",
+              "d7f5",
+              "f1f5",
+              "e8g7",
+              "f5f7",
+              "h7h5",
+              "c1g1",
+              "c8g8",
+              "h1h2",
+              "g7e8",
+              "g1g3",
+              "h5g4",
+              "h3g4",
+              "g8g7",
+              "f7g7",
+              "g6g7",
+              "g4g5",
+              "h8g8"
+            ],
+            "score": {
+              "cp": -290,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 300186,
+            "depth": 20,
+            "seldepth": 35,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 35 multipv 1 score cp -290 nodes 300186 nps 843219 hashfull 55 tbhits 0 time 356 pv f6g6 d3f5 e7f5 g5f5 d7f5 f1f5 e8g7 f5f7 h7h5 c1g1 c8g8 h1h2 g7e8 g1g3 h5g4 h3g4 g8g7 f7g7 g6g7 g4g5 h8g8",
+              "multipv": 1,
+              "score": {
+                "cp": -290,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.356,
+            "wall_time_seconds": 0.3510468000022229,
+            "started_utc": "2026-10-18T12:44:27.680796+00:00",
+            "finished_utc": "2026-10-18T12:44:28.036175+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "h7h6",
+            "pv": [
+              "h7h6",
+              "g5h4",
+              "h8h7",
+              "g4f5",
+              "e7g8",
+              "c1c2",
+              "e8g7",
+              "f1g1",
+              "c8e8",
+              "c2g2",
+              "e8e3",
+              "g2g7",
+              "d7g7",
+              "g1g7",
+              "h7g7",
+              "d3e4",
+              "g7h8",
+              "h1g2",
+              "e3b3",
+              "g2f2"
+            ],
+            "score": {
+              "cp": -398,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 389741,
+            "depth": 20,
+            "seldepth": 27,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 27 multipv 1 score cp -398 nodes 389741 nps 774833 hashfull 81 tbhits 0 time 503 pv h7h6 g5h4 h8h7 g4f5 e7g8 c1c2 e8g7 f1g1 c8e8 c2g2 e8e3 g2g7 d7g7 g1g7 h7g7 d3e4 g7h8 h1g2 e3b3 g2f2",
+              "multipv": 1,
+              "score": {
+                "cp": -398,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.503,
+            "wall_time_seconds": 0.49034109999774955,
+            "started_utc": "2026-10-18T12:44:28.041329+00:00",
+            "finished_utc": "2026-10-18T12:44:28.535762+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 108,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    },
+    {
+      "id": "pair2-p74",
+      "game": 4,
+      "ply": 74,
+      "opening": "LMR exchanged queen pawns and developed bishop",
+      "label": "auxiliary_paired_divergence",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "g8f6",
+        "c4d5",
+        "e6d5",
+        "c1g5",
+        "f8e7",
+        "e2e3",
+        "e8g8",
+        "g1f3",
+        "b8c6",
+        "g5f6",
+        "e7f6",
+        "f1d3",
+        "c8e6",
+        "e1g1",
+        "a7a5",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "c6b4",
+        "g1h1",
+        "c7c5",
+        "g2g3",
+        "g7g5",
+        "d1b1",
+        "h7h5",
+        "d3h7",
+        "g8h8",
+        "h7d3",
+        "g5g4",
+        "f3e5",
+        "f6e5",
+        "d4e5",
+        "d5d4",
+        "c3e2",
+        "b4d3",
+        "b1d3",
+        "d8d5",
+        "h1g1",
+        "e6c8",
+        "e3d4",
+        "c8b7",
+        "f2f3",
+        "g4f3",
+        "e2f4",
+        "d5d4",
+        "d3d4",
+        "c5d4",
+        "h2h4",
+        "a8d8",
+        "f4h5",
+        "f8e8",
+        "a1e1",
+        "d4d3",
+        "e1e3",
+        "d3d2",
+        "f1d1",
+        "d8d4",
+        "h5f4",
+        "e8g8",
+        "g1h2",
+        "b7e4",
+        "e5e6",
+        "f7e6",
+        "f4e6",
+        "e4c2",
+        "e6d4",
+        "c2d1",
+        "e3d3"
+      ],
+      "fen": "6rk/8/1p6/p7/P2N3P/1P1R1pP1/3p3K/3b4 b - - 1 37",
+      "candidate_color": "b",
+      "played": "d1e2",
+      "san": "Be2",
+      "archived_search": {
+        "ply": 74,
+        "role": "candidate",
+        "color": "black",
+        "move": "d1e2",
+        "fen_before": "6rk/8/1p6/p7/P2N3P/1P1R1pP1/3p3K/3b4 b - - 1 37",
+        "elapsed_seconds": 0.182149,
+        "nodes": 119576,
+        "depth": 6,
+        "seldepth": 18,
+        "engine_time_seconds": 0.18,
+        "score": {
+          "pov": "mover",
+          "cp": 247,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d4f3",
+          "e2d3",
+          "f3d2",
+          "g8e8",
+          "h2g1"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "backtrack_opportunity": false,
+        "immediate_backtrack": false
+      },
+      "selection_reasons": [
+        "first pair-2 divergence after 73 identical plies; not a sixth loss"
+      ],
+      "paired_source_game": 3,
+      "paired_alternative": "f3f2",
+      "paired_alternative_san": "f2",
+      "controls": [
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 16,
+          "best": {
+            "move": "f3f2",
+            "pv": [
+              "f3f2",
+              "d3d2",
+              "f2f1n",
+              "h2g1",
+              "f1d2",
+              "g1f2",
+              "d2b3",
+              "d4b3",
+              "d1b3",
+              "g3g4"
+            ],
+            "score": {
+              "cp": 627,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 103086,
+            "depth": 16,
+            "seldepth": 21,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 21 multipv 1 score cp 627 nodes 103086 nps 1412136 hashfull 22 tbhits 0 time 73 pv f3f2 d3d2 f2f1n h2g1 f1d2 g1f2 d2b3 d4b3 d1b3 g3g4",
+              "multipv": 1,
+              "score": {
+                "cp": 627,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.073,
+            "wall_time_seconds": 0.07289909999235533,
+            "started_utc": "2026-10-18T12:44:28.552486+00:00",
+            "finished_utc": "2026-10-18T12:44:28.629420+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "d1e2",
+            "pv": [
+              "d1e2",
+              "d3d2",
+              "f3f2",
+              "d4e2",
+              "f2f1n",
+              "h2h3",
+              "f1d2",
+              "g3g4",
+              "d2b3",
+              "g4g5",
+              "b3c5",
+              "e2f4"
+            ],
+            "score": {
+              "cp": 520,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 44697,
+            "depth": 16,
+            "seldepth": 17,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 17 multipv 1 score cp 520 nodes 44697 nps 1176236 hashfull 11 tbhits 0 time 38 pv d1e2 d3d2 f3f2 d4e2 f2f1n h2h3 f1d2 g3g4 d2b3 g4g5 b3c5 e2f4",
+              "multipv": 1,
+              "score": {
+                "cp": 520,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.038,
+            "wall_time_seconds": 0.03983889997471124,
+            "started_utc": "2026-10-18T12:44:28.634570+00:00",
+            "finished_utc": "2026-10-18T12:44:28.679231+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "forced_paired_alternative": {
+            "move": "f3f2",
+            "pv": [
+              "f3f2",
+              "h2g2",
+              "g8f8",
+              "g2f1",
+              "d1g4",
+              "d4f3",
+              "f8f3",
+              "d3f3",
+              "d2d1q",
+              "f1f2",
+              "d1d2",
+              "f2g1",
+              "d2e1",
+              "g1h2"
+            ],
+            "score": {
+              "cp": 581,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 27259,
+            "depth": 16,
+            "seldepth": 20,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 16 seldepth 20 multipv 1 score cp 581 nodes 27259 nps 1239045 hashfull 6 tbhits 0 time 22 pv f3f2 h2g2 g8f8 g2f1 d1g4 d4f3 f8f3 d3f3 d2d1q f1f2 d1d2 f2g1 d2e1 g1h2",
+              "multipv": 1,
+              "score": {
+                "cp": 581,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 16,
+            "engine_time_seconds": 0.022,
+            "wall_time_seconds": 0.023980300000403076,
+            "started_utc": "2026-10-18T12:44:28.684758+00:00",
+            "finished_utc": "2026-10-18T12:44:28.713005+00:00",
+            "requested_depth": 16,
+            "complete_depth": true
+          },
+          "cp_gap": 107,
+          "complete_depth": true
+        },
+        {
+          "requested_nodes": 4000000,
+          "status": "complete",
+          "requested_depth": 20,
+          "best": {
+            "move": "f3f2",
+            "pv": [
+              "f3f2",
+              "d3d2",
+              "f2f1n",
+              "h2g2",
+              "f1d2",
+              "d4f5",
+              "d1f3",
+              "g2g1",
+              "g8e8",
+              "f5d4",
+              "f3a8",
+              "g1f2",
+              "a8b7",
+              "d4c2",
+              "d2b3",
+              "c2a1",
+              "b3a1",
+              "g3g4",
+              "b7c6"
+            ],
+            "score": {
+              "cp": 642,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 451288,
+            "depth": 20,
+            "seldepth": 22,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 22 multipv 1 score cp 642 nodes 451288 nps 1166118 hashfull 91 tbhits 0 time 387 pv f3f2 d3d2 f2f1n h2g2 f1d2 d4f5 d1f3 g2g1 g8e8 f5d4 f3a8 g1f2 a8b7 d4c2 d2b3 c2a1 b3a1 g3g4 b7c6",
+              "multipv": 1,
+              "score": {
+                "cp": 642,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.387,
+            "wall_time_seconds": 0.37727750002522953,
+            "started_utc": "2026-10-18T12:44:28.720092+00:00",
+            "finished_utc": "2026-10-18T12:44:29.102543+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_played": {
+            "move": "d1e2",
+            "pv": [
+              "d1e2",
+              "d3d2",
+              "f3f2",
+              "d2c2",
+              "f2f1q",
+              "c2e2",
+              "g8d8",
+              "e2d2",
+              "d8a8",
+              "d2c2",
+              "f1d3",
+              "c2c6"
+            ],
+            "score": {
+              "cp": 526,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 285871,
+            "depth": 20,
+            "seldepth": 31,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 31 multipv 1 score cp 526 nodes 285871 nps 1047146 hashfull 59 tbhits 0 time 273 pv d1e2 d3d2 f3f2 d2c2 f2f1q c2e2 g8d8 e2d2 d8a8 d2c2 f1d3 c2c6",
+              "multipv": 1,
+              "score": {
+                "cp": 526,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.273,
+            "wall_time_seconds": 0.26768359998823144,
+            "started_utc": "2026-10-18T12:44:29.108199+00:00",
+            "finished_utc": "2026-10-18T12:44:29.379824+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "forced_paired_alternative": {
+            "move": "f3f2",
+            "pv": [
+              "f3f2",
+              "d3d2",
+              "f2f1n",
+              "h2g2",
+              "f1d2",
+              "d4f5",
+              "g8e8",
+              "g2h3",
+              "d2b3",
+              "f5h6",
+              "b3a1",
+              "h6f7",
+              "h8g8",
+              "f7h6",
+              "g8g7",
+              "h6g4",
+              "d1g4",
+              "h3g4"
+            ],
+            "score": {
+              "cp": 642,
+              "mate": null,
+              "pov": "b"
+            },
+            "requested_nodes": 4000000,
+            "nodes": 451113,
+            "depth": 20,
+            "seldepth": 27,
+            "upperbound": false,
+            "lowerbound": false,
+            "final_score_event": {
+              "raw_info": "info depth 20 seldepth 27 multipv 1 score cp 642 nodes 451113 nps 1094934 hashfull 93 tbhits 0 time 412 pv f3f2 d3d2 f2f1n h2g2 f1d2 d4f5 g8e8 g2h3 d2b3 f5h6 b3a1 h6f7 h8g8 f7h6 g8g7 h6g4 d1g4 h3g4",
+              "multipv": 1,
+              "score": {
+                "cp": 642,
+                "mate": null
+              },
+              "upperbound": false,
+              "lowerbound": false
+            },
+            "score_events_observed": 20,
+            "engine_time_seconds": 0.412,
+            "wall_time_seconds": 0.40228840001509525,
+            "started_utc": "2026-10-18T12:44:29.385589+00:00",
+            "finished_utc": "2026-10-18T12:44:29.792663+00:00",
+            "requested_depth": 20,
+            "complete_depth": true
+          },
+          "cp_gap": 116,
+          "complete_depth": true
+        }
+      ],
+      "status": "complete"
+    }
+  ],
+  "errors": [],
+  "checkpoint_utc": "2026-10-18T12:44:29.823807+00:00",
+  "exit_code": 0
+}

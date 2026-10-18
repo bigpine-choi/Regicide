@@ -1,0 +1,1817 @@
+{
+  "schema_version": 1,
+  "source": {
+    "path": "docs/matches/2026-10-18-lmr-idle-rematch/match-200ms.json",
+    "sha256": "bd8b540ba276ea4673dfaabbb8f0bab09910735e0c30e310832d814d042dd38a"
+  },
+  "loss_game_ids": [
+    1,
+    3,
+    9,
+    13,
+    16
+  ],
+  "regression_contract": "PASS verifies source/history/legal PV/state/limits and diagnostic interpretation. Quality goals are tracked observations, not a fixed best-move assertion or a claim that weaknesses were fixed.",
+  "records": [
+    {
+      "id": "g1-p49",
+      "game": 1,
+      "ply": 49,
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "c2c3",
+        "g8f6",
+        "d2d3",
+        "d7d6",
+        "e1g1",
+        "e8g8",
+        "b2b4",
+        "c5b6",
+        "b4b5",
+        "c6a5",
+        "b1d2",
+        "c7c5",
+        "a2a4",
+        "g8h8",
+        "c1b2",
+        "a5c4",
+        "d2c4",
+        "c8e6",
+        "a4a5",
+        "b6c7",
+        "f3d2",
+        "d8e8",
+        "b5b6",
+        "a7b6",
+        "a5b6",
+        "a8a1",
+        "d1a1",
+        "c7d8",
+        "f2f4",
+        "e5f4",
+        "f1f4",
+        "e8c6",
+        "a1a7",
+        "d6d5",
+        "c4e5",
+        "c6b5",
+        "a7a3",
+        "g7g5",
+        "f4f1",
+        "b5b6",
+        "c3c4",
+        "d5c4"
+      ],
+      "fen": "3b1r1k/1p3p1p/1q2bn2/2p1N1p1/2p1P3/Q2P4/1B1N2PP/5RK1 w - - 0 25",
+      "candidate_color": "w",
+      "played": "d2c4",
+      "san": "Ndxc4",
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "classification": "shared_search_budget_miss",
+      "quality_goal": {
+        "status": "search_budget_recovers",
+        "target_moves": [
+          "e5c4"
+        ],
+        "note": "원래 노드 수에서는 Ndxc4, 250000부터 세 변형 모두 Nexc4. 외부 공통 깊이16/20도 대안을 지지한다. 약점이 엔진 코드에서 수정되었다는 뜻은 아니다."
+      },
+      "source_archived_nodes": 87514,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 228,
+          "best_move": "e5c4",
+          "best_score": {
+            "cp": 325,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": 97,
+            "mate": null,
+            "pov": "w"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 200,
+          "best_move": "e5c4",
+          "best_score": {
+            "cp": 335,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": 135,
+            "mate": null,
+            "pov": "w"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-87514",
+            "depth": 64,
+            "nodes": 87514,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "d2c4",
+              "score_cp": -100,
+              "score_mate": null,
+              "depth": 3,
+              "nodes": 87514,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "d2c4",
+              "score_cp": -100,
+              "score_mate": null,
+              "depth": 3,
+              "nodes": 87514,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "d2c4",
+              "score_cp": -100,
+              "score_mate": null,
+              "depth": 3,
+              "nodes": 87514,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "e5c4",
+              "score_cp": -87,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "e5c4",
+              "score_cp": -87,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "e5c4",
+              "score_cp": -87,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "e5c4",
+              "score_cp": -87,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "e5c4",
+              "score_cp": -87,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1247963,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1247963,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "e5c4",
+              "score_cp": 14,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 668834,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3-p65",
+      "game": 3,
+      "ply": 65,
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "g8f6",
+        "c4d5",
+        "e6d5",
+        "c1g5",
+        "f8e7",
+        "e2e3",
+        "e8g8",
+        "g1f3",
+        "b8c6",
+        "g5f6",
+        "e7f6",
+        "f1d3",
+        "c8e6",
+        "e1g1",
+        "a7a5",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "c6b4",
+        "g1h1",
+        "c7c5",
+        "g2g3",
+        "g7g5",
+        "d1b1",
+        "h7h5",
+        "d3h7",
+        "g8h8",
+        "h7d3",
+        "g5g4",
+        "f3e5",
+        "f6e5",
+        "d4e5",
+        "d5d4",
+        "c3e2",
+        "b4d3",
+        "b1d3",
+        "d8d5",
+        "h1g1",
+        "e6c8",
+        "e3d4",
+        "c8b7",
+        "f2f3",
+        "g4f3",
+        "e2f4",
+        "d5d4",
+        "d3d4",
+        "c5d4",
+        "h2h4",
+        "a8d8",
+        "f4h5",
+        "f8e8",
+        "a1e1",
+        "d4d3",
+        "e1e3",
+        "d3d2",
+        "f1d1",
+        "d8d4",
+        "h5f4",
+        "e8g8"
+      ],
+      "fen": "6rk/1b3p2/1p6/p3P3/P2r1N1P/1P2RpP1/3p4/3R2K1 w - - 4 33",
+      "candidate_color": "w",
+      "played": "g1h2",
+      "san": "Kh2",
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "classification": "shared_search_budget_miss",
+      "quality_goal": {
+        "status": "search_budget_recovers",
+        "target_moves": [
+          "g1f2"
+        ],
+        "note": "원래 노드 수와250000에서는 Kh2, 1000000부터 세 변형 모두 Kf2. 더 나은 방어이지 승리/무승부 보장은 아니다."
+      },
+      "source_archived_nodes": 84163,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 256,
+          "best_move": "g1f2",
+          "best_score": {
+            "cp": -233,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": -489,
+            "mate": null,
+            "pov": "w"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 202,
+          "best_move": "g1f2",
+          "best_score": {
+            "cp": -322,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": -524,
+            "mate": null,
+            "pov": "w"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-84163",
+            "depth": 64,
+            "nodes": 84163,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 84163,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 84163,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 84163,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "g1f2",
+              "score_cp": -203,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "g1f2",
+              "score_cp": -203,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "g1f2",
+              "score_cp": -203,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "g1f2",
+              "score_cp": -209,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "g1f2",
+              "score_cp": -209,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "g1f2",
+              "score_cp": -202,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 138270,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 138270,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "g1h2",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 130372,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "g9-p23",
+      "game": 9,
+      "ply": 23,
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "e1g1",
+        "f8e7",
+        "f1e1",
+        "b7b5",
+        "a4b3",
+        "e8g8",
+        "c2c3",
+        "d7d6",
+        "d2d3",
+        "c8g4",
+        "b1d2",
+        "g8h8",
+        "a2a4",
+        "a8c8"
+      ],
+      "fen": "2rq1r1k/2p1bppp/p1np1n2/1p2p3/P3P1b1/1BPP1N2/1P1N1PPP/R1BQR1K1 w - - 1 12",
+      "candidate_color": "w",
+      "played": "b3d5",
+      "san": "Bd5",
+      "selection_reasons": [
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "classification": "shared_evaluation_or_horizon_candidate",
+      "quality_goal": {
+        "status": "unresolved",
+        "target_moves": [
+          "h2h3",
+          "a4b5"
+        ],
+        "note": "250000에서 h3, 1000000/3000000에서 다시 Bd5. 외부 대안의 차이가 작고 대안도 예산에 따라 바뀌므로 순수 평가 오류를 확정하지 않는다."
+      },
+      "source_archived_nodes": 80553,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 83,
+          "best_move": "h2h3",
+          "best_score": {
+            "cp": 90,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": 7,
+            "mate": null,
+            "pov": "w"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 67,
+          "best_move": "a4b5",
+          "best_score": {
+            "cp": 81,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": 14,
+            "mate": null,
+            "pov": "w"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-80553",
+            "depth": 64,
+            "nodes": 80553,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "b3d5",
+              "score_cp": -23,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 80553,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "b3d5",
+              "score_cp": -23,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 80553,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "b3d5",
+              "score_cp": -23,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 80553,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "h2h3",
+              "score_cp": -20,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "h2h3",
+              "score_cp": -20,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "h2h3",
+              "score_cp": -20,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "b3d5",
+              "score_cp": -11,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "b3d5",
+              "score_cp": -11,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "b3d5",
+              "score_cp": -11,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 665509,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 665509,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "b3d5",
+              "score_cp": -15,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 522794,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "g13-p81",
+      "game": 13,
+      "ply": 81,
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "e2e4",
+        "c7c6",
+        "d2d4",
+        "d7d5",
+        "b1d2",
+        "d5e4",
+        "d2e4",
+        "c8f5",
+        "e4g3",
+        "f5g6",
+        "g1f3",
+        "b8d7",
+        "h2h4",
+        "g8f6",
+        "f1e2",
+        "e7e6",
+        "h4h5",
+        "g6e4",
+        "e1g1",
+        "f8d6",
+        "g3e4",
+        "f6e4",
+        "e2d3",
+        "e4f6",
+        "c1g5",
+        "d8b6",
+        "c2c4",
+        "b6b2",
+        "c4c5",
+        "d6b8",
+        "h5h6",
+        "g7h6",
+        "g5h6",
+        "b7b5",
+        "h6g7",
+        "h8g8",
+        "g7f6",
+        "d7f6",
+        "g1h1",
+        "b8c7",
+        "g2g3",
+        "e8c8",
+        "a1b1",
+        "b2a3",
+        "d1b3",
+        "a3a5",
+        "f3e5",
+        "c7e5",
+        "d4e5",
+        "f6g4",
+        "d3h7",
+        "g8h8",
+        "b3c2",
+        "f7f5",
+        "e5f6",
+        "g4f6",
+        "h1g1",
+        "h8h7",
+        "f1e1",
+        "h7e7",
+        "c2g6",
+        "a5c3",
+        "e1e3",
+        "c3d4",
+        "b1e1",
+        "f6g4",
+        "e3e2",
+        "a7a5",
+        "g6e4",
+        "d4e4",
+        "e2e4",
+        "g4f6",
+        "e4e6",
+        "e7e6",
+        "e1e6",
+        "d8d1",
+        "g1g2",
+        "f6g4",
+        "e6c6",
+        "c8d7"
+      ],
+      "fen": "8/3k4/2R5/ppP5/6n1/6P1/P4PK1/3r4 w - - 1 41",
+      "candidate_color": "w",
+      "played": "c6g6",
+      "san": "Rg6",
+      "selection_reasons": [
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "classification": "mixed_search_evaluation_horizon_candidate",
+      "quality_goal": {
+        "status": "unresolved",
+        "target_moves": [
+          "c6a6",
+          "c6b6"
+        ],
+        "note": "3000000에서 OFF Rg6, ON Rb6. screen Rb6와 후속 Ra6를 단일 정답으로 혼동하지 않는다. 선택적 탐색과 평가/지평선 영향을 분리할 추가 실험이 필요하다."
+      },
+      "source_archived_nodes": 125335,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 85,
+          "best_move": "c6a6",
+          "best_score": {
+            "cp": -175,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": -260,
+            "mate": null,
+            "pov": "w"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 61,
+          "best_move": "c6a6",
+          "best_score": {
+            "cp": -187,
+            "mate": null,
+            "pov": "w"
+          },
+          "forced_played_score": {
+            "cp": -248,
+            "mate": null,
+            "pov": "w"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-125335",
+            "depth": 64,
+            "nodes": 125335,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c6g6",
+              "score_cp": -109,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 125335,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c6g6",
+              "score_cp": -109,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 125335,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "c6g6",
+              "score_cp": -109,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 125335,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c6g6",
+              "score_cp": -103,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c6g6",
+              "score_cp": -103,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "c6g6",
+              "score_cp": -103,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c6g6",
+              "score_cp": -116,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c6g6",
+              "score_cp": -116,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "c6g6",
+              "score_cp": -116,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c6g6",
+              "score_cp": -116,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c6g6",
+              "score_cp": -116,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "c6b6",
+              "score_cp": -134,
+              "score_mate": null,
+              "depth": 10,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c6g6",
+              "score_cp": -97,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 22558,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "c6g6",
+              "score_cp": -97,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 22558,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "c6g6",
+              "score_cp": -97,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 21464,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "g16-p50",
+      "game": 16,
+      "ply": 50,
+      "label": "primary_loss_decision",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "g7g6",
+        "b1c3",
+        "f8g7",
+        "e2e4",
+        "d7d6",
+        "g1f3",
+        "e8g8",
+        "f1e2",
+        "e7e5",
+        "e1g1",
+        "b8c6",
+        "d4d5",
+        "c6e7",
+        "c1e3",
+        "c7c5",
+        "g1h1",
+        "c8g4",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "g8h8",
+        "a1c1",
+        "a7a5",
+        "e2d3",
+        "a8c8",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "f6d7",
+        "c3b5",
+        "d7f6",
+        "g2g4",
+        "d8d7",
+        "f3g3",
+        "f6e8",
+        "f2f4",
+        "f7f5",
+        "e4f5",
+        "g6f5",
+        "f4e5",
+        "g7e5",
+        "e3f4",
+        "e5f4",
+        "g3f4",
+        "f8f6",
+        "f4g5"
+      ],
+      "fen": "2r1n2k/3qn2p/1p1p1r2/pNpP1pQ1/P1P3P1/1P1B3P/8/2R2R1K b - - 2 25",
+      "candidate_color": "b",
+      "played": "h7h6",
+      "san": "h6",
+      "selection_reasons": [
+        "earliest_significant_reference_gap_or_mate_transition",
+        "largest_finite_gap_with_best_cp_at_least_minus_300"
+      ],
+      "classification": "mixed_search_evaluation_horizon_candidate",
+      "quality_goal": {
+        "status": "unresolved",
+        "target_moves": [
+          "f6f7",
+          "f6g6"
+        ],
+        "note": "3000000에서 OFF Rd8, ON h6. 외부는 이미 불리한 위치에서 Rf7/Rg6를 선호한다. Rd8의 독립 강제 평가를 하지 않았으므로 ON의 추가 손해를 확정하지 않는다."
+      },
+      "source_archived_nodes": 82545,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 115,
+          "best_move": "f6f7",
+          "best_score": {
+            "cp": -267,
+            "mate": null,
+            "pov": "b"
+          },
+          "forced_played_score": {
+            "cp": -382,
+            "mate": null,
+            "pov": "b"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 108,
+          "best_move": "f6g6",
+          "best_score": {
+            "cp": -290,
+            "mate": null,
+            "pov": "b"
+          },
+          "forced_played_score": {
+            "cp": -398,
+            "mate": null,
+            "pov": "b"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-82545",
+            "depth": 64,
+            "nodes": 82545,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "h7h6",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 82545,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "h7h6",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 82545,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "h7h6",
+              "score_cp": -158,
+              "score_mate": null,
+              "depth": 4,
+              "nodes": 82545,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "h7h6",
+              "score_cp": -160,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "h7h6",
+              "score_cp": -160,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "h7h6",
+              "score_cp": -160,
+              "score_mate": null,
+              "depth": 5,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "h7h6",
+              "score_cp": -162,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 452380,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 452380,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "c8d8",
+              "score_cp": -161,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 392912,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "pair2-p74",
+      "game": 4,
+      "ply": 74,
+      "label": "auxiliary_paired_divergence",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "g8f6",
+        "c4d5",
+        "e6d5",
+        "c1g5",
+        "f8e7",
+        "e2e3",
+        "e8g8",
+        "g1f3",
+        "b8c6",
+        "g5f6",
+        "e7f6",
+        "f1d3",
+        "c8e6",
+        "e1g1",
+        "a7a5",
+        "a2a4",
+        "b7b6",
+        "b2b3",
+        "c6b4",
+        "g1h1",
+        "c7c5",
+        "g2g3",
+        "g7g5",
+        "d1b1",
+        "h7h5",
+        "d3h7",
+        "g8h8",
+        "h7d3",
+        "g5g4",
+        "f3e5",
+        "f6e5",
+        "d4e5",
+        "d5d4",
+        "c3e2",
+        "b4d3",
+        "b1d3",
+        "d8d5",
+        "h1g1",
+        "e6c8",
+        "e3d4",
+        "c8b7",
+        "f2f3",
+        "g4f3",
+        "e2f4",
+        "d5d4",
+        "d3d4",
+        "c5d4",
+        "h2h4",
+        "a8d8",
+        "f4h5",
+        "f8e8",
+        "a1e1",
+        "d4d3",
+        "e1e3",
+        "d3d2",
+        "f1d1",
+        "d8d4",
+        "h5f4",
+        "e8g8",
+        "g1h2",
+        "b7e4",
+        "e5e6",
+        "f7e6",
+        "f4e6",
+        "e4c2",
+        "e6d4",
+        "c2d1",
+        "e3d3"
+      ],
+      "fen": "6rk/8/1p6/p7/P2N3P/1P1R1pP1/3p3K/3b4 b - - 1 37",
+      "candidate_color": "b",
+      "played": "d1e2",
+      "san": "Be2",
+      "selection_reasons": [
+        "first pair-2 divergence after 73 identical plies; not a sixth loss"
+      ],
+      "classification": "local_lmr_budget_miss_auxiliary",
+      "quality_goal": {
+        "status": "search_budget_recovers",
+        "target_moves": [
+          "f3f2"
+        ],
+        "note": "보조 위치이며 여섯 번째 패배가 아니다. 원래119576노드에서 v057/OFF f2, ON Be2. 250000부터 ON도 f2. 외부에서 Be2도 여전히 크게 유리하므로 이것 하나로 이후 무승부 전체를 설명하지 않는다."
+      },
+      "source_archived_nodes": 119576,
+      "external_depth_observations": [
+        {
+          "requested_depth": 16,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 107,
+          "best_move": "f3f2",
+          "best_score": {
+            "cp": 627,
+            "mate": null,
+            "pov": "b"
+          },
+          "forced_played_score": {
+            "cp": 520,
+            "mate": null,
+            "pov": "b"
+          }
+        },
+        {
+          "requested_depth": 20,
+          "requested_nodes": 4000000,
+          "complete_depth": true,
+          "cp_gap": 116,
+          "best_move": "f3f2",
+          "best_score": {
+            "cp": 642,
+            "mate": null,
+            "pov": "b"
+          },
+          "forced_played_score": {
+            "cp": 526,
+            "mate": null,
+            "pov": "b"
+          }
+        }
+      ],
+      "own_search_observations": [
+        {
+          "query": {
+            "id": "nodes-119576",
+            "depth": 64,
+            "nodes": 119576,
+            "reasons": [
+              "original_archived_search_node_count"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 119576,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 119576,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "d1e2",
+              "score_cp": 247,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 119576,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-250000",
+            "depth": 64,
+            "nodes": 250000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 250000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 7,
+              "nodes": 250000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-1000000",
+            "depth": 64,
+            "nodes": 1000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "f3f2",
+              "score_cp": 639,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "f3f2",
+              "score_cp": 639,
+              "score_mate": null,
+              "depth": 8,
+              "nodes": 1000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "f3f2",
+              "score_cp": 639,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 1000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "nodes-3000000",
+            "depth": 64,
+            "nodes": 3000000,
+            "reasons": [
+              "predeclared_node_budget"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "f3f2",
+              "score_cp": 639,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_off": {
+              "bestmove": "f3f2",
+              "score_cp": 639,
+              "score_mate": null,
+              "depth": 9,
+              "nodes": 3000000,
+              "stopped": true
+            },
+            "v058_on": {
+              "bestmove": "f3f2",
+              "score_cp": 645,
+              "score_mate": null,
+              "depth": 10,
+              "nodes": 3000000,
+              "stopped": true
+            }
+          }
+        },
+        {
+          "query": {
+            "id": "depth-6-nodes-5000000",
+            "depth": 6,
+            "nodes": 5000000,
+            "reasons": [
+              "separate_predeclared_fixed_depth_control"
+            ]
+          },
+          "variants": {
+            "v057": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 50772,
+              "stopped": false
+            },
+            "v058_off": {
+              "bestmove": "f3f2",
+              "score_cp": 557,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 50772,
+              "stopped": false
+            },
+            "v058_on": {
+              "bestmove": "d1e2",
+              "score_cp": 247,
+              "score_mate": null,
+              "depth": 6,
+              "nodes": 34882,
+              "stopped": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
