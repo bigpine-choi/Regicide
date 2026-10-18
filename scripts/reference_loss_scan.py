@@ -36,6 +36,9 @@ REFERENCE_OPTIONS = {
     "UCI_LimitStrength": False,
     "SyzygyProbeLimit": 0,
 }
+SCORE_BOUNDS_POLICY = (
+    "cp/mate and bounds come from the same last primary score-bearing raw info event; "
+    "accumulated python-chess bounds are replaced after score equality validation")
 SELECTION_POLICY = {
     "version": 1,
     "significant_cp_gap": 100,
@@ -50,7 +53,88 @@ SELECTION_POLICY = {
 }
 
 
+def parse_score_event(line):
+    """Parse cp/mate and bounds together from one raw, primary UCI info line.
+
+    python-chess AnalysisResult.info accumulates dictionaries. A bound flag
+    from an earlier aspiration probe can survive a later exact score update;
+    raw events, rather than that accumulated flag, define our final bounds.
+    This pure helper is also usable by engine-free regression tests.
+    """
+    tokens = line.split()
+    if not tokens or tokens[0] != "info":
+        return None
+    # UCI string consumes the rest of the line as arbitrary text.
+    fields = tokens[:tokens.index("string")] if "string" in tokens else tokens
+    if "score" not in fields:
+        return None
+    multipv = 1
+    if "multipv" in fields:
+        index = fields.index("multipv")
+        if index + 1 >= len(fields):
+            raise ValueError("raw reference info has an incomplete multipv field")
+        multipv = int(fields[index + 1])
+    if multipv != 1:
+        return None
+    index = fields.index("score")
+    if index + 2 >= len(fields) or fields[index + 1] not in ("cp", "mate"):
+        raise ValueError("raw reference info has an invalid score field")
+    kind = fields[index + 1]
+    value = int(fields[index + 2])
+    bound = fields[index + 3] if index + 3 < len(fields) else None
+    if (bound in ("upperbound", "lowerbound") and index + 4 < len(fields) and
+            fields[index + 4] in ("upperbound", "lowerbound")):
+        raise ValueError("raw reference score has conflicting/repeated bound flags")
+    return {
+        "raw_info": line, "multipv": multipv,
+        "score": {"cp": value if kind == "cp" else None,
+                  "mate": value if kind == "mate" else None},
+        "upperbound": bound == "upperbound", "lowerbound": bound == "lowerbound",
+    }
+
+
+def apply_score_event(info, event, color):
+    """Replace accumulated bounds only after matching the latest score value."""
+    if event is None or info.get("score") is None:
+        raise ValueError("reference omitted a final raw score event")
+    score = info["score"].pov(color)
+    if {"cp": score.score(), "mate": score.mate()} != event["score"]:
+        raise ValueError("last raw reference score differs from accumulated final score")
+    result = dict(info)
+    result["upperbound"] = event["upperbound"]
+    result["lowerbound"] = event["lowerbound"]
+    return result
+
+
+class ReferenceProtocol(chess.engine.UciProtocol):
+    async def analyse(self, board, limit, **kwargs):
+        self.last_score_event = None
+        self.score_events = 0
+        self.score_capture_error = None
+        result = await super().analyse(board, limit, **kwargs)
+        if self.score_capture_error is not None:
+            raise ValueError(self.score_capture_error)
+        return result
+
+    def line_received(self, line):
+        try:
+            event = parse_score_event(line)
+            if event is not None:
+                self.last_score_event = event
+                self.score_events = getattr(self, "score_events", 0) + 1
+        except (ValueError, TypeError) as exc:
+            # Raise on the waiting analysis task, not from the event-loop IO
+            # callback, so the normal failed-report path remains available.
+            self.score_capture_error = f"raw reference score capture failed: {exc}: {line}"
+        super().line_received(line)
+
+
 class ReferenceEngine(chess.engine.SimpleEngine):
+    @classmethod
+    def popen_uci(cls, command, *, timeout=600, debug=None, setpgrp=False, **kwargs):
+        return cls.popen(ReferenceProtocol, command, timeout=timeout, debug=debug,
+                         setpgrp=setpgrp, **kwargs)
+
     def _timeout_for(self, limit):
         # python-chess normally disables its analysis watchdog when limit.time
         # is None. Retain a 600-second communication watchdog while sending
@@ -282,6 +366,8 @@ def analyse_query(engine, record, nodes, forced, report, checkpoint):
     info = engine.analyse(board, chess.engine.Limit(nodes=nodes),
                           root_moves=[root_move] if root_move is not None else None,
                           game=object(), info=chess.engine.INFO_ALL)
+    score_event = copy.deepcopy(engine.protocol.last_score_event)
+    info = apply_score_event(info, score_event, board.turn)
     wall = time.perf_counter() - start
     pv = info.get("pv", [])
     if not pv or info.get("score") is None:
@@ -310,6 +396,8 @@ def analyse_query(engine, record, nodes, forced, report, checkpoint):
         "seldepth": info.get("seldepth"),
         "upperbound": bool(info.get("upperbound", False)),
         "lowerbound": bool(info.get("lowerbound", False)),
+        "final_score_event": score_event,
+        "score_events_observed": engine.protocol.score_events,
         "engine_time_seconds": info.get("time"), "wall_time_seconds": wall,
         "started_utc": activity["started_utc"], "finished_utc": finished,
     }
@@ -397,8 +485,9 @@ def run_screen(engine, games, report, checkpoint):
 
 
 def checked_screen(screen, report, games):
-    if screen.get("phase") != "screen" or screen.get("status") != "complete":
-        raise ValueError("confirm requires a complete screen report")
+    if (screen.get("phase") != "screen" or screen.get("status") != "complete" or
+            screen.get("exit_code") != 0 or screen.get("errors")):
+        raise ValueError("confirm requires a complete, successful, error-free screen report")
     if screen.get("source", {}).get("sha256") != report["source"]["sha256"]:
         raise ValueError("screen was not produced from the same source bytes")
     if screen.get("reference", {}).get("binary_sha256") != report["reference"]["binary_sha256"]:
@@ -407,6 +496,8 @@ def checked_screen(screen, report, games):
         raise ValueError("screen reference settings differ")
     if screen.get("selection_policy") != SELECTION_POLICY:
         raise ValueError("screen selection policy differs")
+    if screen.get("score_bounds_policy") != SCORE_BOUNDS_POLICY:
+        raise ValueError("screen does not use the corrected raw-event score/bounds policy")
     expected = {item["id"]: item for item in primary_records(games)}
     records = copy.deepcopy(screen.get("records", []))
     if len(records) != len(expected) or {item["id"] for item in records} != set(expected):
@@ -417,6 +508,15 @@ def checked_screen(screen, report, games):
             raise ValueError(f"{item['id']}: screen position differs from source")
         if item.get("status") != "complete" or item.get("cp_gap") != cp_gap(item["best"], item["forced_played"]):
             raise ValueError(f"{item['id']}: screen is partial or gap is inconsistent")
+        for key in ("best", "forced_played"):
+            query = item[key]
+            event = query.get("final_score_event")
+            if (not isinstance(event, dict) or
+                    parse_score_event(event.get("raw_info", "")) != event or
+                    event["score"] != {name: query["score"][name] for name in ("cp", "mate")} or
+                    any(event[name] != query[name] for name in ("upperbound", "lowerbound")) or
+                    query.get("score_events_observed", 0) < 1):
+                raise ValueError(f"{item['id']}: screen final raw score/bounds event is inconsistent")
     selected = select_records(records)
     if screen.get("selected_ids") != [item["id"] for item in selected]:
         raise ValueError("screen selected IDs do not follow the fixed policy")
@@ -469,6 +569,7 @@ def new_report(args):
         "confirm_nodes_per_query": list(CONFIRM_NODES),
         "limits_note": "Only fixed node budgets; no move time or depth limit. Actual reported nodes may overshoot. Engine communication timeout is 600 seconds.",
         "table_policy": "Clear Hash before every query and a fresh python-chess game object per query",
+        "score_bounds_policy": SCORE_BOUNDS_POLICY,
         "source": {"path": str(args.source), "sha256": None},
         "screen_input": {"path": str(args.screen), "sha256": None} if args.screen is not None else None,
         "reference": {
