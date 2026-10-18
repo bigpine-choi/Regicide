@@ -23,7 +23,8 @@ try {
         & $pythonExecutable -m pip install -r requirements-learning.txt
         if ($LASTEXITCODE -ne 0) { throw '학습 도구 설치에 실패했습니다.' }
     }
-    Write-Host '자가대국 → 패배 분석 → 자료 누적 → 재학습 → 이전 모델 대국 검증을 자동으로 반복합니다.'
+    Write-Host '자가대국 → 패배 분석 → 자료 누적 → 정답 안정성 확인 → 재학습 → 이전 모델 대국 검증을 자동으로 반복합니다.'
+    Write-Host '학습 정답은 1만·5만·20만 노드로 재확인합니다. 원본 기록과 기존 검증·시험 자료는 보존하며, 계산 시간은 더 걸립니다.'
     Write-Host '기준을 통과한 모델만 채택합니다. 측정 중에는 대국과 브라우저 사용을 쉬어 주세요.'
     if ($ModelVersion -eq 2) {
         Write-Host '모델 형식 V2: 기존 평가에 최대 폰 1개 이내의 학습 보정을 더합니다.'

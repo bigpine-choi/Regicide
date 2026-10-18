@@ -40,6 +40,8 @@ class MockStages:
         self.state, self.champion = state, champion
         self.arena_pass = arena_pass
         self.collections, self.corpora, self.trainings, self.arenas = [], [], [], []
+        self.qualities = []
+        self.quality_error = None
         self.promotions = []
         self.analysis_error = self.rules_error = self.promotion_error = None
         self.arena_status = "complete"
@@ -57,6 +59,7 @@ class MockStages:
                 (REGISTRY, "promote", self.promote),
                 (CYCLE, "model_version", self.model_version),
                 (CYCLE, "run_rule_checks", self.rules),
+                (CYCLE, "run_teacher_quality", self.quality),
                 (CYCLE, "command", self.command)):
             self.stack.enter_context(mock.patch.object(module, name, side_effect=replacement))
         self.stack.enter_context(mock.patch.object(CYCLE.secrets, "randbits", side_effect=range(101, 201)))
@@ -137,6 +140,17 @@ class MockStages:
                   "model_sha256": CYCLE.sha256(model),
                   "initial_model_sha256": CYCLE.sha256(initial) if initial is not None else None})
         Path(log).write_text("MOCK training stage; not a strength measurement\n", encoding="utf-8")
+
+    def quality(self, dataset, binary, output, **options):
+        if self.quality_error is not None:
+            raise self.quality_error
+        self.qualities.append({"dataset": Path(dataset), "binary": Path(binary), **options})
+        output = Path(output)
+        output.mkdir()
+        manifest = json.loads(Path(dataset).read_text(encoding="utf-8"))
+        save_json(output / "manifest.json", manifest)
+        save_json(output / "quality-report.json", {"status": "complete", "mock": True})
+        return manifest
 
     def native(self, binary, candidate):
         return {"model_sha256": CYCLE.sha256(candidate), "score_cp": 0, "mock": True}
@@ -377,6 +391,76 @@ class CycleTests(unittest.TestCase):
         self.assertEqual(report["evaluation_design"]["default_l2"], .0001)
         self.assertEqual(report["training"]["model_path"], "small-v2.nn")
         self.assertEqual(report["initialization"]["mode"], "seeded_random")
+
+    def test_quality_stage_uses_new_derived_training_input_and_preserves_catalog(self):
+        with MockStages(self.state) as stages:
+            report = self.run_round(self.catalog())
+        arguments = stages.trainings[0]
+        dataset = Path(arguments[arguments.index("--dataset") + 1])
+        self.assertEqual(dataset.parent.name, "quality")
+        self.assertEqual(stages.qualities[0]["dataset"].parent.name, "corpus")
+        self.assertEqual(stages.qualities[0]["node_budgets"], [10000, 50000, 200000])
+        self.assertEqual(stages.qualities[0]["max_cp_delta"], 30)
+        self.assertEqual(stages.qualities[0]["min_depth"], 3)
+        self.assertEqual(report["teacher_quality"]["manifest_sha256"], CYCLE.sha256(dataset))
+        self.assertIn("quality/quality-report.json", report["learning_artifact_sha256"])
+        saved = CYCLE.catalog_read(self.state)
+        self.assertEqual(saved["attempts_started"], 1)
+        self.assertEqual(len(saved["datasets"]), 1)
+        self.assertNotIn("quality", saved["datasets"][0])
+
+    def test_quality_failure_consumes_attempt_and_blocks_training_and_arena(self):
+        with MockStages(self.state) as stages:
+            stages.quality_error = ValueError("no reliable train labels")
+            with self.assertRaisesRegex(ValueError, "reliable"):
+                self.run_round(self.catalog())
+        self.assertEqual(stages.trainings, [])
+        self.assertEqual(stages.arenas, [])
+        self.assertEqual(stages.promotions, [])
+        self.assertEqual(CYCLE.catalog_read(self.state)["attempts_started"], 1)
+        self.assertFalse((self.state / "champion.json").exists())
+
+    def test_quality_wrapper_rejects_empty_train_or_changed_holdout(self):
+        original = {"holdout_rows_sha256": {"validation": "1" * 64, "test": "2" * 64}}
+        source = self.root / "quality-input.json"
+        save_json(source, original)
+        valid = {"status": "complete", "positions_by_split": {"train": 3}, **original}
+        results = [copy.deepcopy(valid) for _ in range(4)]
+        results[1]["positions_by_split"]["train"] = 0
+        results[2]["holdout_rows_sha256"]["test"] = "3" * 64
+        results[3]["status"] = "failed"
+        for index, result in enumerate(results):
+            module = mock.Mock()
+            module.refine_dataset.return_value = result
+            with mock.patch.dict(sys.modules, {"teacher_quality": module}):
+                def call():
+                    return CYCLE.run_teacher_quality(source, self.binary, self.root / "quality-output",
+                        node_budgets=[10000, 50000, 200000], max_cp_delta=30, min_depth=3)
+                if index == 0:
+                    self.assertEqual(call(), valid)
+                else:
+                    with self.assertRaises(ValueError):
+                        call()
+
+    def test_quality_evidence_mutation_blocks_adoption_before_and_during_arena(self):
+        for during_arena in (False, True):
+            state = self.root / ("mutate-quality-arena" if during_arena else "mutate-quality-rules")
+            state.mkdir()
+            with MockStages(state, arena_pass=True) as stages:
+                original = stages.arena if during_arena else stages.rules
+                def changed(*args, **kwargs):
+                    result = original(*args, **kwargs)
+                    run = next((state / "runs").iterdir())
+                    (run / "quality/quality-report.json").write_text("{}", encoding="utf-8")
+                    return result
+                with mock.patch.object(CYCLE if not during_arena else ARENA,
+                                       "run_rule_checks" if not during_arena else "run_arena",
+                                       side_effect=changed):
+                    with self.assertRaisesRegex(ValueError, "Learning evidence changed"):
+                        with contextlib.redirect_stdout(io.StringIO()):
+                            CYCLE.run_round(self.args, state, CYCLE.catalog_read(state))
+                self.assertEqual(stages.promotions, [])
+                self.assertFalse((state / "champion.json").exists())
 
     def test_legacy_incumbent_is_kept_as_opponent_but_not_warm_start_for_v2(self):
         catalog = self.catalog()

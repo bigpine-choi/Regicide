@@ -274,6 +274,28 @@ def evaluation_design(version):
             "target": "0.8*tanh(teacher_cp_stm/600)+0.2*outcome_stm", "default_l2": 0.0}
 
 
+def run_teacher_quality(dataset, binary, output, *, node_budgets, max_cp_delta, min_depth):
+    from teacher_quality import refine_dataset
+    original = json.loads(Path(dataset).read_text(encoding="utf-8"))
+    result = refine_dataset(dataset, binary, output, node_budgets=tuple(node_budgets),
+                            max_cp_delta=max_cp_delta, min_depth=min_depth)
+    if result.get("status") != "complete" or result.get("positions_by_split", {}).get("train", 0) < 1:
+        raise ValueError("Teacher-quality stage produced no reliable training positions.")
+    for split in ("validation", "test"):
+        expected = original.get("holdout_rows_sha256", {}).get(split)
+        if (not isinstance(expected, str) or len(expected) != 64
+                or result.get("holdout_rows_sha256", {}).get(split) != expected):
+            raise ValueError("Teacher-quality stage changed the frozen holdout identity.")
+    return result
+
+
+def learning_artifact_hashes(run):
+    """Freeze the derived training evidence as well as the candidate weights."""
+    return {path.relative_to(run).as_posix(): sha256(path)
+            for directory in (run / "corpus", run / "quality")
+            for path in sorted(directory.rglob("*")) if path.is_file()}
+
+
 def write_summary(run, report):
     collection, analysis = report.get("collection", {}), report.get("loss_analysis", {})
     counts = report.get("corpus", {})
@@ -283,13 +305,14 @@ def write_summary(run, report):
              f"- 이번 자체 대국: 완결 {collection.get('completed_games', '?')}판, 표본 {collection.get('positions', '?')}개",
              f"- 패배 분석: {analysis.get('analyzed_positions', '?')}위치, 학습용 교정 {analysis.get('training_corrections', '?')}개",
              f"- 누적 학습/검증/시험 표본: {counts.get('train', '?')} / {counts.get('validation', '?')} / {counts.get('test', '?')}",
+             f"- 교사 안정성 검사를 통과한 학습 위치: {report.get('teacher_quality', {}).get('positions_by_split', {}).get('train', '?')}개",
              f"- 평가 모델: V{report.get('evaluation_design', {}).get('model_version', '?')} — {report.get('evaluation_design', {}).get('score', '?')}",
              f"- 후보 초기화: {report.get('initialization', {}).get('mode', '?')}",
              f"- 대국 검증: 완료 {arena.get('completed_pairs', '?')}쌍, 새 모델 점수 {arena.get('candidate_pair_score')}",
              f"- 채택 기준의 단측 점수 하한: {arena.get('one_sided_lower_bound')} (0.5 초과 필요)", "",
              "기준을 통과하지 못하면 기존 채택 모델을 유지한다. 완료한 학습 자료는 다음 순환에 누적한다.",
              "평가 오차 감소나 이 예약 대국의 통과가 모든 상대·시간 조건에서의 기력 향상을 보장하지는 않는다.", "",
-             "상세 기록: cycle.json, loss-analysis/loss-report.json, corpus/manifest.json, model/report.json, arena/arena.json.", ""]
+             "상세 기록: cycle.json, loss-analysis/loss-report.json, corpus/manifest.json, quality/manifest.json, quality/quality-report.json, model/report.json, arena/arena.json.", ""]
     (run / "summary.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 
@@ -376,8 +399,20 @@ def run_round(args, state, catalog):
         report["corpus"] = corpus.get("positions_by_split", {})
         report["accumulated_datasets"] = len(datasets)
         report["corpus_manifest_sha256"] = sha256(run / "corpus/manifest.json")
+        stage("teacher-quality")
+        quality = run_teacher_quality(run / "corpus/manifest.json", binary, run / "quality",
+                                      node_budgets=args.quality_nodes,
+                                      max_cp_delta=args.quality_max_cp_delta,
+                                      min_depth=args.quality_min_depth)
+        report["teacher_quality"] = {
+            "positions_by_split": quality["positions_by_split"],
+            "manifest_sha256": sha256(run / "quality/manifest.json"),
+            "report_sha256": sha256(run / "quality/quality-report.json"),
+            "node_budgets": args.quality_nodes,
+            "max_cp_delta": args.quality_max_cp_delta, "min_depth": args.quality_min_depth}
+        report["learning_artifact_sha256"] = learning_artifact_hashes(run)
         stage("retraining")
-        training_args = [ROOT / "scripts/train_neural.py", "--dataset", run / "corpus/manifest.json",
+        training_args = [ROOT / "scripts/train_neural.py", "--dataset", run / "quality/manifest.json",
                          "--output", run / "model", "--epochs", args.epochs,
                          "--batch-size", args.batch_size, "--seed", report["seed"],
                          "--model-version", args.model_version]
@@ -397,6 +432,8 @@ def run_round(args, state, catalog):
         report["rules"] = run_rule_checks(binary, candidate, run / "rules")
         if implementation_hashes() != report["implementation_sha256"]:
             raise ValueError("Learning implementation changed during this attempt; candidate was not adopted.")
+        if learning_artifact_hashes(run) != report["learning_artifact_sha256"]:
+            raise ValueError("Learning evidence changed before the arena; adoption was blocked.")
         if sha256(candidate) != report["candidate_sha256"] or sha256(binary) != digest:
             raise ValueError("Candidate or frozen engine changed before the arena; adoption was blocked.")
         stage("previous-champion-arena")
@@ -412,6 +449,8 @@ def run_round(args, state, catalog):
         stage("adoption-decision")
         if implementation_hashes() != report["implementation_sha256"]:
             raise ValueError("Learning implementation changed during the arena; candidate was not adopted.")
+        if learning_artifact_hashes(run) != report["learning_artifact_sha256"]:
+            raise ValueError("Learning evidence changed during the arena; adoption was blocked.")
         if sha256(candidate) != report["candidate_sha256"] or sha256(binary) != digest:
             raise ValueError("Candidate or frozen engine changed during the arena; adoption was blocked.")
         if arena["promotion_passed"]:
@@ -447,6 +486,10 @@ def parser():
     result.add_argument("--nodes", type=int, default=1000)
     result.add_argument("--teacher-nodes", type=int, default=10000)
     result.add_argument("--analysis-nodes", type=int, default=50000)
+    result.add_argument("--quality-nodes", type=int, nargs=3, default=[10000, 50000, 200000],
+                        help="Increasing classical teacher budgets; train labels only, frozen holdouts unchanged")
+    result.add_argument("--quality-max-cp-delta", type=int, default=30)
+    result.add_argument("--quality-min-depth", type=int, default=3)
     result.add_argument("--loss-positions-per-game", type=int, default=8)
     result.add_argument("--min-loss-cp", type=int, default=100)
     result.add_argument("--max-plies", type=int, default=256)
@@ -469,6 +512,9 @@ def main(argv=None):
                  "batch_size", "arena_pairs", "movetime_ms"):
         if getattr(args, name) < 1:
             argument_parser.error(name.replace("_", "-") + " must be positive")
+    if (args.quality_nodes[0] < 1000 or any(a >= b for a, b in zip(args.quality_nodes, args.quality_nodes[1:]))
+            or args.quality_max_cp_delta < 0 or args.quality_min_depth < 1):
+        argument_parser.error("quality budgets must increase from at least 1000, delta must be nonnegative, and depth positive")
     if args.seed < 0:
         argument_parser.error("seed must be nonnegative")
     if not args.binary.is_file():

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Regicide VERSION 0.6.2 LANGUAGES CXX)
+project(Regicide VERSION 0.6.3 LANGUAGES CXX)
 find_package(Threads REQUIRED)
 
 add_library(regicide_core src/board.cpp)
