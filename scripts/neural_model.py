@@ -16,6 +16,9 @@ INPUTS, HIDDEN1, HIDDEN2 = 768, 32, 16
 SCALE = 600.0
 MAX_FILE_BYTES = 4 * 1024 * 1024
 MAGIC = "REGICIDE_NN_V1"
+MAGIC_V2 = "REGICIDE_NN_V2"
+CORRECTION_CAP = 100.0
+WEIGHT_NAMES = ("w1", "w2", "w3")
 NUMBER = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?\Z")
 SHAPES = {"w1": (32, 768), "b1": (32,), "w2": (16, 32),
           "b2": (16,), "w3": (16,), "b3": (1,)}
@@ -65,14 +68,18 @@ class Model:
     b2: np.ndarray
     w3: np.ndarray
     b3: np.ndarray
+    version: int = 1
 
     def parameters(self):
         return {name: getattr(self, name) for name in SHAPES}
 
     def copy(self):
-        return Model(**{name: value.copy() for name, value in self.parameters().items()})
+        return Model(**{name: value.copy() for name, value in self.parameters().items()},
+                     version=self.version)
 
     def validate(self):
+        if type(self.version) is not int or self.version not in (1, 2):
+            raise ValueError("unsupported neural model version")
         for name, shape in SHAPES.items():
             value = getattr(self, name)
             if value.shape != shape or value.dtype != np.float64:
@@ -82,11 +89,16 @@ class Model:
         return self
 
 
-def initialize_model(seed=20261018):
+def initialize_model(seed=20261018, version=1):
     rng = np.random.default_rng(seed)
-    return Model(rng.normal(0, math.sqrt(2 / INPUTS), SHAPES["w1"]),
-                 np.zeros(32), rng.normal(0, math.sqrt(2 / 32), SHAPES["w2"]),
-                 np.zeros(16), rng.normal(0, .02, 16), np.zeros(1)).validate()
+    model = Model(rng.normal(0, math.sqrt(2 / INPUTS), SHAPES["w1"]),
+                  np.zeros(32), rng.normal(0, math.sqrt(2 / 32), SHAPES["w2"]),
+                  np.zeros(16), rng.normal(0, .02, 16), np.zeros(1),
+                  version=version).validate()
+    if version == 2:
+        model.w3.fill(0)
+        model.b3.fill(0)
+    return model
 
 
 def predict_z(features, model):
@@ -100,16 +112,31 @@ def predict_z(features, model):
     return second @ model.w3 + model.b3[0]
 
 
-def evaluate_cp(position, model):
-    score = material_cp_stm(position) + SCALE * float(predict_z(encode_features(position), model))
+def evaluate_cp(position, model, king_pawn_shield=True, pawn_structure=True):
+    if model.version == 1:
+        score = material_cp_stm(position) + SCALE * float(predict_z(encode_features(position), model))
+    else:
+        from classical_evaluation import classical_cp_stm
+        board = board_from(position)
+        score = classical_cp_stm(board, king_pawn_shield=king_pawn_shield,
+                                 pawn_structure=pawn_structure) + CORRECTION_CAP * math.tanh(
+            float(predict_z(encode_features(board), model)))
     if not math.isfinite(score):
         raise ValueError("nonfinite model prediction")
-    score = min(10000.0, max(-10000.0, score))
+    if model.version == 1:
+        score = min(10000.0, max(-10000.0, score))
     return math.floor(score + .5) if score >= 0 else math.ceil(score - .5)
 
 
-def loss_and_gradients(model, features, material, targets):
-    """Mean squared error after tanh(material/600 + residual)."""
+def l2_penalty(model, coefficient):
+    if not math.isfinite(coefficient) or coefficient < 0:
+        raise ValueError("L2 coefficient must be finite and nonnegative")
+    return .5 * coefficient * sum(float(np.sum(getattr(model, name) ** 2))
+                                  for name in WEIGHT_NAMES) if coefficient else 0.0
+
+
+def loss_and_gradients(model, features, material, targets, *, l2=0.0):
+    """MSE plus optional matrix-only L2; material is the V2 classical baseline."""
     x = np.asarray(features, dtype=np.float64)
     material = np.asarray(material, dtype=np.float64)
     targets = np.asarray(targets, dtype=np.float64)
@@ -123,15 +150,28 @@ def loss_and_gradients(model, features, material, targets):
         raise ValueError("targets must be bounded to [-1,1]")
     h1 = np.maximum(0, x @ model.w1.T + model.b1)
     h2 = np.maximum(0, h1 @ model.w2.T + model.b2)
-    predicted = np.tanh(material / SCALE + h2 @ model.w3 + model.b3[0])
+    if model.version == 1:
+        predicted = np.tanh(material / SCALE + h2 @ model.w3 + model.b3[0])
+        correction_derivative = None
+    else:
+        bounded = np.tanh(h2 @ model.w3 + model.b3[0])
+        predicted = np.tanh((material + CORRECTION_CAP * bounded) / SCALE)
+        correction_derivative = CORRECTION_CAP / SCALE * (1 - bounded * bounded)
     error = predicted - targets
     loss = float(np.mean(error * error))
     dz = 2 * error * (1 - predicted * predicted) / len(x)
+    if correction_derivative is not None:
+        dz *= correction_derivative
     dh2 = dz[:, None] * model.w3[None, :] * (h2 > 0)
     dh1 = (dh2 @ model.w2) * (h1 > 0)
     gradients = {"w1": dh1.T @ x, "b1": dh1.sum(axis=0),
                  "w2": dh2.T @ h1, "b2": dh2.sum(axis=0),
                  "w3": h2.T @ dz, "b3": np.array([dz.sum()])}
+    penalty = l2_penalty(model, l2)
+    if l2:
+        loss += penalty
+        for name in WEIGHT_NAMES:
+            gradients[name] += l2 * getattr(model, name)
     if not math.isfinite(loss) or not all(np.all(np.isfinite(a)) for a in gradients.values()):
         raise ValueError("nonfinite loss or gradient")
     return loss, gradients
@@ -165,7 +205,8 @@ class Adam:
 def export_model(model, path):
     model.validate()
     path = Path(path)
-    header = f"{MAGIC} {INPUTS} {HIDDEN1} {HIDDEN2} {int(SCALE)}\n"
+    header = (f"{MAGIC} {INPUTS} {HIDDEN1} {HIDDEN2} {int(SCALE)}\n" if model.version == 1
+              else f"{MAGIC_V2} {INPUTS} {HIDDEN1} {HIDDEN2} {int(SCALE)} {int(CORRECTION_CAP)}\n")
     lines = [header] + [" ".join(format(float(v), ".17g") for v in value.flat) + "\n"
                         for value in model.parameters().values()]
     payload = "".join(lines)
@@ -181,8 +222,11 @@ def load_model(path):
         raise ValueError("model file exceeds size limit")
     text = path.read_text(encoding="ascii")
     header, separator, body = text.partition("\n")
-    if not separator or header.split() != [MAGIC, "768", "32", "16", "600"]:
+    fields = header.split()
+    if not separator or fields not in ([MAGIC, "768", "32", "16", "600"],
+                                        [MAGIC_V2, "768", "32", "16", "600", "100"]):
         raise ValueError("invalid model header")
+    version = 1 if fields[0] == MAGIC else 2
     tokens = body.split()
     expected = sum(math.prod(shape) for shape in SHAPES.values())
     if len(tokens) != expected:
@@ -202,4 +246,4 @@ def load_model(path):
         count = math.prod(shape)
         parameters[name] = values[offset:offset + count].reshape(shape).copy()
         offset += count
-    return Model(**parameters).validate()
+    return Model(**parameters, version=version).validate()

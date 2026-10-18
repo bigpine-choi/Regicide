@@ -1,4 +1,5 @@
 #include "regicide/neural.hpp"
+#include "regicide/evaluation.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -77,16 +78,26 @@ std::shared_ptr<const NeuralEvaluator> NeuralEvaluator::load(std::istream& input
     if (!std::getline(data, header_line))
         throw std::runtime_error("Missing neural model header.");
     std::istringstream header(header_line);
-    std::array<std::string, 5> expected{"REGICIDE_NN_V1", "768", "32", "16", "600"};
+    std::string magic;
+    if (!(header >> magic) || (magic != "REGICIDE_NN_V1" && magic != "REGICIDE_NN_V2"))
+        throw std::runtime_error("Unsupported neural model version.");
+    const bool classical_residual = magic == "REGICIDE_NN_V2";
+    std::array<std::string, 4> expected{"768", "32", "16", "600"};
     for (const auto& token : expected) {
         std::string actual;
         if (!(header >> actual) || actual != token)
             throw std::runtime_error("Unsupported neural model header or dimensions.");
     }
+    if (classical_residual) {
+        std::string limit;
+        if (!(header >> limit) || limit != "100")
+            throw std::runtime_error("Unsupported neural correction limit.");
+    }
     std::string extra;
     if (header >> extra) throw std::runtime_error("Extra data in neural model header.");
 
     auto model = std::shared_ptr<NeuralEvaluator>(new NeuralEvaluator);
+    model->classical_residual_ = classical_residual;
     read_parameters(data, model->w1_);
     read_parameters(data, model->b1_);
     read_parameters(data, model->w2_);
@@ -98,7 +109,7 @@ std::shared_ptr<const NeuralEvaluator> NeuralEvaluator::load(std::istream& input
     return model;
 }
 
-int NeuralEvaluator::evaluate(const Board& board) const {
+int NeuralEvaluator::evaluate(const Board& board, bool king_pawn_shield, bool pawn_structure) const {
     const auto& position = board.position();
     const bool white_turn = position.turn == Color::white;
     std::array<std::size_t, 64> active{};
@@ -134,7 +145,13 @@ int NeuralEvaluator::evaluate(const Board& board) const {
     double residual = b3_;
     for (std::size_t column = 0; column < hidden2_count; ++column)
         residual += w3_[column] * h2[column];
-    const double score = std::clamp(material + residual_scale * residual, -10000.0, 10000.0);
+    const double unbounded_score = classical_residual_ ?
+        evaluate_position(board, king_pawn_shield, pawn_structure) + correction_limit * std::tanh(residual) :
+        material + residual_scale * residual;
+    // V2 must preserve even legal promotion-heavy classical scores above 10000.
+    // Search separately reserves its mate band for every static evaluator.
+    const double score = classical_residual_ ? unbounded_score :
+                         std::clamp(unbounded_score, -10000.0, 10000.0);
     return static_cast<int>(std::lround(score));
 }
 } // namespace regicide

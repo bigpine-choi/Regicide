@@ -32,6 +32,27 @@ def info(board=None, cp=30, depth=2, nodes=100, pv=None):
 
 
 class LearningDataPureTests(unittest.TestCase):
+    def test_actual_sampling_offsets_cover_both_turns_without_synthetic_positions(self):
+        history = "e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3".split()
+        expected = {1: list(range(18)), 2: [0, 3, 4, 7, 8, 11, 12, 15, 16],
+                    3: [0, 3, 6, 9, 12, 15], 4: [0, 5, 8, 13, 16]}
+        for interval, actual_plies in expected.items():
+            with self.subTest(interval=interval):
+                selected = [ply for ply in range(18) if DATA.should_sample(ply, interval)]
+                self.assertEqual(selected, actual_plies)
+                self.assertEqual(len({ply // interval for ply in selected}), len(selected))
+                boards = [DATA.replay_position(chess.STARTING_FEN, history[:ply]) for ply in selected]
+                self.assertEqual({board.turn for board in boards}, {chess.WHITE, chess.BLACK})
+                for ply, board in zip(selected, boards):
+                    self.assertEqual([move.uci() for move in board.move_stack], history[:ply])
+                    self.assertEqual(board.turn, ply % 2 == 0)
+                self.assertEqual(selected, [ply for ply in range(18) if DATA.should_sample(ply, interval)])
+
+    def test_sampling_rejects_invalid_intervals_and_relative_plies(self):
+        for ply, interval in ((-1, 4), (True, 4), (0, 0), (0, -1), (0, True), (0, 2.5)):
+            with self.subTest(ply=ply, interval=interval), self.assertRaises(ValueError):
+                DATA.should_sample(ply, interval)
+
     def test_fixture_legal_unique_families_and_predefined_splits(self):
         data = DATA.load_openings(DATA.DEFAULT_OPENINGS)
         self.assertEqual(len(data["openings"]), 16)
@@ -271,11 +292,36 @@ class CollectorContractTests(unittest.TestCase):
             self.assertEqual(position["turn"], "b")
             self.assertEqual(position["outcome_stm"], 1)
             self.assertEqual(position["history"], ["f2f3", "e7e5", "g2g4"])
+            self.assertEqual(report["counts_by_turn"]["train"], {"w": 0, "b": 1})
+            self.assertEqual(report["positions_by_turn"], {"b": 1})
             self.assertEqual(len(teacher.calls[0]["history"]), 3)
             self.assertEqual(teacher.calls[0]["limit"].nodes, 200)
             self.assertIsNot(teacher.calls[0]["game"], player.calls[0]["game"])
             for name, digest in report["files_sha256"].items():
                 self.assertEqual(DATA.sha256_file(args.output / name), digest)
+
+    def test_even_interval_collects_real_white_and_black_queries_in_a_completed_game(self):
+        class SequencePlayer(FakeEngine):
+            def play(self, board, limit, **kwargs):
+                self.move = "e2e4 e7e5 d1h5 b8c6 f1c4 g8f6 h5f7".split()[len(board.move_stack)]
+                return super().play(board, limit, **kwargs)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            args = self.setup_args(temporary, [], 12)
+            args.sample_every = 2
+            player, teacher = SequencePlayer(), FakeEngine()
+            report = self.run_mocked(args, player, teacher)
+            samples = [json.loads(line) for line in (args.output / "positions.jsonl").read_text().splitlines()]
+            self.assertEqual(report["completed_games"], 1)
+            self.assertEqual([sample["ply"] for sample in samples], [0, 3, 4])
+            self.assertEqual([sample["turn"] for sample in samples], ["w", "b", "w"])
+            self.assertEqual(report["counts_by_turn"]["train"], {"w": 2, "b": 1})
+            self.assertEqual([len(query["history"]) for query in teacher.calls], [0, 3, 4])
+            for sample in samples:
+                board = DATA.replay_position(sample["initial_fen"], sample["history"])
+                self.assertEqual(board.fen(en_passant="fen"), sample["fen"])
+                self.assertEqual(sample["outcome_stm"], 1 if board.turn else -1)
+            self.assertIn("no synthetic turn flips", report["label_policy"]["sampling_turns"])
 
     def test_engine_failure_preserves_partial_report_as_failed(self):
         with tempfile.TemporaryDirectory() as temporary:

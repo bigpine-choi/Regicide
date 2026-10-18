@@ -43,6 +43,7 @@ class MockStages:
         self.promotions = []
         self.analysis_error = self.rules_error = self.promotion_error = None
         self.arena_status = "complete"
+        self.first_attempt_offset = None
 
     def __enter__(self):
         self.stack = contextlib.ExitStack()
@@ -54,6 +55,7 @@ class MockStages:
                 (ARENA, "validate_native_model", self.native),
                 (REGISTRY, "load_champion", self.load_champion),
                 (REGISTRY, "promote", self.promote),
+                (CYCLE, "model_version", self.model_version),
                 (CYCLE, "run_rule_checks", self.rules),
                 (CYCLE, "command", self.command)):
             self.stack.enter_context(mock.patch.object(module, name, side_effect=replacement))
@@ -66,7 +68,9 @@ class MockStages:
     def collect(self, args):
         # The statistical attempt must already be durably consumed.
         catalog = json.loads((self.state / "catalog.json").read_text())
-        if catalog["attempts_started"] != len(self.collections) + 1:
+        if self.first_attempt_offset is None:
+            self.first_attempt_offset = catalog["attempts_started"] - 1
+        if catalog["attempts_started"] != self.first_attempt_offset + len(self.collections) + 1:
             raise AssertionError("collection started before saving the attempt counter")
         self.collections.append(copy.copy(args))
         output = Path(args.output)
@@ -122,17 +126,23 @@ class MockStages:
         self.trainings.append(arguments)
         output = Path(arguments[arguments.index("--output") + 1])
         output.mkdir()
-        model = output / "small-v1.nn"
-        model.write_bytes(f"MOCK CANDIDATE {len(self.trainings)}\n".encode("ascii"))
+        version = int(arguments[arguments.index("--model-version") + 1])
+        model = output / f"small-v{version}.nn"
+        model.write_text(json.dumps({"mock_version": version, "mock_candidate": len(self.trainings)}), encoding="utf-8")
         initial = (Path(arguments[arguments.index("--initial-model") + 1])
                    if "--initial-model" in arguments else None)
         save_json(output / "report.json", {"status": "complete", "mock": True,
+                  "model_version": version, "model_path": model.name,
+                  "target": "mock teacher target", "loss": "mock mean squared error",
                   "model_sha256": CYCLE.sha256(model),
                   "initial_model_sha256": CYCLE.sha256(initial) if initial is not None else None})
         Path(log).write_text("MOCK training stage; not a strength measurement\n", encoding="utf-8")
 
     def native(self, binary, candidate):
         return {"model_sha256": CYCLE.sha256(candidate), "score_cp": 0, "mock": True}
+
+    def model_version(self, model):
+        return json.loads(Path(model).read_text(encoding="utf-8"))["mock_version"]
 
     def rules(self, binary, candidate, output):
         if self.rules_error is not None:
@@ -188,10 +198,11 @@ class CycleTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             return CYCLE.run_round(self.args, self.state, catalog)
 
-    def incumbent(self):
+    def incumbent(self, version=None):
         model = self.state / "models/incumbent.nn"
         model.parent.mkdir(exist_ok=True)
-        model.write_bytes(b"MOCK INCUMBENT\n")
+        model.write_text(json.dumps({"mock_version": version or self.args.model_version,
+                                     "mock_incumbent": True}), encoding="utf-8")
         champion = {"model_path": str(model), "model_sha256": CYCLE.sha256(model), "generation": 1}
         save_json(self.state / "champion.json", champion)
         return champion
@@ -349,6 +360,132 @@ class CycleTests(unittest.TestCase):
         self.assertNotIn("--initial-model", stages.trainings[0])
         self.assertIsNone(stages.collections[0].model)
         self.assertIsNone(stages.arenas[0]["champion"])
+
+    def test_default_v2_and_explicit_legacy_version_are_validated(self):
+        self.assertEqual(CYCLE.parser().parse_args([]).model_version, 2)
+        self.assertEqual(CYCLE.parser().parse_args(["--model-version", "1"]).model_version, 1)
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            CYCLE.parser().parse_args(["--model-version", "3"])
+
+    def test_default_v2_training_records_bounded_classical_residual(self):
+        with MockStages(self.state) as stages:
+            report = self.run_round(self.catalog())
+        arguments = stages.trainings[0]
+        self.assertEqual(arguments[arguments.index("--model-version") + 1], "2")
+        self.assertEqual(report["evaluation_design"]["model_version"], 2)
+        self.assertEqual(report["evaluation_design"]["residual_bound_cp"], 100)
+        self.assertEqual(report["evaluation_design"]["default_l2"], .0001)
+        self.assertEqual(report["training"]["model_path"], "small-v2.nn")
+        self.assertEqual(report["initialization"]["mode"], "seeded_random")
+
+    def test_legacy_incumbent_is_kept_as_opponent_but_not_warm_start_for_v2(self):
+        catalog = self.catalog()
+        champion = self.incumbent(version=1)
+        before = (self.state / "champion.json").read_bytes()
+        with MockStages(self.state, champion=champion) as stages:
+            report = self.run_round(catalog)
+        self.assertNotIn("--initial-model", stages.trainings[0])
+        self.assertEqual(stages.collections[0].model, Path(champion["model_path"]))
+        self.assertEqual(stages.arenas[0]["champion"], Path(champion["model_path"]))
+        self.assertEqual(report["initialization"]["incumbent_model_version"], 1)
+        self.assertEqual(report["initialization"]["mode"], "seeded_random")
+        self.assertIn("incompatible_model_format", report["initialization"]["reason"])
+        self.assertEqual((self.state / "champion.json").read_bytes(), before)
+
+    def test_explicit_legacy_v1_can_still_warm_start_legacy_incumbent(self):
+        catalog = self.catalog()
+        self.args.model_version = 1
+        champion = self.incumbent(version=1)
+        with MockStages(self.state, champion=champion) as stages:
+            report = self.run_round(catalog)
+        arguments = stages.trainings[0]
+        self.assertEqual(arguments[arguments.index("--model-version") + 1], "1")
+        self.assertEqual(arguments[arguments.index("--initial-model") + 1], champion["model_path"])
+        self.assertEqual(report["initialization"]["mode"], "warm_start")
+        self.assertEqual(report["evaluation_design"]["format"], "REGICIDE_NN_V1 768 32 16 600")
+        self.assertEqual(report["training"]["model_path"], "small-v1.nn")
+
+    def test_version_mismatch_in_training_report_blocks_arena_and_preserves_champion(self):
+        catalog = self.catalog()
+        champion = self.incumbent(version=2)
+        before = (self.state / "champion.json").read_bytes()
+        with MockStages(self.state, champion=champion, arena_pass=True) as stages:
+            def wrong_report(*arguments, **options):
+                stages.command(*arguments, **options)
+                output = Path(arguments[1][arguments[1].index("--output") + 1])
+                path = output / "report.json"
+                training = json.loads(path.read_text(encoding="utf-8"))
+                training["model_version"] = 1
+                save_json(path, training)
+            with mock.patch.object(CYCLE, "command", side_effect=wrong_report):
+                with self.assertRaisesRegex(ValueError, "identities disagree"):
+                    self.run_round(catalog)
+        self.assertEqual(stages.arenas, [])
+        self.assertEqual(stages.promotions, [])
+        self.assertEqual((self.state / "champion.json").read_bytes(), before)
+
+    def test_candidate_path_from_training_report_cannot_escape_model_directory(self):
+        with MockStages(self.state) as stages:
+            def escaped_report(*arguments, **options):
+                stages.command(*arguments, **options)
+                output = Path(arguments[1][arguments[1].index("--output") + 1])
+                path = output / "report.json"
+                training = json.loads(path.read_text(encoding="utf-8"))
+                training["model_path"] = "../../outside-model.nn"
+                save_json(path, training)
+            with mock.patch.object(CYCLE, "command", side_effect=escaped_report):
+                with self.assertRaisesRegex(ValueError, "escapes"):
+                    self.run_round(self.catalog())
+        self.assertEqual(stages.arenas, [])
+        self.assertEqual(stages.promotions, [])
+
+    def test_existing_two_attempts_resume_as_three_after_model_version_change(self):
+        self.args.model_version = 1
+        with MockStages(self.state):
+            self.run_round(self.catalog())
+            self.run_round(CYCLE.catalog_read(self.state))
+        before = CYCLE.catalog_read(self.state)
+        self.args.model_version = 2
+        with MockStages(self.state) as stages:
+            third = self.run_round(CYCLE.catalog_read(self.state))
+        after = CYCLE.catalog_read(self.state)
+        self.assertEqual(third["attempt_index"], 3)
+        self.assertEqual(stages.arenas[0]["attempt_index"], 3)
+        self.assertEqual(after["attempts_started"], 3)
+        self.assertEqual(after["runs"][:2], before["runs"])
+        self.assertEqual(after["bootstrap"], before["bootstrap"])
+        self.assertEqual(len(after["datasets"]), 3)
+
+    def test_source_freeze_includes_classical_helper_and_all_python_regressions(self):
+        hashes = CYCLE.implementation_hashes()
+        for relative in ("scripts/classical_evaluation.py", "tests/learning_cycle_tests.py",
+                         "tests/neural_training_tests.py", "tests/learning_runtime_tests.py"):
+            self.assertIn(relative, hashes)
+            self.assertEqual(hashes[relative], CYCLE.sha256(ROOT / relative))
+
+    def test_actual_model_formats_are_loaded_without_reinterpreting_weights(self):
+        from neural_model import export_model, initialize_model
+        for version in (1, 2):
+            path = self.root / f"real-v{version}.nn"
+            export_model(initialize_model(seed=97, version=version), path)
+            self.assertEqual(CYCLE.model_version(path), version)
+
+    def test_actual_candidate_format_mismatch_blocks_even_with_matching_file_hash(self):
+        with MockStages(self.state) as stages:
+            def wrong_candidate(*arguments, **options):
+                stages.command(*arguments, **options)
+                output = Path(arguments[1][arguments[1].index("--output") + 1])
+                path = output / "report.json"
+                training = json.loads(path.read_text(encoding="utf-8"))
+                candidate = output / training["model_path"]
+                candidate.write_text(json.dumps({"mock_version": 1}), encoding="utf-8")
+                training["model_sha256"] = CYCLE.sha256(candidate)
+                save_json(path, training)
+            with mock.patch.object(CYCLE, "command", side_effect=wrong_candidate):
+                with self.assertRaisesRegex(ValueError, "identities disagree"):
+                    self.run_round(self.catalog())
+        self.assertEqual(stages.arenas, [])
+        self.assertEqual(stages.promotions, [])
 
     def test_failed_analysis_preserves_completed_data_and_spent_attempt(self):
         catalog = self.catalog()

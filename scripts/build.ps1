@@ -58,7 +58,7 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude t
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\see_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj /Fobuild\see_tests.obj /Febuild\regicide_see_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\board.obj build\neural.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\board.obj build\evaluation.obj build\neural.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
 if errorlevel 1 exit /b 1
 $probeBuild
 exit /b %errorlevel%

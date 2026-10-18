@@ -250,11 +250,28 @@ def run_rule_checks(binary, candidate, output):
 
 
 def implementation_hashes():
-    paths = sorted((ROOT / "scripts").glob("*.py")) + [
-        ROOT / "tests/differential.py", ROOT / "tests/neural_integration_tests.py",
-        ROOT / "tests/engine_integration.py", ROOT / "tests/data/learning_openings_v1.json",
+    # Include new evaluator helpers and their regressions automatically. A new
+    # dependency such as classical_evaluation.py must not escape source freeze.
+    paths = sorted((ROOT / "scripts").glob("*.py")) + sorted((ROOT / "tests").glob("*.py")) + [
+        ROOT / "tests/data/learning_openings_v1.json",
         ROOT / "tests/data/learning_arena_openings_v1.json"]
     return {path.relative_to(ROOT).as_posix(): sha256(path) for path in paths}
+
+
+def model_version(path):
+    from neural_model import load_model
+    return load_model(path).version
+
+
+def evaluation_design(version):
+    if version == 2:
+        return {"model_version": 2, "format": "REGICIDE_NN_V2 768 32 16 600 100",
+                "score": "classical_cp_stm + 100*tanh(z)", "residual_bound_cp": 100,
+                "target": "tanh(teacher_cp_stm/600); no game-outcome mixture",
+                "default_l2": .0001}
+    return {"model_version": 1, "format": "REGICIDE_NN_V1 768 32 16 600",
+            "score": "material_cp_stm + 600*z", "residual_bound_cp": None,
+            "target": "0.8*tanh(teacher_cp_stm/600)+0.2*outcome_stm", "default_l2": 0.0}
 
 
 def write_summary(run, report):
@@ -266,6 +283,8 @@ def write_summary(run, report):
              f"- 이번 자체 대국: 완결 {collection.get('completed_games', '?')}판, 표본 {collection.get('positions', '?')}개",
              f"- 패배 분석: {analysis.get('analyzed_positions', '?')}위치, 학습용 교정 {analysis.get('training_corrections', '?')}개",
              f"- 누적 학습/검증/시험 표본: {counts.get('train', '?')} / {counts.get('validation', '?')} / {counts.get('test', '?')}",
+             f"- 평가 모델: V{report.get('evaluation_design', {}).get('model_version', '?')} — {report.get('evaluation_design', {}).get('score', '?')}",
+             f"- 후보 초기화: {report.get('initialization', {}).get('mode', '?')}",
              f"- 대국 검증: 완료 {arena.get('completed_pairs', '?')}쌍, 새 모델 점수 {arena.get('candidate_pair_score')}",
              f"- 채택 기준의 단측 점수 하한: {arena.get('one_sided_lower_bound')} (0.5 초과 필요)", "",
              "기준을 통과하지 못하면 기존 채택 모델을 유지한다. 완료한 학습 자료는 다음 순환에 누적한다.",
@@ -294,6 +313,7 @@ def run_round(args, state, catalog):
     report = {"schema": SCHEMA, "status": "running", "attempt_index": attempt,
               "started_utc": utc_now(), "seed": args.seed + attempt * 1009,
               "stages": [], "adopted": False,
+              "evaluation_design": evaluation_design(args.model_version),
               "power_policy": {"system_required_during_cycle": sys.platform == "win32",
                                "scope": "Thread-scoped Windows idle-sleep request restored on exit; does not override explicit user sleep or lid closure."},
               "policy": "Losses analyzed; accumulated training only; frozen bootstrap heldouts; reserved arena excluded; old champion kept unless strict paired arena passes."}
@@ -310,6 +330,16 @@ def run_round(args, state, catalog):
         champion = load_champion(state, binary)
         model = Path(champion["model_path"]) if champion else None
         previous_sha = champion["model_sha256"] if champion else None
+        incumbent_version = model_version(model) if model is not None else None
+        compatible = model is not None and incumbent_version == args.model_version
+        report["initialization"] = {
+            "mode": "warm_start" if compatible else "seeded_random",
+            "requested_model_version": args.model_version, "incumbent_model_version": incumbent_version,
+            "initial_model_sha256": previous_sha if compatible else None,
+            "reason": "compatible_incumbent" if compatible else
+                      "incompatible_model_format; incumbent retained for self-play and arena" if model else
+                      "no_adopted_neural_model",
+            "incumbent_kept_for_selfplay_and_arena": model is not None}
         report.update(binary_sha256=digest, previous_model_sha256=previous_sha,
                       implementation_sha256=implementation_hashes())
         stage("self-play")
@@ -349,14 +379,18 @@ def run_round(args, state, catalog):
         stage("retraining")
         training_args = [ROOT / "scripts/train_neural.py", "--dataset", run / "corpus/manifest.json",
                          "--output", run / "model", "--epochs", args.epochs,
-                         "--batch-size", args.batch_size, "--seed", report["seed"]]
-        if model is not None:
+                         "--batch-size", args.batch_size, "--seed", report["seed"],
+                         "--model-version", args.model_version]
+        if compatible:
             training_args += ["--initial-model", model]
         command(sys.executable, training_args, run / "training.log")
-        candidate = run / "model/small-v1.nn"
         training = json.loads((run / "model/report.json").read_text(encoding="utf-8"))
-        if training["status"] != "complete" or sha256(candidate) != training["model_sha256"]:
+        candidate = contained(run / "model", training["model_path"])
+        if (training["status"] != "complete" or sha256(candidate) != training["model_sha256"]
+                or training["model_version"] != args.model_version or model_version(candidate) != args.model_version):
             raise ValueError("Candidate and training report identities disagree.")
+        report["training"] = {key: training.get(key) for key in
+                              ("model_version", "model_path", "target", "loss", "regularization", "l2")}
         validate_native_model(binary, candidate)
         report["candidate_sha256"] = sha256(candidate)
         stage("rule-regressions")
@@ -419,6 +453,8 @@ def parser():
     result.add_argument("--sample-every", type=int, default=4)
     result.add_argument("--epochs", type=int, default=100)
     result.add_argument("--batch-size", type=int, default=64)
+    result.add_argument("--model-version", type=int, choices=(1, 2), default=2,
+                        help="2 keeps classical evaluation plus a bounded learned correction; 1 reproduces the legacy model")
     result.add_argument("--seed", type=int, default=20261018)
     result.add_argument("--arena-pairs", type=int, default=32, help="Fewer than 32 pairs are smoke tests and can never promote")
     result.add_argument("--movetime-ms", type=int, default=100)

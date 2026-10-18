@@ -1,9 +1,13 @@
 #include "regicide/neural.hpp"
+#include "regicide/evaluation.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -39,8 +43,9 @@ std::string serialized(const Parameters& parameters,
     for (double parameter : parameters) out << parameter << '\n';
     return out.str();
 }
-std::shared_ptr<const NeuralEvaluator> model(const Parameters& parameters) {
-    std::istringstream input(serialized(parameters));
+std::shared_ptr<const NeuralEvaluator> model(const Parameters& parameters,
+                                           const std::string& header = "REGICIDE_NN_V1 768 32 16 600") {
+    std::istringstream input(serialized(parameters, header));
     return NeuralEvaluator::load(input);
 }
 void rejects(const std::string& text) {
@@ -61,6 +66,60 @@ Parameters feature_path(std::size_t feature, double weight = 1.0) {
 } // namespace
 
 int main() {
+    test("V2 zero correction preserves every classical option and board state", [] {
+        const auto evaluator = model(zero(), "REGICIDE_NN_V2 768 32 16 600 100");
+        std::mt19937 rng(20261019);
+        Board board;
+        for (int index = 0; index < 240; ++index) {
+            const Board saved = board;
+            for (bool shield : {false, true}) {
+                for (bool structure : {false, true}) {
+                    const int expected = evaluate_position(board, shield, structure);
+                    expect(evaluator->evaluate(board, shield, structure) == expected,
+                           "zero V2 lost an existing positional component");
+                }
+            }
+            expect(board == saved, "V2 evaluation changed board state or draw history");
+            const auto moves = board.legal_moves();
+            if (moves.empty() || index % 80 == 79) board = Board();
+            else board.play(moves[rng() % moves.size()]);
+        }
+    });
+    test("V2 correction is bounded and uses classical position rather than material", [] {
+        const Board board("4k3/1P6/8/8/8/8/8/4K3 w - - 0 1");
+        const int baseline = evaluate_position(board);
+        expect(baseline != 100, "passed pawn fixture lacks positional value");
+        for (double raw : {-100.0, -1.0, 0.0, 1.0, 100.0}) {
+            auto parameters = zero();
+            parameters[b3] = raw;
+            const int score = model(parameters, "REGICIDE_NN_V2 768 32 16 600 100")->evaluate(board);
+            const int expected = static_cast<int>(std::lround(baseline + 100.0 * std::tanh(raw)));
+            expect(score == expected && std::abs(score - baseline) <= 100,
+                   "V2 correction exceeded its bound or dropped the classical baseline");
+        }
+    });
+    test("V2 feature paths have the same orientation as V1", [] {
+        const auto evaluator = model(feature_path(10, 0.25), "REGICIDE_NN_V2 768 32 16 600 100");
+        const Board white("4k3/8/8/8/8/8/2P5/4K3 w - - 0 1");
+        const Board black("4k3/2p5/8/8/8/8/8/4K3 b - - 0 1");
+        const int correction = static_cast<int>(std::lround(100.0 * std::tanh(0.25)));
+        expect(evaluator->evaluate(white) == evaluate_position(white) + correction,
+               "V2 own feature orientation mismatch");
+        expect(evaluator->evaluate(black) == evaluator->evaluate(white),
+               "V2 color/rank reflection mismatch");
+    });
+    test("V2 retains bounded corrections in legal promotion-heavy positions", [] {
+        const Board board("7k/8/8/BB6/NN6/RR6/Q1QQ4/KQQQQQQ1 w - - 0 1");
+        const int baseline = evaluate_position(board);
+        expect(baseline > 10000, "promotion fixture must exceed the legacy clamp");
+        for (double raw : {-100.0, 0.0, 100.0}) {
+            auto parameters = zero();
+            parameters[b3] = raw;
+            const int expected = baseline + static_cast<int>(std::lround(100.0 * std::tanh(raw)));
+            expect(model(parameters, "REGICIDE_NN_V2 768 32 16 600 100")->evaluate(board) == expected,
+                   "legacy clamp removed classical promotion value from V2");
+        }
+    });
     test("zero residual preserves exact side-to-move material", [] {
         const auto evaluator = model(zero());
         for (const auto& [fen, expected] : std::array<std::pair<const char*, int>, 5>{{
@@ -179,6 +238,12 @@ int main() {
                                   "REGICIDE_NN_V1 768 32 16", "REGICIDE_NN_V1 768.0 32 16 600"})
             rejects(serialized(zero(), header));
         rejects("");
+        for (const char* header : {"REGICIDE_NN_V3 768 32 16 600 100",
+                                  "REGICIDE_NN_V2 768 32 16 600 101",
+                                  "REGICIDE_NN_V2 768 32 16 600 100.0",
+                                  "REGICIDE_NN_V2 768 32 16 600 100 extra",
+                                  "REGICIDE_NN_V1 768 32 16 600 100"})
+            rejects(serialized(zero(), header));
     });
     test("parameter counts and trailing tokens must match exactly", [] {
         auto parameters = zero();

@@ -18,6 +18,7 @@ jobs:
       - run: python -m pip install -r requirements-learning.txt
       - run: python tests/learning_data_tests.py
       - run: python tests/neural_training_tests.py
+      - run: python tests/classical_evaluation_tests.py
       - run: python tests/learning_loss_analysis_tests.py
       - run: python tests/learning_corpus_tests.py
       - run: python tests/learning_arena_tests.py
@@ -47,6 +48,10 @@ jobs:
         run: python tests/loss_diagnosis_tests.py --binary build/regicide --probe build/regicide_evaluation_probe
       - if: runner.os == 'Windows'
         run: python tests/loss_diagnosis_tests.py --binary build/Release/regicide.exe --probe build/Release/regicide_evaluation_probe.exe
+      - if: runner.os == 'Linux'
+        run: python tests/classical_evaluation_tests.py --probe build/regicide_evaluation_probe
+      - if: runner.os == 'Windows'
+        run: python tests/classical_evaluation_tests.py --probe build/Release/regicide_evaluation_probe.exe
       - if: runner.os == 'Linux'
         run: python tests/differential.py build/regicide
       - if: runner.os == 'Windows'

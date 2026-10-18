@@ -25,9 +25,9 @@ import sys
 import chess
 import numpy as np
 
-from neural_model import (Adam, SCALE, encode_features, export_model, feature_key,
+from neural_model import (Adam, CORRECTION_CAP, SCALE, SHAPES, encode_features, export_model, feature_key,
                           initialize_model, load_model, loss_and_gradients,
-                          material_cp_stm, predict_z)
+                          l2_penalty, material_cp_stm, predict_z)
 
 SCHEMA = "regicide.selfplay.dataset.v1"
 SPLITS = ("train", "validation", "test")
@@ -103,7 +103,11 @@ def position_key(board):
     return " ".join(board.fen(en_passant="fen").split()[:4])
 
 
-def load_dataset(manifest_path, *, allow_empty_splits=False):
+def load_dataset(manifest_path, *, allow_empty_splits=False, model_version=1):
+    if type(model_version) is not int or model_version not in (1, 2):
+        raise ValueError("unsupported neural model version")
+    if model_version == 2:
+        from classical_evaluation import classical_cp_stm
     manifest_path = Path(manifest_path).resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if not isinstance(manifest, dict) or manifest.get("schema") != SCHEMA:
@@ -137,6 +141,7 @@ def load_dataset(manifest_path, *, allow_empty_splits=False):
         raise ValueError("no completed games in dataset")
     rows = {split: [] for split in SPLITS}
     position_splits, feature_splits, seen_samples = {}, {}, set()
+    turns = {split: Counter() for split in SPLITS}
     for sample in json_lines(positions_path):
         game_id = sample.get("game_id")
         if game_id not in games:
@@ -190,8 +195,11 @@ def load_dataset(manifest_path, *, allow_empty_splits=False):
         if neural_key in feature_splits and feature_splits[neural_key] != split:
             raise ValueError("same neural feature input appears across splits")
         feature_splits[neural_key] = split
-        target = .8 * math.tanh(cp / SCALE) + .2 * outcome
-        rows[split].append({"features": encode_features(board), "material": material,
+        target = (.8 * math.tanh(cp / SCALE) + .2 * outcome if model_version == 1
+                  else math.tanh(cp / SCALE))
+        baseline = material if model_version == 1 else classical_cp_stm(board)
+        turns[split][turn] += 1
+        rows[split].append({"features": encode_features(board), "material": baseline,
                             "target": target, "game_id": game_id, "family": sample["family"]})
     for split in SPLITS:
         if not rows[split] and not allow_empty_splits:
@@ -209,13 +217,17 @@ def load_dataset(manifest_path, *, allow_empty_splits=False):
                 "positions": sha256(positions_path), "games": sha256(games_path)},
                 "counts": counts, "exclusions": dict(exclusions),
                 "total_games": len(games), "family_splits": family_splits,
-                "collector_exclusions": manifest.get("exclusions", {})}
+                "collector_exclusions": manifest.get("exclusions", {}),
+                "model_version": model_version,
+                "turn_distribution": {split: {turn: turns[split][turn] for turn in ("w", "b")}
+                                      for split in SPLITS}}
     return batches, metadata
 
 
 def mse(model, batch):
     features, material, targets = batch
-    predicted = np.tanh(material / SCALE + predict_z(features, model))
+    predicted = (np.tanh(material / SCALE + predict_z(features, model)) if model.version == 1
+                 else np.tanh((material + CORRECTION_CAP * np.tanh(predict_z(features, model))) / SCALE))
     value = float(np.mean((predicted - targets) ** 2))
     if not math.isfinite(value):
         raise ValueError("nonfinite evaluation loss")
@@ -228,18 +240,25 @@ def material_mse(batch):
 
 
 def train(batches, *, epochs, batch_size, seed, learning_rate=.003, progress=None,
-          initial_model=None):
+          initial_model=None, model_version=1, l2=None):
     if epochs < 1 or batch_size < 1:
         raise ValueError("epochs and batch size must be positive")
+    if type(model_version) is not int or model_version not in (1, 2):
+        raise ValueError("unsupported neural model version")
+    l2 = (1e-4 if model_version == 2 else 0.0) if l2 is None else l2
+    if not math.isfinite(l2) or l2 < 0:
+        raise ValueError("L2 coefficient must be finite and nonnegative")
     # A learning cycle carries forward weights, while each cycle starts a fresh
     # Adam optimizer. Epoch 0 remains eligible so validation can retain those
     # exact incumbent weights rather than force an inferior updated checkpoint.
     if initial_model is None:
-        initial = initialize_model(seed)
+        initial = initialize_model(seed, version=model_version)
     elif isinstance(initial_model, (str, Path)):
         initial = load_model(initial_model)
     else:
         initial = initial_model.validate().copy()
+    if initial.version != model_version:
+        raise ValueError("initial model version does not match requested training version")
     model, selected = initial.copy(), initial.copy()
     optimizer = Adam(model, learning_rate)
     rng = np.random.default_rng(seed)
@@ -247,26 +266,40 @@ def train(batches, *, epochs, batch_size, seed, learning_rate=.003, progress=Non
     selected_epoch = 0
     history = [{"epoch": 0, "train_mse": mse(initial, batches["train"]),
                 "validation_mse": best_validation}]
+    if model_version == 2 or l2:
+        history[0].update(train_l2_penalty=l2_penalty(initial, l2),
+                          train_total_loss=history[0]["train_mse"] + l2_penalty(initial, l2))
     x, material, targets = batches["train"]
     for epoch in range(1, epochs + 1):
         order = rng.permutation(len(x))
         for start in range(0, len(x), batch_size):
             indices = order[start:start + batch_size]
-            _, gradients = loss_and_gradients(model, x[indices], material[indices], targets[indices])
+            _, gradients = loss_and_gradients(model, x[indices], material[indices], targets[indices], l2=l2)
             optimizer.step(model, gradients)
         train_loss = mse(model, batches["train"])
         validation_loss = mse(model, batches["validation"])
         history.append({"epoch": epoch, "train_mse": train_loss,
                         "validation_mse": validation_loss})
+        if model_version == 2 or l2:
+            history[-1].update(train_l2_penalty=l2_penalty(model, l2),
+                               train_total_loss=train_loss + l2_penalty(model, l2))
         if validation_loss < best_validation:
             best_validation, selected_epoch, selected = validation_loss, epoch, model.copy()
         if progress is not None:
             progress(history[-1], selected_epoch)
     # The test split is deliberately first touched only after model selection.
+    baseline_name = "material_only_mse" if model_version == 1 else "classical_only_mse"
     metrics = {split: {"initial_mse": mse(initial, batches[split]),
                        "selected_mse": mse(selected, batches[split]),
-                       "material_only_mse": material_mse(batches[split])} for split in SPLITS}
-    return selected, {"selected_epoch": selected_epoch, "history": history, "metrics": metrics}
+                       baseline_name: material_mse(batches[split])} for split in SPLITS}
+    result = {"selected_epoch": selected_epoch, "history": history, "metrics": metrics}
+    if model_version == 2 or l2:
+        penalty = l2_penalty(selected, l2)
+        result["loss_components"] = {"selected_train_mse": metrics["train"]["selected_mse"],
+                                     "selected_l2_penalty": penalty,
+                                     "selected_train_total": metrics["train"]["selected_mse"] + penalty,
+                                     "validation_selection": "MSE only; L2 is a training penalty"}
+    return selected, result
 
 
 def main(argv=None):
@@ -279,16 +312,28 @@ def main(argv=None):
     parser.add_argument("--learning-rate", type=float, default=.003)
     parser.add_argument("--initial-model", type=Path,
                         help="start from these weights; Adam state is reset; epoch 0 stays eligible")
+    parser.add_argument("--model-version", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--l2", type=float,
+                        help="matrix-only L2; default 0 for V1 and 0.0001 for V2")
     args = parser.parse_args(argv)
     if (args.epochs < 1 or args.batch_size < 1 or args.seed < 0
-            or not math.isfinite(args.learning_rate) or args.learning_rate <= 0):
-        parser.error("epochs/batch-size/learning-rate must be positive and finite; seed nonnegative")
+            or not math.isfinite(args.learning_rate) or args.learning_rate <= 0
+            or args.l2 is not None and (not math.isfinite(args.l2) or args.l2 < 0)):
+        parser.error("epochs/batch-size/learning-rate must be positive and finite; seed and finite L2 nonnegative")
+    effective_l2 = (1e-4 if args.model_version == 2 else 0.0) if args.l2 is None else args.l2
     args.output.mkdir(parents=True, exist_ok=False)
     report_path = args.output / "report.json"
     report = {"schema": "regicide.neural.training.v1", "status": "running",
               "started_utc": datetime.now(timezone.utc).isoformat(),
               "seed": args.seed, "epochs": args.epochs, "batch_size": args.batch_size,
               "learning_rate": args.learning_rate,
+              "model_version": args.model_version,
+              "model_format": f"REGICIDE_NN_V{args.model_version}",
+              "baseline": "material_cp_stm" if args.model_version == 1 else "classical_cp_stm; pawn shield and pawn structure enabled",
+              "correction": "600*z" if args.model_version == 1 else "100*tanh(z)",
+              "correction_cap_cp": None if args.model_version == 1 else int(CORRECTION_CAP),
+              "l2": {"coefficient": effective_l2, "matrices": ["w1", "w2", "w3"],
+                     "biases_regularized": False, "formula": "0.5*coefficient*sum(weight_matrices^2)"},
               "optimizer": {"name": "Adam", "beta1": .9, "beta2": .999,
                             "epsilon": 1e-8, "gradient_norm_clip": 10,
                             "state_reset": True,
@@ -300,8 +345,11 @@ def main(argv=None):
                   "train_neural.py": sha256(Path(__file__)),
                   "neural_model.py": sha256(Path(__file__).with_name("neural_model.py"))},
               "architecture": [768, 32, 16, 1], "scale_cp": 600,
-              "target": "0.8*tanh(teacher_cp_stm/600)+0.2*outcome_stm",
-              "loss": "mean((tanh(material_cp_stm/600+z)-target)^2)",
+              "parameter_count": sum(math.prod(shape) for shape in SHAPES.values()),
+              "target": ("0.8*tanh(teacher_cp_stm/600)+0.2*outcome_stm" if args.model_version == 1
+                         else "tanh(teacher_cp_stm/600); outcomes retained for integrity checks only"),
+              "loss": ("mean((tanh(material_cp_stm/600+z)-target)^2)" if args.model_version == 1
+                       else "mean((tanh((classical_cp_stm+100*tanh(z))/600)-target)^2)+matrix_only_L2"),
               "selection": "lowest validation MSE; strict improvement; earliest tie; epoch 0 eligible",
               "split_policy": "predeclared opening families; no cross-split games/families/canonical positions/exact neural inputs",
               "test_policy": "one final assessment after validation selection; no tuning on test labels",
@@ -319,17 +367,24 @@ def main(argv=None):
             initial_model = load_model(args.initial_model)
             if sha256(args.initial_model) != before:
                 raise ValueError("initial model changed while being loaded")
+            if initial_model.version != args.model_version:
+                raise ValueError("initial model version does not match requested training version")
             report["initial_model_sha256"] = before
-        batches, metadata = load_dataset(args.dataset)
+        batches, metadata = load_dataset(args.dataset, model_version=args.model_version)
         report["dataset"] = metadata
+        report["parameters_per_training_sample"] = report["parameter_count"] / metadata["counts"]["train"]["samples"]
+        report["turn_distribution"] = metadata["turn_distribution"]
+        if args.model_version == 2:
+            report["implementation_sha256"]["classical_evaluation.py"] = sha256(Path(__file__).with_name("classical_evaluation.py"))
         def progress(epoch, selected_epoch):
             if epoch["epoch"] == 1 or epoch["epoch"] % 10 == 0 or epoch["epoch"] == args.epochs:
                 print(f"epoch {epoch['epoch']}/{args.epochs} train={epoch['train_mse']:.8f} "
                       f"validation={epoch['validation_mse']:.8f} selected={selected_epoch}", flush=True)
         model, result = train(batches, epochs=args.epochs, batch_size=args.batch_size,
                               seed=args.seed, learning_rate=args.learning_rate, progress=progress,
-                              initial_model=initial_model)
-        model_path = args.output / "small-v1.nn"
+                              initial_model=initial_model, model_version=args.model_version,
+                              l2=effective_l2)
+        model_path = args.output / f"small-v{args.model_version}.nn"
         export_model(model, model_path)
         report.update(result)
         report.update({"status": "complete", "model_path": model_path.name,

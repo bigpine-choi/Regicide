@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests"))
 from neural_model import evaluate_cp, export_model, initialize_model, load_model, material_cp_stm
+from classical_evaluation import classical_cp_stm
 from play_human import HumanGame
 from engine_integration import UciProcess, configure
 
@@ -63,6 +64,7 @@ def corpus():
     for move in ("g1f3", "g8f6", "g2g3", "g7g6", "f1g2", "f8g7", "e1g1", "e8g8"):
         castled.push_uci(move)
     boards.append(castled)
+    boards.append(chess.Board("7k/8/8/BB6/NN6/RR6/Q1QQ4/KQQQQQQ1 w - - 0 1"))
     rng = random.Random(20261018)
     walk = chess.Board()
     for ply in range(72):
@@ -149,6 +151,18 @@ class NeuralIntegrationTests(unittest.TestCase):
         hand.w3[15] = .5
         hand.b3[0] = -.125
         cls.models["hand"] = hand
+        cls.models["v2_zero"] = initialize_model(1, version=2)
+        v2_seed = initialize_model(20261019, version=2)
+        v2_seed.w3[:] = .07
+        v2_seed.b3[0] = -.13
+        cls.models["v2_seed"] = v2_seed
+        v2_hand = hand.copy()
+        v2_hand.version = 2
+        cls.models["v2_hand"] = v2_hand
+        for name, bias in (("v2_positive", 100), ("v2_negative", -100)):
+            candidate = initialize_model(1, version=2)
+            candidate.b3[0] = bias
+            cls.models[name] = candidate
         cls.paths = {}
         for name, model in cls.models.items():
             path = cls.root / f"{name} model  with spaces.nn"
@@ -163,7 +177,8 @@ class NeuralIntegrationTests(unittest.TestCase):
 
     def test_python_cpp_static_parity_across_features_and_game_stages(self):
         boards = corpus()
-        for name in ("zero", "seed", "hand"):
+        names = ("zero", "seed", "hand", "v2_zero", "v2_seed", "v2_hand")
+        for name in names:
             restored = load_model(self.paths[name])
             for index, board in enumerate(boards):
                 with self.subTest(model=name, position=index, fen=board.fen()):
@@ -171,7 +186,43 @@ class NeuralIntegrationTests(unittest.TestCase):
                     actual = int(fields(cli(["eval", "--eval-file", self.paths[name],
                                              "--fen", board.fen(en_passant="fen")]).stdout)["score_cp"])
                     self.assertLessEqual(abs(actual - expected), 1)
-        print(f"Python/C++ parity: {len(boards)} positions x 3 models; <= 1 cp", flush=True)
+        print(f"Python/C++ parity: {len(boards)} positions x {len(names)} models; <= 1 cp", flush=True)
+
+    def test_v2_zero_preserves_search_and_options_at_root_and_leaves(self):
+        # Equal static output is also required throughout the actual search,
+        # including the one-node fallback and option-controlled classical base.
+        board = corpus()[9]
+        for shield in (False, True):
+            for structure in (False, True):
+                with self.subTest(shield=shield, structure=structure):
+                    replies = []
+                    for neural in (False, True):
+                        with UciProcess(BINARY) as engine:
+                            configure(engine, Hash=1, UsePawnShield=shield, UsePawnStructure=structure)
+                            if neural:
+                                configure(engine, EvalFile=self.paths["v2_zero"], UseNeuralEvaluation=True)
+                            replies.append(engine.search(board, "go depth 3 nodes 20000"))
+                    self.assertEqual(graph_fingerprint(*replies[0]), graph_fingerprint(*replies[1]))
+                    with UciProcess(BINARY) as engine:
+                        configure(engine, EvalFile=self.paths["v2_zero"], UseNeuralEvaluation=True,
+                                  UsePawnShield=shield, UsePawnStructure=structure)
+                        _, output = engine.search(board, "go nodes 1")
+                        self.assertEqual(score(output), ("cp", classical_cp_stm(board, shield, structure)))
+
+    def test_v2_correction_bound_and_static_options_match_python(self):
+        for board in corpus()[1:10]:
+            for name in ("v2_hand", "v2_positive", "v2_negative"):
+                for shield, structure in ((True, True), (False, True), (True, False), (False, False)):
+                    arguments = ["eval", "--eval-file", self.paths[name], "--fen", board.fen(en_passant="fen")]
+                    if not shield:
+                        arguments.append("--no-pawn-shield")
+                    if not structure:
+                        arguments.append("--no-pawn-structure")
+                    actual = int(fields(cli(arguments).stdout)["score_cp"])
+                    baseline = classical_cp_stm(board, shield, structure)
+                    self.assertLessEqual(abs(actual - baseline), 100)
+                    self.assertLessEqual(abs(actual - evaluate_cp(board, self.models[name],
+                        king_pawn_shield=shield, pawn_structure=structure)), 1)
 
     def test_cli_full_history_and_missing_model_errors(self):
         moves = ["e2e4", "c7c5", "g1f3", "d7d6", "d2d4", "c5d4", "f3d4"]
@@ -253,7 +304,9 @@ class NeuralIntegrationTests(unittest.TestCase):
         board = corpus()[9]
         variants = [("positive", True, True), ("seed", True, True),
                     ("negative", True, True), ("negative", False, True),
-                    ("positive", True, False), ("hand", True, True)]
+                    ("positive", True, False), ("hand", True, True),
+                    ("v2_hand", True, True), ("v2_seed", True, True),
+                    ("v2_positive", True, False)]
         with UciProcess(BINARY) as engine:
             configure(engine, Hash=1)
             for index, (name, enabled, positional) in enumerate(variants):
@@ -295,7 +348,7 @@ class NeuralIntegrationTests(unittest.TestCase):
             ("4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", "score_cp", 0),
             ("7k/8/8/8/8/8/8/R3K3 w - - 150 1", "score_cp", 0),
         ]
-        for name in ("extreme_positive", "extreme_negative"):
+        for name in ("extreme_positive", "extreme_negative", "v2_positive", "v2_negative"):
             for fen, score_name, expected in cases:
                 with self.subTest(model=name, fen=fen):
                     result = fields(cli(["search", "2", "--nodes", "4096", "--eval-file", self.paths[name],

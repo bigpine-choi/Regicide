@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.6.1\n"
+            std::cout << "Regicide 0.6.2\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
                          "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure --no-lmr\n"
                          "    --eval-file MODEL (experimental neural evaluation; default remains classical)\n"
                          "regicide eval --eval-file MODEL [--fen \"FEN\"] [--play ...] (static cp only)\n"
+                         "    optional eval flags: --no-pawn-shield --no-pawn-structure\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -107,8 +108,8 @@ int main(int argc, char** argv) {
             else if (command == "search" && option == "--no-quiet-ordering") search_options.quiet_ordering = false;
             else if (command == "search" && option == "--no-quiescence-checks") search_options.quiescence_checks = false;
             else if (command == "search" && option == "--no-see") search_options.see_ordering = false;
-            else if (command == "search" && option == "--no-pawn-shield") search_options.king_pawn_shield = false;
-            else if (command == "search" && option == "--no-pawn-structure") search_options.pawn_structure = false;
+            else if ((command == "search" || command == "eval") && option == "--no-pawn-shield") search_options.king_pawn_shield = false;
+            else if ((command == "search" || command == "eval") && option == "--no-pawn-structure") search_options.pawn_structure = false;
             else if (command == "search" && option == "--no-lmr") search_options.lmr = false;
             else if (command == "search" && option == "--hash" && arg < argc) {
                 const int amount = depth_arg(argv[arg++]);
@@ -132,7 +133,8 @@ int main(int argc, char** argv) {
         for (const auto& move : moves) board.play(move);
         if (command == "eval") {
             if (!search_options.neural) throw std::invalid_argument("eval requires --eval-file MODEL");
-            std::cout << "score_cp: " << search_options.neural->evaluate(board) << '\n';
+            std::cout << "score_cp: " << search_options.neural->evaluate(
+                board, search_options.king_pawn_shield, search_options.pawn_structure) << '\n';
         } else if (command == "search") {
             const auto result = regicide::search(board, limits, nullptr, {}, search_options);
             std::cout << "bestmove: " << (result.best_move ? result.best_move->uci() : "0000")

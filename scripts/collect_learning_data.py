@@ -172,6 +172,20 @@ def sample_exclusion(board):
     return None
 
 
+def should_sample(relative_ply, interval):
+    """One actual position per block, alternating turn for even intervals.
+
+    The old ``ply % 4 == 0`` schedule always selected the same moving side.
+    Alternating block offsets 0/1 yields 0,5,8,13,... for interval four.
+    Odd intervals already alternate sides, so they retain offset zero.
+    Nothing flips a board's actual turn, history or label perspective.
+    """
+    if type(relative_ply) is not int or relative_ply < 0 or type(interval) is not int or interval <= 0:
+        raise ValueError("sampling needs a nonnegative ply and positive integer interval")
+    block, offset = divmod(relative_ply, interval)
+    return offset == (block % 2 if interval % 2 == 0 else 0)
+
+
 def parse_score_event(line):
     """Capture bounds with their score, never accumulated stale UCI flags."""
     tokens = line.split()
@@ -373,7 +387,8 @@ def collect(args):
                 "label_policy": {"teacher": "own Regicide exact cp, side-to-move perspective; no mate conversion",
                                  "outcome": "completed adjudicated games only; side-to-move perspective",
                                  "draws": "claim every available current or announced-next-move draw",
-                                 "sampling": "post-opening+random augmentation, every N engine plies; root check/claim/terminal excluded",
+                                 "sampling": "actual-ply-block-alternating-offset-v2; post-opening+random augmentation; at most one actual position per N-ply block; offsets alternate 0/1 for even N, otherwise zero; root check/claim/terminal excluded",
+                                 "sampling_turns": "real legal game histories only; no synthetic turn flips or copied/sign-flipped teacher labels",
                                  "teacher_context": "fresh logical UCI game per query; full history; no time budget",
                                  "known_limit": "teacher imitates existing engine; outcome is small self-play evidence, not an independent truth"},
                 "errors": []}
@@ -389,6 +404,10 @@ def collect(args):
                          "completed_games": sum(game["completed"] for game in games),
                          "unfinished_games": sum(not game["completed"] for game in games),
                          "positions": len(filtered), "positions_by_split": dict(Counter(row["split"] for row in filtered)),
+                         "positions_by_turn": dict(Counter(row["turn"] for row in filtered)),
+                         "counts_by_turn": {split: {turn: sum(row["split"] == split and row["turn"] == turn
+                                                             for row in filtered) for turn in ("w", "b")}
+                                            for split in SPLITS},
                          "games_by_split": dict(Counter(game["split"] for game in games)),
                          "exclusions": dict(exclusions), "cross_split_exclusions": leakage,
                          "files_sha256": {name: sha256_file(output / name)
@@ -444,7 +463,7 @@ def collect(args):
                 last_progress = time.monotonic()
                 print(f"game {index}/{len(jobs)} {game_id} {opening['split']} start", flush=True)
                 while len(history) < args.max_plies and board.outcome(claim_draw=True) is None:
-                    if (len(history) - opening_length) % args.sample_every == 0:
+                    if should_sample(len(history) - opening_length, args.sample_every):
                         reason = sample_exclusion(board)
                         if reason:
                             exclusions[reason] += 1

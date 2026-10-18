@@ -346,7 +346,8 @@ private:
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
 
     int static_evaluation(const Board& board) const {
-        const int score = options_.positional ? (options_.neural ? options_.neural->evaluate(board) :
+        const int score = options_.positional ? (options_.neural ? options_.neural->evaluate(
+                                                  board, options_.king_pawn_shield, options_.pawn_structure) :
                                               evaluate_position(board, options_.king_pawn_shield,
                                                                 options_.pawn_structure)) :
                                                evaluate_material(board);
@@ -491,7 +492,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     order_moves(board, moves);
     result.best_move = moves.front();
     result.pv.push_back(moves.front());
-    result.score = options.positional ? (options.neural ? options.neural->evaluate(board) :
+    result.score = options.positional ? (options.neural ? options.neural->evaluate(
+                                            board, options.king_pawn_shield, options.pawn_structure) :
                                         evaluate_position(board, options.king_pawn_shield,
                                                           options.pawn_structure)) :
                                        evaluate_material(board);
