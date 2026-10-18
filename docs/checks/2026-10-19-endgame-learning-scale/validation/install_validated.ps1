@@ -183,15 +183,27 @@ if ($criterion.registry.identical -isnot [bool] -or -not $criterion.registry.ide
 if (@($protection.protected.PSObject.Properties).Count -ne 10) {
     throw 'The protected engine/promotion source inventory no longer has its original ten entries.'
 }
+$protectedSourceAudit = @()
+$strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
 foreach ($property in $protection.protected.PSObject.Properties) {
     # The requested rejection-only futility check changed this file. Its two
     # full promotion functions are bound above; the other nine files remain exact.
     if ($property.Name -eq 'scripts/learning_arena.py') { continue }
-    foreach ($root in @($PrimaryRoot, $ResearchRoot)) {
-        if ((Get-LiteralSha256 -Path (Join-Path $root $property.Name)) -ne $property.Value) {
-            throw ('Protected engine/promotion source changed: ' + $property.Name)
-        }
+    $researchSource = Join-Path $ResearchRoot $property.Name
+    $primarySource = Join-Path $PrimaryRoot $property.Name
+    if ((Get-LiteralSha256 -Path $researchSource) -ne $property.Value) {
+        throw ('Frozen research source bytes changed: ' + $property.Name)
     }
+    $expectedBlob = (Invoke-CheckedGit -Root $PrimaryRoot -GitArguments @('rev-parse', ($baselineCommit + ':' + $property.Name))).Trim()
+    $publishedBlob = (Invoke-CheckedGit -Root $ResearchRoot -GitArguments @('rev-parse', ($ValidatedCommit + ':' + $property.Name))).Trim()
+    $researchText = $strictUtf8.GetString([IO.File]::ReadAllBytes($researchSource)).Replace("`r`n", "`n")
+    $primaryText = $strictUtf8.GetString([IO.File]::ReadAllBytes($primarySource)).Replace("`r`n", "`n")
+    if ($expectedBlob -ne $publishedBlob -or $researchText -cne $primaryText) {
+        throw ('Protected source differs beyond CRLF/LF line endings: ' + $property.Name)
+    }
+    $protectedSourceAudit += [ordered]@{ path = $property.Name; git_blob = $expectedBlob;
+        research_raw_sha256 = $property.Value; primary_raw_sha256 = (Get-LiteralSha256 -Path $primarySource);
+        identical_committed_bytes = $true; working_content_identical_except_crlf_lf = $true }
 }
 $catalog = Get-Content -LiteralPath (Join-Path $researchState 'catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $latest = Get-Content -LiteralPath (Join-Path $researchState 'latest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -319,6 +331,7 @@ try {
         rollback_learning_state = 'build/v064-before-endgame-learning-scale/learning-cycle';
         rollback_state_files = $oldStateHashes.Count; installed_state_files = $installedHashes.Count;
         historical_immutable_files_preserved = (@($protection.states.research.PSObject.Properties).Count - $mutableOldFiles.Count);
+        protected_source_verification = $protectedSourceAudit;
         installed_state_all_sha256 = $installedHashes; rollback_state_all_sha256 = $oldStateHashes;
         learning_attempt_advanced_by_installer = $false; model_promoted_by_installer = $false;
         model_adopted_by_completed_study = [bool]$cycle.adopted; selected_model_sha256 = $championSha;
@@ -326,7 +339,7 @@ try {
     }
     $result | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resultPath -Encoding UTF8
     $journal.status = 'complete'; $journal.stage = 'all-hashes-and-source-verified'; Save-Journal
-    $result | Select-Object status, installed_commit, installed_binary_sha256, installed_state_files, rollback_state_files, selected_model_sha256 | ConvertTo-Json -Depth 3
+    [pscustomobject]$result | Select-Object status, installed_commit, installed_binary_sha256, installed_state_files, rollback_state_files, selected_model_sha256 | ConvertTo-Json -Depth 3
 } catch {
     $journal.status = 'failed'; $journal.error = $_.Exception.Message; Save-Journal
     throw

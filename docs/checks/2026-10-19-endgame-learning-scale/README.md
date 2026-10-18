@@ -113,7 +113,7 @@
 
 [원격 원본 기보](https://github.com/bigpine-choi/Regicide/blob/c2c1a80eaf3f8b8ee0ecf0a4168740681bf485ba/docs/checks/2026-10-19-endgame-learning-scale/remote-result/7a14a7b222f6/arena/games.pgn), [원격 판정 원자료](run/remote-evidence/arena/arena.json), [가져오기 감사](run/remote-import.json), [독립 원격 감사](validation/remote-audit-study6.json), [최종 연구 상태](run/cycle.json)를 보존했다. 새 모델은 채택되지 않았고 기존 수식 평가가 기본값이다.
 
-## 규칙·기능 검증과 남은 작업
+## 규칙·기능 검증과 로컬 반영
 
 기존 규칙·수식 평가·탐색·신경망 수식 및 보정 한도를 유지했다. 실행한 검사는 다음과 같다.
 
@@ -125,7 +125,11 @@
 | Godot 자동 검사 | 963건, 실패 0 — [클라이언트 검사 요약](validation/client-checks-summary.json) |
 | 웹 문법·추천 수 자동 검사 | 모두 통과 — [같은 검사 요약](validation/client-checks-summary.json) |
 
-Godot 검사는 화면 없는 자동 장면 검사와 격리된 실제 백엔드 연결 검사다. 수동 GUI 대국을 수행했다고 주장하지 않는다. **최종 배포 커밋의 CI 확인, 로컬 설치와 설치 후 해시 확인은 아직 남아 있다.**
+Godot 검사는 화면 없는 자동 장면 검사와 격리된 실제 백엔드 연결 검사다. 수동 GUI 대국을 수행했다고 주장하지 않는다. 실행 코드 커밋 `43ee0082a1e1fab2538480722dc50438cba8ee2e`의 [Windows·Ubuntu 전체 CI](https://github.com/bigpine-choi/Regicide/actions/runs/39153073785)는 두 환경 모두 성공했다. 이후 커밋은 문서·증빙만 추가하며 실행 코드가 같음을 [별도 대조](validation/final-source-equivalence.json)로 확인했다. [CI API 증빙](validation/ci-study6-fixed-final.json)을 보존했다.
+
+로컬 설치는 완료했다. 실제 설치된 실행 파일의 버전·SHA256, 기본 모델 선택과 격리된 런타임 검사 13건을 확인했다. 후보는 채택되지 않아 실제 기본 모델 선택도 기존 수식 평가였다. 연구 상태 250개 파일을 전부 같은 바이트로 반영했고, 기존 학습 상태 105개 파일과 이전 실행 파일은 `build/v064-before-endgame-learning-scale/`에 별도로 백업했다. 이전 학습 기록 중 불변 102개 파일도 새 상태에 그대로 남아 있다. 설치 전후 개인 기보 172개는 파일명과 내용을 공개하지 않고 합산 해시로 동일함을 확인했다.
+
+설치 당시 로컬·연구·원격 소스는 `92c7d1e11a4bf9493631046339b53425678afe31`로 일치했다. 이후 검사 증빙과 이 보고서를 포함한 후속 커밋도 로컬에 반영한다. [설치 기록](validation/installation.json), [설치 후 검사](validation/post-install-checks.json), [실제 기본 모델 선택](validation/installed-selection.log), [개인 기보 보존](validation/personal-games-after.json)을 참고한다. 설치 전 검사에서 발견한 LF/CRLF 줄바꿈 차이는 실제 코드 변경과 구분했으며, 동일한 Git 원본과 줄바꿈 외 내용의 일치를 확인했다. 규칙과 채택 기준을 완화하지 않았다.
 
 시도 5는 기보 합본 경계의 빈 줄 부족을 발견해 학습 전에 실패했다. 이를 고치고 회귀 검사를 추가했다. [실패 기록](failed-attempt-000005/cycle.json)과 원자료 29개 파일을 보존했으며, 시도 6에서 완료된 자료 파일 22개의 정책·신원·해시를 다시 확인해 재사용했다. 시도 번호를 초기화하거나 같은 자료를 중복 등록하지 않았다. Windows 경로의 8.3 표기와 긴 이름을 문자열로 비교하던 검사도 경로 정규화로 고쳤다.
 
@@ -134,3 +138,5 @@ Godot 검사는 화면 없는 자동 장면 검사와 격리된 실제 백엔드
 완벽한 종반 정답 제공기는 도입하지 않았다. 자체 교사의 공통 오류, 100 cp 보정 제한, 기존 검증 분포와 새 종반 분포의 차이, 작은 시험 표본과 시드 변동이 남아 있다. 각 요인이 부진에 얼마나 기여했는지는 이번 실험으로 분리하지 못했다. 자료량만 늘리면 자동으로 강해진다는 설명은 이번 결과로 뒷받침되지 않는다.
 
 공개 자료에서는 사용자 절대 경로를 가릴 수 있다. 내부 해시는 원본 바이트를 가리키므로 [공개 해시 대응표](publication-manifest.json)의 원본·공개 SHA256을 구분해야 한다. 모델과 원격 입력 실행 파일 ZIP의 바이트는 유지한다.
+
+공개 대응표에 열거한 모든 파일과 원격 입력 3개의 Git 저장 바이트를 별도로 검사한다. [공개 자료 감사](publication-audit.json)에 결과가 있다. 클라이언트 검사에 포함된 `selected-game.pgn` 등은 자동 검사에서 생성한 격리된 자료이며 실제 학습·기력 검증 판수에 더하지 않는다. 임시 절전 방지 요청도 종료했고 영구 전원 설정은 바꾸지 않았다.
