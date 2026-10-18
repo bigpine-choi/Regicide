@@ -25,6 +25,12 @@ jobs:
       - run: python tests/see_clean_guard_tests.py
       - run: python tests/audit_see_replication.py --self-test
       - run: python tests/audit_see_cost_results.py --self-test
+      - name: Build optional static evaluation diagnostic probe
+        run: cmake --build build --config Release --target regicide_evaluation_probe
+      - if: runner.os == 'Linux'
+        run: python tests/loss_diagnosis_tests.py --binary build/regicide --probe build/regicide_evaluation_probe
+      - if: runner.os == 'Windows'
+        run: python tests/loss_diagnosis_tests.py --binary build/Release/regicide.exe --probe build/Release/regicide_evaluation_probe.exe
       - if: runner.os == 'Linux'
         run: python tests/differential.py build/regicide
       - if: runner.os == 'Windows'
