@@ -62,15 +62,16 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.6.5\n"
+            std::cout << "Regicide 0.6.6\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
                          "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure --no-lmr\n"
                          "    --eval-file MODEL (experimental neural evaluation; default remains classical)\n"
+                         "    --nnue (incremental fixed-point first layer; requires --eval-file)\n"
                          "regicide eval --eval-file MODEL [--fen \"FEN\"] [--play ...] (static cp only)\n"
-                         "    optional eval flags: --no-pawn-shield --no-pawn-structure\n"
+                         "    optional eval flags: --nnue --no-pawn-shield --no-pawn-structure\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -101,6 +102,8 @@ int main(int argc, char** argv) {
             if (option == "--fen" && arg < argc) fen = argv[arg++];
             else if ((command == "search" || command == "eval") && option == "--eval-file" && arg < argc)
                 search_options.neural = regicide::NeuralEvaluator::load(argv[arg++]);
+            else if ((command == "search" || command == "eval") && option == "--nnue")
+                search_options.nnue = true;
             else if (command == "search" && option == "--no-position") search_options.positional = false;
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;
@@ -129,12 +132,17 @@ int main(int argc, char** argv) {
                 limits.movetime = std::chrono::milliseconds(time);
             } else throw std::invalid_argument("invalid option or missing value");
         }
+        if (search_options.nnue && !search_options.neural)
+            throw std::invalid_argument("--nnue requires --eval-file MODEL");
         Board board(fen);
         for (const auto& move : moves) board.play(move);
         if (command == "eval") {
             if (!search_options.neural) throw std::invalid_argument("eval requires --eval-file MODEL");
-            std::cout << "score_cp: " << search_options.neural->evaluate(
-                board, search_options.king_pawn_shield, search_options.pawn_structure) << '\n';
+            const int score = search_options.nnue ? search_options.neural->evaluate_nnue_full(
+                board, search_options.king_pawn_shield, search_options.pawn_structure) :
+                search_options.neural->evaluate(
+                    board, search_options.king_pawn_shield, search_options.pawn_structure);
+            std::cout << "score_cp: " << score << '\n';
         } else if (command == "search") {
             const auto result = regicide::search(board, limits, nullptr, {}, search_options);
             std::cout << "bestmove: " << (result.best_move ? result.best_move->uci() : "0000")
