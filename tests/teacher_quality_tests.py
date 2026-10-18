@@ -75,6 +75,29 @@ class Teacher:
 
 
 class TeacherQualityTests(unittest.TestCase):
+    def test_train_only_mode_requires_explicit_endgame_provenance_and_train_rows(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source, _, _, manifest, games, positions = self.setup_source(temporary)
+            with self.assertRaisesRegex(ValueError, "train-only"):
+                QUALITY._source_state(source, allow_train_only_endgame=True)
+            manifest["endgame"] = {"selected_split": "train"}
+            DATA.checkpoint_json(source, manifest)
+            with self.assertRaisesRegex(ValueError, "train-only"):
+                QUALITY._source_state(source, allow_train_only_endgame=True)
+            selected_games = [row for row in games if row["split"] == "train"]
+            selected_rows = [row for row in positions if row["split"] == "train"]
+            DATA.write_jsonl(source.parent / "games.jsonl", selected_games)
+            DATA.write_jsonl(source.parent / "positions.jsonl", selected_rows)
+            pgn = chess.pgn.Game.from_board(DATA.replay_position(
+                selected_games[0]["initial_fen"], selected_games[0]["history"]))
+            (source.parent / "games.pgn").write_text(str(pgn) + "\n", encoding="utf-8")
+            manifest["files_sha256"] = {name: sha256(source.parent / name)
+                                       for name in ("games.jsonl", "positions.jsonl", "games.pgn")}
+            DATA.checkpoint_json(source, manifest)
+            self.assertTrue(QUALITY._source_state(source, allow_train_only_endgame=True)["positions"])
+            with self.assertRaises(ValueError):
+                QUALITY._source_state(source)
+
     def setup_source(self, temporary, *, pgn=True, crlf=True):
         root = Path(temporary).resolve()
         source = root / "source"

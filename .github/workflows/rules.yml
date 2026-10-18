@@ -27,6 +27,12 @@ jobs:
       - run: python tests/teacher_quality_tests.py
       - run: python tests/neural_cost_diagnostic_tests.py
       - run: python tests/neural_inference_benchmark_tests.py
+      - run: python tests/endgame_diagnosis_tests.py
+      - run: python tests/endgame_data_tests.py
+      - run: python tests/endgame_holdout_quality_tests.py
+      - run: python tests/endgame_learning_curve_tests.py
+      - run: python tests/endgame_matches_tests.py
+      - run: python tests/endgame_study_tests.py
       - name: Build neural cost diagnostic
         run: cmake --build build --config Release --target regicide_profile_neural
       - if: runner.os == 'Linux'

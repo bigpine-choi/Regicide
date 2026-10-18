@@ -67,6 +67,49 @@ def diagnosis(root, source, samples, name="diagnosis"):
 
 
 class CorpusTests(unittest.TestCase):
+    def test_optional_training_exclusion_preserves_holdout_bytes_and_actual_histories(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            a, _, _, _ = dataset(root, "a")
+            b, bm, bg, bp = dataset(root, "b")
+            add_game_sample(bg[0], bp[0], ["g2g4", "e7e5", "f2f3", "d8h4"], 2)
+            rewrite(b, bm, bg, bp)
+            paths = [a / "datasetmanifest.json", b / "datasetmanifest.json"]
+            baseline = CORPUS.build_corpus(paths, root / "base")
+            blocked = NN.feature_key(TRAIN.replay(bp[0]["initial_fen"], bp[0]["history"]))
+            calls = []
+
+            def exclude(board):
+                calls.append([move.uci() for move in board.move_stack])
+                return "reserved_endgame_input" if NN.feature_key(board) == blocked else None
+
+            result = CORPUS.build_corpus(paths, root / "out", position_exclusion=exclude)
+            self.assertEqual(result["positions_by_split"], {"train": 1, "validation": 1, "test": 1})
+            self.assertEqual(len(calls), 2)
+            self.assertTrue(all(len(history) == 2 for history in calls))
+            self.assertIn(bp[0]["history"], calls)
+            self.assertEqual(result["exclusions"]["position_exclusion_reserved_endgame_input"], 1)
+            self.assertEqual(result["holdout_rows_sha256"], baseline["holdout_rows_sha256"])
+            def heldout_bytes(directory):
+                return b"".join(line for line in (directory / "positions.jsonl").read_bytes().splitlines(keepends=True)
+                                if json.loads(line)["split"] != "train")
+            self.assertEqual(heldout_bytes(root / "out"), heldout_bytes(root / "base"))
+
+    def test_optional_training_exclusion_failures_do_not_emit_a_complete_corpus(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, _, _, _ = dataset(root, "source")
+            def failed_guard(board):
+                raise RuntimeError("reserved inventory changed")
+            with self.assertRaisesRegex(RuntimeError, "inventory changed"):
+                CORPUS.build_corpus([source / "datasetmanifest.json"], root / "failure",
+                                    position_exclusion=failed_guard)
+            self.assertFalse((root / "failure").exists())
+            with self.assertRaisesRegex(ValueError, "nonempty reason"):
+                CORPUS.build_corpus([source / "datasetmanifest.json"], root / "invalid",
+                                    position_exclusion=lambda board: False)
+            self.assertFalse((root / "invalid").exists())
+
     def test_bootstrap_and_duplicate_run_registration_are_idempotent(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

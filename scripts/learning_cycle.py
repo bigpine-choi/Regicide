@@ -211,7 +211,31 @@ def catalog_read(state):
             for name, digest in reference["diagnosis"]["files_sha256"].items():
                 if sha256(diagnostic / name) != digest:
                     raise ValueError("An accumulated loss analysis changed.")
+    holdouts = document.get("endgame_holdouts", [])
+    if not isinstance(holdouts, list):
+        raise ValueError("Invalid persistent endgame holdout inventory")
+    seen_holdouts = set()
+    for reference in holdouts:
+        if not isinstance(reference, dict) or "manifest" not in reference:
+            raise ValueError("Malformed persistent endgame holdout reference")
+        manifest = contained(state, reference["manifest"])
+        if reference["manifest"] in seen_holdouts or dataset_reference(state, manifest) != reference:
+            raise ValueError("A frozen endgame holdout changed or was registered twice")
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if data.get("endgame", {}).get("selected_split") != "heldout":
+            raise ValueError("Persistent endgame holdout is not a declared heldout collection")
+        seen_holdouts.add(reference["manifest"])
     return document
+
+
+def endgame_holdout_exclusion(state, catalog):
+    if not catalog.get("endgame_holdouts"):
+        return None
+    from collect_endgame_data import ExclusionInventory
+    inventory = ExclusionInventory()
+    for reference in catalog["endgame_holdouts"]:
+        inventory.add_dataset(contained(state, reference["manifest"]))
+    return inventory
 
 
 def snapshot_binary(binary, run):
@@ -254,7 +278,8 @@ def implementation_hashes():
     # dependency such as classical_evaluation.py must not escape source freeze.
     paths = sorted((ROOT / "scripts").glob("*.py")) + sorted((ROOT / "tests").glob("*.py")) + [
         ROOT / "tests/data/learning_openings_v1.json",
-        ROOT / "tests/data/learning_arena_openings_v1.json"]
+        ROOT / "tests/data/learning_arena_openings_v1.json",
+        ROOT / "tests/data/endgame_learning_seeds_v1.json"]
     return {path.relative_to(ROOT).as_posix(): sha256(path) for path in paths}
 
 
@@ -370,7 +395,12 @@ def run_round(args, state, catalog):
                     games_per_opening=args.games_per_opening, nodes=args.nodes, teacher_nodes=args.teacher_nodes,
                     max_plies=args.max_plies, sample_every=args.sample_every, openings=DEFAULT_OPENINGS,
                     source_commit=None, model=model)
-        collected = collect(collection)
+        endgame_exclusion = endgame_holdout_exclusion(state, catalog)
+        collected = (collect(collection, position_exclusion=endgame_exclusion.reason)
+                     if endgame_exclusion is not None else collect(collection))
+        if endgame_exclusion is not None:
+            endgame_exclusion.verify_sources()
+            report["protected_endgame_holdouts"] = endgame_exclusion.sources
         if collected.get("status") != "complete" or collected.get("errors"):
             raise ValueError("Self-play collection did not complete without errors.")
         report["collection"] = {key: collected.get(key) for key in ("completed_games", "positions", "unfinished_games")}
@@ -395,7 +425,10 @@ def run_round(args, state, catalog):
                     *(contained(state, item["manifest"]) for item in catalog["datasets"])]
         diagnoses = [contained(state, item["diagnosis"]["path"]) for item in catalog["datasets"]
                      if item.get("diagnosis")]
-        corpus = build_corpus(datasets, run / "corpus", diagnosis_paths=diagnoses, fixed_holdout=True)
+        corpus_options = {"diagnosis_paths": diagnoses, "fixed_holdout": True}
+        if endgame_exclusion is not None:
+            corpus_options["position_exclusion"] = endgame_exclusion.reason
+        corpus = build_corpus(datasets, run / "corpus", **corpus_options)
         report["corpus"] = corpus.get("positions_by_split", {})
         report["accumulated_datasets"] = len(datasets)
         report["corpus_manifest_sha256"] = sha256(run / "corpus/manifest.json")
@@ -447,6 +480,8 @@ def run_round(args, state, catalog):
         if arena["status"] != "complete":
             raise ValueError("Arena invalid or interrupted; previous champion was retained.")
         stage("adoption-decision")
+        if endgame_exclusion is not None:
+            endgame_exclusion.verify_sources()
         if implementation_hashes() != report["implementation_sha256"]:
             raise ValueError("Learning implementation changed during the arena; candidate was not adopted.")
         if learning_artifact_hashes(run) != report["learning_artifact_sha256"]:

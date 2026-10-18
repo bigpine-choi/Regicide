@@ -68,9 +68,14 @@ def _holdout(rows, raw_lines):
             for split in ("validation", "test")}
 
 
-def _source_state(dataset):
-    source = _source(dataset)
+def _source_state(dataset, *, allow_train_only_endgame=False):
+    source = _source(dataset, allow_empty_splits=allow_train_only_endgame)
     manifest = source["manifest"]
+    if allow_train_only_endgame and (
+            manifest.get("endgame", {}).get("selected_split") != "train" or
+            any(row["split"] != "train" for row in source["positions"]) or
+            any(game["split"] != "train" for game in source["games"])):
+        raise ValueError("train-only refinement requires a declared train-only endgame collection")
     if manifest.get("schema") != DATA.SCHEMA or manifest.get("status") != "complete":
         raise ValueError("teacher quality requires a complete v1 learning dataset")
     positions_path = local_data_path(source["path"], manifest.get("positions_path", manifest.get("samples_path")))
@@ -207,14 +212,14 @@ def select_label(stages, original_nodes, policy):
 
 
 def refine_dataset(dataset, binary, output, *, node_budgets=DEFAULT_BUDGETS,
-                   max_cp_delta=30, min_depth=3):
+                   max_cp_delta=30, min_depth=3, allow_train_only_endgame=False):
     """Return a separate v1 dataset manifest; raw diagnosis is quality-report.json.
 
     A complete report with trainable=false is valid diagnostic evidence only.
     The cycle/trainer must refuse to train or adopt with an empty train split.
     """
     policy = _configuration(node_budgets, max_cp_delta, min_depth)
-    source = _source_state(dataset)
+    source = _source_state(dataset, allow_train_only_endgame=allow_train_only_endgame)
     reserved = _reserved_guard(source)
     binary = Path(binary).expanduser().resolve(strict=True)
     if not binary.is_file():

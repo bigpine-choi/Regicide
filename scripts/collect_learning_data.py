@@ -338,7 +338,7 @@ def checkout_provenance():
         return {"commit": None, "error": str(exc)}
 
 
-def collect(args):
+def collect(args, *, position_exclusion=None):
     opening_data = load_openings(args.openings)
     binary = args.binary.expanduser().resolve(strict=True)
     model_arg = getattr(args, "model", None)
@@ -465,6 +465,8 @@ def collect(args):
                 while len(history) < args.max_plies and board.outcome(claim_draw=True) is None:
                     if should_sample(len(history) - opening_length, args.sample_every):
                         reason = sample_exclusion(board)
+                        if reason is None and position_exclusion is not None:
+                            reason = position_exclusion(board)
                         if reason:
                             exclusions[reason] += 1
                         else:

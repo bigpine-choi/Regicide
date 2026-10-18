@@ -137,7 +137,7 @@ def _write_jsonl(path, rows):
             handle.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
 
 
-def build_corpus(dataset_paths, output, diagnosis_paths=(), fixed_holdout=True):
+def build_corpus(dataset_paths, output, diagnosis_paths=(), fixed_holdout=True, *, position_exclusion=None):
     """Return a v1 manifest dict; output/manifest.json is the trainer entrypoint.
 
     Dataset order is chronological. Repeated identical manifests are idempotent.
@@ -278,6 +278,15 @@ def build_corpus(dataset_paths, output, diagnosis_paths=(), fixed_holdout=True):
         if position_key(board) in holdout_positions or neural_key in holdout_features:
             stats["train_holdout_collisions_excluded"] += 1
             continue
+        if position_exclusion is not None:
+            # Only training rows reach this optional guard. Restore the actual
+            # legal history, so a caller never receives a synthetic bare FEN.
+            reason = position_exclusion(replay(sample["initial_fen"], sample["history"]))
+            if reason is not None:
+                if not isinstance(reason, str) or not reason:
+                    raise ValueError("training position exclusion must return a nonempty reason or None")
+                stats["position_exclusion_" + reason] += 1
+                continue
         if neural_key in selected_train:
             stats["duplicate_train_neural_inputs_replaced"] += 1
         selected_train[neural_key] = sample
