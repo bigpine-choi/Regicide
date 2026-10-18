@@ -29,6 +29,8 @@ import chess.engine
 LOSS_GAMES = (1, 3, 9, 13, 16)
 SCREEN_NODES = 50_000
 CONFIRM_NODES = (1_000_000, 4_000_000)
+CONTROL_DEPTHS = (16, 20)
+CONTROL_NODE_CAP = 4_000_000
 REFERENCE_OPTIONS = {
     "Threads": 1,
     "Hash": 32,
@@ -172,13 +174,13 @@ def parse_args(argv=None):
     parser.add_argument("--reference-binary", type=Path, required=True,
                         help="actual executable bytes readable by this Python process, including a WSL UNC path")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--phase", choices=("screen", "confirm"), required=True)
+    parser.add_argument("--phase", choices=("screen", "confirm", "depth-control"), required=True)
     parser.add_argument("--screen", type=Path)
     args = parser.parse_args(argv)
-    if args.phase == "confirm" and args.screen is None:
-        parser.error("--screen is required for confirm")
+    if args.phase in ("confirm", "depth-control") and args.screen is None:
+        parser.error("--screen is required for confirm/depth-control")
     if args.phase == "screen" and args.screen is not None:
-        parser.error("--screen is only valid for confirm")
+        parser.error("--screen is only valid for confirm/depth-control")
     return args
 
 
@@ -352,18 +354,20 @@ def configure_reference(engine, report, checkpoint):
     checkpoint.save()
 
 
-def analyse_query(engine, record, nodes, forced, report, checkpoint):
+def analyse_query(engine, record, nodes, forced, report, checkpoint, requested_depth=None):
     board = board_for(record)
     root_move = chess.Move.from_uci(forced) if forced is not None else None
     if root_move is not None and root_move not in board.legal_moves:
         raise ValueError(f"{record['id']}: illegal forced alternative {forced}")
     activity = {"record_id": record["id"], "requested_nodes": nodes,
                 "forced_move": forced, "started_utc": utc_now(), "status": "running"}
+    if requested_depth is not None:
+        activity["requested_depth"] = requested_depth
     report["active_query"] = activity
     checkpoint.save()
     engine.configure({"Clear Hash": None})
     start = time.perf_counter()
-    info = engine.analyse(board, chess.engine.Limit(nodes=nodes),
+    info = engine.analyse(board, chess.engine.Limit(nodes=nodes, depth=requested_depth),
                           root_moves=[root_move] if root_move is not None else None,
                           game=object(), info=chess.engine.INFO_ALL)
     score_event = copy.deepcopy(engine.protocol.last_score_event)
@@ -401,6 +405,10 @@ def analyse_query(engine, record, nodes, forced, report, checkpoint):
         "engine_time_seconds": info.get("time"), "wall_time_seconds": wall,
         "started_utc": activity["started_utc"], "finished_utc": finished,
     }
+    if requested_depth is not None:
+        result["requested_depth"] = requested_depth
+        result["complete_depth"] = (depth == requested_depth and
+                                    not result["upperbound"] and not result["lowerbound"])
     report["queries_completed"] += 1
     activity.update(status="complete", finished_utc=finished)
     return result
@@ -528,7 +536,7 @@ def checked_screen(screen, report, games):
     return selected, auxiliary
 
 
-def run_confirm(engine, games, screen, report, checkpoint):
+def run_confirm(engine, games, screen, report, checkpoint, depth_control=False):
     selected, auxiliary = checked_screen(screen, report, games)
     for original in [*selected, auxiliary]:
         record = {key: copy.deepcopy(value) for key, value in original.items()
@@ -536,26 +544,38 @@ def run_confirm(engine, games, screen, report, checkpoint):
         if original["label"] != "auxiliary_paired_divergence":
             record["screen_analysis"] = {key: copy.deepcopy(original[key])
                                          for key in ("best", "forced_played", "cp_gap")}
-        record["budgets"] = []
+        collection = "controls" if depth_control else "budgets"
+        record[collection] = []
         record["status"] = "running"
         report["records"].append(record)
         checkpoint.save()
-        for nodes in CONFIRM_NODES:
+        requests = ([(CONTROL_NODE_CAP, depth) for depth in CONTROL_DEPTHS] if depth_control
+                    else [(nodes, None) for nodes in CONFIRM_NODES])
+        for nodes, depth in requests:
             result = {"requested_nodes": nodes, "status": "running"}
-            record["budgets"].append(result)
+            if depth is not None:
+                result["requested_depth"] = depth
+            record[collection].append(result)
             queries = [("best", None), ("forced_played", record["played"])]
             if "paired_alternative" in record:
                 queries.append(("forced_paired_alternative", record["paired_alternative"]))
             for key, forced in queries:
-                result[key] = analyse_query(engine, record, nodes, forced, report, checkpoint)
+                result[key] = analyse_query(engine, record, nodes, forced, report, checkpoint,
+                                            requested_depth=depth)
                 checkpoint.save()
             result["cp_gap"] = cp_gap(result["best"], result["forced_played"])
+            if depth is not None:
+                result["complete_depth"] = all(result[key]["complete_depth"] for key, _ in queries)
+                if not result["complete_depth"]:
+                    # A node-capped or bound result is not a common-depth comparison.
+                    result["cp_gap"] = None
             result["status"] = "complete"
             checkpoint.save()
-            print(f"confirm {record['id']}: {nodes} nodes per query complete", flush=True)
+            label = f"depth {depth}, cap {nodes}" if depth is not None else f"{nodes} nodes"
+            print(f"{report['phase']} {record['id']}: {label} per query complete", flush=True)
         record["status"] = "complete"
         checkpoint.save()
-        print(f"confirm position {record['id']} complete", flush=True)
+        print(f"{report['phase']} position {record['id']} complete", flush=True)
 
 
 def new_report(args):
@@ -567,7 +587,12 @@ def new_report(args):
         "selection_policy": copy.deepcopy(SELECTION_POLICY),
         "screen_nodes_per_query": SCREEN_NODES,
         "confirm_nodes_per_query": list(CONFIRM_NODES),
-        "limits_note": "Only fixed node budgets; no move time or depth limit. Actual reported nodes may overshoot. Engine communication timeout is 600 seconds.",
+        "limits_note": (
+            "Common depth 16/20 with a 4000000-node safety cap per query, no time limit. "
+            "A comparison is complete_depth only when every query reports the requested depth without a bound. "
+            "Actual reported nodes may overshoot. Engine communication timeout is 600 seconds."
+            if args.phase == "depth-control" else
+            "Only fixed node budgets; no move time or depth limit. Actual reported nodes may overshoot. Engine communication timeout is 600 seconds."),
         "table_policy": "Clear Hash before every query and a fresh python-chess game object per query",
         "score_bounds_policy": SCORE_BOUNDS_POLICY,
         "source": {"path": str(args.source), "sha256": None},
@@ -616,7 +641,8 @@ def main(argv=None):
         if args.phase == "screen":
             run_screen(engine, games, report, checkpoint)
         else:
-            run_confirm(engine, games, screen, report, checkpoint)
+            run_confirm(engine, games, screen, report, checkpoint,
+                        depth_control=args.phase == "depth-control")
         report["status"] = "complete"
     except (Exception, KeyboardInterrupt) as exc:
         exit_code = 2
