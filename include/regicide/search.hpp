@@ -37,6 +37,7 @@ struct SearchOptions {
     bool pvs = true; // Full first move, scout later moves; re-search improvements.
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
     bool neural = false; // Overrides positional; default preserves classical evaluation.
+    bool neural_incremental = true; // Only used when neural is enabled; false is the full oracle.
 };
 
 struct SearchResult {

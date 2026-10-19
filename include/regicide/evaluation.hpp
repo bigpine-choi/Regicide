@@ -11,7 +11,24 @@ namespace regicide {
 int evaluate_position(const Board& board);
 
 // Experimental, untrained 768 -> 16 clipped-ReLU -> 1 network.
-// Full refresh only; scores are side-to-move centipawns, not mate scores.
+// Independent full-refresh reference; side-to-move centipawns, not mate scores.
 int evaluate_neural(const Board& board);
+
+// Search-local raw sums for both perspectives. Never clip stored sums: clipping
+// belongs to evaluate(), so removing a feature restores the exact prior value.
+// Copy before a move and assign that snapshot after Board::undo(). This class
+// owns no board/history and performs no allocation during update or evaluation.
+class NeuralAccumulator {
+public:
+    explicit NeuralAccumulator(const Board& board) noexcept;
+    // Precondition: before -> after is this freshly generated legal orthodox
+    // move, and this accumulator matches before. Examines only changed squares.
+    void update_generated(const Position& before, const Position& after, Move move) noexcept;
+    int evaluate(Color turn) const noexcept;
+    bool operator==(const NeuralAccumulator&) const = default;
+private:
+    std::array<std::array<int, 16>, 2> sums_{};
+    void add_piece(char piece, int square, int sign) noexcept;
+};
 
 } // namespace regicide

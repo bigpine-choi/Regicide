@@ -134,15 +134,31 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
 // Restores board and repetition history, including when cancellation unwinds.
 class AppliedMove {
 public:
-    AppliedMove(Board& board, Move move, bool fast) : board_(board) {
-        if (fast) board_.play_generated(move);
-        else board_.play(move);
+    AppliedMove(Board& board, Move move, bool fast, NeuralAccumulator* neural = nullptr)
+        : board_(board), neural_(neural) {
+        if (neural_) {
+            const Position before = board_.position();
+            saved_ = *neural_;
+            if (fast) board_.play_generated(move);
+            else board_.play(move);
+            // No allocation or exception can separate board publication from
+            // accumulator publication; failed Board::play leaves sums intact.
+            neural_->update_generated(before, board_.position(), move);
+        } else {
+            if (fast) board_.play_generated(move);
+            else board_.play(move);
+        }
     }
-    ~AppliedMove() { board_.undo(); }
+    ~AppliedMove() {
+        board_.undo();
+        if (neural_) *neural_ = *saved_;
+    }
     AppliedMove(const AppliedMove&) = delete;
     AppliedMove& operator=(const AppliedMove&) = delete;
 private:
     Board& board_;
+    NeuralAccumulator* neural_;
+    std::optional<NeuralAccumulator> saved_;
 };
 
 struct Interrupted {};
@@ -150,8 +166,10 @@ struct Interrupted {};
 class Searcher {
 public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
-             SearchOptions options, TranspositionTable* table)
-        : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {}
+             SearchOptions options, TranspositionTable* table, const Board& root)
+        : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {
+        if (options_.neural && options_.neural_incremental) neural_.emplace(root);
+    }
 
     std::uint64_t nodes = 0;
     std::uint64_t qnodes = 0;
@@ -223,7 +241,7 @@ public:
             int score;
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move, options_.fast_moves);
+                AppliedMove applied(board, move, options_.fast_moves, neural_ ? &*neural_ : nullptr);
                 const bool intended_claim = claimable(board);
                 if (options_.pvs && !first_move) {
                     // A one-point window first asks only whether this move can
@@ -282,11 +300,13 @@ private:
     Clock::time_point start_;
     SearchOptions options_;
     TranspositionTable* table_;
+    std::optional<NeuralAccumulator> neural_;
     std::array<Killers, max_search_ply + 1> killers_{};
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
 
     int static_evaluation(const Board& board) const {
-        const int score = options_.neural ? evaluate_neural(board) :
+        const int score = options_.neural ?
+            (neural_ ? neural_->evaluate(board.position().turn) : evaluate_neural(board)) :
             (options_.positional ? evaluate_position(board) : evaluate_material(board));
         const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
         return std::clamp(score, -mate_score + reserved_plies + 1,
@@ -336,7 +356,7 @@ private:
             const bool quiet = quiet_move(board, move);
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move, options_.fast_moves);
+                AppliedMove applied(board, move, options_.fast_moves, neural_ ? &*neural_ : nullptr);
                 const bool intended_claim = claimable(board);
                 // Captures/promotions preserve the quiet-check budget. All
                 // check evasions remain legal candidates even at zero; a
@@ -358,14 +378,14 @@ private:
         return best;
     }
 
-    bool intended_claim_available(Board& board, const std::vector<Move>& moves) const {
+    bool intended_claim_available(Board& board, const std::vector<Move>& moves) {
         // A third occurrence is impossible unless some reversible-history
         // position has already occurred twice. The board maintains this fact
         // exactly, avoiding a full speculative move scan at most q leaves.
         if (board.position().halfmove < 99 && !board.has_repetition_candidate()) return false;
         for (Move move : moves) {
             poll(false);
-            AppliedMove applied(board, move, options_.fast_moves);
+            AppliedMove applied(board, move, options_.fast_moves, neural_ ? &*neural_ : nullptr);
             if (claimable(board) && board.outcome() == Outcome::ongoing) return true;
         }
         return false;
@@ -425,7 +445,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.tt_bytes = work.bytes;
         table = &active_context.table_;
     }
-    Searcher searcher(limits, stop, start, options, table);
+    Searcher searcher(limits, stop, start, options, table, board);
     for (int depth = 1; depth <= limits.depth; ++depth) {
         std::vector<Move> pv;
         int score;

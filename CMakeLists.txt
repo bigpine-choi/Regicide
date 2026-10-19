@@ -57,3 +57,7 @@ endif()
 add_executable(regicide_evaluation_benchmark scripts/evaluation_benchmark.cpp)
 target_link_libraries(regicide_evaluation_benchmark PRIVATE regicide_search)
 regicide_warnings(regicide_evaluation_benchmark)
+
+add_executable(regicide_neural_incremental_benchmark scripts/neural_incremental_benchmark.cpp)
+target_link_libraries(regicide_neural_incremental_benchmark PRIVATE regicide_search)
+regicide_warnings(regicide_neural_incremental_benchmark)

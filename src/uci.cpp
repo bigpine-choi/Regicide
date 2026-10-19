@@ -129,6 +129,7 @@ public:
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UseNeuralEvaluation type check default false");
+            send("option name UseIncrementalNeuralEvaluation type check default true");
             send("option name UsePositionalEvaluation type check default true");
             send("option name UseQuiescence type check default true");
             send("option name UseTranspositionTable type check default true");
@@ -174,7 +175,7 @@ private:
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
-            option != "UseSEE" && option != "UseNeuralEvaluation") return;
+            option != "UseSEE" && option != "UseNeuralEvaluation" && option != "UseIncrementalNeuralEvaluation") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -186,6 +187,7 @@ private:
         const auto& text = *(value + 1);
         if (text != "true" && text != "false") throw std::invalid_argument("check option requires true or false");
         if (option == "UseNeuralEvaluation") options_.neural = text == "true";
+        else if (option == "UseIncrementalNeuralEvaluation") options_.neural_incremental = text == "true";
         else if (option == "UsePositionalEvaluation") options_.positional = text == "true";
         else if (option == "UseQuiescence") options_.quiescence = text == "true";
         else if (option == "UseTranspositionTable") options_.transposition = text == "true";

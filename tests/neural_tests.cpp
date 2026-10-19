@@ -4,12 +4,14 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace regicide;
 namespace {
@@ -87,6 +89,59 @@ void symmetric(const Board& board) {
     }
     expect(board == saved, "evaluation changed the board or history");
 }
+
+void exact_accumulator(const Board& board, const NeuralAccumulator& accumulator,
+                       const std::string& label) {
+    const auto saved = board;
+    expect(accumulator == NeuralAccumulator(board), label + ": raw sums differ from refresh");
+    const int expected = evaluate_neural(board);
+    expect(accumulator.evaluate(board.position().turn) == expected,
+           label + ": incremental score differs from full refresh");
+    expect(accumulator.evaluate(opposite(board.position().turn)) == -expected,
+           label + ": opposite score perspective");
+    expect(board == saved, label + ": evaluation changed board/history");
+}
+
+void apply(Board& board, NeuralAccumulator& accumulator, Move move, bool fast) {
+    const Position before = board.position();
+    if (fast) board.play_generated(move);
+    else board.play(move);
+    accumulator.update_generated(before, board.position(), move);
+}
+
+void siblings(Board& board, NeuralAccumulator& accumulator, bool fast,
+              std::size_t maximum = 1000) {
+    const auto saved_board = board;
+    const auto saved_accumulator = accumulator;
+    const auto moves = board.legal_moves();
+    for (std::size_t i = 0; i < std::min(maximum, moves.size()); ++i) {
+        apply(board, accumulator, moves[i], fast);
+        exact_accumulator(board, accumulator, "sibling " + moves[i].uci());
+        board.undo(); accumulator = saved_accumulator;
+        expect(board == saved_board, "sibling undo changed exact board/history");
+        exact_accumulator(board, accumulator, "sibling undo");
+    }
+}
+
+// Compare every stable search field; memory allocation/reuse counters depend on
+// context ownership, and elapsed time necessarily differs between evaluators.
+void same_graph(const SearchResult& left, const SearchResult& right) {
+    expect(left.best_move == right.best_move && left.score == right.score &&
+               left.depth == right.depth && left.pv == right.pv && left.stopped == right.stopped,
+           "incremental/full search result differs");
+    expect(left.nodes == right.nodes && left.qnodes == right.qnodes &&
+               left.seldepth == right.seldepth && left.tt_probes == right.tt_probes &&
+               left.tt_hits == right.tt_hits && left.tt_cutoffs == right.tt_cutoffs &&
+               left.tt_stores == right.tt_stores && left.pvs_probes == right.pvs_probes &&
+               left.pvs_researches == right.pvs_researches && left.see_calls == right.see_calls &&
+               left.tt_bytes == right.tt_bytes,
+           "incremental/full search graph differs");
+}
+
+std::uint32_t next_random(std::uint32_t& state) {
+    state ^= state << 13; state ^= state >> 17; state ^= state << 5;
+    return state;
+}
 } // namespace
 
 int main() {
@@ -118,6 +173,143 @@ int main() {
    board.play(move); symmetric(board);
    expect(evaluate_neural(board) == evaluate_neural(Board(board.fen())), "special refresh");
    board.undo(); expect(board == saved && evaluate_neural(board) == score, "special undo");
+  }
+ });
+ test("incremental special moves, sibling branches and exact undo", [] {
+  std::vector<std::pair<std::string, std::string>> fixtures{
+   {"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1g1"},
+   {"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1c1"},
+   {"r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8g8"},
+   {"r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8c8"},
+   {"7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", "e5d6"},
+   {"7k/8/8/8/3pP3/8/8/6K1 b - e3 0 1", "d4e3"},
+   {std::string(Board::start_fen), "e2e4"},
+   {"r3k2r/1P6/8/8/8/8/8/R3K2R w KQkq - 0 1", "b7a8q"}
+  };
+  for (char promotion : std::string("qrbn")) {
+   fixtures.emplace_back("7k/P7/8/8/8/8/8/6K1 w - - 0 1", "a7a8" + std::string(1, promotion));
+   fixtures.emplace_back("1r5k/P7/8/8/8/8/8/6K1 w - - 0 1", "a7b8" + std::string(1, promotion));
+   fixtures.emplace_back("7k/8/8/8/8/8/p7/6K1 b - - 0 1", "a2a1" + std::string(1, promotion));
+   fixtures.emplace_back("7k/8/8/8/8/8/p7/1R4K1 b - - 0 1", "a2b1" + std::string(1, promotion));
+  }
+  for (const auto& [source, text] : fixtures) for (bool fast : {false, true}) {
+   Board board(source); NeuralAccumulator accumulator(board);
+   const auto saved_board = board; const auto saved_accumulator = accumulator;
+   exact_accumulator(board, accumulator, "special root");
+   const Move move = Move::from_uci(text); const auto legal = board.legal_moves();
+   expect(std::find(legal.begin(), legal.end(), move) != legal.end(), "special fixture must be legal");
+   apply(board, accumulator, move, fast);
+   exact_accumulator(board, accumulator, "special " + text);
+   siblings(board, accumulator, fast);
+   board.undo(); accumulator = saved_accumulator;
+   expect(board == saved_board, "special undo exact board/history");
+   exact_accumulator(board, accumulator, "special undo " + text);
+   siblings(board, accumulator, fast);
+  }
+ });
+ test("incremental raw values survive nonlinear clipping crossings", [] {
+  Board board("7k/8/8/8/8/8/P7/6K1 w - - 0 1"); NeuralAccumulator accumulator(board);
+  std::vector<std::pair<Board, NeuralAccumulator>> parents;
+  // bootstrap-v1 white raw channel 8 follows 1,0,6,3,-2,0,1. Storing a
+  // clipped activation instead of the raw sum corrupts later updates/undo.
+  for (const char* text : {"a2a4", "h8g8", "a4a5", "g8f8", "g1f2", "f8e8"}) {
+   parents.emplace_back(board, accumulator);
+   apply(board, accumulator, Move::from_uci(text), false);
+   exact_accumulator(board, accumulator, "clipping crossing");
+  }
+  while (!parents.empty()) {
+   board.undo(); accumulator = parents.back().second;
+   expect(board == parents.back().first, "clipping undo history");
+   exact_accumulator(board, accumulator, "clipping undo"); parents.pop_back();
+  }
+ });
+ test("seeded deep legal walks, sibling isolation and complete unwind", [] {
+  const std::array<const char*, 3> roots{{
+   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+   "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+   "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1"}};
+  for (const char* source : roots) for (std::uint32_t seed : {0x52454731U, 0x4e4e5545U}) {
+   Board board(source); NeuralAccumulator accumulator(board);
+   const auto root = board; const auto root_accumulator = accumulator;
+   std::vector<std::pair<Board, NeuralAccumulator>> parents;
+   int forward = 0;
+   for (int ply = 0; ply < 160; ++ply) {
+    exact_accumulator(board, accumulator, "walk root/parent");
+    const auto moves = board.legal_moves(); if (moves.empty()) break;
+    siblings(board, accumulator, (ply % 2) != 0, ply % 16 == 0 ? moves.size() : 2);
+    const Move move = moves[next_random(seed) % moves.size()];
+    parents.emplace_back(board, accumulator);
+    apply(board, accumulator, move, (ply % 2) == 0); ++forward;
+    exact_accumulator(board, accumulator, "walk child");
+   }
+   expect(forward >= 32, "walk fixture terminated before exercising deep state");
+   while (!parents.empty()) {
+    board.undo(); accumulator = parents.back().second;
+    expect(board == parents.back().first, "deep undo exact board/history");
+    exact_accumulator(board, accumulator, "deep undo"); parents.pop_back();
+   }
+   expect(board == root && accumulator == root_accumulator, "complete unwind did not restore root");
+  }
+ });
+ test("incremental/full search parity across search options", [] {
+  const std::array<const char*, 4> sources{{
+   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+   "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+   "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+   "1r5k/P7/8/8/8/8/8/6K1 w - - 0 1"}};
+  SearchLimits limits; limits.depth = 2;
+  for (bool quiet : {false, true}) for (bool pvs : {false, true})
+   for (bool fast : {false, true}) for (const char* source : sources) {
+    Board board(source); const auto saved = board; SearchContext context;
+    SearchOptions options; options.neural = true; options.hash_mb = 1;
+    options.quiescence = quiet; options.pvs = pvs; options.fast_moves = fast;
+    std::vector<SearchResult> incremental_iterations, full_iterations;
+    const auto incremental = search(board, limits, nullptr,
+      [&](const auto& result) { incremental_iterations.push_back(result); }, options, &context);
+    options.neural_incremental = false;
+    const auto full = search(board, limits, nullptr,
+      [&](const auto& result) { full_iterations.push_back(result); }, options, &context);
+    same_graph(incremental, full);
+    expect(incremental_iterations.size() == full_iterations.size(), "iteration count differs");
+    for (std::size_t i = 0; i < incremental_iterations.size(); ++i)
+     same_graph(incremental_iterations[i], full_iterations[i]);
+    options.neural_incremental = true;
+    same_graph(incremental, search(board, limits, nullptr, {}, options, &context));
+    expect(board == saved, "search changed input board/history");
+   }
+ });
+ test("incremental/full cancellation, draw claims and context reuse", [] {
+  Board board;
+  for (const char* text : {"g1f3", "g8f6", "f3g1", "f6g8"}) board.play(text);
+  const auto saved = board; SearchContext context; SearchOptions options;
+  options.neural = true; options.hash_mb = 1; SearchLimits limits; limits.depth = 3;
+  for (bool fast : {false, true}) {
+   limits.depth = 3;
+   options.fast_moves = fast;
+   for (std::uint64_t budget : {1ULL, 41ULL, 257ULL}) {
+    limits.nodes = budget; options.neural_incremental = true;
+    const auto incremental = search(board, limits, nullptr, {}, options, &context);
+    options.neural_incremental = false;
+    const auto full = search(board, limits, nullptr, {}, options, &context);
+    same_graph(incremental, full); expect(incremental.stopped, "node budget did not cancel search");
+   }
+   limits.nodes = 0; std::atomic_bool stopped{true}; options.neural_incremental = true;
+   const auto fallback = search(board, limits, &stopped, {}, options, &context);
+   options.neural_incremental = false;
+   same_graph(fallback, search(board, limits, &stopped, {}, options, &context));
+   expect(fallback.depth == 0 && fallback.stopped, "pre-cancel fallback");
+   stopped.store(false); options.neural_incremental = true;
+   const auto interrupted = search(board, limits, &stopped,
+     [&](const auto&) { stopped.store(true); }, options, &context);
+   stopped.store(false); options.neural_incremental = false;
+   same_graph(interrupted, search(board, limits, &stopped,
+     [&](const auto&) { stopped.store(true); }, options, &context));
+   expect(interrupted.depth == 1 && interrupted.stopped, "callback cancellation");
+   limits.depth = 2; options.neural_incremental = true;
+   const auto resumed = search(board, limits, nullptr, {}, options, &context);
+   options.neural_incremental = false;
+   same_graph(resumed, search(board, limits, nullptr, {}, options));
+   expect(board == saved, "cancellation or reused context changed input history");
   }
  });
  test("search selection, fallback, terminal and context reuse", [] {

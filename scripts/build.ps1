@@ -50,6 +50,8 @@ if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\neural.obj build\transposition.obj build\see.obj /Fobuild\neural_tests.obj /Febuild\regicide_neural_tests.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\evaluation_benchmark.cpp build\board.obj build\evaluation.obj build\neural.obj /Fobuild\evaluation_benchmark.obj /Febuild\regicide_evaluation_benchmark.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\neural_incremental_benchmark.cpp build\board.obj build\evaluation.obj build\neural.obj /Fobuild\neural_incremental_benchmark.obj /Febuild\regicide_neural_incremental_benchmark.exe
 exit /b %errorlevel%
 "@
 $batch = $batch.Replace('build\', ($BuildDirectory + '\'))
