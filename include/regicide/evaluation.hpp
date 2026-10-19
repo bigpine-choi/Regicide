@@ -14,13 +14,20 @@ int evaluate_position(const Board& board);
 
 // Original 768 -> 16 clipped-ReLU -> 1 network parameters. Both color
 // perspectives share weights. Loaded models are immutable and range checked.
-// For direct in-memory models, inference requires the same validated limits:
-// input [-127,127], bias [-4096,4096], output [-8192,8192], scale [1,65536].
+// Direct in-memory models require the same limits as loaded files. Format v1:
+// input [-127,127], bias [-4096,4096], input_scale 1. Format v2:
+// input [-32767,32767], bias [-1048576,1048576], input_scale a power of two
+// in [2,256]. Both use output [-8192,8192] and denominator [1,65536].
+// V2 accumulates fixed-point input/bias values, clips at 127 * input_scale,
+// and divides the final white numerator once by output_scale. The latter
+// includes input_scale and must be divisible by it.
 struct NeuralModel {
     std::array<std::array<int, 16>, 768> input_weights{};
     std::array<int, 16> hidden_bias{};
     std::array<int, 16> output_weights{};
     int output_scale = 1;
+    int format_version = 1;
+    int input_scale = 1;
 };
 const NeuralModel& builtin_neural_model() noexcept;
 std::shared_ptr<const NeuralModel> load_neural_model(const std::string& path);

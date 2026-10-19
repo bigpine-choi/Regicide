@@ -1,0 +1,84 @@
+{
+  "base_commit": "1cd4de87eec36e75cdfc321a1e1845245aaa53b8",
+  "baseline_model": "docs/checks/2026-10-19-neural-qat/selection-final/model.nnue",
+  "benchmark_plan": "Same binary preloaded prior QAT v1 vs selected v2;163 legal transitions,500000 iterations,8 rounds,alternating model/workload order; no strength claim",
+  "calibration_limitation": "Initializer already saw all original train positions; ranking is in-sample calibration",
+  "candidate_grid": [
+    {
+      "batch_size": 128,
+      "candidate_id": "s08-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 8,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s08-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 8,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s16-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 16,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s16-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 16,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s32-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 32,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s32-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 32,
+      "output_lr": 0.005,
+      "seed": 20261024
+    }
+  ],
+  "format": "New v2 fixed point768x16; input/bias quantized at S, clip127*S, output quantized at8, denominator8*S; v1 compatibility preserved",
+  "goal": "Retain learned input-layer changes in deployed fixed-point weights; separate rescaling-only changes from training changes",
+  "holdout_plan": {
+    "exclude_color_rank_mirror_equivalent_inputs": true,
+    "exclude_prior_original_train_and_validation": true,
+    "exclude_prior_qat_holdout": true,
+    "games": 64,
+    "generate_only_after_final_freeze": true,
+    "max_plies": 64,
+    "sample_every": 2,
+    "sample_start_ply": 6,
+    "seed": 20261025,
+    "teacher": "unchanged own classical static evaluator"
+  },
+  "initial_floats": "docs/checks/2026-10-19-neural-training/first-run/training/float_weights.npz",
+  "new_holdout_will_not_select_or_tune": true,
+  "ranking": "Final serialized integer train MAE, then train RMSE, then fixed plan index, ascending",
+  "recorded_utc": "2026-10-19T04:28:46.305676+00:00",
+  "references": "Each S has an untrained same-scale re-quantized original float checkpoint; record changed input integers relative to this reference and ablation reverting trained inputs only",
+  "required_before_new_holdout": "Selected trained model has input integer changes beyond same-scale initializer; all core tests/parity pass",
+  "schema_version": 1,
+  "selection_data": "Original1498 train positions only; no old validation/old QAT holdout labels or new holdout read"
+}

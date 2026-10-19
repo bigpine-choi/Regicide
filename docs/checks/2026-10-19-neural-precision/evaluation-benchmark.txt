@@ -1,0 +1,90 @@
+{
+  "models": {
+    "baseline": {
+      "model_checksum": 4169634320372998457,
+      "transitions": 163,
+      "workloads": {
+        "classical_after": {
+          "median_ns_per_operation": 148.1942,
+          "min_ns_per_operation": 143.6482,
+          "max_ns_per_operation": 166.5596
+        },
+        "neural_full_after": {
+          "median_ns_per_operation": 594.0618,
+          "min_ns_per_operation": 590.3022,
+          "max_ns_per_operation": 618.5758
+        },
+        "neural_score_only": {
+          "median_ns_per_operation": 24.2333,
+          "min_ns_per_operation": 23.8884,
+          "max_ns_per_operation": 24.7746
+        },
+        "neural_update_snapshot_restore": {
+          "median_ns_per_operation": 66.14580000000001,
+          "min_ns_per_operation": 64.9032,
+          "max_ns_per_operation": 69.7992
+        },
+        "board_play_full_undo": {
+          "median_ns_per_operation": 656.4338,
+          "min_ns_per_operation": 639.7386,
+          "max_ns_per_operation": 663.4262
+        },
+        "board_play_incremental_undo": {
+          "median_ns_per_operation": 111.9001,
+          "min_ns_per_operation": 111.0732,
+          "max_ns_per_operation": 112.9542
+        }
+      },
+      "median_paired_speedup_full_over_incremental": 8.952846055752154,
+      "median_paired_speedup_board_full_over_incremental": 5.835754689346368
+    },
+    "qat": {
+      "model_checksum": 12850805878070247189,
+      "transitions": 163,
+      "workloads": {
+        "classical_after": {
+          "median_ns_per_operation": 149.1233,
+          "min_ns_per_operation": 143.6446,
+          "max_ns_per_operation": 181.83
+        },
+        "neural_full_after": {
+          "median_ns_per_operation": 607.137,
+          "min_ns_per_operation": 583.1966,
+          "max_ns_per_operation": 622.871
+        },
+        "neural_score_only": {
+          "median_ns_per_operation": 24.249699999999997,
+          "min_ns_per_operation": 23.6622,
+          "max_ns_per_operation": 25.6834
+        },
+        "neural_update_snapshot_restore": {
+          "median_ns_per_operation": 66.5644,
+          "min_ns_per_operation": 64.4002,
+          "max_ns_per_operation": 70.0298
+        },
+        "board_play_full_undo": {
+          "median_ns_per_operation": 651.7015,
+          "min_ns_per_operation": 646.1586,
+          "max_ns_per_operation": 669.6252
+        },
+        "board_play_incremental_undo": {
+          "median_ns_per_operation": 112.3005,
+          "min_ns_per_operation": 110.7376,
+          "max_ns_per_operation": 115.0558
+        }
+      },
+      "median_paired_speedup_full_over_incremental": 9.047649267982443,
+      "median_paired_speedup_board_full_over_incremental": 5.8214058916618105
+    }
+  },
+  "median_paired_qat_over_baseline_cost_ratio": {
+    "classical_after": 1.0002151056363768,
+    "neural_full_after": 1.0135185315266342,
+    "neural_score_only": 0.9964575189746295,
+    "neural_update_snapshot_restore": 0.9994607119237264,
+    "board_play_full_undo": 0.9910843080531582,
+    "board_play_incremental_undo": 1.0027128963961778
+  },
+  "samples": 96,
+  "all_within_model_neural_checksums_equal": true
+}

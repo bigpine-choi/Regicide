@@ -1,0 +1,28 @@
+Windows build and validation sequence
+
+1. scripts/build.ps1 -BuildDirectory build-neural-precision-runtime -Test
+   MSVC optimized /O2 /DNDEBUG, /std:c++20 /W4 /WX /permissive- /utf-8.
+   The existing seven regression suites passed with 8325, 13616, 400,
+   18974, 97, 9119, and 51153 assertions respectively.
+2. The first new model-test run reported one failed hand-calculated clipping
+   expectation. Its starting-board fixture contained a black e7 pawn that
+   mapped to the same relative own-pawn feature as White e2, cancelling the
+   intended asymmetry. This was a test-fixture error, not an inference error.
+3. Replaced that fixture with the legal position
+   7k/8/8/8/8/8/4P3/6K1 w - - 0 1.
+   Expected parent score -1 cp and e2e4 child side-to-move score -2 cp are
+   now checked explicitly. No runtime implementation was changed for this fix.
+4. Recompiled only neural_model_tests.cpp, retaining the previously built
+   runtime objects. Final default model test: 9 groups, 26566 assertions,
+   0 failures. Both the initial and corrected run logs are preserved here.
+5. Compiled all current model-test and runtime sources separately under
+   Ubuntu GCC 13.3 with ASan+UBSan, debug information, and frame pointers.
+   Both custom stress and actual selected S32 models passed 26566 assertions.
+   libasan.so.8 and libubsan.so.1 linkage is recorded. No sanitizer diagnostics.
+
+Actual selected model commands (exit code 0 for both):
+  build-neural-precision-runtime/regicide_neural_model_tests.exe docs/checks/2026-10-19-neural-precision/selection/model.nnue
+  wsl --exec env ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 build-neural-precision-runtime/model-tests-sanitized docs/checks/2026-10-19-neural-precision/selection/model.nnue
+Actual selected checksum: 12850805878070247189.
+Binary artifacts remain in the ignored local build directory; only provenance,
+commands and test output are copied into this evidence directory.

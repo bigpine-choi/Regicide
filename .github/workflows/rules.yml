@@ -17,6 +17,15 @@ jobs:
       - run: python -m pip install -r requirements-training.txt
       - run: python tests/neural_training_unit_tests.py
       - run: python tests/neural_qat_tests.py
+      - run: python tests/neural_precision_tests.py
+      - if: runner.os == 'Linux'
+        run: python tests/neural_precision_integration.py --engine build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/neural_precision_integration.py --engine build/Release/regicide.exe
+      - if: runner.os == 'Linux'
+        run: python tests/neural_precision_experiment_tests.py --engine build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/neural_precision_experiment_tests.py --engine build/Release/regicide.exe
       - if: runner.os == 'Linux'
         run: python tests/neural_qat_integration.py --engine build/regicide
       - if: runner.os == 'Windows'

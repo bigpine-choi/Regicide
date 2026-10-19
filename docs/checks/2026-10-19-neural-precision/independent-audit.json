@@ -1,0 +1,241 @@
+{
+  "audit_finished_utc": "2026-10-19T04:37:14.572207+00:00",
+  "audit_source_sha256": "e19d72ce39b493467df3fbeb1e74586dfa7f2da14eb3cda80db356520a4c3db6",
+  "audit_started_utc": "2026-10-19T04:37:12.595903+00:00",
+  "benchmark": {
+    "median_paired_precision_over_baseline_cost_ratio": {
+      "board_play_full_undo": 0.9910843080531582,
+      "board_play_incremental_undo": 1.0027128963961778,
+      "classical_after": 1.0002151056363768,
+      "neural_full_after": 1.0135185315266342,
+      "neural_score_only": 0.9964575189746295,
+      "neural_update_snapshot_restore": 0.9994607119237264
+    },
+    "models_times_ns": {
+      "baseline": {
+        "board_play_full_undo": 656.4338,
+        "board_play_incremental_undo": 111.9001,
+        "classical_after": 148.1942,
+        "median_paired_speedup_board_full_over_incremental": 5.835754689346368,
+        "median_paired_speedup_full_over_incremental": 8.952846055752154,
+        "neural_full_after": 594.0618,
+        "neural_score_only": 24.2333,
+        "neural_update_snapshot_restore": 66.14580000000001
+      },
+      "qat": {
+        "board_play_full_undo": 651.7015,
+        "board_play_incremental_undo": 112.3005,
+        "classical_after": 149.1233,
+        "median_paired_speedup_board_full_over_incremental": 5.8214058916618105,
+        "median_paired_speedup_full_over_incremental": 9.047649267982443,
+        "neural_full_after": 607.137,
+        "neural_score_only": 24.249699999999997,
+        "neural_update_snapshot_restore": 66.5644
+      }
+    },
+    "samples_recomputed": 96,
+    "scope": "Checks recorded timings and arithmetic; no rerun, CPU isolation, load measurement or strength inference"
+  },
+  "holdout": {
+    "candidate_positions": 1894,
+    "duplicate_inputs_removed": 1,
+    "engine_checks": {
+      "baseline_model": {
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-precision-runtime\\regicide.exe",
+          "eval-batch",
+          "--neural-model",
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-19-neural-qat\\selection-final\\model.nnue"
+        ],
+        "positions": 1893,
+        "python_full_incremental_mismatches": 0,
+        "teacher_mismatches": 0
+      },
+      "precision_model": {
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-precision-runtime\\regicide.exe",
+          "eval-batch",
+          "--neural-model",
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-19-neural-precision\\selection\\model.nnue"
+        ],
+        "positions": 1893,
+        "python_full_incremental_mismatches": 0,
+        "teacher_mismatches": 0
+      }
+    },
+    "frozen_experiment_files": 29,
+    "input_learning_changes_prediction_rows": 1861,
+    "metrics": {
+      "baseline_model": {
+        "mae_cp": 30.62176439513999,
+        "mse_cp2": 1458.716851558373,
+        "rmse_cp": 38.19315189347919
+      },
+      "precision_model": {
+        "mae_cp": 11.210248283148442,
+        "mse_cp2": 214.8214474379292,
+        "rmse_cp": 14.656788442149569
+      },
+      "same_scale_initial": {
+        "mae_cp": 20.37136819862652,
+        "mse_cp2": 669.5419968304279,
+        "rmse_cp": 25.87550959556986
+      },
+      "trained_inputs_reverted": {
+        "mae_cp": 20.595879556259906,
+        "mse_cp2": 672.5557316428949,
+        "rmse_cp": 25.933679485234926
+      }
+    },
+    "positions_replayed": 1893,
+    "prior_color_rank_mirror_input_overlap": 0,
+    "prior_game_overlap": 0,
+    "prior_position_counts": {
+      "original_train": 1498,
+      "original_validation": 390,
+      "prior_holdout": 1905
+    },
+    "prior_unique_input_count": 3793,
+    "raw_game_sequences_replayed": 64,
+    "receipt_precedes_generation": true
+  },
+  "policy": "Existing source/model/data artifacts read only; no training, tuning or generation",
+  "schema_version": 1,
+  "status": "PASS",
+  "training": {
+    "candidates": [
+      {
+        "candidate_id": "s08-lr000020-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 1,
+          "input_weights": 120,
+          "output_weights": 15
+        },
+        "grid_index": 0,
+        "train": {
+          "mae_cp": 25.02803738317757,
+          "mse_cp2": 972.9639519359146,
+          "rmse_cp": 31.192370091673293
+        }
+      },
+      {
+        "candidate_id": "s08-lr000100-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 2,
+          "input_weights": 1066,
+          "output_weights": 15
+        },
+        "grid_index": 1,
+        "train": {
+          "mae_cp": 24.50066755674232,
+          "mse_cp2": 1022.0293724966622,
+          "rmse_cp": 31.969194117097512
+        }
+      },
+      {
+        "candidate_id": "s16-lr000020-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 1,
+          "input_weights": 771,
+          "output_weights": 15
+        },
+        "grid_index": 2,
+        "train": {
+          "mae_cp": 14.024032042723631,
+          "mse_cp2": 309.086782376502,
+          "rmse_cp": 17.580864096411815
+        }
+      },
+      {
+        "candidate_id": "s16-lr000100-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 0,
+          "input_weights": 1362,
+          "output_weights": 13
+        },
+        "grid_index": 3,
+        "train": {
+          "mae_cp": 18.7716955941255,
+          "mse_cp2": 566.2910547396529,
+          "rmse_cp": 23.79687069216566
+        }
+      },
+      {
+        "candidate_id": "s32-lr000020-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 2,
+          "input_weights": 975,
+          "output_weights": 11
+        },
+        "grid_index": 4,
+        "train": {
+          "mae_cp": 8.68291054739653,
+          "mse_cp2": 124.43190921228305,
+          "rmse_cp": 11.154905163751193
+        }
+      },
+      {
+        "candidate_id": "s32-lr000100-e120",
+        "changed_integer_parameters_vs_initial_reference": {
+          "hidden_bias": 2,
+          "input_weights": 1391,
+          "output_weights": 9
+        },
+        "grid_index": 5,
+        "train": {
+          "mae_cp": 14.970627503337784,
+          "mse_cp2": 368.1361815754339,
+          "rmse_cp": 19.186875242608785
+        }
+      }
+    ],
+    "frozen_dependencies": 12,
+    "input_learning_ablation": {
+      "changed_prediction_rows": 1490,
+      "description": "Restore only input weights to same-S initial reference; retain final bias and outputs",
+      "reverted_inputs_train": {
+        "mae_cp": 21.078104138851803,
+        "mse_cp2": 694.0687583444593,
+        "rmse_cp": 26.34518472784845
+      },
+      "selected_train": {
+        "mae_cp": 8.68291054739653,
+        "mse_cp2": 124.43190921228305,
+        "rmse_cp": 11.154905163751193
+      }
+    },
+    "references": [
+      {
+        "input_scale": 8,
+        "untrained_requantized_train": {
+          "mae_cp": 30.765687583444592,
+          "mse_cp2": 1469.2449933244325,
+          "rmse_cp": 38.33073170870121
+        }
+      },
+      {
+        "input_scale": 16,
+        "untrained_requantized_train": {
+          "mae_cp": 29.912550066755674,
+          "mse_cp2": 1413.1088117489987,
+          "rmse_cp": 37.59133958439096
+        }
+      },
+      {
+        "input_scale": 32,
+        "untrained_requantized_train": {
+          "mae_cp": 21.114152202937248,
+          "mse_cp2": 699.5587449933245,
+          "rmse_cp": 26.449172860286662
+        }
+      }
+    ],
+    "selected_candidate_id": "s32-lr000020-e120",
+    "selected_integer_changes": {
+      "hidden_bias": 2,
+      "input_weights": 975,
+      "output_weights": 11
+    },
+    "training_positions": 1498
+  }
+}

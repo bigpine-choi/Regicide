@@ -62,9 +62,19 @@ NeuralModel custom_model() {
     model.input_weights[0][2] = 127;
     return model;
 }
+NeuralModel precision_model(int scale) {
+    auto model = custom_model();
+    model.format_version = 2;
+    model.input_scale = scale;
+    model.output_scale *= scale;
+    for (int& value : model.hidden_bias) value *= scale;
+    for (auto& row : model.input_weights) for (int& value : row) value *= scale;
+    return model;
+}
 bool equal_model(const NeuralModel& a, const NeuralModel& b) {
     return a.input_weights == b.input_weights && a.hidden_bias == b.hidden_bias &&
-        a.output_weights == b.output_weights && a.output_scale == b.output_scale;
+        a.output_weights == b.output_weights && a.output_scale == b.output_scale &&
+        a.format_version == b.format_version && a.input_scale == b.input_scale;
 }
 std::string read(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
@@ -78,7 +88,10 @@ void write(const std::string& path, const std::string& text) {
 // checksum. A malformed model must not pass merely because its hash matches.
 std::string raw_model(const NeuralModel& model) {
     std::ostringstream out;
-    out << "REGICIDE_NNUE 1 768 16 127 " << model.output_scale << '\n';
+    out << "REGICIDE_NNUE " << model.format_version << " 768 16 " << 127 * model.input_scale
+        << ' ' << model.output_scale;
+    if (model.format_version == 2) out << ' ' << model.input_scale;
+    out << '\n';
     for (int value : model.hidden_bias) out << value << ' ';
     for (int value : model.output_weights) out << value << ' ';
     for (const auto& row : model.input_weights) for (int value : row) out << value << ' ';
@@ -148,7 +161,7 @@ int main(int argc, char** argv) {
         auto malformed = good;
         malformed.replace(0, std::string("REGICIDE_NNUE").size(), "OTHER_FORMAT");
         write(path, malformed); rejects([&] { (void)load_neural_model(path); }, "bad signature");
-        for (const auto& prefix : {"REGICIDE_NNUE 2 768 16 127 7\n", "REGICIDE_NNUE 1 767 16 127 7\n",
+        for (const auto& prefix : {"REGICIDE_NNUE 3 768 16 127 7\n", "REGICIDE_NNUE 1 767 16 127 7\n",
                                   "REGICIDE_NNUE 1 768 15 127 7\n", "REGICIDE_NNUE 1 768 16 128 7\n"}) {
             write(path, prefix + good.substr(good.find('\n') + 1));
             rejects([&] { (void)load_neural_model(path); }, "unsupported header");
@@ -179,6 +192,115 @@ int main(int argc, char** argv) {
             expect(!std::filesystem::exists(save_path), "invalid save left destination");
         }
         rejects([&] { (void)load_neural_model(temporary.file("missing.nnue")); }, "missing file");
+    });
+    test("fixed-point v2 serialization and exact integer rescaling of v1", [&] {
+        const auto original = custom_model();
+        expect(neural_model_checksum(original) == 18155381136170626874ULL,
+               "historical v1 checksum changed");
+        for (int scale = 2; scale <= 256; scale *= 2) {
+            const auto fixed = precision_model(scale);
+            const auto fixed_path = temporary.file("precision-" + std::to_string(scale) + ".nnue");
+            save_neural_model(fixed, fixed_path);
+            const auto loaded = load_neural_model(fixed_path);
+            expect(equal_model(fixed, *loaded), "v2 parameter round trip");
+            expect(neural_model_checksum(fixed) == neural_model_checksum(*loaded), "v2 checksum round trip");
+            expect(neural_model_checksum(fixed) != neural_model_checksum(original), "v2 precision absent from checksum");
+            const auto serialized = read(fixed_path);
+            rejects([&] { save_neural_model(fixed, fixed_path); }, "existing v2 destination overwrite");
+            expect(read(fixed_path) == serialized, "v2 rejected save changed destination");
+            for (const char* source : {Board::start_fen.data(),
+                    "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+                    "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+                    "1r5k/P7/8/8/8/8/8/6K1 w - - 0 1"}) {
+                Board board(source); NeuralAccumulator accumulator(board, *loaded);
+                expect(evaluate_neural(board, original) == evaluate_neural(board, *loaded),
+                       "v2 exact rescaling changed v1 score");
+                exact(board, accumulator, *loaded, "rescaled v2 root");
+                siblings(board, accumulator, *loaded, true);
+            }
+        }
+    });
+    test("v2 malformed precision headers, numeric limits and checksum rejection", [&] {
+        const auto invalid_path = temporary.file("invalid-v2.nnue");
+        const auto good = raw_model(precision_model(16));
+        for (const char* header : {"REGICIDE_NNUE 2 768 16 2031 112 16\n",
+                "REGICIDE_NNUE 2 768 16 2032 112 8\n", "REGICIDE_NNUE 2 768 16 381 112 3\n",
+                "REGICIDE_NNUE 2 768 16 2032 112 1\n", "REGICIDE_NNUE 2 768 16 65024 4096 512\n",
+                "REGICIDE_NNUE 2 768 16 2032 113 16\n", "REGICIDE_NNUE 2 768 16 2032 0 16\n",
+                "REGICIDE_NNUE 2 768 16 2032 65537 16\n"}) {
+            write(invalid_path, header + good.substr(good.find('\n') + 1));
+            rejects([&] { (void)load_neural_model(invalid_path); }, "malformed v2 header");
+        }
+        for (int kind = 0; kind < 12; ++kind) {
+            auto invalid = precision_model(16);
+            if (kind == 0) invalid.input_weights[0][0] = 32768;
+            if (kind == 1) invalid.input_weights[0][0] = -32768;
+            if (kind == 2) invalid.hidden_bias[0] = 1048577;
+            if (kind == 3) invalid.hidden_bias[0] = -1048577;
+            if (kind == 4) invalid.output_weights[0] = 8193;
+            if (kind == 5) invalid.output_weights[0] = -8193;
+            if (kind == 6) invalid.output_scale = 65537;
+            if (kind == 7) invalid.output_scale = 113;
+            if (kind == 8) invalid.input_scale = 3;
+            if (kind == 9) invalid.input_scale = 0;
+            if (kind == 10) invalid.format_version = 3;
+            if (kind == 11) { invalid.format_version = 1; invalid.input_scale = 2; }
+            write(invalid_path, raw_model(invalid));
+            rejects([&] { (void)load_neural_model(invalid_path); }, "out-of-range v2 parameter load");
+            const auto invalid_save = temporary.file("invalid-v2-save-" + std::to_string(kind));
+            rejects([&] { save_neural_model(invalid, invalid_save); }, "out-of-range v2 parameter save");
+            expect(!std::filesystem::exists(invalid_save), "rejected v2 save left destination");
+        }
+        auto tampered = good;
+        tampered.replace(tampered.find("2032 112 16"), 11, "1016 112 8");
+        write(invalid_path, tampered);
+        rejects([&] { (void)load_neural_model(invalid_path); }, "valid precision edit with stale checksum");
+        write(invalid_path, good.substr(0, good.size() / 2));
+        rejects([&] { (void)load_neural_model(invalid_path); }, "truncated v2 model");
+        write(invalid_path, good + " trailing");
+        rejects([&] { (void)load_neural_model(invalid_path); }, "trailing v2 token");
+    });
+    test("v2 fractional inputs, one signed division, clipping crossings and undo", [&] {
+        const Board pawn("7k/8/8/8/8/8/P7/6K1 w - - 0 1");
+        NeuralModel tiny;
+        tiny.format_version = 2; tiny.input_scale = 16; tiny.output_scale = 128;
+        tiny.input_weights[8][0] = 1; tiny.output_weights[0] = 128;
+        expect(evaluate_neural(pawn, tiny) == 1, "fractional 1/16 input vanished from inference");
+        exact(pawn, NeuralAccumulator(pawn, tiny), tiny, "fractional positive");
+        tiny.output_weights[0] = -128;
+        expect(evaluate_neural(pawn, tiny) == -1, "fractional negative score sign");
+        tiny.input_scale = 2; tiny.output_scale = 4;
+        tiny.input_weights[8][0] = 5; tiny.input_weights[6 * 64 + (8 ^ 56)][0] = 3;
+        tiny.output_weights[0] = 1;
+        expect(evaluate_neural(pawn, tiny) == 0, "perspectives were divided separately");
+        tiny.input_weights[6 * 64 + (8 ^ 56)][0] = 0; tiny.output_weights[0] = -1;
+        expect(evaluate_neural(pawn, tiny) == -1, "negative division did not truncate toward zero");
+        NeuralModel crossing;
+        crossing.format_version = 2; crossing.input_scale = 16; crossing.output_scale = 128;
+        crossing.hidden_bias[0] = 2031; crossing.hidden_bias[1] = 1;
+        crossing.output_weights[0] = 128; crossing.output_weights[1] = 256;
+        crossing.input_weights[12][0] = 2; crossing.input_weights[28][0] = -2;
+        crossing.input_weights[12][1] = -2; crossing.input_weights[28][1] = 2;
+        Board board("7k/8/8/8/8/8/4P3/6K1 w - - 0 1");
+        NeuralAccumulator accumulator(board, crossing);
+        const auto saved_board = board; const auto saved_accumulator = accumulator;
+        expect(evaluate_neural(board, crossing) == -1, "upper/lower parent clipping arithmetic");
+        exact(board, accumulator, crossing, "v2 clipping parent");
+        apply(board, accumulator, Move::from_uci("e2e4"), true);
+        expect(evaluate_neural(board, crossing) == -2, "upper/lower child clipping arithmetic");
+        exact(board, accumulator, crossing, "v2 clipping child");
+        board.undo(); accumulator = saved_accumulator;
+        expect(board == saved_board, "v2 clipping undo changed board/history");
+        exact(board, accumulator, crossing, "v2 clipping undo");
+        NeuralModel extreme;
+        extreme.format_version = 2; extreme.input_scale = 256; extreme.output_scale = 256;
+        for (int h = 0; h < 16; ++h) {
+            extreme.output_weights[h] = 8192;
+            for (int feature = 0; feature < 768; ++feature)
+                extreme.input_weights[feature][h] = feature < 384 ? 32767 : -32767;
+        }
+        expect(evaluate_neural(pawn, extreme) == 28000, "wide v2 numerator overflow or clamp");
+        exact(pawn, NeuralAccumulator(pawn, extreme), extreme, "v2 wide numerator");
     });
     const auto path = temporary.file("walk.nnue");
     save_neural_model(custom_model(), path);
