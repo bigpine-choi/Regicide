@@ -67,6 +67,7 @@ int main(int argc, char** argv) {
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
                          "    --no-quiet-ordering --no-quiescence-checks --no-see\n"
+                         "regicide search 4 --neural  (experimental untrained evaluator)\n"
                          "regicide uci  (UCI engine protocol)\n"
                          "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
             return 0;
@@ -95,6 +96,7 @@ int main(int argc, char** argv) {
         while (arg < argc) {
             const std::string option = argv[arg++];
             if (option == "--fen" && arg < argc) fen = argv[arg++];
+            else if (command == "search" && option == "--neural") search_options.neural = true;
             else if (command == "search" && option == "--no-position") search_options.positional = false;
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;
