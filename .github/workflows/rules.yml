@@ -18,6 +18,8 @@ jobs:
       - run: python tests/neural_training_unit_tests.py
       - run: python tests/neural_qat_tests.py
       - run: python tests/neural_precision_tests.py
+      - run: python tests/neural_strength_driver_tests.py
+      - run: python tests/audit_neural_strength_results.py --self-test
       - if: runner.os == 'Linux'
         run: python tests/neural_precision_integration.py --engine build/regicide
       - if: runner.os == 'Windows'

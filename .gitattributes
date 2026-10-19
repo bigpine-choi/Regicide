@@ -57,3 +57,87 @@ tests/neural_precision_tests.py text eol=lf
 tests/neural_precision_integration.py text eol=lf
 tests/neural_precision_experiment_tests.py text eol=lf
 tests/differential.py text eol=lf
+
+# Preserve the first neural/classical strength comparison and frozen tool bytes.
+docs/matches/2026-10-19-neural-strength/** -text -whitespace
+docs/experiments/2026-10-19-neural-strength-plan.md -text
+docs/experiments/2026-10-19-neural-strength.md text eol=lf
+tests/data/neural_strength_openings_2026-10-19.json -text
+scripts/generate_neural_strength_openings.py -text
+scripts/run_neural_strength_comparison.py -text
+tests/audit_neural_strength_results.py -text
+tests/neural_strength_driver_tests.py text eol=lf
+
+# Restore the recorded CRLF bytes on every platform, including this file.
+.gitattributes text eol=crlf
+.github/workflows/rules.yml text eol=crlf
+README.md text eol=crlf
+docs/ENGINE.md text eol=crlf
+# These small attribute files were frozen as LF inputs to the diagnostics.
+scripts/.gitattributes text eol=lf
+tests/.gitattributes text eol=lf
+docs/analysis/.gitattributes text eol=lf
+docs/checks/2026-10-19-neural-commit/** -text -whitespace
+
+# Restore exact bytes of the measured source and opening-novelty references.
+CMakeLists.txt text eol=crlf
+docs/matches/2026-10-17-hash-memory/debug/conclusion.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/debug/raw-reproduction.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/independent-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/primary-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/retry-suspend-events.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/suspend-events.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100-retry.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100-retry.json text eol=lf
+docs/matches/2026-10-17-hash-memory/time100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100.json text eol=lf
+docs/matches/2026-10-17-hash-memory/time40.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time40.json text eol=lf
+docs/matches/2026-10-17-hash-memory/wake-guard.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/coach-analysis.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/development-probes.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/heldout-validation.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/independent-critical-positions.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/independent-loss-analysis.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/own-engine-findings.json text eol=lf
+docs/matches/2026-10-17-loss-guided/analysis/own-engine-queries.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/cpu.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/development100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/development100.json text eol=lf
+docs/matches/2026-10-17-loss-guided/environment-and-results-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/frozen-ci.json text eol=lf
+docs/matches/2026-10-17-loss-guided/heldout100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/heldout100.json text eol=lf
+docs/matches/2026-10-17-loss-guided/memory.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/os.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/suspend-event-query.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/suspend-events-window.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/wake-guard.json text eol=crlf
+docs/matches/2026-10-17-tt/independent-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-tt/time100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-tt/time100.json text eol=lf
+docs/matches/2026-10-17-tt/time40.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-tt/time40.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-depth2.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-nodes1000.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-position-only.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-quiescence-only.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-time40.json text eol=lf
+include/regicide/evaluation.hpp text eol=crlf
+include/regicide/search.hpp text eol=crlf
+scripts/build.ps1 text eol=crlf
+scripts/compare_engines.py text eol=lf
+scripts/see_clean_guard.py text eol=lf
+src/main.cpp text eol=crlf
+src/search.cpp text eol=crlf
+src/uci.cpp text eol=crlf
+tests/audit_see_replication.py text eol=lf
+tests/audit_see_results.py text eol=lf
+tests/compare_engines_tests.py text eol=lf
+tests/data/comparison_openings.json text eol=lf
+tests/data/heldout_openings_2026-10-17.json text eol=lf
+tests/data/pvs_openings_2026-10-18.json text eol=lf
+tests/see_clean_guard_tests.py text eol=lf
+
+# Retain the already-frozen auditor source, including its final blank line.
+tests/audit_neural_strength_results.py whitespace=-blank-at-eof
