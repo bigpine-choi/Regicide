@@ -21,3 +21,4 @@
 ## 문서
 
 - [프로젝트 지침](docs/PROJECT_INSTRUCTIONS.md)
+- [NNUE 개발 아이디어와 공개 연구 자료](docs/research/2026-10-19-nnue-development-ideas.md)
