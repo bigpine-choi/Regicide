@@ -1,0 +1,51 @@
+{
+  "recorded_utc": "2026-10-19T04:06:08.319144+00:00",
+  "candidate_grid": [
+    {
+      "candidate_id": "lr000020-e060",
+      "epochs": 60,
+      "input_bias_lr": 2e-05,
+      "output_lr": 0.005,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "output_lr": 0.005,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr000100-e060",
+      "epochs": 60,
+      "input_bias_lr": 0.0001,
+      "output_lr": 0.005,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "output_lr": 0.005,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr005-e005",
+      "epochs": 5,
+      "input_bias_lr": 0.005,
+      "output_lr": 0.01,
+      "seed": 20261021,
+      "batch_size": 128
+    }
+  ],
+  "reason": "All first four QAT candidates regressed on training only; observed initial-grid training curve improved early then destabilized. Smaller steps and fixed early-epoch candidate are calibrated only on originaltraining before any new holdout generation.",
+  "stage1_selection_sha256": "a71adceaab85831bc5452a8f642f4407077691033542ec0c824099dd058de865",
+  "stage1_best_train_mae": 79.23164218958611,
+  "baseline_train_mae": 30.76502002670227,
+  "fresh_holdout_generated_or_observed": false,
+  "no_holdout_selection": true
+}

@@ -24,3 +24,26 @@ src/neural.cpp -text whitespace=cr-at-eol
 tests/neural_model_tests.cpp text eol=lf
 tests/neural_training_integration.py text eol=lf
 requirements-training.txt text eol=lf
+
+# Preserve the QAT freeze, model, datasets and measured source hashes on checkout.
+docs/checks/2026-10-19-neural-qat/** -text -whitespace
+docs/NEURAL_QAT.md text eol=lf
+scripts/neural_qat.py -text
+scripts/calibrate_neural_qat.py -text whitespace=cr-at-eol
+scripts/neural_qat_experiment.py -text whitespace=cr-at-eol
+scripts/benchmark_qat_models.py -text
+scripts/neural_incremental_benchmark.cpp -text
+tests/neural_qat_tests.py text eol=lf
+tests/neural_qat_integration.py text eol=lf
+
+# Keep pre-existing LF bytes used by the QAT measurement manifest on checkout.
+include/regicide/board.hpp text eol=lf
+include/regicide/see.hpp text eol=lf
+include/regicide/transposition.hpp text eol=lf
+include/regicide/uci.hpp text eol=lf
+requirements-test.txt text eol=lf
+src/board.cpp text eol=lf
+src/evaluation.cpp text eol=lf
+src/see.cpp text eol=lf
+src/transposition.cpp text eol=lf
+tests/engine_integration.py text eol=lf

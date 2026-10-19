@@ -1,0 +1,53 @@
+{
+  "recorded_utc": "2026-10-19T02:21:51.537752+00:00",
+  "base_commit": "4f27bce9a510937143fd9ded62a6b42438638909",
+  "selection": "rank final exported integer MAE on original1498 training only, tie RMSE then fixedgridindex; prior float initializer saw same originaltraining",
+  "grid": [
+    {
+      "candidate_id": "lr005-e060",
+      "epochs": 60,
+      "input_bias_lr": 0.005,
+      "output_lr": 0.01,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr005-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.005,
+      "output_lr": 0.01,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr020-e060",
+      "epochs": 60,
+      "input_bias_lr": 0.02,
+      "output_lr": 0.01,
+      "seed": 20261021,
+      "batch_size": 128
+    },
+    {
+      "candidate_id": "lr020-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.02,
+      "output_lr": 0.01,
+      "seed": 20261021,
+      "batch_size": 128
+    }
+  ],
+  "holdout_plan": {
+    "generate_only_after_freeze": true,
+    "seed": 20261022,
+    "games": 64,
+    "max_plies": 64,
+    "sample_start_ply": 6,
+    "sample_every": 2,
+    "exclude_all_prior_train_validation_mirrored_inputs": true,
+    "teacher": "unchanged own static classical evaluator"
+  },
+  "new_holdout_will_not_select_or_tune": true,
+  "format": "REGICIDE_NNUE v1,768x16,clip127,scale8 unchanged",
+  "qat_source_sha256": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d",
+  "experiment_source_sha256": "5723c7c1f9d004f17b997625512e03bd234b17e21011ef190b30ff2fd34b0758"
+}

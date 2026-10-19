@@ -24,7 +24,7 @@ struct Transition {
     NeuralAccumulator working_accumulator;
 };
 
-std::vector<Transition> make_transitions() {
+std::vector<Transition> make_transitions(const NeuralModel& model) {
     // Developer-composed positions: every legal child is included, without
     // looking at measured timings. Both colors and all special move types occur.
     constexpr std::array<std::string_view, 9> fens{
@@ -40,14 +40,14 @@ std::vector<Transition> make_transitions() {
     std::vector<Transition> result;
     for (auto fen : fens) {
         const Board before(fen);
-        const NeuralAccumulator initial(before);
+        const NeuralAccumulator initial(before, model);
         for (Move move : before.legal_moves()) {
             Board after = before;
             after.play_generated(move);
             NeuralAccumulator updated = initial;
             updated.update_generated(before.position(), after.position(), move);
-            const NeuralAccumulator refreshed(after);
-            if (updated != refreshed || updated.evaluate(after.position().turn) != evaluate_neural(after) ||
+            const NeuralAccumulator refreshed(after, model);
+            if (updated != refreshed || updated.evaluate(after.position().turn) != evaluate_neural(after, model) ||
                 updated.evaluate(Color::white) != refreshed.evaluate(Color::white) ||
                 updated.evaluate(Color::black) != refreshed.evaluate(Color::black))
                 throw std::runtime_error("preflight incremental/full score mismatch");
@@ -73,7 +73,7 @@ constexpr std::array names{"classical_after", "neural_full_after", "neural_score
 // Evaluation/update calls live in another translation unit. Signal fences and
 // the printed checksum keep the timed reads and results observable to compilers.
 template<Workload workload>
-std::int64_t execute(std::vector<Transition>& transitions, int iterations) {
+std::int64_t execute(std::vector<Transition>& transitions, int iterations, const NeuralModel& model) {
     std::int64_t checksum = 0;
     std::uint32_t state = 0x6a09e667U;
     for (int i = 0; i < iterations; ++i) {
@@ -83,7 +83,7 @@ std::int64_t execute(std::vector<Transition>& transitions, int iterations) {
         if constexpr (workload == Workload::classical) {
             checksum += evaluate_position(item.after);
         } else if constexpr (workload == Workload::full) {
-            checksum += evaluate_neural(item.after);
+            checksum += evaluate_neural(item.after, model);
         } else if constexpr (workload == Workload::score_only) {
             checksum += item.after_accumulator.evaluate(item.after.position().turn);
         } else if constexpr (workload == Workload::update) {
@@ -93,7 +93,7 @@ std::int64_t execute(std::vector<Transition>& transitions, int iterations) {
             item.working_accumulator = saved;
         } else if constexpr (workload == Workload::board_full) {
             item.before.play_generated(item.move);
-            checksum += evaluate_neural(item.before);
+            checksum += evaluate_neural(item.before, model);
             item.before.undo();
         } else if constexpr (workload == Workload::board_incremental) {
             const auto before = item.before.position();
@@ -109,7 +109,7 @@ std::int64_t execute(std::vector<Transition>& transitions, int iterations) {
     return checksum;
 }
 
-using Runner = std::int64_t (*)(std::vector<Transition>&, int);
+using Runner = std::int64_t (*)(std::vector<Transition>&, int, const NeuralModel&);
 constexpr std::array<Runner, 6> runners{execute<Workload::classical>, execute<Workload::full>,
     execute<Workload::score_only>, execute<Workload::update>, execute<Workload::board_full>,
     execute<Workload::board_incremental>};
@@ -125,39 +125,79 @@ int positive(std::string_view text) {
 
 int main(int argc, char** argv) {
     try {
-        if (argc > 3) throw std::invalid_argument("usage: benchmark [iterations=500000] [repeats=6]");
-        const int iterations = argc > 1 ? positive(argv[1]) : 500000;
-        const int repeats = argc > 2 ? positive(argv[2]) : 6;
-        auto transitions = make_transitions();
-        std::cout << "round,order,workload,transitions,iterations,elapsed_ns,checksum\n";
-        for (int round = 0; round < repeats; ++round) {
-            std::array<std::int64_t, workloads.size()> checksums{};
-            // Reverse order on alternate rounds, balancing first/last positions.
-            for (std::size_t order = 0; order < workloads.size(); ++order) {
-                const auto index = round % 2 == 0 ? order : workloads.size() - 1 - order;
-                const auto run = runners[index];
-                const auto warmup_checksum = run(transitions, std::min(iterations, 1000));
-                std::atomic_signal_fence(std::memory_order_seq_cst);
-                const auto started = std::chrono::steady_clock::now();
-                const auto checksum = run(transitions, iterations);
-                const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() - started).count();
-                checksums[index] = checksum;
-                // Warmup results are consumed outside the timed region.
-                if (warmup_checksum != runners[index](transitions, std::min(iterations, 1000)))
-                    throw std::runtime_error("workload is not deterministic");
-                std::cout << round << ',' << order << ',' << names[index] << ',' << transitions.size()
-                          << ',' << iterations << ',' << ns << ',' << checksum << '\n';
+        const auto usage = "usage: benchmark [iterations=500000] [repeats=6] [--model PATH] [--compare-model PATH]";
+        int iterations = 500000;
+        int repeats = 6;
+        int positional = 0;
+        std::string model_path;
+        std::string comparison_path;
+        for (int argument = 1; argument < argc; ++argument) {
+            const std::string_view option = argv[argument];
+            if (option == "--model" || option == "--compare-model") {
+                if (argument + 1 == argc) throw std::invalid_argument(usage);
+                auto& path = option == "--model" ? model_path : comparison_path;
+                if (!path.empty()) throw std::invalid_argument("duplicate model option");
+                path = argv[++argument];
+                if (path.empty()) throw std::invalid_argument("empty model path");
+            } else if (positional < 2 && !option.starts_with("--")) {
+                (positional++ == 0 ? iterations : repeats) = positive(option);
+            } else {
+                throw std::invalid_argument(usage);
             }
-            for (std::size_t i = 2; i < checksums.size(); ++i)
-                if (checksums[i] != checksums[1]) throw std::runtime_error("workload checksums differ");
         }
-        for (const auto& item : transitions) {
-            if (item.working_accumulator != item.before_accumulator)
-                throw std::runtime_error("postflight accumulator restoration mismatch");
-            auto expected = item.after;
-            expected.undo();
-            if (item.before != expected) throw std::runtime_error("postflight board restoration mismatch");
+        if (!comparison_path.empty() && model_path.empty())
+            throw std::invalid_argument("--compare-model requires --model");
+        // Models are loaded before transition construction and all measurements.
+        // Their shared ownership outlives every accumulator and snapshot.
+        const auto loaded = model_path.empty() ? std::shared_ptr<const NeuralModel>{} : load_neural_model(model_path);
+        const auto compared = comparison_path.empty() ? std::shared_ptr<const NeuralModel>{} : load_neural_model(comparison_path);
+        const std::array<const NeuralModel*, 2> models{loaded ? loaded.get() : &builtin_neural_model(), compared.get()};
+        const std::size_t model_count = compared ? 2U : 1U;
+        std::array<std::vector<Transition>, 2> suites;
+        for (std::size_t model = 0; model < model_count; ++model)
+            suites[model] = make_transitions(*models[model]);
+        std::cout << "round,";
+        if (compared) std::cout << "model_order,model,";
+        if (loaded) std::cout << "model_checksum,";
+        std::cout << "order,workload,transitions,iterations,elapsed_ns,checksum\n";
+        for (int round = 0; round < repeats; ++round) {
+            for (std::size_t model_order = 0; model_order < model_count; ++model_order) {
+                const auto model_index = round % 2 == 0 ? model_order : model_count - 1 - model_order;
+                const auto& model = *models[model_index];
+                auto& transitions = suites[model_index];
+                std::array<std::int64_t, workloads.size()> checksums{};
+                // Reverse order on alternate rounds, balancing first/last positions.
+                for (std::size_t order = 0; order < workloads.size(); ++order) {
+                    const auto index = round % 2 == 0 ? order : workloads.size() - 1 - order;
+                    const auto run = runners[index];
+                    const auto warmup_checksum = run(transitions, std::min(iterations, 1000), model);
+                    std::atomic_signal_fence(std::memory_order_seq_cst);
+                    const auto started = std::chrono::steady_clock::now();
+                    const auto checksum = run(transitions, iterations, model);
+                    const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - started).count();
+                    checksums[index] = checksum;
+                    // Warmup results are consumed outside the timed region.
+                    if (warmup_checksum != runners[index](transitions, std::min(iterations, 1000), model))
+                        throw std::runtime_error("workload is not deterministic");
+                    std::cout << round << ',';
+                    if (compared) std::cout << model_order << ',' << model_index << ',';
+                    if (loaded) std::cout << neural_model_checksum(model) << ',';
+                    std::cout << order << ',' << names[index] << ',' << transitions.size()
+                              << ',' << iterations << ',' << ns << ',' << checksum << '\n';
+                }
+                for (std::size_t i = 2; i < checksums.size(); ++i)
+                    if (checksums[i] != checksums[1]) throw std::runtime_error("workload checksums differ");
+            }
+        }
+        for (std::size_t model = 0; model < model_count; ++model) {
+            for (const auto& item : suites[model]) {
+                if (item.working_accumulator != item.before_accumulator)
+                    throw std::runtime_error("postflight accumulator restoration mismatch");
+                auto expected = item.after;
+                expected.undo();
+                if (item.before != expected) throw std::runtime_error("postflight board restoration mismatch");
+            }
         }
         return 0;
     } catch (const std::exception& error) {
