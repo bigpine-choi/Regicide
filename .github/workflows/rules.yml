@@ -14,7 +14,12 @@ jobs:
       - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build --config Release
       - run: ctest --test-dir build -C Release --output-on-failure
-      - run: python -m pip install -r requirements-test.txt
+      - run: python -m pip install -r requirements-training.txt
+      - run: python tests/neural_training_unit_tests.py
+      - if: runner.os == 'Linux'
+        run: python tests/neural_training_integration.py --engine build/regicide
+      - if: runner.os == 'Windows'
+        run: python tests/neural_training_integration.py --engine build/Release/regicide.exe
       - run: python tests/audit_pvs_results.py --self-test
       - run: python tests/audit_see_results.py --self-test
       - run: python tests/see_clean_guard_tests.py

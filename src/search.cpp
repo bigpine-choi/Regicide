@@ -168,7 +168,7 @@ public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
              SearchOptions options, TranspositionTable* table, const Board& root)
         : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {
-        if (options_.neural && options_.neural_incremental) neural_.emplace(root);
+        if (options_.neural && options_.neural_incremental) neural_.emplace(root, model());
     }
 
     std::uint64_t nodes = 0;
@@ -304,9 +304,13 @@ private:
     std::array<Killers, max_search_ply + 1> killers_{};
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
 
+    const NeuralModel& model() const noexcept {
+        return options_.neural_model ? *options_.neural_model : builtin_neural_model();
+    }
+
     int static_evaluation(const Board& board) const {
         const int score = options_.neural ?
-            (neural_ ? neural_->evaluate(board.position().turn) : evaluate_neural(board)) :
+            (neural_ ? neural_->evaluate(board.position().turn) : evaluate_neural(board, model())) :
             (options_.positional ? evaluate_position(board) : evaluate_material(board));
         const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
         return std::clamp(score, -mate_score + reserved_plies + 1,
@@ -431,7 +435,8 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     order_moves(board, moves);
     result.best_move = moves.front();
     result.pv.push_back(moves.front());
-    result.score = options.neural ? evaluate_neural(board) :
+    result.score = options.neural ?
+        evaluate_neural(board, options.neural_model ? *options.neural_model : builtin_neural_model()) :
         (options.positional ? evaluate_position(board) : evaluate_material(board));
     if (claimable(board)) result.score = std::max(0, result.score);
     SearchContext one_shot_context;

@@ -8,9 +8,12 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <memory>
 #include <vector>
 
 namespace regicide {
+
+struct NeuralModel;
 
 inline constexpr int mate_score = 30000;
 inline constexpr int max_search_depth = 64;
@@ -38,6 +41,7 @@ struct SearchOptions {
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
     bool neural = false; // Overrides positional; default preserves classical evaluation.
     bool neural_incremental = true; // Only used when neural is enabled; false is the full oracle.
+    std::shared_ptr<const NeuralModel> neural_model{}; // Null selects the built-in model; owned by each worker.
 };
 
 struct SearchResult {

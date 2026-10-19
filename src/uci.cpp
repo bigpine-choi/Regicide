@@ -1,5 +1,6 @@
 #include "regicide/uci.hpp"
 #include "regicide/search.hpp"
+#include "regicide/evaluation.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -130,6 +131,7 @@ public:
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UseNeuralEvaluation type check default false");
             send("option name UseIncrementalNeuralEvaluation type check default true");
+            send("option name NeuralModelFile type string default <builtin>");
             send("option name UsePositionalEvaluation type check default true");
             send("option name UseQuiescence type check default true");
             send("option name UseTranspositionTable type check default true");
@@ -167,6 +169,23 @@ private:
         for (auto i = tokens.begin() + 2; i != value; ++i) {
             if (!option.empty()) option += ' ';
             option += *i;
+        }
+        if (option == "NeuralModelFile") {
+            std::string path;
+            if (value != tokens.end())
+                for (auto i = value + 1; i != tokens.end(); ++i) {
+                    if (!path.empty()) path += ' ';
+                    path += *i;
+                }
+            // Validate completely before replacing the current shared model.
+            // Session::handle has already joined any active search worker.
+            auto selected = path.empty() || path == "<builtin>" ?
+                std::shared_ptr<const NeuralModel>{} : load_neural_model(path);
+            options_.neural_model = std::move(selected);
+            context_.clear();
+            const auto& model = options_.neural_model ? *options_.neural_model : builtin_neural_model();
+            send("info string neural model checksum " + std::to_string(neural_model_checksum(model)));
+            return;
         }
         if (option == "Clear Hash") {
             if (value != tokens.end()) throw std::invalid_argument("Clear Hash is a button without a value");

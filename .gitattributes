@@ -16,3 +16,11 @@ tests/data/see_replication_openings_2026-10-18.json -text
 tests/data/see_cost_openings_2026-10-18.json -text
 tests/data/see_cost_freeze_2026-10-18.json -text
 docs/matches/2026-10-18-see-cost/** -text -whitespace
+
+# Keep the first training model, datasets and validation checksums byte-identical.
+docs/checks/2026-10-19-neural-training/** -text -whitespace
+# Preserve the exact measured source bytes/new-file line endings on Windows.
+src/neural.cpp -text whitespace=cr-at-eol
+tests/neural_model_tests.cpp text eol=lf
+tests/neural_training_integration.py text eol=lf
+requirements-training.txt text eol=lf
