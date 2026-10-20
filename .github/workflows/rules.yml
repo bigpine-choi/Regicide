@@ -69,6 +69,7 @@ jobs:
         run: python tests/human_play_tests.py build/regicide
       - if: runner.os == 'Windows'
         run: python tests/human_play_tests.py build/Release/regicide.exe
+      - run: python tests/think_time_tests.py
       - if: runner.os == 'Linux'
         run: python tests/handicap_play_tests.py build/regicide
       - if: runner.os == 'Windows'
@@ -93,4 +94,8 @@ jobs:
           python tests/handicap_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/archive_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/think_time_offline_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/think_time_live_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary --output build/think-time-live.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

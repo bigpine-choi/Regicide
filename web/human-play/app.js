@@ -11,6 +11,8 @@
   let state = null;
   let selected = null;
   let busy = true;
+  let timeSaving = false;
+  let timeNotice = "";
   let closed = false;
   let errorMessage = "";
   let pendingPromotion = [];
@@ -22,7 +24,7 @@
     byId("error-panel").hidden = !errorMessage;
   }
 
-  async function request(path, payload) {
+  async function request(path, payload, preserveSelection = false) {
     let response;
     try {
       response = await fetch(path, {
@@ -38,15 +40,32 @@
     try { data = await response.json(); }
     catch (_) { throw new Error("대국 상태를 읽지 못했습니다. 페이지를 새로 열어주세요."); }
     if (!response.ok) {
-      if (data.state) applyState(data.state);
+      if (data.state) applyState(data.state, preserveSelection);
       throw new Error(data.error || "요청을 처리하지 못했습니다. 다시 시도해주세요.");
     }
     return data;
   }
 
-  function applyState(next) {
+  function applyState(next, preserveSelection = false) {
+    // A settings response may arrive after the engine response. Never move
+    // the board or its independently versioned time setting backwards.
+    if (state && next.revision < state.revision) {
+      if (state.game_id === next.game_id &&
+          Number(next.engine.settings_revision || 0) > Number(state.engine.settings_revision || 0)) {
+        state.engine.movetime_ms = next.engine.movetime_ms;
+        state.engine.settings_revision = next.engine.settings_revision;
+        render();
+      }
+      return;
+    }
+    if (state?.game_id === next.game_id &&
+        Number(next.engine.settings_revision || 0) < Number(state.engine.settings_revision || 0)) {
+      next.engine.movetime_ms = state.engine.movetime_ms;
+      next.engine.settings_revision = state.engine.settings_revision;
+    }
+    const samePosition = state?.game_id === next.game_id && state.revision === next.revision;
     state = next;
-    selected = null;
+    if (!preserveSelection || !samePosition) selected = null;
     render();
   }
 
@@ -77,7 +96,7 @@
         const label = piece ? `${square}, ${colorName(pieceColor)} ${pieceNames[piece.toLowerCase()]}` : `${square}, 빈 칸`;
         button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : ""));
         button.setAttribute("aria-pressed", String(square === selected));
-        button.disabled = busy || closed || !state?.human_to_move;
+        button.disabled = busy || timeSaving || closed || !state?.human_to_move;
         if (piece) {
           const symbol = document.createElement("span");
           symbol.className = "piece " + pieceColor;
@@ -149,13 +168,19 @@
       byId("engine-version").textContent = state.engine.name || "Regicide v0.5.0";
       byId("human-detail").textContent = active ? `${colorName(humanColor)}으로 두고 있어요. 기물과 도착 칸을 눌러주세요.` : "이번 대국이 끝났습니다.";
     }
-    byId("new-game").disabled = !ready || busy;
-    byId("human-side").disabled = !ready || busy;
-    byId("think-time").disabled = !ready || busy;
-    byId("undo").disabled = !ready || busy || !state.can_undo;
-    byId("resign").disabled = !ready || busy || !active;
+    byId("new-game").disabled = !ready || busy || timeSaving;
+    byId("human-side").disabled = !ready || busy || timeSaving;
+    byId("think-time").disabled = !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
+    if (state && !timeSaving) byId("think-time").value = String(state.engine.movetime_ms);
+    const currentMS = state?.engine.active_movetime_ms;
+    byId("think-time-help").textContent = timeSaving ? "생각 시간을 저장하고 있습니다…" :
+      currentMS != null && currentMS !== state.engine.movetime_ms ?
+      `현재 수는 ${currentMS / 1000}초로 생각 중 · 다음 Regicide 수부터 ${state.engine.movetime_ms / 1000}초` :
+      timeNotice || "대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.";
+    byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
+    byId("resign").disabled = !ready || busy || timeSaving || !active;
     byId("download-pgn").disabled = !ready || busy;
-    byId("shutdown").disabled = !ready || busy;
+    byId("shutdown").disabled = !ready || busy || timeSaving;
     byId("connection-label").textContent = closed ? "프로그램 종료됨" : "내 컴퓨터에서 대국 중";
     const thinking = busy && ready && state.engine_to_move;
     byId("status-dot").classList.toggle("thinking", thinking);
@@ -171,7 +196,7 @@
   }
 
   async function mutate(path, payload = {}) {
-    if (busy || closed || !state) return;
+    if (busy || timeSaving || closed || !state) return;
     busy = true;
     showError("");
     selected = null;
@@ -181,6 +206,23 @@
       await engineMove();
     } catch (error) { showError(error.message); }
     finally { busy = false; render(); }
+  }
+
+  async function changeThinkTime() {
+    if (!state || closed || timeSaving || state.handicap_mode || (busy && !state.engine_to_move)) return;
+    const movetime = Number(byId("think-time").value);
+    timeSaving = true;
+    timeNotice = "";
+    showError("");
+    render();
+    try {
+      applyState(await request("/api/think-time", {
+        game_id: state.game_id, settings_revision: state.engine.settings_revision,
+        movetime_ms: movetime
+      }, true), true);
+      timeNotice = `${movetime / 1000}초로 저장했습니다. 다음 Regicide 수부터 적용됩니다.`;
+    } catch (error) { showError(error.message); }
+    finally { timeSaving = false; render(); }
   }
 
   function choosePromotion(moves) {
@@ -209,7 +251,7 @@
 
   boardElement.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-square]");
-    if (!button || busy || closed || !state?.human_to_move) return;
+    if (!button || busy || timeSaving || closed || !state?.human_to_move) return;
     const square = button.dataset.square;
     if (selected === square) { selected = null; render(); return; }
     if (selected) {
@@ -235,10 +277,11 @@
     event.preventDefault();
     void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value)});
   });
+  byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
   byId("resign").addEventListener("click", () => { void mutate("/api/resign"); });
   byId("shutdown").addEventListener("click", async () => {
-    if (busy || closed || !state) return;
+    if (busy || timeSaving || closed || !state) return;
     busy = true;
     showError("");
     render();

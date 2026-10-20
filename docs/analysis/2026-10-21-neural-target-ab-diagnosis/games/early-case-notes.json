@@ -1,0 +1,556 @@
+{
+  "by_losing_arm": {
+    "A": {
+      "A_child_at_least100cp_better": 1,
+      "A_minus_B_child_reference_cp_mean": -3.925925925925926,
+      "A_minus_B_child_reference_cp_median": 0,
+      "B_child_at_least100cp_better": 1,
+      "actual_100ms_move_matches_own10k": 20,
+      "exact_child_cp_comparisons": 27,
+      "opposite_arm10k_at_least100cp_better_than_actual": 0,
+      "opposite_arm10k_vs_actual_exact_cp_denominator": 27,
+      "positions": 27,
+      "same_A10k_B10k_move": 16
+    },
+    "B": {
+      "A_child_at_least100cp_better": 2,
+      "A_minus_B_child_reference_cp_mean": 9.26530612244898,
+      "A_minus_B_child_reference_cp_median": 0,
+      "B_child_at_least100cp_better": 0,
+      "actual_100ms_move_matches_own10k": 38,
+      "exact_child_cp_comparisons": 49,
+      "opposite_arm10k_at_least100cp_better_than_actual": 4,
+      "opposite_arm10k_vs_actual_exact_cp_denominator": 49,
+      "positions": 49,
+      "same_A10k_B10k_move": 28
+    }
+  },
+  "case_interpretations_ko": {
+    "23": "원래 B 실제 12...Nb4의 자식참조 -334cp에 비해 A10k Ne5는 -85cp다. B10k는 원래 수와 다른 Qh4+(-314cp)를 택한다. 루트 -93cp에서 불리한 선택을 하는 양상은 보이지만 10k B 대안을 실전 실제 수와 혼동하면 안 된다.",
+    "4": "A패배 위치에서는 B10k Qe5+의 자식참조 -506cp가 A10k Qb4+(-648cp)보다142cp 낫다. 그러나 원래 A 100ms 실제 수도 Qe5+이므로 고정노드 차이를 실제 A의 실수로 부르면 잘못이다. B가 언제나 나쁜 수를 고르는 것은 아니며 예산과 선택시점을 맞춘 비교가 필요하다.",
+    "78": "12...Ne4+는 원래 B 100ms 실제 수이면서 B10k 재검색 수도 같다. A10k는 Nbd7. 흑관점 공통 자식참조는 각각 -246과 -55cp로 191cp 차이다. 루트참조 -41cp여서 후기 패색 위치만 본 사례보다 진단 가치가 크다. 실전은 Nxe4 dxe4 d5 Ra6 dxc6 Qxd1 c7로 이어졌다. B의 10k 주변화는 d5 대신 Nxc6를 예상했다. 유한 탐색의 수순 예측 차이가 확인되지만 이 한 수가 49패 전체의 원인이라는 뜻은 아니다."
+  },
+  "cases": [
+    {
+      "actual_san_next12": [
+        "Ne4+",
+        "Nxe4",
+        "dxe4",
+        "d5",
+        "Ra6",
+        "dxc6",
+        "Qxd1",
+        "c7",
+        "Nc6",
+        "Rxd1",
+        "Ra8",
+        "Bb6"
+      ],
+      "actual_search": {
+        "backtrack_opportunity": true,
+        "color": "black",
+        "depth": 4,
+        "elapsed_seconds": 0.08299,
+        "engine_time_seconds": 0.08,
+        "fen_before": "1n2kb1r/rp2pppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R b k - 9 12",
+        "immediate_backtrack": false,
+        "move": "f6e4",
+        "nodes": 37345,
+        "ply": 24,
+        "pv": [
+          "f6e4",
+          "c3e4",
+          "d5e4",
+          "e5c4"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "role": "candidate",
+        "score": {
+          "cp": 25,
+          "lowerbound": false,
+          "mate": null,
+          "pov": "mover",
+          "upperbound": false
+        },
+        "seldepth": 21
+      },
+      "candidate_child_mover_cp": {
+        "A10k": -55,
+        "B10k": -246,
+        "C100k": -41,
+        "played": -246
+      },
+      "candidate_moves_san": {
+        "A10k": "Nbd7",
+        "B10k": "Ne4+",
+        "C100k": "e6",
+        "played": "Ne4+"
+      },
+      "classical_root_mover_cp": -41,
+      "family_id": "ab2-match100-normal-012",
+      "fen_before": "1n2kb1r/rp2pppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R b k - 9 12",
+      "game": 78,
+      "history": [
+        "a2a3",
+        "d7d5",
+        "h2h3",
+        "c7c6",
+        "f2f4",
+        "d8d6",
+        "c2c4",
+        "a7a5",
+        "d2d4",
+        "d6g6",
+        "e1f2",
+        "c8d7",
+        "c4d5",
+        "c6d5",
+        "g1f3",
+        "d7c6",
+        "f3e5",
+        "g6d6",
+        "b1c3",
+        "a8a7",
+        "c1e3",
+        "g8f6",
+        "a1b1"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "losing_arm": "B",
+      "ply": 24,
+      "queries": [
+        {
+          "depth": 3,
+          "exact_white_cp": 28,
+          "fen": "1n2kb1r/rp2pppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R b k - 9 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Nbd7",
+            "b4",
+            "Rg8"
+          ],
+          "query_id": "game-0078-sixth-decision/A10k"
+        },
+        {
+          "depth": 3,
+          "exact_white_cp": -54,
+          "fen": "1n2kb1r/rp2pppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R b k - 9 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Ne4+",
+            "Nxe4",
+            "dxe4",
+            "Nxc6",
+            "Nxc6"
+          ],
+          "query_id": "game-0078-sixth-decision/B10k"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 41,
+          "fen": "1n2kb1r/rp2pppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R b k - 9 12",
+          "nodes": 100000,
+          "pv_san": [
+            "e6",
+            "Kg1",
+            "Be7",
+            "b4",
+            "O-O"
+          ],
+          "query_id": "game-0078-sixth-decision/C100k"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 55,
+          "fen": "4kb1r/rp1npppp/2bq1n2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R w k - 10 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Kg1",
+            "e6",
+            "Nxd7",
+            "Nxd7",
+            "b4"
+          ],
+          "query_id": "game-0078-sixth-decision/child/b8d7"
+        },
+        {
+          "depth": 4,
+          "exact_white_cp": 41,
+          "fen": "1n2kb1r/rp3ppp/2bqpn2/p2pN3/3P1P2/P1N1B2P/1P2PKP1/1R1Q1B1R w k - 0 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Kg1",
+            "Be7",
+            "b4",
+            "O-O"
+          ],
+          "query_id": "game-0078-sixth-decision/child/e7e6"
+        },
+        {
+          "depth": 6,
+          "exact_white_cp": 246,
+          "fen": "1n2kb1r/rp2pppp/2bq4/p2pN3/3PnP2/P1N1B2P/1P2PKP1/1R1Q1B1R w k - 10 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Nxe4",
+            "dxe4",
+            "d5",
+            "Ra8",
+            "dxc6",
+            "Nxc6"
+          ],
+          "query_id": "game-0078-sixth-decision/child/f6e4"
+        }
+      ],
+      "query_id": "game-0078-sixth-decision",
+      "seed": 20261022
+    },
+    {
+      "actual_san_next12": [
+        "Nb4",
+        "e4",
+        "Bc5",
+        "Bf4",
+        "Qh4+",
+        "g3",
+        "Qh3",
+        "Bxc7",
+        "Qg2",
+        "Kd2",
+        "Qf3",
+        "Kc1"
+      ],
+      "actual_search": {
+        "backtrack_opportunity": true,
+        "color": "black",
+        "depth": 3,
+        "elapsed_seconds": 0.081794,
+        "engine_time_seconds": 0.08,
+        "fen_before": "2bq1rk1/rpp3pp/p1nb4/3P4/2P3p1/2N1P3/PP2N1PP/R1BQK2R b KQ - 0 12",
+        "immediate_backtrack": false,
+        "move": "c6b4",
+        "nodes": 38066,
+        "ply": 24,
+        "pv": [
+          "c6b4",
+          "e2f4",
+          "c8d7"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "role": "candidate",
+        "score": {
+          "cp": -60,
+          "lowerbound": false,
+          "mate": null,
+          "pov": "mover",
+          "upperbound": false
+        },
+        "seldepth": 20
+      },
+      "candidate_child_mover_cp": {
+        "A10k": -85,
+        "B10k": -314,
+        "C100k": -85,
+        "played": -334
+      },
+      "candidate_moves_san": {
+        "A10k": "Ne5",
+        "B10k": "Qh4+",
+        "C100k": "Ne5",
+        "played": "Nb4"
+      },
+      "classical_root_mover_cp": -93,
+      "family_id": "ab2-match100-normal-003",
+      "fen_before": "2bq1rk1/rpp3pp/p1nb4/3P4/2P3p1/2N1P3/PP2N1PP/R1BQK2R b KQ - 0 12",
+      "game": 23,
+      "history": [
+        "f2f3",
+        "b8c6",
+        "f3f4",
+        "g8h6",
+        "d2d4",
+        "h6g4",
+        "e2e3",
+        "f7f5",
+        "c2c4",
+        "a7a6",
+        "f1e2",
+        "e7e5",
+        "e2g4",
+        "f5g4",
+        "f4e5",
+        "d7d6",
+        "e5d6",
+        "f8d6",
+        "g1e2",
+        "e8g8",
+        "b1c3",
+        "a8a7",
+        "d4d5"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "losing_arm": "B",
+      "ply": 24,
+      "queries": [
+        {
+          "depth": 3,
+          "exact_white_cp": 81,
+          "fen": "2bq1rk1/rpp3pp/p1nb4/3P4/2P3p1/2N1P3/PP2N1PP/R1BQK2R b KQ - 0 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Ne5",
+            "Qd4",
+            "c5"
+          ],
+          "query_id": "game-0023-sixth-decision/A10k"
+        },
+        {
+          "depth": 2,
+          "exact_white_cp": 45,
+          "fen": "2bq1rk1/rpp3pp/p1nb4/3P4/2P3p1/2N1P3/PP2N1PP/R1BQK2R b KQ - 0 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Qh4+",
+            "g3"
+          ],
+          "query_id": "game-0023-sixth-decision/B10k"
+        },
+        {
+          "depth": 4,
+          "exact_white_cp": 93,
+          "fen": "2bq1rk1/rpp3pp/p1nb4/3P4/2P3p1/2N1P3/PP2N1PP/R1BQK2R b KQ - 0 12",
+          "nodes": 100000,
+          "pv_san": [
+            "Ne5",
+            "b3",
+            "Bd7",
+            "Nd4"
+          ],
+          "query_id": "game-0023-sixth-decision/C100k"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 334,
+          "fen": "2bq1rk1/rpp3pp/p2b4/3P4/1nP3p1/2N1P3/PP2N1PP/R1BQK2R w KQ - 1 13",
+          "nodes": 100000,
+          "pv_san": [
+            "a3",
+            "Nc6",
+            "dxc6",
+            "bxc6",
+            "Bd2"
+          ],
+          "query_id": "game-0023-sixth-decision/child/c6b4"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 85,
+          "fen": "2bq1rk1/rpp3pp/p2b4/3Pn3/2P3p1/2N1P3/PP2N1PP/R1BQK2R w KQ - 1 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Qd4",
+            "c5",
+            "dxc6",
+            "Nxc6",
+            "Qe4"
+          ],
+          "query_id": "game-0023-sixth-decision/child/c6e5"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 314,
+          "fen": "2b2rk1/rpp3pp/p1nb4/3P4/2P3pq/2N1P3/PP2N1PP/R1BQK2R w KQ - 1 13",
+          "nodes": 100000,
+          "pv_san": [
+            "g3",
+            "Qf6",
+            "dxc6",
+            "Qf2+",
+            "Kd2",
+            "bxc6"
+          ],
+          "query_id": "game-0023-sixth-decision/child/d8h4"
+        }
+      ],
+      "query_id": "game-0023-sixth-decision",
+      "seed": 20261022
+    },
+    {
+      "actual_san_next12": [
+        "Qe5+",
+        "Ne2",
+        "f3",
+        "d6",
+        "cxd6",
+        "Nc7+",
+        "Kd8",
+        "Nxa8",
+        "Qxe2+",
+        "Qxe2",
+        "fxe2",
+        "Bg5"
+      ],
+      "actual_search": {
+        "backtrack_opportunity": false,
+        "color": "black",
+        "depth": 4,
+        "elapsed_seconds": 0.081916,
+        "engine_time_seconds": 0.08,
+        "fen_before": "r3kbnr/p1p1p1p1/1p1q4/1N1P4/2P2p2/3Q4/PP3P1P/R1B1K1NR b KQkq - 0 12",
+        "immediate_backtrack": false,
+        "move": "d6e5",
+        "nodes": 33528,
+        "ply": 24,
+        "pv": [
+          "d6e5",
+          "g1e2",
+          "f4f3",
+          "d3f3",
+          "h8h2",
+          "h1h2",
+          "e5h2"
+        ],
+        "quiet_nonpawn_not_in_check": true,
+        "role": "baseline",
+        "score": {
+          "cp": -384,
+          "lowerbound": false,
+          "mate": null,
+          "pov": "mover",
+          "upperbound": false
+        },
+        "seldepth": 22
+      },
+      "candidate_child_mover_cp": {
+        "A10k": -648,
+        "B10k": -506,
+        "C100k": -506,
+        "played": -506
+      },
+      "candidate_moves_san": {
+        "A10k": "Qb4+",
+        "B10k": "Qe5+",
+        "C100k": "Qe5+",
+        "played": "Qe5+"
+      },
+      "classical_root_mover_cp": -506,
+      "family_id": "ab2-match100-normal-000",
+      "fen_before": "r3kbnr/p1p1p1p1/1p1q4/1N1P4/2P2p2/3Q4/PP3P1P/R1B1K1NR b KQkq - 0 12",
+      "game": 4,
+      "history": [
+        "g2g4",
+        "b8c6",
+        "c2c4",
+        "h7h5",
+        "b1a3",
+        "f7f5",
+        "f1h3",
+        "f5f4",
+        "e2e4",
+        "d7d5",
+        "d2d3",
+        "b7b6",
+        "e4d5",
+        "h5g4",
+        "h3g4",
+        "c8g4",
+        "d1g4",
+        "c6e5",
+        "g4f5",
+        "d8d6",
+        "a3b5",
+        "e5d3",
+        "f5d3"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "losing_arm": "A",
+      "ply": 24,
+      "queries": [
+        {
+          "depth": 2,
+          "exact_white_cp": 358,
+          "fen": "r3kbnr/p1p1p1p1/1p1q4/1N1P4/2P2p2/3Q4/PP3P1P/R1B1K1NR b KQkq - 0 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Qb4+",
+            "Ke2"
+          ],
+          "query_id": "game-0004-sixth-decision/A10k"
+        },
+        {
+          "depth": 3,
+          "exact_white_cp": 341,
+          "fen": "r3kbnr/p1p1p1p1/1p1q4/1N1P4/2P2p2/3Q4/PP3P1P/R1B1K1NR b KQkq - 0 12",
+          "nodes": 10000,
+          "pv_san": [
+            "Qe5+",
+            "Qe2",
+            "Qxe2+",
+            "Nxe2"
+          ],
+          "query_id": "game-0004-sixth-decision/B10k"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 506,
+          "fen": "r3kbnr/p1p1p1p1/1p1q4/1N1P4/2P2p2/3Q4/PP3P1P/R1B1K1NR b KQkq - 0 12",
+          "nodes": 100000,
+          "pv_san": [
+            "Qe5+",
+            "Qe2",
+            "Qxe2+",
+            "Nxe2",
+            "O-O-O",
+            "Bxf4"
+          ],
+          "query_id": "game-0004-sixth-decision/C100k"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 648,
+          "fen": "r3kbnr/p1p1p1p1/1p6/1N1P4/1qP2p2/3Q4/PP3P1P/R1B1K1NR w KQkq - 1 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Bd2",
+            "Qxb2",
+            "Bc3",
+            "Qxa1+",
+            "Bxa1"
+          ],
+          "query_id": "game-0004-sixth-decision/child/d6b4"
+        },
+        {
+          "depth": 5,
+          "exact_white_cp": 506,
+          "fen": "r3kbnr/p1p1p1p1/1p6/1N1Pq3/2P2p2/3Q4/PP3P1P/R1B1K1NR w KQkq - 1 13",
+          "nodes": 100000,
+          "pv_san": [
+            "Qe2",
+            "Qxe2+",
+            "Nxe2",
+            "O-O-O",
+            "Bxf4"
+          ],
+          "query_id": "game-0004-sixth-decision/child/d6e5"
+        }
+      ],
+      "query_id": "game-0004-sixth-decision",
+      "seed": 20261021
+    }
+  ],
+  "interpretation": [
+    "All 76 decisive games contribute one sixth searched decision, fixed before the new engine probes.",
+    "These counterfactuals use the own classical 100k engine, a finite reference sharing the training teacher; they do not prove best moves.",
+    "A10k and B10k have equal node budgets, unlike the original 100ms game. Played moves are retained separately.",
+    "Root and fresh child searches have different horizons. Candidate quality comparisons use equal fresh child budgets, not root minus child.",
+    "The highlighted examples are explanatory case selection after exploratory analysis, not an independent success-rate test."
+  ],
+  "schema_version": 1,
+  "source_sha256": {
+    "docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\game-comparisons.json": "b6278d27c867052b4d096d5783fbc2e5eb7018d3199b1f8345f8427ed2683249",
+    "docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\queries.jsonl": "c568f265e2f4214239d33498106fe241957e2a99f75cb47fce25bb3826f81bf7",
+    "docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-games\\selected-positions.jsonl": "6012f51882693599383a99a3ce780a889b928ec8be5801516abdc4a6cf197116",
+    "docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\games\\early-case-notes.py": "67f5170c65262b1fa9968baa3537f0ebe4e558b9ff09df2d562461ad30017beb",
+    "docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\matches-100ms\\match.json": "b8432f01d05629f0110e22934760aa90a7edab3f2c1461609abd86738b6621fa"
+  }
+}

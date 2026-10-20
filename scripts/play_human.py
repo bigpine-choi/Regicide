@@ -15,6 +15,7 @@ import secrets
 import sys
 import tempfile
 import threading
+import time
 import uuid
 import webbrowser
 
@@ -43,6 +44,9 @@ class HumanGame:
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10))
         self._lock = threading.RLock()
+        self._search_lock = threading.Lock()
+        self._engine_searching = False
+        self._active_movetime_ms = None
         self._engine = None
         self.revision = 0
         try:
@@ -64,6 +68,9 @@ class HumanGame:
         self.board = chess.Board()
         self.human_color = chess.WHITE if color == "white" else chess.BLACK
         self.movetime_ms = movetime_ms
+        self._settings_revision = 0
+        self._time_settings_events = []
+        self._engine_movetimes = {}
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -79,8 +86,43 @@ class HumanGame:
         self._save()
 
     def _check_revision(self, revision):
+        if not self._game_open:
+            raise ValueError("종료된 대국입니다. 대국 프로그램을 다시 실행해 주세요.")
         if type(revision) is not int or revision != self.revision:
             raise RevisionError("다른 작업이 먼저 반영됐습니다. 현재 체스판에서 다시 선택해 주세요.")
+
+    def _require_idle(self):
+        if self._engine_searching:
+            raise ValueError("Regicide가 생각하고 있습니다. 현재 수가 끝나면 다시 선택해 주세요.")
+
+    @staticmethod
+    def _validate_movetime(movetime_ms):
+        if type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
+            raise ValueError("100~5000ms의 생각 시간을 선택해 주세요.")
+
+    def set_think_time(self, movetime_ms, game_id, settings_revision):
+        """Persist the next search budget without changing the board revision.
+
+        Settings have their own revision so a time change cannot invalidate an
+        already submitted engine request. The game ID prevents an old window
+        from applying its setting to a newly started game.
+        """
+        with self._lock:
+            if not self._game_open or game_id != self.game_id:
+                raise RevisionError("대국이 바뀌었습니다. 현재 대국에서 생각 시간을 다시 선택해 주세요.")
+            if type(settings_revision) is not int or settings_revision != self._settings_revision:
+                raise RevisionError("생각 시간 설정이 먼저 바뀌었습니다. 다시 선택해 주세요.")
+            self._require_no_handicap()
+            self._validate_movetime(movetime_ms)
+            if movetime_ms != self.movetime_ms:
+                self._time_settings_events.append({
+                    "at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "after_ply": len(self.board.move_stack), "from_ms": self.movetime_ms,
+                    "to_ms": movetime_ms, "active_search_ms": self._active_movetime_ms})
+                self.movetime_ms = movetime_ms
+                self._settings_revision += 1
+                self._save()
+            return self.state()
 
     def _outcome(self):
         if self._override:
@@ -92,7 +134,7 @@ class HumanGame:
         with self._lock:
             result, termination = self._outcome()
             handicap_mode = self._handicap_backup is not None
-            active = result == "*" and not self.error
+            active = self._game_open and result == "*" and not self.error
             human_turn = active and not handicap_mode and self.board.turn == self.human_color
             engine_turn = active and not handicap_mode and self.board.turn != self.human_color
             names = {"checkmate": "체크메이트", "stalemate": "스테일메이트",
@@ -102,6 +144,8 @@ class HumanGame:
                      "resignation": "기권"}
             if handicap_mode:
                 status = "핸디캡 · Regicide 대신 두세요"
+            elif not self._game_open and result == "*":
+                status = "종료된 대국입니다"
             elif self.error:
                 status = "엔진 응답에 문제가 생겼습니다. 기보는 보존됐습니다. 새 대국으로 다시 시작해 주세요."
             elif result == "1/2-1/2":
@@ -125,7 +169,7 @@ class HumanGame:
                 replay.push(move)
             # Include a human move that itself ended the game (there may be no
             # engine reply). The initial engine opening is still retained.
-            can_undo = (not handicap_mode and bool(self.board.move_stack) and
+            can_undo = (self._game_open and not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
             return {"revision": self.revision, "game_id": self.game_id,
                     "started_at": self.started_at, "updated_at": self.updated_at,
@@ -142,15 +186,19 @@ class HumanGame:
                     "in_check": self.board.is_check(),
                     "last_move": self.board.peek().uci() if self.board.move_stack else None,
                     "can_undo": can_undo, "error": self.error,
+                    "engine_thinking": self._engine_searching,
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
+                               "settings_revision": self._settings_revision,
+                               "active_movetime_ms": self._active_movetime_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256}}
 
     def new_game(self, color, movetime_ms, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             self._require_no_handicap()
             if color not in ("white", "black") or type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
@@ -161,6 +209,7 @@ class HumanGame:
     def human_move(self, uci, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             if not self.state()["human_to_move"]:
                 raise ValueError("지금은 당신 차례가 아닙니다.")
             if not isinstance(uci, str) or len(uci) not in (4, 5):
@@ -177,29 +226,55 @@ class HumanGame:
             return self.state()
 
     def engine_move(self, revision):
-        with self._lock:
-            self._check_revision(revision)
-            if not self.state()["engine_to_move"]:
-                raise ValueError("지금은 Regicide 차례가 아닙니다.")
+        # The search owns its engine transport, but releases the board lock so
+        # time settings and state reads remain responsive during engine.play.
+        with self._search_lock:
+            with self._lock:
+                self._check_revision(revision)
+                if not self.state()["engine_to_move"]:
+                    raise ValueError("지금은 Regicide 차례가 아닙니다.")
+                try:
+                    self._ensure_engine()
+                except Exception as exc:
+                    self.error = f"{type(exc).__name__}: {exc}"
+                    self.revision += 1
+                    self._save()
+                    return self.state()
+                board = self.board.copy(stack=True)
+                movetime_ms = self.movetime_ms
+                token = self._game_token
+                game_id = self.game_id
+                self._engine_searching = True
+                self._active_movetime_ms = movetime_ms
+            reply, failure = None, None
             try:
-                self._ensure_engine()
-                reply = self._engine.play(self.board, chess.engine.Limit(time=self.movetime_ms / 1000),
-                                          game=self._game_token, info=chess.engine.INFO_ALL)
-                if reply.move is None or reply.move not in self.board.legal_moves:
+                reply = self._engine.play(board, chess.engine.Limit(time=movetime_ms / 1000),
+                                          game=token, info=chess.engine.INFO_ALL)
+                if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
-                self.board.push(reply.move)
-            except Exception as exc:
-                self.error = f"{type(exc).__name__}: {exc}"
-                if self._engine is not None:
-                    self._engine.close()
-                    self._engine = None
-            self.revision += 1
-            self._save()
-            return self.state()
+            except BaseException as exc:
+                failure = f"{type(exc).__name__}: {exc}"
+            with self._lock:
+                self._engine_searching = False
+                self._active_movetime_ms = None
+                if self.game_id != game_id or self._game_token is not token or self.revision != revision:
+                    failure = "RuntimeError: 검색 중 대국 상태가 바뀌어 이전 응답을 적용하지 않았습니다."
+                if failure is None:
+                    self.board.push(reply.move)
+                    self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
+                else:
+                    self.error = failure
+                    if self._engine is not None:
+                        self._engine.close()
+                        self._engine = None
+                self.revision += 1
+                self._save()
+                return self.state()
 
     def undo(self, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             self._require_no_handicap()
             if not self.state()["can_undo"]:
                 raise ValueError("되돌릴 당신의 수가 없습니다.")
@@ -211,6 +286,8 @@ class HumanGame:
             self.error = None
             self._override = None
             self._forced_plies.intersection_update(range(1, len(self.board.move_stack) + 1))
+            self._engine_movetimes = {ply: ms for ply, ms in self._engine_movetimes.items()
+                                     if ply <= len(self.board.move_stack)}
             self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
@@ -221,6 +298,7 @@ class HumanGame:
     def resign(self, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             self._require_no_handicap()
             if self._outcome()[0] != "*" or self.error:
                 raise ValueError("이미 종료된 대국입니다.")
@@ -237,6 +315,7 @@ class HumanGame:
         """Preview a replacement without overwriting the durable original line."""
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             self._require_no_handicap()
             if type(ply) is not int or not 1 <= ply <= len(self.board.move_stack):
                 raise ValueError("바꿀 Regicide의 수를 선택해 주세요.")
@@ -247,11 +326,14 @@ class HumanGame:
                 raise ValueError("당신의 수가 아닌 Regicide의 수를 선택해 주세요.")
             self._handicap_backup = {"board": self.board.copy(stack=True),
                                      "forced_plies": self._forced_plies.copy(),
+                                     "engine_movetimes": self._engine_movetimes.copy(),
                                      "override": self._override, "error": self.error,
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
             self.board = preview
             self._forced_plies.intersection_update(range(1, ply))
+            self._engine_movetimes = {number: ms for number, ms in self._engine_movetimes.items()
+                                     if number < ply}
             self.error = None
             self._override = None
             self.revision += 1
@@ -260,6 +342,7 @@ class HumanGame:
     def forced_move(self, uci, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             if self._handicap_backup is None or self.board.turn == self.human_color:
                 raise ValueError("먼저 바꿀 Regicide의 수를 선택해 주세요.")
             if not isinstance(uci, str) or len(uci) not in (4, 5):
@@ -293,11 +376,13 @@ class HumanGame:
     def cancel_handicap(self, revision):
         with self._lock:
             self._check_revision(revision)
+            self._require_idle()
             if self._handicap_backup is None:
                 raise ValueError("현재 바꾸고 있는 Regicide의 수가 없습니다.")
             backup = self._handicap_backup
             self.board = backup["board"]
             self._forced_plies = backup["forced_plies"]
+            self._engine_movetimes = backup["engine_movetimes"]
             self.error = backup["error"]
             self._override = backup["override"]
             self.updated_at = backup["updated_at"]
@@ -312,6 +397,7 @@ class HumanGame:
             backup = self._handicap_backup
             board = backup["board"] if backup else self.board
             forced_plies = backup["forced_plies"] if backup else self._forced_plies
+            movetimes = backup["engine_movetimes"] if backup else self._engine_movetimes
             error = backup["error"] if backup else self.error
             game = chess.pgn.Game.from_board(board)
             result, termination = backup["outcome"] if backup else self._outcome()
@@ -326,9 +412,13 @@ class HumanGame:
                                  "Termination": "unterminated" if result == "*" else "normal",
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
+            if movetimes or self._time_settings_events:
+                game.headers["EngineMoveTimePolicy"] = "Header is latest setting; move comments record each search budget"
             for ply, node in enumerate(game.mainline(), 1):
                 if ply in forced_plies:
                     node.comment = "User-forced Regicide move (handicap)"
+                elif ply in movetimes:
+                    node.comment = f"Regicide think time: {movetimes[ply]} ms"
             return str(game) + "\n\n"
 
     def _record_status(self):
@@ -355,6 +445,8 @@ class HumanGame:
                   "uci_moves": [move.uci() for move in self.board.move_stack],
                   "state": state, "draw_policy": "always claim available threefold/50-move draws",
                   "handicap_events": self._handicap_events,
+                  "engine_movetimes_ms": self._engine_movetimes,
+                  "time_settings_events": self._time_settings_events,
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
@@ -364,7 +456,7 @@ class HumanGame:
             temporary.replace(target)
 
     def close(self):
-        with self._lock:
+        with self._search_lock, self._lock:
             try:
                 if getattr(self, "_game_open", False):
                     self._game_open = False
@@ -412,16 +504,46 @@ class HumanHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _forbidden(self, message):
+        # Closing a Windows TCP socket with an unread POST body can reset the
+        # connection before the client receives its 403. Discard only a small
+        # declared body, with a bounded wait; rejected data is never processed.
+        if self.command == "POST":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = 0
+            if 0 < length <= 4096:
+                timeout = self.connection.gettimeout()
+                try:
+                    deadline = time.monotonic() + 0.1
+                    remaining = length
+                    while remaining > 0:
+                        wait = deadline - time.monotonic()
+                        if wait <= 0:
+                            break
+                        self.connection.settimeout(wait)
+                        chunk = self.rfile.read1(remaining)
+                        if not chunk:
+                            break
+                        remaining -= len(chunk)
+                except (TimeoutError, OSError):
+                    pass
+                finally:
+                    self.connection.settimeout(timeout)
+        self.close_connection = True
+        self._send(403, {"error": message})
+
     def _allowed(self, api=False):
         if self.headers.get("Host") != self.server.origin.removeprefix("http://"):
-            self._send(403, {"error": "허용되지 않은 주소입니다."})
+            self._forbidden("허용되지 않은 주소입니다.")
             return False
         origin = self.headers.get("Origin")
         if origin is not None and origin != self.server.origin:
-            self._send(403, {"error": "같은 대국 화면에서만 요청할 수 있습니다."})
+            self._forbidden("같은 대국 화면에서만 요청할 수 있습니다.")
             return False
         if api and not secrets.compare_digest(self.headers.get("X-Regicide-Token", ""), self.server.token):
-            self._send(403, {"error": "대국 화면을 새로 열어 주세요."})
+            self._forbidden("대국 화면을 새로 열어 주세요.")
             return False
         return True
 
@@ -484,6 +606,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             revision = data.get("revision")
             game = self.server.game
             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision),
+                       "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
+                           data.get("game_id"), data.get("settings_revision")),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),
                        "/api/engine": lambda: game.engine_move(revision),
                        "/api/handicap": lambda: game.begin_handicap(data.get("ply"), revision),
@@ -492,7 +616,9 @@ class HumanHandler(BaseHTTPRequestHandler):
                        "/api/undo": lambda: game.undo(revision),
                        "/api/resign": lambda: game.resign(revision)}
             if self.path == "/api/shutdown":
-                game._check_revision(revision)
+                with game._lock:
+                    game._check_revision(revision)
+                    game._require_idle()
                 self._send(200, {"closed": True})
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
             elif self.path in actions:

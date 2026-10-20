@@ -1,0 +1,26 @@
+name: Paired neural target experiment tools
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tools:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-training.txt
+      - run: python tests/neural_target_ab_data_tests.py
+      - run: python tests/neural_target_ab_training_tests.py
+      - run: python tests/neural_target_ab_match_tests.py
+      - run: python tests/neural_target_ab_audit_tests.py

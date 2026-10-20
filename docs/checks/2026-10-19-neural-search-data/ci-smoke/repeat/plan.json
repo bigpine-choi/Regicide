@@ -1,0 +1,170 @@
+{
+  "config": {
+    "max_plies": 24,
+    "max_searches": 192,
+    "max_seconds": 60.0,
+    "nodes": 2000,
+    "quiet": true,
+    "sample_every": 3,
+    "search_timeout": 10.0,
+    "seed": 20261019,
+    "static_control": true,
+    "validation_fraction": 0.25
+  },
+  "created_utc": "2026-10-19T07:42:37.532058+00:00",
+  "engine": {
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-precision-runtime\\regicide.exe",
+    "sha256": "598ebec433334b2ce053d0ed6b143fbfd34f9dd3a76557adb62764dcd940c705"
+  },
+  "environment": {
+    "chess": "1.11.2",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.16"
+  },
+  "families": {
+    "minor-a": "validation",
+    "open-a": "train",
+    "open-b": "validation",
+    "open-c": "train",
+    "open-d": "train",
+    "pawn-a": "train",
+    "queen-a": "train",
+    "rook-a": "train"
+  },
+  "node_upper_bound": 384000,
+  "planned_games": 8,
+  "policy": {
+    "identity": "Global mirror-normalized piece-only identity for current v2 input, plus exact initial-FEN/history hash",
+    "node_budget": "One go nodes N per position, no movetime; last completed iteration score",
+    "results": "Only python-chess outcome(claim_draw=True) yields WDL; truncated games have null result",
+    "sampling": "Root before each move, generated ply modulo sample_every equals zero; quiet exact cp only",
+    "scope": "Data generation only; no model training, deployment or strength estimate",
+    "split": "Seed families stratified by source kind before play; related variants must share a family",
+    "teacher": "Own Regicide classical evaluation with own fixed-node search",
+    "tt": "New game token for every query; empty TT; full initial FEN and history retained"
+  },
+  "provenance": {
+    "binary_build_commit": null,
+    "binary_build_note": "Executable SHA is recorded separately. Checkout HEAD alone does not attest its build revision.",
+    "checkout_head": "5ff2074aa142f915260739a8f0f3c2ddb8586ee5",
+    "checkout_status": "M .gitattributes\n M .github/workflows/rules.yml\n M docs/GODOT_PLAY.md\n M docs/HUMAN_PLAY.md\n M godot/scripts/main.gd\n M scripts/game_archive.py\n M scripts/play_human.py\n M web/human-play/app.js\n M web/human-play/index.html\n?? .github/workflows/neural-search-data.yml\n?? docs/NEURAL_SEARCH_DATA.md\n?? docs/checks/2026-10-19-live-think-time/\n?? docs/checks/2026-10-19-neural-search-data/\n?? docs/experiments/2026-10-19-live-think-time.md\n?? docs/experiments/2026-10-19-neural-long-time-plan.md\n?? docs/experiments/2026-10-19-neural-long-time-results.md\n?? docs/matches/2026-10-19-neural-long-time/\n?? godot/tests/think_time_capture_scene.gd\n?? godot/tests/think_time_live_tests.gd\n?? godot/tests/think_time_offline_tests.gd\n?? scripts/generate_neural_long_time_openings.py\n?? scripts/neural_search_data/\n?? scripts/run_neural_long_time_comparison.py\n?? tests/audit_neural_extra_time_prefix.py\n?? tests/audit_neural_extra_time_results.py\n?? tests/audit_neural_long_time_results.py\n?? tests/data/neural_long_time_openings_2026-10-19.json\n?? tests/neural_long_time_driver_tests.py\n?? tests/neural_search_data/\n?? tests/think_time_live_tests.py\n?? tests/think_time_tests.py\n?? tests/think_time_web_tests.js",
+    "source_sha256": {
+      "include/regicide/board.hpp": "82314803540f259b4483e70b499c4735f5ed5e9e33c8a2276681abca9c6ff5af",
+      "include/regicide/evaluation.hpp": "532be244f74bbd7a159b889de77eba284549431a46a6a517b59253bbf66a3129",
+      "include/regicide/search.hpp": "64fa7eba6af4c05356e1f76daa0c0730aa004db6732ad5aa286aa70ca55b1302",
+      "include/regicide/see.hpp": "2f7a66098e9a95ddf7c3b9089394e6900010934805d9d90205a00984d35eb6d3",
+      "include/regicide/transposition.hpp": "9bb619666060dbf583eea104109c6cd93b4676fa80ce04af4ec9fcbd00dba5e1",
+      "include/regicide/uci.hpp": "0bb84a9d0e0f7c1b6d91a54c4cfe2ad6ddeda9beba4d5ff5ed941d323c581bf5",
+      "scripts/neural_search_data/__init__.py": "20b1814d4576102cf3f37a6048688a5a7efeaba416cf8051a0aa07e3398f6ccd",
+      "scripts/neural_search_data/__main__.py": "6d6b1f1f936562d69cb5676cb13208b4eadbb76c221f0edbbc28be763476a035",
+      "scripts/neural_search_data/engine.py": "d7817ad87b95be4f9201d93973f2093a906296710aec1d972bd838b37b7b4049",
+      "scripts/neural_search_data/generate.py": "33bb9d7ba49721db6e8a99f6bc18dbd0343834cbeb4e052a3204c6cc18034535",
+      "scripts/neural_search_data/schema.py": "917faea94fe25382b0026e5dcc69f60bf26067c43122797bde77d85ecca18871",
+      "src/board.cpp": "f2138847cc0a250ac363c1ec7874eed34c8114972cbe231fd29f08f45fba98e1",
+      "src/evaluation.cpp": "283fb58acd8eb805361357900fb422c3e646f96da8a65c71aee509c1d43c543b",
+      "src/main.cpp": "1b579e562a46728acd039e41e7bcf116b879df328ad52fa82d27cfd93baeef29",
+      "src/neural.cpp": "effdf10b2facae52abeabe639b162cb540bd71506ae66c72e8d971bde72bbd33",
+      "src/search.cpp": "f1f553d3f4032c53f622e1e812589d05cd0da4bdc78c2a06acc94000bd8c4ee6",
+      "src/see.cpp": "3174e4a235165571158efa2c4d000594ac270488c03f377a09ed655812d8a6cb",
+      "src/transposition.cpp": "6f2c44c6c9e4d0298d696fd381b50e1df892cc0ece9031c3ba05aa2221fe2054",
+      "src/uci.cpp": "8e88087f2f8a82dcf8726ae82a7594d16b9322b306d100ed14a1aedf7f1bc66a"
+    }
+  },
+  "schema_version": 2,
+  "search_upper_bound": 192,
+  "seed_bank_sha256": "69615f8491ace2a5a771f7e30e1a874580d550303897c686218053ea35e9bcc5",
+  "seeds": [
+    {
+      "description": "Own legal four-ply opening prefix A",
+      "family_id": "open-a",
+      "history": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "kind": "selfplay_start",
+      "seed_id": "open-a",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Kings and six pawns",
+      "family_id": "pawn-a",
+      "history": [],
+      "initial_fen": "4k3/1p3p2/7p/8/8/6P1/P4P2/4K3 w - - 0 1",
+      "kind": "synthetic_endgame",
+      "seed_id": "pawn-a",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Own legal four-ply opening prefix B",
+      "family_id": "open-b",
+      "history": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "kind": "selfplay_start",
+      "seed_id": "open-b",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Kings, rooks and four pawns",
+      "family_id": "rook-a",
+      "history": [],
+      "initial_fen": "r3k3/5p1p/8/8/8/8/P4P2/4K2R w - - 0 1",
+      "kind": "synthetic_endgame",
+      "seed_id": "rook-a",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Own legal four-ply opening prefix C",
+      "family_id": "open-c",
+      "history": [
+        "c2c4",
+        "e7e5",
+        "b1c3",
+        "g8f6"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "kind": "selfplay_start",
+      "seed_id": "open-c",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Bishop versus knight with five pawns",
+      "family_id": "minor-a",
+      "history": [],
+      "initial_fen": "4k3/3n1pp1/8/8/8/8/2P2PP1/2B1K3 b - - 0 1",
+      "kind": "synthetic_endgame",
+      "seed_id": "minor-a",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Own legal four-ply opening prefix D",
+      "family_id": "open-d",
+      "history": [
+        "g1f3",
+        "d7d5",
+        "g2g3",
+        "c7c5"
+      ],
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "kind": "selfplay_start",
+      "seed_id": "open-d",
+      "source": "Regicide project hand-authored"
+    },
+    {
+      "description": "Kings, queens and four pawns",
+      "family_id": "queen-a",
+      "history": [],
+      "initial_fen": "4k3/3q2p1/7p/8/8/6P1/5P2/3Q2K1 w - - 0 1",
+      "kind": "synthetic_endgame",
+      "seed_id": "queen-a",
+      "source": "Regicide project hand-authored"
+    }
+  ]
+}

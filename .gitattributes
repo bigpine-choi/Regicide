@@ -141,3 +141,69 @@ tests/see_clean_guard_tests.py text eol=lf
 
 # Retain the already-frozen auditor source, including its final blank line.
 tests/audit_neural_strength_results.py whitespace=-blank-at-eof
+
+# Preserve the human-play time-setting source and validation evidence bytes.
+docs/checks/2026-10-19-live-think-time/** -text -whitespace
+docs/experiments/2026-10-19-live-think-time.md -text
+docs/GODOT_PLAY.md -text
+docs/HUMAN_PLAY.md -text
+scripts/play_human.py -text
+scripts/game_archive.py -text
+web/human-play/app.js text eol=crlf
+web/human-play/index.html -text
+godot/scripts/main.gd -text
+godot/tests/think_time_capture_scene.gd -text
+godot/tests/think_time_live_tests.gd -text
+godot/tests/think_time_offline_tests.gd -text
+tests/think_time_live_tests.py -text
+tests/think_time_tests.py -text
+tests/think_time_web_tests.js -text
+
+# Preserve this fixed extra-time experiment and its raw receipts byte for byte.
+docs/matches/2026-10-19-neural-long-time/** -text -whitespace
+docs/experiments/2026-10-19-neural-long-time-plan.md -text
+docs/experiments/2026-10-19-neural-long-time-results.md -text
+scripts/generate_neural_long_time_openings.py -text
+scripts/run_neural_long_time_comparison.py -text
+tests/audit_neural_long_time_results.py -text
+tests/audit_neural_extra_time_results.py -text
+tests/neural_long_time_driver_tests.py -text
+tests/data/neural_long_time_openings_2026-10-19.json -text
+tests/audit_neural_extra_time_prefix.py -text
+
+# Preserve pending research/source evidence bytes at the 2026-10-21 save handoff.
+.github/workflows/neural-search-data.yml -text
+.github/workflows/neural-target-ab.yml -text
+docs/NEURAL_SEARCH_DATA.md -text
+docs/experiments/2026-10-19-neural-search-data.md -text
+docs/experiments/2026-10-20-neural-target-ab-followup-plan.md -text
+docs/experiments/2026-10-20-neural-target-ab-plan.md -text
+docs/experiments/2026-10-20-neural-target-ab.md -text
+docs/experiments/2026-10-21-neural-target-ab-diagnosis.md -text
+scripts/analyze_neural_ab_counterfactuals.py -text
+scripts/analyze_neural_ab_losses.py -text
+scripts/analyze_neural_ab_residuals.py -text
+scripts/neural_target_ab.py -text
+scripts/neural_target_ab_data.py -text
+scripts/run_neural_target_ab_matches.py -text
+scripts/select_neural_ab_early_positions.py -text
+tests/audit_neural_target_ab.py -text
+tests/audit_neural_target_ab_v2.py -text
+tests/neural_target_ab_audit_tests.py -text
+tests/neural_target_ab_data_tests.py -text
+tests/neural_target_ab_match_tests.py -text
+tests/neural_target_ab_training_tests.py -text
+tests/neural_target_ab_v2_audit_tests.py -text
+
+# Preserve original CRLF source receipts and intentional Markdown/archival whitespace.
+.gitattributes -text whitespace=cr-at-eol
+.github/workflows/rules.yml -text whitespace=cr-at-eol
+README.md -text whitespace=cr-at-eol,-blank-at-eol
+web/human-play/app.js -text whitespace=cr-at-eol
+scripts/neural_search_data/.gitattributes -text whitespace=cr-at-eol
+tests/neural_search_data/.gitattributes -text whitespace=cr-at-eol
+docs/experiments/2026-10-20-neural-target-ab-plan.md -text whitespace=-blank-at-eol
+docs/experiments/2026-10-20-neural-target-ab.md -text whitespace=-blank-at-eol
+tests/audit_neural_extra_time_prefix.py -text whitespace=cr-at-eol
+tests/audit_neural_extra_time_results.py -text whitespace=-blank-at-eof
+tests/audit_neural_long_time_results.py -text whitespace=-blank-at-eof
