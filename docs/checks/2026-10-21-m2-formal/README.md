@@ -1,6 +1,6 @@
 # 정식 M2 실행 기록 — 2026-10-21
 
-현재 단계: **별도 사전24판 및 독립 감사 통과, 본176/768판에서 부하 위반 중단·독립 진단 중**. `attempt-004`의 본 단계는 유효한 정식 성적으로 해석하지 않는다. 이전 중단 시도도 보존한다.
+현재 단계: **구현·사전24판·M3 준비 완료, 정식 M2 미완료**. 본 `attempt-004`는176/768판에서 다른 작업 CPU 부하로 중단했다. 사용자 지시로 재시작한 `attempt-005`도 사전12/24판에서 부하 기준 위반으로 멈췄다. 성적 비교·Elo·승격에는 사용하지 않는다.
 
 [사전 계획](../../experiments/2026-10-21-m2-formal-plan.md)과 [정확한 JSON](../../experiments/2026-10-21-m2-formal-plan.json)에 조건을 고정했다. M1 수식·보정망 V2·정수 NNUE와 Stockfish18/Sunfish,100ms/1초, 새32개 시작 계열·양색의768판이다. 별도 첫 사전 계열의24판이 입력·부하·코어/기보 감사를 통과해야 본 대국을 시작한다.
 
@@ -34,4 +34,14 @@
 
 [자원 재계산](main-stop-diagnosis/README.md)과 [현재 호스트 별도 진단](main-stop-diagnosis/current-host/README.md)을 보존했다. 과거 중단 원인 앱은 특정하지 않는다. [전후 보존 검사](preservation-after.json)는 native17파일·실행 파일·원래 두 개발 폴더의HEAD와미커밋작업까지 일치했다.
 
-원시 기록은 [attempt004 보존 목록](attempts/attempt-004/archive.json)에 원본SHA·크기와 선택적gzip 압축SHA를 연결했다. 실행 파일/외부소스/전체Python런타임을 새로 배포하는 번들은 아니며 전체 동결 복사본은 ignored 실행 폴더에도 남아 있다. [결과와 재개 조건](../../experiments/2026-10-21-m2-formal-outcome.md)을 따른다. 사용자가 재시작을 명시해 같은 조건의 새 `attempt-005`를 준비한다. [재시작 사전 기록](../../experiments/2026-10-21-m2-formal-restart-001.md)을 따르며 이전 결과는 그대로 보존한다.
+원시 기록은 [attempt004 보존 목록](attempts/attempt-004/archive.json)에 원본SHA·크기와 선택적gzip 압축SHA를 연결했다. 실행 파일/외부소스/전체Python런타임을 새로 배포하는 번들은 아니며 전체 동결 복사본은 ignored 실행 폴더에도 남아 있다. [결과와 재개 조건](../../experiments/2026-10-21-m2-formal-outcome.md)을 따른다. 사용자가 재시작을 명시해 같은 조건의 새 `attempt-005`를 실제 실행했고 사전12/24판에서 부하 기준 위반으로 중단했다. [재시작 사전 기록](../../experiments/2026-10-21-m2-formal-restart-001.md)을 따르며 이전 결과는 그대로 보존한다.
+
+## 사용자 지시에 따른 재시작005
+
+같은 엔진·입력·대국/부하 조건으로 새 동결한005는98.231초·완료6쌍12판 뒤 중단했다. 최초 다른 작업 CPU2초창23.1156%, 종료 최대23.6769%였다. 최대 감시 간격0.5143초·외부 알려진 엔진 CPU 증가0이며 새 본 대국은0판이다. [독립 자원 진단](restart-005-resource-diagnosis.md)과 [보존 검사](preservation-after-restart-005.json)를 남겼다. 새 [원시 기록](attempts/attempt-005/archive.json)도 앞선 시도와 분리했다.
+
+비소유 CPU란 등록한 실험 작업 외의 CPU 사용량이다. 다른 앱·Windows·감시 작업도 포함되며 전체 논리 CPU 능력 대비 비율이다. 이번20% 상한을 바꾸지 않았다. 현재 환경을 그대로 반복하기보다 다른 작업의 영향을 줄인 실험 시간대/환경이 필요하다.
+
+005의 [중단 전용 독립 감사](peer-preflight-stopped-005.json)도12판 수순1301반수·PV7147반수·searched1157반수 검증을 통과했다. 활성2쌍은 완료 집계에서 분리했다. `INTEGRITY_PASS_STOPPED_INVALID`로 전 성적을 비교에서 제외한다.
+
+최종 발행 무결성 목록은 `artifact-integrity-published-final.json`이다. 이전 두 목록은 당시 로컬 스냅샷이며 ignored canary 실행 파일·중간 진단 출력도 포함했다. 최종 목록은 의도적으로 로컬에만 두는 파일을 명시적으로 제외하고, 압축 원문 해시와 Git에 저장될 파일 바이트를 점검한다. 전체 Python/외부 실행 파일 배포 번들은 아니다.

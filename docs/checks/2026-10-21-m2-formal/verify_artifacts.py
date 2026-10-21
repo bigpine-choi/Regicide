@@ -36,17 +36,19 @@ def verify(output):
   'tests/data/m2_formal_openings_2026-10-21.json','tests/data/m2_preflight_openings_2026-10-21.json',
   'docs/experiments/2026-10-21-m2-formal-plan.json','docs/experiments/2026-10-21-m2-formal-plan.md',
   'docs/experiments/2026-10-21-m2-formal-outcome.md','docs/experiments/2026-10-21-m3-huber-preparation.md',
+  'docs/experiments/2026-10-21-m2-formal-restart-001.md','docs/experiments/2026-10-21-m2-formal-restart-001-plan.json',
   'docs/ROADMAP.md')
  files.update(ROOT/name for name in names)
  selected=[path for path in sorted(files) if path.is_file() and path.resolve()!=output.resolve() and '__pycache__' not in path.parts]
  names=[path.relative_to(ROOT).as_posix() for path in selected]
- ignored=subprocess.run(['git','check-ignore','--stdin'],cwd=ROOT,input='\n'.join(names)+'\n',capture_output=True,text=True)
- if ignored.returncode not in (0,1):raise RuntimeError(ignored.stderr)
- excluded=set(ignored.stdout.splitlines())
+ ignored=subprocess.run(['git','check-ignore','--stdin'],cwd=ROOT,input=('\n'.join(names)+'\n').encode('utf-8'),capture_output=True)
+ if ignored.returncode not in (0,1):raise RuntimeError(ignored.stderr.decode('utf-8',errors='replace'))
+ excluded=set(ignored.stdout.decode('utf-8').splitlines())
  entries={path.relative_to(ROOT).as_posix():{'sha256':sha(path.read_bytes()),'size':path.stat().st_size}
           for path in selected if path.relative_to(ROOT).as_posix() not in excluded}
  return {'status':'PASS_FOR_ARTIFACT_INTEGRITY_ONLY','verified_utc':datetime.now(timezone.utc).isoformat(),
   'main_status':'STOPPED','main_valid_for_comparison':False,'main_completed_games':176,'main_scheduled_games':768,
+  'restart_005_preflight_status':'STOPPED','restart_005_completed_preflight_games':12,'restart_005_scheduled_preflight_games':24,
   'archived_raw_files':archives,'files':entries,'intentionally_local_ignored_files':sorted(excluded),
   'scope':'Checks preserved byte identities and gzip round trips. This is not a strength pass or a complete hermetic engine/runtime distribution.'}
 
