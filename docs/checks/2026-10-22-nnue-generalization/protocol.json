@@ -1,0 +1,63 @@
+{
+  "created_utc": "2026-10-21T16:25:05.499967+00:00",
+  "config": {
+    "candidate_id": "sf18-mse-stm-family-20261020",
+    "input_scale": 32,
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "output_lr": 0.005,
+    "seed": 20261020,
+    "batch_size": 128,
+    "loss": "mse"
+  },
+  "guards": {
+    "patience": 5,
+    "eval_interval": 5,
+    "min_delta_cp2": 1.0
+  },
+  "training_runs": 1,
+  "gate_runs": 1,
+  "gate_plan": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\gate-001\\plan.json",
+  "gate_policy": {
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "retry_or_gate_checkpoint_selection": false
+  },
+  "loss": "Unchanged pointMSE+pairgapMSE coefficient1",
+  "architecture": "Unchanged v3,768piece+1turn,16hidden,S32",
+  "improvement": "Broader root families, capped old-family pairs, seeded family round-robin, eachpaironceperepoch",
+  "conditional_match": {
+    "opening_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_generalization_match_openings_2026-10-22.json",
+    "only_if_gate_passes": true,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "movetime_ms": 100,
+    "hash_mb": 16,
+    "opening_count": 8,
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "estimated_minutes_if_pass": [
+      2,
+      4
+    ]
+  },
+  "no_retraining_or_gate_threshold_changes": true,
+  "default_changed": false,
+  "inputs": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_ordering.py": "899d3cf314d59ae3dce4fcc94d9f47e3a8ab7714eb264d95bb510705b31b9ee6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\prepare_nnue_generalization.py": "65ae485d0968fddb84c42c4f39a4c1d469f45e843b99222c2d9f7ca08345e8f0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_generalization.py": "461ce725a0043d296366d2dcad684fe3e274e719b7658a6cac170c77c750704b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_generalization_gate.py": "cf29f1c4cbf5d8f0bcaf6b90808dbb5782983dd647a8fafb63d21a1a2d38b940",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\diagnose_nnue_generalization.py": "5ba9a74d241ce2e67b82fd3dc0d548dfbe5a73ac0c19893beb821393ce8f4861",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\data-001\\manifest.json": "47cef2bb68d0eac856a0eaff9a9eb18bbd5ea45abe4ff3ce2d982422e6c0b5ef",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\gate-001\\plan.json": "2ab257bc68c97071db28c1bb4ed28ff1fe0c2ea73bd21d0628ca00589c179792",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\gate-001\\frozen-roots.json": "0d07a1bc19b19517fb91f1cbd4dedf05c9940608481b214bb795137bef4855cb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\gate-001\\blocked-features.json": "22d926da939d1ee555bd3fe7c9fd22eeb6e36417a0de8e252d778078ecfe12ef",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_generalization_match_openings_2026-10-22.json": "e67fa4dfa6c29429f2cfff49c42077f691ba3c6fd8e37532cadc3e1c17ce0e6f"
+  }
+}

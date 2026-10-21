@@ -44,6 +44,28 @@ def _slice_pairs(pairs, chosen):
     return tuple(array[chosen] for array in pairs)
 
 
+def _validate_pair_families(family_ids, pair_count, batch_count):
+    if (not isinstance(family_ids, (tuple, list)) or len(family_ids) != pair_count
+            or any(not isinstance(value, str) or not value.strip() for value in family_ids)):
+        raise ValueError('pair_family_ids must name one nonempty family per training pair')
+    if pair_count < batch_count:
+        raise ValueError('Family pair scheduling requires at least one pair per point batch')
+
+
+def _family_pair_batches(family_ids, batch_count, rng):
+    """Visit every pair once, interleaving independently shuffled families."""
+    _validate_pair_families(family_ids, len(family_ids), batch_count)
+    groups = {}
+    for index, family in enumerate(family_ids):
+        groups.setdefault(family, []).append(index)
+    groups = {family: list(rng.permutation(group)) for family, group in groups.items()}
+    families = list(rng.permutation(list(groups)))
+    order = []
+    for offset in range(max(map(len, groups.values()))):
+        order.extend(groups[family][offset] for family in families if offset < len(groups[family]))
+    return np.array_split(np.asarray(order, dtype=np.int64), batch_count)
+
+
 def pair_metrics(parameters, pairs, input_scale=32, *, enable_turn=True):
     ia, ta, sa, ib, tb, sb = _validate_pairs(pairs, enable_turn)
     pa, _ = stm.qat_forward(parameters, ia, input_scale, turns=sa, enable_turn=enable_turn)
@@ -89,7 +111,7 @@ def train_candidate(initial_parameters, indices, targets, config, *, turns, pair
                     validation_indices, validation_targets, validation_turns,
                     validation_pairs, anchor_indices, anchor_targets, anchor_turns,
                     patience=5, min_delta_cp2=1.0, eval_interval=5,
-                    progress=None, enable_turn=True):
+                    progress=None, enable_turn=True, pair_family_ids=None):
     """Return one validation-selected checkpoint, retaining the epoch-zero oracle.
 
     Selection minimizes integer point MSE + integer pair-gap MSE, subject to
@@ -119,6 +141,9 @@ def train_candidate(initial_parameters, indices, targets, config, *, turns, pair
         stm._turn_mask(side, len(ix), enable_turn)
     pairs = _validate_pairs(pairs, enable_turn)
     validation_pairs = _validate_pairs(validation_pairs, enable_turn)
+    point_batch_count = math.ceil(len(targets) / config['batch_size'])
+    if pair_family_ids is not None:
+        _validate_pair_families(pair_family_ids, len(pairs[0]), point_batch_count)
     turns = np.asarray(turns)
     bounds = stm._bounds(config['input_scale'])
     parameters = {key: value.astype(np.float64, copy=True)
@@ -152,15 +177,21 @@ def train_candidate(initial_parameters, indices, targets, config, *, turns, pair
              for key in stm.PARAMETER_KEYS}
     rng = np.random.default_rng(config['seed'])
     reason = 'max_epochs'
+    observed_pairs_per_epoch = []
     for epoch in range(1, config['epochs'] + 1):
         order = rng.permutation(len(targets))
-        pair_order = rng.permutation(len(pairs[0]))
-        pair_batches = [pair_order[o:o + config['batch_size']]
-                        for o in range(0, len(pair_order), config['batch_size'])]
+        if pair_family_ids is None:
+            pair_order = rng.permutation(len(pairs[0]))
+            pair_batches = [pair_order[o:o + config['batch_size']]
+                            for o in range(0, len(pair_order), config['batch_size'])]
+        else:
+            pair_batches = _family_pair_batches(pair_family_ids, point_batch_count, rng)
         maximum_norm, clipped_batches = 0.0, 0
+        observed_pairs = 0
         for batch_no, offset in enumerate(range(0, len(order), config['batch_size'])):
             chosen = order[offset:offset + config['batch_size']]
             pair_chosen = pair_batches[batch_no % len(pair_batches)]
+            observed_pairs += len(pair_chosen)
             gradients = qat_gradients(parameters, indices[chosen], targets[chosen],
                                        config['input_scale'], turns=turns[chosen],
                                        pairs=_slice_pairs(pairs, pair_chosen),
@@ -181,6 +212,7 @@ def train_candidate(initial_parameters, indices, targets, config, *, turns, pair
                 np.clip(parameter, -bounds[key], bounds[key], out=parameter)
                 if not np.all(np.isfinite(parameter)):
                     raise ValueError('Nonfinite fixed-point QAT shadow')
+        observed_pairs_per_epoch.append(observed_pairs)
         predictions, _ = stm.qat_forward(parameters, indices, config['input_scale'],
                                          turns=turns, enable_turn=enable_turn)
         history.append({'epoch': epoch, 'optimizer_steps': step,
@@ -221,4 +253,10 @@ def train_candidate(initial_parameters, indices, targets, config, *, turns, pair
         'anchor_limit_cp2': anchor_limit, 'anchor_policy': 'MSE <= epoch-zero anchor MSE',
         'pair_batch_policy': 'Seeded pair permutation each epoch; cycle pair batches per point batch',
     }
+    if pair_family_ids is not None:
+        selection['pair_batch_policy'] = ('Shuffle each family and family order with the training seed; '
+                                          'round-robin families, split across point batches; each pair once per epoch')
+        selection['observed_pairs_per_epoch'] = observed_pairs_per_epoch
+        selection['pair_family_counts'] = {family: pair_family_ids.count(family)
+                                            for family in sorted(set(pair_family_ids))}
     return best, history, selection
