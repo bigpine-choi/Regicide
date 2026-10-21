@@ -1,0 +1,81 @@
+{
+  "created_utc": "2026-10-21T16:53:11.966025+00:00",
+  "revision_reason": "First preservation fit improved the anchor at some epochs but no checkpoint improved both unchanged anchor/tuning conditions. Add one TRAIN-only deployed-integer descent check to optimizer proposals; do not relax guards or consume the reserved gate for selection.",
+  "original_protocol_sha256": "8ea981a9c756a110f83f8eb103a724692436cee779282e4b1dbfe3c57feca110",
+  "original_training_limit": 1,
+  "superseding_total_production_training_limit": 2,
+  "production_fits_before_this_revision": 1,
+  "old_diagnostic_reconstruction_epochs": 5,
+  "second_fit_only_no_additional_iterations": true,
+  "config": {
+    "candidate_id": "sf18-mse-stm-preservation-step-20261020",
+    "input_scale": 32,
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "output_lr": 0.005,
+    "seed": 20261020,
+    "batch_size": 128,
+    "loss": "mse"
+  },
+  "guards": {
+    "patience": 5,
+    "eval_interval": 5,
+    "min_delta_cp2": 1.0
+  },
+  "preservation_weight": 4.0,
+  "loss_unchanged": "Point teacher MSE+1*sibling-gap teacher MSE+4*oldTRAIN frozen output MSE",
+  "architecture_unchanged": true,
+  "data_unchanged": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001",
+  "optimizer_change": {
+    "fixed_scales": [
+      1,
+      0.5,
+      0.25,
+      0.125,
+      0.0625,
+      0.03125
+    ],
+    "accept": "First finite clipped proposal whose full TRAIN integer objective does not increase; allow equal integer loss for subquantum float progress; otherwise skip",
+    "moments": "One update per original minibatch, including skipped proposal",
+    "heldout_used_for_step_acceptance": false
+  },
+  "gate_plan": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\gate-001\\plan.json",
+  "gate_criteria_unchanged": {
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "retry_or_gate_checkpoint_selection": false
+  },
+  "gate_queries_before_revision": 0,
+  "conditional_match": {
+    "only_if_gate_passes": true,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "opening_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_leaf_match_openings_2026-10-22.json",
+    "opening_count": 8,
+    "movetime_ms": 100,
+    "hash_mb": 16,
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "estimated_minutes_if_pass": [
+      2,
+      4
+    ]
+  },
+  "no_gate_based_retraining_or_reselection": true,
+  "inputs": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\protocol.json": "8ea981a9c756a110f83f8eb103a724692436cee779282e4b1dbfe3c57feca110",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-001\\screen-decision.json": "b4ace5d0e0451d04e0e9f580e2c471db996fdc1d2734fef413be14a9cf1205b7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-001\\training.json": "90448a8c7d8e6ba959c3bd296f2e22a90c4c00ac812c24e5472bd87b2c10fda4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\gate-001\\plan.json": "d8c753322329b6309c08b595386de97f80e93863fd4f1b88fc73c9abda2bea26",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation_step.py": "db36f339e6062b738a28f3a378d2678f56a86202629f61616681bdcc3f8cd425",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation.py": "c19f66774d95241f6552df0e13327567f6f9b67ef07dadbdff47731a166e3df5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_preservation_step.py": "fa4943c0dd59e1cd50b267e8b3c95ddc76687555774ae95ef836adb38254eeab",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_ordering.py": "899d3cf314d59ae3dce4fcc94d9f47e3a8ab7714eb264d95bb510705b31b9ee6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\neural_stm_preservation_step_tests.py": "fee6dc6ff30a3ff9d22eb2e56ad2a29842bd74b7ebc051f6ac16a7b968ea6cce"
+  }
+}
