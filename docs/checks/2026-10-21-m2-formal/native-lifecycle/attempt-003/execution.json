@@ -1,0 +1,159 @@
+{
+  "status": "PASS",
+  "started_utc": "2026-10-21T09:10:45.092949+00:00",
+  "command": [
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Scripts\\python.exe",
+    "docs/checks/2026-10-21-m2-formal/native-lifecycle/probe.py",
+    "--expected-guard",
+    "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "--output",
+    "docs/checks/2026-10-21-m2-formal/native-lifecycle/attempt-003"
+  ],
+  "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "base_python": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "probe_sha256": "c78513b17554f2f98ef73118481c4db34b5263e887b63914204e3a85f3eaef0e",
+  "sources_before": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal.py": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa"
+  },
+  "expected_guard_sha256": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+  "policy": {
+    "max_nonworker_cpu_fraction": 0.2,
+    "interval_seconds": 0.5,
+    "max_sample_gap_seconds": 2.0,
+    "host_window_seconds": 2.0
+  },
+  "scope": "Four newly created Python roots and one short-lived child each. No chess engine or existing process is stopped.",
+  "workers": [
+    {
+      "pid": 7704,
+      "creation_ticks": 134370474501315829,
+      "state_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\native-lifecycle\\attempt-003\\worker-0.json",
+      "root": 7704,
+      "child": 26296
+    },
+    {
+      "pid": 21860,
+      "creation_ticks": 134370474501693129,
+      "state_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\native-lifecycle\\attempt-003\\worker-1.json",
+      "root": 21860,
+      "child": 11208
+    },
+    {
+      "pid": 8168,
+      "creation_ticks": 134370474502094128,
+      "state_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\native-lifecycle\\attempt-003\\worker-2.json",
+      "root": 8168,
+      "child": 30120
+    },
+    {
+      "pid": 32584,
+      "creation_ticks": 134370474502529566,
+      "state_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\native-lifecycle\\attempt-003\\worker-3.json",
+      "root": 32584,
+      "child": 37816
+    }
+  ],
+  "post_detach_samples": [
+    {
+      "index": 1,
+      "retired_handle_count": 0,
+      "retirement_events": [
+        {
+          "event": "retired_timer_closed",
+          "identity": [
+            32584,
+            134370474502529566
+          ],
+          "cpu_ticks": 781250,
+          "absent_snapshots": 2
+        }
+      ],
+      "failure": null
+    },
+    {
+      "index": 2,
+      "retired_handle_count": 0,
+      "retirement_events": [],
+      "failure": null
+    }
+  ],
+  "summary": {
+    "schema_version": 1,
+    "started_utc": "2026-10-21T09:10:45.103360+00:00",
+    "finished_utc": "2026-10-21T09:10:54.435372+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 0.2,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 30348,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 32,
+    "max_sample_gap_seconds": 0.5178388999775052,
+    "max_snapshot_duration_seconds": 0.015243600006215274,
+    "external_cpu_increase_ticks": 0,
+    "max_nonworker_cpu_fraction": 0.08318051050760275,
+    "preflight_complete": true,
+    "completed_idle_seconds": 5.011214800004382,
+    "failure": null,
+    "workers": [
+      {
+        "pid": 7704,
+        "creation_ticks": 134370474501315829,
+        "attached_utc": "2026-10-21T09:10:50.167456+00:00",
+        "detached_utc": "2026-10-21T09:10:53.373622+00:00"
+      },
+      {
+        "pid": 21860,
+        "creation_ticks": 134370474501693129,
+        "attached_utc": "2026-10-21T09:10:50.207551+00:00",
+        "detached_utc": "2026-10-21T09:10:53.383037+00:00"
+      },
+      {
+        "pid": 8168,
+        "creation_ticks": 134370474502094128,
+        "attached_utc": "2026-10-21T09:10:50.251240+00:00",
+        "detached_utc": "2026-10-21T09:10:53.392077+00:00"
+      },
+      {
+        "pid": 32584,
+        "creation_ticks": 134370474502529566,
+        "attached_utc": "2026-10-21T09:10:50.290979+00:00",
+        "detached_utc": "2026-10-21T09:10:53.401055+00:00"
+      }
+    ],
+    "valid_for_load_check": true,
+    "scope": "Sampled known-engine CPU/identity and aggregate nonworker CPU estimate; unknown or transient work between samples, power, thermals and OS isolation are not certified.",
+    "timer": {
+      "started": true,
+      "samples": 8,
+      "alive": false,
+      "failure": null,
+      "join_bound_seconds": 2.0
+    }
+  },
+  "remaining_owned_handles_after_close": 0,
+  "remaining_retired_handles_after_close": 0,
+  "all_own_roots_exited": true,
+  "sources_after": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal.py": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa"
+  },
+  "sources_unchanged": true,
+  "elapsed_seconds": 9.3423190000467,
+  "finished_utc": "2026-10-21T09:10:54.436292+00:00"
+}

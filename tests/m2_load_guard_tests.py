@@ -244,6 +244,9 @@ class LoadGuardTests(unittest.TestCase):
         self.provider.live[999] = load.ProcessInfo(999, 1, 'stockfish.exe', error='OpenProcess denied')
         self.guard.sample()
         self.assertEqual(self.guard.stop_reason['kind'], 'process_access')
+        record = json.loads(self.guard.output.read_text().splitlines()[-1])
+        self.assertEqual(record['processes'][0]['name'], 'stockfish.exe')
+        self.assertEqual(record['processes'][0]['parent_pid'], 1)
         # The first failure cannot be erased by later clean snapshots.
         self.provider.live.clear()
         self.advance()
@@ -414,29 +417,208 @@ class LoadGuardTests(unittest.TestCase):
             provider.watch_root(worker.identity)
         provider._retain.assert_not_called()
 
-    def test_native_retirement_closes_matching_cache_only_and_rejects_live_handles(self):
+    def native_provider(self):
         provider = load.WindowsLoadProvider.__new__(load.WindowsLoadProvider)
+        provider.native = Mock()
+        provider.owned_handles, provider.retired_handles = {}, {}
+        provider.retirement_events = []
+        inventory, timers = {}, {}
+        provider.native.snapshot.side_effect = lambda: dict(inventory)
+        provider.native.times.side_effect = lambda process: inventory[process.pid]
+        provider.native._handle_times.side_effect = lambda handle, _process: timers[handle]
+        provider.native.kernel.CloseHandle.return_value = True
+        provider.native.kernel.GetSystemTimes.return_value = True
+        provider.native.engine_handles = {}
+        return provider, inventory, timers
+
+    def test_native_retirement_waits_two_absent_inventories_and_closes_matching_cache_only(self):
+        provider, inventory, timers = self.native_provider()
         old = load.ProcessInfo(100, os.getpid(), 'regicide.exe', WALL, 123, exited_during_snapshot=True)
         reused = replace(old, creation_ticks=WALL + 100, exited_during_snapshot=False)
-        provider.native = Mock()
-        provider.native.kernel.CloseHandle.return_value = True
-        provider.native._handle_times.return_value = old
         provider.owned_handles = {old.identity: (10, old)}
         provider.native.engine_handles = {100: (20, reused)}
+        timers[10] = old
         provider.release_finished((old.identity,))
+        provider.native.kernel.CloseHandle.assert_not_called()
+        self.assertFalse(provider.owned_handles)
+        provider.snapshot(())
+        provider.native.kernel.CloseHandle.assert_not_called()
+        provider.snapshot(())
         provider.native.kernel.CloseHandle.assert_called_once_with(10)
         self.assertEqual(provider.native.engine_handles, {100: (20, reused)})
         provider.owned_handles[old.identity] = 30, old
+        timers[30] = old
         provider.native.engine_handles = {100: (40, old)}
         provider.release_finished((old.identity,))
+        provider.snapshot(())
+        provider.snapshot(())
         self.assertFalse(provider.native.engine_handles)
         self.assertFalse(provider.owned_handles)
-        self.assertEqual([call.args[0] for call in provider.native.kernel.CloseHandle.call_args_list], [10, 30, 40])
+        self.assertFalse(provider.retired_handles)
+        self.assertEqual([call.args[0] for call in provider.native.kernel.CloseHandle.call_args_list], [10, 40, 30])
         provider.owned_handles[reused.identity] = 50, reused
-        provider.native._handle_times.return_value = reused
+        timers[50] = reused
         with self.assertRaisesRegex(RuntimeError, 'live owned'):
             provider.release_finished((reused.identity,))
         self.assertIn(reused.identity, provider.owned_handles)
+
+    def test_native_stale_access_denied_is_recovered_only_with_held_exact_exited_proof(self):
+        provider, inventory, timers = self.native_provider()
+        final = load.ProcessInfo(100, 90, 'regicide.exe', WALL, 123, exited_during_snapshot=True)
+        provider.owned_handles[final.identity] = 10, final
+        provider.native.engine_handles[100] = 20, final
+        timers[10] = final
+        provider.release_finished((final.identity,))
+        inventory[100] = load.ProcessInfo(100, 90, 'regicide.exe', error='OpenProcess error 5')
+        for _ in range(3):
+            frame = provider.snapshot(())
+            self.assertEqual(frame.processes[100], final)
+            self.assertEqual(frame.retained_owned, ())
+            self.assertEqual(frame.retired_handle_count, 1)
+            recovery = next(event for event in frame.retirement_events if event['event'] == 'stale_owned_entry')
+            self.assertEqual(recovery['identity'], final.identity)
+            self.assertEqual(recovery['original_error'], 'OpenProcess error 5')
+            provider.release_finished((final.identity,))
+            provider.native.kernel.CloseHandle.assert_not_called()
+        inventory.clear()
+        provider.snapshot(())
+        self.assertIn(final.identity, provider.retired_handles)
+        frame = provider.snapshot(())
+        self.assertFalse(provider.retired_handles)
+        self.assertEqual(frame.retired_handle_count, 0)
+        self.assertIn('retired_timer_closed', [event['event'] for event in frame.retirement_events])
+
+    def test_full_guard_repeated_retired_stale_rows_keep_zero_delta_and_validity(self):
+        self.idle()
+        provider, inventory, timers = self.native_provider()
+        # Exercise the real provider plus complete M2LoadGuard accounting and
+        # post-persist retirement callback; only native OS I/O is mocked.
+        original = self.provider
+        def host_times(idle, kernel, user):
+            source = original.snapshot(()).system
+            for pointer, value in ((idle, source.idle_ticks), (kernel, source.kernel_ticks),
+                                   (user, source.user_ticks)):
+                pointer._obj.dwLowDateTime = value & 0xffffffff
+                pointer._obj.dwHighDateTime = value >> 32
+            return True
+        provider.native.kernel.GetSystemTimes.side_effect = host_times
+        provider.native.kernel.OpenProcess.side_effect = lambda _access, _inherit, pid: {100: 10, 101: 20}[pid]
+        root = load.ProcessInfo(100, os.getpid(), 'python.exe', WALL + 2001, 0)
+        child = load.ProcessInfo(101, 100, 'regicide.exe', WALL + 2002, 100)
+        inventory.update({100: root, 101: child})
+        timers.update({10: root, 20: child})
+        self.guard.provider = provider
+        self.guard.attach_worker(*root.identity)
+        self.advance()
+        final = replace(child, cpu_ticks=400, exited_during_snapshot=True)
+        timers[20] = final
+        inventory[101] = final
+        provider.native.engine_handles[101] = 30, final
+        record = self.advance()
+        self.guard.assert_clean()
+        self.assertEqual(record['host']['owned_delta_ticks'], 300)
+        self.assertIn(child.identity, provider.retired_handles)
+        inventory[101] = load.ProcessInfo(101, 100, 'regicide.exe', error='OpenProcess error 5')
+        for _ in range(3):
+            record = self.advance()
+            self.guard.assert_clean()
+            self.assertEqual(record['host']['owned_delta_ticks'], 0)
+            row = next(row for row in record['processes'] if row['pid'] == 101)
+            self.assertTrue(row['owned'])
+            self.assertTrue(row['exited'])
+            self.assertEqual(row['cpu_ticks'], 400)
+            self.assertIn(child.identity, provider.retired_handles)
+        del inventory[101]
+        self.advance()
+        self.advance()
+        self.guard.assert_clean()
+        self.assertNotIn(child.identity, provider.retired_handles)
+        final_root = replace(root, cpu_ticks=10, exited_during_snapshot=True)
+        inventory[100] = timers[10] = final_root
+        self.advance()
+        self.guard.detach_worker(100)
+        self.guard.close()
+        self.assertTrue(self.guard.summary['valid_for_load_check'])
+
+    def test_repeated_retirement_still_rejects_a_changed_final_timer(self):
+        provider, _inventory, timers = self.native_provider()
+        final = load.ProcessInfo(100, 90, 'regicide.exe', WALL, 123, exited_during_snapshot=True)
+        provider.owned_handles[final.identity] = 10, final
+        timers[10] = final
+        provider.release_finished((final.identity,))
+        timers[10] = replace(final, cpu_ticks=124)
+        with self.assertRaisesRegex(RuntimeError, 'repeated retirement'):
+            provider.release_finished((final.identity,))
+
+    def test_native_live_or_unproved_access_denied_stays_a_failure(self):
+        provider, inventory, timers = self.native_provider()
+        live = load.ProcessInfo(100, 90, 'regicide.exe', WALL, 123)
+        denied = load.ProcessInfo(100, 90, 'regicide.exe', error='OpenProcess error 5')
+        inventory[100] = denied
+        provider.owned_handles[live.identity] = 10, live
+        timers[10] = live
+        with self.assertRaisesRegex(RuntimeError, 'held-exited proof'):
+            provider.snapshot(())
+        provider.owned_handles.clear()
+        self.assertEqual(provider.snapshot(()).processes[100], denied)
+        provider.native.kernel.CloseHandle.assert_not_called()
+
+    def test_native_first_final_timer_can_recover_stale_entry_before_retirement(self):
+        provider, inventory, timers = self.native_provider()
+        live = load.ProcessInfo(100, 90, 'regicide.exe', WALL, 10)
+        final = replace(live, cpu_ticks=123, exited_during_snapshot=True)
+        provider.owned_handles[live.identity] = 10, live
+        timers[10] = final
+        inventory[100] = load.ProcessInfo(100, 90, 'regicide.exe', error='OpenProcess error 5')
+        frame = provider.snapshot(())
+        self.assertEqual(frame.processes[100], final)
+        self.assertEqual(frame.retained_owned, (final,))
+        provider.release_finished((final.identity,))
+        self.assertIn(final.identity, provider.retired_handles)
+
+    def test_native_disappeared_retired_pid_can_later_be_a_fresh_unowned_identity(self):
+        provider, inventory, timers = self.native_provider()
+        old = load.ProcessInfo(100, 90, 'regicide.exe', WALL, 123, exited_during_snapshot=True)
+        provider.owned_handles[old.identity] = 10, old
+        provider.native.engine_handles[100] = 20, old
+        timers[10] = old
+        provider.release_finished((old.identity,))
+        provider.snapshot(())
+        provider.snapshot(())
+        fresh = replace(old, creation_ticks=WALL + 100, cpu_ticks=0, exited_during_snapshot=False)
+        inventory[100] = fresh
+        frame = provider.snapshot(())
+        self.assertEqual(frame.processes[100].identity, fresh.identity)
+        self.assertNotEqual(frame.processes[100].identity, old.identity)
+        self.assertFalse(frame.retained_owned)
+        self.assertFalse(frame.retirement_events)
+
+    def test_native_retired_identity_conflict_cannot_reuse_a_still_held_pid(self):
+        provider, inventory, timers = self.native_provider()
+        final = load.ProcessInfo(100, 90, 'python.exe', WALL, 123, exited_during_snapshot=True)
+        provider.owned_handles[final.identity] = 10, final
+        timers[10] = final
+        provider.release_finished((final.identity,))
+        inventory[100] = replace(final, creation_ticks=WALL + 1, exited_during_snapshot=False)
+        with self.assertRaisesRegex(RuntimeError, 'identity changed'):
+            provider.snapshot(())
+
+    def test_native_many_completed_tombstones_do_not_accumulate_after_absence(self):
+        provider, _inventory, timers = self.native_provider()
+        for index in range(80):
+            final = load.ProcessInfo(100 + index, 90, 'regicide.exe', WALL + index, 123,
+                                      exited_during_snapshot=True)
+            handle = 1000 + index
+            timers[handle] = final
+            provider.owned_handles[final.identity] = handle, final
+            provider.release_finished((final.identity,))
+            first = provider.snapshot(())
+            self.assertEqual(first.retired_handle_count, 1)
+            self.assertFalse(first.retained_owned)
+            second = provider.snapshot(())
+            self.assertEqual(second.retired_handle_count, 0)
+            self.assertFalse(second.retained_owned)
+        self.assertEqual(provider.native.kernel.CloseHandle.call_count, 80)
 
 
 class GuardMonitorTests(unittest.TestCase):

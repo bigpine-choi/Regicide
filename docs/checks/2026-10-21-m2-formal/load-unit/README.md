@@ -13,11 +13,12 @@ includes idle time and is counted once. Worker CPU is subtracted only after a
 PID/creation-time ancestry proof; old first-seen process CPU has no guessed
 historical subtraction.
 
-The 24 synthetic tests cover four concurrent roots, final timers after exit,
+The initial 24 synthetic tests cover four concurrent roots, final timers after exit,
 PID reuse, access failures, counter failures, delayed samples, rolling load,
 receipt failures, and cleanup of 40 successive cohorts (120 processes). Exited
-children are included in one final receipt, then both retained timer handles
-are closed. An attached root retains its final timer until detach. Repeated
+children were included in one final receipt, then both retained timer handles
+were closed in that revision. The corrected handle lifetime is described below.
+An attached root retains its final timer until detach. Repeated
 frames therefore contain current/just-completed processes, not every prior
 worker. An active child after a detached root invalidates the run.
 
@@ -108,3 +109,61 @@ during that pre-worker phase is outside this wrapper's current guarantee.
 The earlier native attempts above certify their recorded pre-wrapper source
 hash only. The coordinator records the new wrapper's native smoke separately;
 the earlier passes are not presented as native validation of later code.
+
+## Retired process lifetime follow-up
+
+Formal preflight attempt 003 reached two completed preflight games, then
+stopped on four first-seen `OpenProcess error 5` process entries. The previous
+error rows did not retain their names or parent IDs, so this evidence does not
+establish whether the processes were stale retired children or short-lived
+helpers first encountered during startup. That failed attempt remains invalid;
+the guard's error rows now preserve name, parent, creation and CPU fields for
+classification. Unproven access-denied processes still invalidate the run.
+
+An accounted final timer now moves from active owned handles to a retired
+tombstone. Its exact process handle and matching native timer cache remain
+open until the raw inventory omits the PID in two consecutive snapshots.
+Only an owned exact held process object proven exited by its handle, with
+matching identity/name/parent and unchanged final CPU, can replace a stale
+access-denied entry. Live objects, missing ownership proof, inconsistent
+metadata, query failures, or conflicting identities still fail closed. Holding
+the process object preserves its PID identity until the handles are closed,
+as documented by [Microsoft PROCESS_INFORMATION](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/ns-processthreadsapi-process_information).
+
+Accounted tombstones do not appear repeatedly in the complete retained-timer
+array. A PID actually present in raw inventory may produce an owned row with
+the same final CPU (zero further CPU delta). Compact lifecycle events identify
+retirement, proven stale-entry recovery and handle closure, and each sample
+records the current retired-handle count. Cleanup depends on the inventory
+absence condition; a permanently listed process is not silently discarded to
+impose a memory limit.
+
+Unit attempt 007 passed **39 tests**, covering held exited access-denied
+recovery before and after retirement, rejection of live/unproved entries,
+two-absence cleanup, fresh identity after closure, conflicting identity while
+held, matching-cache-only closure, and 80 successive completed tombstones
+without retained-array or handle accumulation after absence. The prior 38-test
+attempt 006 remains preserved. At that step the source SHA256 was
+`f22ef91446b59b74db101bd7ddb96426fe8a50d52b1fdf6f76bdcbadf6873610`;
+test SHA256 is `2e3336dcdffefd7c2375a6eba66e8c013d6f9bb3c72b5efd9bf372187f63af9c`.
+The historical guard remains unchanged. The coordinator records the actual
+Windows cohort/tombstone convergence smoke separately before freezing the
+next preflight attempt. Reducing worker Git helper launches is a separate
+runner change and is not evidence that this provider change fixed attempt
+003's unclassified first-seen entries.
+
+A subsequent full-path review found that a recovered retired process row
+would pass through `M2LoadGuard.sample()`'s retirement callback again. Repeated
+retirement is now idempotent only after the same held exited object's identity
+and unchanged final CPU are reverified; missing proof or a changed final timer
+still fails. No absence counter is reset by the duplicate callback.
+
+Final unit attempt 008 passed **41 tests**. Its added integration test uses the
+actual `WindowsLoadProvider` and complete guard sample/persist/retire path with
+only OS I/O mocked. The retired stale access-denied row reappears three times
+with zero additional owned CPU, then two absent inventories close its handles;
+the root's final sample, detach and close retain a valid receipt. A separate
+regression rejects a changed final timer on repeated retirement. Final source
+SHA256 is `39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13`,
+and final test SHA256 is
+`b3c47295de02fe6d5b8a9c11caeb092f106293459c1b5f7bac54e7b3370330fa`.

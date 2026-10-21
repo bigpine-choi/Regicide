@@ -23,8 +23,26 @@
         "reason": "sample duration or sampling gap exceeded its declared bound",
         "utc": "2026-10-21T08:44:53.354869+00:00"
       }
+    },
+    {
+      "status": "STOPPED",
+      "completed_games": 2,
+      "scheduled_games": 24,
+      "failure": {
+        "kind": "process_access",
+        "reason": "cannot measure process PID 34924: OpenProcess error 5",
+        "utc": "2026-10-21T08:57:27.712613+00:00"
+      },
+      "attempt": "attempt-003",
+      "main_started": false,
+      "canonical_exposure_index": {
+        "path": "openings/exposure-index.json.gz",
+        "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+      },
+      "stop_reason": "LoadGuardViolation: cannot measure process PID 34924: OpenProcess error 5"
     }
   ],
   "attempt001_resolution": "User explicitly chose to close the live game themselves. A fresh native process inventory verified no known chess engine remained before attempt002.",
-  "attempt002_resolution": "Preserve strict 2 second bound. Decouple sampling from synchronous hash/replay orchestration using a synchronized background timer. No threshold change or scored-game selection."
+  "attempt002_resolution": "Preserve strict 2 second bound. Decouple sampling from synchronous hash/replay orchestration using a synchronized background timer. No threshold change or scored-game selection.",
+  "attempt003_resolution": "First pair completed, then four first-seen transient process entries were access denied. Cause not proven by the old error rows. Preserve the strict guard; retain already-accounted exact exited handles until two absent inventories. Remove worker Git helper churn by reusing exact successful root Git receipts sealed before workers. Unknown queries still fail and the original commit validator remains active. No opening, model, CPU limit or sample selection change."
 }

@@ -233,6 +233,13 @@ def freeze_plan(path, destination):
     frozen = {'schema_version': 1, 'frozen_utc': utc_now(), 'plan': plan,
               'source_plan_sha256': sha256(path), 'source_plan_path': str(path), 'profiles': frozen_profiles,
               'harness_source_sha256': {}, 'banks': {}, 'cells': {}, 'preregistration_artifacts': []}
+    # Verify real Git objects here, before measured workers. Short-lived Git
+    # helpers can exit between process enumeration and a native timer query.
+    commits=sorted({p['source']['commit'] for p in profiles['candidates']})
+    queries=[['rev-parse','--verify',commit+'^{commit}'] for commit in commits]
+    queries += [['rev-parse','HEAD'],['status','--porcelain']]
+    frozen['git_receipts']=[{'arguments':query,'stdout':comparison.git_command(*query),'exit_code':0,
+        'verified_utc':utc_now(),'scope':'Actual root Git command at freeze; stdout uses existing harness strip normalization.'} for query in queries]
     (destination/'harness').mkdir()
     (destination/'source-plan.json').write_bytes(path.read_bytes())
     for name in HARNESS:
@@ -300,7 +307,33 @@ def cell_inputs(directory, frozen, profiles, cell):
     return target, command
 
 
+def git_receipt_cache(receipts):
+    cache={}
+    for entry in receipts:
+        key=tuple(entry['arguments'])
+        if key in cache or entry['exit_code']!=0 or not isinstance(entry['stdout'],str):
+            raise ValueError('invalid sealed Git receipt')
+        cache[key]=entry['stdout']
+    def lookup(*arguments):
+        key=tuple(arguments)
+        if key not in cache:
+            raise ValueError('worker requested a Git query not verified at input freeze')
+        return cache[key]
+    return lookup
+
+
 def execute_worker(directory, phase, index, start_gate):
+    directory=Path(directory).resolve()
+    if sha256(directory/'frozen-plan.json')!=read_json(directory/'seal.json')['frozen_plan_sha256']:
+        raise ValueError('Git receipt envelope changed')
+    frozen=read_json(directory/'frozen-plan.json')
+    # The existing full commit validator still runs. Only its exact previously
+    # verified Git queries are served from the sealed root receipts.
+    with patch.object(comparison,'git_command',side_effect=git_receipt_cache(frozen['git_receipts'])):
+        return _execute_worker(directory,phase,index,start_gate)
+
+
+def _execute_worker(directory, phase, index, start_gate):
     directory = Path(directory).resolve()
     frozen, profiles = verify_frozen(directory)
     cell = frozen['cells'][phase][index]
@@ -373,6 +406,8 @@ def execute_worker(directory, phase, index, start_gate):
     with patch.object(comparison.chess.engine.SimpleEngine, 'popen_uci', side_effect=launch):
         metadata, code = comparison.run_match(args)
     metadata['formal_cell'] = cell
+    metadata['formal_git_receipts']=frozen['git_receipts']
+    metadata['harness_checkout']['scope']='Git objects/context verified by real root commands at input freeze and served from sealed exact-query receipts. Worker rechecks file/model/harness hashes at match start; no transient Git helper is launched in a measured worker.'
     metadata['affinity'] = {'worker_mask': affinity(), 'expected_mask': mask, 'transports': transports}
     comparison.save_outputs(args, metadata)
     print(json.dumps({'cell': cell['id'], 'completed': metadata['completed'], 'exit_code': code}), flush=True)
@@ -383,6 +418,12 @@ def audit_cell(directory, frozen, profiles, cell):
     phase = cell['id'].split('-')[0]
     target = Path(directory)/phase/'cells'/cell['id']
     metadata = read_json(target/'games.json')
+    if metadata.get('formal_git_receipts') != frozen['git_receipts']:
+        raise ValueError('worker Git provenance differs from root-verified sealed receipts')
+    cached_git=git_receipt_cache(frozen['git_receipts'])
+    if (metadata['harness_checkout']['commit']!=cached_git('rev-parse','HEAD')
+            or metadata['harness_checkout']['status_porcelain']!=cached_git('status','--porcelain')):
+        raise ValueError('worker checkout provenance differs from input freeze')
     _, rows = comparison.load_openings(Path(frozen['banks'][phase]['path']))
     expected_opening = rows[cell['opening_index']]
     if (metadata['formal_cell'] != cell or metadata['selected_openings'] != [expected_opening]

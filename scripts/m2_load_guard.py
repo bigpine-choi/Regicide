@@ -81,6 +81,8 @@ class LoadSnapshot:
     system: SystemTimes
     wall_ticks: int
     retained_owned: tuple = ()
+    retirement_events: tuple = ()
+    retired_handle_count: int = 0
 
 
 class LoadGuardViolation(RuntimeError):
@@ -96,6 +98,8 @@ class WindowsLoadProvider:
         self.native = WindowsProcesses(policy.engine_names, policy.extra_engine_pids)
         self.engine_names = self.native.engine_names
         self.owned_handles = {}
+        self.retired_handles = {}
+        self.retirement_events = []
         self.native.kernel.GetSystemTimes.argtypes = [ctypes.POINTER(wintypes.FILETIME)] * 3
         self.native.kernel.GetSystemTimes.restype = wintypes.BOOL
 
@@ -103,6 +107,10 @@ class WindowsLoadProvider:
         return self.native.is_engine(process)
 
     def _retain(self, process):
+        if process.identity in self.retired_handles:
+            if not process.exited_during_snapshot:
+                raise RuntimeError('retired exact process object unexpectedly became live')
+            return
         if process.identity in self.owned_handles:
             handle, _old = self.owned_handles[process.identity]
             self.owned_handles[process.identity] = handle, process
@@ -140,6 +148,31 @@ class WindowsLoadProvider:
     def snapshot(self, roots):
         wall_ticks = time.time_ns() // 100 + _FILETIME_EPOCH
         processes = self.native.snapshot()
+        recoveries = []
+        for pid, process in tuple(processes.items()):
+            if process.error != 'OpenProcess error 5':
+                continue
+            candidates = [(identity, handle, previous) for identity, (handle, previous) in self.owned_handles.items()
+                          if identity[0] == pid]
+            candidates += [(identity, entry['handle'], entry['final']) for identity, entry in self.retired_handles.items()
+                           if identity[0] == pid]
+            if len(candidates) > 1:
+                raise RuntimeError('ambiguous held process identity for stale Toolhelp entry')
+            if not candidates:
+                continue  # No held ownership proof: retain the access error.
+            identity, handle, previous = candidates[0]
+            final = self.native._handle_times(handle, previous)
+            if (final.error or final.identity != identity or not final.exited_during_snapshot or
+                    (process.name.casefold(), process.parent_pid) != (previous.name.casefold(), previous.parent_pid)):
+                raise RuntimeError(f'access-denied owned PID {pid} ({process.name}, parent {process.parent_pid}) '
+                                   'has no consistent exact held-exited proof')
+            retired = self.retired_handles.get(identity)
+            if retired is not None and final.cpu_ticks != retired['final'].cpu_ticks:
+                raise RuntimeError('accounted retired process final CPU timer changed')
+            processes[pid] = final
+            recoveries.append({'event': 'stale_owned_entry', 'identity': identity, 'cpu_ticks': final.cpu_ticks,
+                               'original_error': process.error, 'proof': 'exact-held-exited-process'})
+        self._reap_retired(processes)
         possible = {pid for pid, _created in roots if pid in processes}
         changed = True
         while changed:
@@ -156,38 +189,80 @@ class WindowsLoadProvider:
             if (not process.error and process.creation_ticks is not None and
                     any(descendant_chain(process, processes, root) is not None for root in roots)):
                 self._retain(process)
-        retained = tuple(self.native._handle_times(handle, process)
-                         for handle, process in self.owned_handles.values())
+        retained = []
+        for identity, (handle, process) in tuple(self.owned_handles.items()):
+            measured = self.native._handle_times(handle, process)
+            if measured.error is None and measured.identity == identity:
+                self.owned_handles[identity] = handle, measured
+            retained.append(measured)
         idle, kernel, user = (wintypes.FILETIME() for _ in range(3))
         if not self.native.kernel.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
             raise OSError(ctypes.get_last_error(), 'GetSystemTimes failed')
         def ticks(value):
             return value.dwLowDateTime | value.dwHighDateTime << 32
-        return LoadSnapshot(processes, SystemTimes(ticks(idle), ticks(kernel), ticks(user)), wall_ticks, retained)
+        events = tuple(self.retirement_events + recoveries)
+        self.retirement_events.clear()
+        return LoadSnapshot(processes, SystemTimes(ticks(idle), ticks(kernel), ticks(user)), wall_ticks,
+                            tuple(retained), events, len(self.retired_handles))
 
     def release_finished(self, identities):
-        """Release only already-accounted, signaled exact process objects."""
+        """Retire accounted timers; keep proof until two absent inventories.
+
+        Holding the process object prevents PID reuse. Windows may still list
+        an exited process in Toolhelp while OpenProcess returns access denied.
+        Its exact held, signaled object is the only permitted recovery proof.
+        """
         for identity in identities:
             held = self.owned_handles.get(identity)
             if held is None:
-                raise RuntimeError('finished owned process has no retained handle')
+                retired = self.retired_handles.get(identity)
+                if retired is None:
+                    raise RuntimeError('finished owned process has no retained handle')
+                final = self.native._handle_times(retired['handle'], retired['final'])
+                if (final.error or final.identity != identity or not final.exited_during_snapshot or
+                        final.cpu_ticks != retired['final'].cpu_ticks):
+                    raise RuntimeError('repeated retirement has no consistent exact held-exited proof')
+                continue  # An unchanged accounted final timer must not retire twice.
             handle, process = held
             final = self.native._handle_times(handle, process)
-            if final.error or final.identity != identity or not final.exited_during_snapshot:
+            if (final.error or final.identity != identity or not final.exited_during_snapshot or
+                    not process.exited_during_snapshot or final.cpu_ticks != process.cpu_ticks):
                 raise RuntimeError('cannot release an unverified or live owned process')
-            if not self.native.kernel.CloseHandle(handle):
-                raise OSError(ctypes.get_last_error(), 'cannot close finished owned process handle')
+            self.retired_handles[identity] = {'handle': handle, 'final': final, 'absent_snapshots': 0}
             del self.owned_handles[identity]
+            self.retirement_events.append({'event': 'retired_timer_held', 'identity': identity,
+                                            'cpu_ticks': final.cpu_ticks})
+
+    def _reap_retired(self, inventory):
+        for identity, entry in tuple(self.retired_handles.items()):
+            current = inventory.get(identity[0])
+            if current is not None and current.creation_ticks is not None and current.identity != identity:
+                raise RuntimeError('retired PID identity changed while its exact process handle is still held')
+            entry['absent_snapshots'] = 0 if identity[0] in inventory else entry['absent_snapshots'] + 1
+            if entry['absent_snapshots'] < 2:
+                continue
+            final = self.native._handle_times(entry['handle'], entry['final'])
+            if (final.error or final.identity != identity or not final.exited_during_snapshot or
+                    final.cpu_ticks != entry['final'].cpu_ticks):
+                raise RuntimeError('cannot verify accounted final timer before closing retired handle')
             cached = self.native.engine_handles.get(identity[0])
             if cached is not None and cached[1].identity == identity:
                 if not self.native.kernel.CloseHandle(cached[0]):
-                    raise OSError(ctypes.get_last_error(), 'cannot close finished engine timer handle')
+                    raise OSError(ctypes.get_last_error(), 'cannot close retired engine timer handle')
                 del self.native.engine_handles[identity[0]]
+            if not self.native.kernel.CloseHandle(entry['handle']):
+                raise OSError(ctypes.get_last_error(), 'cannot close retired owned process handle')
+            del self.retired_handles[identity]
+            self.retirement_events.append({'event': 'retired_timer_closed', 'identity': identity,
+                                            'cpu_ticks': final.cpu_ticks, 'absent_snapshots': 2})
 
     def close(self):
         for handle, _process in self.owned_handles.values():
             self.native.kernel.CloseHandle(handle)
         self.owned_handles.clear()
+        for entry in self.retired_handles.values():
+            self.native.kernel.CloseHandle(entry['handle'])
+        self.retired_handles.clear()
         self.native.close()
 
 
@@ -349,7 +424,9 @@ class M2LoadGuard:
                     if (process.error or type(process.creation_ticks) is not int or process.creation_ticks <= 0 or
                             type(process.cpu_ticks) is not int or process.cpu_ticks < 0):
                         self._fail('process_access', f'cannot measure process PID {process.pid}: {process.error}')
-                        record['processes'].append({'pid': process.pid, 'error': process.error})
+                        record['processes'].append({'pid': process.pid, 'parent_pid': process.parent_pid,
+                                                    'name': process.name, 'creation_ticks': process.creation_ticks,
+                                                    'cpu_ticks': process.cpu_ticks, 'error': process.error})
                         continue
                     root = self.known_owned.get(process.identity)
                     chain = None
@@ -440,6 +517,8 @@ class M2LoadGuard:
         self.previous_end = ended
         record.update(gap_seconds=gap, snapshot_duration_seconds=duration, failure=self.stop_reason,
                       retiring_owned=list(finished),
+                      retirement_events=list(frame.retirement_events) if 'frame' in locals() else [],
+                      retired_handle_count=frame.retired_handle_count if 'frame' in locals() else 0,
                       retained_owned=[{'pid': p.pid, 'creation_ticks': p.creation_ticks, 'cpu_ticks': p.cpu_ticks,
                                        'exited': p.exited_during_snapshot} for p in frame.retained_owned]
                       if 'frame' in locals() else [])

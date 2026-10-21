@@ -32,7 +32,9 @@ class FormalTests(unittest.TestCase):
         self.bank = self.directory/'main-openings.json'
         formal.write_json(self.bank, {'schema_version':1, 'openings':rows})
         self.frozen = {'plan':{'max_plies':100,'lane_affinity_masks':[15,240,3840,61440]},
-                       'banks':{'main':{'path':str(self.bank)}}}
+                       'banks':{'main':{'path':str(self.bank)}},
+                       'git_receipts':[{'arguments':['rev-parse','HEAD'],'stdout':self.fixture.commit,'exit_code':0},
+                                       {'arguments':['status','--porcelain'],'stdout':'','exit_code':0}]}
         self.target = self.directory/'main/cells/main-0001'
         self.target.mkdir(parents=True)
         formal.write_json(self.target/'openings.json', {'schema_version':1,'openings':[rows[0]]})
@@ -42,6 +44,8 @@ class FormalTests(unittest.TestCase):
         metadata['games_requested'] = 2
         metadata['summary'] = formal.comparison.summarize(metadata['games'],metadata['selected_openings'])
         metadata['formal_cell'] = self.cell
+        metadata['formal_git_receipts']=self.frozen['git_receipts']
+        metadata['harness_checkout']={'commit':self.fixture.commit,'status_porcelain':''}
         metadata['opening_file_sha256'] = formal.sha256(self.target/'openings.json')
         metadata['affinity'] = {'worker_mask':15,'expected_mask':15,
                                 'transports':[{'affinity_mask':15,'pid':1000+i,'creation_ticks':100,
@@ -172,6 +176,23 @@ class FormalTests(unittest.TestCase):
 
 
 class StatisticsTests(unittest.TestCase):
+    def test_only_exact_successful_sealed_git_queries_can_be_reused(self):
+        commit='a'*40
+        cache=formal.git_receipt_cache([{'arguments':['rev-parse','--verify',commit+'^{commit}'],
+                                        'stdout':commit,'exit_code':0}])
+        self.assertEqual(cache('rev-parse','--verify',commit+'^{commit}'),commit)
+        with self.assertRaisesRegex(ValueError,'not verified'): cache('rev-parse','HEAD')
+        with self.assertRaises(ValueError): formal.git_receipt_cache([{'arguments':['rev-parse','HEAD'],'stdout':commit,'exit_code':1}])
+
+    def test_original_commit_validator_remains_active_under_cached_git(self):
+        commit='a'*40
+        cache=formal.git_receipt_cache([{'arguments':['rev-parse','--verify',commit+'^{commit}'],
+                                        'stdout':commit,'exit_code':0}])
+        with patch.object(formal.comparison,'git_command',side_effect=cache):
+            self.assertEqual(formal.comparison.verified_commit(commit),commit)
+            with self.assertRaises(ValueError): formal.comparison.verified_commit('main')
+            with self.assertRaises(ValueError): formal.comparison.verified_commit('b'*40)
+
     def test_cluster_resampling_keeps_all_members_and_is_deterministic(self):
         clusters={'a':[0,0,.5,1],'b':[1,1]}
         first=statistics.bootstrap_clusters(clusters,2026102101,1000)

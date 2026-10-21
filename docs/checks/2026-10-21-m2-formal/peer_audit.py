@@ -15,6 +15,7 @@ import io
 import json
 import math
 from pathlib import Path
+import re
 import sys
 
 import chess
@@ -89,6 +90,30 @@ def schedule(candidates, opponents, times, openings, phase):
     return rows
 
 
+def git_receipts(frozen, profiles, candidates):
+    commits = sorted({profiles[key]['source']['commit'] for key in candidates})
+    expected = [('rev-parse', '--verify', commit + '^{commit}') for commit in commits]
+    expected += [('rev-parse', 'HEAD'), ('status', '--porcelain')]
+    receipts = frozen['git_receipts']
+    check(isinstance(receipts, list) and len(receipts) == len(expected), 'Git receipt count differs')
+    observed = {}
+    for item, query in zip(receipts, expected, strict=True):
+        check(item['arguments'] == list(query) and query not in observed, 'Git receipt query/order is not exact')
+        check(type(item['exit_code']) is int and item['exit_code'] == 0
+              and isinstance(item['stdout'], str) and item['stdout'] == item['stdout'].strip(), 'Git receipt failed/unnormalized')
+        utc(item['verified_utc'])  # May follow frozen_utc: commands are verified sequentially during freeze.
+        check(item['scope'] == 'Actual root Git command at freeze; stdout uses existing harness strip normalization.',
+              'Git receipt scope is not real root verification at freeze')
+        if query[:2] == ('rev-parse', '--verify'):
+            commit = query[2][:-len('^{commit}')]
+            check(re.fullmatch(r'[0-9a-fA-F]{40}|[0-9a-fA-F]{64}', commit)
+                  and item['stdout'].lower() == commit.lower(), 'Source commit receipt is not its full resolved object ID')
+        elif query == ('rev-parse', 'HEAD'):
+            check(re.fullmatch(r'[0-9a-fA-F]{40}|[0-9a-fA-F]{64}', item['stdout']), 'Frozen checkout HEAD is not a full object ID')
+        observed[query] = item['stdout']
+    return observed
+
+
 def frozen_inputs(directory):
     frozen = read(directory / 'frozen-plan.json')
     check(read(directory / 'seal.json')['frozen_plan_sha256'] == sha(directory / 'frozen-plan.json'), 'Broken freeze seal')
@@ -128,6 +153,7 @@ def frozen_inputs(directory):
             helper.same_identity(original, profiles[original['id']])
     check(len(set(candidates + opponents)) == 5 and set(profiles) == set(candidates + opponents), 'Profile IDs differ')
     check({profiles[key]['evaluation'] for key in candidates} == {'classical', 'residual', 'nnue'}, 'Missing evaluator')
+    git_receipts(frozen, profiles, candidates)
     mode_keys = {'UseNeuralEvaluation', 'UseNNUEEvaluation', 'EvalFile', 'NeuralModelFile'}
     common = [{key: value for key, value in profiles[name]['resolved_options'].items() if key not in mode_keys}
               for name in candidates]
@@ -242,12 +268,14 @@ def guard_records(target, plan, report):
           and policy['host_window_seconds'] == 2 and policy['max_nonworker_cpu_fraction'] == .20, 'Formal CPU policy differs')
     check(summary['completed_idle_seconds'] >= plan['idle_probe_seconds'] >= 2, 'Idle preflight incomplete')
     active, known, attached, detached, observed_owned = {}, {}, {}, {}, {}
+    retired, final_timers, retirement_counts = {}, {}, Counter()
     external_before, owned_before, previous, previous_end = None, {}, None, None
     end, samples, max_gap, max_duration, maximum_fraction, maximum_ready_fraction = 0., 0, 0., 0., 0., 0.
     intervals, external_identities = deque(), set()
     ready_windows, underflow_windows, idle_start, idle_end = 0, 0, None, None
     worker_events, phase_events = [], Counter()
     timer_started = timer_stopped = False
+    host_progress_end = None
     previous_utc = None
     with path.open(encoding='utf-8') as stream:
         for number, text in enumerate(stream, 1):
@@ -350,16 +378,49 @@ def guard_records(target, plan, report):
                       (current is None and root in owned and owned[root]['exited'] is True), 'Worker identity missing/reused')
                 if current is not None:
                     check(current['parent_pid'] == summary['monitor_pid'], 'Worker is not the recorded monitor direct subprocess')
+            for key, item in owned.items():
+                if key in final_timers:
+                    check(item['exited'] is True and item['cpu_ticks'] == final_timers[key], 'Final accounted process CPU/exit state changed')
+                if item['exited'] is True:
+                    final_timers[key] = item['cpu_ticks']
+            for retirement in row['retirement_events']:
+                key = tuple(retirement['identity'])
+                check(key in known and key in final_timers and retirement['cpu_ticks'] == final_timers[key],
+                      'Retirement event lacks a checked final owned CPU timer')
+                action = retirement['event']
+                if action == 'retired_timer_held':
+                    check(key not in retired, 'Duplicate held retired timer')
+                    retired[key] = retirement['cpu_ticks']
+                elif action == 'stale_owned_entry':
+                    check(retirement['original_error'] == 'OpenProcess error 5'
+                          and retirement['proof'] == 'exact-held-exited-process', 'Stale entry lacks declared exact held-exited proof')
+                    check(key in retired or key in owned_before, 'Stale entry has no previously retained exact timer')
+                elif action == 'retired_timer_closed':
+                    check(key in retired and retired.pop(key) == retirement['cpu_ticks']
+                          and type(retirement['absent_snapshots']) is int and retirement['absent_snapshots'] == 2,
+                          'Closed retired timer lacks prior held identity/two-absence receipt')
+                    check(key[0] not in processes, 'Closed retired PID still appears in emitted inventory')
+                else:
+                    check(False, 'Unknown retirement event')
+                retirement_counts[action] += 1
+            check(type(row['retired_handle_count']) is int and row['retired_handle_count'] == len(retired),
+                  'Retired handle count differs from recorded lifecycle')
             if external_before is not None:
                 check(set(external) == set(external_before), 'Known external PID+creation set changed')
                 check(all(external[key]['cpu_ticks'] == external_before[key]['cpu_ticks'] for key in external),
                       'Known external engine CPU counter changed (zero-tolerance policy)')
             external_before = external
+            if host_progress_end is None:
+                host_progress_end = end
             if previous is not None:
                 total = system['kernel_ticks'] + system['user_ticks'] - previous['system']['kernel_ticks'] - previous['system']['user_ticks']
                 idle = system['idle_ticks'] - previous['system']['idle_ticks']
                 check(total >= 0 and 0 <= idle <= total and row['wall_ticks'] >= previous['wall_ticks']
                       and all(system[key] >= previous['system'][key] for key in ('kernel_ticks', 'user_ticks')), 'Native counters regressed')
+                if total > 0:
+                    host_progress_end = end
+                else:
+                    check(end-host_progress_end < policy['interval_seconds'], 'Native aggregate CPU counter stalled for a sample interval')
                 owned_delta = 0
                 for key, item in owned.items():
                     if key in owned_before:
@@ -370,8 +431,9 @@ def guard_records(target, plan, report):
                         owned_delta += item['cpu_ticks']
                 busy = total - idle
                 nonworker = max(0, busy - owned_delta)
-                if total > 0:
-                    intervals.append((previous_end, end, total, nonworker))
+                # Windows counters are quantized; zero-tick intervals still
+                # occupy wall time in the complete two-second window.
+                intervals.append((previous_end, end, total, nonworker))
                 cutoff = end - policy['host_window_seconds']
                 while intervals and intervals[0][1] <= cutoff:
                     intervals.popleft()
@@ -430,7 +492,8 @@ def guard_records(target, plan, report):
             'max_host_nonworker_fraction_ready_windows': maximum_ready_fraction,
             'accounting_underflow_intervals': underflow_windows, 'policy': policy,
             'timer': timer, 'timer_stopped_event_recorded': timer_stopped,
-            'scope': 'Raw native cumulative counters and retained final process timers independently recomputed. Rolling nonworker CPU is an estimate with proportional partial-interval weighting; unknown/transient work, power, thermals and complete OS isolation are not certified.'}, attached, detached, observed_owned, worker_events
+            'retirement_events': dict(retirement_counts), 'retired_handles_at_last_sample_before_provider_close': len(retired),
+            'scope': 'Raw native cumulative counters, owned ancestry, stable final timers and retirement lifecycle receipts independently checked. Exact-held stale entry recovery/two absent full Toolhelp inventories are native-provider receipts; the log emits filtered process inventory, not every OS process. Rolling nonworker CPU is an estimate with proportional partial-interval weighting; unknown/transient work, power, thermals and complete OS isolation are not certified.'}, attached, detached, observed_owned, worker_events
 
 
 def audit(directory, phase):
@@ -443,6 +506,9 @@ def audit(directory, phase):
     check(sha(HELPER_PATH) == HELPER_SHA256, 'Independent helper changed')
     frozen, profiles, banks, candidates, opponents = frozen_inputs(directory)
     plan, target = frozen['plan'], directory / phase
+    git_values = git_receipts(frozen, profiles, candidates)
+    check(all(utc(item['verified_utc']) <= utc(report['started_utc']) for item in frozen['git_receipts']),
+          'Git verification happened after measured phase started')
     cells = frozen['cells'][phase]
     pairs, games = (12, 24) if phase == 'preflight' else (384, 768)
     check(len(cells) == pairs and len(report['cells']) == pairs and len(report['launched_cells']) == pairs, 'Missing/extra phase pairs')
@@ -470,6 +536,13 @@ def audit(directory, phase):
         check(sha(cell_dir / 'games.json') == actual['games_json_sha256'] and sha(cell_dir / 'games.pgn') == actual['pgn_sha256'], 'Cell result hashes differ')
         check(metadata['completed'] is True and metadata['errors'] == [] and metadata['exit_code'] == 0,
               'Incomplete/errored match was marked complete')
+        check(metadata['formal_git_receipts'] == frozen['git_receipts'], 'Worker Git receipts leave sealed freeze envelope')
+        checkout = metadata['harness_checkout']
+        check(checkout['commit'] == git_values[('rev-parse', 'HEAD')]
+              and checkout['status_porcelain'] == git_values[('status', '--porcelain')] and not checkout.get('error'),
+              'Worker checkout context differs from root-verified freeze receipts')
+        check(checkout['scope'] == 'Git objects/context verified by real root commands at input freeze and served from sealed exact-query receipts. Worker rechecks file/model/harness hashes at match start; no transient Git helper is launched in a measured worker.',
+              'Worker checkout scope misstates freeze-time Git context')
         opening = banks[phase][cell['opening_index']]
         check(metadata['formal_cell'] == cell and metadata['selected_openings'] == [opening]
               and read(cell_dir / 'openings.json') == {'schema_version': 1, 'openings': [opening]}, 'Wrong cell opening')
@@ -502,6 +575,10 @@ def audit(directory, phase):
             local = profile['kind'] == 'regicide'
             check(engine['source_commit_object_verified'] is local and
                   engine['provided_source_commit'] == (profile['source']['commit'] if local else None), 'Source relationship claim differs')
+            if local:
+                commit = profile['source']['commit']
+                check(git_values[('rev-parse', '--verify', commit+'^{commit}')].lower() == commit.lower(),
+                      'Candidate source commit lacks exact root verification receipt')
             if not local:
                 external = engine['external_source']
                 check(external['manifest_sha256'] == sha(cell_dir / 'external-source.json')
@@ -559,6 +636,7 @@ def audit(directory, phase):
             'independent_helper_sha256': sha(HELPER_PATH), 'scheduled_pairs': pairs, 'audited_pairs': pairs,
             'scheduled_games': games, 'completed_games': games, 'incomplete_games': 0, 'errors': 0,
             'replay': dict(helper.MOVES), 'cells': results, 'strata': strata, 'load': guard,
+            'git_scope': 'Exact candidate commit, HEAD and porcelain-status queries succeeded at input freeze and their sealed receipts match every worker metadata copy. These are freeze-time context, not fresh per-worker Git commands; file/model/harness identities are separately hash-checked.',
             'input_sha256': dict(sorted(helper.FILES.items())),
             'source_scope': 'File/model/artifact identities, declared local commit objects and native build receipt/source consistency checked. No independent source-to-binary rebuild; external version/revision/URL remain declarations. Direct worker executable and the two declared chess source files are hashed; these are not a complete frozen Python runtime.',
             'configuration_scope': 'Serialized actual command including direct executable/-s, file bindings, model SHA, accepted UCI option types/order, worker and launch-time engine affinity, PID+creation ancestry and raw counters checked. Worker self-reported executable/hash/versions/no_user_site and three environment variables match frozen bindings; no external OS environment readback, raw UCI wire transcript, general option readback or continuous affinity monitoring is claimed.',
