@@ -90,14 +90,14 @@ private:
 };
 
 void validate_model(const NeuralModel& model) {
-    if (model.format_version != 1 && model.format_version != 2)
+    if (model.format_version != 1 && model.format_version != 2 && model.format_version != 3)
         throw std::runtime_error("unsupported neural model version");
     if (model.format_version == 1 && model.input_scale != 1)
         throw std::runtime_error("neural model v1 input scale must be 1");
-    if (model.format_version == 2 &&
+    if (model.format_version >= 2 &&
         (model.input_scale < 2 || model.input_scale > 256 ||
          (model.input_scale & (model.input_scale - 1)) != 0))
-        throw std::runtime_error("neural model v2 input scale must be a power of two in [2, 256]");
+        throw std::runtime_error("neural model v2/v3 input scale must be a power of two in [2, 256]");
     if (model.output_scale < 1 || model.output_scale > 65536)
         throw std::runtime_error("neural model output scale must be in [1, 65536]");
     if (model.output_scale % model.input_scale != 0)
@@ -114,6 +114,12 @@ void validate_model(const NeuralModel& model) {
         for (int value : row)
             if (value < -input_bound || value > input_bound)
                 throw std::runtime_error("neural model input weight is out of range");
+    for (int value : model.turn_weights) {
+        if (model.format_version < 3 && value != 0)
+            throw std::runtime_error("legacy neural model turn weights must be zero");
+        if (value < -input_bound || value > input_bound)
+            throw std::runtime_error("neural model turn weight is out of range");
+    }
 }
 
 std::int64_t perspective(const Position& position, Color viewer, const NeuralModel& model) noexcept {
@@ -128,6 +134,8 @@ std::int64_t perspective(const Position& position, Color viewer, const NeuralMod
         const auto& row = model.input_weights[relative_piece * 64 + relative_square];
         for (int h = 0; h < hidden; ++h) accumulator[h] += row[h];
     }
+    if (model.format_version == 3 && viewer == position.turn)
+        for (int h = 0; h < hidden; ++h) accumulator[h] += model.turn_weights[h];
     std::int64_t score = 0;
     const int activation_clip = base_activation_clip * model.input_scale;
     for (int h = 0; h < hidden; ++h)
@@ -157,14 +165,16 @@ std::uint64_t neural_model_checksum(const NeuralModel& model) noexcept {
             word >>= 8;
         }
     };
-    for (int value : {model.format_version, inputs, hidden,
+    for (int value : {model.format_version, inputs + (model.format_version == 3 ? 1 : 0), hidden,
                      base_activation_clip * model.input_scale, model.output_scale})
         integer(value);
-    if (model.format_version == 2) integer(model.input_scale);
+    if (model.format_version >= 2) integer(model.input_scale);
     for (int value : model.hidden_bias) integer(value);
     for (int value : model.output_weights) integer(value);
     for (const auto& row : model.input_weights)
         for (int value : row) integer(value);
+    if (model.format_version == 3)
+        for (int value : model.turn_weights) integer(value);
     return hash;
 }
 
@@ -181,14 +191,15 @@ std::shared_ptr<const NeuralModel> load_neural_model(const std::string& path) {
         throw std::runtime_error("cannot read complete neural model");
     ModelReader reader(contents);
     if (reader.token() != "REGICIDE_NNUE") throw std::runtime_error("invalid neural model magic");
-    const int version = reader.integer(1, 2);
-    reader.integer(inputs, inputs);
+    const int version = reader.integer(1, 3);
+    const int serialized_inputs = inputs + (version == 3 ? 1 : 0);
+    reader.integer(serialized_inputs, serialized_inputs);
     reader.integer(hidden, hidden);
     const int clip = reader.integer(base_activation_clip, base_activation_clip * 256);
     auto model = std::make_shared<NeuralModel>();
     model->format_version = version;
     model->output_scale = reader.integer(1, 65536);
-    if (version == 2) model->input_scale = reader.integer(2, 256);
+    if (version >= 2) model->input_scale = reader.integer(2, 256);
     if (clip != base_activation_clip * model->input_scale)
         throw std::runtime_error("neural model activation clip does not match input scale");
     const int bias_bound = version == 1 ? 4096 : 1048576;
@@ -197,6 +208,8 @@ std::shared_ptr<const NeuralModel> load_neural_model(const std::string& path) {
     const int input_bound = version == 1 ? 127 : 32767;
     for (auto& row : model->input_weights)
         for (int& value : row) value = reader.integer(-input_bound, input_bound);
+    if (version == 3)
+        for (int& value : model->turn_weights) value = reader.integer(-input_bound, input_bound);
     validate_model(*model);
     if (reader.token() != "checksum") throw std::runtime_error("missing neural model checksum");
     if (reader.checksum() != neural_model_checksum(*model))
@@ -222,9 +235,10 @@ void save_neural_model(const NeuralModel& model, const std::string& path) {
     std::ofstream stream(temporary, std::ios::binary | std::ios::trunc);
     if (!stream) throw std::runtime_error("cannot create neural model temporary file");
     stream.imbue(std::locale::classic());
-    stream << "REGICIDE_NNUE\n" << model.format_version << ' ' << inputs << ' ' << hidden << ' '
+    stream << "REGICIDE_NNUE\n" << model.format_version << ' '
+           << inputs + (model.format_version == 3 ? 1 : 0) << ' ' << hidden << ' '
            << base_activation_clip * model.input_scale << ' ' << model.output_scale;
-    if (model.format_version == 2) stream << ' ' << model.input_scale;
+    if (model.format_version >= 2) stream << ' ' << model.input_scale;
     stream << '\n';
     for (int value : model.hidden_bias) stream << value << ' ';
     stream << '\n';
@@ -232,6 +246,10 @@ void save_neural_model(const NeuralModel& model, const std::string& path) {
     stream << '\n';
     for (const auto& row : model.input_weights) {
         for (int value : row) stream << value << ' ';
+        stream << '\n';
+    }
+    if (model.format_version == 3) {
+        for (int value : model.turn_weights) stream << value << ' ';
         stream << '\n';
     }
     stream << "checksum " << neural_model_checksum(model) << '\n';
@@ -296,10 +314,14 @@ void NeuralAccumulator::update_generated(const Position& before, const Position&
 int NeuralAccumulator::evaluate(Color turn) const noexcept {
     std::int64_t white = 0;
     const int activation_clip = base_activation_clip * model_->input_scale;
-    for (int h = 0; h < hidden; ++h)
-        white += static_cast<std::int64_t>(std::clamp(sums_[0][h], 0, activation_clip) -
-                                         std::clamp(sums_[1][h], 0, activation_clip)) *
+    for (int h = 0; h < hidden; ++h) {
+        const int turn_weight = model_->format_version == 3 ? model_->turn_weights[h] : 0;
+        const int white_sum = sums_[0][h] + (turn == Color::white ? turn_weight : 0);
+        const int black_sum = sums_[1][h] + (turn == Color::black ? turn_weight : 0);
+        white += static_cast<std::int64_t>(std::clamp(white_sum, 0, activation_clip) -
+                                         std::clamp(black_sum, 0, activation_clip)) *
                  model_->output_weights[h];
+    }
     return final_score(white, model_->output_scale, turn);
 }
 } // namespace regicide

@@ -1,0 +1,81 @@
+{
+  "architecture": {
+    "added_trainable_parameters": 16,
+    "candidate": "same plus one binary input per perspective: viewer has move",
+    "legacy": "768 piece inputs, shared 16 hidden units, two perspectives",
+    "turn_weight_initialization": "all zero"
+  },
+  "baseline": {
+    "id": "B-mse-20261020",
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-huber-preparation\\attempt-001\\training\\B-mse-20261020\\model.nnue",
+    "retrained": false,
+    "sha256": "267f65646c24292efa28f11a5f5990311ed7da4f6c134d7c4a6b6c1e0f7be1eb"
+  },
+  "config": {
+    "batch_size": 128,
+    "candidate_id": "B-mse-stm-20261020",
+    "epochs": 120,
+    "input_bias_lr": 2e-05,
+    "input_scale": 32,
+    "loss": "mse",
+    "output_lr": 0.005,
+    "seed": 20261020
+  },
+  "created_utc": "2026-10-21T14:14:09.658110+00:00",
+  "data": {
+    "batch_order_sha256": "82aa541252591983612b19d383f40feb3d00a41782ff835828ecbc3f6d0ac967",
+    "feature_sha256": "479fe32c161773c713edc59bd94a41606fecb4bd8066914a65c11e8adcb1cdc8",
+    "historical_data_sha256_exact": {
+      "manifest.json": "530bf500f276ebe886e74cfcee065f1a3568fc2a5be15ad6e1afca24f1437d62",
+      "train.jsonl": "cb502e8fc274b6429e6ed6298940b146ad91195a4625756993f06cef50552c97",
+      "validation.jsonl": "be1605423587845c093169358279809472a783d468c66d46c41de090357ff3c4"
+    },
+    "holdout_policy": "Existing heldout labels and prior match positions are not read or used.",
+    "initial_sha256": "5ce9ca28e3436b125db9b307944d28c1fe7e58bbd7415048ec986aa570d4bd05",
+    "rows": {
+      "manifest": 18,
+      "test": 0,
+      "train": 2209,
+      "validation": 723
+    },
+    "source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval",
+    "target": "target_white_cp (B, existing self-search labels)",
+    "turn_sha256": "a2bb6d5716215348651653e298a5eb1ace2311d885f8f17e2561ced74cec578e"
+  },
+  "environment": {
+    "blas_threads": 1,
+    "chess": "1.11.2",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "hypothesis": "Relative side-to-move hidden input can represent initiative and turn-dependent evaluation.",
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\freeze.json": "bc484c64ff4cad3431a422fdc0a6fc0efeeb26c243bcd70eebf0d3ac7ef43f1c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\initial-floats.npz": "5ce9ca28e3436b125db9b307944d28c1fe7e58bbd7415048ec986aa570d4bd05",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\manifest.json": "530bf500f276ebe886e74cfcee065f1a3568fc2a5be15ad6e1afca24f1437d62",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\test.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\train.jsonl": "cb502e8fc274b6429e6ed6298940b146ad91195a4625756993f06cef50552c97",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\validation.jsonl": "be1605423587845c093169358279809472a783d468c66d46c41de090357ff3c4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-huber-preparation\\attempt-001\\training\\B-mse-20261020\\metrics.json": "97dfa92a34d7e5a41b0618ede4e3e627e732c8223e32a24355bd1d4668ea655c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-huber-preparation\\attempt-001\\training\\B-mse-20261020\\model.nnue": "267f65646c24292efa28f11a5f5990311ed7da4f6c134d7c4a6b6c1e0f7be1eb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_precision.py": "97b05c7869226abc4ce57f77e36d46627cb12301c0add431f5e152d139c0d5a2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_qat.py": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_target_ab_data.py": "7a615b857923963689d20d6b6c867244959f1600573d1ac19dda842647a35339",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_training.py": "7ce2a4e8d3ccc9a4ffad1d48f12749b3dc831b51dbc39c2b7cc7a838852c9343",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\prepare_neural_huber.py": "fa14b709794974a12966fce72a5c1a8285a290ed6f81feae4e3d77f87ca11b16",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_neural_stm.py": "bf31f8f63f177ec3d70fad7de86b9fdc967921f087608813c757e327b5419ed0"
+  },
+  "optimizer": {
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "epsilon": 1e-08,
+    "gradient_norm_limit": 10,
+    "name": "Adam",
+    "turn_lr": 2e-05
+  },
+  "selection": "One candidate, fixed final epoch 120; no validation or match selection; no seed sweep.",
+  "starting_head": "2acf68003aec7be9401a5845a53995b12863635a",
+  "strength_promoted": false
+}

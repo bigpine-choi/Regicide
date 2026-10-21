@@ -72,10 +72,18 @@ NeuralModel precision_model(int scale) {
     for (auto& row : model.input_weights) for (int& value : row) value *= scale;
     return model;
 }
+NeuralModel turn_model() {
+    auto model = precision_model(16);
+    model.format_version = 3;
+    for (int h = 0; h < 16; ++h)
+        model.turn_weights[h] = (h % 2 == 0 ? 1 : -1) * (h + 1) * 17;
+    return model;
+}
 bool equal_model(const NeuralModel& a, const NeuralModel& b) {
     return a.input_weights == b.input_weights && a.hidden_bias == b.hidden_bias &&
         a.output_weights == b.output_weights && a.output_scale == b.output_scale &&
-        a.format_version == b.format_version && a.input_scale == b.input_scale;
+        a.format_version == b.format_version && a.input_scale == b.input_scale &&
+        a.turn_weights == b.turn_weights;
 }
 std::string read(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
@@ -89,13 +97,34 @@ void write(const std::string& path, const std::string& text) {
 // checksum. A malformed model must not pass merely because its hash matches.
 std::string raw_model(const NeuralModel& model) {
     std::ostringstream out;
-    out << "REGICIDE_NNUE " << model.format_version << " 768 16 " << 127 * model.input_scale
+    out << "REGICIDE_NNUE " << model.format_version << ' '
+        << (model.format_version == 3 ? 769 : 768) << " 16 " << 127 * model.input_scale
         << ' ' << model.output_scale;
-    if (model.format_version == 2) out << ' ' << model.input_scale;
+    if (model.format_version >= 2) out << ' ' << model.input_scale;
     out << '\n';
     for (int value : model.hidden_bias) out << value << ' ';
     for (int value : model.output_weights) out << value << ' ';
     for (const auto& row : model.input_weights) for (int value : row) out << value << ' ';
+    if (model.format_version == 3)
+        for (int value : model.turn_weights) out << value << ' ';
+    out << "checksum " << neural_model_checksum(model) << '\n';
+    return out.str();
+}
+// Historical v1/v2 writer layout, independent of the version-aware writer.
+std::string legacy_bytes(const NeuralModel& model) {
+    std::ostringstream out;
+    out << "REGICIDE_NNUE\n" << model.format_version << " 768 16 " << 127 * model.input_scale
+        << ' ' << model.output_scale;
+    if (model.format_version == 2) out << ' ' << model.input_scale;
+    out << '\n';
+    for (int value : model.hidden_bias) out << value << ' ';
+    out << '\n';
+    for (int value : model.output_weights) out << value << ' ';
+    out << '\n';
+    for (const auto& row : model.input_weights) {
+        for (int value : row) out << value << ' ';
+        out << '\n';
+    }
     out << "checksum " << neural_model_checksum(model) << '\n';
     return out.str();
 }
@@ -105,7 +134,8 @@ void exact(const Board& board, const NeuralAccumulator& accumulator,
     expect(accumulator == NeuralAccumulator(board, model), label + ": raw accumulator differs");
     const int score = evaluate_neural(board, model);
     expect(accumulator.evaluate(board.position().turn) == score, label + ": full/incremental score differs");
-    expect(accumulator.evaluate(opposite(board.position().turn)) == -score, label + ": score perspective differs");
+    if (model.format_version < 3)
+        expect(accumulator.evaluate(opposite(board.position().turn)) == -score, label + ": score perspective differs");
     expect(board == saved, label + ": evaluation changed board/history");
 }
 void apply(Board& board, NeuralAccumulator& accumulator, Move move, bool fast) {
@@ -245,7 +275,7 @@ int main(int argc, char** argv) {
             if (kind == 7) invalid.output_scale = 113;
             if (kind == 8) invalid.input_scale = 3;
             if (kind == 9) invalid.input_scale = 0;
-            if (kind == 10) invalid.format_version = 3;
+            if (kind == 10) invalid.format_version = 4;
             if (kind == 11) { invalid.format_version = 1; invalid.input_scale = 2; }
             write(invalid_path, raw_model(invalid));
             rejects([&] { (void)load_neural_model(invalid_path); }, "out-of-range v2 parameter load");
@@ -303,6 +333,167 @@ int main(int argc, char** argv) {
         }
         expect(evaluate_neural(pawn, extreme) == 28000, "wide v2 numerator overflow or clamp");
         exact(pawn, NeuralAccumulator(pawn, extreme), extreme, "v2 wide numerator");
+    });
+    test("v3 serialization, legacy bytes and zero-feature compatibility", [&] {
+        expect(neural_model_checksum(precision_model(16)) == 8263884807544471307ULL,
+               "historical v2 checksum changed");
+        for (int version : {1, 2}) {
+            const auto legacy = version == 1 ? custom_model() : precision_model(16);
+            const auto legacy_path = temporary.file("legacy-bytes-" + std::to_string(version));
+            save_neural_model(legacy, legacy_path);
+            expect(read(legacy_path) == legacy_bytes(legacy), "legacy serialized bytes changed");
+            auto empty_turn = version == 1 ? precision_model(16) : legacy;
+            empty_turn.format_version = 3;
+            for (const char* source : {Board::start_fen.data(),
+                    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1",
+                    "7k/8/8/8/8/8/P7/6K1 w - - 0 1"}) {
+                const Board board(source);
+                expect(evaluate_neural(board, legacy) == evaluate_neural(board, empty_turn),
+                       "zero v3 turn feature changed legacy evaluation");
+                exact(board, NeuralAccumulator(board, empty_turn), empty_turn, "zero v3 turn feature");
+            }
+            auto hidden_turn = legacy;
+            hidden_turn.turn_weights[3] = 1;
+            const auto invalid_path = temporary.file("legacy-hidden-turn-" + std::to_string(version));
+            rejects([&] { save_neural_model(hidden_turn, invalid_path); }, "legacy hidden turn weight");
+            expect(!std::filesystem::exists(invalid_path), "legacy invalid save left destination");
+        }
+        const auto original = turn_model();
+        const auto v3_path = temporary.file("turn-v3.nnue");
+        save_neural_model(original, v3_path);
+        const auto loaded = load_neural_model(v3_path);
+        expect(equal_model(original, *loaded), "v3 parameter round trip");
+        expect(read(v3_path).starts_with("REGICIDE_NNUE\n3 769 16 2032 112 16\n"),
+               "v3 header does not declare the turn input");
+        const auto serialized = read(v3_path);
+        rejects([&] { save_neural_model(original, v3_path); }, "existing v3 destination overwrite");
+        expect(read(v3_path) == serialized, "rejected v3 save changed destination");
+        auto changed = original;
+        ++changed.turn_weights[5];
+        expect(neural_model_checksum(original) != neural_model_checksum(changed),
+               "turn input is absent from checksum");
+        expect(evaluate_neural(Board(), original) == evaluate_neural(Board(), *loaded),
+               "v3 round-trip score");
+    });
+    test("v3 turn feature, clipping and unchanged-piece turn flip", [&] {
+        NeuralModel tempo;
+        tempo.format_version = 3; tempo.input_scale = 16; tempo.output_scale = 128;
+        tempo.hidden_bias[0] = 10; tempo.output_weights[0] = 128; tempo.turn_weights[0] = 32;
+        const Board white("7k/8/8/8/8/8/P7/6K1 w - - 0 1");
+        const Board black("7k/8/8/8/8/8/P7/6K1 b - - 0 1");
+        const NeuralAccumulator accumulator(white, tempo);
+        expect(white.position().squares == black.position().squares, "turn flip changed pieces");
+        expect(accumulator == NeuralAccumulator(black, tempo), "turn feature leaked into stored piece sums");
+        expect(evaluate_neural(white, tempo) == 32 && evaluate_neural(black, tempo) == 32,
+               "turn feature was not relative to the moving perspective");
+        expect(accumulator.evaluate(Color::white) == 32 && accumulator.evaluate(Color::black) == 32,
+               "turn-only change requires a piece update");
+        exact(white, accumulator, tempo, "white tempo");
+        exact(black, accumulator, tempo, "black tempo");
+        tempo.hidden_bias[0] = 2031; tempo.turn_weights[0] = 2;
+        tempo.hidden_bias[1] = 1; tempo.turn_weights[1] = -2; tempo.output_weights[1] = 256;
+        expect(evaluate_neural(white, tempo) == -1 && evaluate_neural(black, tempo) == -1,
+               "turn weight must be added before upper/lower clipping");
+        exact(white, NeuralAccumulator(white, tempo), tempo, "turn clipping white");
+        exact(black, NeuralAccumulator(black, tempo), tempo, "turn clipping black");
+        tempo.hidden_bias.fill(0); tempo.turn_weights.fill(32767); tempo.output_weights.fill(8192);
+        expect(evaluate_neural(white, tempo) == 28000, "v3 wide numerator overflow or clamp");
+        exact(white, NeuralAccumulator(white, tempo), tempo, "wide v3 turn numerator");
+    });
+    test("v3 header, turn ranges, truncation and checksum rejection", [&] {
+        const auto invalid_path = temporary.file("invalid-v3.nnue");
+        const auto original = turn_model();
+        const auto good = raw_model(original);
+        for (const char* header : {"REGICIDE_NNUE 3 768 16 2032 112 16\n",
+                "REGICIDE_NNUE 3 770 16 2032 112 16\n", "REGICIDE_NNUE 3 769 16 2031 112 16\n",
+                "REGICIDE_NNUE 3 769 16 2032 112 8\n", "REGICIDE_NNUE 3 769 16 381 112 3\n",
+                "REGICIDE_NNUE 3 769 16 127 112 1\n", "REGICIDE_NNUE 4 769 16 2032 112 16\n"}) {
+            write(invalid_path, header + good.substr(good.find('\n') + 1));
+            rejects([&] { (void)load_neural_model(invalid_path); }, "malformed v3 header");
+        }
+        for (int kind = 0; kind < 4; ++kind) {
+            auto invalid = original;
+            if (kind == 0) invalid.turn_weights[0] = 32768;
+            if (kind == 1) invalid.turn_weights[0] = -32768;
+            if (kind == 2) invalid.hidden_bias[0] = 1048577;
+            if (kind == 3) invalid.input_weights[0][0] = -32768;
+            write(invalid_path, raw_model(invalid));
+            rejects([&] { (void)load_neural_model(invalid_path); }, "out-of-range v3 load");
+            const auto invalid_save = temporary.file("invalid-v3-save-" + std::to_string(kind));
+            rejects([&] { save_neural_model(invalid, invalid_save); }, "out-of-range v3 save");
+            expect(!std::filesystem::exists(invalid_save), "rejected v3 save left destination");
+        }
+        auto changed = original;
+        ++changed.turn_weights[15];
+        auto corrupt = raw_model(changed);
+        const auto checksum_start = corrupt.find("checksum ");
+        corrupt.replace(checksum_start, std::string::npos,
+                        "checksum " + std::to_string(neural_model_checksum(original)) + "\n");
+        write(invalid_path, corrupt);
+        rejects([&] { (void)load_neural_model(invalid_path); }, "turn edit with stale checksum");
+        const auto row_end = good.find("checksum ");
+        write(invalid_path, good.substr(0, row_end - 4));
+        rejects([&] { (void)load_neural_model(invalid_path); }, "truncated turn row");
+        write(invalid_path, good + " trailing");
+        rejects([&] { (void)load_neural_model(invalid_path); }, "trailing v3 data");
+    });
+    test("v3 special moves, exact undo and full/incremental search", [&] {
+        const auto v3_path = temporary.file("turn-walk-v3.nnue");
+        save_neural_model(turn_model(), v3_path);
+        const auto model = load_neural_model(v3_path);
+        std::vector<std::pair<std::string, std::string>> fixtures{
+            {"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1g1"},
+            {"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1c1"},
+            {"r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8g8"},
+            {"r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8c8"},
+            {"7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", "e5d6"},
+            {"7k/8/8/8/3pP3/8/8/6K1 b - e3 0 1", "d4e3"},
+            {std::string(Board::start_fen), "e2e4"}};
+        for (char promotion : std::string("qrbn")) {
+            fixtures.emplace_back("7k/P7/8/8/8/8/8/6K1 w - - 0 1", "a7a8" + std::string(1, promotion));
+            fixtures.emplace_back("1r5k/P7/8/8/8/8/8/6K1 w - - 0 1", "a7b8" + std::string(1, promotion));
+            fixtures.emplace_back("7k/8/8/8/8/8/p7/6K1 b - - 0 1", "a2a1" + std::string(1, promotion));
+            fixtures.emplace_back("7k/8/8/8/8/8/p7/1R4K1 b - - 0 1", "a2b1" + std::string(1, promotion));
+        }
+        for (const auto& [source, text] : fixtures) for (bool fast : {false, true}) {
+            Board board(source); NeuralAccumulator accumulator(board, *model);
+            const auto saved_board = board; const auto saved_accumulator = accumulator;
+            exact(board, accumulator, *model, "v3 special parent");
+            apply(board, accumulator, Move::from_uci(text), fast);
+            exact(board, accumulator, *model, "v3 special " + text);
+            siblings(board, accumulator, *model, fast);
+            board.undo(); accumulator = saved_accumulator;
+            expect(board == saved_board, "v3 special undo changed board/history");
+            exact(board, accumulator, *model, "v3 special undo");
+        }
+        Board board; NeuralAccumulator accumulator(board, *model);
+        const auto root = board; const auto root_accumulator = accumulator;
+        std::vector<std::pair<Board, NeuralAccumulator>> parents;
+        std::uint32_t seed = 0x53544d33U;
+        for (int ply = 0; ply < 120; ++ply) {
+            const auto moves = board.legal_moves(); if (moves.empty()) break;
+            parents.emplace_back(board, accumulator);
+            apply(board, accumulator, moves[random_next(seed) % moves.size()], ply % 2 == 0);
+            exact(board, accumulator, *model, "v3 legal walk");
+        }
+        expect(parents.size() >= 32, "v3 legal walk too short");
+        while (!parents.empty()) {
+            board.undo(); accumulator = parents.back().second;
+            expect(board == parents.back().first, "v3 walk undo board/history");
+            exact(board, accumulator, *model, "v3 walk undo"); parents.pop_back();
+        }
+        expect(board == root && accumulator == root_accumulator, "v3 complete unwind changed root");
+        SearchLimits limits; limits.depth = 2;
+        SearchOptions options; options.nnue = true; options.nnue_model = model; options.hash_mb = 1;
+        for (const char* source : {Board::start_fen.data(),
+                "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
+                "1r5k/P7/8/8/8/8/8/6K1 w - - 0 1"}) {
+            const Board position(source);
+            options.nnue_incremental = true;
+            const auto incremental = search(position, limits, nullptr, {}, options);
+            options.nnue_incremental = false;
+            same_graph(incremental, search(position, limits, nullptr, {}, options));
+        }
     });
     const auto path = temporary.file("walk.nnue");
     save_neural_model(custom_model(), path);
