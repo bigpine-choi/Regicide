@@ -1,0 +1,926 @@
+{
+  "bounded_replay": {
+    "epochs": 5,
+    "exact_previous_epoch5_evaluation_and_history": true,
+    "models_or_checkpoints_saved": 0,
+    "optimizer_steps": 80,
+    "same_seed_and_config_as_previous": true
+  },
+  "created_utc": "2026-10-21T16:46:54.399280+00:00",
+  "data": {
+    "anchor": 263,
+    "leaf_point_fraction": 0.1852216748768473,
+    "new_leaf_train": 94,
+    "new_leaf_train_weighted": 376,
+    "new_leaf_tuning": 32,
+    "old_train": 1426,
+    "old_train_weighted": 1654,
+    "old_tuning": 337,
+    "pair_train": 26,
+    "total_weighted": 2030
+  },
+  "elapsed_seconds": 1.4608035999699496,
+  "evidence_limits": [
+    "Full-batch gradients are local STE diagnostics; Adam normalization means norm ratios are not causal strength shares.",
+    "First-step controls are fixed local counterfactuals, not additional candidate training or a hyperparameter sweep.",
+    "The five-epoch replay reconstructs a previously observed checkpoint, not an independently tested model.",
+    "Shared feature coverage demonstrates parameter coupling, not a proof that fixed topology cannot generalize.",
+    "Anchor/tuning only evaluate; old69 test labels are not scored and reserved16 gate files are not read.",
+    "An old-training-output MSE preservation term would target function drift directly; its value remains an experimental hypothesis."
+  ],
+  "exact_previous_epoch5_replay": {
+    "drift": {
+      "anchor": {
+        "changed_predictions": 259,
+        "delta_mse_cp2": 1445.5399239543726,
+        "drift_squared_cp2": 1016.9619771863117,
+        "max_abs_drift_cp": 107.0,
+        "mean_abs_drift_cp": 25.380228136882128,
+        "mean_drift_cp": 0.3231939163498099,
+        "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+        "residual_drift_cross_term_cp2": 428.5779467680608
+      },
+      "leaf_train": {
+        "changed_predictions": 368,
+        "delta_mse_cp2": -12903.021276595744,
+        "drift_squared_cp2": 1367.0212765957447,
+        "max_abs_drift_cp": 110.0,
+        "mean_abs_drift_cp": 28.5531914893617,
+        "mean_drift_cp": -7.191489361702128,
+        "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+        "residual_drift_cross_term_cp2": -14270.04255319149
+      },
+      "leaf_tuning": {
+        "changed_predictions": 128,
+        "delta_mse_cp2": -1804.71875,
+        "drift_squared_cp2": 1400.96875,
+        "max_abs_drift_cp": 84.0,
+        "mean_abs_drift_cp": 29.09375,
+        "mean_drift_cp": 2.03125,
+        "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+        "residual_drift_cross_term_cp2": -3205.6875
+      },
+      "old_train": {
+        "changed_predictions": 1636,
+        "delta_mse_cp2": -2830.609431680774,
+        "drift_squared_cp2": 988.819830713422,
+        "max_abs_drift_cp": 116.0,
+        "mean_abs_drift_cp": 24.92261185006046,
+        "mean_drift_cp": 0.9951632406287787,
+        "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+        "residual_drift_cross_term_cp2": -3819.429262394196
+      },
+      "old_tuning": {
+        "changed_predictions": 477,
+        "delta_mse_cp2": 1226.8586278586279,
+        "drift_squared_cp2": 982.2349272349272,
+        "max_abs_drift_cp": 107.0,
+        "mean_abs_drift_cp": 25.686070686070686,
+        "mean_drift_cp": -1.0914760914760915,
+        "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+        "residual_drift_cross_term_cp2": 244.6237006237006
+      }
+    },
+    "epoch": 5,
+    "evaluation": {
+      "anchor": {
+        "mae_cp": 187.82889733840304,
+        "mse_cp2": 64253.49429657795,
+        "rmse_cp": 253.48272977971882
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": false,
+      "epoch": 5,
+      "mse_cp2": 150992.2281403941,
+      "objective_cp2": 150992.2281403941,
+      "pair": {
+        "mae_cp": 185.3125,
+        "mse_cp2": 60811.9375,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 246.6007654083823,
+        "strict_order_matches": 6,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 227.52216748768473,
+        "mse_cp2": 90180.29064039409,
+        "rmse_cp": 300.3003340664044
+      }
+    },
+    "largest_anchor_squared_error_increases": [
+      {
+        "family_id": "ab2-normal-020",
+        "feature_hash": "f48409c40fa0027f2d6312fe012f3cb914936c51662e6ffef2a547cfbf934f2f",
+        "row": 255,
+        "squared_error_increase_cp2": 53243.0
+      },
+      {
+        "family_id": "ab2-normal-019",
+        "feature_hash": "7b91c02c88821fa30aab42a407032729e2598e982a7310c757975d9430f3f5be",
+        "row": 7,
+        "squared_error_increase_cp2": 41409.0
+      },
+      {
+        "family_id": "ab2-normal-020",
+        "feature_hash": "3638f51eec3e6afc5bf56222ade15d0a4d46d3b63894b3d3cd814a8552e7d111",
+        "row": 134,
+        "squared_error_increase_cp2": 38055.0
+      },
+      {
+        "family_id": "ab2-normal-010",
+        "feature_hash": "821a85b9ab4cacf256e3da572ede61d5802ce4986b6a0dc0f073bc71fcb903af",
+        "row": 204,
+        "squared_error_increase_cp2": 36096.0
+      },
+      {
+        "family_id": "ab2-normal-006",
+        "feature_hash": "5700208e5252b2d3c9933f4ae9fbc81b7ed0ad33034f5ae8a2ae1f713e768d01",
+        "row": 166,
+        "squared_error_increase_cp2": 35931.0
+      },
+      {
+        "family_id": "ab2-normal-011",
+        "feature_hash": "c2dd63be5fe09dad168592dc19187faed8b18ef0812dad8102187aff656d8506",
+        "row": 185,
+        "squared_error_increase_cp2": 31185.0
+      },
+      {
+        "family_id": "ab2-normal-020",
+        "feature_hash": "f4775dc9d45adb4dbd63a2f275ad25e0f88cb201dd49e3802169b63f65f84bba",
+        "row": 168,
+        "squared_error_increase_cp2": 29624.0
+      },
+      {
+        "family_id": "ab2-normal-019",
+        "feature_hash": "af606a4e3757b86d010810d0fad48ebf0efc8f844fdd450088ecaea8ee19f718",
+        "row": 85,
+        "squared_error_increase_cp2": 28059.0
+      },
+      {
+        "family_id": "ab2-normal-010",
+        "feature_hash": "6f8f14cc99b01f3668c3fa0910a1141d4cbe4668a4f610272f7c861beeb32110",
+        "row": 128,
+        "squared_error_increase_cp2": 26091.0
+      },
+      {
+        "family_id": "ab2-normal-019",
+        "feature_hash": "303c53f20ac47d4a558ce25fa91ddb78c19a59eb569716e3c51a562efb862463",
+        "row": 102,
+        "squared_error_increase_cp2": 25200.0
+      }
+    ],
+    "metrics": {
+      "anchor": {
+        "integer": {
+          "mae_cp": 187.82889733840304,
+          "mse_cp2": 64253.49429657795,
+          "rmse_cp": 253.48272977971882
+        },
+        "integer_minus_shadow_mse_cp2": 737.8507281206539,
+        "integer_output_truncation_mse_cp2": 0.3166492882790221,
+        "shadow_float": {
+          "mae_cp": 182.63318495606677,
+          "mse_cp2": 62053.0907370015,
+          "rmse_cp": 249.1045779125737
+        }
+      },
+      "leaf_train": {
+        "integer": {
+          "mae_cp": 246.14893617021278,
+          "mse_cp2": 104983.12765957447,
+          "rmse_cp": 324.01099928794775
+        },
+        "integer_minus_shadow_mse_cp2": 511.9959789183085,
+        "integer_output_truncation_mse_cp2": 0.3317944141144448,
+        "shadow_float": {
+          "mae_cp": 249.4698283054525,
+          "mse_cp2": 106939.38756214664,
+          "rmse_cp": 327.0158827368277
+        }
+      },
+      "leaf_tuning": {
+        "integer": {
+          "mae_cp": 274.71875,
+          "mse_cp2": 144646.15625,
+          "rmse_cp": 380.3237518877831
+        },
+        "integer_minus_shadow_mse_cp2": 692.3576562450785,
+        "integer_output_truncation_mse_cp2": 0.4032711982727051,
+        "shadow_float": {
+          "mae_cp": 279.02352962585354,
+          "mse_cp2": 146740.77775544103,
+          "rmse_cp": 383.0675890171877
+        }
+      },
+      "old_train": {
+        "integer": {
+          "mae_cp": 164.96372430471584,
+          "mse_cp2": 51691.23700120919,
+          "rmse_cp": 227.35706938912014
+        },
+        "integer_minus_shadow_mse_cp2": 658.1999096103568,
+        "integer_output_truncation_mse_cp2": 0.3232910820477819,
+        "shadow_float": {
+          "mae_cp": 164.22041925710352,
+          "mse_cp2": 51607.63794353062,
+          "rmse_cp": 227.17314529567668
+        }
+      },
+      "old_tuning": {
+        "integer": {
+          "mae_cp": 214.96257796257797,
+          "mse_cp2": 75686.25571725571,
+          "rmse_cp": 275.1113514874581
+        },
+        "integer_minus_shadow_mse_cp2": 1183.0443056364545,
+        "integer_output_truncation_mse_cp2": 0.31899183753126625,
+        "shadow_float": {
+          "mae_cp": 222.0418600443855,
+          "mse_cp2": 79666.81938607311,
+          "rmse_cp": 282.2531122699502
+        }
+      }
+    },
+    "old_train_pair_retention": {
+      "epoch5_strict_order_matches": 14,
+      "gap_prediction_drift_mse_cp2": 347.65384615384613,
+      "pairs": 26,
+      "warm_strict_order_matches": 11
+    },
+    "one_parameter_group_reverted_to_warm": {
+      "hidden_bias": {
+        "interpretation": "One-group counterfactual at fixed epoch5; effects interact and cannot be added as causal shares",
+        "metrics": {
+          "anchor": {
+            "integer": {
+              "mae_cp": 187.79847908745248,
+              "mse_cp2": 64236.498098859316,
+              "rmse_cp": 253.44920220600284
+            },
+            "integer_minus_shadow_mse_cp2": 737.7782170567416,
+            "integer_output_truncation_mse_cp2": 0.3164608451350107,
+            "shadow_float": {
+              "mae_cp": 182.60739918956028,
+              "mse_cp2": 62038.98588659086,
+              "rmse_cp": 249.07626520122477
+            }
+          },
+          "leaf_tuning": {
+            "integer": {
+              "mae_cp": 274.71875,
+              "mse_cp2": 144646.15625,
+              "rmse_cp": 380.3237518877831
+            },
+            "integer_minus_shadow_mse_cp2": 692.442990513111,
+            "integer_output_truncation_mse_cp2": 0.4032711982727051,
+            "shadow_float": {
+              "mae_cp": 279.02282835149,
+              "mse_cp2": 146740.90082442705,
+              "rmse_cp": 383.0677496532788
+            }
+          },
+          "old_train": {
+            "integer": {
+              "mae_cp": 164.96311970979443,
+              "mse_cp2": 51691.24969770254,
+              "rmse_cp": 227.35709731104183
+            },
+            "integer_minus_shadow_mse_cp2": 658.1624725159479,
+            "integer_output_truncation_mse_cp2": 0.3209873923655721,
+            "shadow_float": {
+              "mae_cp": 164.2141173522153,
+              "mse_cp2": 51608.71591348251,
+              "rmse_cp": 227.17551785674993
+            }
+          }
+        }
+      },
+      "input_weights": {
+        "interpretation": "One-group counterfactual at fixed epoch5; effects interact and cannot be added as causal shares",
+        "metrics": {
+          "anchor": {
+            "integer": {
+              "mae_cp": 182.63498098859316,
+              "mse_cp2": 61829.26615969582,
+              "rmse_cp": 248.65491380565118
+            },
+            "integer_minus_shadow_mse_cp2": 803.0743542850093,
+            "integer_output_truncation_mse_cp2": 0.31394099826595173,
+            "shadow_float": {
+              "mae_cp": 179.83076900418624,
+              "mse_cp2": 60650.01026082569,
+              "rmse_cp": 246.2722279527793
+            }
+          },
+          "leaf_tuning": {
+            "integer": {
+              "mae_cp": 278.625,
+              "mse_cp2": 147108.75,
+              "rmse_cp": 383.54758505301527
+            },
+            "integer_minus_shadow_mse_cp2": 584.2063782822291,
+            "integer_output_truncation_mse_cp2": 0.33137035369873047,
+            "shadow_float": {
+              "mae_cp": 280.4214386054134,
+              "mse_cp2": 146386.38373053964,
+              "rmse_cp": 382.60473563527626
+            }
+          },
+          "old_train": {
+            "integer": {
+              "mae_cp": 168.01209189842805,
+              "mse_cp2": 53945.49576783555,
+              "rmse_cp": 232.2616967298645
+            },
+            "integer_minus_shadow_mse_cp2": 601.5793749380755,
+            "integer_output_truncation_mse_cp2": 0.33475853252295573,
+            "shadow_float": {
+              "mae_cp": 168.8996157539385,
+              "mse_cp2": 54279.8392937865,
+              "rmse_cp": 232.98034100281185
+            }
+          }
+        }
+      },
+      "output_weights": {
+        "interpretation": "One-group counterfactual at fixed epoch5; effects interact and cannot be added as causal shares",
+        "metrics": {
+          "anchor": {
+            "integer": {
+              "mae_cp": 187.9315589353612,
+              "mse_cp2": 64363.201520912546,
+              "rmse_cp": 253.69903728810746
+            },
+            "integer_minus_shadow_mse_cp2": 743.1442728573649,
+            "integer_output_truncation_mse_cp2": 0.35559563582387715,
+            "shadow_float": {
+              "mae_cp": 182.8373689860073,
+              "mse_cp2": 62239.431479130435,
+              "rmse_cp": 249.47831865541028
+            }
+          },
+          "leaf_tuning": {
+            "integer": {
+              "mae_cp": 274.65625,
+              "mse_cp2": 144666.03125,
+              "rmse_cp": 380.34988004467675
+            },
+            "integer_minus_shadow_mse_cp2": 710.171836003261,
+            "integer_output_truncation_mse_cp2": 0.3224830627441406,
+            "shadow_float": {
+              "mae_cp": 279.35277601368233,
+              "mse_cp2": 147009.06159647022,
+              "rmse_cp": 383.41760731149293
+            }
+          },
+          "old_train": {
+            "integer": {
+              "mae_cp": 165.00725513905684,
+              "mse_cp2": 51753.616686819834,
+              "rmse_cp": 227.49421242488748
+            },
+            "integer_minus_shadow_mse_cp2": 666.2487094976774,
+            "integer_output_truncation_mse_cp2": 0.33892366531538126,
+            "shadow_float": {
+              "mae_cp": 164.30264425847588,
+              "mse_cp2": 51696.201072696276,
+              "rmse_cp": 227.36798603298635
+            }
+          }
+        }
+      },
+      "turn_weights": {
+        "interpretation": "One-group counterfactual at fixed epoch5; effects interact and cannot be added as causal shares",
+        "metrics": {
+          "anchor": {
+            "integer": {
+              "mae_cp": 189.24334600760457,
+              "mse_cp2": 65182.37642585552,
+              "rmse_cp": 255.3083947422323
+            },
+            "integer_minus_shadow_mse_cp2": 746.8882042992441,
+            "integer_output_truncation_mse_cp2": 0.3245008345339235,
+            "shadow_float": {
+              "mae_cp": 183.16094434558872,
+              "mse_cp2": 62400.42172125965,
+              "rmse_cp": 249.80076405259382
+            }
+          },
+          "leaf_tuning": {
+            "integer": {
+              "mae_cp": 275.75,
+              "mse_cp2": 143694.6875,
+              "rmse_cp": 379.07082121946553
+            },
+            "integer_minus_shadow_mse_cp2": 664.125091532484,
+            "integer_output_truncation_mse_cp2": 0.3508334159851074,
+            "shadow_float": {
+              "mae_cp": 279.41247444833346,
+              "mse_cp2": 146412.42791731807,
+              "rmse_cp": 382.63876949064905
+            }
+          },
+          "old_train": {
+            "integer": {
+              "mae_cp": 165.35973397823457,
+              "mse_cp2": 52197.41656590084,
+              "rmse_cp": 228.4675394140289
+            },
+            "integer_minus_shadow_mse_cp2": 638.4630725467299,
+            "integer_output_truncation_mse_cp2": 0.33481570224231505,
+            "shadow_float": {
+              "mae_cp": 164.51649952589338,
+              "mse_cp2": 51804.68760171297,
+              "rmse_cp": 227.60643137159585
+            }
+          }
+        }
+      }
+    },
+    "quantized_changes": {
+      "hidden_bias": {
+        "changed": 1,
+        "max_integer_step": 1,
+        "total": 16
+      },
+      "input_weights": {
+        "changed": 1075,
+        "max_integer_step": 1,
+        "total": 12288
+      },
+      "output_weights": {
+        "changed": 11,
+        "max_integer_step": 2,
+        "total": 16
+      },
+      "turn_weights": {
+        "changed": 4,
+        "max_integer_step": 1,
+        "total": 16
+      }
+    }
+  },
+  "feature_overlap_old_train_to_leaf_train": {
+    "left_piece_rows": 672,
+    "right_piece_rows": 386,
+    "right_rows_previously_active_fraction": 0.9689119170984456,
+    "shared_piece_rows": 374
+  },
+  "full_batch_first_adam_step_controls": {
+    "combined": {
+      "group_drift": {
+        "anchor": {
+          "changed_predictions": 191,
+          "delta_mse_cp2": -205.26235741444867,
+          "drift_squared_cp2": 25.802281368821294,
+          "max_abs_drift_cp": 22.0,
+          "mean_abs_drift_cp": 3.376425855513308,
+          "mean_drift_cp": 0.8821292775665399,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -231.06463878326997
+        },
+        "leaf_train": {
+          "changed_predictions": 320,
+          "delta_mse_cp2": 381.20212765957444,
+          "drift_squared_cp2": 37.351063829787236,
+          "max_abs_drift_cp": 18.0,
+          "mean_abs_drift_cp": 4.5212765957446805,
+          "mean_drift_cp": -0.11702127659574468,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 343.8510638297872
+        },
+        "leaf_tuning": {
+          "changed_predictions": 108,
+          "delta_mse_cp2": 905.15625,
+          "drift_squared_cp2": 31.96875,
+          "max_abs_drift_cp": 17.0,
+          "mean_abs_drift_cp": 3.96875,
+          "mean_drift_cp": 1.28125,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 873.1875
+        },
+        "old_train": {
+          "changed_predictions": 1414,
+          "delta_mse_cp2": -52.44195888754535,
+          "drift_squared_cp2": 32.061064087061666,
+          "max_abs_drift_cp": 27.0,
+          "mean_abs_drift_cp": 4.1348246674727935,
+          "mean_drift_cp": 0.24969770253929868,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -84.503022974607
+        },
+        "old_tuning": {
+          "changed_predictions": 380,
+          "delta_mse_cp2": -82.82744282744282,
+          "drift_squared_cp2": 23.58835758835759,
+          "max_abs_drift_cp": 22.0,
+          "mean_abs_drift_cp": 3.471933471933472,
+          "mean_drift_cp": 0.9521829521829522,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -106.41580041580042
+        }
+      },
+      "quantized_changes": {
+        "hidden_bias": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "input_weights": {
+          "changed": 85,
+          "max_integer_step": 1,
+          "total": 12288
+        },
+        "output_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "turn_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        }
+      }
+    },
+    "leaf": {
+      "group_drift": {
+        "anchor": {
+          "changed_predictions": 113,
+          "delta_mse_cp2": -320.8174904942966,
+          "drift_squared_cp2": 10.574144486692015,
+          "max_abs_drift_cp": 15.0,
+          "mean_abs_drift_cp": 1.608365019011407,
+          "mean_drift_cp": -0.5741444866920152,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -331.3916349809886
+        },
+        "leaf_train": {
+          "changed_predictions": 220,
+          "delta_mse_cp2": -439.21276595744683,
+          "drift_squared_cp2": 11.97872340425532,
+          "max_abs_drift_cp": 10.0,
+          "mean_abs_drift_cp": 1.9574468085106382,
+          "mean_drift_cp": -0.8936170212765957,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -451.1914893617021
+        },
+        "leaf_tuning": {
+          "changed_predictions": 68,
+          "delta_mse_cp2": -330.9375,
+          "drift_squared_cp2": 9.6875,
+          "max_abs_drift_cp": 13.0,
+          "mean_abs_drift_cp": 1.5,
+          "mean_drift_cp": -0.75,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -340.625
+        },
+        "old_train": {
+          "changed_predictions": 813,
+          "delta_mse_cp2": -21.097944377267233,
+          "drift_squared_cp2": 7.454655380894801,
+          "max_abs_drift_cp": 15.0,
+          "mean_abs_drift_cp": 1.3760580411124546,
+          "mean_drift_cp": 0.17654171704957677,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -28.55259975816203
+        },
+        "old_tuning": {
+          "changed_predictions": 214,
+          "delta_mse_cp2": -96.51351351351352,
+          "drift_squared_cp2": 6.496881496881497,
+          "max_abs_drift_cp": 15.0,
+          "mean_abs_drift_cp": 1.1912681912681913,
+          "mean_drift_cp": -0.2972972972972973,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -103.01039501039502
+        }
+      },
+      "quantized_changes": {
+        "hidden_bias": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "input_weights": {
+          "changed": 33,
+          "max_integer_step": 1,
+          "total": 12288
+        },
+        "output_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "turn_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        }
+      }
+    },
+    "old_point": {
+      "group_drift": {
+        "anchor": {
+          "changed_predictions": 206,
+          "delta_mse_cp2": 146.1292775665399,
+          "drift_squared_cp2": 62.07604562737642,
+          "max_abs_drift_cp": 33.0,
+          "mean_abs_drift_cp": 5.452471482889734,
+          "mean_drift_cp": 2.2661596958174903,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 84.0532319391635
+        },
+        "leaf_train": {
+          "changed_predictions": 336,
+          "delta_mse_cp2": 1077.5212765957447,
+          "drift_squared_cp2": 81.01063829787235,
+          "max_abs_drift_cp": 26.0,
+          "mean_abs_drift_cp": 7.01063829787234,
+          "mean_drift_cp": 1.4361702127659575,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 996.5106382978723
+        },
+        "leaf_tuning": {
+          "changed_predictions": 108,
+          "delta_mse_cp2": 1075.09375,
+          "drift_squared_cp2": 72.96875,
+          "max_abs_drift_cp": 25.0,
+          "mean_abs_drift_cp": 5.90625,
+          "mean_drift_cp": 2.46875,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 1002.125
+        },
+        "old_train": {
+          "changed_predictions": 1397,
+          "delta_mse_cp2": -104.91233373639662,
+          "drift_squared_cp2": 62.175937122128175,
+          "max_abs_drift_cp": 25.0,
+          "mean_abs_drift_cp": 5.807134220072552,
+          "mean_drift_cp": 0.5399032648125756,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -167.0882708585248
+        },
+        "old_tuning": {
+          "changed_predictions": 416,
+          "delta_mse_cp2": 405.7110187110187,
+          "drift_squared_cp2": 56.57588357588357,
+          "max_abs_drift_cp": 33.0,
+          "mean_abs_drift_cp": 5.598752598752599,
+          "mean_drift_cp": 1.7484407484407485,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 349.13513513513516
+        }
+      },
+      "quantized_changes": {
+        "hidden_bias": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "input_weights": {
+          "changed": 79,
+          "max_integer_step": 1,
+          "total": 12288
+        },
+        "output_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "turn_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        }
+      }
+    },
+    "pair": {
+      "group_drift": {
+        "anchor": {
+          "changed_predictions": 136,
+          "delta_mse_cp2": -265.66920152091257,
+          "drift_squared_cp2": 17.15209125475285,
+          "max_abs_drift_cp": 14.0,
+          "mean_abs_drift_cp": 2.5285171102661597,
+          "mean_drift_cp": 0.8555133079847909,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": -282.8212927756654
+        },
+        "leaf_train": {
+          "changed_predictions": 272,
+          "delta_mse_cp2": 455.6489361702128,
+          "drift_squared_cp2": 23.393617021276597,
+          "max_abs_drift_cp": 15.0,
+          "mean_abs_drift_cp": 3.4574468085106385,
+          "mean_drift_cp": -0.13829787234042554,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 432.25531914893617
+        },
+        "leaf_tuning": {
+          "changed_predictions": 68,
+          "delta_mse_cp2": 711.03125,
+          "drift_squared_cp2": 12.09375,
+          "max_abs_drift_cp": 8.0,
+          "mean_abs_drift_cp": 2.21875,
+          "mean_drift_cp": 0.46875,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 698.9375
+        },
+        "old_train": {
+          "changed_predictions": 1160,
+          "delta_mse_cp2": 41.480652962515116,
+          "drift_squared_cp2": 19.012696493349456,
+          "max_abs_drift_cp": 23.0,
+          "mean_abs_drift_cp": 3.0042321644498187,
+          "mean_drift_cp": -0.26541717049576785,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 22.46795646916566
+        },
+        "old_tuning": {
+          "changed_predictions": 321,
+          "delta_mse_cp2": 97.67775467775468,
+          "drift_squared_cp2": 14.201663201663202,
+          "max_abs_drift_cp": 14.0,
+          "mean_abs_drift_cp": 2.550935550935551,
+          "mean_drift_cp": 0.9459459459459459,
+          "regression_decomposition": "delta MSE = 2*mean(old residual*prediction drift) + mean(drift squared)",
+          "residual_drift_cross_term_cp2": 83.47609147609148
+        }
+      },
+      "quantized_changes": {
+        "hidden_bias": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "input_weights": {
+          "changed": 21,
+          "max_integer_step": 1,
+          "total": 12288
+        },
+        "output_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        },
+        "turn_weights": {
+          "changed": 0,
+          "max_integer_step": 0,
+          "total": 16
+        }
+      }
+    }
+  },
+  "full_training_gradient_components": {
+    "leaf": {
+      "global_l2": 14.148823851581307,
+      "per_parameter_l2": {
+        "hidden_bias": 0.5103238049968003,
+        "input_weights": 12.320559495435125,
+        "output_weights": 0.1968936642593929,
+        "turn_weights": 6.934971708777736
+      }
+    },
+    "leaf_vs_pair": {
+      "cosine": 0.05255055084336752,
+      "per_parameter_cosine": {
+        "hidden_bias": -0.9149711225401816,
+        "input_weights": 0.060932432600017246,
+        "output_weights": 0.2111212646563766,
+        "turn_weights": 0.0006909384275965275
+      }
+    },
+    "old_point": {
+      "global_l2": 3.4919538301304835,
+      "per_parameter_l2": {
+        "hidden_bias": 0.15573702223193717,
+        "input_weights": 3.209470367107877,
+        "output_weights": 0.050149918968468384,
+        "turn_weights": 1.3661158369454502
+      }
+    },
+    "old_point_vs_leaf": {
+      "cosine": 0.1706598268909138,
+      "per_parameter_cosine": {
+        "hidden_bias": -0.8803381904447151,
+        "input_weights": -0.024255287734447867,
+        "output_weights": 0.05896693519403014,
+        "turn_weights": 0.9985560372765921
+      }
+    },
+    "old_point_vs_pair": {
+      "cosine": 0.012541660198186933,
+      "per_parameter_cosine": {
+        "hidden_bias": 0.6800542726407036,
+        "input_weights": 0.013113824905637873,
+        "output_weights": -0.027101711390042464,
+        "turn_weights": 0.00016997011983608965
+      }
+    },
+    "pair": {
+      "global_l2": 15.050572320321024,
+      "per_parameter_l2": {
+        "hidden_bias": 0.24719794567954606,
+        "input_weights": 15.046568244117443,
+        "output_weights": 0.24354775258193276,
+        "turn_weights": 0.009429326273488123
+      }
+    }
+  },
+  "initial_metrics": {
+    "anchor": {
+      "integer": {
+        "mae_cp": 183.91634980988593,
+        "mse_cp2": 62807.95437262357,
+        "rmse_cp": 250.61515192147417
+      },
+      "integer_minus_shadow_mse_cp2": 780.1334933663065,
+      "integer_output_truncation_mse_cp2": 0.32741764199144485,
+      "shadow_float": {
+        "mae_cp": 180.5274884097891,
+        "mse_cp2": 61191.88815788672,
+        "rmse_cp": 247.3699419046031
+      }
+    },
+    "leaf_train": {
+      "integer": {
+        "mae_cp": 264.40425531914894,
+        "mse_cp2": 117886.14893617021,
+        "rmse_cp": 343.3455241242708
+      },
+      "integer_minus_shadow_mse_cp2": 495.4840777640837,
+      "integer_output_truncation_mse_cp2": 0.3171268219643451,
+      "shadow_float": {
+        "mae_cp": 265.36139014545233,
+        "mse_cp2": 119379.86872470203,
+        "rmse_cp": 345.51391972640124
+      }
+    },
+    "leaf_tuning": {
+      "integer": {
+        "mae_cp": 279.625,
+        "mse_cp2": 146450.875,
+        "rmse_cp": 382.6890055907015
+      },
+      "integer_minus_shadow_mse_cp2": 653.9563492858829,
+      "integer_output_truncation_mse_cp2": 0.3175778388977051,
+      "shadow_float": {
+        "mae_cp": 281.1390665807011,
+        "mse_cp2": 146391.11684798863,
+        "rmse_cp": 382.610920973237
+      }
+    },
+    "old_train": {
+      "integer": {
+        "mae_cp": 168.25755743651754,
+        "mse_cp2": 54521.846432889964,
+        "rmse_cp": 233.49913582900038
+      },
+      "integer_minus_shadow_mse_cp2": 581.126611444573,
+      "integer_output_truncation_mse_cp2": 0.324211471170151,
+      "shadow_float": {
+        "mae_cp": 169.29805794041033,
+        "mse_cp2": 54589.389930171725,
+        "rmse_cp": 233.64372435435052
+      }
+    },
+    "old_tuning": {
+      "integer": {
+        "mae_cp": 213.76715176715177,
+        "mse_cp2": 74459.39708939708,
+        "rmse_cp": 272.8724923648353
+      },
+      "integer_minus_shadow_mse_cp2": 684.2263719179131,
+      "integer_output_truncation_mse_cp2": 0.32482351830496364,
+      "shadow_float": {
+        "mae_cp": 218.03357144259928,
+        "mse_cp2": 76999.65229168243,
+        "rmse_cp": 277.4881119826261
+      }
+    }
+  },
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-diversity\\data-001\\tuning.jsonl": "b759afb3910271a65f64ac50398c2805e5d5bfdb4409039d836749c11c903f22",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\attempt-001\\selection.json": "c98d1eae766f85d5e25b1feeb3c159ed5e0bd857b5c838ca48c6b58f0cfd723f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\attempt-001\\training.json": "bcde06b979e3a213cb55a4629ab68af1164602a09ab9762bc06a666b459b9be9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\manifest.json": "526b5e3d909c3f30bf771e3a97fac677984e1680b8b7b291f96f42e9cf8c2ec3",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\pairs-train.jsonl": "18bfccc31a3dd15ea2abd931558c19d789c53fc7953e14c915649dc911cc700a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\pairs-tuning.jsonl": "c2e2261aba4ae93d0e7d51f380621ddd05b1cd5a1dcec80de29742593f9c47ec",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\test.jsonl": "81418d0eac56cf157e013ec5314bbf5d6193baea337539e94306fc14fb099754",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\train.jsonl": "44284d91fc79c2659f06785fd19c4383c5b57f30d26c021e4af7b97041fc7eee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\tuning.jsonl": "bfde4c22bd2dead17779be4e1c975661a2e38bb3a5c18127e0d8b6ac936c3d41",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-ordering\\attempt-001\\float_weights.npz": "293f8c6ad7af32ccc2a3d69c09e100bbb4c897fc4fc29871a8f7263ec56d5760",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-ordering\\attempt-001\\model.nnue": "4e54305bce4a495ff3bb0d961e397f78eac12d387ff30e7766202fcdf7d3bdee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\diagnose_nnue_preservation.py": "83db418fd8a903b0d62b5fc8db32e9eaec8afb2e5ad1f7b11536ede9e9aa79e1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_ordering.py": "899d3cf314d59ae3dce4fcc94d9f47e3a8ab7714eb264d95bb510705b31b9ee6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_leaf.py": "106c746d90fc8c226c28098f9082c59d98246af08552709324ddb5d1d5c8074b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_loss_repair.py": "abd4b228a5a30fd9b0639e6a7220dcc5c9c1e82fef51f83e14c035b4afc30559",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_ordering.py": "34d9f4388aef27fdf089abcb62a5b0ea4164ef729816211c76b6835616d04605"
+  },
+  "purpose": "Diagnose already rejected leaf fit; no new candidate, no teacher/engine/gate calls",
+  "recommendation": "Keep original Stockfish MSE and sibling-gap MSE; add warm-output MSE only on existing TRAIN inputs, independently sampled/replayed each update. Preserve anchor evaluation-only and every existing selection guard."
+}
