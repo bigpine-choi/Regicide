@@ -175,13 +175,20 @@ def prepare(output, gate_path, collector):
         for identity in features: feature_splits[identity].add(pair['partition'])
     cross = {h for h, parts in feature_splits.items() if len(parts) > 1}
     backed = {'train': [], 'tuning': []}
+    comparison_keys = {p: {(r['root_id'], tuple(sorted((r['move_a'], r['move_b']))))
+                          for r in group} for p, group in existing.items()}
     for pair, features in candidates:
         part = pair['partition']
+        key = (pair['root_id'], tuple(sorted((pair['move_a'], pair['move_b']))))
+        if key in comparison_keys[part]:
+            rejected['duplicate_old_or_new_comparison'] += 1
+            continue
         other = set().union(*(group_ids for p, group_ids in baseline.items() if p != part))
         if features & (blocked | cross | other):
             rejected['gate_or_cross_partition_input'] += 1
             continue
         backed[part].append(pair)
+        comparison_keys[part].add(key)
     require(all(backed.values()), 'Need verified new comparisons in both source partitions')
     for name in (*old_manifest['files'], *old_manifest['pair_files']):
         shutil.copyfile(OLD / name, output / name)
