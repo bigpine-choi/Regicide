@@ -82,12 +82,28 @@ intentional external-engine CPU failure with complete diagnostic cleanup.
 The first positive diagnostic driver's tuple/JSON policy mismatch and its
 read-only correction are both preserved; the CPU workload was not rerun.
 
-The next raw attempt directory is `build-m2-engine-cpu/attempt-003`. A complete
-fresh 24-game preflight must pass product and independent audits before 768
-main games start. Each phase retains its own PGN, per-search CPU stream,
-metadata, raw Job/coordinator/system CPU samples, process-discovery receipts,
-warning counts, final owned Job state and audits. The old partial games and
-the new preflight/main are never pooled.
+Attempt 003 completed its fresh 24-game preflight in 595.218 seconds with
+product and independent audits PASS. It retained 2,213 search receipts,
+2,501 mainline plies, 16,171 PV plies and 2,340 runtime ownership scopes.
+Fifteen warning windows in three episodes peaked at 32.593519%; they did not
+stop or invalidate the run. Final owned Job active processes were zero.
+
+Before this attempt's main phase started, the user explicitly reduced the
+main target from 768 to 96 games to obtain a quick descriptive baseline.
+The old 768-game main is not started. The new
+[96-game plan](../../experiments/2026-10-21-m2-baseline96-plan.md) fixes the
+original bank's first four opening families, retaining all three candidates,
+both opponents, both thinking times and paired colors. A small adapter reuses
+the unchanged v6 worker and raw validators; its nine synthetic checks passed.
+The completed preflight is referenced with exact audit/input/source hashes,
+not copied or presented as newly played games. New raw main output goes to
+`build-m2-baseline96/attempt-001`. Old stopped games and preflight scores are
+excluded from the 96 main results.
+
+Future change comparisons follow the user's
+[short experiment policy](../../EXPERIMENT_POLICY.md): prioritize engine code
+and learning, compare one change against its baseline in a short paired match,
+and explain cost before expanding the sample.
 
 This is a local external baseline with a previously exposed fixed authored
 opening bank. CPU time is consumed process CPU, not an exact measurement of

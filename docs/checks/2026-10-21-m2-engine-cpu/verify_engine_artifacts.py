@@ -246,16 +246,17 @@ def verify_archive(path, *, verify_excluded_payloads=False, excluded_sources=())
 
 def manifest_paths(output, sources):
     files = set(HERE.rglob('*')) | set(sources)
-    for pattern in ('m2_engine_*.py', 'm2_warning*.py', 'm2_*v[456].py', 'archive_m2_engine*.py'):
+    for pattern in ('m2_engine_*.py', 'm2_warning*.py', 'm2_*v[456].py', 'm2_baseline96.py', 'archive_m2_engine*.py'):
         files.update((ROOT/'scripts').glob(pattern))
-    for pattern in ('m2_engine*_tests.py', 'm2_warning*_tests.py', 'm2_formal_v[456]_tests.py', 'm2_job_process_scope_tests.py'):
+    for pattern in ('m2_engine*_tests.py', 'm2_warning*_tests.py', 'm2_formal_v[456]_tests.py', 'm2_job_process_scope_tests.py', 'm2_baseline96_tests.py'):
         files.update((ROOT/'tests').glob(pattern))
     for runner in sorted((ROOT/'scripts').glob('m2_formal_v[456].py')):
         for node in ast.parse(runner.read_text(encoding='utf-8-sig')).body:
             if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'HARNESS' for t in node.targets):
                 files.update(ROOT/'scripts'/name for name in ast.literal_eval(node.value))
     files.update((ROOT/'docs/experiments').glob('2026-10-21-m2-engine-cpu*'))
-    files.update((ROOT/'.gitattributes', ROOT/'docs/ROADMAP.md'))
+    files.update((ROOT/'docs/experiments').glob('2026-10-21-m2-baseline96*'))
+    files.update((ROOT/'.gitattributes', ROOT/'docs/ROADMAP.md', ROOT/'docs/EXPERIMENT_POLICY.md'))
     selected = sorted(path for path in files if path.is_file() and '__pycache__' not in path.parts
                       and path.resolve() != Path(output).resolve())
     names = [path.relative_to(ROOT).as_posix() for path in selected]
