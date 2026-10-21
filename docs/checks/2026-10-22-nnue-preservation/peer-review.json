@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "reviewer": "preserve_audit",
+  "completed_utc": "2026-10-21 16:57:31 UTC",
+  "status": "Verified preservation and bounded integer-step implementation, guarded final candidate, and first use of reserved move-choice screen. Fixed screen failed; zero match games.",
+  "review_actions": {
+    "source_files_mutated": 0,
+    "engine_or_teacher_searches": 0,
+    "production_training_runs": 0,
+    "method": "Read source and tests; independently reconstruct scalar-loop combined STE derivatives; recompute saved-model point, weighted, pair, leaf and anchor metrics; replay recorded histories and PVs; verify data separation, SHA bindings, checkpoint and gate decisions.",
+    "artifact_written": "docs/checks/2026-10-22-nnue-preservation/peer-review.json"
+  },
+  "source_review": {
+    "architecture": "Unchanged NNUEv3,768 piece features+1 relative-turn,hidden16,S32",
+    "objective": "Point teacher MSE + sibling teacher-gap MSE coefficient1 + frozen-warm-output MSE coefficient4 on unique old TRAIN1426 inputs",
+    "old_teacher_labels_retained": true,
+    "heldout_anchor_and_test_excluded_from_gradients_and_step_scales": true,
+    "fixed_starting_integer_outputs_do_not_update_during_fit": true,
+    "optimizer_rates_seed_clip_and_checkpoint_guards_unchanged": true,
+    "epoch_zero_and_best_eligible_restore_retained": true,
+    "scalar_loop_derivative_max_abs_difference": 4.440892098500626e-16,
+    "scalar_loop_scope": "Actual6 TRAIN points+2 pairs+4 preservation inputs; perturbed output parameters; separate scalar accumulation for every active feature/hidden/turn term. This verifies the existing STE surrogate, not the mathematical derivative of integer rounding.",
+    "stage2_fixed_scales": [
+      1,
+      0.5,
+      0.25,
+      0.125,
+      0.0625,
+      0.03125
+    ],
+    "stage2_acceptance": "First finite actual full-TRAIN objective <= current objective, or skip. Equal integer loss permits shadow progress. Adam moments and step count advance once per proposal."
+  },
+  "protocol": {
+    "initial_production_limit": 1,
+    "revised_total_production_limit": 2,
+    "revision_before_second_fit_and_before_gate": true,
+    "first_attempt_and_original_source_preserved": true,
+    "no_seed_coefficient_or_architecture_sweep": true,
+    "diagnostic_reconstruction": "One bounded exact replay of previously recorded five epochs, with no candidate saved.",
+    "no_retraining_reselection_or_threshold_relaxation_after_gate": true,
+    "diagnostic_reconstruction_seconds": 1.4608035999699496
+  },
+  "data": {
+    "reused_immutable_leaf_bank": true,
+    "point_rows": {
+      "train": 1520,
+      "tuning": 369,
+      "test": 69
+    },
+    "leaf_rows": {
+      "train": 94,
+      "tuning": 32
+    },
+    "pair_rows": {
+      "train": 26,
+      "tuning": 16
+    },
+    "old_train_preservation_inputs": 1426,
+    "new_teacher_training_queries": 0,
+    "weighted_train_rows": 2030,
+    "point_batches_per_epoch": 16,
+    "original_anchor263_evaluation_only": true,
+    "existing_test69_previously_exposed_not_independent": true
+  },
+  "prior_error_diagnosis": {
+    "replayed_epoch5_original_anchor_mse_change_cp2": 1445.5399239543726,
+    "prediction_drift_squared_term_cp2": 1016.9619771863117,
+    "old_residual_times_drift_cross_term_cp2": 428.5779467680608,
+    "interpretation": "Shared trainable parameters move old and new predictions together; prior observed training error decreases did not imply old held-out error decreases. Local gradient norms and counterfactual parameter reverts are diagnostic, not causal shares or evidence that this topology cannot generalize."
+  },
+  "attempt_001": {
+    "attempt": "001",
+    "model_sha256": "4e54305bce4a495ff3bb0d961e397f78eac12d387ff30e7766202fcdf7d3bdee",
+    "source_input_bindings": 38,
+    "input_mismatches": [],
+    "metric_max_abs_diff": 0,
+    "pair_metric_max_abs_diff": 0,
+    "final_float_identical_to_warm": true,
+    "float_quantized_checksum_matches_saved_model": true,
+    "selected_epoch": 0,
+    "selected_is_min_eligible_objective": true,
+    "anchor_eligible_epochs": [
+      0,
+      10,
+      25
+    ],
+    "stopped_epoch": 25,
+    "optimizer_steps": 400,
+    "preservation_target_rows": 1426,
+    "native_receipt_positions": 2004,
+    "native_receipt_mismatches": 0,
+    "training_wall_seconds": 7.010932200006209
+  },
+  "attempt_002": {
+    "attempt": "002",
+    "model_sha256": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "source_input_bindings": 39,
+    "input_mismatches": [],
+    "metric_max_abs_diff": 0,
+    "pair_metric_max_abs_diff": 0,
+    "anchor_metric_max_abs_diff": 0,
+    "leaf_metric_max_abs_diff": 0,
+    "float_quantized_checksum_matches_saved_model": true,
+    "selected_epoch": 5,
+    "selected_is_min_eligible_objective": true,
+    "anchor_eligible_epochs": [
+      0,
+      5,
+      10
+    ],
+    "stopped_epoch": 30,
+    "optimizer_steps": 480,
+    "preservation_target_rows": 1426,
+    "frozen_preservation_target_hash_matches": true,
+    "selected_old_train_drift": {
+      "mae_cp": 9.987377279102384,
+      "mse_cp2": 185.98316970546983,
+      "max_absolute_cp": 57,
+      "changed_predictions": 1351
+    },
+    "step_audit": {
+      "history_epochs": 30,
+      "all_recorded_epoch_descent_count_chain_and_skip_checks_pass": true,
+      "epoch_objective_decomposition_max_abs_diff": 0,
+      "selected_model_training_objective_matches_selected_epoch": true,
+      "proposals": 480,
+      "skipped": 341,
+      "accepted": 139,
+      "trial_evaluations": 2377,
+      "accepted_scale_histogram": {
+        "0.03125": 13,
+        "0.0625": 17,
+        "0.125": 11,
+        "0.25": 9,
+        "0.5": 8,
+        "1.0": 81
+      },
+      "individual_accepted_trial_losses_not_logged": true
+    },
+    "anchor_before_after_cp2": [
+      62807.95437262357,
+      62230.90874524715
+    ],
+    "leaf_train_before_after_cp2": [
+      117886.14893617021,
+      113553.24468085106
+    ],
+    "leaf_tuning_before_after_cp2": [
+      146450.875,
+      144329.25
+    ],
+    "native_receipt_positions": 2004,
+    "native_receipt_mismatches": 0,
+    "training_wall_seconds": 36.65844319999451
+  },
+  "reserved_screen": {
+    "reused_original_leaf_gate_plan_roots_and_criteria": true,
+    "originally_reserved_roots": 16,
+    "reserved_root_and_all_legal_child_features": 581,
+    "pre_gate_inventory_position_files": 152,
+    "pre_gate_inventory_unique_features": 105966,
+    "pre_gate_feature_overlap": 0,
+    "recomputed_reserved_root_all_child_set_matches_original": true,
+    "candidate_sealed_before_first_teacher_root_query": true,
+    "gate_result": {
+      "input_binding_files": 170,
+      "input_mismatches": [],
+      "root_history_cases": 16,
+      "legal_pv_replays_including_duplicate_child_receipts": 80,
+      "exact_root_receipts": 16,
+      "distinct_exact_child_receipts": 18,
+      "teacher_queries_total": 34,
+      "native_searches": 32,
+      "root_mover_sign_and_raw_cp_receipts_verified": true,
+      "warm_matches": 4,
+      "candidate_matches": 4,
+      "all_original_warm_correct_retained": true,
+      "mean_mover_gain_cp": 4.375,
+      "severe_regressions": 0,
+      "changed_cases": [
+        {
+          "source_index": 15,
+          "family": "m2-formal-ponziani-supported-center-20261021",
+          "warm": "Bg5",
+          "candidate": "Na3",
+          "root_mover_quality_gain_cp": 4
+        },
+        {
+          "source_index": 23,
+          "family": "m2-formal-italian-two-knights-quiet-20261021",
+          "warm": "Ng5",
+          "candidate": "Bg5",
+          "root_mover_quality_gain_cp": 66
+        }
+      ],
+      "fixed_gate_passed": false,
+      "games_authorized": 0,
+      "same_native_selected_moves": 14,
+      "changed_native_selected_moves": 2
+    },
+    "now_exposed_for_future_research": true
+  },
+  "receipt_audit": {
+    "receipt_documents": 13,
+    "unique_authenticated_files": 220,
+    "conflicting_bindings": 0,
+    "current_sha_mismatches": 0,
+    "gate_candidate_seal_utc": "2026-10-21T16:54:22.629089+00:00",
+    "root_labels_first_started_utc": "2026-10-21T16:54:23.589652+00:00",
+    "screen_decision_matches_gate": true,
+    "native_binary_sha256": "b78c50d0ebeefd937cf3265921e6f71a300146d8fecf0fb7e1d1379739a5bcf0",
+    "installed_binary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+    "both_saved_model_native_validation_receipts": "2004 positions,0 Python/full/incremental mismatches;13 model groups,25521 assertions,0 failures. Reviewer did not rerun native tests.",
+    "match_pgn_files": 0
+  },
+  "decision": {
+    "final_training_candidate_is_changed_and_guard_eligible": true,
+    "fixed_untrained_move_choice_gate_passed": false,
+    "games_authorized": 0,
+    "games_played": 0,
+    "default_promoted": false,
+    "interpretation": "Old263 anchor error and new-leaf error improved, while old TRAIN outputs still changed. On the16 reserved roots all4 prior teacher matches remained,2 changed choices gained4 and66cp in finite teacher search, but4\u21924 matches and+4.375cp mean failed fixed+2 matches/+20cp requirements. No playing-strength improvement established.",
+    "limits": [
+      "The teacher is Stockfish18 at depth10 or100000nodes, not an oracle of infinite-depth best play.",
+      "Individual accepted trial losses were not logged; actual epoch loss decomposition/descent chains, skip trials and counts were checked, supplemented by source and focused tests.",
+      "No engine, teacher or training execution was performed by this independent reviewer."
+    ]
+  }
+}
