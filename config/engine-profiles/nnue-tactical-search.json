@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "regicide-nnue-tactical-search-20261022",
+  "kind": "regicide",
+  "evaluation": "nnue",
+  "binary": {
+    "path": "../../build-m3-tactical-guarded/regicide.exe",
+    "sha256": "84ec743a2833abeff327bc2e647230c7ab1be84e2c194445d307da2cfed5acf7"
+  },
+  "args": [
+    "uci"
+  ],
+  "options": {
+    "UseNeuralEvaluation": false,
+    "UseNNUEEvaluation": true,
+    "EvalFile": "<empty>",
+    "NeuralModelFile": "../../docs/checks/2026-10-22-nnue-head-repair/attempt-001/model.nnue",
+    "UseIncrementalNeuralEvaluation": true,
+    "Hash": 16,
+    "Move Overhead": 20,
+    "UsePositionalEvaluation": true,
+    "UseQuiescence": true,
+    "UseTranspositionTable": true,
+    "UseFastMoves": true,
+    "UseQuietMoveOrdering": true,
+    "UseQuiescenceChecks": true,
+    "PVS": true,
+    "UseSEE": true,
+    "UsePawnShield": true,
+    "UsePawnStructure": true,
+    "UseLMR": true,
+    "UseQuiescenceThreats": true
+  },
+  "models": {
+    "NeuralModelFile": {
+      "path": "../../docs/checks/2026-10-22-nnue-head-repair/attempt-001/model.nnue",
+      "sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac"
+    }
+  },
+  "source": {
+    "commit": "02b6af600ab35d3353b07087f847bd51107a5bbc",
+    "search_threads": 1,
+    "training_runs": 0,
+    "experimental_opt_in": true,
+    "adopted": false,
+    "loss": "MSE unchanged; no new fitting",
+    "head_training": "Frozen existing output-only model; input/hidden unchanged",
+    "build_receipt_role": "native-build-receipt"
+  },
+  "artifacts": [
+    {
+      "path": "../../docs/checks/2026-10-22-nnue-tactical-search/build-provenance.json",
+      "sha256": "200bbc08b901a391d0aab625218462a7cfda705d47c9c2e59b4bfe8e6158e68b",
+      "role": "native-build-receipt"
+    }
+  ]
+}

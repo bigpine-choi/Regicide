@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "completed": true,
+  "created_utc": "2026-10-21T18:12:46.034658+00:00",
+  "review_scope": "Independent source and saved-receipt audit; no native probes, training, teacher queries, fresh labels or games executed by reviewer.",
+  "procedure_review_passed": true,
+  "actual_move_choice_improvement_passed": false,
+  "adoption_recommended": false,
+  "model_sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+  "old_binary_sha256": "b78c50d0ebeefd937cf3265921e6f71a300146d8fecf0fb7e1d1379739a5bcf0",
+  "new_binary_sha256": "84ec743a2833abeff327bc2e647230c7ab1be84e2c194445d307da2cfed5acf7",
+  "current_input_bindings_verified": 289,
+  "build_source_and_snapshot_files_verified": 21,
+  "historical_source_bindings_resolved": [
+    {
+      "receipt": "protocol.json",
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\check_nnue_tactical_search.py",
+      "preserved_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\pre-fallback-source-snapshot\\scripts\\check_nnue_tactical_search.py",
+      "sha256": "e02d6aad2d805d82599e9a81ea9692a000a29022439f0ea88ead807aab4f8878"
+    },
+    {
+      "receipt": "protocol-amendment.json",
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp",
+      "preserved_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\pre-cost-source-snapshot\\src\\search.cpp",
+      "sha256": "064ec9829a6038a037f0ef679c9e248022b4e69e112fa0bfb35c9b08a9134a75"
+    },
+    {
+      "receipt": "protocol-amendment.json",
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp",
+      "preserved_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\pre-cost-source-snapshot\\include\\regicide\\search.hpp",
+      "sha256": "2bbd2fdc50ec45ef9d8c6ed2663f4d9be7bb3ed389e2ed1b76b2f9fac45fdc23"
+    }
+  ],
+  "protected_training_and_nnue_sources_unchanged_from_base": [
+    "scripts/neural_stm_output_only.py",
+    "scripts/neural_stm.py",
+    "scripts/train_nnue_head_repair.py",
+    "src/nnue.cpp",
+    "include/regicide/nnue.hpp",
+    "src/neural.cpp",
+    "include/regicide/neural.hpp"
+  ],
+  "source_review": {
+    "feature_default": false,
+    "quiet_knight_threats_per_path": 1,
+    "defensive_reply": "Every legal reply, no stand pat; SEE filtering bypassed",
+    "see_pruning": "Opt-in only, nonchecked/nondefensive qnodes, SEE<0 captures; checks, promotions and en passant protected",
+    "tt": "No qsearch cache; normal search generation resets per call",
+    "board_and_nnue": "AppliedMove keeps undo/accumulator restoration; classifier uses private board",
+    "limitations": [
+      "Knight double-major fork motif only",
+      "Selective SEE pruning can miss nonchecking sacrifices with later compensation",
+      "Exhaustive oracle equality applies only to stated simple fixtures"
+    ]
+  },
+  "saved_checks": {
+    "search_groups": 68,
+    "search_assertions": 24396,
+    "search_failures": 0,
+    "native_suite_executables": 10,
+    "uci_groups": 28,
+    "actual_model_groups": 13,
+    "actual_model_assertions": 25521,
+    "actual_model_failures": 0,
+    "known_native_searches": 12,
+    "known_positions_passed": 0,
+    "known_positions_total": 3,
+    "native_mismatches": 0,
+    "disabled_path_equal": true,
+    "full_incremental_equal": true
+  },
+  "known_results": [
+    {
+      "name": "original_black_choice",
+      "expected": "f6e4",
+      "baseline": "c8f5",
+      "candidate": "c8f5",
+      "candidate_depth": 2
+    },
+    {
+      "name": "white_reply_after_Bf5",
+      "expected": "e5f6",
+      "baseline": "c1g5",
+      "candidate": "c1g5",
+      "candidate_depth": 1
+    },
+    {
+      "name": "quiet_fork_after_exf6_Bxb1",
+      "expected": "f3g5",
+      "baseline": "f6g7",
+      "candidate": "f6g7",
+      "candidate_depth": 0
+    }
+  ],
+  "critical_nonchecking_ng5_witnesses": [
+    {
+      "case": 0,
+      "path": [
+        "c8f5",
+        "e5f6",
+        "f5b1",
+        "f3g5",
+        "b1a2"
+      ],
+      "iteration": 1,
+      "completed_depth": 2,
+      "observed_leaf_fen": "r2qkb1r/1pp2ppp/2n2P2/6N1/p1Bp4/P7/bP3PPP/2BQ1RK1 w kq - 0 12"
+    },
+    {
+      "case": 1,
+      "path": [
+        "e5f6",
+        "f5b1",
+        "f3g5",
+        "b1a2"
+      ],
+      "iteration": 1,
+      "completed_depth": 1,
+      "observed_leaf_fen": "r2qkb1r/1pp2ppp/2n2P2/6N1/p1Bp4/P7/bP3PPP/2BQ1RK1 w kq - 0 12"
+    }
+  ],
+  "fresh_reservation": {
+    "roots": 16,
+    "roots_and_legal_children_features": 594,
+    "post_development_exposure_features": 21354,
+    "overlap_features": 0,
+    "original_bindings_unchanged": true,
+    "labels_or_queries_or_consumption": false
+  },
+  "development_history": "One initial pure fork variant and one preregistered SEE guard revision before official screen; failed exposed-only results and invalid unshielded fixture logs preserved. Shielded simple motif fixture retains material-loss expectation and adds independent all-legal two-ply oracle. No fresh outcomes used for revision.",
+  "final_decision": {
+    "training_runs": 0,
+    "new_teacher_queries": 0,
+    "fresh_gate_native_queries": 0,
+    "fresh_gate_teacher_queries": 0,
+    "comparison_games": 0,
+    "default_engine_changed": false,
+    "installed_game_changed": false,
+    "further_variants_or_retries_allowed": false
+  },
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\known-position-check.json": "a4b4190889ff7a9cb77daf18bc7717221a401069fd9934376358a76a917b2f46",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\correctness.json": "90f341013a41849d497cbe6edb777b71087b1cd133c0492cc8e3720fc4cdf43e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\build-provenance.json": "200bbc08b901a391d0aab625218462a7cfda705d47c9c2e59b4bfe8e6158e68b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\screen-decision.json": "7e67407332e31158f521d6f334d200592582bd1421cda9cd199b6273b9528896",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\development-guarded-probe-audit.json": "32026e786f19057c75629c05e6cb1442cc38538ac8660ded03376406ea9c0ed8",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\post-development-exposure-check.json": "e0ec95f493124e9386a352a597fe5d1775c7314ee284e27c3059b508e006d578",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\protocol.json": "7c3d8d112ef4d86a91ca69ab05c9c90239a59fdebe74def27d70adbf9f479cd9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\protocol-amendment.json": "33ae52651734bde6ad889d15f54ce1b2122623f4b9c0fbff841c5aa01eca3b8b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\fallback-reporting-amendment.json": "ee5e14975e9c523dac19451c21473196217f8d42d45aae561b448415da8ce1d3",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\development-probe-context.json": "80ed7753724f1f92d42152af41e4d8ed9a683dece557e4c16c1702940987d0cb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\development-guarded-probe.json": "87974ba4de2aab4effb4c894a0856b26dc15aba88d624d970694fb08123834d4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\gate-001\\reservation.json": "bff49134b6317ab0977bb926c8be2eca379e7439b6f84d9bb1b7672ad3092451",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\gate-001\\position-only-verification.json": "0db701173d63fd3a41cf2c452c10f0646d329c72af10c161f6a8c31b8f227222",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\nnue-tactical-search.json": "0813a5a1a5830d5162a8250f2062796f28aaf2fc3cee66ddb1ffaedca274beff",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp": "c2473a05959859bb21af242c6c40d55630864a707f5c7a2bc5690fc8b9d3783b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp": "1f7f28b7486e2b7f4f3e190681db1a104338b18d514f4cf3d3eade40329eea7a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp": "90bbf68e9ac4ae24d5bfef753b1c4f8faa4c912f4954692c5ee0baf763e20c42",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\search_tests.cpp": "7876907b38e018443b73cfb32bc7717160d9e337a6a0b200f7ae85ebef2449af"
+  }
+}
