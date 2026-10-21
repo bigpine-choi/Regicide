@@ -245,12 +245,38 @@ def qat_forward(parameters: dict, indices: np.ndarray, input_scale: int = 16) ->
     return _integer_forward(quantize(parameters, input_scale), indices)
 
 
+def loss_terms(predictions: np.ndarray, targets: np.ndarray, loss: str = "mse") -> np.ndarray:
+    """Per-row pawn-unit loss; H100 is twice standard Huber, delta=100cp.
+
+    Inside and at +/-100cp H100 equals the historical MSE. Outside it is
+    2*abs(residual_cp)/100-1. Targets are never clipped or removed.
+    """
+    if not isinstance(loss, str) or loss not in ("mse", "h100"):
+        raise ValueError("Loss must be mse or h100 (fixed delta 100cp)")
+    predicted, expected = np.asarray(predictions, dtype=np.float64), np.asarray(targets, dtype=np.float64)
+    if predicted.ndim != 1 or predicted.shape != expected.shape or not len(predicted) or not (
+            np.all(np.isfinite(predicted)) and np.all(np.isfinite(expected))):
+        raise ValueError("Loss requires equally shaped nonempty finite score vectors")
+    residual = (predicted - expected) / 100
+    return residual ** 2 if loss == "mse" else np.where(np.abs(residual) <= 1, residual ** 2, 2 * np.abs(residual) - 1)
+
+
+def loss_derivative(predictions: np.ndarray, targets: np.ndarray, loss: str = "mse") -> np.ndarray:
+    """d(mean loss)/d(prediction_cp), before STE activation/score masks."""
+    loss_terms(predictions, targets, loss)  # Validate shape, finiteness and the fixed loss name.
+    # Keep the original MSE arithmetic/order exactly for historical reproduction.
+    residual = predictions - targets
+    if loss == "h100":
+        residual = np.clip(residual, -100, 100)
+    return 2 * residual / (len(targets) * 10000)
+
+
 def qat_gradients(parameters: dict, indices: np.ndarray, targets: np.ndarray,
-                  input_scale: int = 16) -> dict:
-    """MSE STE in real shadow units; S cancels along each hidden gradient."""
+                  input_scale: int = 16, *, loss: str = "mse") -> dict:
+    """MSE/H100 STE in real shadow units; S cancels along each hidden gradient."""
     qat._validate_batch(indices, targets)
     predictions, cache = qat_forward(parameters, indices, input_scale)
-    derivative = 2 * (predictions - targets) / (len(targets) * 10000)
+    derivative = loss_derivative(predictions, targets, loss)
     derivative *= (cache["raw_scores"] > -28000) & (cache["raw_scores"] < 28000)
     outputs = cache["quantized_model"]["output_weights"] / OUTPUT_SCALE
     hidden_gradient = derivative[:, None, None] * outputs[None, None, :]
@@ -272,8 +298,10 @@ def qat_gradients(parameters: dict, indices: np.ndarray, targets: np.ndarray,
 
 def _validate_config(config: dict) -> None:
     expected = {"candidate_id", "input_scale", "epochs", "input_bias_lr", "output_lr", "seed", "batch_size"}
-    if set(config) != expected:
+    if not expected <= set(config) <= expected | {"loss"}:
         raise ValueError("Unexpected candidate configuration keys")
+    if not isinstance(config.get("loss", "mse"), str) or config.get("loss", "mse") not in ("mse", "h100"):
+        raise ValueError("Loss must be mse or h100 (fixed delta 100cp)")
     if not isinstance(config["candidate_id"], str) or not re.fullmatch(r"[A-Za-z0-9_-]+", config["candidate_id"]):
         raise ValueError("Candidate ID must contain only letters, numbers, underscore or hyphen")
     _validate_scale(config["input_scale"])
@@ -287,10 +315,18 @@ def _validate_config(config: dict) -> None:
 
 
 def train_candidate(initial_parameters: dict, indices: np.ndarray, targets: np.ndarray,
-                    config: dict) -> tuple[dict, list[dict]]:
+                    config: dict, *, progress=None) -> tuple[dict, list[dict]]:
+    """Train final-epoch weights; optional observational copies every 10 epochs.
+
+    progress(epoch, parameter_copies, history_entry_copy) cannot change optimizer
+    arrays. Its observations never select an epoch or alter the training order.
+    Historical configurations without loss keep MSE and the same arithmetic.
+    """
     _validate_parameters(initial_parameters)
     qat._validate_batch(indices, targets)
     _validate_config(config)
+    if progress is not None and not callable(progress):
+        raise ValueError("progress must be callable or None")
     bounds = _bounds(config["input_scale"])
     parameters = {key: value.astype(np.float64, copy=True) for key, value in initial_parameters.items()}
     if any(np.any(np.abs(values) > bounds[key]) for key, values in parameters.items()):
@@ -300,14 +336,19 @@ def train_candidate(initial_parameters: dict, indices: np.ndarray, targets: np.n
     rates = {"input_weights": config["input_bias_lr"], "hidden_bias": config["input_bias_lr"],
              "output_weights": config["output_lr"]}
     rng, history, step = np.random.default_rng(config["seed"]), [], 0
+    progress_window = []
     for epoch in range(1, config["epochs"] + 1):
         order = rng.permutation(len(targets))
         maximum_norm, clipped_batches = 0.0, 0
+        batch_norms = []
         for offset in range(0, len(order), config["batch_size"]):
             chosen = order[offset:offset + config["batch_size"]]
-            gradients = qat_gradients(parameters, indices[chosen], targets[chosen], config["input_scale"])
+            gradients = qat_gradients(parameters, indices[chosen], targets[chosen], config["input_scale"],
+                                      loss=config.get("loss", "mse"))
             norm = math.sqrt(sum(float(np.sum(value * value)) for value in gradients.values()))
             maximum_norm = max(maximum_norm, norm)
+            if progress is not None:
+                batch_norms.append(norm)
             clipped_batches += int(norm > 10)
             factor, step = min(1.0, 10.0 / max(norm, 1e-30)), step + 1
             for key, parameter in parameters.items():
@@ -328,6 +369,12 @@ def train_candidate(initial_parameters: dict, indices: np.ndarray, targets: np.n
                         "shadow_float_train": base.error_metrics(base.forward(parameters, indices)[0], targets),
                         "max_batch_gradient_global_norm": maximum_norm,
                         "gradient_clipped_batches": clipped_batches})
+        if progress is not None:
+            progress_window.append({"epoch": epoch, "batch_gradient_global_norms": batch_norms})
+            if epoch % 10 == 0:
+                observed = dict(history[-1], batch_gradient_observations=progress_window)
+                progress(epoch, {key: value.copy() for key, value in parameters.items()}, observed)
+                progress_window = []
     return parameters, history
 
 

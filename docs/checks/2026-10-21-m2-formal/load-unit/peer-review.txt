@@ -1,0 +1,24 @@
+2026-10-21 independent source review
+
+Guard reviewer: /root/roadmap_review; source SHA256
+e82b414a177f9506e069bf9cadedc9e610aa5bc046b580157a66d2233a9b26f4.
+Read-only review, no extra process execution. No actionable P1/P2 found.
+Checked PID/creation-time ownership, descendant ancestry, retained final CPU
+deltas, child/native-cache retirement, root final sample before detach, and
+the absence of a user-process termination operation in the guard.
+
+Runner reviewer: /root/engine_audit; scripts/m2_formal.py SHA256
+27a3453fa65e590dac071846aaf5d02465d183dc6549a847a06994291f9dcc81,
+summary.py 73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea,
+tests/m2_formal_tests.py bc3a6f94081f8fdb456a74bfb0da6fa6ebdcc74e1dfb65109fb7e02ba3df34b1.
+Read-only review of four-lane attach/detach, startup gate, Job cleanup,
+guard close and COMPLETE/audit paths. No actionable P1/P2 found. Runtime
+worker exit zero, two complete legal games, durable replay/option/affinity
+audits and a clean final phase guard are required. Final guard errors revert
+COMPLETE to STOPPED. Statistical intervals are suppressed for invalid phases.
+
+Limit: process/system timer samples are not atomic. Accounting underflow is
+recorded and clipped for the nonworker estimate. Unknown engines, workloads
+starting and stopping between samples, power/thermal variation and complete
+OS isolation are outside the claim. Mock tests and the separate native
+probes establish the recorded checks, not playing strength.

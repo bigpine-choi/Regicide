@@ -1,0 +1,71 @@
+in uci
+out id name Regicide 0.7.0-dev
+out id author Regicide project
+out option name Move Overhead type spin default 20 min 0 max 5000
+out option name UsePositionalEvaluation type check default true
+out option name UseQuiescence type check default true
+out option name UseTranspositionTable type check default true
+out option name Hash type spin default 16 min 1 max 256
+out option name Clear Hash type button
+out option name UseFastMoves type check default true
+out option name UseQuietMoveOrdering type check default true
+out option name UseQuiescenceChecks type check default true
+out option name PVS type check default true
+out option name UseSEE type check default true
+out option name UsePawnShield type check default true
+out option name UsePawnStructure type check default true
+out option name UseLMR type check default true
+out option name EvalFile type string default <empty>
+out option name UseNeuralEvaluation type check default false
+out option name UseNNUEEvaluation type check default false
+out option name NeuralModelFile type string default <builtin>
+out option name UseIncrementalNeuralEvaluation type check default true
+out info string integer NNUE is experimental; default remains classical
+out uciok
+in isready
+out readyok
+in position startpos
+in go infinite
+out info depth 1 seldepth 1 score cp 30 nodes 22 time 2 pv b1c3
+out info string pvs probes 19 researches 1
+out info string see calls 0
+out info string lmr reductions 0 researches 0
+out info string tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 2 seldepth 3 score cp 0 nodes 119 time 2 pv b1c3 b8c6
+out info string pvs probes 90 researches 4
+out info string see calls 0
+out info string lmr reductions 0 researches 0
+out info string tt probes 22 hits 1 cutoffs 0 stores 22 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 3 seldepth 3 score cp 30 nodes 645 time 3 pv b1c3 b8c6 g1f3
+out info string pvs probes 554 researches 5
+out info string see calls 2
+out info string lmr reductions 0 researches 0
+out info string tt probes 82 hits 22 cutoffs 0 stores 82 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 4 seldepth 12 score cp 0 nodes 2123 time 5 pv b1c3 b8c6 g1f3 g8f6
+out info string pvs probes 1471 researches 8
+out info string see calls 208
+out info string lmr reductions 0 researches 0
+out info string tt probes 606 hits 194 cutoffs 112 stores 494 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 5 seldepth 13 score cp 14 nodes 14228 time 23 pv g1f3 b8c6 c2c4 g8f6 b1c3
+out info string pvs probes 10933 researches 12
+out info string see calls 1602
+out info string lmr reductions 1 researches 0
+out info string tt probes 2557 hits 1015 cutoffs 524 stores 2032 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 6 seldepth 17 score cp 0 nodes 47002 time 79 pv g1f3 g8f6 c2c4 c7c5 b1c3 b8c6
+out info string pvs probes 29318 researches 18
+out info string see calls 13010
+out info string lmr reductions 108 researches 13
+out info string tt probes 11652 hits 4411 cutoffs 2927 stores 8686 allocations 1 reuses 0 clears 0 bytes 16777208
+out info depth 7 seldepth 20 score cp 31 nodes 289988 time 482 pv g1f3 d7d5 e2e3 c8g4 b1c3 g8f6 f1d3 g4f3 d1f3
+out info string pvs probes 201483 researches 29
+out info string see calls 74402
+out info string lmr reductions 373 researches 82
+out info string tt probes 49215 hits 17263 cutoffs 9579 stores 38796 allocations 1 reuses 0 clears 0 bytes 16777208
+in stop
+in quit
+out info depth 7 seldepth 20 score cp 31 nodes 307791 time 512 pv g1f3 d7d5 e2e3 c8g4 b1c3 g8f6 f1d3 g4f3 d1f3
+out info string pvs probes 213256 researches 35
+out info string see calls 80584
+out info string lmr reductions 373 researches 82
+out info string tt probes 50851 hits 17750 cutoffs 9636 stores 40336 allocations 1 reuses 0 clears 0 bytes 16777208
+out bestmove g1f3

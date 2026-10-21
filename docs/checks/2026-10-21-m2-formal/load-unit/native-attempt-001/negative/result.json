@@ -1,0 +1,47 @@
+{
+  "expected": "external_cpu rejection of newly created canary only",
+  "canary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+  "passed": true,
+  "canary_pid": 24464,
+  "idle_baseline_completed": true,
+  "assert_clean_rejected": "external known engine consumed CPU",
+  "summary": {
+    "schema_version": 1,
+    "started_utc": "2026-10-21T08:34:56.261242+00:00",
+    "finished_utc": "2026-10-21T08:34:58.817611+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 0.2,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 15736,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 7,
+    "max_sample_gap_seconds": 0.5164880999946035,
+    "max_snapshot_duration_seconds": 0.015566699963528663,
+    "external_cpu_increase_ticks": 5156250,
+    "max_nonworker_cpu_fraction": 0.16068935429562112,
+    "preflight_complete": true,
+    "completed_idle_seconds": 2.0138992999563925,
+    "failure": {
+      "kind": "external_cpu",
+      "reason": "external known engine consumed CPU",
+      "utc": "2026-10-21T08:34:58.801138+00:00"
+    },
+    "workers": [],
+    "valid_for_load_check": false,
+    "scope": "Sampled known-engine CPU/identity and aggregate nonworker CPU estimate; unknown or transient work between samples, power, thermals and OS isolation are not certified."
+  },
+  "canary_exited": true
+}

@@ -1,0 +1,180 @@
+{
+  "argv": [
+    "docs/checks/2026-10-21-m2-formal/load-unit/native_probe.py",
+    "--output",
+    "docs/checks/2026-10-21-m2-formal/load-unit/native-attempt-002"
+  ],
+  "python": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Scripts\\python.exe",
+  "base_python": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "python_version": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "helper_sha256": "73e4298d25fcd435cb3134bdce8dfad42fdb96f0583bc9941db1332c99567075",
+  "sources": {
+    "scripts/m2_load_guard.py": "e82b414a177f9506e069bf9cadedc9e610aa5bc046b580157a66d2233a9b26f4",
+    "scripts/see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "scripts/m2_formal.py": "27a3453fa65e590dac071846aaf5d02465d183dc6549a847a06994291f9dcc81",
+    "tests/m2_load_guard_tests.py": "d29926323d7dddf184e61963e26ef0873d8c1f5f245f0de514c9a99ca59ba28c"
+  },
+  "results": {
+    "positive": {
+      "expected": "clean sampled load receipt",
+      "passed": true,
+      "events": [
+        {
+          "event": "registered",
+          "pid": 34904,
+          "creation_ticks": 134370453913532748
+        },
+        {
+          "event": "registered",
+          "pid": 19280,
+          "creation_ticks": 134370453913900272
+        },
+        {
+          "event": "registered",
+          "pid": 17736,
+          "creation_ticks": 134370453914233520
+        },
+        {
+          "event": "registered",
+          "pid": 34368,
+          "creation_ticks": 134370453914602392
+        },
+        {
+          "event": "detached",
+          "pid": 34904,
+          "returncode": 0
+        },
+        {
+          "event": "detached",
+          "pid": 19280,
+          "returncode": 0
+        },
+        {
+          "event": "detached",
+          "pid": 17736,
+          "returncode": 0
+        },
+        {
+          "event": "detached",
+          "pid": 34368,
+          "returncode": 0
+        }
+      ],
+      "summary": {
+        "schema_version": 1,
+        "started_utc": "2026-10-21T08:36:26.320889+00:00",
+        "finished_utc": "2026-10-21T08:36:34.585310+00:00",
+        "policy": {
+          "max_nonworker_cpu_fraction": 0.2,
+          "interval_seconds": 0.5,
+          "max_sample_gap_seconds": 2.0,
+          "host_window_seconds": 2.0,
+          "engine_names": [
+            "lc0-cpu.exe",
+            "lc0.exe",
+            "regicide.exe",
+            "stockfish.exe",
+            "sunfish.exe"
+          ],
+          "extra_engine_pids": []
+        },
+        "monitor_pid": 16544,
+        "platform": "win32",
+        "cpu_ticks_per_second": 10000000,
+        "external_cpu_tolerance_ticks": 0,
+        "snapshot_count": 18,
+        "max_sample_gap_seconds": 0.6532585999812,
+        "max_snapshot_duration_seconds": 0.013878000027034432,
+        "external_cpu_increase_ticks": 0,
+        "max_nonworker_cpu_fraction": 0.09653258352377068,
+        "preflight_complete": true,
+        "completed_idle_seconds": 5.012573399988469,
+        "failure": null,
+        "workers": [
+          {
+            "pid": 34904,
+            "creation_ticks": 134370453913532748,
+            "attached_utc": "2026-10-21T08:36:31.388458+00:00",
+            "detached_utc": "2026-10-21T08:36:34.572680+00:00"
+          },
+          {
+            "pid": 19280,
+            "creation_ticks": 134370453913900272,
+            "attached_utc": "2026-10-21T08:36:31.421715+00:00",
+            "detached_utc": "2026-10-21T08:36:34.572762+00:00"
+          },
+          {
+            "pid": 17736,
+            "creation_ticks": 134370453914233520,
+            "attached_utc": "2026-10-21T08:36:31.458559+00:00",
+            "detached_utc": "2026-10-21T08:36:34.572785+00:00"
+          },
+          {
+            "pid": 34368,
+            "creation_ticks": 134370453914602392,
+            "attached_utc": "2026-10-21T08:36:31.492824+00:00",
+            "detached_utc": "2026-10-21T08:36:34.572800+00:00"
+          }
+        ],
+        "valid_for_load_check": true,
+        "scope": "Sampled known-engine CPU/identity and aggregate nonworker CPU estimate; unknown or transient work between samples, power, thermals and OS isolation are not certified."
+      },
+      "workers_exited": true,
+      "remaining_native_owned_handles": 0
+    },
+    "negative": {
+      "expected": "external_cpu rejection of newly created canary only",
+      "canary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+      "passed": true,
+      "canary_pid": 5728,
+      "idle_baseline_completed": true,
+      "assert_clean_rejected": "external known engine consumed CPU",
+      "summary": {
+        "schema_version": 1,
+        "started_utc": "2026-10-21T08:36:34.765275+00:00",
+        "finished_utc": "2026-10-21T08:36:37.319056+00:00",
+        "policy": {
+          "max_nonworker_cpu_fraction": 0.2,
+          "interval_seconds": 0.5,
+          "max_sample_gap_seconds": 2.0,
+          "host_window_seconds": 2.0,
+          "engine_names": [
+            "lc0-cpu.exe",
+            "lc0.exe",
+            "regicide.exe",
+            "stockfish.exe",
+            "sunfish.exe"
+          ],
+          "extra_engine_pids": []
+        },
+        "monitor_pid": 16544,
+        "platform": "win32",
+        "cpu_ticks_per_second": 10000000,
+        "external_cpu_tolerance_ticks": 0,
+        "snapshot_count": 7,
+        "max_sample_gap_seconds": 0.513769900018815,
+        "max_snapshot_duration_seconds": 0.01287530001718551,
+        "external_cpu_increase_ticks": 5000000,
+        "max_nonworker_cpu_fraction": 0.13038334074872887,
+        "preflight_complete": true,
+        "completed_idle_seconds": 2.01481069996953,
+        "failure": {
+          "kind": "external_cpu",
+          "reason": "external known engine consumed CPU",
+          "utc": "2026-10-21T08:36:37.303087+00:00"
+        },
+        "workers": [],
+        "valid_for_load_check": false,
+        "scope": "Sampled known-engine CPU/identity and aggregate nonworker CPU estimate; unknown or transient work between samples, power, thermals and OS isolation are not certified."
+      },
+      "canary_exited": true
+    }
+  },
+  "passed": true,
+  "sources_after": {
+    "scripts/m2_load_guard.py": "e82b414a177f9506e069bf9cadedc9e610aa5bc046b580157a66d2233a9b26f4",
+    "scripts/see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "scripts/m2_formal.py": "27a3453fa65e590dac071846aaf5d02465d183dc6549a847a06994291f9dcc81",
+    "tests/m2_load_guard_tests.py": "d29926323d7dddf184e61963e26ef0873d8c1f5f245f0de514c9a99ca59ba28c"
+  }
+}
