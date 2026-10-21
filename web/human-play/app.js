@@ -26,6 +26,7 @@
   let hintPollInFlight = false;
   let hintToggleInFlight = false;
   let hintToggleDirty = false;
+  let renderedOpeningKey = null;
 
   function clearHint() {
     hintEpoch++;
@@ -98,6 +99,142 @@
     return Boolean(first && second && first.game_id != null && first.revision != null && first.fen &&
       first.game_id === second.game_id &&
       first.revision === second.revision && first.fen === second.fen);
+  }
+
+  function openingText(value, limit = 250) {
+    return typeof value === "string" ? value.trim().slice(0, limit) : "";
+  }
+
+  function openingLabel(item) {
+    const name = openingText(item?.name);
+    const eco = /^[A-E][0-9]{2}$/.test(item?.eco) ? item.eco : "";
+    return name ? `${name}${eco ? ` · ${eco}` : ""}` : "";
+  }
+
+  function openingLink(url, label) {
+    if (typeof URL !== "function" || typeof url !== "string") return null;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+      const link = document.createElement("a");
+      link.textContent = label;
+      link.setAttribute("href", parsed.href);
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+      return link;
+    } catch (_) { return null; }
+  }
+
+  function renderOpeningGuide() {
+    const guide = state?.opening_guide;
+    const key = JSON.stringify([state?.game_id, state?.revision, state?.fen, guide || null]);
+    // Board selection and time-setting renders must not collapse a reader's
+    // open previews. A new position or catalog payload rebuilds the examples.
+    if (key === renderedOpeningKey) return;
+    renderedOpeningKey = key;
+    const statuses = {in_catalog:"등록 수순 안", beyond_catalog:"등록 수순 이후",
+      unknown:"등록 이름 없음", unavailable:"안내 없음"};
+    const status = guide && Object.hasOwn(statuses, guide.status) ? guide.status : "unavailable";
+    byId("opening-badge").textContent = !state ? "준비 중" : statuses[status];
+    const matches = Array.isArray(guide?.current_matches) ? guide.current_matches.filter(openingLabel) : [];
+    const matched = openingLabel(guide?.matched_opening);
+    byId("opening-name").textContent = !state ? "오프닝 자료를 기다리고 있어요." :
+      matches.length ? openingLabel(matches[0]) : matched ? `마지막 확인: ${matched}` :
+      status === "in_catalog" ? "이어서 오프닝을 살펴보세요." :
+      status === "unavailable" ? "오프닝 안내를 불러오지 못했습니다." : "현재 위치의 등록 이름이 없습니다.";
+    let description = !state ? "수를 두면 등록된 이름과 이어지는 수순을 확인할 수 있습니다." :
+      status === "unavailable" ? "오프닝 자료를 읽지 못했습니다. 대국은 계속할 수 있습니다." :
+      status === "beyond_catalog" ? "등록된 수순을 벗어났습니다. 마지막으로 확인한 이름을 표시합니다." :
+      status === "unknown" ? "이 자료에 일치하는 이름을 찾지 못했습니다. 계속 두어도 됩니다." :
+      matches[0]?.match_type === "transposition" ? "다른 수순으로 같은 오프닝 위치에 도착했습니다." :
+      matches[0]?.match_type === "position" ? "현재 배치에 일치하는 등록 이름입니다." :
+      matches.length ? "현재 수순에 일치하는 등록 이름입니다." : "다음 수를 펼쳐 이어지는 등록 수순을 확인하세요.";
+    if (guide?.history_scope === "custom" && status !== "unavailable")
+      description += " 직접 불러온 위치는 확인 가능한 배치와 이후 수순을 기준으로 안내합니다.";
+    byId("opening-status").textContent = description;
+    const aliases = matches.slice(1).map(openingLabel);
+    byId("opening-aliases").hidden = aliases.length === 0 && !guide?.current_matches_truncated;
+    byId("opening-aliases").textContent = `${aliases.length ? `함께 등록된 이름: ${aliases.join(" / ")}` : ""}${guide?.current_matches_truncated ? " · 다른 등록 이름도 있습니다." : ""}`;
+
+    const fragment = document.createDocumentFragment();
+    const branches = status === "unavailable" || !Array.isArray(guide?.continuations) ? [] : guide.continuations;
+    let visible = 0;
+    for (const branch of branches) {
+      if (!branch || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(branch.uci) || !openingText(branch.san)) continue;
+      // The server validates every continuation. Where the live board also
+      // exposes human legal moves, reject a stale/foreign continuation locally.
+      // An opponent's turn intentionally exposes an empty human move list.
+      if (state?.human_to_move && Array.isArray(state.legal_moves) && !state.legal_moves.includes(branch.uci)) continue;
+      const details = document.createElement("details");
+      details.className = "opening-branch";
+      details.dataset.uci = branch.uci;
+      const summary = document.createElement("summary");
+      const san = document.createElement("span");
+      san.className = "opening-next-san";
+      san.textContent = openingText(branch.san);
+      const immediate = Array.isArray(branch.immediate_openings) ? branch.immediate_openings.map(openingLabel).filter(Boolean) : [];
+      const label = document.createElement("span");
+      label.textContent = immediate.length ? immediate.join(" / ") : "이어지는 이름 살펴보기";
+      const count = document.createElement("span");
+      count.className = "opening-branch-count";
+      count.textContent = Number.isInteger(branch.reachable_total) && branch.reachable_total >= 0 ?
+        `도달 가능한 등록 이름 ${branch.reachable_total}개 · 수순 펼치기` : "등록 수순 펼치기";
+      summary.append(san, label, count);
+      const lines = document.createElement("div");
+      lines.className = "opening-lines";
+      const reachable = Array.isArray(branch.reachable_openings) ? branch.reachable_openings : [];
+      let lineCount = 0;
+      for (const line of reachable) {
+        const name = openingLabel(line);
+        const sequence = openingText(line?.remaining_san, 2500);
+        if (!name || !sequence) continue;
+        const item = document.createElement("div");
+        item.className = "opening-line";
+        const heading = document.createElement("p");
+        heading.className = "opening-line-name";
+        heading.textContent = name;
+        const distance = document.createElement("p");
+        distance.className = "opening-line-distance";
+        distance.textContent = Number.isInteger(line.distance_plies) && line.distance_plies > 0 ?
+          `이 수를 포함해 ${line.distance_plies}번 이동 뒤의 등록 이름` : "현재 위치에서 이어지는 등록 수순";
+        const preview = document.createElement("p");
+        preview.className = "opening-line-san";
+        preview.textContent = sequence;
+        item.append(heading, distance, preview);
+        lines.append(item);
+        lineCount++;
+      }
+      if (lineCount === 0 || branch.reachable_truncated || branch.immediate_truncated) {
+        const note = document.createElement("p");
+        note.className = "opening-status";
+        note.textContent = lineCount === 0 ? "더 이어지는 등록 수순을 표시할 수 없습니다." : "등록 이름과 수순 중 일부를 표시합니다.";
+        lines.append(note);
+      }
+      details.append(summary, lines);
+      fragment.append(details);
+      visible++;
+    }
+    byId("opening-branches").replaceChildren(fragment);
+    byId("opening-empty").hidden = !state || status === "unavailable" || visible > 0;
+    byId("opening-empty").textContent = "현재 위치에서 이어지는 등록 수순이 없습니다. 오프닝 자료의 범위는 한정되어 있습니다.";
+    byId("opening-coverage").hidden = !guide?.continuations_truncated;
+    byId("opening-coverage").textContent = Number.isInteger(guide?.continuations_total) ?
+      `등록된 다음 수 ${guide.continuations_total}개 중 ${visible}개를 표시합니다.` : "등록된 다음 수 중 일부를 표시합니다.";
+    byId("opening-disclaimer").textContent = openingText(guide?.disclaimer, 500) ||
+      "공개된 오프닝 수순의 분류입니다. 승률이나 엔진의 추천 수가 아닙니다.";
+    const source = guide?.source;
+    const sourceItems = [];
+    const repository = openingLink(source?.repository_url, "오프닝 원자료");
+    const license = openingLink(source?.license_url, "이용 조건");
+    if (repository) sourceItems.push(repository);
+    if (license) sourceItems.push(license);
+    const attribution = document.createElement("p");
+    attribution.textContent = openingText(source?.attribution, 500) || "원자료의 출처를 현재 표시할 수 없습니다.";
+    const metadata = document.createElement("span");
+    metadata.className = "opening-source-meta";
+    metadata.textContent = [openingText(source?.license, 80),
+      /^[a-f0-9]{40}$/i.test(source?.commit) ? `자료 버전 ${source.commit.slice(0, 7)}` : ""].filter(Boolean).join(" · ");
+    byId("opening-sources").replaceChildren(...sourceItems, attribution, metadata);
   }
 
   function evaluationView() {
@@ -352,6 +489,7 @@
     renderMoves();
     renderEvaluation();
     renderHint();
+    renderOpeningGuide();
     const ready = Boolean(state) && !closed;
     const active = ready && state.result === "*";
     const humanColor = state?.human_color || "white";

@@ -43,6 +43,12 @@ var _hint_toggle_version: int = 0
 var _hint_sent_version: int = 0
 var _hint_connection_error: String = ""
 var _hint_control_failed: bool = false
+var _opening_render_key: String = ""
+var _opening_rows: Array = []
+var _opening_selected: int = -1
+var _opening_branch_count: int = 0
+var _opening_expanded: bool = false
+var _opening_source: Dictionary = {}
 
 var board: ChessBoard
 var evaluation_bar: EvaluationBar
@@ -51,6 +57,17 @@ var evaluation_detail: Label
 var hint_button: Button
 var hint_summary: Label
 var hint_detail: Label
+var opening_summary: Label
+var opening_status: Label
+var opening_toggle: Button
+var opening_details: VBoxContainer
+var opening_branch_list: RichTextLabel
+var opening_catalog_note: Label
+var opening_preview_title: Label
+var opening_preview: RichTextLabel
+var opening_source_button: Button
+var opening_source_dialog: AcceptDialog
+var opening_source_text: RichTextLabel
 var flip_button: Button
 var view_label: Label
 var status_label: Label
@@ -64,6 +81,7 @@ var move_count: Label
 var color_option: OptionButton
 var time_option: OptionButton
 var think_time_help: Label
+var sidebar_scroll: ScrollContainer
 var live_settings: GridContainer
 var live_actions: HBoxContainer
 var handicap_section: VBoxContainer
@@ -253,7 +271,7 @@ func _build_ui() -> void:
 		side_margins.add_theme_constant_override("margin_" + side, 14)
 	side_panel.add_child(side_margins)
 	# The default window keeps the controls visible; a smaller window may scroll.
-	var sidebar_scroll := ScrollContainer.new()
+	sidebar_scroll = ScrollContainer.new()
 	sidebar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	side_margins.add_child(sidebar_scroll)
 	var sidebar := VBoxContainer.new()
@@ -267,6 +285,9 @@ func _build_ui() -> void:
 	status_detail = _label("잠시만 기다려 주세요.", 13, "a3b6c8")
 	status_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_detail)
+	# A required move choice stays above optional learning content.
+	_build_promotion(sidebar)
+	_build_opening_guide(sidebar)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
 	hint_button.tooltip_text = "Regicide가 당신의 다음 수를 추천합니다. 추천만 표시하며 직접 착수하지 않습니다."
@@ -327,7 +348,6 @@ func _build_ui() -> void:
 	resign_button = _button("기권", _on_resign_pressed)
 	actions.add_child(resign_button)
 	_build_handicap(sidebar)
-	_build_promotion(sidebar)
 	sidebar.add_child(HSeparator.new())
 	var history_title := HBoxContainer.new()
 	sidebar.add_child(history_title)
@@ -387,6 +407,214 @@ func _build_ui() -> void:
 	save_dialog.file_selected.connect(_save_pgn_file)
 	add_child(save_dialog)
 	_build_library_dialog()
+
+
+func _build_opening_guide(parent: VBoxContainer) -> void:
+	var panel := PanelContainer.new()
+	panel.name = "OpeningGuide"
+	panel.add_theme_stylebox_override("panel", _panel_style("192c3e", 8))
+	parent.add_child(panel)
+	var margins := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margins.add_theme_constant_override("margin_" + side, 8)
+	panel.add_child(margins)
+	var contents := VBoxContainer.new()
+	contents.add_theme_constant_override("separation", 4)
+	margins.add_child(contents)
+	var heading := HBoxContainer.new()
+	contents.add_child(heading)
+	var title := _label("오프닝 안내", 15, "f6f0de")
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(title)
+	opening_source_button = _button("출처", _on_opening_source_pressed)
+	opening_source_button.name = "OpeningSource"
+	opening_source_button.add_theme_font_size_override("font_size", 12)
+	heading.add_child(opening_source_button)
+	opening_summary = _label("오프닝 자료를 기다립니다.", 14, "9bd7ca")
+	opening_summary.name = "OpeningSummary"
+	opening_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contents.add_child(opening_summary)
+	opening_status = _label("", 12, "a3b6c8")
+	opening_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contents.add_child(opening_status)
+	opening_toggle = _button("다음 분기 보기", _on_opening_toggle_pressed)
+	opening_toggle.name = "OpeningContinuations"
+	opening_toggle.add_theme_font_size_override("font_size", 12)
+	contents.add_child(opening_toggle)
+	opening_details = VBoxContainer.new()
+	opening_details.add_theme_constant_override("separation", 5)
+	contents.add_child(opening_details)
+	var help := _label("이름을 누르면 남은 수순을 봅니다.\n대국에는 착수하지 않습니다.", 12, "a3b6c8")
+	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	opening_details.add_child(help)
+	opening_branch_list = RichTextLabel.new()
+	opening_branch_list.name = "OpeningBranchList"
+	opening_branch_list.custom_minimum_size.y = 145
+	opening_branch_list.selection_enabled = true
+	opening_branch_list.add_theme_font_size_override("normal_font_size", 13)
+	opening_branch_list.meta_clicked.connect(_on_opening_line_selected)
+	opening_details.add_child(opening_branch_list)
+	opening_catalog_note = _label("", 12, "8197aa")
+	opening_catalog_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	opening_details.add_child(opening_catalog_note)
+	opening_preview_title = _label("이름을 선택해 수순을 살펴보세요.", 13, "9bd7ca")
+	opening_preview_title.name = "OpeningPreviewTitle"
+	opening_preview_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	opening_details.add_child(opening_preview_title)
+	opening_preview = RichTextLabel.new()
+	opening_preview.name = "OpeningPreviewSequence"
+	opening_preview.custom_minimum_size.y = 72
+	opening_preview.selection_enabled = true
+	opening_preview.add_theme_font_size_override("normal_font_size", 13)
+	opening_details.add_child(opening_preview)
+	opening_source_dialog = AcceptDialog.new()
+	opening_source_dialog.title = "오프닝 자료 출처"
+	opening_source_dialog.min_size = Vector2i(470, 280)
+	opening_source_text = RichTextLabel.new()
+	opening_source_text.custom_minimum_size = Vector2(450, 240)
+	opening_source_text.selection_enabled = true
+	opening_source_text.add_theme_font_size_override("normal_font_size", 14)
+	opening_source_dialog.add_child(opening_source_text)
+	add_child(opening_source_dialog)
+
+
+func _opening_name(value: Dictionary) -> String:
+	var name: String = str(value.get("name", ""))
+	var eco: String = str(value.get("eco", ""))
+	return name + (" · " + eco if not eco.is_empty() else "")
+
+
+func _append_opening_line(value: Dictionary, san: String, uci: String, immediate: bool) -> void:
+	if str(value.get("name", "")).is_empty():
+		return
+	var row: Dictionary = value.duplicate(true)
+	if immediate:
+		row["distance_plies"] = 1
+		row["remaining_uci"] = [uci]
+		row["remaining_san"] = san
+	var key: String = str(row.get("name", "")) + "|" + str(row.get("eco", "")) + "|" + JSON.stringify(row.get("remaining_uci", []))
+	for old in _opening_rows:
+		if old.get("_key", "") == key:
+			# A reachable record carries the catalog's complete numbered SAN,
+			# including the move number when this name is only one move away.
+			if not immediate and not str(row.get("remaining_san", "")).is_empty():
+				old["remaining_san"] = row["remaining_san"]
+			return
+	row["_key"] = key
+	var index: int = _opening_rows.size()
+	_opening_rows.append(row)
+	opening_branch_list.append_text("  ")
+	opening_branch_list.push_color(Color("9bd7ca"))
+	opening_branch_list.push_meta(index)
+	opening_branch_list.append_text(_opening_name(row))
+	opening_branch_list.pop()
+	opening_branch_list.pop()
+	var distance: int = maxi(1, int(row.get("distance_plies", 1)))
+	opening_branch_list.append_text("  · 다음 수\n" if distance == 1 else "  · %d번 착수 뒤\n" % distance)
+
+
+func _render_opening_guide(shown: Dictionary) -> void:
+	if opening_summary == null:
+		return
+	var candidate: Variant = shown.get("opening_guide", {})
+	var guide: Dictionary = candidate if candidate is Dictionary else {}
+	var matches: Variant = guide.get("current_matches", [])
+	var current: Dictionary = matches[0] if matches is Array and not matches.is_empty() and matches[0] is Dictionary else {}
+	var last: Variant = guide.get("matched_opening")
+	var scope: String = "사용자 시작 위치 · " if guide.get("history_scope", "standard") == "custom" else ""
+	if not current.is_empty():
+		opening_summary.text = _opening_name(current)
+		var kind: String = str(current.get("match_type", "exact"))
+		opening_status.text = scope + ("다른 수순으로 같은 위치에 도달했습니다." if kind == "transposition" else "현재 위치가 등록된 이름과 일치합니다." if kind == "position" else "등록된 수순과 일치합니다.")
+		var aliases: PackedStringArray = []
+		for item in matches:
+			if item is Dictionary:
+				aliases.append(_opening_name(item))
+		opening_summary.tooltip_text = "같은 위치의 등록 이름\n" + "\n".join(aliases)
+	elif last is Dictionary and not last.is_empty():
+		opening_summary.text = "마지막 확인: " + _opening_name(last)
+		opening_summary.tooltip_text = ""
+		opening_status.text = scope + "현재 위치는 등록 수순 밖입니다."
+	else:
+		opening_summary.text = "등록된 오프닝 이름 없음" if not guide.is_empty() and guide.get("status", "unavailable") != "unavailable" else "오프닝 자료를 기다립니다."
+		opening_summary.tooltip_text = ""
+		opening_status.text = scope + ("이 자료에서 이름을 찾지 못했습니다." if not guide.is_empty() and guide.get("status", "unavailable") != "unavailable" else "현재 위치의 안내 자료를 받지 못했습니다.")
+	if bool(guide.get("current_matches_truncated", false)):
+		opening_status.text += "\n현재 위치의 이름은 일부만 표시합니다."
+	var source: Variant = guide.get("source", {})
+	_opening_source = source.duplicate(true) if source is Dictionary else {}
+	opening_source_button.disabled = _opening_source.is_empty()
+	opening_source_text.text = "%s\n\n저장소: %s\n고정 버전: %s\n이용 조건: %s\n\n%s" % [str(_opening_source.get("attribution", "")), str(_opening_source.get("repository_url", "")), str(_opening_source.get("commit", "")), str(_opening_source.get("license", "")), str(guide.get("disclaimer", "등록된 이름과 수순을 살펴보는 학습 안내입니다."))]
+	var key: String = JSON.stringify(guide)
+	if key != _opening_render_key:
+		_opening_render_key = key
+		_opening_rows.clear()
+		_opening_selected = -1
+		opening_branch_list.clear()
+		var branches: Variant = guide.get("continuations", [])
+		var count: int = 0
+		var clipped: bool = bool(guide.get("continuations_truncated", false))
+		if branches is Array:
+			for branch in branches:
+				if not branch is Dictionary:
+					continue
+				var san: String = str(branch.get("san", ""))
+				var uci: String = str(branch.get("uci", ""))
+				if san.is_empty() or uci.is_empty():
+					continue
+				count += 1
+				opening_branch_list.push_color(Color("f6f0de"))
+				opening_branch_list.append_text(san + "\n")
+				opening_branch_list.pop()
+				var immediate: Variant = branch.get("immediate_openings", [])
+				if immediate is Array:
+					for line in immediate:
+						if line is Dictionary:
+							_append_opening_line(line, san, uci, true)
+				var reachable: Variant = branch.get("reachable_openings", [])
+				if reachable is Array:
+					for line in reachable:
+						if line is Dictionary:
+							_append_opening_line(line, san, uci, false)
+				clipped = clipped or bool(branch.get("immediate_truncated", false)) or bool(branch.get("reachable_truncated", false))
+				opening_branch_list.append_text("\n")
+		_opening_branch_count = count
+		opening_toggle.text = "다음 분기 접기" if _opening_expanded else "다음 분기 보기 (%d개 첫 수)" % _opening_branch_count
+		opening_catalog_note.text = "등록된 이름으로 이어지는 수가 없습니다." if count == 0 else "등록 자료의 이름 있는 분기입니다."
+		if clipped:
+			opening_catalog_note.text += "\n분기·이름 목록을 일부만 표시합니다."
+		opening_catalog_note.text += "\n" + str(guide.get("ordering", "SAN 표기순이며 추천 순위가 아닙니다."))
+		opening_branch_list.visible = count > 0
+		_render_opening_preview()
+	opening_details.visible = _opening_expanded
+
+
+func _render_opening_preview() -> void:
+	if _opening_selected < 0 or _opening_selected >= _opening_rows.size():
+		opening_preview_title.text = "이름을 선택해 수순을 살펴보세요."
+		opening_preview.text = ""
+		return
+	var row: Dictionary = _opening_rows[_opening_selected]
+	opening_preview_title.text = _opening_name(row) + "\n총 %d번의 착수 뒤 이 이름에 도달합니다." % maxi(1, int(row.get("distance_plies", 1)))
+	opening_preview.text = str(row.get("remaining_san", "수순 정보 없음"))
+
+
+func _on_opening_line_selected(meta: Variant) -> void:
+	if not meta is int or meta < 0 or meta >= _opening_rows.size():
+		return
+	_opening_selected = int(meta)
+	_render_opening_preview()
+
+
+func _on_opening_toggle_pressed() -> void:
+	_opening_expanded = not _opening_expanded
+	opening_details.visible = _opening_expanded
+	opening_toggle.text = "다음 분기 접기" if _opening_expanded else "다음 분기 보기 (%d개 첫 수)" % _opening_branch_count
+
+
+func _on_opening_source_pressed() -> void:
+	if not _opening_source.is_empty():
+		opening_source_dialog.popup_centered()
 
 
 func _build_review_controls(parent: VBoxContainer) -> void:
@@ -1151,6 +1379,7 @@ func _render() -> void:
 	board.queue_redraw()
 	_render_evaluation()
 	_render_hint()
+	_render_opening_guide(shown)
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = false
 	var human_color: String = str(shown.get("human_color", "white"))
@@ -1233,7 +1462,10 @@ func _render() -> void:
 			status_detail.text = "당신은 %s · 한 수에 %s초 생각합니다." % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
+	var promotion_was_visible: bool = promotion_panel.visible
 	promotion_panel.visible = not review_mode and not board_model.pending_promotions.is_empty()
+	if promotion_panel.visible and not promotion_was_visible:
+		_reveal_promotion()
 	for kind in promotion_buttons:
 		var available := false
 		for move in board_model.pending_promotions:
@@ -1241,6 +1473,12 @@ func _render() -> void:
 				available = true
 		promotion_buttons[kind].disabled = request_in_flight or think_time_request_in_flight or not available
 	_render_history()
+
+
+func _reveal_promotion() -> void:
+	await get_tree().process_frame
+	if not closing and promotion_panel.visible:
+		sidebar_scroll.ensure_control_visible(promotion_panel)
 
 
 func _player_text(color_name: String, human_color: String) -> String:

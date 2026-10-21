@@ -20,6 +20,8 @@ import threading
 import chess
 import chess.pgn
 
+from opening_presentation import OpeningGuideCache
+
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
 MAX_PLIES = 10_000
@@ -78,6 +80,7 @@ class GameArchive:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self._cache = OrderedDict()
         self._lock = threading.RLock()
+        self._opening_guide = OpeningGuideCache()
 
     @staticmethod
     def _check_id(game_id):
@@ -333,6 +336,7 @@ class GameArchive:
                     "status": summary["status"] if final else "과거 기보 · " + ("백" if board.turn else "흑") + " 차례",
                     "human_to_move": False, "engine_to_move": False, "legal_moves": [],
                     "can_undo": False, "can_handicap": False, "handicap_mode": False,
+                    "opening_guide": self._opening_guide.get(board),
                     "error": None})
                 if not final:
                     board.push_uci(prepared["moves"][ply]["uci"])

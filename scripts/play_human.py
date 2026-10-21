@@ -27,6 +27,7 @@ import chess.pgn
 from play_game import source_version
 from game_archive import GameArchive, default_game_directory
 from move_hints import MoveHints
+from opening_presentation import OpeningGuideCache
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
@@ -108,6 +109,7 @@ class HumanGame:
             hint_engine_factory = configured(hint_engine_factory or (
                 lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
         self._lock = threading.RLock()
+        self._opening_guide = OpeningGuideCache()
         # Evaluation polling must not wait for the game lock held by a search.
         self._evaluation_lock = threading.Lock()
         self._evaluation = {}
@@ -327,6 +329,7 @@ class HumanGame:
                     "legal_moves": [move.uci() for move in self.board.legal_moves]
                     if human_turn or handicap_mode else [],
                     "moves": moves, "status": status, "result": result, "termination": termination,
+                    "opening_guide": self._opening_guide.get(self.board),
                     "in_check": self.board.is_check(),
                     "last_move": self.board.peek().uci() if self.board.move_stack else None,
                     "can_undo": can_undo, "error": self.error,
