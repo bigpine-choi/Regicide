@@ -1560,6 +1560,39 @@ def test_lmr_default_client_compatibility(binary):
             client.ping()
 
 
+def test_quiescence_threat_option_lifecycle(binary):
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options["UseQuiescenceThreats"]
+        assert option.type == "check" and option.default is False
+    board = chess.Board("r2qkb1r/1pp2ppp/2n2P2/8/p1Bp4/P4N2/RP3PPP/1bBQ1RK1 w kq - 0 11")
+    with UciProcess(binary) as engine:
+        for value in ("yes", "1", "TRUE", "false extra"):
+            engine.send("setoption name UseQuiescenceThreats value " + value)
+            output = engine.ready()
+            assert any("check option requires" in line or "missing or extra" in line for line in output), output
+        original = None
+        for enabled in (False, True, False):
+            configure(engine, UseQuiescenceThreats=enabled)
+            actual = engine.search(board, "go nodes 2000")
+            with UciProcess(binary) as cold:
+                configure(cold, UseQuiescenceThreats=enabled)
+                expected = cold.search(board, "go nodes 2000")
+            assert search_fingerprint(*actual) == search_fingerprint(*expected)
+            if not enabled:
+                current = search_fingerprint(*actual)
+                assert original is None or original == current
+                original = current
+            assert any(line.startswith("info string qthreat ") for line in actual[1]), actual
+        configure(engine, UseQuiescenceThreats=True)
+        engine.position(board)
+        engine.send("go infinite")
+        engine.await_search_started()
+        engine.send("setoption name UseQuiescenceThreats value false")
+        output = engine.ready(allow_bestmove=True)
+        assert sum(line.startswith("bestmove ") for line in output) == 1, output
+        engine.ready()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -1575,7 +1608,8 @@ def main():
               test_see_option_lifecycle, test_pawn_shield_protocol_and_cli,
               test_pawn_shield_option_lifecycle, test_pawn_structure_protocol_and_cli,
               test_pawn_structure_option_lifecycle, test_lmr_protocol_cli_and_gates,
-              test_lmr_option_lifecycle, test_lmr_default_client_compatibility]
+              test_lmr_option_lifecycle, test_lmr_default_client_compatibility,
+              test_quiescence_threat_option_lifecycle]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T18:02:23.557304+00:00",
+  "base_commit": "23c2892a8f261877193d9903b2abbee98c8ee427",
+  "hypothesis": "One bounded quiet knight-fork threat continuation plus complete legal opponent defense can expose exf6/Bxb1/Ng5 tactics omitted at the capture/check frontier. No hardcoded position or move.",
+  "training_runs": 0,
+  "model_policy": "Reuse sealed output-only head439583 unchanged on both searches. MSE/NNUE structure/output-only optimizer/regularization sources and model protected by hashes.",
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-leaf\\regicide.exe": "b78c50d0ebeefd937cf3265921e6f71a300146d8fecf0fb7e1d1379739a5bcf0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_output_only.py": "48dd2fd97582931adb76752451e0e05121700e340ff605ee0042e698cd1c719b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_head_repair.py": "d655d10461928a3f16706b45220a6e1191d5049ab313768a3613a09e4dcca163",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\protocol.json": "c3ebecd61330452535fbc3bc5eee12a02a523b631328b89ad186e2678f5913aa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\check_nnue_tactical_search.py": "e02d6aad2d805d82599e9a81ea9692a000a29022439f0ea88ead807aab4f8878"
+  },
+  "native_nodes": 10000,
+  "known_position_policy": {
+    "all_required": true,
+    "expected_moves": [
+      "f6e4",
+      "e5f6",
+      "f3g5"
+    ],
+    "histories": "Original exposed QGA root; after Bf5; after Bf5 exf6 Bxb1",
+    "native_mismatches": 0,
+    "equal_budget": true,
+    "queries_per_final_screen": 12,
+    "new_teacher_queries": 0
+  },
+  "fresh_gate_policy": {
+    "positions": 16,
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "fresh_gate_runs_maximum": 1,
+    "only_after_known_position_pass": true,
+    "no_outcome_driven_refill_or_retries": true
+  },
+  "match_policy": {
+    "only_after_both_gates_pass": true,
+    "games": 16,
+    "pairs": 8,
+    "time_per_move_ms": 100,
+    "hash_mb": 16,
+    "maximum_plies": 500,
+    "draw_policy": "claim",
+    "candidate": "new search + frozen NNUE439583 + UseQuiescenceThreats=true",
+    "baseline": "frozen basic classical Regicide",
+    "source_openings": "tests/data/nnue_leaf_match_openings_2026-10-22.json",
+    "strength_claim": "Small direction screen only, not Elo proof"
+  },
+  "defaults_changed": false,
+  "installed_game_changed": false
+}

@@ -95,6 +95,18 @@ class EngineProfileTests(unittest.TestCase):
             literal['options'][key] = value
             self.rejects(literal)
 
+    def test_v3_nnue_and_explicit_tactical_search_option(self):
+        self.nnue.write_bytes(b'REGICIDE_NNUE 3 768 16 4064 256 32\nfixture\n')
+        literal = self.fixture('nnue')
+        literal['options']['UseQuiescenceThreats'] = True
+        loaded = self.load(literal)
+        self.assertIs(loaded['options']['UseQuiescenceThreats'], True)
+        literal['options']['UseQuiescenceThreats'] = 1
+        self.rejects(literal)
+        del literal['options']['UseQuiescenceThreats']
+        literal['options']['usequiescencethreats'] = True
+        self.rejects(literal)
+
     def test_model_family_binding_and_builtin_are_rejected(self):
         literal = self.fixture('nnue')
         literal['models'] = {}

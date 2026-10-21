@@ -76,6 +76,10 @@ struct SearchOptions {
     // The observer must not mutate search-owned objects or stop state. Its work
     // consumes wall time, so deterministic collection uses node/depth limits.
     StaticEvaluationObserver static_evaluation_observer = {};
+    // Experimental bounded knight-fork threats plus guarded local SEE pruning
+    // in quiescence. One quiet threat per path; all opponent replies remain.
+    // SEE pruning excludes check evasions, threat replies, checks, EP and promotions.
+    bool quiescence_threats = false;
 };
 
 struct SearchResult {
@@ -101,6 +105,10 @@ struct SearchResult {
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;
     std::vector<Move> pv;
+    std::uint64_t quiet_threat_candidates = 0; // Qualified quiet moves, including pruned siblings.
+    std::uint64_t quiet_threat_extensions = 0; // Quiet threat branches actually searched.
+    std::uint64_t defensive_qnodes = 0; // All-reply quiescence nodes after such a threat.
+    std::uint64_t qsee_pruned = 0; // Locally losing ordinary nonchecking q captures omitted by the opt-in.
 };
 
 using SearchCallback = std::function<void(const SearchResult&)>;

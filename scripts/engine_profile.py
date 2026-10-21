@@ -31,7 +31,7 @@ REQUIRED_OPTIONS = (
 _REGICIDE_OPTIONS = set(REQUIRED_OPTIONS) | {
     'Move Overhead', 'UsePositionalEvaluation', 'UseQuiescence', 'UseTranspositionTable',
     'Clear Hash', 'UseFastMoves', 'UseQuietMoveOrdering', 'UseQuiescenceChecks',
-    'PVS', 'UseSEE', 'EvalFile', 'NeuralModelFile',
+    'PVS', 'UseSEE', 'EvalFile', 'NeuralModelFile', 'UseQuiescenceThreats',
 }
 _CANONICAL_OPTIONS = {name.casefold(): name for name in _REGICIDE_OPTIONS}
 _METADATA = {'manifest_path', 'manifest_sha256', 'normalized_sha256'}
@@ -160,7 +160,7 @@ def _normalize(profile, base):
             with Path(normalized['path']).open('rb') as stream:
                 magic = stream.read(256).split()
             valid = (magic[:1] in ([b'REGICIDE_NN_V1'], [b'REGICIDE_NN_V2']) if key == 'EvalFile'
-                     else len(magic) > 1 and magic[0] == b'REGICIDE_NNUE' and magic[1] in (b'1', b'2'))
+                     else len(magic) > 1 and magic[0] == b'REGICIDE_NNUE' and magic[1] in (b'1', b'2', b'3'))
             if not valid:
                 raise ProfileError(f'{key} model has the wrong Regicide model family or version')
     if kind == 'regicide':
@@ -168,6 +168,8 @@ def _normalize(profile, base):
             raise ProfileError('Regicide profile must explicitly set ' + ', '.join(REQUIRED_OPTIONS))
         if any(type(options[key]) is not bool for key in REQUIRED_OPTIONS if key != 'Hash') or type(options['Hash']) is not int:
             raise ProfileError('Regicide mode/search flags must be booleans and Hash an integer')
+        if 'UseQuiescenceThreats' in options and type(options['UseQuiescenceThreats']) is not bool:
+            raise ProfileError('UseQuiescenceThreats must be a boolean')
         if options['UseNeuralEvaluation'] != (evaluation == 'residual') or options['UseNNUEEvaluation'] != (evaluation == 'nnue'):
             raise ProfileError('evaluation family conflicts with neural activation options')
         if evaluation in ('classical', 'residual') and options.get('UsePositionalEvaluation', True) is not True:

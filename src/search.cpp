@@ -43,6 +43,64 @@ bool quiet_move(const Board& board, Move move) {
     return position.squares[move.to] == '.' && !en_passant && !move.promotion;
 }
 
+constexpr int knight_steps[8][2] = {
+    {1, 2}, {2, 1}, {2, -1}, {1, -2}, {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}};
+
+bool belongs_to(char piece, Color side) {
+    return piece != '.' && ((piece >= 'A' && piece <= 'Z') == (side == Color::white));
+}
+
+// A conservative motif, not an evaluation bonus or a claim that a fork wins:
+// a quiet knight move attacks two enemy rooks/queens, or threatens a legal,
+// locally non-losing capture which attacks two such pieces. The actual search
+// must then allow all opponent replies, including quiet prevention and capture
+// of the knight. Hypothetical legality/SEE use a private board, never history or
+// NNUE state belonging to the search. The classifier changes no search score.
+template<class Poll>
+bool quiet_knight_fork_threat(const Board& board, Move move, std::uint64_t& see_calls, Poll&& poll) {
+    const auto& before = board.position();
+    if (before.squares[move.from] != 'N' && before.squares[move.from] != 'n') return false;
+    auto squares = before.squares;
+    squares[move.to] = squares[move.from];
+    squares[move.from] = '.';
+    const Color enemy = opposite(before.turn);
+    const auto majors = [&](int square) {
+        int count = 0;
+        for (const auto& step : knight_steps) {
+            const int file = square % 8 + step[0], rank = square / 8 + step[1];
+            if (file < 0 || file >= 8 || rank < 0 || rank >= 8) continue;
+            const char piece = squares[rank * 8 + file];
+            if (belongs_to(piece, enemy) && value(piece) >= 500) ++count;
+        }
+        return count;
+    };
+    if (majors(move.to) >= 2) return true;
+    std::vector<Move> captures;
+    for (const auto& step : knight_steps) {
+        const int file = move.to % 8 + step[0], rank = move.to / 8 + step[1];
+        if (file < 0 || file >= 8 || rank < 0 || rank >= 8) continue;
+        const int target = rank * 8 + file;
+        const char victim = squares[target];
+        if (belongs_to(victim, enemy) && victim != 'K' && victim != 'k' && majors(target) >= 2)
+            captures.push_back({move.to, target});
+    }
+    if (captures.empty()) return false;
+    poll();
+    Board after = board;
+    after.play_generated(move);
+    auto hypothetical_fen = after.fen();
+    hypothetical_fen[hypothetical_fen.find(' ') + 1] = before.turn == Color::white ? 'w' : 'b';
+    Board hypothetical(hypothetical_fen);
+    const auto legal = hypothetical.legal_moves();
+    for (Move capture : captures) {
+        poll();
+        if (std::find(legal.begin(), legal.end(), capture) == legal.end()) continue;
+        ++see_calls;
+        if (static_exchange_evaluation(hypothetical, capture) >= 0) return true;
+    }
+    return false;
+}
+
 using QuietHistory = std::array<std::array<int, 64>, 64>;
 using Killers = std::array<std::optional<Move>, 2>;
 constexpr int history_limit = 16384;
@@ -200,6 +258,8 @@ public:
     std::uint64_t pvs_probes = 0, pvs_researches = 0;
     std::uint64_t see_calls = 0;
     std::uint64_t lmr_reductions = 0, lmr_researches = 0;
+    std::uint64_t quiet_threat_candidates = 0, quiet_threat_extensions = 0, defensive_qnodes = 0;
+    std::uint64_t qsee_pruned = 0;
     int seldepth = 0;
     int iteration_depth = 0;
 
@@ -208,7 +268,8 @@ public:
                 const std::optional<Move>& preferred = {}) {
         // A horizon position belongs to exactly one node, even when extended.
         if (depth == 0 && options_.quiescence)
-            return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0, alpha, beta, pv);
+            return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0,
+                              options_.quiescence_threats ? 1 : 0, false, alpha, beta, pv);
         poll();
         ++nodes;
         seldepth = std::max(seldepth, ply);
@@ -408,11 +469,12 @@ private:
                  current_claim, adjusted});
     }
 
-    int quiescence(Board& board, int ply, int qply, int checks_left, int alpha, int beta,
-                   std::vector<Move>& pv) {
+    int quiescence(Board& board, int ply, int qply, int checks_left, int threats_left,
+                   bool defensive_reply, int alpha, int beta, std::vector<Move>& pv) {
         poll();
         ++nodes;
         ++qnodes;
+        if (defensive_reply) ++defensive_qnodes;
         seldepth = std::max(seldepth, ply);
         pv.clear();
         auto moves = board.legal_moves();
@@ -423,10 +485,11 @@ private:
         // No position in check may use stand pat. If the absolute extension
         // ceiling is reached, discard this iteration and retain the previous
         // complete result, rather than treating an unresolved check as quiet.
-        if (checked && qply >= max_quiescence_depth) throw Interrupted{};
+        if ((checked || defensive_reply) && qply >= max_quiescence_depth) throw Interrupted{};
 
         int best = -infinity;
-        if (!checked) {
+        std::vector<Move> threats;
+        if (!checked && !defensive_reply) {
             int raw_score;
             best = static_evaluation(board, raw_score);
             // A quiet intended move can permit a draw even though quiescence
@@ -437,8 +500,34 @@ private:
             if (best >= beta || qply >= max_quiescence_depth) return best;
             alpha = std::max(alpha, best);
             std::erase_if(moves, [&](Move move) {
-                return quiet_move(board, move) &&
-                       !(checks_left > 0 && board.gives_check_generated(move));
+                if (!quiet_move(board, move)) {
+                    // Local SEE is a selective speed heuristic, not a proof of
+                    // tactical worth. Keep forced replies and all promotions,
+                    // en passant and checking captures, including sacrifices.
+                    // This opt-in policy is independent of SEE move ordering.
+                    const auto& position = board.position();
+                    const char piece = position.squares[move.from];
+                    const bool ep = (piece == 'P' || piece == 'p') && move.to == position.en_passant;
+                    if (options_.quiescence_threats && !move.promotion && !ep &&
+                        !board.gives_check_generated(move)) {
+                        poll(false);
+                        ++see_calls;
+                        if (static_exchange_evaluation(board, move) < 0) {
+                            ++qsee_pruned;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                if ((checks_left > 0 || threats_left > 0) && board.gives_check_generated(move))
+                    return checks_left <= 0;
+                if (threats_left > 0 && qply + 2 < max_quiescence_depth &&
+                    quiet_knight_fork_threat(board, move, see_calls, [this] { poll(false); })) {
+                    threats.push_back(move);
+                    ++quiet_threat_candidates;
+                    return false;
+                }
+                return true;
             });
         } else if (current_claim) {
             best = 0;
@@ -452,6 +541,8 @@ private:
             poll(false);
             int score;
             const bool quiet = quiet_move(board, move);
+            const bool threat = std::find(threats.begin(), threats.end(), move) != threats.end();
+            if (threat) ++quiet_threat_extensions;
             std::vector<Move> child_pv;
             {
                 AppliedMove applied(board, move, options_.fast_moves, nnue_ ? &*nnue_ : nullptr,
@@ -462,7 +553,9 @@ private:
                 // quiet countercheck consumes the budget only if one remains.
                 const int child_checks = checks_left -
                     (checks_left > 0 && quiet && board.in_check() ? 1 : 0);
-                score = -quiescence(board, ply + 1, qply + 1, child_checks, -beta, -alpha, child_pv);
+                score = -quiescence(board, ply + 1, qply + 1, child_checks,
+                                    threats_left - (threat ? 1 : 0), threat,
+                                    -beta, -alpha, child_pv);
                 if (intended_claim) score = std::max(0, score);
             }
             if (score > best) {
@@ -595,6 +688,10 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.see_calls = searcher.see_calls;
         result.lmr_reductions = searcher.lmr_reductions;
         result.lmr_researches = searcher.lmr_researches;
+        result.quiet_threat_candidates = searcher.quiet_threat_candidates;
+        result.quiet_threat_extensions = searcher.quiet_threat_extensions;
+        result.defensive_qnodes = searcher.defensive_qnodes;
+        result.qsee_pruned = searcher.qsee_pruned;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -610,6 +707,10 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.see_calls = searcher.see_calls;
     result.lmr_reductions = searcher.lmr_reductions;
     result.lmr_researches = searcher.lmr_researches;
+    result.quiet_threat_candidates = searcher.quiet_threat_candidates;
+    result.quiet_threat_extensions = searcher.quiet_threat_extensions;
+    result.defensive_qnodes = searcher.defensive_qnodes;
+    result.qsee_pruned = searcher.qsee_pruned;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

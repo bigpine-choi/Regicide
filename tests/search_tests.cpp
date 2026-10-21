@@ -87,7 +87,10 @@ void same_graph(const SearchResult& left, const SearchResult& right) {
                left.tt_cutoffs == right.tt_cutoffs && left.tt_stores == right.tt_stores &&
                left.pvs_probes == right.pvs_probes && left.pvs_researches == right.pvs_researches &&
                left.see_calls == right.see_calls && left.lmr_reductions == right.lmr_reductions &&
-               left.lmr_researches == right.lmr_researches,
+               left.lmr_researches == right.lmr_researches &&
+               left.quiet_threat_candidates == right.quiet_threat_candidates &&
+               left.quiet_threat_extensions == right.quiet_threat_extensions &&
+               left.defensive_qnodes == right.defensive_qnodes && left.qsee_pruned == right.qsee_pruned,
            "reused memory changed the search graph or transposition work");
 }
 void no_memory_work(const SearchResult& result) {
@@ -1660,6 +1663,206 @@ int main() {
         expect(claim.score == 0 && claim.best_move == options.root_moves->front(),
                "root restriction suppressed a current optional claim");
         valid_pv(claimable_board, claim);
+    });
+    test("bounded quiet knight forks see a horizon fork and all quiet defensive replies", [] {
+        // The shield prevents a queen countercheck from curing the fork. The
+        // bishop deliberately offers a losing defensive Qxd1 which must still
+        // be searched: the all-reply node must bypass selective SEE pruning.
+        const Board board("k2q3r/p7/7N/8/8/8/5PPP/3B1RK1 b - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.positional = false;
+        options.quiescence_checks = false;
+        options.root_moves = std::vector<Move>{Move::from_uci("a7a6")};
+        const auto previous = search(board, {.depth = 1}, nullptr, {}, options);
+        options.quiescence_threats = true;
+        bool saw_fork = false, saw_quiet_defense = false, saw_losing_defense = false;
+        options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                 const StaticEvaluationObservation&) {
+            if (path.size() < 2 || path[1] != Move::from_uci("h6f7")) return;
+            saw_fork = true;
+            if (path.size() >= 3) {
+                Board replay = board;
+                replay.play(path[0]); replay.play(path[1]);
+                if (replay.position().squares[path[2].to] == '.' &&
+                    !replay.gives_check_generated(path[2])) saw_quiet_defense = true;
+                if (path[2] == Move::from_uci("d8d1") &&
+                    static_exchange_evaluation(replay, path[2]) < 0) saw_losing_defense = true;
+            }
+        };
+        const auto extended = search(board, {.depth = 1}, nullptr, {}, options);
+        expect(!previous.quiet_threat_candidates && !previous.quiet_threat_extensions &&
+                   !previous.defensive_qnodes, "disabled option changed its old search graph");
+        expect(extended.quiet_threat_candidates && extended.quiet_threat_extensions &&
+                   extended.defensive_qnodes, "fixture did not enter the new bounded extension");
+        expect(saw_fork && saw_quiet_defense,
+               "fork search must actually evaluate quiet prevention, not assume stand pat");
+        expect(saw_losing_defense, "losing defensive capture was pruned despite the all-reply contract");
+        expect(extended.score + 100 <= previous.score,
+               "horizon fork failed to expose a material loss to the root mover");
+        Board oracle = board;
+        oracle.play("a7a6");
+        const int exhaustive = -quiet_minimax(oracle, 2, 1);
+        expect(extended.score == exhaustive,
+               "bounded fork result disagrees with exhaustive two-ply legal-reply oracle");
+        expect(extended.pv.size() > 1 && extended.pv[1] == Move::from_uci("h6f7"),
+               "quiet fork was not retained in the completed principal variation");
+        valid_pv(board, extended);
+        expect(board == saved, "fork classification or reply search changed input history");
+    });
+    test("capture-fork preparation is observed but locally losing hypothetical captures are rejected", [] {
+        const Board board("3qk2r/5p2/8/8/2B5/5N2/2b5/1N4K1 b - - 0 1");
+        SearchOptions options;
+        options.positional = false;
+        options.quiescence_checks = false;
+        options.quiescence_threats = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("c2b1")};
+        bool saw_preparation = false;
+        options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                 const StaticEvaluationObservation&) {
+            if (path.size() >= 3 && path[1] == Move::from_uci("f3g5")) saw_preparation = true;
+        };
+        const auto result = search(board, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+        expect(result.quiet_threat_extensions && saw_preparation,
+               "nonchecking preparation of a safe capture-fork was never evaluated");
+        expect(result.defensive_qnodes <= result.quiet_threat_extensions,
+               "more defensive nodes than actually launched threat branches");
+        valid_pv(board, result);
+        const Board unsafe("3qkr1r/5p2/8/8/8/5N2/2b5/1N4K1 b - - 0 1");
+        options.static_evaluation_observer = {};
+        const auto rejected = search(unsafe, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+        expect(!rejected.quiet_threat_candidates && !rejected.quiet_threat_extensions,
+               "a losing future knight capture masqueraded as a safe fork threat");
+    });
+    test("quiet fork and capture-fork preparation work with colors and ranks reversed", [] {
+        const Board board("3b1rk1/5ppp/8/8/8/7n/P7/K2Q3R w - - 0 1");
+        SearchOptions options;
+        options.positional = false;
+        options.quiescence_checks = false;
+        options.quiescence_threats = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("a2a3")};
+        const auto result = search(board, {.depth = 1}, nullptr, {}, options);
+        Board oracle = board;
+        oracle.play("a2a3");
+        expect(result.score == -quiet_minimax(oracle, 2, 1),
+               "black fork differs from exhaustive legal-reply oracle");
+        expect(result.quiet_threat_extensions && result.defensive_qnodes &&
+                   result.pv.size() > 1 && result.pv[1] == Move::from_uci("h3f2"),
+               "mirrored black fork was missed");
+        valid_pv(board, result);
+        const Board preparation("1n4k1/2B5/5n2/2b5/8/8/5P2/3QK2R w - - 0 1");
+        options.root_moves = std::vector<Move>{Move::from_uci("c7b8")};
+        bool saw_black_preparation = false;
+        options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                 const StaticEvaluationObservation&) {
+            if (path.size() >= 3 && path[1] == Move::from_uci("f6g4")) saw_black_preparation = true;
+        };
+        const auto prepared = search(preparation, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+        expect(prepared.quiet_threat_extensions && saw_black_preparation,
+               "mirrored legal capture-fork preparation was never evaluated");
+        valid_pv(preparation, prepared);
+    });
+    test("quiet fork extensions share exact budgets and restore NNUE history and reused TT state", [] {
+        const Board board("k2q3r/p7/7N/8/8/8/8/6K1 b - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.quiescence_checks = false;
+        options.quiescence_threats = true;
+        options.nnue = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("a7a6")};
+        const auto incremental = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        options.nnue_incremental = false;
+        const auto full = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        same_graph(incremental, full);
+        options.nnue_incremental = true;
+        SearchContext context;
+        const auto interrupted = search(board, {.depth = 3, .nodes = 20}, nullptr, {}, options, &context);
+        expect(interrupted.stopped && interrupted.nodes == 20,
+               "fork replies escaped the exact shared node cap");
+        const auto restarted = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options, &context);
+        same_graph(incremental, restarted);
+        options.quiescence_threats = false;
+        const auto fresh_off = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        const auto reused_off = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options, &context);
+        same_graph(fresh_off, reused_off);
+        std::atomic_bool stop{true};
+        options.quiescence_threats = true;
+        const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+        expect(stopped.stopped && !stopped.nodes && !stopped.quiet_threat_extensions,
+               "preexisting stop entered threat work");
+        expect(board == saved, "threat/NNUE/TT cancellation altered root or repetition state");
+        valid_pv(board, incremental); valid_pv(board, interrupted);
+    });
+    test("quiet fork option preserves terminal and optional draw precedence", [] {
+        for (const char* fen : {"7k/6Q1/6K1/8/8/8/8/8 b - - 150 1",
+                                "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1",
+                                "7k/8/8/3P4/8/8/q7/6K1 w - - 100 1",
+                                "7k/8/8/3P4/8/8/q7/6K1 w - - 150 1"}) {
+            const Board board(fen);
+            SearchOptions options;
+            const auto previous = search(board, {.depth = 2}, nullptr, {}, options);
+            options.quiescence_threats = true;
+            const auto enabled = search(board, {.depth = 2}, nullptr, {}, options);
+            same_graph(previous, enabled);
+        }
+    });
+    test("opt-in qsearch SEE pruning skips a losing capture without changing its exhaustive value", [] {
+        const Board board("6k1/8/4p3/3p4/8/8/8/3Q2K1 b - - 0 1");
+        SearchOptions options;
+        options.positional = false;
+        options.quiescence_checks = false;
+        options.root_moves = std::vector<Move>{Move::from_uci("g8h8")};
+        const auto previous = search(board, {.depth = 1}, nullptr, {}, options);
+        Board horizon = board;
+        horizon.play("g8h8");
+        expect(static_exchange_evaluation(horizon, Move::from_uci("d1d5")) < 0 &&
+                   !horizon.gives_check_generated(Move::from_uci("d1d5")),
+               "fixture capture is not an ordinary local material loss");
+        options.quiescence_threats = true;
+        const auto guarded = search(board, {.depth = 1}, nullptr, {}, options);
+        expect(!previous.qsee_pruned && guarded.qsee_pruned > 0 && guarded.nodes < previous.nodes,
+               "guard failed to omit actual losing-capture work");
+        expect(guarded.score == previous.score && guarded.score == -quiet_minimax(horizon, 0, 1),
+               "guard disagrees with exhaustive tactical oracle on the simple losing capture");
+        options.see_ordering = false;
+        const auto independent = search(board, {.depth = 1}, nullptr, {}, options);
+        expect(independent.qsee_pruned == guarded.qsee_pruned && independent.score == guarded.score,
+               "new selective policy incorrectly depends on the ordering-only SEE switch");
+        valid_pv(board, guarded);
+    });
+    test("guarded qsearch retains negative checking sacrifices promotions and en passant", [] {
+        struct Fixture { const char* fen; const char* root; const char* protected_move; };
+        for (const auto& fixture : std::array<Fixture, 3>{{
+                 {"4k3/p4p2/8/8/2B5/8/8/6K1 b - - 0 1", "a7a6", "c4f7"},
+                 {"1r4k1/P7/8/8/8/8/8/6K1 b - - 0 1", "g8h8", "a7a8n"},
+                 {"3r3k/3p4/8/4P3/8/8/8/6K1 b - - 0 1", "d7d5", "e5d6"}}}) {
+            const Board board(fixture.fen);
+            const auto saved = board;
+            Board horizon = board;
+            horizon.play(fixture.root);
+            const Move protected_move = Move::from_uci(fixture.protected_move);
+            expect(legal(horizon, protected_move), "protected tactical fixture is illegal");
+            if (fixture.protected_move != std::string("e5d6"))
+                expect(static_exchange_evaluation(horizon, protected_move) < 0,
+                       "checking/promotion fixture must actually have negative local SEE");
+            SearchOptions options;
+            options.positional = false;
+            options.quiescence_checks = false;
+            options.quiescence_threats = true;
+            options.root_moves = std::vector<Move>{Move::from_uci(fixture.root)};
+            bool saw_protected = false;
+            options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                     const StaticEvaluationObservation&) {
+                if (path.size() >= 2 && path[1] == protected_move) saw_protected = true;
+            };
+            const auto result = search(board, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+            expect(saw_protected, "negative checking sacrifice, promotion or EP was silently pruned");
+            valid_pv(board, result);
+            expect(board == saved, "guarded special move damaged board or history restoration");
+        }
+        // SEE cannot prove that every nonchecking sacrifice is bad. This
+        // experimental guard is intentionally selective; exhaustive equality
+        // above belongs only to those stated fixtures, not arbitrary positions.
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

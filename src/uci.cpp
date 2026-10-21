@@ -153,6 +153,7 @@ public:
             send("option name UseFastMoves type check default true");
             send("option name UseQuietMoveOrdering type check default true");
             send("option name UseQuiescenceChecks type check default true");
+            send("option name UseQuiescenceThreats type check default false");
             send("option name PVS type check default true");
             send("option name UseSEE type check default true");
             send("option name UsePawnShield type check default true");
@@ -268,7 +269,7 @@ private:
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
             option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
-            option != "UseLMR") return;
+            option != "UseLMR" && option != "UseQuiescenceThreats") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -285,6 +286,7 @@ private:
         else if (option == "UseFastMoves") options_.fast_moves = text == "true";
         else if (option == "UseQuietMoveOrdering") options_.quiet_ordering = text == "true";
         else if (option == "UseQuiescenceChecks") options_.quiescence_checks = text == "true";
+        else if (option == "UseQuiescenceThreats") options_.quiescence_threats = text == "true";
         else if (option == "PVS") options_.pvs = text == "true";
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";
@@ -311,6 +313,10 @@ private:
         send("info string see calls " + std::to_string(result.see_calls));
         send("info string lmr reductions " + std::to_string(result.lmr_reductions) +
              " researches " + std::to_string(result.lmr_researches));
+        send("info string qthreat candidates " + std::to_string(result.quiet_threat_candidates) +
+             " extensions " + std::to_string(result.quiet_threat_extensions) +
+             " defenses " + std::to_string(result.defensive_qnodes) +
+             " pruned " + std::to_string(result.qsee_pruned));
         send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
              " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores) +
              " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +
