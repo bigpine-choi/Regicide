@@ -1,0 +1,31 @@
+{
+  "schema": "regicide-engine-profile-unit-receipt-v1",
+  "attempt": 2,
+  "recorded_at": "2026-10-21 07:02:55 UTC",
+  "prior_receipt": "engine-profile-unit-receipt.json",
+  "change": "Reject casefold-duplicate options for both kinds and every noncanonical known Regicide UCI alias, including lone aliases.",
+  "command": [
+    ".venv-tests/Scripts/python.exe",
+    "tests/engine_profile_tests.py",
+    "-v"
+  ],
+  "raw_log": "engine-profile-unit-attempt2.txt",
+  "exit_code": 0,
+  "tests": 15,
+  "failures": 0,
+  "elapsed_seconds": 24.793,
+  "source_sha256": {
+    "scripts/engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+    "tests/engine_profile_tests.py": "e09a6f3af1bdfcfcfa68e13aa9a5f381be82f2eb6a56416760722f0d1bbc6c02"
+  },
+  "added_checks": [
+    "casefold_duplicate_options_are_rejected_for_both_kinds",
+    "single_noncanonical_regicide_aliases_cannot_bypass_mode_or_model_checks"
+  ],
+  "notes": [
+    "All previous 13 unit checks also passed with this final source.",
+    "Canonical-key/alias regressions cover both engine kinds and all 19 known Regicide UCI option spellings.",
+    "External engines may declare a single alternate spelling; actual advertisement/range validation remains the match runner's job.",
+    "No engine or GUI process is started by this unit suite; native UCI integration is recorded separately."
+  ]
+}

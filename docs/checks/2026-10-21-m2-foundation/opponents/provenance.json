@@ -1,0 +1,272 @@
+{
+  "status": "PASS",
+  "stockfish": {
+    "name": "Stockfish",
+    "version": "18",
+    "revision": "cb3d4ee9b47d0c5aae855b12379378ea1439675c",
+    "tag": "sf_18",
+    "source_url": "https://github.com/official-stockfish/Stockfish",
+    "release_url": "https://github.com/official-stockfish/Stockfish/releases/tag/sf_18",
+    "asset": {
+      "url": "https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-windows-x86-64.zip",
+      "path": "build-m2-opponents\\stockfish18\\stockfish-windows-x86-64.zip",
+      "sha256": "40cc975817e7eee270b03f354810d20956df565420d320f6dd37d454dc81a139",
+      "bytes": 76949606
+    },
+    "asset_digest_verified": true,
+    "binary_path": "build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+    "binary_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+    "license": "GPL-3.0-or-later",
+    "license_url": "https://github.com/official-stockfish/Stockfish/blob/cb3d4ee9b47d0c5aae855b12379378ea1439675c/Copying.txt",
+    "license_sha256": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809",
+    "cpu_variant": "official generic Windows x86-64; no AVX2/AVX512 requirement selected",
+    "uci_smoke": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe"
+      ],
+      "id": {
+        "name": "Stockfish 18",
+        "author": "the Stockfish developers (see AUTHORS file)"
+      },
+      "advertised_options": {
+        "Debug Log File": {
+          "type": "string",
+          "default": "<empty>",
+          "min": null,
+          "max": null
+        },
+        "NumaPolicy": {
+          "type": "string",
+          "default": "auto",
+          "min": null,
+          "max": null
+        },
+        "Threads": {
+          "type": "spin",
+          "default": 1,
+          "min": 1,
+          "max": 1024
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 33554432
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null
+        },
+        "Ponder": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null
+        },
+        "MultiPV": {
+          "type": "spin",
+          "default": 1,
+          "min": 1,
+          "max": 256
+        },
+        "Skill Level": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 20
+        },
+        "Move Overhead": {
+          "type": "spin",
+          "default": 10,
+          "min": 0,
+          "max": 5000
+        },
+        "nodestime": {
+          "type": "spin",
+          "default": 0,
+          "min": 0,
+          "max": 10000
+        },
+        "UCI_Chess960": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null
+        },
+        "UCI_LimitStrength": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null
+        },
+        "UCI_Elo": {
+          "type": "spin",
+          "default": 1320,
+          "min": 1320,
+          "max": 3190
+        },
+        "UCI_ShowWDL": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null
+        },
+        "SyzygyPath": {
+          "type": "string",
+          "default": "<empty>",
+          "min": null,
+          "max": null
+        },
+        "SyzygyProbeDepth": {
+          "type": "spin",
+          "default": 1,
+          "min": 1,
+          "max": 100
+        },
+        "Syzygy50MoveRule": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null
+        },
+        "SyzygyProbeLimit": {
+          "type": "spin",
+          "default": 7,
+          "min": 0,
+          "max": 7
+        },
+        "EvalFile": {
+          "type": "string",
+          "default": "nn-c288c895ea92.nnue",
+          "min": null,
+          "max": null
+        },
+        "EvalFileSmall": {
+          "type": "string",
+          "default": "nn-37f18f62d772.nnue",
+          "min": null,
+          "max": null
+        }
+      },
+      "requested_options": {
+        "Threads": 1,
+        "Hash": 16
+      },
+      "legal_bestmove": "e2e4",
+      "requested_movetime_ms": 50,
+      "scope": "UCI handshake/configuration/legal-move smoke only; not playing-strength evidence"
+    }
+  },
+  "sunfish": {
+    "name": "Sunfish",
+    "version": "sunfish 2026",
+    "revision": "e396948acbd80cdcbad3dccfb07e878fba9df8f4",
+    "source_url": "https://github.com/thomasahle/sunfish",
+    "license": "GPL-3.0",
+    "license_url": "https://github.com/thomasahle/sunfish/blob/e396948acbd80cdcbad3dccfb07e878fba9df8f4/LICENSE.md",
+    "source_files": [
+      {
+        "url": "https://raw.githubusercontent.com/thomasahle/sunfish/e396948acbd80cdcbad3dccfb07e878fba9df8f4/sunfish.py",
+        "path": "build-m2-opponents\\sunfish\\source\\sunfish.py",
+        "sha256": "5d9ba12a615e6394b634b22ca2ad33fd4720bb6ca38e327717be7891060e2819",
+        "bytes": 32941
+      },
+      {
+        "url": "https://raw.githubusercontent.com/thomasahle/sunfish/e396948acbd80cdcbad3dccfb07e878fba9df8f4/sunfish_ui/uci.py",
+        "path": "build-m2-opponents\\sunfish\\source\\sunfish_ui\\uci.py",
+        "sha256": "43026e9b66865df51303043adfbcbde54e99bcbdd7b065444a31b6e7d6426bbb",
+        "bytes": 53083
+      },
+      {
+        "url": "https://raw.githubusercontent.com/thomasahle/sunfish/e396948acbd80cdcbad3dccfb07e878fba9df8f4/sunfish_ui/__init__.py",
+        "path": "build-m2-opponents\\sunfish\\source\\sunfish_ui\\__init__.py",
+        "sha256": "cd91854c568446bd045e530980a97568b499f239ea05a3c0095273852bcbad5e",
+        "bytes": 446
+      },
+      {
+        "url": "https://raw.githubusercontent.com/thomasahle/sunfish/e396948acbd80cdcbad3dccfb07e878fba9df8f4/LICENSE.md",
+        "path": "build-m2-opponents\\sunfish\\source\\LICENSE.md",
+        "sha256": "4052be61f35ad6a156dcee919b8f99058b24b0417a152ecef746f702c7f34c5c",
+        "bytes": 35179
+      }
+    ],
+    "binary_path": "build-m2-opponents\\sunfish\\runtime\\python.exe",
+    "binary_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+    "pyvenv_cfg_sha256": "b045a2768b3c8d09670b027dc2225381be18e3bc157c25eaefa8726e9a5aa32f",
+    "runtime_probe_exit_code": 0,
+    "runtime_probe_stdout": "{\"version\": \"3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]\", \"executable\": \"C:\\\\Users\\\\hanso\\\\.codex\\\\.chatgpt-projects\\\\g-p-6a8b058617088191ac7cb44895558f31\\\\Regicide-m1-integration\\\\build-m2-opponents\\\\sunfish\\\\runtime\\\\python.exe\", \"base_executable\": \"C:\\\\Users\\\\hanso\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\"}\n",
+    "runtime_probe_stderr": "",
+    "runtime_scope": "copied venv redirector and config depend on the recorded existing absolute base Python home; not a self-contained Python distribution",
+    "uci_smoke": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+        "-u",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\source\\sunfish.py"
+      ],
+      "id": {
+        "name": "sunfish 2026"
+      },
+      "advertised_options": {
+        "QS": {
+          "type": "spin",
+          "default": 36,
+          "min": 0,
+          "max": 300
+        },
+        "QS_A": {
+          "type": "spin",
+          "default": 180,
+          "min": 0,
+          "max": 300
+        },
+        "LMR": {
+          "type": "spin",
+          "default": 70,
+          "min": -200,
+          "max": 200
+        },
+        "EVAL_ROUGHNESS": {
+          "type": "spin",
+          "default": 15,
+          "min": 0,
+          "max": 50
+        },
+        "NULL_MARGIN": {
+          "type": "spin",
+          "default": -200,
+          "min": -400,
+          "max": 800
+        },
+        "TABLE_SIZE": {
+          "type": "spin",
+          "default": 1000000,
+          "min": 10000,
+          "max": 100000000
+        },
+        "Ponder": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 1000,
+          "min": 1,
+          "max": 32768
+        }
+      },
+      "requested_options": {
+        "Hash": 16
+      },
+      "legal_bestmove": "f2f4",
+      "requested_movetime_ms": 50,
+      "scope": "UCI handshake/configuration/legal-move smoke only; not playing-strength evidence"
+    }
+  },
+  "original_checkouts_modified": false,
+  "shared_regicide_binary_used": false,
+  "existing_gui_process_used": false
+}

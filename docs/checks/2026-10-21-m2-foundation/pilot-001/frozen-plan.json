@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "frozen_utc": "2026-10-21T07:03:36.654898+00:00",
+  "plan": {
+    "schema_version": 1,
+    "id": "m2-three-evaluators-external-pilot-20261021",
+    "phase": "pilot",
+    "candidates": [
+      {
+        "path": "../../config/engine-profiles/classical.json",
+        "sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2"
+      },
+      {
+        "path": "../../config/engine-profiles/residual-v2.json",
+        "sha256": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0"
+      },
+      {
+        "path": "../../config/engine-profiles/nnue-s32.json",
+        "sha256": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1"
+      }
+    ],
+    "opponents": [
+      {
+        "path": "../../build-m2-opponents/profiles/stockfish18.json",
+        "sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090"
+      },
+      {
+        "path": "../../build-m2-opponents/profiles/sunfish.json",
+        "sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3"
+      }
+    ],
+    "openings": {
+      "path": "../../tests/data/m2_pilot_openings_2026-10-21.json",
+      "sha256": "d94eea544cf816ba62966682c83467808656ae9677d9ce3b1b320371541cc6b2"
+    },
+    "movetimes_ms": [
+      50,
+      200
+    ],
+    "max_plies": 360,
+    "cell_timeout_seconds": 600,
+    "total_timeout_seconds": 1800,
+    "draw_policy": "claim",
+    "schedule": "rotate-candidates-per-block",
+    "notes": [
+      "48 scheduled games:3 evaluators x2 opponents x2 times x2 families x2 colors.",
+      "Shared host; descriptive pilot only. No Elo, promotion or full M2 completion.",
+      "Freeze inputs before inspecting any match result. Stop at first incomplete cell; no adaptive retries or opening changes.",
+      "The two opening families become development data after this pilot. Full M2 needs separate families and >=100ms/1s controlled trials."
+    ]
+  },
+  "source_plan_sha256": "fb818b1f0e7766fa67225a612886218b0e73b3cfeaee0533eb95d8abf334f8fc",
+  "source_plan_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\experiments\\2026-10-21-m2-pilot-plan.json",
+  "profiles": {
+    "regicide-classical-m1": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-matrix\\pilot-001\\profiles\\regicide-classical-m1\\profile.json",
+      "sha256": "8fc0a382475095914310a867c7f21947d2dc78da638b940a33933a9daa0f020b"
+    },
+    "regicide-residual-v2-quality-attempt4": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-matrix\\pilot-001\\profiles\\regicide-residual-v2-quality-attempt4\\profile.json",
+      "sha256": "86e9c1a6cf8906415330422ac68da321500698cec2676873498a1e108b9a67f7"
+    },
+    "regicide-nnue-s32-precision-20261019": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-matrix\\pilot-001\\profiles\\regicide-nnue-s32-precision-20261019\\profile.json",
+      "sha256": "2ba43eeb63cde02db0393fba478e98ad3a8bbe4878de092a47a164caa4371a8e"
+    },
+    "stockfish18-x86-64": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-matrix\\pilot-001\\profiles\\stockfish18-x86-64\\profile.json",
+      "sha256": "4757c4c063ea6313fb941d8674b589618374f4b86ced0cae68cd8e9e2459c2ea"
+    },
+    "sunfish-e396948-cpython313": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-matrix\\pilot-001\\profiles\\sunfish-e396948-cpython313\\profile.json",
+      "sha256": "c2588ea646279465bf7f99d8b2cfc4020c454e3054015cc37bf6feb1671caad9"
+    }
+  },
+  "harness_source_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\external_baseline_matrix.py": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967"
+  },
+  "openings_sha256": "d94eea544cf816ba62966682c83467808656ae9677d9ce3b1b320371541cc6b2",
+  "opening_families": 2,
+  "scheduled_games_per_cell": 4,
+  "cells": [
+    {
+      "id": "001-regicide-classical-m1-vs-stockfish18-x86-64-50ms",
+      "candidate": "regicide-classical-m1",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 50
+    },
+    {
+      "id": "002-regicide-residual-v2-quality-attempt4-vs-stockfish18-x86-64-50ms",
+      "candidate": "regicide-residual-v2-quality-attempt4",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 50
+    },
+    {
+      "id": "003-regicide-nnue-s32-precision-20261019-vs-stockfish18-x86-64-50ms",
+      "candidate": "regicide-nnue-s32-precision-20261019",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 50
+    },
+    {
+      "id": "004-regicide-residual-v2-quality-attempt4-vs-stockfish18-x86-64-200ms",
+      "candidate": "regicide-residual-v2-quality-attempt4",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 200
+    },
+    {
+      "id": "005-regicide-nnue-s32-precision-20261019-vs-stockfish18-x86-64-200ms",
+      "candidate": "regicide-nnue-s32-precision-20261019",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 200
+    },
+    {
+      "id": "006-regicide-classical-m1-vs-stockfish18-x86-64-200ms",
+      "candidate": "regicide-classical-m1",
+      "opponent": "stockfish18-x86-64",
+      "movetime_ms": 200
+    },
+    {
+      "id": "007-regicide-nnue-s32-precision-20261019-vs-sunfish-e396948-cpython313-50ms",
+      "candidate": "regicide-nnue-s32-precision-20261019",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 50
+    },
+    {
+      "id": "008-regicide-classical-m1-vs-sunfish-e396948-cpython313-50ms",
+      "candidate": "regicide-classical-m1",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 50
+    },
+    {
+      "id": "009-regicide-residual-v2-quality-attempt4-vs-sunfish-e396948-cpython313-50ms",
+      "candidate": "regicide-residual-v2-quality-attempt4",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 50
+    },
+    {
+      "id": "010-regicide-classical-m1-vs-sunfish-e396948-cpython313-200ms",
+      "candidate": "regicide-classical-m1",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 200
+    },
+    {
+      "id": "011-regicide-residual-v2-quality-attempt4-vs-sunfish-e396948-cpython313-200ms",
+      "candidate": "regicide-residual-v2-quality-attempt4",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 200
+    },
+    {
+      "id": "012-regicide-nnue-s32-precision-20261019-vs-sunfish-e396948-cpython313-200ms",
+      "candidate": "regicide-nnue-s32-precision-20261019",
+      "opponent": "sunfish-e396948-cpython313",
+      "movetime_ms": 200
+    }
+  ],
+  "scope": "Shared-host descriptive pilot only; no evaluator promotion or Elo claim."
+}

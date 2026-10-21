@@ -1,8 +1,27 @@
 # 외부 엔진과의 재현 가능한 기준 대국
 
-이 문서는 외부 UCI 상대를 실행하는 도구 사용법이다. 실제 외부 상대의 경기력이나 Elo 검증 결과는 아니다. 핵심 C++ 엔진은 변경하지 않는다.
+이 문서는 외부 UCI 상대를 실행하는 도구 사용법이다. 도구 구현 자체는 경기력이나 Elo 검증 결과가 아니다. 핵심 C++ 엔진은 변경하지 않는다. 2026-10-21에는 세 평가 프로필의 동결과 두 외부 상대의 파일럿을 연결했다. 조건·실제 결과·한계는 [M2 기준선 기록](checks/2026-10-21-m2-foundation/README.md)을 따른다.
 
 ## 출처 모드
+
+### 세 평가 경로의 동결 프로필과 사전 계획
+
+`config/engine-profiles/`의 수식·Residual V2·NNUE S32는 같은 통합 엔진의 평가 모드와 모델을 명시한다. 두 신경망 모델은 M1에서 이미 검증한 대표 파일이며 새로 가장 강한 모델로 고른 것이 아니다. 기본 대국 평가기를 바꾸지 않는다.
+
+`scripts/engine_profile.py`는 프로필·실행 파일·모델·출처 영수증·선언한 외부 소스/런타임 설정의 SHA256을 검증하고 새 폴더로 복사한다. 파일 경로를 복사본에 다시 연결한다. 잘못된 모델 계열, 모드 모순, UCI 옵션의 대소문자 중복, 변경된 입력과 기존 출력 덮어쓰기를 거절한다. Git 객체 존재와 빌드 영수증을 별도로 기록하며, 해시만으로 빌드 출처가 증명된다고 표현하지 않는다. 미선언 파일·OS·Python 표준 환경까지 봉인하는 도구는 아니다.
+
+`scripts/external_baseline_matrix.py`는 프로필/개시군 해시·시간 조건·색 교환·전체 판수·중단 정책을 결과 전에 동결한다. 기존 `compare_engines.py`의 UCI·합법 수·종료 판정을 재사용하고, 각 조건 뒤 PGN과 JSON을 다시 재생한다. 후보 순서는 블록마다 회전한다. 실패·시간 상한·중단·미실행을 별도로 남기며, 미완료를 무승부나 완료 성적으로 바꾸지 않는다. 이번 구현은 **공유 PC의 기술 파일럿 전용**이다. 정식 시계 심판·부하 격리·모델 자동 승격을 제공하지 않는다.
+
+```powershell
+# 입력 프로필과 외부 실행 파일을 먼저 준비한 뒤, 새 출력 폴더 사용
+.venv-tests/Scripts/python.exe scripts/external_baseline_matrix.py freeze --plan docs/experiments/2026-10-21-m2-pilot-plan.json --output build-m2-matrix/new-pilot
+.venv-tests/Scripts/python.exe scripts/external_baseline_matrix.py run --directory build-m2-matrix/new-pilot
+.venv-tests/Scripts/python.exe scripts/external_baseline_matrix.py audit --directory build-m2-matrix/new-pilot
+```
+
+현재 고정 프로필은 이 Windows 빌드의 SHA를 가리킨다. 다른 PC에서 새로 빌드하면 새 실행 파일과 빌드 출처를 기록한 프로필 및 계획을 만들어야 한다. 이전 해시 검사를 끄거나 조용히 다른 파일로 대체하지 않는다. 외부 준비 파일과 재현 절차는 위 M2 기록에 남긴다.
+
+### 기존 단일 상대 도구
 
 내부 기준 엔진은 기존 `--baseline-commit`을 사용한다. 외부 기준 엔진은 `--baseline-source` JSON 파일을 사용한다. 둘 중 정확히 하나를 지정한다. 후보 Regicide의 `--candidate-commit`은 현재 체크아웃에서 접근할 수 있는 전체 커밋 ID여야 한다.
 

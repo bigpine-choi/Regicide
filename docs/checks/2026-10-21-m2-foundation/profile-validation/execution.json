@@ -1,0 +1,41 @@
+{
+  "created_utc": "2026-10-21T06:57:29.576297+00:00",
+  "environment": {
+    "python_executable": "C:\\Users\\hanso\\dev\\Regicide\\.venv-tests\\Scripts\\python.exe",
+    "python": "3.13.16",
+    "chess": "1.11.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "command": [
+    "C:\\Users\\hanso\\dev\\Regicide\\.venv-tests\\Scripts\\python.exe",
+    "-B",
+    "tests/engine_profile_integration.py",
+    "--output",
+    "docs/checks/2026-10-21-m2-foundation/profile-validation/attempt-001"
+  ],
+  "returncode": 0,
+  "sha256": {
+    "config/engine-profiles/classical.json": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2",
+    "config/engine-profiles/residual-v2.json": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0",
+    "config/engine-profiles/nnue-s32.json": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1",
+    "tests/engine_profile_integration.py": "fff8d4da66f9a06ac1f184e20e92265d86977bad55eb797edf2e8b1d9999713b",
+    "scripts/engine_profile.py": "3ca041f17867f51e7d55cbaf78a64f8937cd488c74dcf27deda1c4e08124689d"
+  },
+  "native_core_commit": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+  "core_change_check": {
+    "command": [
+      "git",
+      "diff",
+      "b241995..de79979",
+      "--exit-code",
+      "--",
+      "src",
+      "include"
+    ],
+    "returncode": 0,
+    "output": "empty"
+  },
+  "execution_safety": "All spawned engine PIDs belong to TemporaryDirectory snapshots; canonical executable/models/artifacts read and hashed, never overwritten or executed by this check.",
+  "scope": "Correctness and model/profile wiring only. No external match, strength improvement, rating, or speed comparison.",
+  "status": "PASS"
+}
