@@ -1,0 +1,128 @@
+{
+  "architecture": {
+    "added_parameters": 0,
+    "changed": false,
+    "format": 3,
+    "hidden": 16,
+    "piece_features": 768,
+    "relative_turn_features": 1
+  },
+  "comparison": "Basic classical Regicide versus this candidate, same search options, 8 starts x both colors, 100ms, exactly16games",
+  "config": {
+    "batch_size": 128,
+    "candidate_id": "sf18-mse-stm-small-20261020",
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "input_scale": 32,
+    "loss": "mse",
+    "output_lr": 0.005,
+    "seed": 20261020
+  },
+  "created_utc": "2026-10-21T14:51:18.626759+00:00",
+  "default_changed": false,
+  "environment": {
+    "blas_threads": 1,
+    "chess": "1.11.2",
+    "numpy": "2.3.5",
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "initial": {
+    "kind": "fine-tune current STM float checkpoint",
+    "model_sha256": "f001f1d3bd9b710e046d37c88040c13a90e8507b28bfb2c416814b9427332f26",
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\float_weights.npz",
+    "sha256": "14d93a7c4a1b42c886b1077ec0239e979e39f0ff912b348eb33134f901424a02"
+  },
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\Copying.txt": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-stm\\regicide.exe": "97140c4ad1c40a9f2c67e2fb9a8c0718fe70722e83dcbe50a7011b71c97558d1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\classical.json": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\manifest.json": "530bf500f276ebe886e74cfcee065f1a3568fc2a5be15ad6e1afca24f1437d62",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\train.jsonl": "cb502e8fc274b6429e6ed6298940b146ad91195a4625756993f06cef50552c97",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\validation.jsonl": "be1605423587845c093169358279809472a783d468c66d46c41de090357ff3c4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-foundation\\opponents\\stockfish18-profile.json": "b67e5f73c8e4f116b035a261e2ab534fc33739b0091ece998a411497508d5279",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\float_weights.npz": "14d93a7c4a1b42c886b1077ec0239e979e39f0ff912b348eb33134f901424a02",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\model.nnue": "f001f1d3bd9b710e046d37c88040c13a90e8507b28bfb2c416814b9427332f26",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\validation.json": "ad126115696bba706484c620ef21afbd3e38320332f12a5f33c6bb4928987237",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_precision.py": "97b05c7869226abc4ce57f77e36d46627cb12301c0add431f5e152d139c0d5a2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_qat.py": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_search_data\\schema.py": "917faea94fe25382b0026e5dcc69f60bf26067c43122797bde77d85ecca18871",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_target_ab_data.py": "7a615b857923963689d20d6b6c867244959f1600573d1ac19dda842647a35339",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_training.py": "7ce2a4e8d3ccc9a4ffad1d48f12749b3dc831b51dbc39c2b7cc7a838852c9343",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\stockfish_teacher.py": "7ec8ddbaf8395be747299dc88f7bbdc11a7042ddc662c526f55330fbc33ee5f0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_stockfish_teacher.py": "c98449be5c5c8904475d95912d2126994adc559f9e8e9dcf17338c75c1873201"
+  },
+  "sampling": {
+    "holdout_read": false,
+    "minimum_accepted": {
+      "train": 256,
+      "validation": 64
+    },
+    "replacement_after_rejection": false,
+    "requested": {
+      "train": 512,
+      "validation": 128
+    },
+    "seed": 20261021,
+    "selected_before_teacher": true,
+    "selection": "Seeded permutation of each frozen partition"
+  },
+  "source_head": "349975e578bb314a5335d5819004a5b7468480e7",
+  "teacher": {
+    "excluded": [
+      "terminal",
+      "mate score",
+      "bounded score",
+      "invalid/missing score or PV",
+      "abs(cp)>1500"
+    ],
+    "license_url": "https://github.com/official-stockfish/Stockfish/blob/cb3d4ee9b47d0c5aae855b12379378ea1439675c/Copying.txt",
+    "max_abs_cp": 1500,
+    "profile": {
+      "args": [],
+      "artifacts": [
+        {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\Copying.txt",
+          "relative_path": "artifacts/Copying.txt",
+          "role": "license",
+          "sha256": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809"
+        }
+      ],
+      "binary": {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+        "sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+      },
+      "evaluation": "external",
+      "id": "stockfish18-x86-64",
+      "kind": "external",
+      "models": {},
+      "options": {
+        "Hash": 16,
+        "Skill Level": 20,
+        "SyzygyPath": "",
+        "Threads": 1,
+        "UCI_LimitStrength": false
+      },
+      "schema_version": 1,
+      "source": {
+        "license": "GPL-3.0-or-later",
+        "license_url": "https://github.com/official-stockfish/Stockfish/blob/cb3d4ee9b47d0c5aae855b12379378ea1439675c/Copying.txt",
+        "name": "Stockfish",
+        "revision": "cb3d4ee9b47d0c5aae855b12379378ea1439675c",
+        "source_url": "https://github.com/official-stockfish/Stockfish",
+        "version": "18"
+      }
+    },
+    "requested_nodes": 10000,
+    "role": "Separate unmodified GPL-3.0-or-later executable, used only to generate numerical labels",
+    "scores": "Stockfish normalized UCI cp, white POV; no calibration to material pawn units",
+    "source_url": "https://github.com/official-stockfish/Stockfish"
+  },
+  "training": {
+    "candidate_runs": 1,
+    "learning_rate_reason": "Small fixed set uses 500 epochs and input rate .0002 to allow useful fine-tuning; no causal label-only claim",
+    "optimizer": "Existing MSE STE Adam, beta .9/.999 epsilon1e-8, norm cap10",
+    "selection": "Fixed last epoch 500; no validation selection or sweep"
+  }
+}
