@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-21T11:15:57.792404+00:00",
+  "command": [
+    ".venv-tests/Scripts/python.exe",
+    "-B",
+    "tests/m2_engine_cpu_tests.py",
+    "--native",
+    "--receipt-dir",
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw",
+    "-v"
+  ],
+  "result": "PASS",
+  "tests": 15,
+  "native_tests": 3,
+  "mock_tests": 12,
+  "reported_unittest_elapsed_seconds": 0.425,
+  "raw_files": {
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/child-0.001-1.json": "5a5d356e6fb7b977e57765b6cf540201ffb77487622501be67ccf40ff0475ad3",
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/child-0.08-2.json": "fe2f7acbc62b259036dc4b70b863f1795aa731801fd28701221809ba170e11c7",
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/close-preserves-live-child.json": "6934d1b9f53baaa6d6cf03de4e0206e3dfa214f9494906053f61912d7f7fd88d",
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/self-process.json": "6f1734920f1558adbea866c1b7be78c014eabee6aafdc13748fb85384c831715"
+  },
+  "source_sha256": {
+    "scripts/m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+    "tests/m2_engine_cpu_tests.py": "80863f1ce1916d6dce2de9d79cb8e1d7e463b5460f2217402d15025336e71a20",
+    "scripts/m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac"
+  },
+  "scope": "Independent native GetProcessTimes definitions are used by the tests. All children are newly created direct base-Python processes; no UCI game or user application was launched or terminated.",
+  "native_cases": [
+    "self process raw counters independently bracketed",
+    "short one-thread child final held-process counters exact match",
+    "long two-thread child final held-process counters exact match",
+    "CloseHandle leaves a live child running until its normal requested exit"
+  ],
+  "native_process_outcomes": [
+    {
+      "pid": 7860,
+      "creation_ticks": 134370549302747248,
+      "returncode": 0,
+      "meter_handle_closed": true
+    },
+    {
+      "pid": 3524,
+      "creation_ticks": 134370549303507261,
+      "returncode": 0,
+      "meter_handle_closed": true
+    },
+    {
+      "pid": 1628,
+      "creation_ticks": 134370549301820620,
+      "returncode": 0,
+      "meter_handle_closed": true
+    }
+  ],
+  "cleanup": {
+    "owned_children": 3,
+    "live_owned_children": 0,
+    "unknown_owned_children": 0,
+    "evidence": "Each owned child completed process.wait() with returncode 0 and a final held-handle GetProcessTimes identity/counter read. Only the intentionally live self process is excluded."
+  },
+  "limitations": [
+    "CPU counters are quantized; zero CPU is valid for immediate moves.",
+    "Search CPU covers only the selected endpoint process and all of its threads, excluding descendants.",
+    "CPU/wall ratios are diagnostics and have no minimum-utilization pass criterion.",
+    "Self-read is compared to independently queried before/after counters; final exited-child counters match exactly."
+  ]
+}

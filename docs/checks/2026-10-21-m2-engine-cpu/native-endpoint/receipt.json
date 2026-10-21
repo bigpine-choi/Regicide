@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-21T11:20:10.760110+00:00",
+  "status": "FAIL",
+  "formal_games": 0,
+  "formal_load_validation": false,
+  "playing_strength_claim": false,
+  "scope": "Identity and one 100ms Sunfish functional CPU probe only; no load isolation or formal games.",
+  "source_sha256": {
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-endpoint\\probe.py": "3ffcda5ab8590baede651330d1a2b90efbb9d9257656ddbf644c53628aad2d3c",
+    "scripts\\m2_engine_identity.py": "c8e41e9ae8862a8e52afb2bf0e3e78a2a2fd441744a59cc38fb77a760f449bac",
+    "scripts\\m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+    "scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb"
+  },
+  "plan_reference": {
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\experiments\\2026-10-21-m2-engine-cpu-plan.json",
+    "sha256": "3396ed5a86cd14da330fbf62b959550da833be26295c3016f5b85939b5b806eb"
+  },
+  "cases": [
+    {
+      "label": "sunfish",
+      "status": "FAIL",
+      "profile_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\profiles\\sunfish.json",
+      "profile_sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3",
+      "cleanup": [
+        {
+          "pid": 23800,
+          "creation_ticks": 134370552107676764,
+          "status": "exact-process-exited-object-still-open",
+          "observed": {
+            "pid": 23800,
+            "creation_ticks": 134370552107676764,
+            "kernel_ticks": 312500,
+            "user_ticks": 0,
+            "cpu_ticks": 312500,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 465938.3958295,
+            "read_finished_monotonic": 465938.3958847
+          }
+        }
+      ],
+      "literal_command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+        "-u",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\source\\sunfish.py"
+      ],
+      "configured_options": {},
+      "uci_id": {
+        "name": "sunfish 2026"
+      },
+      "error": {
+        "type": "EngineIdentityError",
+        "message": "Sunfish must have exactly one direct base-Python child",
+        "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-engine-cpu\\native-endpoint\\probe.py\", line 105, in main\n    resolution = resolve_engine_endpoint(pid, creation, profile, expected_runtime)\n  File \"C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity.py\", line 225, in resolve_engine_endpoint\n    raise EngineIdentityError('Sunfish must have exactly one direct base-Python child')\nm2_engine_identity.EngineIdentityError: Sunfish must have exactly one direct base-Python child\n"
+      },
+      "graceful_quit": true
+    }
+  ],
+  "error": {
+    "type": "EngineIdentityError",
+    "message": "Sunfish must have exactly one direct base-Python child",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-engine-cpu\\native-endpoint\\probe.py\", line 105, in main\n    resolution = resolve_engine_endpoint(pid, creation, profile, expected_runtime)\n  File \"C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity.py\", line 225, in resolve_engine_endpoint\n    raise EngineIdentityError('Sunfish must have exactly one direct base-Python child')\nm2_engine_identity.EngineIdentityError: Sunfish must have exactly one direct base-Python child\n"
+  },
+  "finished_utc": "2026-10-21T11:20:10.939575+00:00"
+}

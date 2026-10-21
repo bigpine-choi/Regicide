@@ -1,0 +1,610 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-21T11:25:19.417605+00:00",
+  "status": "PASS",
+  "formal_games": 0,
+  "formal_load_validation": false,
+  "playing_strength_claim": false,
+  "scope": "Identity and one 100ms Sunfish functional CPU probe only; no load isolation or formal games.",
+  "source_sha256": {
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-endpoint\\probe_final.py": "70b5782eba53e72bfb49205d1878fcdef0d940232d08f69a276d4ce122c919da",
+    "scripts\\m2_engine_identity.py": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+    "scripts\\m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+    "scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb"
+  },
+  "plan_reference": {
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\experiments\\2026-10-21-m2-engine-cpu-plan.json",
+    "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+  },
+  "cases": [
+    {
+      "label": "sunfish",
+      "status": "PASS",
+      "profile_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\profiles\\sunfish.json",
+      "profile_sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3",
+      "cleanup": [
+        {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "status": "exact-held-process-exited",
+          "final": {
+            "pid": 32544,
+            "creation_ticks": 134370555194249310,
+            "kernel_ticks": 0,
+            "user_ticks": 156250,
+            "cpu_ticks": 156250,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.0877105,
+            "read_finished_monotonic": 466247.0878358
+          }
+        },
+        {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "status": "exact-held-process-exited",
+          "final": {
+            "pid": 18740,
+            "creation_ticks": 134370555194387032,
+            "kernel_ticks": 781250,
+            "user_ticks": 937500,
+            "cpu_ticks": 1718750,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.0878468,
+            "read_finished_monotonic": 466247.0879149
+          }
+        },
+        {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "status": "exact-process-exited-object-still-open",
+          "observed": {
+            "pid": 32544,
+            "creation_ticks": 134370555194249310,
+            "kernel_ticks": 0,
+            "user_ticks": 156250,
+            "cpu_ticks": 156250,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.0880313,
+            "read_finished_monotonic": 466247.0880538
+          }
+        },
+        {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "status": "absent"
+        }
+      ],
+      "literal_command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+        "-u",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\source\\sunfish.py"
+      ],
+      "configured_options": {},
+      "uci_id": {
+        "name": "sunfish 2026"
+      },
+      "resolution": {
+        "schema_version": 1,
+        "method": "frozen-image-and-held-creation-with-toolhelp-parent",
+        "profile_id": "sunfish-e396948-cpython313",
+        "mode": "sunfish-venv-child",
+        "transport": {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+          "image_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466246.9827967,
+          "read_finished_monotonic": 466246.983159,
+          "parent_pid": 4476
+        },
+        "endpoint": {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "image_path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "image_sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466246.9832076,
+          "read_finished_monotonic": 466246.9835829,
+          "parent_pid": 32544
+        },
+        "transport_after": {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+          "image_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466246.991954,
+          "read_finished_monotonic": 466246.9923618
+        },
+        "endpoint_after": {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "image_path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "image_sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466246.9923693,
+          "read_finished_monotonic": 466246.9927977
+        },
+        "frozen_binary": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\runtime\\python.exe",
+          "sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289"
+        },
+        "frozen_script": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\sunfish\\source\\sunfish.py",
+          "sha256": "5d9ba12a615e6394b634b22ca2ad33fd4720bb6ca38e327717be7891060e2819"
+        },
+        "expected_base_runtime": {
+          "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+        },
+        "observed_direct_children": [
+          18740
+        ],
+        "expected_console_helper": null,
+        "console_helpers": [],
+        "console_helpers_after": [],
+        "matching_inventories": [
+          {
+            "32544": {
+              "pid": 32544,
+              "parent_pid": 4476
+            },
+            "18740": {
+              "pid": 18740,
+              "parent_pid": 32544
+            }
+          },
+          {
+            "32544": {
+              "pid": 32544,
+              "parent_pid": 4476
+            },
+            "18740": {
+              "pid": 18740,
+              "parent_pid": 32544
+            }
+          }
+        ],
+        "query_access_mask": 1052672,
+        "allowed_scope": "Only the frozen Sunfish -u script venv launcher and its unique direct frozen base-Python child; wrapper startup CPU excluded from endpoint CPU and retained in owned Job CPU. At most one explicitly frozen conhost helper; helper CPU excluded from endpoint CPU and retained in owned Job CPU. No other observed descendants.",
+        "scope": "Sampled exact image/creation/parent proof; held during resolution. CPU meter must recheck pid and creation. No whole-system or future-descendant guarantee.",
+        "read_started_monotonic": 466246.9739475,
+        "read_finished_monotonic": 466246.992806
+      },
+      "independent_initial": {
+        "pid": 18740,
+        "creation_ticks": 134370555194387032,
+        "kernel_ticks": 468750,
+        "user_ticks": 156250,
+        "cpu_ticks": 625000,
+        "exit_code_diagnostic": 259,
+        "wait_status": 258,
+        "read_started_monotonic": 466246.9928503,
+        "read_finished_monotonic": 466246.9928655
+      },
+      "meter_initial": {
+        "pid": 18740,
+        "creation_ticks": 134370555194387032,
+        "kernel_ticks": 468750,
+        "user_ticks": 156250,
+        "cpu_ticks": 625000,
+        "read_started_monotonic": 466246.9929548,
+        "read_finished_monotonic": 466246.992962
+      },
+      "independent_cpu_method": "Separate ctypes FT structure/GetProcessTimes calls on held query+wait handles.",
+      "play": {
+        "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "requested_movetime_ms": 100,
+        "returned_move": "f2f4",
+        "legal": true,
+        "cpu_receipt": {
+          "schema_version": 1,
+          "sequence": 1,
+          "scope": "actual UCI transport process, all threads; descendants excluded",
+          "status": "OK",
+          "outcome": "complete",
+          "before": {
+            "pid": 18740,
+            "creation_ticks": 134370555194387032,
+            "kernel_ticks": 468750,
+            "user_ticks": 156250,
+            "cpu_ticks": 625000,
+            "read_started_monotonic": 466246.9930116,
+            "read_finished_monotonic": 466246.9930149
+          },
+          "after": {
+            "pid": 18740,
+            "creation_ticks": 134370555194387032,
+            "kernel_ticks": 625000,
+            "user_ticks": 781250,
+            "cpu_ticks": 1406250,
+            "read_started_monotonic": 466247.0747899,
+            "read_finished_monotonic": 466247.0748137
+          },
+          "call_started_monotonic": 466246.9930175,
+          "call_finished_monotonic": 466247.0747787,
+          "response_elapsed_seconds": 0.08176120003918186,
+          "cpu_per_wall_ratio": 0.9555265818329561,
+          "ratio_is_diagnostic_only": true,
+          "counter_resolution_note": "Native quantization; zero CPU delta is valid.",
+          "kernel_delta_ticks": 156250,
+          "kernel_seconds": 0.015625,
+          "user_delta_ticks": 625000,
+          "user_seconds": 0.0625,
+          "cpu_delta_ticks": 781250,
+          "cpu_seconds": 0.078125
+        },
+        "independent_before": {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "kernel_ticks": 468750,
+          "user_ticks": 156250,
+          "cpu_ticks": 625000,
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "read_started_monotonic": 466246.9929859,
+          "read_finished_monotonic": 466246.9929923
+        },
+        "independent_after": {
+          "pid": 18740,
+          "creation_ticks": 134370555194387032,
+          "kernel_ticks": 625000,
+          "user_ticks": 781250,
+          "cpu_ticks": 1406250,
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "read_started_monotonic": 466247.0748369,
+          "read_finished_monotonic": 466247.0748497
+        },
+        "independent_ordered_counter_reconciliation": true,
+        "wrapper_before": {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "kernel_ticks": 0,
+          "user_ticks": 156250,
+          "cpu_ticks": 156250,
+          "read_started_monotonic": 466246.9929937,
+          "read_finished_monotonic": 466246.9929987
+        },
+        "wrapper_after": {
+          "pid": 32544,
+          "creation_ticks": 134370555194249310,
+          "kernel_ticks": 0,
+          "user_ticks": 156250,
+          "cpu_ticks": 156250,
+          "read_started_monotonic": 466247.0748262,
+          "read_finished_monotonic": 466247.074833
+        },
+        "wrapper_cpu_delta_ticks": 0
+      },
+      "graceful_quit": true,
+      "post_quit_inventory": {
+        "32544": "absent",
+        "18740": "absent"
+      }
+    },
+    {
+      "label": "regicide",
+      "status": "PASS",
+      "profile_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\classical.json",
+      "profile_sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2",
+      "cleanup": [
+        {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "status": "exact-held-process-exited",
+          "final": {
+            "pid": 18116,
+            "creation_ticks": 134370555197681651,
+            "kernel_ticks": 0,
+            "user_ticks": 156250,
+            "cpu_ticks": 156250,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.2612085,
+            "read_finished_monotonic": 466247.2612749
+          }
+        },
+        {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "status": "exact-process-exited-object-still-open",
+          "observed": {
+            "pid": 18116,
+            "creation_ticks": 134370555197681651,
+            "kernel_ticks": 0,
+            "user_ticks": 156250,
+            "cpu_ticks": 156250,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.2613126,
+            "read_finished_monotonic": 466247.2613189
+          }
+        }
+      ],
+      "literal_command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+        "uci"
+      ],
+      "configured_options": {},
+      "uci_id": {
+        "name": "Regicide 0.7.0-dev",
+        "author": "Regicide project"
+      },
+      "resolution": {
+        "schema_version": 1,
+        "method": "frozen-image-and-held-creation-with-toolhelp-parent",
+        "profile_id": "regicide-classical-m1",
+        "mode": "native-direct",
+        "transport": {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+          "image_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.2478154,
+          "read_finished_monotonic": 466247.2481851,
+          "parent_pid": 4476
+        },
+        "endpoint": {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+          "image_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.2478154,
+          "read_finished_monotonic": 466247.2481851,
+          "parent_pid": 4476
+        },
+        "transport_after": {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+          "image_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.2553639,
+          "read_finished_monotonic": 466247.2557462
+        },
+        "endpoint_after": {
+          "pid": 18116,
+          "creation_ticks": 134370555197681651,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+          "image_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.2553639,
+          "read_finished_monotonic": 466247.2557462
+        },
+        "frozen_binary": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe",
+          "sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a"
+        },
+        "frozen_script": null,
+        "expected_base_runtime": null,
+        "observed_direct_children": [],
+        "expected_console_helper": null,
+        "console_helpers": [],
+        "console_helpers_after": [],
+        "matching_inventories": [
+          {
+            "18116": {
+              "pid": 18116,
+              "parent_pid": 4476
+            }
+          },
+          {
+            "18116": {
+              "pid": 18116,
+              "parent_pid": 4476
+            }
+          }
+        ],
+        "query_access_mask": 1052672,
+        "allowed_scope": "Frozen native profile image itself. At most one explicitly frozen conhost helper; helper CPU excluded from endpoint CPU and retained in owned Job CPU. No other observed descendants.",
+        "scope": "Sampled exact image/creation/parent proof; held during resolution. CPU meter must recheck pid and creation. No whole-system or future-descendant guarantee.",
+        "read_started_monotonic": 466247.2392115,
+        "read_finished_monotonic": 466247.2557598
+      },
+      "independent_initial": {
+        "pid": 18116,
+        "creation_ticks": 134370555197681651,
+        "kernel_ticks": 0,
+        "user_ticks": 156250,
+        "cpu_ticks": 156250,
+        "exit_code_diagnostic": 259,
+        "wait_status": 258,
+        "read_started_monotonic": 466247.2557939,
+        "read_finished_monotonic": 466247.255806
+      },
+      "meter_initial": {
+        "pid": 18116,
+        "creation_ticks": 134370555197681651,
+        "kernel_ticks": 0,
+        "user_ticks": 156250,
+        "cpu_ticks": 156250,
+        "read_started_monotonic": 466247.2559015,
+        "read_finished_monotonic": 466247.2559066
+      },
+      "independent_cpu_method": "Separate ctypes FT structure/GetProcessTimes calls on held query+wait handles.",
+      "graceful_quit": true,
+      "post_quit_inventory": {
+        "18116": "absent"
+      }
+    },
+    {
+      "label": "stockfish",
+      "status": "PASS",
+      "profile_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\profiles\\stockfish18.json",
+      "profile_sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090",
+      "cleanup": [
+        {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "status": "exact-held-process-exited",
+          "final": {
+            "pid": 21212,
+            "creation_ticks": 134370555198811200,
+            "kernel_ticks": 2187500,
+            "user_ticks": 1406250,
+            "cpu_ticks": 3593750,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.8136425,
+            "read_finished_monotonic": 466247.8136929
+          }
+        },
+        {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "status": "exact-process-exited-object-still-open",
+          "observed": {
+            "pid": 21212,
+            "creation_ticks": 134370555198811200,
+            "kernel_ticks": 2187500,
+            "user_ticks": 1406250,
+            "cpu_ticks": 3593750,
+            "exit_code_diagnostic": 0,
+            "wait_status": 0,
+            "read_started_monotonic": 466247.8137197,
+            "read_finished_monotonic": 466247.8137266
+          }
+        }
+      ],
+      "literal_command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe"
+      ],
+      "configured_options": {},
+      "uci_id": {
+        "name": "Stockfish 18",
+        "author": "the Stockfish developers (see AUTHORS file)"
+      },
+      "resolution": {
+        "schema_version": 1,
+        "method": "frozen-image-and-held-creation-with-toolhelp-parent",
+        "profile_id": "stockfish18-x86-64",
+        "mode": "native-direct",
+        "transport": {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "image_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.7646578,
+          "read_finished_monotonic": 466247.765176,
+          "parent_pid": 4476
+        },
+        "endpoint": {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "image_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.7646578,
+          "read_finished_monotonic": 466247.765176,
+          "parent_pid": 4476
+        },
+        "transport_after": {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "image_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.7733595,
+          "read_finished_monotonic": 466247.7737535
+        },
+        "endpoint_after": {
+          "pid": 21212,
+          "creation_ticks": 134370555198811200,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "image_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 466247.7733595,
+          "read_finished_monotonic": 466247.7737535
+        },
+        "frozen_binary": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+        },
+        "frozen_script": null,
+        "expected_base_runtime": null,
+        "observed_direct_children": [],
+        "expected_console_helper": null,
+        "console_helpers": [],
+        "console_helpers_after": [],
+        "matching_inventories": [
+          {
+            "21212": {
+              "pid": 21212,
+              "parent_pid": 4476
+            }
+          },
+          {
+            "21212": {
+              "pid": 21212,
+              "parent_pid": 4476
+            }
+          }
+        ],
+        "query_access_mask": 1052672,
+        "allowed_scope": "Frozen native profile image itself. At most one explicitly frozen conhost helper; helper CPU excluded from endpoint CPU and retained in owned Job CPU. No other observed descendants.",
+        "scope": "Sampled exact image/creation/parent proof; held during resolution. CPU meter must recheck pid and creation. No whole-system or future-descendant guarantee.",
+        "read_started_monotonic": 466247.7554536,
+        "read_finished_monotonic": 466247.7737679
+      },
+      "independent_initial": {
+        "pid": 21212,
+        "creation_ticks": 134370555198811200,
+        "kernel_ticks": 1875000,
+        "user_ticks": 1406250,
+        "cpu_ticks": 3281250,
+        "exit_code_diagnostic": 259,
+        "wait_status": 258,
+        "read_started_monotonic": 466247.773805,
+        "read_finished_monotonic": 466247.7738184
+      },
+      "meter_initial": {
+        "pid": 21212,
+        "creation_ticks": 134370555198811200,
+        "kernel_ticks": 1875000,
+        "user_ticks": 1406250,
+        "cpu_ticks": 3281250,
+        "read_started_monotonic": 466247.7738942,
+        "read_finished_monotonic": 466247.7738991
+      },
+      "independent_cpu_method": "Separate ctypes FT structure/GetProcessTimes calls on held query+wait handles.",
+      "graceful_quit": true,
+      "post_quit_inventory": {
+        "21212": "absent"
+      }
+    }
+  ],
+  "finished_utc": "2026-10-21T11:25:20.367080+00:00"
+}
