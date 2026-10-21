@@ -1,0 +1,1520 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T17:01:15.340721+00:00",
+  "purpose": "Explain score-MSE versus actual move-choice mismatch on prior exposed evidence only",
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\move-choice-gate.json": "9c0ada2ce87174d33e2fc1595845358de07e9c707fa3f1671adc6167cde8c079",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-ordering\\attempt-001\\model.nnue": "4e54305bce4a495ff3bb0d961e397f78eac12d387ff30e7766202fcdf7d3bdee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\model.nnue": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\training.json": "44488a00dc773aadccfaf87abe18b375eaf37e05b6f954d7735841ac57230c56",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\selection.json": "aae00971644ae769d0fe62faa6ef902f1dc26cbfb0ccf45d3ca37ca2a70e2f46",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\native-leaf-receipts.jsonl": "8662466f8ea57dcdb8bc9c3e067f173d062843a0aacfb4b67092c3c7b7fe50da",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\selected-leaves.json": "f5ded40efc2290a99410a953c539820e853924c4fd64dae7145916fe91bc0b43",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\diagnose_nnue_choice.py": "b0226d6d55ee409c876405d9b366843ad0d365d63a3314c660312b7301859cd3",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_ordering.py": "34d9f4388aef27fdf089abcb62a5b0ea4164ef729816211c76b6835616d04605",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\pairs-train.jsonl": "18bfccc31a3dd15ea2abd931558c19d789c53fc7953e14c915649dc911cc700a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\data-001\\pairs-train.jsonl": "18bfccc31a3dd15ea2abd931558c19d789c53fc7953e14c915649dc911cc700a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\pairs-tuning.jsonl": "c2e2261aba4ae93d0e7d51f380621ddd05b1cd5a1dcec80de29742593f9c47ec",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-generalization\\data-001\\pairs-tuning.jsonl": "c2e2261aba4ae93d0e7d51f380621ddd05b1cd5a1dcec80de29742593f9c47ec",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\train.jsonl": "44284d91fc79c2659f06785fd19c4383c5b57f30d26c021e4af7b97041fc7eee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-leaf\\data-001\\tuning.jsonl": "bfde4c22bd2dead17779be4e1c975661a2e38bb3a5c18127e0d8b6ac936c3d41"
+  },
+  "training_runs": 0,
+  "native_searches": 0,
+  "teacher_queries": 0,
+  "fresh_gate_labels_read": 0,
+  "previous_candidate": {
+    "selected_epoch": 5,
+    "anchor_mse_before_cp2": 62807.95437262357,
+    "anchor_mse_after_cp2": 62230.90874524715,
+    "leaf_tuning_mse_before_cp2": 146450.875,
+    "leaf_tuning_mse_after_cp2": 144329.25,
+    "preservation_weight": 4.0,
+    "training_output_drift": {
+      "integer_scores_changed": 1351,
+      "mae_cp": 9.987377279102384,
+      "maximum_absolute_drift_cp": 57.0,
+      "mse_cp2": 185.98316970546983,
+      "positions": 1426,
+      "rmse_cp": 13.637564654492746
+    }
+  },
+  "old_gate": {
+    "positions": 16,
+    "move_changes": 2,
+    "mean_teacher_quality_gain_cp": 4.375,
+    "searched_root_score_change_mover_cp": {
+      "count": 16,
+      "mean": -0.3125,
+      "mean_absolute": 7.6875,
+      "median_absolute": 7.5,
+      "maximum_absolute": 16.0
+    },
+    "models": {
+      "warm": {
+        "teacher_bestmove_matches": 4,
+        "teacher_in_static_best_set": 2,
+        "searched_move_in_static_best_set": 4,
+        "wrong_warm_cases_with_positive_teacher_direct_child_margin": 1,
+        "wrong_warm_cases_with_negative_teacher_direct_child_margin": 11,
+        "wrong_warm_case_teacher_direct_child_margins_cp": [
+          -18,
+          -40,
+          -67,
+          -26,
+          40,
+          -47,
+          -76,
+          -71,
+          -130,
+          -368,
+          -95,
+          -12
+        ],
+        "completed_depth_counts": {
+          "2": 4,
+          "3": 9,
+          "4": 3
+        },
+        "seldepth_summary": {
+          "count": 16,
+          "mean": 19.125,
+          "mean_absolute": 19.125,
+          "median_absolute": 19.0,
+          "maximum_absolute": 24.0
+        },
+        "reported_pv_endpoint_static_equals_root_score": 16
+      },
+      "candidate": {
+        "teacher_bestmove_matches": 4,
+        "teacher_in_static_best_set": 2,
+        "searched_move_in_static_best_set": 4,
+        "wrong_warm_cases_with_positive_teacher_direct_child_margin": 1,
+        "wrong_warm_cases_with_negative_teacher_direct_child_margin": 11,
+        "wrong_warm_case_teacher_direct_child_margins_cp": [
+          -15,
+          -30,
+          -71,
+          -30,
+          38,
+          -35,
+          -75,
+          -86,
+          -135,
+          -359,
+          -97,
+          -23
+        ],
+        "completed_depth_counts": {
+          "2": 5,
+          "3": 8,
+          "4": 3
+        },
+        "seldepth_summary": {
+          "count": 16,
+          "mean": 18.875,
+          "mean_absolute": 18.875,
+          "median_absolute": 19.0,
+          "maximum_absolute": 24.0
+        },
+        "reported_pv_endpoint_static_equals_root_score": 16
+      }
+    },
+    "cases": [
+      {
+        "query_id": "leaf-gate-opening-06",
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "teacher_bestmove_uci": "f8e7",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 2,
+        "models": {
+          "warm": {
+            "searched_move_uci": "e6e5",
+            "searched_white_cp": 80,
+            "completed_depth": 2,
+            "seldepth": 20,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "c6b4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -18,
+            "reported_pv_endpoint_fen": "r1bqkbnr/pp3ppp/2np4/1N2p3/2B1P3/5N2/PP3PPP/R1BQ1RK1 b kq - 1 8",
+            "reported_pv_endpoint_static_white_cp": 80,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "e6e5",
+            "searched_white_cp": 78,
+            "completed_depth": 2,
+            "seldepth": 20,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "c6b4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -15,
+            "reported_pv_endpoint_fen": "r1bqkbnr/pp3ppp/2np4/1N2p3/2B1P3/5N2/PP3PPP/R1BQ1RK1 b kq - 1 8",
+            "reported_pv_endpoint_static_white_cp": 78,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-07",
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "teacher_bestmove_uci": "e7e6",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -9,
+        "models": {
+          "warm": {
+            "searched_move_uci": "f6e4",
+            "searched_white_cp": 5,
+            "completed_depth": 3,
+            "seldepth": 24,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -40,
+            "reported_pv_endpoint_fen": "r3kb1r/pp2pppp/2n5/qN1p1b2/3PnB2/4P3/PP1N1PPP/R2QKB1R b KQkq - 4 9",
+            "reported_pv_endpoint_static_white_cp": 5,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "f6e4",
+            "searched_white_cp": 14,
+            "completed_depth": 3,
+            "seldepth": 20,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -30,
+            "reported_pv_endpoint_fen": "r3kb1r/pp2pppp/2n5/qN1p1b2/3PnB2/4P3/PP1N1PPP/R2QKB1R b KQkq - 4 9",
+            "reported_pv_endpoint_static_white_cp": 14,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-10",
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "teacher_bestmove_uci": "f8e8",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 8,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c8g4",
+            "searched_white_cp": -73,
+            "completed_depth": 2,
+            "seldepth": 22,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "f6e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -67,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp2ppp/2p2n2/2b1p3/4P1bP/3P1N2/PPPN1PP1/R1BQ1RK1 b - h3 0 8",
+            "reported_pv_endpoint_static_white_cp": -73,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c8g4",
+            "searched_white_cp": -81,
+            "completed_depth": 2,
+            "seldepth": 22,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "f6e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -71,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp2ppp/2p2n2/2b1p3/4P1bP/3P1N2/PPPN1PP1/R1BQ1RK1 b - h3 0 8",
+            "reported_pv_endpoint_static_white_cp": -81,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-11",
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "teacher_bestmove_uci": "d4d5",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -13,
+        "models": {
+          "warm": {
+            "searched_move_uci": "d4d5",
+            "searched_white_cp": 189,
+            "completed_depth": 3,
+            "seldepth": 16,
+            "reported_pv_plies": 5,
+            "static_best_moves_uci": [
+              "a4c6"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r1bqk2r/2p1npbp/p1Pp2p1/8/Q3P3/5N2/PP3PPP/RNB2RK1 b kq - 0 11",
+            "reported_pv_endpoint_static_white_cp": 189,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "d4d5",
+            "searched_white_cp": 176,
+            "completed_depth": 3,
+            "seldepth": 16,
+            "reported_pv_plies": 5,
+            "static_best_moves_uci": [
+              "a4c6"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r1bqk2r/2p1npbp/p1Pp2p1/8/Q3P3/5N2/PP3PPP/RNB2RK1 b kq - 0 11",
+            "reported_pv_endpoint_static_white_cp": 176,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-15",
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "teacher_bestmove_uci": "b1d2",
+        "move_changed": true,
+        "mover_quality_gain_cp": 4,
+        "searched_root_score_change_mover_cp": -7,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c1g5",
+            "searched_white_cp": -14,
+            "completed_depth": 3,
+            "seldepth": 18,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -26,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp1bppp/2np1n2/4p1B1/Q2PP1b1/2PB1N2/PP3PPP/RN3RK1 b - - 8 8",
+            "reported_pv_endpoint_static_white_cp": -14,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "b1a3",
+            "searched_white_cp": -21,
+            "completed_depth": 3,
+            "seldepth": 18,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -30,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp1bppp/2np1n2/1N2p3/3PP1b1/2PB1N2/PP3PPP/R1BQ1RK1 b - - 8 8",
+            "reported_pv_endpoint_static_white_cp": -21,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-17",
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "teacher_bestmove_uci": "b4c3",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -5,
+        "models": {
+          "warm": {
+            "searched_move_uci": "b4c3",
+            "searched_white_cp": 21,
+            "completed_depth": 4,
+            "seldepth": 20,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "b4c3"
+            ],
+            "teacher_in_static_best_set": true,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp2ppp/2np1n2/1B2p3/4P1b1/P1PP1N2/1BP2PPP/R2Q1RK1 b - - 2 9",
+            "reported_pv_endpoint_static_white_cp": 21,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "b4c3",
+            "searched_white_cp": 26,
+            "completed_depth": 4,
+            "seldepth": 20,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "b4c3"
+            ],
+            "teacher_in_static_best_set": true,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp2ppp/2np1n2/1B2p3/4P1b1/P1PP1N2/1BP2PPP/R2Q1RK1 b - - 2 9",
+            "reported_pv_endpoint_static_white_cp": 26,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-18",
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "teacher_bestmove_uci": "d5e4",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 7,
+        "models": {
+          "warm": {
+            "searched_move_uci": "e8g8",
+            "searched_white_cp": 128,
+            "completed_depth": 3,
+            "seldepth": 16,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "f6e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 40,
+            "reported_pv_endpoint_fen": "rn1q1rk1/pp2bppp/2p1pn2/8/3PN3/3BBQ1P/PPP2PP1/R4RK1 b - - 0 10",
+            "reported_pv_endpoint_static_white_cp": 128,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "e8g8",
+            "searched_white_cp": 121,
+            "completed_depth": 3,
+            "seldepth": 16,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "f6e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 38,
+            "reported_pv_endpoint_fen": "rn1q1rk1/pp2bppp/2p1pn2/8/3PN3/3BBQ1P/PPP2PP1/R4RK1 b - - 0 10",
+            "reported_pv_endpoint_static_white_cp": 121,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-20",
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "teacher_bestmove_uci": "c3a4",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 0,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c3b5",
+            "searched_white_cp": 35,
+            "completed_depth": 2,
+            "seldepth": 21,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -47,
+            "reported_pv_endpoint_fen": "r1bq1rk1/ppp2ppp/3p1n2/1Nb1p3/1nB1P3/3P1N2/PPP2PPP/R1BQ1RK1 w - - 4 8",
+            "reported_pv_endpoint_static_white_cp": 35,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c3b5",
+            "searched_white_cp": 35,
+            "completed_depth": 2,
+            "seldepth": 21,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -35,
+            "reported_pv_endpoint_fen": "r1bq1rk1/ppp2ppp/3p1n2/1Nb1p3/1nB1P3/3P1N2/PPP2PPP/R1BQ1RK1 w - - 4 8",
+            "reported_pv_endpoint_static_white_cp": 35,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-22",
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "teacher_bestmove_uci": "b1a3",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -12,
+        "models": {
+          "warm": {
+            "searched_move_uci": "d2d4",
+            "searched_white_cp": 54,
+            "completed_depth": 4,
+            "seldepth": 18,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "d2d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -76,
+            "reported_pv_endpoint_fen": "rn1q1rk1/pb3ppp/2pb4/3n4/3P1p2/5N2/PPPBB1PP/RN1Q1RK1 w - - 3 11",
+            "reported_pv_endpoint_static_white_cp": 54,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "d2d4",
+            "searched_white_cp": 42,
+            "completed_depth": 4,
+            "seldepth": 16,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "d2d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -75,
+            "reported_pv_endpoint_fen": "rn1q1rk1/pb3ppp/2pb4/3n4/3P1p2/5N2/PPPBB1PP/RN1Q1RK1 w - - 3 11",
+            "reported_pv_endpoint_static_white_cp": 42,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-23",
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "teacher_bestmove_uci": "h2h3",
+        "move_changed": true,
+        "mover_quality_gain_cp": 66,
+        "searched_root_score_change_mover_cp": 16,
+        "models": {
+          "warm": {
+            "searched_move_uci": "f3g5",
+            "searched_white_cp": 8,
+            "completed_depth": 3,
+            "seldepth": 18,
+            "reported_pv_plies": 6,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -71,
+            "reported_pv_endpoint_fen": "r2q4/1pp1bkpp/p1np1n2/4p3/4P1b1/P1NP4/1PP2PPP/R1BQ1RK1 w - - 0 11",
+            "reported_pv_endpoint_static_white_cp": 8,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c1g5",
+            "searched_white_cp": 24,
+            "completed_depth": 2,
+            "seldepth": 17,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "f3e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -86,
+            "reported_pv_endpoint_fen": "r2q1rk1/1pp1bppp/p1np1n2/4p1B1/2B1P1b1/P1NP1N2/1PP2PPP/R2Q1RK1 w - - 2 9",
+            "reported_pv_endpoint_static_white_cp": 24,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-24",
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "teacher_bestmove_uci": "c8g4",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -3,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c8g4",
+            "searched_white_cp": 1,
+            "completed_depth": 3,
+            "seldepth": 19,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "d6h2"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "rn1q1rk1/ppp2ppp/5n2/3p2B1/1b1P2b1/2NB1N2/PPP2PPP/R2Q1RK1 w - - 10 9",
+            "reported_pv_endpoint_static_white_cp": 1,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c8g4",
+            "searched_white_cp": 4,
+            "completed_depth": 3,
+            "seldepth": 19,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "d6h2"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "rn1q1rk1/ppp2ppp/5n2/3p2B1/1b1P2b1/2NB1N2/PPP2PPP/R2Q1RK1 w - - 10 9",
+            "reported_pv_endpoint_static_white_cp": 4,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-25",
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "teacher_bestmove_uci": "h7h6",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 2,
+        "models": {
+          "warm": {
+            "searched_move_uci": "e8g8",
+            "searched_white_cp": 0,
+            "completed_depth": 3,
+            "seldepth": 16,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -130,
+            "reported_pv_endpoint_fen": "r1bq1rk1/pp2bppp/2n2n2/1N1p4/2pP4/5NP1/PP2PPBP/R1BQ1RK1 w - - 0 10",
+            "reported_pv_endpoint_static_white_cp": 0,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "e8g8",
+            "searched_white_cp": -2,
+            "completed_depth": 3,
+            "seldepth": 17,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -135,
+            "reported_pv_endpoint_fen": "r1bq1rk1/pp2bppp/2n2n2/3p2B1/2pP4/2N2NP1/PP2PPBP/R2Q1RK1 w - - 0 10",
+            "reported_pv_endpoint_static_white_cp": -2,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-26",
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "teacher_bestmove_uci": "c6d4",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -7,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c6d4",
+            "searched_white_cp": 8,
+            "completed_depth": 4,
+            "seldepth": 18,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": true,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp1bppp/3p1n2/8/3QPBb1/2N5/PPP1BPPP/2KR3R b - - 2 10",
+            "reported_pv_endpoint_static_white_cp": 8,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c6d4",
+            "searched_white_cp": 15,
+            "completed_depth": 4,
+            "seldepth": 18,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "c6d4"
+            ],
+            "teacher_in_static_best_set": true,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": 0,
+            "reported_pv_endpoint_fen": "r2q1rk1/ppp1bppp/3p1n2/8/3QPBb1/2N5/PPP1BPPP/2KR3R b - - 2 10",
+            "reported_pv_endpoint_static_white_cp": 15,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-27",
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "teacher_bestmove_uci": "c2c4",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 13,
+        "models": {
+          "warm": {
+            "searched_move_uci": "d3e4",
+            "searched_white_cp": -15,
+            "completed_depth": 3,
+            "seldepth": 19,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "d3e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -368,
+            "reported_pv_endpoint_fen": "rnbq1rk1/1pp2ppp/3b4/p5B1/3Pp3/P4N2/1PP2PPP/RN1Q1RK1 b - - 1 10",
+            "reported_pv_endpoint_static_white_cp": -15,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "d3e4",
+            "searched_white_cp": -2,
+            "completed_depth": 3,
+            "seldepth": 19,
+            "reported_pv_plies": 3,
+            "static_best_moves_uci": [
+              "d3e4"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": true,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -359,
+            "reported_pv_endpoint_fen": "rnbq1rk1/1pp2ppp/3b4/p5B1/3Pp3/P4N2/1PP2PPP/RN1Q1RK1 b - - 1 10",
+            "reported_pv_endpoint_static_white_cp": -2,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-28",
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "teacher_bestmove_uci": "c2c3",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": -8,
+        "models": {
+          "warm": {
+            "searched_move_uci": "c1g5",
+            "searched_white_cp": 81,
+            "completed_depth": 3,
+            "seldepth": 22,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "d4c5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -95,
+            "reported_pv_endpoint_fen": "rn1q3r/pb1nkppp/1p2p3/2ppP3/3P4/3B1N2/PPP1QPPP/RN3RK1 w - - 0 10",
+            "reported_pv_endpoint_static_white_cp": 81,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "c1g5",
+            "searched_white_cp": 73,
+            "completed_depth": 3,
+            "seldepth": 24,
+            "reported_pv_plies": 4,
+            "static_best_moves_uci": [
+              "d4c5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -97,
+            "reported_pv_endpoint_fen": "rn1q3r/pb1nkppp/1p2p3/2ppP3/3P4/3B1N2/PPP1QPPP/RN3RK1 w - - 0 10",
+            "reported_pv_endpoint_static_white_cp": 73,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      },
+      {
+        "query_id": "leaf-gate-opening-30",
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "teacher_bestmove_uci": "f6d5",
+        "move_changed": false,
+        "mover_quality_gain_cp": 0,
+        "searched_root_score_change_mover_cp": 11,
+        "models": {
+          "warm": {
+            "searched_move_uci": "f6g4",
+            "searched_white_cp": -2,
+            "completed_depth": 2,
+            "seldepth": 19,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "c6e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -12,
+            "reported_pv_endpoint_fen": "r1bqkb1r/ppp2ppp/2n5/4P1B1/2Bp2n1/5N2/PP3PPP/RN1Q1RK1 b kq - 2 8",
+            "reported_pv_endpoint_static_white_cp": -2,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          },
+          "candidate": {
+            "searched_move_uci": "f6g4",
+            "searched_white_cp": -13,
+            "completed_depth": 2,
+            "seldepth": 19,
+            "reported_pv_plies": 2,
+            "static_best_moves_uci": [
+              "c6e5"
+            ],
+            "teacher_in_static_best_set": false,
+            "searched_move_in_static_best_set": false,
+            "teacher_vs_warm_selected_direct_child_margin_mover_cp": -23,
+            "reported_pv_endpoint_fen": "r1bqkb1r/ppp2ppp/2n5/4P1B1/2Bp2n1/5N2/PP3PPP/RN1Q1RK1 b kq - 2 8",
+            "reported_pv_endpoint_static_white_cp": -13,
+            "endpoint_static_minus_searched_white_cp": 0,
+            "endpoint_is_backed_up_static_witness": false
+          }
+        }
+      }
+    ]
+  },
+  "prior_pair_learning": {
+    "train": {
+      "count": 26,
+      "same_bytes_as_pre_leaf_pair_file": true,
+      "metrics": {
+        "count": 26,
+        "clear_gap_ge50cp": 17,
+        "warm": {
+          "mse_cp2": 181186.3076923077,
+          "rmse_cp": 425.65984975365916,
+          "mae_cp": 285.6923076923077,
+          "strict_order_matches": 11,
+          "clear_order_matches": 7,
+          "target_root_gaps_cp": [
+            35,
+            59,
+            45,
+            36,
+            439,
+            415,
+            21,
+            90,
+            21,
+            -84,
+            59,
+            218,
+            103,
+            114,
+            691,
+            796,
+            430,
+            735,
+            53,
+            57,
+            96,
+            -5,
+            30,
+            222,
+            -10,
+            48
+          ],
+          "predicted_root_gaps_cp": [
+            6,
+            205,
+            179,
+            -64,
+            33,
+            41,
+            -3,
+            107,
+            6,
+            1,
+            26,
+            54,
+            125,
+            -116,
+            -250,
+            -208,
+            -91,
+            -14,
+            -16,
+            -931,
+            -152,
+            -76,
+            -34,
+            -419,
+            255,
+            -40
+          ]
+        },
+        "ordering": {
+          "mse_cp2": 174164.5,
+          "rmse_cp": 417.33020499359975,
+          "mae_cp": 277.88461538461536,
+          "strict_order_matches": 13,
+          "clear_order_matches": 8,
+          "target_root_gaps_cp": [
+            35,
+            59,
+            45,
+            36,
+            439,
+            415,
+            21,
+            90,
+            21,
+            -84,
+            59,
+            218,
+            103,
+            114,
+            691,
+            796,
+            430,
+            735,
+            53,
+            57,
+            96,
+            -5,
+            30,
+            222,
+            -10,
+            48
+          ],
+          "predicted_root_gaps_cp": [
+            12,
+            199,
+            179,
+            -62,
+            34,
+            49,
+            5,
+            109,
+            6,
+            -8,
+            35,
+            52,
+            114,
+            -110,
+            -227,
+            -184,
+            -66,
+            -4,
+            -5,
+            -919,
+            -149,
+            -60,
+            -32,
+            -416,
+            245,
+            -38
+          ]
+        }
+      },
+      "gap_change_cp": {
+        "count": 26,
+        "mean": 1.8846153846153846,
+        "mean_absolute": 8.115384615384615,
+        "median_absolute": 7.0,
+        "maximum_absolute": 25.0
+      },
+      "wrong_before_and_after": 13,
+      "cases": [
+        {
+          "root_id": "loss-01-065-root",
+          "family_id": "loss-pair-01",
+          "target_gap_white_cp": 35,
+          "warm_gap_white_cp": 6,
+          "candidate_gap_white_cp": 12,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-01-047-root",
+          "family_id": "loss-pair-01",
+          "target_gap_white_cp": 59,
+          "warm_gap_white_cp": 205,
+          "candidate_gap_white_cp": 199,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-04-070-root",
+          "family_id": "loss-pair-02",
+          "target_gap_white_cp": -45,
+          "warm_gap_white_cp": -179,
+          "candidate_gap_white_cp": -179,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-04-032-root",
+          "family_id": "loss-pair-02",
+          "target_gap_white_cp": -36,
+          "warm_gap_white_cp": 64,
+          "candidate_gap_white_cp": 62,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-06-048-root",
+          "family_id": "loss-pair-03",
+          "target_gap_white_cp": -439,
+          "warm_gap_white_cp": -33,
+          "candidate_gap_white_cp": -34,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-06-048-root",
+          "family_id": "loss-pair-03",
+          "target_gap_white_cp": -415,
+          "warm_gap_white_cp": -41,
+          "candidate_gap_white_cp": -49,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-08-042-root",
+          "family_id": "loss-pair-04",
+          "target_gap_white_cp": -21,
+          "warm_gap_white_cp": 3,
+          "candidate_gap_white_cp": -5,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-08-058-root",
+          "family_id": "loss-pair-04",
+          "target_gap_white_cp": -90,
+          "warm_gap_white_cp": -107,
+          "candidate_gap_white_cp": -109,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-10-038-root",
+          "family_id": "loss-pair-05",
+          "target_gap_white_cp": -21,
+          "warm_gap_white_cp": -6,
+          "candidate_gap_white_cp": -6,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-10-102-root",
+          "family_id": "loss-pair-05",
+          "target_gap_white_cp": 84,
+          "warm_gap_white_cp": -1,
+          "candidate_gap_white_cp": 8,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-12-084-root",
+          "family_id": "loss-pair-06",
+          "target_gap_white_cp": -59,
+          "warm_gap_white_cp": -26,
+          "candidate_gap_white_cp": -35,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-12-040-root",
+          "family_id": "loss-pair-06",
+          "target_gap_white_cp": -218,
+          "warm_gap_white_cp": -54,
+          "candidate_gap_white_cp": -52,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-000988",
+          "family_id": "ab2-normal-001",
+          "target_gap_white_cp": -103,
+          "warm_gap_white_cp": -125,
+          "candidate_gap_white_cp": -114,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-001003",
+          "family_id": "ab2-normal-001",
+          "target_gap_white_cp": 114,
+          "warm_gap_white_cp": -116,
+          "candidate_gap_white_cp": -110,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-001212",
+          "family_id": "ab2-normal-002",
+          "target_gap_white_cp": 691,
+          "warm_gap_white_cp": -250,
+          "candidate_gap_white_cp": -227,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-002552",
+          "family_id": "ab2-normal-012",
+          "target_gap_white_cp": -796,
+          "warm_gap_white_cp": 208,
+          "candidate_gap_white_cp": 184,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-003599",
+          "family_id": "ab2-normal-016",
+          "target_gap_white_cp": 430,
+          "warm_gap_white_cp": -91,
+          "candidate_gap_white_cp": -66,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-003824",
+          "family_id": "ab2-normal-017",
+          "target_gap_white_cp": 735,
+          "warm_gap_white_cp": -14,
+          "candidate_gap_white_cp": -4,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-004149",
+          "family_id": "ab2-normal-021",
+          "target_gap_white_cp": 53,
+          "warm_gap_white_cp": -16,
+          "candidate_gap_white_cp": -5,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-004565",
+          "family_id": "ab2-normal-022",
+          "target_gap_white_cp": 57,
+          "warm_gap_white_cp": -931,
+          "candidate_gap_white_cp": -919,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-005148",
+          "family_id": "ab2-normal-024",
+          "target_gap_white_cp": 96,
+          "warm_gap_white_cp": -152,
+          "candidate_gap_white_cp": -149,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-005825",
+          "family_id": "ab2-normal-027",
+          "target_gap_white_cp": 5,
+          "warm_gap_white_cp": 76,
+          "candidate_gap_white_cp": 60,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-005838",
+          "family_id": "ab2-normal-027",
+          "target_gap_white_cp": 30,
+          "warm_gap_white_cp": -34,
+          "candidate_gap_white_cp": -32,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-006314",
+          "family_id": "ab2-normal-029",
+          "target_gap_white_cp": -222,
+          "warm_gap_white_cp": 419,
+          "candidate_gap_white_cp": 416,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-006720",
+          "family_id": "ab2-normal-032",
+          "target_gap_white_cp": 10,
+          "warm_gap_white_cp": -255,
+          "candidate_gap_white_cp": -245,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-007273",
+          "family_id": "ab2-normal-036",
+          "target_gap_white_cp": -48,
+          "warm_gap_white_cp": 40,
+          "candidate_gap_white_cp": 38,
+          "both_immediate_children_of_root": true
+        }
+      ]
+    },
+    "tuning": {
+      "count": 16,
+      "same_bytes_as_pre_leaf_pair_file": true,
+      "metrics": {
+        "count": 16,
+        "clear_gap_ge50cp": 10,
+        "warm": {
+          "mse_cp2": 62155.5625,
+          "rmse_cp": 249.31017327818776,
+          "mae_cp": 187.5625,
+          "strict_order_matches": 5,
+          "clear_order_matches": 3,
+          "target_root_gaps_cp": [
+            193,
+            40,
+            114,
+            91,
+            18,
+            134,
+            147,
+            21,
+            192,
+            40,
+            -9,
+            255,
+            336,
+            615,
+            33,
+            66
+          ],
+          "predicted_root_gaps_cp": [
+            -69,
+            -51,
+            0,
+            -145,
+            24,
+            57,
+            -14,
+            70,
+            -43,
+            -87,
+            15,
+            -108,
+            318,
+            2,
+            -420,
+            -106
+          ]
+        },
+        "ordering": {
+          "mse_cp2": 61455.4375,
+          "rmse_cp": 247.9020723995667,
+          "mae_cp": 186.1875,
+          "strict_order_matches": 6,
+          "clear_order_matches": 4,
+          "target_root_gaps_cp": [
+            193,
+            40,
+            114,
+            91,
+            18,
+            134,
+            147,
+            21,
+            192,
+            40,
+            -9,
+            255,
+            336,
+            615,
+            33,
+            66
+          ],
+          "predicted_root_gaps_cp": [
+            -69,
+            -49,
+            1,
+            -139,
+            19,
+            50,
+            -14,
+            69,
+            -43,
+            -88,
+            14,
+            -113,
+            326,
+            10,
+            -417,
+            -106
+          ]
+        }
+      },
+      "gap_change_cp": {
+        "count": 16,
+        "mean": 0.625,
+        "mean_absolute": 3.0,
+        "median_absolute": 1.5,
+        "maximum_absolute": 8.0
+      },
+      "wrong_before_and_after": 10,
+      "cases": [
+        {
+          "root_id": "loss-13-019-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": 193,
+          "warm_gap_white_cp": -69,
+          "candidate_gap_white_cp": -69,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-13-019-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": 40,
+          "warm_gap_white_cp": -51,
+          "candidate_gap_white_cp": -49,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-13-033-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": 114,
+          "warm_gap_white_cp": 0,
+          "candidate_gap_white_cp": 1,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-13-039-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": 91,
+          "warm_gap_white_cp": -145,
+          "candidate_gap_white_cp": -139,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-13-039-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": 18,
+          "warm_gap_white_cp": 24,
+          "candidate_gap_white_cp": 19,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-14-100-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": -134,
+          "warm_gap_white_cp": -57,
+          "candidate_gap_white_cp": -50,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-14-100-root",
+          "family_id": "loss-pair-07",
+          "target_gap_white_cp": -147,
+          "warm_gap_white_cp": 14,
+          "candidate_gap_white_cp": 14,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-15-047-root",
+          "family_id": "loss-pair-08",
+          "target_gap_white_cp": 21,
+          "warm_gap_white_cp": 70,
+          "candidate_gap_white_cp": 69,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-16-058-root",
+          "family_id": "loss-pair-08",
+          "target_gap_white_cp": -192,
+          "warm_gap_white_cp": 43,
+          "candidate_gap_white_cp": 43,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-16-058-root",
+          "family_id": "loss-pair-08",
+          "target_gap_white_cp": -40,
+          "warm_gap_white_cp": 87,
+          "candidate_gap_white_cp": 88,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "loss-16-066-root",
+          "family_id": "loss-pair-08",
+          "target_gap_white_cp": 9,
+          "warm_gap_white_cp": -15,
+          "candidate_gap_white_cp": -14,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-010983",
+          "family_id": "ab2-normal-010",
+          "target_gap_white_cp": 255,
+          "warm_gap_white_cp": -108,
+          "candidate_gap_white_cp": -113,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-011270",
+          "family_id": "ab2-normal-011",
+          "target_gap_white_cp": 336,
+          "warm_gap_white_cp": 318,
+          "candidate_gap_white_cp": 326,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-011293",
+          "family_id": "ab2-normal-011",
+          "target_gap_white_cp": -615,
+          "warm_gap_white_cp": -2,
+          "candidate_gap_white_cp": -10,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-011491",
+          "family_id": "ab2-normal-018",
+          "target_gap_white_cp": 33,
+          "warm_gap_white_cp": -420,
+          "candidate_gap_white_cp": -417,
+          "both_immediate_children_of_root": true
+        },
+        {
+          "root_id": "family-query-012838",
+          "family_id": "ab2-normal-035",
+          "target_gap_white_cp": 66,
+          "warm_gap_white_cp": -106,
+          "candidate_gap_white_cp": -106,
+          "both_immediate_children_of_root": true
+        }
+      ]
+    }
+  },
+  "prior_leaf_reservoir": {
+    "search_roots": 64,
+    "sample_occurrences": 256,
+    "sample_first_move_is_root_bestmove": 105,
+    "sample_iteration_completed": 86,
+    "sample_root_mover_static_equals_root_score": 1,
+    "sample_combined_three_conditions": 0,
+    "phase_counts": {
+      "quiescence_stand_pat": 256
+    },
+    "ply_summary": {
+      "count": 256,
+      "mean": 6.796875,
+      "mean_absolute": 6.796875,
+      "median_absolute": 6.0,
+      "maximum_absolute": 19.0
+    },
+    "sampling_policy": "Reservoir occurrences across all evaluated branches, not paired winning/refuting backed-up leaves",
+    "numeric_equality_is_not_a_backed_up_witness": true
+  },
+  "accepted_prior_leaf_point_inputs": {
+    "train": {
+      "count": 94,
+      "first_move_is_root_bestmove": 42,
+      "sample_iteration_completed": 29,
+      "root_mover_static_equals_root_score": 0,
+      "combined_three_conditions": 0,
+      "numeric_equality_is_not_a_backed_up_witness": true
+    },
+    "tuning": {
+      "count": 32,
+      "first_move_is_root_bestmove": 11,
+      "sample_iteration_completed": 13,
+      "root_mover_static_equals_root_score": 0,
+      "combined_three_conditions": 0,
+      "numeric_equality_is_not_a_backed_up_witness": true
+    }
+  },
+  "quantized_parameter_changes": {
+    "input_weights": {
+      "changed": 576,
+      "total": 12288,
+      "change_quantized_units": {
+        "count": 12288,
+        "mean": 0.0021158854166666665,
+        "mean_absolute": 0.046875,
+        "median_absolute": 0.0,
+        "maximum_absolute": 1.0
+      }
+    },
+    "hidden_bias": {
+      "changed": 0,
+      "total": 16,
+      "change_quantized_units": {
+        "count": 16,
+        "mean": 0.0,
+        "mean_absolute": 0.0,
+        "median_absolute": 0.0,
+        "maximum_absolute": 0.0
+      }
+    },
+    "output_weights": {
+      "changed": 6,
+      "total": 16,
+      "change_quantized_units": {
+        "count": 16,
+        "mean": -0.125,
+        "mean_absolute": 0.375,
+        "median_absolute": 0.0,
+        "maximum_absolute": 1.0
+      }
+    },
+    "turn_weights": {
+      "changed": 0,
+      "total": 16,
+      "change_quantized_units": {
+        "count": 16,
+        "mean": 0.0,
+        "mean_absolute": 0.0,
+        "median_absolute": 0.0,
+        "maximum_absolute": 0.0
+      }
+    }
+  },
+  "supported_findings": [
+    "Point MSE improved without directly optimizing the argmax of backed-up competing root moves.",
+    "The actual-leaf data addition kept the earlier immediate-child pair files byte-identical.",
+    "Reservoir leaves cover many alternatives; a sample need not determine the root score or chosen move.",
+    "Printed native PV endpoints are not automatically the quiescence evaluator endpoint; no endpoint is used as a training label in this diagnosis.",
+    "Preservation permits nonzero output changes while limiting drift; root choice changes are sparse in the previously exposed gate."
+  ],
+  "recommended_controlled_change": {
+    "loss": "Keep point teacher MSE, pair-gap MSE, and old-training warm-output preservation MSE",
+    "pair_inputs": "Use actual native evaluator calls that back up competing forced-root-move search scores, with full histories and legal endpoint witnesses",
+    "comparison_target": "Teacher root-mover quality difference between the competing root moves; orient leaf scores consistently to white before loss",
+    "checks": "Fixed-depth full-window TT-off completed search; reject bounds, terminal/draw-adjusted, missing static witness, and score/end-point mismatches; separate fresh gate before teacher queries",
+    "retained_guards": "Current architecture, epoch-zero anchor limit, tuning-only checkpoint selection, early stopping, best restore, integer step acceptance, frozen fresh gate"
+  },
+  "limits": [
+    "No causal contribution is assigned to preservation strength, teacher budget, or architecture from this single candidate.",
+    "Immediate-child margins do not prove an alternative root-search margin; forced-move backed-up leaf collection is needed for that comparison.",
+    "Teacher recommendation matches and centipawn deltas are finite-screen observations, not Elo or playing-strength proof."
+  ]
+}

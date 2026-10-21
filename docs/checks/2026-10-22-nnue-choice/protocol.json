@@ -1,0 +1,90 @@
+{
+  "created_utc": "2026-10-21T17:07:41.605052+00:00",
+  "training_runs_maximum": 1,
+  "config": {
+    "candidate_id": "sf18-mse-stm-choice-20261020",
+    "input_scale": 32,
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "output_lr": 0.005,
+    "seed": 20261020,
+    "batch_size": 128,
+    "loss": "mse"
+  },
+  "guards": {
+    "patience": 5,
+    "eval_interval": 5,
+    "min_delta_cp2": 1.0
+  },
+  "preservation_weight": 4.0,
+  "architecture": "Unchanged NNUEv3,768piece+1turn,hidden16,S32",
+  "initial_model_sha256": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+  "initial_model_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\model.nnue",
+  "data_change": "Learn root teacher/default-student disagreements using verified fixed-depth branch-support leaves; preserve all prior point and old26/16gap data",
+  "gap_target_semantics": "Teacher root-child score differences, a frozen minimax-path surrogate, not literal teacher labels at supportleaf",
+  "maximum_teacher_data_queries": 192,
+  "maximum_warm_default_searches": 64,
+  "maximum_forced_branch_searches": 128,
+  "branch_profile": {
+    "depth": 3,
+    "nodes_ceiling": 10000,
+    "transposition": false,
+    "pvs": false,
+    "lmr": false,
+    "static_support_proof_required": true
+  },
+  "development_recheck": {
+    "after_candidate_seal": true,
+    "maximum_candidate_default_searches": 64,
+    "teacher_queries": 0,
+    "used_for_selection_or_retraining": false,
+    "not_independent_of_training_or_tuning": true
+  },
+  "gate_plan": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\plan.json",
+  "fresh_gate_roots": 16,
+  "reserved_input_count": 604,
+  "gate_runs_maximum": 1,
+  "criteria": {
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "retry_or_gate_checkpoint_selection": false
+  },
+  "conditional_match": {
+    "only_if_gate_passes": true,
+    "games_if_pass": 16,
+    "games_if_fail": 0,
+    "opening_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_choice_match_openings_2026-10-22.json",
+    "opening_count": 8,
+    "movetime_ms": 100,
+    "hash_mb": 16,
+    "max_plies": 500,
+    "draw_policy": "claim"
+  },
+  "no_gate_retraining_reselection_or_threshold_relaxation": true,
+  "default_changed": false,
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\plan.json": "197aa80799d927d425f60a9be02a24f01bf3b9eb234a0ecfb7fdd0d6a9ad101f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\frozen-roots.json": "80fb3270c38a6dfa4ce9b6d9b76b4e6d618bf85332ce1b92970dcac85394a303",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\blocked-features.json": "fe240910b8cefd407b0d0438d0d80e2560503527f4e4f79b9c206412af0d4062",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\diagnosis.json": "45ecff19ef0c15504c2a54f3b9ad3c4c671a8cfd8b6d2d1cf717dc12b6259ef0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_choice_match_openings_2026-10-22.json": "8cc0926ebf579913b8132ca1c5c777d86b80733c58263dd6b2fd825d5222375b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-choice\\regicide_choice_data.exe": "716cbf08f9682f87df3fe082575593b2c9f7441250312a99b43f85a9f1a3c1fe",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-leaf\\regicide.exe": "b78c50d0ebeefd937cf3265921e6f71a300146d8fecf0fb7e1d1379739a5bcf0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_choice_gate.py": "f05d195cc91a9622111ba19e5e5be8cfe617b0058bc1676edc021663ad32dd1a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_choice_pairs.py": "f1d6b95beed2fb9ac73f296b65d78fd625db4daa4cecbf5112331bca1b9b735f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\prepare_nnue_choice.py": "241cda8e4cf95905f40ca5a3398d57e08234e7e6b741e8d25681bf7720931dd8",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_choice.py": "5adba95521c5fd8d7fdd2c58c9dc60c58e5f98c8e18ff04049b490d77ac41332",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\diagnose_nnue_choice.py": "b0226d6d55ee409c876405d9b366843ad0d365d63a3314c660312b7301859cd3",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\choice_leaf_support.hpp": "2e8443fa964d60cb66d91386cffc3dce9aa7540d19343d8677eb54857f025c5e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\collect_choice_leaves.cpp": "37e6c0a9248f0d60bf57bae27cc39e3bb26f496b139e809b305e05f087e7e2a9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\build_choice.ps1": "7e8bd0ed137eabbb0e99d29f34c0ec7188557b66f270f12a5637e8a2f8e8c6c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation_step.py": "db36f339e6062b738a28f3a378d2678f56a86202629f61616681bdcc3f8cd425",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation.py": "c19f66774d95241f6552df0e13327567f6f9b67ef07dadbdff47731a166e3df5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_ordering.py": "899d3cf314d59ae3dce4fcc94d9f47e3a8ab7714eb264d95bb510705b31b9ee6"
+  }
+}
