@@ -53,9 +53,13 @@ def utc(text):
     return value
 
 
-def opening_rows(path, count):
+def opening_rows(path, count, *, selected_prefix=False):
     document = read(path)
-    check(document['schema_version'] == 1 and len(document['openings']) == count, 'Opening count/schema differs')
+    size = len(document['openings'])
+    check(document['schema_version'] == 1 and (size >= count if selected_prefix else size == count), 'Opening count/schema differs')
+    if selected_prefix:
+        check(document.get('selected_indices_one_based', list(range(1, count+1))) == list(range(1, count+1)),
+              'Source bank declares a different fixed prefix')
     rows = []
     for literal in document['openings']:
         row = dict(literal)
@@ -71,8 +75,8 @@ def opening_rows(path, count):
         check(row.get('fen_after_opening', fen) == fen, 'Opening FEN differs from legal moves')
         row['fen_after_opening'] = fen
         rows.append(row)
-    check(len({row['family_id'] for row in rows}) == count, 'Duplicate opening family')
-    return rows
+    check(len({row['family_id'] for row in rows}) == size, 'Duplicate opening family')
+    return rows[:count] if selected_prefix else rows
 
 
 def schedule(candidates, opponents, times, openings, phase):
@@ -161,7 +165,7 @@ def frozen_inputs(directory):
     check(len({profiles[name]['binary']['sha256'] for name in candidates}) == 1, 'Candidate binaries differ')
     banks = {}
     for phase, key, count in (('preflight', 'preflight_openings', 1), ('main', 'openings', 32)):
-        original = opening_rows(bound_file(plan[key], source.parent), count)
+        original = opening_rows(bound_file(plan[key], source.parent), count, selected_prefix=phase == 'preflight')
         copied = opening_rows(bound_file(frozen['banks'][phase], directory), count)
         check(original == copied, 'Frozen opening bank changed')
         banks[phase] = copied

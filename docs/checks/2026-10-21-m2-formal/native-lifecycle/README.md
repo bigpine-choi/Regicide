@@ -1,5 +1,15 @@
 # 실제 Windows owned-process lifecycle 검증
 
+**최종 `attempt-003/execution.json`: PASS.** guard SHA `39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13`, 9.342초, 샘플 32회(timer 8회), 최대 gap 0.51784초, nonworker 추정 최대 8.3181%. guard가 열린 상태에서 detach 후 두 샘플 모두 retired count 0이며, close 후 owned/retired도 0이다. 자체 root 전부 종료, 소스 실행 전후 SHA 동일, summary valid true/failure null을 확인했다. 20%/0.5초/2초 gap/2초 rolling/idle 5초 조건은 그대로다.
+
+```powershell
+.\.venv-tests\Scripts\python.exe docs/checks/2026-10-21-m2-formal/native-lifecycle/probe.py --expected-guard 39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13 --output docs/checks/2026-10-21-m2-formal/native-lifecycle/attempt-003
+```
+
+같은 최종 소스의 `attempt-002`는 **FAIL 그대로 보존**했다. 자체 cohort 종료와 첫 retired count 0을 관측한 뒤, 두 번째 확인 전에 rolling nonworker CPU 23.1710%가 20%를 넘어 guard가 정상 차단했다. 핸들 retirement 오류는 아니었으나 clean summary를 얻지 못했으므로 PASS로 계산하지 않는다. 원인 프로세스는 확정하지 않았다. 병렬 검사 작업이 끝난 뒤 같은 조건으로 별도 새 `attempt-003`을 실행했으며, 실패 데이터를 삭제하거나 수치를 완화하지 않았다.
+
+## 이전 소스의 일반 lifecycle 확인
+
 `attempt-001/execution.json`: **PASS**, 9.331초. 검증 대상 guard SHA는 `f22ef91446b59b74db101bd7ddb96426fe8a50d52b1fdf6f76bdcbadf6873610`이며 실행 전후 같았다. 게임 엔진이나 사용자 프로세스를 시작·종료하지 않았다.
 
 ```powershell

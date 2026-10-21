@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "id": "regicide-nnue-s32-precision-20261019",
+  "kind": "regicide",
+  "evaluation": "nnue",
+  "binary": {
+    "path": "binary/regicide.exe",
+    "sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a"
+  },
+  "args": [
+    "uci"
+  ],
+  "options": {
+    "UseNeuralEvaluation": false,
+    "UseNNUEEvaluation": true,
+    "EvalFile": "<empty>",
+    "NeuralModelFile": "models/NeuralModelFile-model.nnue",
+    "UseIncrementalNeuralEvaluation": true,
+    "Hash": 16,
+    "Move Overhead": 20,
+    "UsePositionalEvaluation": true,
+    "UseQuiescence": true,
+    "UseTranspositionTable": true,
+    "UseFastMoves": true,
+    "UseQuietMoveOrdering": true,
+    "UseQuiescenceChecks": true,
+    "PVS": true,
+    "UseSEE": true,
+    "UsePawnShield": true,
+    "UsePawnStructure": true,
+    "UseLMR": true
+  },
+  "models": {
+    "NeuralModelFile": {
+      "path": "models/NeuralModelFile-model.nnue",
+      "sha256": "c9ca5f35bb0ef0f61fca9b7eba10cd01d4320cf6c2a1dd4863630b7f87baaa92"
+    }
+  },
+  "source": {
+    "commit": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+    "native_core_unchanged_since": "b241995",
+    "native_build_receipt_role": "native-build-receipt",
+    "search_threads": 1,
+    "threads_uci_option": false,
+    "model_provenance": {
+      "historical_base_commit": "1cd4de87eec36e75cdfc321a1e1845245aaa53b8",
+      "historical_working_tree_uncommitted": true,
+      "exact_source_identity": "Historical selection/freeze.json and manifest.json file hashes, not the base commit alone",
+      "format": "REGICIDE_NNUE 2 768 16 4064 256 32",
+      "checksum": 12850805878070247189,
+      "representative_reason": "Previously frozen S32 QAT model and same file used by M1 engine-parity validation; not selected anew by strength",
+      "candidate_id": "s32-lr000020-e120",
+      "seed": 20261024,
+      "epochs": 120,
+      "selected_by": "Historical train integer MAE, then RMSE, then fixed grid order",
+      "strength_promoted": false,
+      "adopted": false,
+      "historical_result": "100ms: 2 wins, 2 draws, 12 losses; 1s: 5 wins, 4 draws, 7 losses; no strength promotion"
+    }
+  },
+  "artifacts": [
+    {
+      "path": "artifacts/0-build-provenance.json",
+      "sha256": "85f1c7bc47237ea195bef8c8b2717013d3075b45f4c7b35163eb842fd174f703",
+      "role": "native-build-receipt"
+    },
+    {
+      "path": "artifacts/1-freeze.json",
+      "sha256": "09ab4792b7804fb09c49a4fa2015fe262a8b0682efb2594386512b86d9548c91",
+      "role": "historical-model-source-freeze"
+    },
+    {
+      "path": "artifacts/2-manifest.json",
+      "sha256": "79811ff34179838b7f36f4024b2df32a9a036160221a2411b01aab23f5679559",
+      "role": "historical-model-manifest"
+    }
+  ]
+}

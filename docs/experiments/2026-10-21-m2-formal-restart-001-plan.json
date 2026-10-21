@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "id": "m2-formal-20261021-v1",
+  "phase": "formal-m2",
+  "preregistered_utc": "2026-10-21T08:37:43.896567+00:00",
+  "candidates": [
+    {
+      "path": "../../config/engine-profiles/classical.json",
+      "sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2"
+    },
+    {
+      "path": "../../config/engine-profiles/residual-v2.json",
+      "sha256": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0"
+    },
+    {
+      "path": "../../config/engine-profiles/nnue-s32.json",
+      "sha256": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1"
+    }
+  ],
+  "opponents": [
+    {
+      "path": "../../build-m2-opponents/profiles/stockfish18.json",
+      "sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090"
+    },
+    {
+      "path": "../../build-m2-opponents/profiles/sunfish.json",
+      "sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3"
+    }
+  ],
+  "openings": {
+    "path": "../../tests/data/m2_formal_openings_2026-10-21.json",
+    "sha256": "1994d67709942de642b0e577ded78e382195df260b806117edc8aa774e454edd"
+  },
+  "preflight_openings": {
+    "path": "../../tests/data/m2_preflight_openings_2026-10-21.json",
+    "sha256": "1e6b08b689701e95c34adc8809cf1a104d12413c8ad02c02461de1ef2a6817b8"
+  },
+  "preflight_opening_count": 1,
+  "movetimes_ms": [
+    100,
+    1000
+  ],
+  "max_plies": 500,
+  "draw_policy": "claim",
+  "lane_affinity_masks": [
+    15,
+    240,
+    3840,
+    61440
+  ],
+  "topology": {
+    "physical_core_masks": [
+      3,
+      12,
+      48,
+      192,
+      768,
+      3072,
+      12288,
+      49152
+    ],
+    "logical_cpus": 16,
+    "scope": "Single Windows processor group, physical-core affinity masks."
+  },
+  "load_policy": {
+    "interval_seconds": 0.5,
+    "max_sample_gap_seconds": 2.0,
+    "max_nonworker_cpu_fraction": 0.2,
+    "host_window_seconds": 2.0
+  },
+  "idle_probe_seconds": 5.0,
+  "move_deadline": {
+    "multiplier": 2.0,
+    "slack_seconds": 0.25
+  },
+  "cell_timeout_seconds": 1500,
+  "preflight_timeout_seconds": 1800,
+  "main_timeout_seconds": 14400,
+  "retry_policy": "no-result-based-retries-stop-on-first-failure",
+  "statistics": {
+    "method": "descriptive-paired-colors-preserving-broad-cluster-percentile-bootstrap",
+    "seed": 2026102101,
+    "resamples": 20000,
+    "interval": [
+      0.025,
+      0.975
+    ],
+    "minimum_clusters": 2,
+    "elo_estimate": null,
+    "promotion_rule": null
+  },
+  "preregistration_artifacts": [
+    {
+      "path": "2026-10-21-m2-formal-plan.md",
+      "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/exclusion-audit.json",
+      "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/exposure-index.json.gz",
+      "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/test-report.json",
+      "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/hardware.json",
+      "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/native-before.json",
+      "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/test-report-final.json",
+      "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+    },
+    {
+      "path": "2026-10-21-m2-formal-restart-001.md",
+      "sha256": "91e37f0640ab04a550689d2fbdaef16bc3fa163fb71342ac8010b19f95813dd8"
+    }
+  ],
+  "scope": [
+    "768 main games, 24 distinct preflight games; preflight results are not pooled.",
+    "Three M1 profiles unchanged; H100 candidates excluded from the M2 baseline.",
+    "Four physical-core-disjoint lanes, identical conditions balanced across lanes.",
+    "Known external engine CPU and sampled rolling nonworker host CPU guarded. No complete OS/power/thermal isolation claim.",
+    "Authored new parents checked against declared inventory; historical supplemental PV extraction has documented limitations.",
+    "First failure stops the entire phase. No result-adaptive retries, selection, extra games or default promotion."
+  ],
+  "worker_runtime": {
+    "executable": {
+      "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+    },
+    "pythonpath": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages",
+    "package_files": [
+      {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\__init__.py",
+        "sha256": "1fde6a8e932508d14b31f6a584497b49c2969fc3c7cdc675347f819f0d667a5b"
+      },
+      {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\engine.py",
+        "sha256": "40a1407749ea43b4ed3174f0603e0316a9c971b8943113fbea5be47c82bde22b"
+      }
+    ],
+    "python_version": "3.13.16",
+    "chess_version": "1.11.2"
+  }
+}

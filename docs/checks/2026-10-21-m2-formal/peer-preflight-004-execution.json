@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "phase": "preflight",
+  "directory": "build-m2-formal/attempt-004",
+  "working_directory": "C:/Users/hanso/.codex/.chatgpt-projects/g-p-6a8b058617088191ac7cb44895558f31/Regicide-m1-integration",
+  "attempts": [
+    {
+      "command": ".venv-tests/Scripts/python.exe -B docs/checks/2026-10-21-m2-formal/peer_audit.py --directory build-m2-formal/attempt-004 --phase preflight --output docs/checks/2026-10-21-m2-formal/peer-preflight-004.json",
+      "exit_code": 1,
+      "status": "FAIL",
+      "audit_script_sha256": "bdccd5948b2dc7b278f5453c26bf891946c03c62debed215e01774e3022d35d2",
+      "output_sha256": "2bf4df2b7e1909d7d7f68124ab0b74f06951f77366dd229c489395ad2e64bf5b",
+      "error": "AssertionError: Opening count/schema differs",
+      "classification": "Auditor assumption defect. The source preflight bank contains two legal authored rows; the preregistered prefix count is one. The product validates the whole bank then freezes its first row. The original failed output is preserved."
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe -B docs/checks/2026-10-21-m2-formal/peer_audit.py --directory build-m2-formal/attempt-004 --phase preflight --output docs/checks/2026-10-21-m2-formal/peer-preflight-004-r2.json",
+      "exit_code": 0,
+      "status": "PASS",
+      "audit_script_sha256": "ba08d91f9ec3edcd85fea4939ef6286ae73197f9015eca96c35fc09675f4bdff",
+      "output_sha256": "ee396f21da3814131ba1a5b4579108f8901026481901402d533f9abff8f6db5c",
+      "correction": "Only the independent auditor changed: validate every source-bank row, then compare the explicitly selected first-row prefix with the strict one-row frozen bank. Product harness, plan, binaries, models and recorded games were not modified."
+    }
+  ],
+  "completed_pairs": 12,
+  "completed_games": 24,
+  "legal_mainline_plies": 2374,
+  "legal_pv_plies": 15730,
+  "searched_plies": 2086,
+  "input_sha256_entries": 180,
+  "guard_samples": 1902,
+  "ready_host_windows": 1898,
+  "timer_samples": 959,
+  "max_sample_gap_seconds": 0.5843730999622494,
+  "max_snapshot_duration_seconds": 0.09990809997543693,
+  "max_ready_nonworker_cpu_fraction": 0.1688864532440343,
+  "observed_known_external_process_identities": 0,
+  "observed_known_external_cpu_delta_ticks": 0,
+  "accounting_underflow_intervals": 22,
+  "retired_timers_held": 42,
+  "retired_timers_closed": 42,
+  "retired_handles_at_last_sample": 0,
+  "audit_processes_finished": true,
+  "engines_started_by_auditor": 0,
+  "scope": "Independent completed-preflight integrity and raw-counter audit. No playing-strength inference, model promotion or complete OS/power/thermal isolation claim. Nonworker CPU uses the preregistered sampled estimate, including its recorded clamped accounting underflows. Preflight scores are excluded from main results."
+}

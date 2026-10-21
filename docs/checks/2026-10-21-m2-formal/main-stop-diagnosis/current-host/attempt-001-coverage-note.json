@@ -1,0 +1,7 @@
+{
+  "applies_to": "attempt-001/receipt.json",
+  "raw_receipt_preserved": true,
+  "limitation": "The first probe cast Get-Process.CPU directly to double, so an inaccessible null counter became zero. Its unmeasured_end_process_count=0 is not a valid coverage claim. A separate immediate check found 166 null CPU counters, including Idle, but does not reconstruct exactly which counters were unavailable during the three earlier windows.",
+  "still_observed": "Per-process positive CPU deltas and independent GetSystemTimes host aggregate remain observed data. Process sums are lower bounds with incomplete coverage; zeros cannot establish that a protected process was idle.",
+  "correction": "attempt-002 uses explicit null handling and preserves before/after cumulative CPU values and measurement PID. No historical source/plan or process setting is changed."
+}

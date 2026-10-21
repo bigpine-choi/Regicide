@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-21T09:31:50.6696611Z",
+  "status": "COMPLETE",
+  "requested_pid": 11552,
+  "query_properties": [
+    "ProcessId",
+    "ParentProcessId",
+    "Name"
+  ],
+  "probe_sha256": "a5249c3f2d77f62afb16030a3f0c1880b86e692c636e869133751fd391f9f5fc",
+  "scope": "Current reported PID/name/parent chain only, without command lines, window content, settings or process actions. No creation-time identity proof, so parent PID reuse cannot be excluded. Cannot identify the earlier main-stop cause.",
+  "chain": [
+    {
+      "pid": 11552,
+      "process_name": "msedgewebview2.exe",
+      "parent_pid": 24064
+    },
+    {
+      "pid": 24064,
+      "process_name": "msedgewebview2.exe",
+      "parent_pid": 19508
+    },
+    {
+      "pid": 19508,
+      "process_name": "ms-teams.exe",
+      "parent_pid": 2224
+    },
+    {
+      "pid": 2224,
+      "process_name": "explorer.exe",
+      "parent_pid": 30152
+    }
+  ],
+  "terminal": "PID 30152 not present at query time",
+  "finished_utc": "2026-10-21T09:31:51.2491709Z"
+}
