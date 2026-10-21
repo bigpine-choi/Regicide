@@ -526,7 +526,9 @@ def select_model(data_dir: Path | str, baseline_model_path: Path | str,
                      "selected_train": winner["train"]},
                  "ranking": [{key: item[key] for key in ranking_keys} for item in ranking],
                  "optimizer": "Adam beta1=0.9 beta2=0.999 epsilon=1e-8; float64 shadows/moments; all layers trained",
-                 "loss": "Mean squared error in pawn units; exact integer deployed forward",
+                 "loss": ("Twice standard Huber in pawn units, delta=100cp; exact integer deployed forward"
+                          if winner["config"].get("loss", "mse") == "h100" else
+                          "Mean squared error in pawn units; exact integer deployed forward"),
                  "gradient_global_norm_limit": 10.0,
                  "ste": "Rounding/truncation unit surrogate; strict clipped-ReLU and score-clamp interior; scale-correct real-unit gradients",
                  "quantization": "Nearest ties-to-even input/bias*S, output*8; int64; one signed truncation /8S; clamp +/-28000",

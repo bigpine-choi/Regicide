@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "scope": "General select loss-description metadata correction; no optimizer, loss arithmetic, prepared model, frozen snapshot or engine changes",
+  "evidence_basis": "Recorded from already observed exec_command results; tests were not rerun to produce this document",
+  "observation_limits": {
+    "exact_utc": "Not captured",
+    "stdout_stderr_separation": "exec_command returned one combined output string; separate stdout and stderr streams were not captured",
+    "output_file_sha256": "No separate output files or hashes were captured",
+    "source_hash_timing": "Before hashes were observed before the edit. After hashes were observed after all four tests passed; exact per-test boundary hashes were not captured",
+    "strength_claim": "None; the change makes selected H100 provenance accurate and preserves historical default MSE wording"
+  },
+  "working_directory": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration",
+  "source_sha256": {
+    "scripts/neural_precision.py": {
+      "before": "c38671afd6cf06661cd3941830d0a04cfcdcb7daf7a98361d3430b1eca577649",
+      "after": "97b05c7869226abc4ce57f77e36d46627cb12301c0add431f5e152d139c0d5a2"
+    },
+    "tests/neural_precision_tests.py": {
+      "before": "e042c655efeab961d42fd478994791e776f74e8b76366fb72615ed2152367c09",
+      "after": "a4d69880f5decae4df914e706363c165204767a0cf211a7adf31c058651d4697"
+    },
+    "tests/neural_huber_tests.py": {
+      "observed_after": "d5e660205f14a97eb8beb305ba8fe36fc12fd84ea86b1b67eb0bc52f13011a08",
+      "edited": false
+    }
+  },
+  "test_runs": [
+    {
+      "command": ".\\.venv-tests\\Scripts\\python.exe -B -s tests/neural_precision_tests.py SelectionAndFreezeTests.test_default_mse_selection_records_historical_loss_description SelectionAndFreezeTests.test_h100_selection_records_actual_loss_and_freezes_configuration -v",
+      "exit_code": 0,
+      "tool_wall_time_seconds": 0.8656131,
+      "reported_test_count": 2,
+      "reported_test_elapsed_seconds": 0.3,
+      "combined_output": "test_default_mse_selection_records_historical_loss_description (__main__.SelectionAndFreezeTests.test_default_mse_selection_records_historical_loss_description) ... ok\r\ntest_h100_selection_records_actual_loss_and_freezes_configuration (__main__.SelectionAndFreezeTests.test_h100_selection_records_actual_loss_and_freezes_configuration) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 2 tests in 0.300s\r\n\r\nOK\r\n"
+    },
+    {
+      "command": ".\\.venv-tests\\Scripts\\python.exe -B -s tests/neural_huber_tests.py HuberTests.test_explicit_mse_and_observational_callback_preserve_all_arrays HuberTests.test_h100_deterministic_and_serialization_requantization_exact -v",
+      "exit_code": 0,
+      "tool_wall_time_seconds": 0.8085615,
+      "reported_test_count": 2,
+      "reported_test_elapsed_seconds": 0.174,
+      "combined_output": "test_explicit_mse_and_observational_callback_preserve_all_arrays (__main__.HuberTests.test_explicit_mse_and_observational_callback_preserve_all_arrays) ... ok\r\ntest_h100_deterministic_and_serialization_requantization_exact (__main__.HuberTests.test_h100_deterministic_and_serialization_requantization_exact) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 2 tests in 0.174s\r\n\r\nOK\r\n"
+    }
+  ],
+  "diff_check": {
+    "command": "git diff --check",
+    "observed_diagnostics": "None",
+    "command_context": "Executed as the first command in a subsequent inspection call; no dedicated exit code was captured for this individual PowerShell statement"
+  }
+}

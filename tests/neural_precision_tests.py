@@ -467,6 +467,37 @@ class SelectionAndFreezeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "checksum|hash"):
                 precision.verify_freeze(root / "selected/freeze.json")
 
+    def test_default_mse_selection_records_historical_loss_description(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            make_dataset(root / "data")
+            self.initial_files(root)
+            with mock.patch.object(self, "GRID", self.GRID[:1]):
+                selected = self.select(root)
+            saved = json.loads((root / "selected/selection.json").read_text(encoding="utf-8"))
+            self.assertNotIn("loss", selected["selected_config"])
+            self.assertEqual(saved["loss"],
+                             "Mean squared error in pawn units; exact integer deployed forward")
+            self.assertEqual(precision.verify_freeze(root / "selected/freeze.json")["selected_config"],
+                             selected["selected_config"])
+
+    def test_h100_selection_records_actual_loss_and_freezes_configuration(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            make_dataset(root / "data")
+            self.initial_files(root)
+            plan = root / "h100-plan.json"
+            config = {**self.GRID[0], "loss": "h100"}
+            base.write_json(plan, {"candidate_grid": [config]})
+            selected = precision.select_model(root / "data", root / "initial.nnue",
+                                               root / "initial.npz", root / "selected", plan)
+            saved = json.loads((root / "selected/selection.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["loss"],
+                             "Twice standard Huber in pawn units, delta=100cp; exact integer deployed forward")
+            self.assertEqual(saved["selected_config"], config)
+            self.assertEqual(selected["selected_config"], config)
+            self.assertEqual(precision.verify_freeze(root / "selected/freeze.json")["selected_config"], config)
+
     def test_no_integer_input_update_cannot_be_frozen(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
