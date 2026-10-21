@@ -1,0 +1,62 @@
+PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescence terminal and optional claim handling
+PASS quiescence shares exact node budgets and restores interrupted work
+PASS transposition scores agree with uncached fixed-depth search
+PASS transpositions reuse completed work and never publish a partial root
+PASS cached search keeps optional history-dependent claims
+PASS caller-owned memory reuse preserves every completed iteration graph
+PASS reused memory isolates options FENs history clocks and hash resize
+PASS disabled terminal and interrupted calls preserve reusable storage safely
+PASS quiet move ordering changes work without changing exact fixed-depth scores
+PASS one quiet-check qsearch matches an unpruned independent oracle
+PASS quiet checks recognize mate beyond the capture-only frontier
+PASS Caro-Kann loss regression sees the checking knight refutation
+PASS PVS and alpha-beta select oracle-optimal moves with and without TT
+PASS PVS preserves independently enumerated quiescence and quiet-check values
+PASS PVS scouts ties without re-search and re-searches a genuine improvement
+PASS PVS handles current intended and historical optional draw claims
+PASS an intended draw floor can require a PVS full-window re-search
+PASS PVS interruption at scout and re-search entry retains the completed iteration
+PASS reused PVS memory isolates modes histories options and interruption
+PASS SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode
+PASS a sole legal capture needs no exchange sort and still preserves its result
+PASS favorable captures precede losing captures without discarding either
+PASS negative SEE queen sacrifice remains available and produces the oracle mate
+PASS SEE preserves the independent bounded-check quiescence oracle
+PASS SEE mode changes and cancellation cannot leak through retained memory
+PASS shelter ON and OFF search match exhaustive normal and tactical oracles
+PASS cancelled fallback uses the selected shelter evaluator before any completed iteration
+PASS reused memory isolates shelter mode switches and material-only evaluation ignores them
+PASS pawn structure ON and OFF match exhaustive ordinary and tactical search
+PASS pawn structure defaults ON and remains selected in cancelled or one-node fallbacks
+PASS retained memory isolates pawn structure changes and material-only ignores both positional flags
+PASS pawn bonuses never override mate automatic draws or optional claims
+PASS LMR OFF retains full-depth reference graphs and shallow ON never reduces
+PASS LMR requires both PVS and learned quiet ordering and never reduces pawn or king moves
+PASS LMR really reduces and verifies late quiet scouts while publishing legal deterministic lines
+PASS LMR interruption retains the last full iteration and its reusable memory stays isolated
+PASS LMR protects current and intended draw claims before reducing any late knight move
+PASS LMR preserves quiet checking mates sacrifices terminal results and optional claims
+PASS root restriction preserves every reply and the unrestricted default graph
+PASS root restriction rejects empty duplicate and illegal moves
+PASS restricted fallback cancellation and every completed PV stay inside the list
+PASS root restriction handles castling promotion and en passant
+PASS root restriction preserves current draw claims and automatic adjudication
+61 groups, 21389 assertions, 0 failures

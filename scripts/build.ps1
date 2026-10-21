@@ -75,6 +75,10 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude t
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\neural_model_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\regicide_neural_model_tests.obj /Febuild\regicide_neural_model_tests.exe
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\leaf_observer_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\regicide_leaf_observer_tests.obj /Febuild\regicide_leaf_observer_tests.exe
+if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\collect_search_leaves.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\collect_search_leaves.obj /Febuild\regicide_leaf_data.exe
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\evaluation_benchmark.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\regicide_evaluation_benchmark.obj /Febuild\regicide_evaluation_benchmark.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude scripts\neural_incremental_benchmark.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\regicide_neural_incremental_benchmark.obj /Febuild\regicide_neural_incremental_benchmark.exe
@@ -106,4 +110,6 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'NNUE tests failed.' }
     & (Join-Path $buildDir 'regicide_neural_model_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'NNUE model tests failed.' }
+    & (Join-Path $buildDir 'regicide_leaf_observer_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Leaf observer tests failed.' }
 }

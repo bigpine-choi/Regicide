@@ -136,8 +136,9 @@ void order_moves_with_see(const Board& board, std::vector<Move>& moves,
 // Restores board and repetition history, including when cancellation unwinds.
 class AppliedMove {
 public:
-    AppliedMove(Board& board, Move move, bool fast, NeuralAccumulator* nnue = nullptr)
-        : board_(board), nnue_(nnue) {
+    AppliedMove(Board& board, Move move, bool fast, NeuralAccumulator* nnue = nullptr,
+                std::vector<Move>* observed_path = nullptr)
+        : board_(board), nnue_(nnue), observed_path_(observed_path) {
         if (nnue_) {
             const Position before = board_.position();
             saved_ = *nnue_;
@@ -150,10 +151,13 @@ public:
             if (fast) board_.play_generated(move);
             else board_.play(move);
         }
+        // Searcher reserves the full legal search-ply bound before recursion.
+        if (observed_path_) observed_path_->push_back(move);
     }
     ~AppliedMove() {
         board_.undo();
         if (nnue_) *nnue_ = *saved_;
+        if (observed_path_) observed_path_->pop_back();
     }
     AppliedMove(const AppliedMove&) = delete;
     AppliedMove& operator=(const AppliedMove&) = delete;
@@ -161,6 +165,7 @@ private:
     Board& board_;
     NeuralAccumulator* nnue_;
     std::optional<NeuralAccumulator> saved_;
+    std::vector<Move>* observed_path_;
 };
 
 // Keep both pre-existing evaluator meanings: positional=false selects material
@@ -186,6 +191,7 @@ public:
         : limits_(limits), stop_(stop), start_(start), options_(options), table_(table) {
         if (options_.nnue && options_.nnue_incremental)
             nnue_.emplace(root, options_.nnue_model ? *options_.nnue_model : builtin_neural_model());
+        if (options_.static_evaluation_observer) observed_path_.reserve(max_search_ply + 1);
     }
 
     std::uint64_t nodes = 0;
@@ -195,6 +201,7 @@ public:
     std::uint64_t see_calls = 0;
     std::uint64_t lmr_reductions = 0, lmr_researches = 0;
     int seldepth = 0;
+    int iteration_depth = 0;
 
     int negamax(Board& board, int depth, int ply, int alpha, int beta,
                 std::vector<Move>& pv, bool pv_node,
@@ -218,8 +225,11 @@ public:
         }
         const bool current_claim = claimable(board);
         if (depth == 0) {
-            const int score = static_evaluation(board);
-            if (score < 0 && (current_claim || intended_claim_available(board, moves))) return 0;
+            int raw_score;
+            const int score = static_evaluation(board, raw_score);
+            const bool adjusted = score < 0 && (current_claim || intended_claim_available(board, moves));
+            observe_evaluation(board, raw_score, score, ply, -1, current_claim, adjusted);
+            if (adjusted) return 0;
             return score;
         }
         const int original_alpha = alpha;
@@ -283,7 +293,8 @@ public:
                     killers_[ply][0] != move && killers_[ply][1] != move;
             }
             {
-                AppliedMove applied(board, move, options_.fast_moves, nnue_ ? &*nnue_ : nullptr);
+                AppliedMove applied(board, move, options_.fast_moves, nnue_ ? &*nnue_ : nullptr,
+                                    options_.static_evaluation_observer ? &observed_path_ : nullptr);
                 const bool intended_claim = claimable(board);
                 if (options_.pvs && !first_move) {
                     // A one-point window first asks only whether this move can
@@ -379,12 +390,22 @@ private:
     std::optional<NeuralAccumulator> nnue_;
     std::array<Killers, max_search_ply + 1> killers_{};
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
+    std::vector<Move> observed_path_;
+    std::uint64_t observed_evaluations_ = 0;
 
-    int static_evaluation(const Board& board) const {
-        const int score = static_score(board, options_, nnue_ ? &*nnue_ : nullptr);
+    int static_evaluation(const Board& board, int& raw_score) const {
+        raw_score = static_score(board, options_, nnue_ ? &*nnue_ : nullptr);
         const int reserved_plies = options_.quiescence ? max_search_ply : max_search_depth;
-        return std::clamp(score, -mate_score + reserved_plies + 1,
+        return std::clamp(raw_score, -mate_score + reserved_plies + 1,
                           mate_score - reserved_plies - 1);
+    }
+
+    void observe_evaluation(const Board& board, int raw_score, int score, int ply, int qply,
+                            bool current_claim, bool adjusted) {
+        if (options_.static_evaluation_observer)
+            options_.static_evaluation_observer(board, observed_path_,
+                {raw_score, score, iteration_depth, ply, qply, ++observed_evaluations_,
+                 current_claim, adjusted});
     }
 
     int quiescence(Board& board, int ply, int qply, int checks_left, int alpha, int beta,
@@ -406,10 +427,13 @@ private:
 
         int best = -infinity;
         if (!checked) {
-            best = static_evaluation(board);
+            int raw_score;
+            best = static_evaluation(board, raw_score);
             // A quiet intended move can permit a draw even though quiescence
             // otherwise searches only captures and promotions.
-            if (best < 0 && (current_claim || intended_claim_available(board, moves))) best = 0;
+            const bool adjusted = best < 0 && (current_claim || intended_claim_available(board, moves));
+            observe_evaluation(board, raw_score, best, ply, qply, current_claim, adjusted);
+            if (adjusted) best = 0;
             if (best >= beta || qply >= max_quiescence_depth) return best;
             alpha = std::max(alpha, best);
             std::erase_if(moves, [&](Move move) {
@@ -430,7 +454,8 @@ private:
             const bool quiet = quiet_move(board, move);
             std::vector<Move> child_pv;
             {
-                AppliedMove applied(board, move, options_.fast_moves, nnue_ ? &*nnue_ : nullptr);
+                AppliedMove applied(board, move, options_.fast_moves, nnue_ ? &*nnue_ : nullptr,
+                                    options_.static_evaluation_observer ? &observed_path_ : nullptr);
                 const bool intended_claim = claimable(board);
                 // Captures/promotions preserve the quiet-check budget. All
                 // check evasions remain legal candidates even at zero; a
@@ -540,6 +565,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     }
     Searcher searcher(limits, stop, start, options, table, board);
     for (int depth = 1; depth <= limits.depth; ++depth) {
+        searcher.iteration_depth = depth;
         std::vector<Move> pv;
         int score;
         try {

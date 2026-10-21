@@ -30,6 +30,24 @@ struct SearchLimits {
     std::chrono::milliseconds movetime{0}; // Zero means unlimited.
 };
 
+// An actual static-evaluator invocation, not a principal-variation endpoint.
+// References passed to the observer are valid only for that invocation. The
+// path starts at the search root; the caller retains the root's prior history.
+// Unfinished iterative-deepening work is observed too. Root fallback, terminal
+// adjudication, checked quiescence nodes and transposition returns are not.
+struct StaticEvaluationObservation {
+    int raw_score = 0; // Side-to-move evaluator output, before mate-band clamp.
+    int score = 0; // The static score used by search, before any draw adjustment.
+    int iteration_depth = 0;
+    int ply = 0;
+    int qply = -1; // -1 = normal horizon; >=0 = quiescence stand pat.
+    std::uint64_t evaluation_index = 0; // One-based, includes excluded claims.
+    bool current_draw_claim = false;
+    bool draw_claim_adjusted = false; // Search substitutes an available zero.
+};
+using StaticEvaluationObserver = std::function<void(
+    const Board&, const std::vector<Move>&, const StaticEvaluationObservation&)>;
+
 struct SearchOptions {
     bool positional = true;
     bool quiescence = true;
@@ -54,6 +72,10 @@ struct SearchOptions {
     // Null searches every legal root move. A present list must be nonempty,
     // legal and duplicate-free. Descendants always retain all legal moves.
     std::optional<std::vector<Move>> root_moves = {};
+    // Research-only opt-in. Empty leaves search decisions and traversal intact.
+    // The observer must not mutate search-owned objects or stop state. Its work
+    // consumes wall time, so deterministic collection uses node/depth limits.
+    StaticEvaluationObserver static_evaluation_observer = {};
 };
 
 struct SearchResult {
