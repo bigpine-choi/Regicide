@@ -1,0 +1,363 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T17:50:25.363441+00:00",
+  "reviewer": "repair_gate: authored the position-only reservation; independently reviewed root trainer/data collection, numerical reports and final scorer receipts without running any engine, teacher or fit.",
+  "source_head": "ec20bcdb981ea680255fd547c9f13617c5419ad3",
+  "passed": true,
+  "review_scope": "PASS means implementation/protocol verification only. The improvement experiment failed.",
+  "blocking_findings": [],
+  "outcome": "Score MSE improved, but the known QGA error and its two opponent-reply checks did not recover. All sixteen fresh choices stayed unchanged, teacher agreement stayed11/16 and mean quality gain was0cp. Comparison games0; no strength or move-choice improvement is established.",
+  "claims": {
+    "architecture_unchanged": true,
+    "representation_frozen": true,
+    "loss_mse_unchanged": true,
+    "overfit_guards_retained": true,
+    "old_data_preserved": true,
+    "score_fit_improved": true,
+    "known_failure_recovered": false,
+    "fresh_move_choice_improved": false,
+    "playing_strength_improvement_established": false,
+    "automatic_promotion": false
+  },
+  "source_review": {
+    "protected_source_reference": "a04126c",
+    "protected_source_diff_files": 0,
+    "protected_scope": [
+      "src/",
+      "include/",
+      "neural_stm_output_only.py",
+      "neural_stm_preservation_step.py",
+      "neural_stm_preservation.py",
+      "neural_stm.py",
+      "neural_training.py",
+      "neural_stm_guarded.py",
+      "neural_stm_ordering.py",
+      "nnue_leaf_gate.py",
+      "nnue_generalization_gate.py",
+      "nnue_choice_gate.py"
+    ],
+    "architecture": "NNUEv3,768piece+1turn,hidden16,S32",
+    "trainable_keys": [
+      "output_weights"
+    ],
+    "trainable_parameters": 16,
+    "frozen_keys": [
+      "input_weights",
+      "hidden_bias",
+      "turn_weights"
+    ],
+    "frozen_parameters": 12320,
+    "optimizer": "Unchanged output-only MSE QAT; only the sixteen existing output weights enter clipping, Adam moments and proposals.",
+    "loss": "Point teacher MSE +1.0*mean(all old and new comparison gap MSE) +4.0*old TRAIN1426 frozen current-warm output MSE.",
+    "controls": [
+      "Same seed20261020, output_lr0.005, batch128, clip10, fixed family pair schedule.",
+      "Same six integer full-TRAIN nonincrease step scales1,.5,.25,.125,.0625,.03125; no anchor use for scale choice.",
+      "Original263 anchor MSE must not exceed current warm61507.89733840304; no anchor gradients.",
+      "Tuning-only point+gap MSE checkpoint selection; epoch-zero protection, interval5, patience5,minDelta1,best restoration.",
+      "One production fit; selected/native-validated candidate sealed before any fresh labels; no gate-driven retry, checkpoint reselection or threshold changes."
+    ],
+    "support_semantics": "New teacher root-child gaps are frozen-search surrogates through observed completed-PV support endpoints under the default profile and matching completed depth. They are not literal teacher labels for these leaves or proof of a complete causal alpha-beta/TT trace."
+  },
+  "diagnosis_verification": {
+    "bounded_exposed_native_searches": 32,
+    "new_teacher_queries": 0,
+    "fresh_gate_access": false,
+    "old_teacher_white_cp": {
+      "Ng4": 126,
+      "Bf5": 297
+    },
+    "black_quality_change_cp": -171,
+    "completed_full_root_depth": 2,
+    "forced_depth2_old_white_cp": {
+      "Ng4": -51,
+      "Bf5": -51,
+      "Ne4": -5
+    },
+    "forced_depth2_output_only_white_cp": {
+      "Ng4": -43,
+      "Bf5": -44,
+      "Ne4": 1
+    },
+    "raw_Bf5_minus_Ng4_change_cp": -2.2265625,
+    "interpretation": "171cp is the stored teacher consequence of crossing a shallow near-tie, not a171cp neural output change. The output head shifted the raw competing gap by about2.23cp and the integer gap by1cp. Both heads missed exf6 after Bf5; a later quiet non-check Ng5 falls beyond the completed horizon and capture/check quiescence. Disabling TT/PVS/LMR retained the six depth2 forced values.",
+    "limitation": "These exact-CP teacher receipts were requested at depth10 with a100000-node cap. They are reference evidence, not deep ground truth."
+  },
+  "reservation_and_data": {
+    "prelabel_reservation_revision": {
+      "same35root_bytes": true,
+      "original_data001_teacher_queries": 0,
+      "original_data001_native_searches": 0,
+      "original_data001_fits": 0,
+      "reason": "Bind the original unrestricted decision receipts in the final loader; retain original snapshot and reseal the same roots as data002 before collection."
+    },
+    "production_collections": 1,
+    "raw_collection": "data-002",
+    "canonical_dataset": "data-003",
+    "point_rows": {
+      "train": 1520,
+      "tuning": 369,
+      "test": 69
+    },
+    "historical_pair_rows": {
+      "train": 55,
+      "tuning": 24
+    },
+    "live_pair_rows": {
+      "train": 15,
+      "tuning": 5
+    },
+    "combined_pair_rows": {
+      "train": 70,
+      "tuning": 29
+    },
+    "critical_pair_rows": {
+      "train": 3,
+      "tuning": 0
+    },
+    "old_point_and_pair_files_byte_identical": 7,
+    "historical_support_model_sha256": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "live_support_model_sha256": "4e100302474cc3861ee5ef2ec69a641dad0e08cc94c1b685f80c3bb2e8883700",
+    "cached_correction": {
+      "incomplete_root_id": "head-live-family-query-011943",
+      "partition": "tuning",
+      "requested_depth": 2,
+      "completed_branch_depths": [
+        1,
+        2
+      ],
+      "removed_pairs": 1,
+      "reason": "The native collector honestly accepted the last completed prefix; the predeclared learning rule requires the requested matched iteration itself. The strict validator rejected it. Cached assembly drops this pair, retains every raw receipt, and makes no replacement queries or policy changes.",
+      "new_teacher_queries": 0,
+      "new_native_searches": 0,
+      "new_training_runs": 0,
+      "original_receipts_preserved": true
+    },
+    "provenance_verification": {
+      "original_protocol_sha_unchanged": true,
+      "original_overall_bindings_resolved": 25,
+      "amendment_current_bindings_checked": 7,
+      "changes": 0,
+      "original_prepare_source_resolved_to_raw_snapshot": true,
+      "original_training_wrapper_resolved_to_archived_git_source": true,
+      "assembly_current_raw_and_historical_bindings_changes": 0
+    },
+    "independent_pre_fit_boundaries": {
+      "canonical_and_raw_json_files": 31,
+      "all_replayed_or_recorded_features": 16209,
+      "new_gate_overlap": 0,
+      "actual_gradient_and_all_root_selection_PV_features": {
+        "train": 2867,
+        "tuning": 797,
+        "test": 69
+      },
+      "train_tuning_intersection": 0,
+      "train_test_intersection": 0,
+      "tuning_test_intersection": 0,
+      "policy": "Include all raw JSON/JSONL FEN/root_fen/root/source wrappers, legal PVs and recorded histories when checking fresh-gate exposure. For TRAIN/TUNE/TEST separation include old/new gradient paths plus every unrestricted root-selection and root-teacher recommendation PV; common past root-history prefixes are excluded from this cross-partition test.",
+      "additional_native_teacher_fit_calls": 0
+    },
+    "teacher_queries": {
+      "root": 32,
+      "child": 42,
+      "total": 74
+    },
+    "native_searches": {
+      "default_root": 33,
+      "critical_reply": 2,
+      "forced": 42,
+      "total": 77
+    },
+    "manifest_sha256": "40eae9f37f5826b41bd6e7bf6691835d9e0d4bfa33dd13949f65574dc6a25d1c"
+  },
+  "training_verification": {
+    "model_sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "frozen": {
+      "input_weights": true,
+      "hidden_bias": true,
+      "turn_weights": true
+    },
+    "frozen_parameters": 12320,
+    "output_float_changed": 15,
+    "output_integer_changed": 11,
+    "anchor": {
+      "warm": 61507.89733840304,
+      "ordering": 61110.380228136884
+    },
+    "critical_development_static_gaps": [
+      {
+        "root_id": "head-critical-qga-root",
+        "role": "warm",
+        "predicted_root_gap_cp": -45,
+        "target_root_gap_cp": 285
+      },
+      {
+        "root_id": "head-critical-qga-after-bf5",
+        "role": "warm",
+        "predicted_root_gap_cp": -17,
+        "target_root_gap_cp": 182
+      },
+      {
+        "root_id": "head-critical-qga-after-ng4",
+        "role": "warm",
+        "predicted_root_gap_cp": -87,
+        "target_root_gap_cp": 186
+      },
+      {
+        "root_id": "head-critical-qga-root",
+        "role": "ordering",
+        "predicted_root_gap_cp": -45,
+        "target_root_gap_cp": 285
+      },
+      {
+        "root_id": "head-critical-qga-after-bf5",
+        "role": "ordering",
+        "predicted_root_gap_cp": -17,
+        "target_root_gap_cp": 182
+      },
+      {
+        "root_id": "head-critical-qga-after-ng4",
+        "role": "ordering",
+        "predicted_root_gap_cp": -84,
+        "target_root_gap_cp": 186
+      }
+    ],
+    "metric_maximum_absolute_difference": 0,
+    "selected_epoch": 15,
+    "minimum_eligible_epoch": 15,
+    "validation_checkpoints": 9,
+    "stopped_epoch": 40,
+    "optimizer_steps": 640,
+    "actual_train_objective_nonincrease": true,
+    "pairs_seen_once_every_epoch": true,
+    "binding_mismatches": [],
+    "reviewer_search_teacher_fit_calls": 0,
+    "training_seconds": 45.08380650001345
+  },
+  "native_validation": {
+    "positions": 2117,
+    "corpus_unique_positions": 2071,
+    "special_positions": 46,
+    "python_native_full_incremental_mismatches": 0,
+    "actual_model_groups": 13,
+    "actual_model_assertions": 25521,
+    "actual_model_failures": 0,
+    "live_collector_groups": 6,
+    "live_collector_assertions": 68,
+    "live_collector_failures": 0,
+    "research_native_binary_sha256": "b78c50d0ebeefd937cf3265921e6f71a300146d8fecf0fb7e1d1379739a5bcf0"
+  },
+  "exposed_development_check": {
+    "only_after_seal": true,
+    "independent_of_training": false,
+    "used_in_selection_or_retraining": false,
+    "native_searches": 3,
+    "teacher_queries": 0,
+    "unchanged_choices": 3,
+    "cases": [
+      {
+        "id": "head-critical-qga-root",
+        "warm": "c8f5",
+        "candidate": "c8f5",
+        "teacher": "f6e4"
+      },
+      {
+        "id": "head-critical-qga-after-bf5",
+        "warm": "c1g5",
+        "candidate": "c1g5",
+        "teacher": "e5f6"
+      },
+      {
+        "id": "head-critical-qga-after-ng4",
+        "warm": "c1g5",
+        "candidate": "c1g5",
+        "teacher": "h2h3"
+      }
+    ],
+    "recovered": false
+  },
+  "fresh_gate_reservation": {
+    "plan_sha256": "4ab1bcbb08463335ba49f6a6b8d7228d0a554d50fa6eca0f229000377c06f1f4",
+    "warm_sha256": "4e100302474cc3861ee5ef2ec69a641dad0e08cc94c1b685f80c3bb2e8883700",
+    "fixed_source_indices": "1,3,...31",
+    "actual_quiet_extension_plies": 4,
+    "reserved_roots": 16,
+    "blocked_root_and_child_features": 564,
+    "prior_exposure_files": 225,
+    "prior_exposure_features": 119641,
+    "initial_overlap": 0,
+    "reservation_input_bindings": 237,
+    "selection_teacher_native_fit_calls": 0,
+    "unit_tests": 9,
+    "unit_test_failures": 0
+  },
+  "final_gate_verification": {
+    "created_utc": "2026-10-21T17:50:25.363441+00:00",
+    "completed": true,
+    "accepted": 16,
+    "warm_bestmove_matches": 11,
+    "candidate_bestmove_matches": 11,
+    "unchanged_moves": 16,
+    "mean_mover_quality_gain_cp": 0,
+    "large_regressions": 0,
+    "root_teacher_queries": 16,
+    "child_teacher_queries": 16,
+    "native_searches": 32,
+    "replayed_pvs_including_shared_child_receipt_references": 80,
+    "result_hash_bindings_checked": 266,
+    "hash_binding_mismatches": [],
+    "candidate_sealed_before_labels": true,
+    "manual_gate_pass": false,
+    "stored_gate_pass": false,
+    "authorized_games": 0,
+    "actual_pgn_files": 0,
+    "production_fit_directories": 1,
+    "consumed_do_not_reuse_as_fresh": true,
+    "gate_result_sha256": "943b3ed8b44e5fb8858ae016459924ddfe72712803ec97806c6d98974be5e33e",
+    "reviewer_native_teacher_fit_calls": 0,
+    "decision_and_consumed_records": [
+      "attempt-001/screen-decision.json",
+      "gate-001/consumed.json"
+    ]
+  },
+  "operation_counts": {
+    "diagnosis_bounded_native_searches": 32,
+    "data_collection_native_searches": 77,
+    "postseal_exposed_development_native_searches": 3,
+    "final_gate_native_searches": 32,
+    "total_bounded_research_native_searches": 144,
+    "data_teacher_queries": 74,
+    "gate_root_teacher_queries": 16,
+    "gate_child_teacher_queries": 16,
+    "total_teacher_queries": 106,
+    "production_fits": 1,
+    "comparison_games": 0,
+    "reviewer_engine_teacher_fit_calls": 0,
+    "notes": "Research call counts are distinct from native correctness/unit-test invocations and static evaluation comparisons."
+  },
+  "limitations": [
+    "No actual move-choice recovery was observed in the three exposed critical checks or the sixteen fresh roots.",
+    "The old69 point test was previously exposed; its post-save fit is descriptive, not independent strength evidence.",
+    "The opening source families were previously known; these extended positions and legal children were separated from recorded learning/selection/probe inputs. This is a small move-choice screen, not an Elo trial.",
+    "All sixteen fresh roots are now consumed development evidence and must not be reused as a fresh gate.",
+    "This experiment does not prove that output-only learning or the fixed representation can never work. It establishes failure under these data, optimization and guard conditions."
+  ],
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\protocol.json": "de8b1b070c5cb8cc507f67f0df297a98dd990cbb7aa4f465222f24fc2dc762bc",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\protocol-amendment.json": "c51805d340685e129172ef0bff53fe718d5d2beb9b4bc285b9a93034ea632c41",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\reservation-revision.json": "915ac527de50a8a9fe517614100cc3fece74835f9a2753c8a91a0eb2d7076f37",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\diagnosis.json": "72d99c7c71877d3d8b9062eca98ec8cf212d27b3aca8ca4d69f1d083efd90d3d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\data-002\\protocol.json": "990ab84bd0b10f2479c9e68477fcb5ebacb5ad84bad3abc0ee5a24b24a1be2ae",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\data-003\\protocol.json": "aaf5badfa70a1a86274cadbccd0e875cd092b6fedc3d67977024b91e4f62716a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\data-003\\assembly-receipt.json": "5438587aa86483225d299a8645800aed25df20ac9b39fbf18cb6df74aca5ae3a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\data-003\\manifest.json": "40eae9f37f5826b41bd6e7bf6691835d9e0d4bfa33dd13949f65574dc6a25d1c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\protocol.json": "c3ebecd61330452535fbc3bc5eee12a02a523b631328b89ad186e2678f5913aa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\training.json": "69a93695d9f5b27eec90a051416eb0ca85280676d21fce492e894a4030f7c424",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\selection.json": "9caf2dc78ce67b2c46ae778cb3760b2f2a7b810c4063ec3ee6616b82c06f4f2d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\validation.json": "031d628d1062859742ea53c6c664cf0e7abda665f878684951ab7ecb47d5e7f6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\gate-seal.json": "9943d53b57902367dd6431b9608ca6771ee2f05c85e51d48159b6245960401db",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\development-recovery.json": "60601522f5694afb2adb575fcaac6577737f3588ef3d05b883fb9564aa049540",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\move-choice-gate.json": "943b3ed8b44e5fb8858ae016459924ddfe72712803ec97806c6d98974be5e33e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\screen-decision.json": "f95385225028dfb624466357aa8bb57e1e0b3e112a0ccc8f3ec78a6914964bd7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\gate-001\\consumed.json": "16af4e71d7b8284ffb05e60d26f0410e78a0061ea845ea68cfb80345d6ab5056"
+  }
+}
