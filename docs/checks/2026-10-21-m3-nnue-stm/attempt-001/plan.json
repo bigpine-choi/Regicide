@@ -1,0 +1,83 @@
+{
+  "id": "m3-nnue-stm-20261021-001",
+  "created_utc": "2026-10-21T14:18:01.753597+00:00",
+  "scheduled_games": 16,
+  "movetime_ms": 100,
+  "hash_mb": 16,
+  "search_threads": 1,
+  "max_plies": 500,
+  "draw_policy": "claim",
+  "baseline_id": "B-mse-20261020",
+  "candidate_id": "B-mse-stm-20261020",
+  "change": "One relative side-to-move input with 16 zero-initialized new weights; MSE preserved.",
+  "baseline_retrained": false,
+  "candidate_training_runs": 1,
+  "candidate_selection": "Fixed final epoch120 and seed20261020, no sweep or checkpoint selection.",
+  "model_sha256": {
+    "baseline": "267f65646c24292efa28f11a5f5990311ed7da4f6c134d7c4a6b6c1e0f7be1eb",
+    "candidate": "f001f1d3bd9b710e046d37c88040c13a90e8507b28bfb2c416814b9427332f26"
+  },
+  "source_commit": "e246d8102c58b4c8680b26ac3886095ab25e79f0",
+  "hardware": {
+    "cpu": "AMD Ryzen AI 7 350 w/ Radeon 860M",
+    "cores": 8,
+    "logical_processors": 16,
+    "os": "Windows 11",
+    "shared_pc": true
+  },
+  "opening_policy": "Existing exposed ordered eight project-authored starts, each both colors; development screen.",
+  "estimated_minutes": [
+    2,
+    4
+  ],
+  "limitations": [
+    "16 games and one fixed seed cannot establish Elo or universal strength.",
+    "NumPy version is 2.3.5 versus historical baseline preparation2.3.4; execution environment is not asserted identical.",
+    "No process CPU/thermal isolation measurement; ordinary shared-PC timing."
+  ],
+  "monitoring": "Existing comparator legality and engine timeout only; no new load guard.",
+  "promotion": "No automatic promotion, count expansion, additional seeds or retraining.",
+  "command": [
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Scripts\\python.exe",
+    "-B",
+    "-s",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-stm\\regicide.exe",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-stm\\regicide.exe",
+    "--baseline-commit",
+    "e246d8102c58b4c8680b26ac3886095ab25e79f0",
+    "--candidate-commit",
+    "e246d8102c58b4c8680b26ac3886095ab25e79f0",
+    "--baseline-options",
+    "{\"UseNeuralEvaluation\": false, \"UseNNUEEvaluation\": true, \"EvalFile\": \"<empty>\", \"NeuralModelFile\": \"C:\\\\Users\\\\hanso\\\\.codex\\\\.chatgpt-projects\\\\g-p-6a8b058617088191ac7cb44895558f31\\\\Regicide-m1-integration\\\\docs\\\\checks\\\\2026-10-21-m3-huber-preparation\\\\attempt-001\\\\training\\\\B-mse-20261020\\\\model.nnue\", \"UseIncrementalNeuralEvaluation\": true, \"Hash\": 16, \"Move Overhead\": 20, \"UsePositionalEvaluation\": true, \"UseQuiescence\": true, \"UseTranspositionTable\": true, \"UseFastMoves\": true, \"UseQuietMoveOrdering\": true, \"UseQuiescenceChecks\": true, \"PVS\": true, \"UseSEE\": true, \"UsePawnShield\": true, \"UsePawnStructure\": true, \"UseLMR\": true}",
+    "--candidate-options",
+    "{\"UseNeuralEvaluation\": false, \"UseNNUEEvaluation\": true, \"EvalFile\": \"<empty>\", \"NeuralModelFile\": \"C:\\\\Users\\\\hanso\\\\.codex\\\\.chatgpt-projects\\\\g-p-6a8b058617088191ac7cb44895558f31\\\\Regicide-m1-integration\\\\docs\\\\checks\\\\2026-10-21-m3-nnue-stm\\\\attempt-001\\\\model.nnue\", \"UseIncrementalNeuralEvaluation\": true, \"Hash\": 16, \"Move Overhead\": 20, \"UsePositionalEvaluation\": true, \"UseQuiescence\": true, \"UseTranspositionTable\": true, \"UseFastMoves\": true, \"UseQuietMoveOrdering\": true, \"UseQuiescenceChecks\": true, \"PVS\": true, \"UseSEE\": true, \"UsePawnShield\": true, \"UsePawnStructure\": true, \"UseLMR\": true}",
+    "--movetime",
+    "100",
+    "--openings",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\comparison_openings.json",
+    "--opening-count",
+    "8",
+    "--max-plies",
+    "500",
+    "--draw-policy",
+    "claim",
+    "--pgn",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\games.pgn"
+  ],
+  "inputs": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-stm\\regicide.exe": "97140c4ad1c40a9f2c67e2fb9a8c0718fe70722e83dcbe50a7011b71c97558d1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\regicide.exe": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-huber-preparation\\attempt-001\\training\\B-mse-20261020\\model.nnue": "267f65646c24292efa28f11a5f5990311ed7da4f6c134d7c4a6b6c1e0f7be1eb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\model.nnue": "f001f1d3bd9b710e046d37c88040c13a90e8507b28bfb2c416814b9427332f26",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\comparison_openings.json": "86126fa3936967759205984b53bb4412056f2fb38ff6d7ba2b44175e444f31db",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\audit_neural_stm_match.py": "2dd869d25e0a76c28e1c51e10fc09b81fbf19d3cab77e3981e964fd48aadfa05",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\neural_stm_integration.py": "b08364099f41cd4429f0c0e40302bc22230816b3c22412472bc62e4bc0d6ce43",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\protocol.json": "f3ec0728357b29a5860af3a01ea59a5b6be0ee92309d376e73993218d0fc8f99",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\training.json": "4abb454c51949026703d6dc5fcbb554cab9a2bbe837fa107fd7cea4e2b40cd56",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\validation.json": "ad126115696bba706484c620ef21afbd3e38320332f12a5f33c6bb4928987237",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m3-nnue-stm\\attempt-001\\build-provenance.json": "8192f14c8778f47aa34a951ea35c1162f2568b26d60b5ec4c9abb40819a11b4d"
+  },
+  "previous_scores_pooled": false
+}
