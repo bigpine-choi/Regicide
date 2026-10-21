@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T18:35:47.425280+00:00",
+  "base_commit": "7bae01f23d2b485950c4196cc0cac8df30770c3e",
+  "hypothesis": "Diagnose remaining late optional quiet checks/fork preparation and root priority window costs. Bound optional quiet forcing near qfrontier while keeping capture policy, every checking capture/promotion/en-passant/check evasion and every threat defense. qply<=2 includes exf6/Bxb1/Ng5.",
+  "initial_candidate_policy": {
+    "UseQuiescenceThreats": true,
+    "UseQuiescenceThreatCache": true,
+    "UseTacticalThreatOrdering": false,
+    "UseQuiescenceReplyBudget": true,
+    "optional_quiet_start_max_qply": 2
+  },
+  "baseline_and_disabled_policy": {
+    "UseQuiescenceThreats": true,
+    "UseQuiescenceThreatCache": true,
+    "UseTacticalThreatOrdering": true,
+    "UseQuiescenceReplyBudget": false
+  },
+  "candidate_scope": "Selective optional forcing horizon; no unresolved check/mandatory defense may be statically truncated. No overall qdepth reduction or relaxed counters.",
+  "model_policy": "Same439583 frozen output-onlyMSE/v3 structure/regularization; no fitting",
+  "training_runs": 0,
+  "new_training_teacher_queries": 0,
+  "native_nodes": 10000,
+  "development": {
+    "baseline_diagnostic_searches_maximum": 6,
+    "candidate_variants_maximum": 3,
+    "searches_per_variant_maximum": 6,
+    "selection": "Exposed known-position cost, required tactical path coverage, independent correctness tests; only diagnosed changes, no blind parameter grid",
+    "fresh_answers_seen": false
+  },
+  "known_gate": {
+    "final_native_searches": 12,
+    "required_moves": [
+      "f6e4",
+      "e5f6",
+      "f3g5"
+    ],
+    "all_required": true,
+    "all_must_finish_first_iteration_within_nodes": true,
+    "Bf5_child_first_iteration_nodes_maximum": 2577,
+    "native_mismatches": 0,
+    "final_runs_maximum": 1
+  },
+  "fresh_gate": {
+    "same_untouched16_roots": true,
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "runs_maximum": 1,
+    "only_after_known_gate_pass": true
+  },
+  "match_policy": {
+    "only_after_both_gates_pass": true,
+    "games": 16,
+    "pairs": 8,
+    "time_per_move_ms": 100,
+    "hash_mb": 16,
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "opponent": "frozen basic classical Regicide",
+    "strength_claim": "Short direction screen, no Elo proof"
+  },
+  "defaults_changed": false,
+  "installed_game_changed": false,
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-qsearch-priority\\regicide.exe": "23663fb23f0699a6acd1a6cae7ee4d3a47a5fbb23a846ad0c8d8049fb6489529",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_output_only.py": "48dd2fd97582931adb76752451e0e05121700e340ff605ee0042e698cd1c719b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_head_repair.py": "d655d10461928a3f16706b45220a6e1191d5049ab313768a3613a09e4dcca163",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\gate-002\\reservation.json": "8ade02d18b546c9cd092c194c00486f6ed065c93bd60cc01ecfbcaff9fe07b05",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp": "73bf1ccf279d9119678a3b8a8f229ada1bc37c4e2484142e67db05d02c918eaa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp": "dade760d7d222e7b247db020f1c08df4910c2c7e3a7846d0710ed3192964eae9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp": "64dd335e5274636f21035202d8e5a4794b19d9f163e39e4360a6fbc4e301e52d"
+  }
+}

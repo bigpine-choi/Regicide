@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "id": "regicide-nnue-reply-budget-20261022",
+  "kind": "regicide",
+  "evaluation": "nnue",
+  "binary": {
+    "path": "../../build-m3-reply-budget/regicide.exe",
+    "sha256": "01993996fc422afc1dbceaa3cd6f70789402cc5a3ee5f48294fd9e928f045810"
+  },
+  "args": [
+    "uci"
+  ],
+  "options": {
+    "UseNeuralEvaluation": false,
+    "UseNNUEEvaluation": true,
+    "EvalFile": "<empty>",
+    "NeuralModelFile": "../../docs/checks/2026-10-22-nnue-head-repair/attempt-001/model.nnue",
+    "UseIncrementalNeuralEvaluation": true,
+    "Hash": 16,
+    "Move Overhead": 20,
+    "UsePositionalEvaluation": true,
+    "UseQuiescence": true,
+    "UseTranspositionTable": true,
+    "UseFastMoves": true,
+    "UseQuietMoveOrdering": true,
+    "UseQuiescenceChecks": true,
+    "PVS": true,
+    "UseSEE": true,
+    "UsePawnShield": true,
+    "UsePawnStructure": true,
+    "UseLMR": true,
+    "UseQuiescenceThreats": true,
+    "UseQuiescenceThreatCache": true,
+    "UseTacticalThreatOrdering": false,
+    "UseQuiescenceReplyBudget": true
+  },
+  "models": {
+    "NeuralModelFile": {
+      "path": "../../docs/checks/2026-10-22-nnue-head-repair/attempt-001/model.nnue",
+      "sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac"
+    }
+  },
+  "source": {
+    "commit": "c858cd58b29f7c44e410acbd5b47385161fd3d7a",
+    "search_threads": 1,
+    "training_runs": 0,
+    "adopted": false,
+    "experimental_opt_in": true,
+    "additional_qcache_bytes_maximum": 1048576,
+    "normal_hash_mb": 16,
+    "unchanged_loss": "MSE/output-only head/architecture/regularization",
+    "optional_quiet_start_max_qply": 2,
+    "limitation": "Optional quiet checks and forks first appearing after qply2 may be missed"
+  },
+  "artifacts": [
+    {
+      "path": "../../docs/checks/2026-10-22-nnue-qsearch-reply-budget/build-provenance.json",
+      "sha256": "919bb34dd32d0604bfefc5898a49b3de77a0ab14420e461c6ef0215cefd60caa",
+      "role": "native-build-receipt"
+    }
+  ]
+}
