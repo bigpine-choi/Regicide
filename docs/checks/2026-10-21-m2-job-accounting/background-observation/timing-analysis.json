@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only existing receipts and existing Windows events; no experiment restarted, CPU workload launched or settings changed.",
+  "runs": [
+    {
+      "attempt": "attempt-001",
+      "phase": "preflight",
+      "phase_started_utc": "2026-10-21T10:30:29.143906+00:00",
+      "guard_started_utc": "2026-10-21T10:30:29.227211+00:00",
+      "first_failure_utc": "2026-10-21T10:34:19.265168+00:00",
+      "phase_elapsed_at_first_failure_seconds": 230.121262,
+      "guard_elapsed_at_first_failure_seconds": 230.037957,
+      "recorded_phase_elapsed_seconds": 230.103,
+      "first_raw_failure": {
+        "line_number": 918,
+        "event": "sample",
+        "utc": "2026-10-21T10:34:19.254563+00:00",
+        "phase": "timer",
+        "wall_ticks": 134370524592545852,
+        "failure": {
+          "kind": "host_nonworker_cpu",
+          "reason": "rolling residual system/background CPU estimate exceeded the declared threshold",
+          "utc": "2026-10-21T10:34:19.265168+00:00"
+        },
+        "host": {
+          "total_delta_ticks": 73593750,
+          "busy_delta_ticks": 34062500,
+          "owned_delta_ticks": 9218750.0,
+          "experiment_job_delta_ticks": 9218750.0,
+          "coordinator_delta_ticks": 156250.0,
+          "observed_process_delta_ticks_diagnostic": 9218750,
+          "residual_signed_delta_ticks": 24687500.0,
+          "nonworker_delta_ticks": 24687500.0,
+          "accounting_underflow_ticks": 0,
+          "window_seconds": 2.0,
+          "window_total_ticks": 319471061.72815657,
+          "window_nonworker_ticks": 86078319.91125587,
+          "window_fraction": 0.2694401159392064,
+          "window_ready": true,
+          "approximate": true
+        }
+      },
+      "raw_first_failure_walltime_utc": "2026-10-21T10:34:19.2545852Z",
+      "completed_games": 16,
+      "scheduled_games": 24,
+      "sources": {
+        "build-m2-job-accounting/attempt-001/preflight/load.jsonl": {
+          "sha256": "ef0600b5888e1e63194c3d0900e1032aaa0fdb96b0260db5b0f2d1d3b7362d87",
+          "size": 5075306
+        },
+        "build-m2-job-accounting/attempt-001/preflight/load-summary.json": {
+          "sha256": "a85e8db5fb83f119cd5928bfd755e4d30b8abc2469bdffd0e2f7d3953326d1bd",
+          "size": 3903
+        },
+        "build-m2-job-accounting/attempt-001/preflight/report.json": {
+          "sha256": "511a6a150f3466cb9ace1798d772db343471abf31c29c66beac224c04b72f562",
+          "size": 60097
+        }
+      }
+    },
+    {
+      "attempt": "attempt-002",
+      "phase": "preflight",
+      "phase_started_utc": "2026-10-21T10:42:47.263882+00:00",
+      "guard_started_utc": "2026-10-21T10:42:47.354761+00:00",
+      "first_failure_utc": "2026-10-21T10:44:19.398251+00:00",
+      "phase_elapsed_at_first_failure_seconds": 92.134369,
+      "guard_elapsed_at_first_failure_seconds": 92.04349,
+      "recorded_phase_elapsed_seconds": 92.128,
+      "first_raw_failure": {
+        "line_number": 374,
+        "event": "sample",
+        "utc": "2026-10-21T10:44:19.387646+00:00",
+        "phase": "timer",
+        "wall_ticks": 134370530593876734,
+        "failure": {
+          "kind": "host_nonworker_cpu",
+          "reason": "rolling residual system/background CPU estimate exceeded the declared threshold",
+          "utc": "2026-10-21T10:44:19.398251+00:00"
+        },
+        "host": {
+          "total_delta_ticks": 70000000,
+          "busy_delta_ticks": 24531250,
+          "owned_delta_ticks": 8750000.0,
+          "experiment_job_delta_ticks": 8750000.0,
+          "coordinator_delta_ticks": 0.0,
+          "observed_process_delta_ticks_diagnostic": 8750000,
+          "residual_signed_delta_ticks": 15781250.0,
+          "nonworker_delta_ticks": 15781250.0,
+          "accounting_underflow_ticks": 0,
+          "window_seconds": 2.0,
+          "window_total_ticks": 319270169.8492132,
+          "window_nonworker_ticks": 77665748.13516213,
+          "window_fraction": 0.2432602712988895,
+          "window_ready": true,
+          "approximate": true
+        }
+      },
+      "raw_first_failure_walltime_utc": "2026-10-21T10:44:19.3876734Z",
+      "completed_games": 12,
+      "scheduled_games": 24,
+      "sources": {
+        "build-m2-job-accounting/attempt-002/preflight/load.jsonl": {
+          "sha256": "7a5143f0fb4736464f6c5b908520107e1b69e980d7eeb7996848b363e9580759",
+          "size": 2279219
+        },
+        "build-m2-job-accounting/attempt-002/preflight/load-summary.json": {
+          "sha256": "a6cec8a203836b08e92840b2688db060fe22ccdb9ea7dfb3b0e7468d3857e7d2",
+          "size": 3501
+        },
+        "build-m2-job-accounting/attempt-002/preflight/report.json": {
+          "sha256": "005b0329e2bf89c25cd0c8ff94419caf04660d1e7639e3b0496e5998f6f915fb",
+          "size": 47389
+        }
+      }
+    }
+  ],
+  "first_failure_gap_seconds": 600.133083,
+  "phase_start_gap_seconds": 738.119976,
+  "event_query_summary": [
+    {
+      "log": "Microsoft-Windows-TaskScheduler/Operational",
+      "center_utc": "2026-10-21T10:34:19.2651680+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    },
+    {
+      "log": "Application",
+      "center_utc": "2026-10-21T10:34:19.2651680+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    },
+    {
+      "log": "System",
+      "center_utc": "2026-10-21T10:34:19.2651680+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    },
+    {
+      "log": "Microsoft-Windows-TaskScheduler/Operational",
+      "center_utc": "2026-10-21T10:44:19.3982510+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    },
+    {
+      "log": "Application",
+      "center_utc": "2026-10-21T10:44:19.3982510+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    },
+    {
+      "log": "System",
+      "center_utc": "2026-10-21T10:44:19.3982510+00:00",
+      "status": "no_matching_events",
+      "count": 0,
+      "error_id": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+      "error": "No events were found that match the specified selection criteria."
+    }
+  ],
+  "causal_attribution": "Unknown. A near-600-second separation of two failure timestamps is an observation only. Different phase elapsed times do not establish a phase-relative trigger, periodic task, named application or service.",
+  "log_availability": "TaskScheduler/Operational is disabled, so scheduled-task execution is unknown. Application/System are enabled, but no matching events occurred in the two requested +/-5-second query windows. Event absence does not exclude unlogged CPU activity."
+}

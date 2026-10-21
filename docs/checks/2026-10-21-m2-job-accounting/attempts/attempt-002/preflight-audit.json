@@ -1,0 +1,146 @@
+{
+  "status": "PASS",
+  "phase_status": "STOPPED",
+  "phase": "preflight",
+  "audited_pairs": 6,
+  "scheduled_pairs": 12,
+  "valid_for_comparison": false,
+  "elo_estimate": null,
+  "promotion_performed": false,
+  "guard_summary": {
+    "schema_version": 2,
+    "started_utc": "2026-10-21T10:42:47.354761+00:00",
+    "finished_utc": "2026-10-21T10:44:19.410985+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 0.2,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 19848,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 359,
+    "max_sample_gap_seconds": 0.5153662000084296,
+    "max_snapshot_duration_seconds": 0.03159179998328909,
+    "external_cpu_increase_ticks": 0,
+    "max_nonworker_cpu_fraction": 0.2432602712988895,
+    "preflight_complete": true,
+    "completed_idle_seconds": 5.014164800057188,
+    "failure": {
+      "kind": "host_nonworker_cpu",
+      "reason": "rolling residual system/background CPU estimate exceeded the declared threshold",
+      "utc": "2026-10-21T10:44:19.398251+00:00"
+    },
+    "workers": [
+      {
+        "pid": 36764,
+        "creation_ticks": 134370529723823426,
+        "attached_utc": "2026-10-21T10:42:52.425686+00:00",
+        "detached_utc": "2026-10-21T10:43:06.160290+00:00"
+      },
+      {
+        "pid": 36196,
+        "creation_ticks": 134370529724290687,
+        "attached_utc": "2026-10-21T10:42:52.478090+00:00",
+        "detached_utc": "2026-10-21T10:43:10.454562+00:00"
+      },
+      {
+        "pid": 20284,
+        "creation_ticks": 134370529724814702,
+        "attached_utc": "2026-10-21T10:42:52.525560+00:00",
+        "detached_utc": null
+      },
+      {
+        "pid": 14980,
+        "creation_ticks": 134370529725297582,
+        "attached_utc": "2026-10-21T10:42:52.577770+00:00",
+        "detached_utc": null
+      },
+      {
+        "pid": 31284,
+        "creation_ticks": 134370529862686186,
+        "attached_utc": "2026-10-21T10:43:06.314624+00:00",
+        "detached_utc": "2026-10-21T10:43:18.284067+00:00"
+      },
+      {
+        "pid": 35560,
+        "creation_ticks": 134370529905079680,
+        "attached_utc": "2026-10-21T10:43:10.559968+00:00",
+        "detached_utc": "2026-10-21T10:43:40.136394+00:00"
+      },
+      {
+        "pid": 37328,
+        "creation_ticks": 134370529983997254,
+        "attached_utc": "2026-10-21T10:43:18.441697+00:00",
+        "detached_utc": "2026-10-21T10:43:29.770612+00:00"
+      },
+      {
+        "pid": 31044,
+        "creation_ticks": 134370530202169111,
+        "attached_utc": "2026-10-21T10:43:40.262408+00:00",
+        "detached_utc": "2026-10-21T10:43:57.369296+00:00"
+      }
+    ],
+    "valid_for_load_check": false,
+    "scope": "Job CPU covers active and exited owned descendants; coordinator CPU is measured separately. Residual system/background CPU is an asynchronous, quantized rolling estimate, not application attribution, OS isolation, thermal certification or a bound on individual move contention.",
+    "accounting_method": "windows-job-plus-coordinator-cpu",
+    "approximate": true,
+    "experiment_job_delta_ticks": 2739843750.0,
+    "coordinator_delta_ticks": 57500000.0,
+    "accounting_underflow_ticks": 0,
+    "timer": {
+      "started": true,
+      "samples": 174,
+      "alive": false,
+      "failure": {
+        "kind": "host_nonworker_cpu",
+        "reason": "rolling residual system/background CPU estimate exceeded the declared threshold",
+        "utc": "2026-10-21T10:44:19.398446+00:00"
+      },
+      "join_bound_seconds": 2.0
+    }
+  },
+  "raw_cpu_audit": {
+    "status": "INVALID",
+    "valid_for_load_check": false,
+    "counts": {
+      "records": 377,
+      "samples": 359,
+      "accepted_samples": 359,
+      "recomputed_intervals": 358,
+      "ready_windows": 355,
+      "failure_observations": 4
+    },
+    "recomputed_metrics": {
+      "experiment_job_delta_ticks": 2739843750.0,
+      "coordinator_delta_ticks": 57500000.0,
+      "accounting_underflow_ticks": 0.0,
+      "external_cpu_increase_ticks": 0.0,
+      "max_nonworker_cpu_fraction": 0.2432602712988895,
+      "max_sample_gap_seconds": 0.5153662000084296,
+      "max_snapshot_duration_seconds": 0.03159179998328909,
+      "idle_sample_span_seconds": 5.014119700004812,
+      "idle_write_reconciliation_slack_seconds": 0.05
+    },
+    "invalid_errors": [
+      "summary: host_nonworker_cpu",
+      "sample: host_nonworker_cpu",
+      "rolling residual threshold exceeded",
+      "event timer_failed: host_nonworker_cpu",
+      "sampler has not closed cleanly",
+      "worker identities remain attached",
+      "summary explicitly invalid"
+    ],
+    "scope": "Independent raw-counter arithmetic and recorded-coverage audit; asynchronous CPU estimates, not move-level isolation."
+  }
+}
