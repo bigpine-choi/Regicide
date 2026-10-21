@@ -28,6 +28,7 @@ from play_game import source_version
 from game_archive import GameArchive, default_game_directory
 from move_hints import MoveHints
 from opening_presentation import OpeningGuideCache
+from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
@@ -801,11 +802,17 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if not 0 < length <= 4096:
+            maximum = MAX_PGN_REQUEST_BYTES if self.path == "/api/pgn-preview" else 4096
+            if not 0 < length <= maximum:
                 raise ValueError("요청 크기가 올바르지 않습니다.")
             data = json.loads(self.rfile.read(length))
             if not isinstance(data, dict):
                 raise ValueError("올바른 요청이 필요합니다.")
+            if self.path == "/api/pgn-preview":
+                if set(data) != {"pgn"}:
+                    raise ValueError("PGN 본문만 전송해 주세요.")
+                self._send(200, preview_pgn(data["pgn"]))
+                return
             revision = data.get("revision")
             game = self.server.game
             if self.path == "/api/hint":
@@ -837,11 +844,16 @@ class HumanHandler(BaseHTTPRequestHandler):
         except RevisionError as exc:
             self._send(409, {"error": str(exc), "state": self.server.game.state()})
         except (ValueError, UnicodeError) as exc:
-            self._send(400, {"error": str(exc), "state": self.server.game.state()})
+            error = {"error": str(exc)}
+            if self.path != "/api/pgn-preview":
+                error["state"] = self.server.game.state()
+            self._send(400, error)
         except Exception as exc:
             print(f"request failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
-            self._send(500, {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요.",
-                             "state": self.server.game.state()})
+            error = {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요."}
+            if self.path != "/api/pgn-preview":
+                error["state"] = self.server.game.state()
+            self._send(500, error)
 
 
 def main():

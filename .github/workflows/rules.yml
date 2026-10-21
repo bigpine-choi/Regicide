@@ -69,6 +69,7 @@ jobs:
       - run: node tests/opening_guide_web_tests.js
       - run: python tests/opening_guide_tests.py
       - run: python tests/opening_guide_integration_tests.py
+      - run: python tests/pgn_preview_tests.py
       - run: python tests/think_time_tests.py
       - run: python tests/installed_think_time_stream_tests.py
       - run: python tests/evaluation_state_tests.py
@@ -143,6 +144,8 @@ jobs:
           python tests/hint_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/opening_guide_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/pgn_file_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Both neural model families and learning paths

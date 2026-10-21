@@ -20,6 +20,9 @@ var backend_token: String = ""
 var own_backend: bool = false
 var error_message: String = ""
 var _pending_pgn: String = ""
+var _save_dialog_open: bool = false
+var _open_pgn_dialog_open: bool = false
+var _last_pgn_path: String = ""
 var _rendered_move_count: int = -1
 var _notice_message: String = ""
 var _handicap_choices_key: String = ""
@@ -95,6 +98,7 @@ var resign_button: Button
 var save_button: Button
 var refresh_button: Button
 var library_button: Button
+var open_pgn_button: Button
 var library_dialog: AcceptDialog
 var library_list: ItemList
 var library_open_button: Button
@@ -109,6 +113,7 @@ var review_return_button: Button
 var promotion_panel: PanelContainer
 var promotion_buttons: Dictionary = {}
 var save_dialog: FileDialog
+var open_pgn_dialog: FileDialog
 var http: HTTPRequest
 var evaluation_http: HTTPRequest
 var evaluation_timer: Timer
@@ -308,7 +313,16 @@ func _build_ui() -> void:
 	library_button = _button("내 대국 기보", _on_library_pressed)
 	library_button.name = "GameLibrary"
 	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
-	sidebar.add_child(library_button)
+	var library_actions := HBoxContainer.new()
+	library_actions.add_theme_constant_override("separation", 8)
+	sidebar.add_child(library_actions)
+	library_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	library_actions.add_child(library_button)
+	open_pgn_button = _button("PGN 파일 열기", _on_open_pgn_pressed)
+	open_pgn_button.name = "OpenPGN"
+	open_pgn_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	open_pgn_button.tooltip_text = "저장한 PGN 파일을 읽기 전용으로 다시 봅니다. 현재 대국은 그대로 유지됩니다."
+	library_actions.add_child(open_pgn_button)
 	_build_review_controls(sidebar)
 	sidebar.add_child(HSeparator.new())
 	var settings := GridContainer.new()
@@ -400,12 +414,33 @@ func _build_ui() -> void:
 	save_dialog = FileDialog.new()
 	save_dialog.title = "기보 저장"
 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	save_dialog.title = "기보 저장"
 	save_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	save_dialog.use_native_dialog = true
+	# Keep focus and modality in the same game window on every desktop.
+	# Native choosers can remain open while FileDialog.visible is false.
+	save_dialog.use_native_dialog = false
+	save_dialog.exclusive = true
 	save_dialog.filters = PackedStringArray(["*.pgn ; Chess PGN"])
 	save_dialog.current_dir = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
 	save_dialog.file_selected.connect(_save_pgn_file)
+	save_dialog.canceled.connect(_on_save_dialog_canceled)
 	add_child(save_dialog)
+	save_dialog.get_ok_button().text = "저장"
+	save_dialog.get_cancel_button().text = "취소"
+	open_pgn_dialog = FileDialog.new()
+	open_pgn_dialog.title = "PGN 기보 열기"
+	open_pgn_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	open_pgn_dialog.title = "PGN 기보 열기"
+	open_pgn_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	open_pgn_dialog.use_native_dialog = false
+	open_pgn_dialog.exclusive = true
+	open_pgn_dialog.filters = PackedStringArray(["*.pgn ; Chess PGN"])
+	open_pgn_dialog.current_dir = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
+	open_pgn_dialog.file_selected.connect(_open_pgn_file)
+	open_pgn_dialog.canceled.connect(_on_open_pgn_dialog_canceled)
+	add_child(open_pgn_dialog)
+	open_pgn_dialog.get_ok_button().text = "열기"
+	open_pgn_dialog.get_cancel_button().text = "취소"
 	_build_library_dialog()
 
 
@@ -756,7 +791,7 @@ func _load_backend_arguments() -> void:
 
 
 func _on_library_pressed() -> void:
-	if request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
 	request_in_flight = true
 	error_message = ""
@@ -789,6 +824,8 @@ func _on_library_pressed() -> void:
 
 
 func _record_description(game: Dictionary) -> String:
+	if game.get("source_kind", "") == "pgn":
+		return "%s  ·  %d수  ·  %s" % [str(game.get("title", "PGN 파일")), int(game.get("ply_count", 0)), str(game.get("result", "*"))]
 	var date := _record_local_date(str(game.get("started_at", game.get("updated_at", ""))))
 	var color_name := "백" if game.get("human_color", "white") == "white" else "흑"
 	var result_text: String = str(game.get("result", "*"))
@@ -824,7 +861,7 @@ func _on_library_item_activated(index: int) -> void:
 
 func _open_selected_record() -> void:
 	var selected := library_list.get_selected_items()
-	if request_in_flight or closing or selected.is_empty():
+	if _file_dialog_busy() or request_in_flight or closing or selected.is_empty():
 		return
 	var index: int = selected[0]
 	if index < 0 or index >= _library_games.size():
@@ -844,24 +881,7 @@ func _open_selected_record() -> void:
 		_render()
 		return
 	if response.get("ok", false):
-		var detail: Dictionary = response.data
-		var frames: Variant = detail.get("frames", [])
-		var moves: Variant = detail.get("moves", [])
-		if frames is Array and moves is Array and not frames.is_empty() and frames.size() == moves.size() + 1:
-			if not review_mode:
-				_live_selected_square = board_model.selected_square
-				_live_pending_promotions = board_model.pending_promotions.duplicate()
-			review_frames = frames.duplicate(true)
-			review_moves = moves.duplicate(true)
-			review_summary = detail.get("summary", {}).duplicate(true)
-			review_pgn = str(detail.get("pgn", ""))
-			review_mode = true
-			_clear_hint()
-			review_ply = 0
-			board_model.selected_square = ""
-			board_model.pending_promotions.clear()
-			_notice_message = ""
-			error_message = ""
+		if _adopt_review(response.data):
 			library_dialog.hide()
 		else:
 			library_detail.text = "기보의 수순을 읽지 못했습니다. 다른 대국을 선택해 주세요."
@@ -869,6 +889,29 @@ func _open_selected_record() -> void:
 		library_detail.text = str(response.get("error", "기보를 불러오지 못했습니다."))
 	library_open_button.disabled = library_list.get_selected_items().is_empty()
 	_render()
+
+
+func _adopt_review(detail: Dictionary) -> bool:
+	var frames: Variant = detail.get("frames", [])
+	var moves: Variant = detail.get("moves", [])
+	var summary: Variant = detail.get("summary", {})
+	if not frames is Array or not moves is Array or not summary is Dictionary or frames.is_empty() or frames.size() != moves.size() + 1:
+		return false
+	if not review_mode:
+		_live_selected_square = board_model.selected_square
+		_live_pending_promotions = board_model.pending_promotions.duplicate()
+	review_frames = frames.duplicate(true)
+	review_moves = moves.duplicate(true)
+	review_summary = summary.duplicate(true)
+	review_pgn = str(detail.get("pgn", ""))
+	review_mode = true
+	_clear_hint()
+	review_ply = 0
+	board_model.selected_square = ""
+	board_model.pending_promotions.clear()
+	_notice_message = ""
+	error_message = ""
+	return true
 
 
 func _display_state() -> Dictionary:
@@ -885,7 +928,7 @@ func _display_state() -> Dictionary:
 
 
 func _set_review_ply(ply: int) -> void:
-	if not review_mode or closing or review_frames.is_empty():
+	if _file_dialog_busy() or not review_mode or closing or review_frames.is_empty():
 		return
 	review_ply = clampi(ply, 0, review_frames.size() - 1)
 	_render()
@@ -900,7 +943,7 @@ func _last_review_position() -> void:
 
 
 func _exit_review() -> void:
-	if not review_mode or request_in_flight or closing:
+	if _file_dialog_busy() or not review_mode or request_in_flight or closing:
 		return
 	review_mode = false
 	review_frames.clear()
@@ -1064,7 +1107,7 @@ func accept_hint(value: Dictionary) -> bool:
 
 
 func _on_hint_pressed() -> void:
-	if closing or review_mode or state.is_empty() or backend_url.is_empty():
+	if _file_dialog_busy() or closing or review_mode or state.is_empty() or backend_url.is_empty():
 		return
 	hint_enabled = not hint_enabled
 	_hint_toggle_version += 1
@@ -1127,7 +1170,7 @@ func _render_hint() -> void:
 		return
 	hint_button.text = "추천 수: 켬" if hint_enabled else "추천 수: 끔"
 	# Deliberately independent of request_in_flight and engine_thinking.
-	hint_button.disabled = closing or review_mode or state.is_empty() or backend_url.is_empty()
+	hint_button.disabled = _file_dialog_busy() or closing or review_mode or state.is_empty() or backend_url.is_empty()
 	hint_summary.visible = hint_enabled and not review_mode
 	hint_detail.visible = hint_enabled and not review_mode
 	board.hint_move = ""
@@ -1190,7 +1233,7 @@ func _connect_backend() -> void:
 
 
 func _mutate(path: String, payload: Dictionary = {}) -> void:
-	if request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
 		return
 	request_in_flight = true
 	error_message = ""
@@ -1220,7 +1263,7 @@ func _play_engine_if_needed() -> void:
 
 
 func _can_change_think_time() -> bool:
-	return not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
+	return not _file_dialog_busy() and not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
 
 
 func _on_think_time_selected(index: int) -> void:
@@ -1245,6 +1288,8 @@ func _on_think_time_selected(index: int) -> void:
 
 
 func _on_flip_pressed() -> void:
+	if _file_dialog_busy():
+		return
 	# Always available, even while waiting for HTTP, promotion or game end.
 	board_model.flip_view()
 	_render()
@@ -1252,7 +1297,7 @@ func _on_flip_pressed() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var focus_owner := get_viewport().gui_get_focus_owner()
-	if save_dialog.visible or focus_owner is LineEdit or focus_owner is TextEdit:
+	if _file_dialog_busy() or save_dialog.visible or open_pgn_dialog.visible or focus_owner is LineEdit or focus_owner is TextEdit:
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
 		_on_flip_pressed()
@@ -1296,7 +1341,7 @@ func _on_promotion_pressed(kind: String) -> void:
 
 
 func _can_select_move() -> bool:
-	return not review_mode and (state.get("human_to_move", false) or state.get("handicap_mode", false))
+	return not _file_dialog_busy() and not review_mode and (state.get("human_to_move", false) or state.get("handicap_mode", false))
 
 
 func _submit_selected_move(move: String) -> void:
@@ -1346,37 +1391,137 @@ func _on_resign_pressed() -> void:
 	_mutate("/api/resign")
 
 
+func _file_dialog_busy() -> bool:
+	return _save_dialog_open or _open_pgn_dialog_open
+
+
 func _on_save_pressed() -> void:
-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
+	_save_dialog_open = true
+	_notice_message = ""
+	error_message = ""
 	if review_mode:
 		_pending_pgn = review_pgn
 		save_dialog.current_file = "Regicide-" + str(review_summary.get("game_id", "record")) + ".pgn"
 		save_dialog.popup_centered_ratio(0.75)
+		_render()
 		return
 	request_in_flight = true
 	_render()
 	var response: Dictionary = await _send_request("/api/pgn")
 	request_in_flight = false
+	if closing:
+		_save_dialog_open = false
+		_pending_pgn = ""
+		return
 	if response.get("ok", false):
 		_pending_pgn = response.pgn
 		save_dialog.current_file = "Regicide-" + Time.get_datetime_string_from_system().replace(":", "-") + ".pgn"
 		save_dialog.popup_centered_ratio(0.75)
 	else:
+		_save_dialog_open = false
+		_pending_pgn = ""
 		error_message = str(response.get("error", "기보를 읽지 못했습니다."))
 	_render()
 
 
+func _on_save_dialog_canceled() -> void:
+	_save_dialog_open = false
+	_pending_pgn = ""
+	_notice_message = "기보 저장을 취소했습니다."
+	_render()
+
+
 func _save_pgn_file(path: String) -> void:
+	if not _save_dialog_open or _pending_pgn.is_empty():
+		return
+	var contents: PackedByteArray = _pending_pgn.to_utf8_buffer()
+	_save_dialog_open = false
+	_pending_pgn = ""
+	save_dialog.hide()
+	_notice_message = ""
 	if not path.to_lower().ends_with(".pgn"):
 		path += ".pgn"
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		error_message = "기보 파일을 저장하지 못했습니다. 다른 폴더를 선택해 주세요."
 	else:
-		file.store_string(_pending_pgn)
-		error_message = ""
-		_notice_message = "기보를 저장했습니다: " + path.get_file()
+		file.store_buffer(contents)
+		file.flush()
+		var write_ok: bool = file.get_error() == OK and file.get_length() == contents.size()
+		file.close()
+		# Confirm the bytes after closing before telling the player it is saved.
+		if write_ok and FileAccess.get_file_as_bytes(path) == contents:
+			error_message = ""
+			_last_pgn_path = path
+			save_dialog.current_dir = path.get_base_dir()
+			_notice_message = "기보를 저장했습니다: " + path.get_file()
+		else:
+			error_message = "기보 파일을 끝까지 저장하지 못했습니다. 다른 폴더에서 다시 저장해 주세요."
+	_render()
+
+
+func _on_open_pgn_pressed() -> void:
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or state.is_empty() or backend_url.is_empty() or state.get("handicap_mode", false):
+		return
+	_open_pgn_dialog_open = true
+	_notice_message = ""
+	error_message = ""
+	if not _last_pgn_path.is_empty() and FileAccess.file_exists(_last_pgn_path):
+		open_pgn_dialog.current_dir = _last_pgn_path.get_base_dir()
+	# An auto-selected current_path can leave Godot's Open button disabled.
+	# Start with the recent folder, then let the user explicitly select a file.
+	open_pgn_dialog.current_file = ""
+	open_pgn_dialog.popup_centered_ratio(0.75)
+	_render()
+
+
+func _on_open_pgn_dialog_canceled() -> void:
+	_open_pgn_dialog_open = false
+	_notice_message = "기보 열기를 취소했습니다."
+	_render()
+
+
+func _open_pgn_file(path: String) -> void:
+	if not _open_pgn_dialog_open or closing:
+		return
+	_open_pgn_dialog_open = false
+	open_pgn_dialog.hide()
+	_notice_message = ""
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		error_message = "기보 파일을 읽지 못했습니다. 파일과 폴더를 확인해 주세요."
+		_render()
+		return
+	var length: int = file.get_length()
+	if length == 0 or length > 1048576:
+		file.close()
+		error_message = "비어 있지 않은 1MB 이하의 PGN 파일을 선택해 주세요."
+		_render()
+		return
+	var bytes: PackedByteArray = file.get_buffer(length)
+	file.close()
+	var text: String = bytes.get_string_from_utf8()
+	# Godot strips the optional UTF-8 BOM. Keep it for byte-exact re-export.
+	if bytes.size() >= 3 and bytes[0] == 0xef and bytes[1] == 0xbb and bytes[2] == 0xbf:
+		text = String.chr(0xfeff) + text
+	if bytes.size() != length or text.to_utf8_buffer() != bytes:
+		error_message = "UTF-8 형식의 PGN 파일을 선택해 주세요."
+		_render()
+		return
+	request_in_flight = true
+	_render()
+	var response: Dictionary = await _send_request("/api/pgn-preview", {"pgn": text})
+	request_in_flight = false
+	if closing:
+		return
+	if response.get("ok", false) and _adopt_review(response.data):
+		_last_pgn_path = path
+		review_summary["title"] = path.get_file()
+		_notice_message = "PGN 파일을 열었습니다. 현재 대국은 그대로 유지됩니다."
+	else:
+		error_message = str(response.get("error", "기보의 수순을 읽지 못했습니다."))
 	_render()
 
 
@@ -1390,7 +1535,7 @@ func _render() -> void:
 	_render_hint()
 	_render_opening_guide(shown)
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
-	flip_button.disabled = false
+	flip_button.disabled = _file_dialog_busy()
 	var human_color: String = str(shown.get("human_color", "white"))
 	var bottom_color: String = "white" if board_model.view_from_white else "black"
 	var upper_color: String = "black" if board_model.view_from_white else "white"
@@ -1402,7 +1547,7 @@ func _render() -> void:
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
-	var enabled: bool = ready and not request_in_flight and not think_time_request_in_flight and not review_mode
+	var enabled: bool = ready and not _file_dialog_busy() and not request_in_flight and not think_time_request_in_flight and not review_mode
 	var replacing: bool = state.get("handicap_mode", false)
 	live_settings.visible = not review_mode
 	live_actions.visible = not review_mode
@@ -1428,19 +1573,20 @@ func _render() -> void:
 		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
-	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and review_pgn.is_empty())
+	save_button.disabled = not ready or _file_dialog_busy() or request_in_flight or think_time_request_in_flight or replacing or (review_mode and review_pgn.is_empty())
+	open_pgn_button.disabled = not ready or _file_dialog_busy() or request_in_flight or think_time_request_in_flight or replacing or backend_url.is_empty()
 	save_button.text = "이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)"
 	refresh_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or review_mode
 	refresh_button.visible = not review_mode and (not error_message.is_empty() or state.is_empty())
-	library_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or replacing
+	library_button.disabled = _file_dialog_busy() or request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or replacing
 	review_controls.visible = review_mode
 	if review_mode:
 		review_position_label.text = "%d / %d수 · %s" % [review_ply, review_moves.size(), "시작 배치" if review_ply == 0 else str(review_moves[review_ply - 1].get("san", ""))]
-		review_first_button.disabled = review_ply == 0
-		review_previous_button.disabled = review_ply == 0
-		review_next_button.disabled = review_ply >= review_frames.size() - 1
-		review_last_button.disabled = review_ply >= review_frames.size() - 1
-		review_return_button.disabled = request_in_flight or closing
+		review_first_button.disabled = _file_dialog_busy() or review_ply == 0
+		review_previous_button.disabled = _file_dialog_busy() or review_ply == 0
+		review_next_button.disabled = _file_dialog_busy() or review_ply >= review_frames.size() - 1
+		review_last_button.disabled = _file_dialog_busy() or review_ply >= review_frames.size() - 1
+		review_return_button.disabled = _file_dialog_busy() or request_in_flight or closing
 	_render_handicap(enabled)
 	error_label.text = error_message if not error_message.is_empty() else str(state.get("error", "") if state.get("error") != null else "")
 	error_label.visible = not error_label.text.is_empty()
@@ -1492,7 +1638,10 @@ func _reveal_promotion() -> void:
 
 func _player_text(color_name: String, human_color: String) -> String:
 	var text := "백" if color_name == "white" else "흑"
-	text += "  ·  당신" if color_name == human_color else "  ·  Regicide"
+	if review_mode and review_summary.get("source_kind", "") == "pgn":
+		text += "  ·  " + str(review_summary.get(color_name, "?"))
+	else:
+		text += "  ·  당신" if color_name == human_color else "  ·  Regicide"
 	var shown: Dictionary = _display_state()
 	if shown.get("result", "*") == "*" and shown.get("turn", "") == color_name:
 		text += "   ● 차례"
@@ -1541,14 +1690,28 @@ func _render_history() -> void:
 	if moves.is_empty():
 		contents = "[color=#8197aa]시작 배치입니다. 다음 수를 눌러 살펴보세요.[/color]" if review_mode else "[color=#8197aa]첫 수를 기다리고 있습니다.[/color]"
 	else:
+		var first_fullmove: int = 1
+		var first_column: int = 0
+		if review_mode:
+			var initial_fens: Array = [review_summary.get("initial_fen", "")]
+			if not review_frames.is_empty():
+				initial_fens.append(review_frames[0].get("fen", ""))
+			for initial_fen in initial_fens:
+				var fields: PackedStringArray = str(initial_fen).split(" ", false)
+				if fields.size() >= 6 and fields[1] in ["w", "b"] and fields[5].is_valid_int() and int(fields[5]) > 0:
+					first_fullmove = int(fields[5])
+					first_column = 1 if fields[1] == "b" else 0
+					break
 		contents = "[table=3]"
-		for index in range(0, moves.size(), 2):
-			contents += "[cell][color=#8197aa]%d.   [/color][/cell]" % (index / 2 + 1)
-			for ply in range(index, index + 2):
-				var san: String = str(moves[ply].get("san", "")) if ply < moves.size() else ""
-				if ply < moves.size() and moves[ply].get("forced", false):
+		for index in range(0, moves.size() + first_column, 2):
+			contents += "[cell][color=#8197aa]%d.   [/color][/cell]" % (first_fullmove + index / 2)
+			for column in range(2):
+				var ply: int = index + column - first_column
+				var has_move: bool = ply >= 0 and ply < moves.size()
+				var san: String = str(moves[ply].get("san", "")) if has_move else ""
+				if has_move and moves[ply].get("forced", false):
 					san += " [hint=사용자가 Regicide 대신 지정한 수입니다.][color=#ffd578]핸디캡[/color][/hint]"
-				if ply == moves.size() - 1:
+				if has_move and ply == moves.size() - 1:
 					san = "[color=#98dfcb]" + san + "[/color]"
 				contents += "[cell]" + san + "     [/cell]"
 		contents += "[/table]"
