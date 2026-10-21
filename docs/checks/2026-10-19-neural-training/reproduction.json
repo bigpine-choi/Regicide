@@ -1,0 +1,21 @@
+{
+  "full_run_config": "64games64ply sample2,60epochs batch128,generate seed20261019,trainseed20261020",
+  "exact_byte_equal": {
+    "data/train.jsonl": true,
+    "data/validation.jsonl": true,
+    "data/raw_games.jsonl": true,
+    "data/split_manifest.json": true,
+    "training/model.nnue": true
+  },
+  "exact_float_array_equal": {
+    "input_weights": true,
+    "hidden_bias": true,
+    "output_weights": true
+  },
+  "numpy": "2.3.4",
+  "threads": {
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1,
+    "MKL_NUM_THREADS": 1
+  }
+}

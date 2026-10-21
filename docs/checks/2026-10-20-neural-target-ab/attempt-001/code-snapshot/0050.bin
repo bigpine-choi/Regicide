@@ -1,0 +1,749 @@
+"""Frozen three-way, paired-target data for the 2026-10-20 A/B experiment.
+
+Only Regicide supplies labels. Opening families are deterministic legal
+constructions, not human games; synthetic endgames do not claim reachability.
+This module deliberately does not relabel schema 2 as static schema 1.
+"""
+from __future__ import annotations
+
+import argparse
+from collections import Counter, defaultdict
+import hashlib
+import json
+import math
+from pathlib import Path
+import platform
+import random
+import re
+import time
+
+import chess
+
+try:
+    from .neural_search_data.engine import EngineTeacher, SearchInterrupted
+    from .neural_search_data.generate import now, source_provenance, static_scores
+    from .neural_search_data.schema import (board_from, feature_hash, sha256,
+                                          state_hash, validate_query, write_json)
+except ImportError:
+    from neural_search_data.engine import EngineTeacher, SearchInterrupted
+    from neural_search_data.generate import now, source_provenance, static_scores
+    from neural_search_data.schema import (board_from, feature_hash, sha256,
+                                          state_hash, validate_query, write_json)
+
+ROOT = Path(__file__).resolve().parents[1]
+PARTITIONS = ("train", "validation", "test")
+TARGET_MAPPING = {"A": "classical_static_white_cp", "B": "target_white_cp"}
+SPLIT_SEED, VARIANT_SEED = 20261026, 20261027
+SOURCE = "Regicide deterministic legal construction; no external games or engine used to construct the bank"
+
+
+def _hash(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _json(path):
+    value = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("Expected JSON object")
+    return value
+
+
+def _rows(path):
+    rows = [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines()]
+    if any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Expected object rows")
+    return rows
+
+
+def _write_rows(path, rows):
+    with Path(path).open("x", encoding="utf-8", newline="\n") as stream:
+        for row in rows:
+            stream.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def collect_exclusions(paths=()):
+    """Collect old exact inputs and declared opening prefixes, with file hashes.
+
+    FENs and explicit feature hashes are recursive; move lists are only treated
+    as source families in source/opening records, not arbitrary random games.
+    """
+    features, histories, artifacts = set(), set(), []
+    for raw_path in paths:
+        path = Path(raw_path).resolve()
+        if not path.is_file():
+            raise ValueError("Missing exclusion artifact: " + str(path))
+        artifacts.append({"path": str(path), "sha256": sha256(path)})
+        text = path.read_text(encoding="utf-8-sig")
+        values = [json.loads(line) for line in text.splitlines()] if path.suffix == ".jsonl" else [json.loads(text)]
+
+        def visit(value, declared=False):
+            if isinstance(value, list):
+                for entry in value:
+                    visit(entry, declared)
+            elif isinstance(value, dict):
+                identity = value.get("feature_hash")
+                if isinstance(identity, str) and re.fullmatch(r"[0-9a-f]{64}", identity):
+                    features.add(identity)
+                for key in ("fen", "initial_fen", "starting_fen", "fen_after_opening", "final_fen"):
+                    if isinstance(value.get(key), str):
+                        try:
+                            board = chess.Board(value[key])
+                            if board.is_valid():
+                                features.add(feature_hash(board))
+                        except ValueError:
+                            pass
+                initial = value.get("initial_fen", chess.STARTING_FEN)
+                history = value.get("history", value.get("moves_uci", value.get("moves")))
+                if isinstance(history, list) and all(isinstance(move, str) for move in history):
+                    try:
+                        board = board_from(initial, history)
+                        features.add(feature_hash(board))
+                        if (declared or any(key in value for key in ("name", "family_id", "seed_id"))) and initial == chess.STARTING_FEN and len(history) >= 4:
+                            histories.add(tuple(history))
+                    except ValueError:
+                        pass
+                for key, entry in value.items():
+                    visit(entry, declared or key in ("sources", "seeds", "openings", "match_openings_100", "match_openings_1000"))
+        for value in values:
+            visit(value)
+    return {"feature_hashes": sorted(features), "opening_histories": [list(h) for h in sorted(histories)],
+            "artifacts": artifacts}
+
+
+def _assignments(families):
+    """Recomputed by the strict loader; rehashing a forged split does not help."""
+    result, rng = {}, random.Random(SPLIT_SEED)
+    for subtype in ("normal", "pawn", "rook", "minor", "queen"):
+        names = sorted(f["family_id"] for f in families if f["subtype"] == subtype)
+        expected = 40 if subtype == "normal" else 10
+        if len(names) != expected or len(set(names)) != expected:
+            raise ValueError("Bank must have 40 normal and ten of each endgame subtype")
+        rng.shuffle(names)
+        train, validation = (24, 8) if subtype == "normal" else (6, 2)
+        for index, family in enumerate(names):
+            result[family] = "train" if index < train else "validation" if index < train + validation else "test"
+    return dict(sorted(result.items()))
+
+
+def _related(left, right):
+    return left[:min(len(left), len(right))] == right[:min(len(left), len(right))]
+
+
+def _construct_moves(board, length, rng):
+    """Modest opening development bias, fixed before any teacher search."""
+    for _ in range(length):
+        candidates = []
+        for move in sorted(board.legal_moves, key=lambda m: m.uci()):
+            if board.is_capture(move) or move.promotion:
+                continue
+            after = board.copy(stack=True)
+            after.push(move)
+            if after.outcome(claim_draw=True) is not None or after.is_check():
+                continue
+            piece = board.piece_at(move.from_square)
+            weight = 1
+            if piece.piece_type == chess.PAWN:
+                weight = 6 if chess.square_file(move.from_square) in (2, 3, 4, 5) else 2
+                if abs(chess.square_rank(move.to_square) - chess.square_rank(move.from_square)) == 2:
+                    weight += 2
+            elif piece.piece_type in (chess.KNIGHT, chess.BISHOP):
+                weight = 7 if chess.square_rank(move.from_square) in (0, 7) else 2
+            elif board.is_castling(move):
+                weight = 7
+            candidates.extend([move] * weight)
+        if not candidates:
+            raise ValueError("Construction reached a tactical or terminal dead end")
+        board.push(rng.choice(candidates))
+    return board
+
+
+def _synthetic(subtype, rng):
+    for _ in range(10000):
+        board = chess.Board(None)
+        board.turn = rng.choice((True, False))
+        # Kings stay in their own halves; pawns cannot already be promoted.
+        white_k = rng.choice([chess.square(f, r) for r in (0, 1, 2) for f in range(8)])
+        black_k = rng.choice([chess.square(f, r) for r in (5, 6, 7) for f in range(8)])
+        board.set_piece_at(white_k, chess.Piece(chess.KING, True))
+        board.set_piece_at(black_k, chess.Piece(chess.KING, False))
+        entries = []
+        for color in (True, False):
+            entries.extend((chess.PAWN, color) for _ in range(rng.choice((2, 3))))
+            if subtype != "pawn":
+                entries.append(({"rook": chess.ROOK, "minor": rng.choice((chess.BISHOP, chess.KNIGHT)), "queen": chess.QUEEN}[subtype], color))
+        for kind, color in entries:
+            squares = [chess.square(f, r) for f in range(8) for r in range(1, 7)
+                       if board.piece_at(chess.square(f, r)) is None]
+            if kind == chess.PAWN:
+                # Avoid two same-color pawns on one file at construction time.
+                files = {chess.square_file(s) for s in chess.scan_forward(board.pawns & board.occupied_co[color])}
+                squares = [s for s in squares if chess.square_file(s) not in files]
+            board.set_piece_at(rng.choice(squares), chess.Piece(kind, color))
+        if board.is_valid() and not board.is_check() and board.outcome(claim_draw=True) is None:
+            return board
+    raise RuntimeError("Could not construct synthetic position")
+
+
+def make_bank(output, exclusion_paths=(), exclusions=None):
+    """Create the complete data/match bank, never overwrite an existing file."""
+    output = Path(output)
+    if output.exists():
+        raise FileExistsError("Refusing to overwrite a frozen bank: " + str(output))
+    if output.suffix.lower() != ".json":
+        output.mkdir(parents=True, exist_ok=False)
+        output = output / "bank.json"
+    else:
+        output.parent.mkdir(parents=True, exist_ok=True)
+    defaults = [ROOT / "scripts/neural_search_data/seeds.json"] + sorted((ROOT / "tests/data").glob("*openings*.json"))
+    exclusion = collect_exclusions(list(dict.fromkeys([*defaults, *map(Path, exclusion_paths)])))
+    if exclusions:
+        extra = exclusions.get("feature_hashes", ()) if isinstance(exclusions, dict) else exclusions
+        exclusion["feature_hashes"] = sorted(set(exclusion["feature_hashes"]) | set(extra))
+    seen = set(exclusion["feature_hashes"])
+    old_histories = exclusion["opening_histories"]
+    parents, families, sources = [], [], []
+
+    def normal(family_id, index):
+        for attempt in range(10000):
+            rng = random.Random(VARIANT_SEED + index * 1000003 + attempt * 7919)
+            parent = _construct_moves(chess.Board(), 8 + 2 * (index % 3), rng)
+            history = [m.uci() for m in parent.move_stack]
+            if any(_related(history, old) for old in old_histories + parents) or feature_hash(parent) in seen:
+                continue
+            variants = []
+            for variant in range(2):
+                after = _construct_moves(parent.copy(stack=True), 2 + 2 * ((index + variant) % 2),
+                                         random.Random(VARIANT_SEED + index * 1000003 + attempt * 7919 + variant * 104729 + 17))
+                variants.append(after)
+            identities = [feature_hash(b) for b in variants]
+            if len(set(identities)) < 2 or any(i in seen for i in identities):
+                continue
+            parents.append(history)
+            seen.update([feature_hash(parent), *identities])
+            return parent, variants
+        raise RuntimeError("Unable to construct unrelated normal family")
+
+    for index in range(40):
+        family_id = f"normal-{index:03}"
+        parent, variants = normal(family_id, index)
+        families.append({"family_id": family_id, "subtype": "normal", "kind": "selfplay_start"})
+        for variant, board in enumerate(variants):
+            sources.append({"seed_id": f"{family_id}-v{variant}", "family_id": family_id,
+                            "subtype": "normal", "kind": "selfplay_start", "initial_fen": chess.STARTING_FEN,
+                            "history": [m.uci() for m in board.move_stack], "parent_initial_fen": chess.STARTING_FEN,
+                            "parent_history": [m.uci() for m in parent.move_stack], "parent_feature_hash": feature_hash(parent),
+                            "description": "Deterministically constructed legal opening and two independently seeded continuations",
+                            "source": SOURCE})
+    for subtype_index, subtype in enumerate(("pawn", "rook", "minor", "queen")):
+        for index in range(10):
+            family_id = f"{subtype}-{index:03}"
+            for attempt in range(10000):
+                rng = random.Random(VARIANT_SEED + (subtype_index + 1) * 10000019 + index * 1000003 + attempt * 7919)
+                parent = _synthetic(subtype, rng)
+                # Variants preserve one synthetic parent and two legal branches.
+                try:
+                    variants = [_construct_moves(parent.copy(stack=True), 2 + 2 * v,
+                                                 random.Random(VARIANT_SEED + subtype_index * 99991 + index * 1009 + attempt * 7919 + v * 104729))
+                                for v in range(2)]
+                except ValueError:
+                    continue
+                identities = [feature_hash(parent), *map(feature_hash, variants)]
+                if len(set(identities)) == 3 and not any(i in seen for i in identities):
+                    seen.update(identities)
+                    break
+            else:
+                raise RuntimeError("Unable to construct unrelated synthetic family")
+            families.append({"family_id": family_id, "subtype": subtype, "kind": "synthetic_endgame"})
+            for variant, board in enumerate(variants):
+                sources.append({"seed_id": f"{family_id}-v{variant}", "family_id": family_id, "subtype": subtype,
+                                "kind": "synthetic_endgame", "initial_fen": parent.fen(en_passant="fen"),
+                                "history": [m.uci() for m in board.move_stack], "parent_initial_fen": parent.fen(en_passant="fen"),
+                                "parent_history": [], "parent_feature_hash": feature_hash(parent),
+                                "description": "Synthetic 6-12 piece legal board; reachability from normal play is not asserted",
+                                "source": SOURCE})
+    assignments = _assignments(families)
+    for source in sources:
+        source["partition"] = assignments[source["family_id"]]
+    # Frozen traversal order is partition first, then source-bank order.
+    sources.sort(key=lambda s: (PARTITIONS.index(s["partition"]), s["seed_id"]))
+    matches = {}
+    for block, offset in ((100, 40), (1000, 56)):
+        rows = []
+        for index in range(16):
+            family_id = f"match{block}-normal-{index:03}"
+            parent, variants = normal(family_id, offset + index)
+            board = variants[0]
+            rows.append({"family_id": family_id, "initial_fen": chess.STARTING_FEN,
+                         "history": [m.uci() for m in board.move_stack], "fen_after_opening": board.fen(en_passant="fen"),
+                         "feature_hash": feature_hash(board), "parent_history": [m.uci() for m in parent.move_stack],
+                         "description": "Fresh deterministic normal-start family, first frozen continuation", "source": SOURCE})
+        matches[f"match_openings_{block}"] = rows
+    bank = {"schema_version": 3, "experiment": "2026-10-20-neural-target-ab", "generator_sha256": sha256(Path(__file__)),
+            "split_seed": SPLIT_SEED, "variant_seed": VARIANT_SEED, "source": SOURCE,
+            "families": families, "master_partition": assignments, "sources": sources, "exclusions": exclusion,
+            "review": {"exact_source_and_parent_feature_overlap": 0,
+                       "normal_parent_prefix_overlap": 0,
+                       "synthetic_reachability": "not established", "human_authored_moves": False}, **matches}
+    validate_bank(bank)
+    write_json(output, bank)
+    return output
+
+
+def validate_bank(bank):
+    if bank.get("schema_version") != 3 or bank.get("split_seed") != SPLIT_SEED or bank.get("variant_seed") != VARIANT_SEED:
+        raise ValueError("Unsupported bank schema or seeds")
+    families = bank.get("families")
+    if not isinstance(families, list) or len(families) != 80:
+        raise ValueError("Expected 80 predeclared families")
+    assignments = _assignments(families)
+    if assignments != bank.get("master_partition"):
+        raise ValueError("Master partition differs from deterministic allocation")
+    family_meta = {f["family_id"]: f for f in families}
+    sources = bank.get("sources")
+    if not isinstance(sources, list) or len(sources) != 160:
+        raise ValueError("Expected two variants per family")
+    seen, parent_identity, prefix_parents, counts, seed_ids = {}, {}, [], Counter(), set()
+    exclusions = bank.get("exclusions", {})
+    excluded = set(exclusions.get("feature_hashes", ()))
+    for source in sources:
+        family, seed = source.get("family_id"), source.get("seed_id")
+        if family not in family_meta or not isinstance(seed, str) or seed in seed_ids:
+            raise ValueError("Unknown source family or duplicate seed")
+        seed_ids.add(seed)
+        if (source.get("partition") != assignments[family] or any(source.get(key) != family_meta[family].get(key) for key in ("kind", "subtype"))):
+            raise ValueError("Source crosses master partition or subtype")
+        counts[family] += 1
+        board = board_from(source["initial_fen"], source["history"])
+        parent = board_from(source["parent_initial_fen"], source["parent_history"])
+        if not board.is_valid() or board.outcome(claim_draw=True) is not None or source.get("parent_feature_hash") != feature_hash(parent):
+            raise ValueError("Invalid source or parent identity")
+        if source["initial_fen"] != source["parent_initial_fen"] or source["history"][:len(source["parent_history"])] != source["parent_history"]:
+            raise ValueError("Variant does not extend its declared parent")
+        if len(source["history"]) - len(source["parent_history"]) not in (2, 4):
+            raise ValueError("Variant must extend parent by two or four plies")
+        if source["kind"] == "selfplay_start":
+            if source["initial_fen"] != chess.STARTING_FEN or not 8 <= len(source["parent_history"]) <= 12:
+                raise ValueError("Normal source must have a standard-start 8-12 ply parent")
+        elif source["kind"] == "synthetic_endgame":
+            if not 6 <= len(parent.piece_map()) <= 12 or source["parent_history"]:
+                raise ValueError("Synthetic parent must have 6-12 pieces and no fabricated history")
+        else:
+            raise ValueError("Unsupported source kind")
+        for identity in (feature_hash(board), feature_hash(parent)):
+            if identity in excluded or identity in seen and seen[identity] != family:
+                raise ValueError("Source or parent input collides with another family or old data")
+            if identity == feature_hash(board) and identity in seen:
+                raise ValueError("Duplicate variant input")
+            seen[identity] = family
+        previous = parent_identity.setdefault(family, (source["parent_initial_fen"], source["parent_history"]))
+        if previous != (source["parent_initial_fen"], source["parent_history"]):
+            raise ValueError("Family variants do not share the same parent")
+    if set(counts.values()) != {2} or len(counts) != 80:
+        raise ValueError("Expected exactly two variants for every family")
+    for family, (initial, history) in parent_identity.items():
+        if initial == chess.STARTING_FEN:
+            if any(_related(history, other) for other in prefix_parents + exclusions.get("opening_histories", [])):
+                raise ValueError("Normal parent shares a declared source prefix")
+            prefix_parents.append(history)
+    for block in (100, 1000):
+        match_rows = bank.get(f"match_openings_{block}")
+        if not isinstance(match_rows, list) or len(match_rows) != 16:
+            raise ValueError("Match block must have 16 opening families")
+        for row in match_rows:
+            if row.get("family_id") in counts:
+                raise ValueError("Match family overlaps data or another match block")
+            counts[row["family_id"]] += 1
+            board = board_from(row["initial_fen"], row["history"])
+            history = row["parent_history"]
+            if row["initial_fen"] != chess.STARTING_FEN or board.outcome(claim_draw=True) is not None:
+                raise ValueError("Match opening must be legal nonterminal normal-start history")
+            if row.get("feature_hash") != feature_hash(board) or row.get("fen_after_opening") != board.fen(en_passant="fen"):
+                raise ValueError("Match opening identity differs from replay")
+            if feature_hash(board) in seen or feature_hash(board) in excluded or any(_related(history, other) for other in prefix_parents + exclusions.get("opening_histories", [])):
+                raise ValueError("Match opening overlaps a declared family")
+            seen[feature_hash(board)] = row["family_id"]
+            prefix_parents.append(history)
+    return assignments
+
+
+def _sample(board, query):
+    value = query["score"]["stm"]
+    keys = ("query_id", "fen", "initial_fen", "history", "feature_hash", "state_hash", "family_id", "game_id", "ply", "partition", "kind", "subtype", "depth", "nodes", "requested_nodes", "pv_uci", "bestmove_uci")
+    return {**{k: query[k] for k in keys}, "search_stm_cp": value,
+            "target_white_cp": value if board.turn else -value,
+            "classical_static_stm_cp": query["classical_static_stm_cp"],
+            "classical_static_white_cp": query["classical_static_white_cp"]}
+
+
+def _minimum_audit(partitions, requested):
+    result = {}
+    for name in requested:
+        rows = partitions[name]
+        kind = Counter(row["kind"] for row in rows)
+        families = Counter(row["family_id"] for row in rows)
+        result[name] = {"count": len(rows), "required": 1000 if name == "train" else 300,
+                        "kinds": dict(kind), "families_at_least_four": sum(n >= 4 for n in families.values()),
+                        "passes": len(rows) >= (1000 if name == "train" else 300)
+                        and all(kind[k] >= 100 for k in ("selfplay_start", "synthetic_endgame"))
+                        and (name == "train" or sum(n >= 4 for n in families.values()) >= 12)}
+    return result
+
+
+def _collisions(queries):
+    groups = defaultdict(list)
+    for q in queries:
+        if "classical_static_white_cp" not in q:
+            continue
+        board = chess.Board(q["fen"])
+        sign = 1 if board.board_fen() <= board.mirror().board_fen() else -1
+        groups[q["feature_hash"]].append({"query_id": q["query_id"], "partition": q["partition"],
+            "state_hash": q["state_hash"], "fen": q["fen"],
+            "normalized_static_cp": sign * q["classical_static_white_cp"],
+            "normalized_search_cp": sign * q["score"]["stm"] * (1 if board.turn else -1)})
+    collisions = [{"feature_hash": key, "states": rows,
+                   "search_cp_spread": max(r["normalized_search_cp"] for r in rows) - min(r["normalized_search_cp"] for r in rows)}
+                  for key, rows in groups.items() if len(rows) > 1]
+    return {"policy": "Pre-dedup eligible positions; color/rank mirror scores sign-normalized; distinct history is not necessarily distinct missing network state",
+            "collision_groups": len(collisions), "groups": collisions}
+
+
+def generate(engine, bank, output, partitions=("train", "validation"), excluded=None,
+             max_seconds=1200, *, teacher_factory=EngineTeacher, control_labeler=static_scores):
+    """Generate one exclusive attempt; partial/insufficient output is not trainable."""
+    if (tuple(partitions) not in (("train", "validation"), ("test",)) or isinstance(max_seconds, bool)
+            or not isinstance(max_seconds, (int, float)) or not math.isfinite(max_seconds)
+            or not 0 < max_seconds <= (600 if tuple(partitions) == ("test",) else 1200)):
+        raise ValueError("Require train+validation or test, within the frozen wall budget")
+    engine, bank, output = Path(engine).resolve(), Path(bank).resolve(), Path(output).resolve()
+    if not engine.is_file():
+        raise ValueError("Missing engine executable")
+    bank_value = _json(bank)
+    validate_bank(bank_value)
+    excluded = set(excluded or ()) | set(bank_value["exclusions"]["feature_hashes"])
+    if any(not isinstance(v, str) or not re.fullmatch(r"[0-9a-f]{64}", v) for v in excluded):
+        raise ValueError("Excluded inputs must be SHA256 feature identities")
+    sources = [row for row in bank_value["sources"] if row["partition"] in partitions]
+    output.mkdir(parents=True, exist_ok=False)
+    write_json(output / "bank.json", bank_value)
+    plan = {"schema_version": 3, "bank_sha256": sha256(output / "bank.json"), "master_partition": bank_value["master_partition"],
+            "requested_partitions": list(partitions), "target_mapping": TARGET_MAPPING,
+            "excluded_features": sorted(excluded), "exclusions_sha256": _hash(sorted(excluded)),
+            "engine": {"path": str(engine), "sha256": sha256(engine)}, "provenance": source_provenance(),
+            "adapter_sha256": sha256(Path(__file__)),
+            "config": {"nodes": 10000, "max_plies": 96, "sample_every": 3, "search_timeout": 10,
+                       "max_seconds": max_seconds, "quiet": True, "hash_mib": 16},
+            "search_upper_bound": len(sources) * 96, "node_upper_bound": len(sources) * 96 * 10000,
+            "environment": {"python": platform.python_version(), "chess": chess.__version__, "platform": platform.platform()}}
+    write_json(output / "plan.json", plan)
+    started, queries, games, controls = time.monotonic(), [], [], []
+    deadline, teacher = started + max_seconds, None
+    status, error, stop_reason = "complete", None, None
+    options, identity, cleanup = None, None, None
+    try:
+        teacher = teacher_factory(engine, output / "uci.jsonl", 10000, deadline, 10)
+        with teacher:
+            options, identity = teacher.options, teacher.identity
+            for index, source in enumerate(sources):
+                if stop_reason:
+                    break
+                board = board_from(source["initial_fen"], source["history"])
+                game = {k: source[k] for k in ("seed_id", "family_id", "partition", "kind", "subtype", "initial_fen")}
+                game.update(game_id=f"game-{index:04}", initial_history=source["history"], query_ids=[], generated_plies=0,
+                            termination="max_plies", result=None, outcome_termination=None)
+                try:
+                    for ply in range(96):
+                        if board.outcome(claim_draw=True) is not None:
+                            break
+                        if time.monotonic() >= deadline:
+                            stop_reason = "wall_budget"
+                            break
+                        query_id = f"query-{len(queries):06}"
+                        metadata = {k: game[k] for k in ("family_id", "game_id", "partition", "kind", "subtype", "initial_fen")}
+                        history = [m.uci() for m in board.move_stack]
+                        metadata.update(query_id=query_id, ply=ply, history=history, fen=board.fen(en_passant="fen"),
+                                        feature_hash=feature_hash(board), state_hash=state_hash(source["initial_fen"], history))
+                        try:
+                            query = teacher.query(board, query_id)
+                        except SearchInterrupted as exc:
+                            query = {**exc.record, "completed": False, **metadata}
+                            queries.append(query)
+                            game["query_ids"].append(query_id)
+                            stop_reason = exc.reason
+                            break
+                        query.update(metadata)
+                        queries.append(query)
+                        game["query_ids"].append(query_id)
+                        reasons = validate_query(board, query, 10000, quiet=False)
+                        if any(r in reasons for r in ("illegal_pv", "illegal_bestmove")) and not (query.get("depth") == 0 and query.get("pv_uci") == []):
+                            raise ValueError("Malformed engine decision: " + query_id)
+                        move = chess.Move.from_uci(query["bestmove_uci"])
+                        if move not in board.legal_moves:
+                            raise ValueError("Illegal teacher move")
+                        board.push(move)
+                        game["generated_plies"] += 1
+                    outcome = board.outcome(claim_draw=True)
+                    if outcome:
+                        game.update(termination="outcome", result=outcome.result(), outcome_termination=outcome.termination.name.lower())
+                    elif stop_reason:
+                        game["termination"] = stop_reason
+                except Exception:
+                    game["termination"] = "error"
+                    raise
+                finally:
+                    game.update(moves_uci=[m.uci() for m in board.move_stack], final_fen=board.fen(en_passant="fen"))
+                    games.append(game)
+        if stop_reason:
+            status = "budget_exhausted" if stop_reason == "wall_budget" else "error"
+            if status == "error":
+                error = stop_reason
+        candidates = [q for q in queries if not validate_query(chess.Board(q["fen"]), q, 10000, quiet=True) and q["ply"] % 3 == 0]
+        scores = control_labeler(engine, candidates, deadline)
+        for q, score in zip(candidates, scores, strict=True):
+            if type(score) is not int:
+                raise ValueError("Static control must contain integer cp")
+            q["classical_static_stm_cp"] = score
+            q["classical_static_white_cp"] = score * (1 if chess.Board(q["fen"]).turn else -1)
+            controls.append({"query_id": q["query_id"], "fen": q["fen"], "engine_sha256": plan["engine"]["sha256"],
+                             "classical_static_stm_cp": score, "classical_static_white_cp": q["classical_static_white_cp"]})
+    except (TimeoutError, __import__("subprocess").TimeoutExpired):
+        status, stop_reason = "budget_exhausted", "wall_budget"
+    except SearchInterrupted as exc:
+        status, stop_reason, error = ("budget_exhausted" if exc.reason == "wall_budget" else "error"), exc.reason, exc.reason
+    except Exception as exc:
+        status, error = "error", f"{type(exc).__name__}: {exc}"
+    finally:
+        if teacher is not None:
+            try:
+                teacher.close()
+                cleanup = getattr(teacher, "cleanup_status", None)
+            except Exception as exc:
+                status, error = "error", f"Cleanup failed: {exc}"
+        if not (output / "uci.jsonl").exists():
+            (output / "uci.jsonl").touch()
+    rows = {name: [] for name in PARTITIONS}
+    selected = set()
+    for q in queries:
+        board = chess.Board(q["fen"])
+        reasons = validate_query(board, q, 10000, quiet=True)
+        if q.get("completed") is True:
+            if q["ply"] % 3:
+                reasons.append("sampling_interval")
+            if not reasons and "classical_static_stm_cp" not in q:
+                reasons.append("missing_static_control")
+            if not reasons and (abs(q["classical_static_white_cp"]) > 28000 or abs(q["score"]["stm"]) > 28000):
+                reasons.append("target_range")
+            if not reasons and q["feature_hash"] in excluded:
+                reasons.append("previous_features")
+            if not reasons and q["feature_hash"] in selected:
+                reasons.append("duplicate_features")
+        q["excluded_reasons"], q["sampled"] = reasons, not reasons
+        if not reasons:
+            rows[q["partition"]].append(_sample(board, q))
+            selected.add(q["feature_hash"])
+    minima = _minimum_audit(rows, partitions)
+    if status == "complete" and not all(item["passes"] for item in minima.values()):
+        status, error = "insufficient_data", "Frozen operational sample minima not met; do not train on this attempt"
+    if sha256(engine) != plan["engine"]["sha256"]:
+        status, error = "error", "Engine executable changed during generation"
+    for name in PARTITIONS:
+        _write_rows(output / f"{name}.jsonl", rows[name])
+    for name, records in (("queries.jsonl", queries), ("games.jsonl", games), ("controls.jsonl", controls)):
+        _write_rows(output / name, records)
+    write_json(output / "input_collisions.json", _collisions(queries))
+    names = ["plan.json", "bank.json", "queries.jsonl", "games.jsonl", "controls.jsonl", "uci.jsonl", "input_collisions.json", *[f"{n}.jsonl" for n in PARTITIONS]]
+    manifest = {"schema_version": 3, "status": status, "error": error, "stop_reason": stop_reason,
+                "started_monotonic": started, "finished_utc": now(), "wall_seconds": time.monotonic() - started,
+                "plan_sha256": sha256(output / "plan.json"), "bank_sha256": sha256(output / "bank.json"),
+                "teacher_options": options, "engine_identity": identity, "cleanup": cleanup,
+                "target_mapping": TARGET_MAPPING, "minimum_audit": minima,
+                "partitions": {n: {"file": n + ".jsonl", "count": len(rows[n]), "sha256": sha256(output / (n + ".jsonl"))} for n in PARTITIONS},
+                "stats": {"searches": len(queries), "games": len(games), "actual_nodes": sum(q.get("nodes") or 0 for q in queries),
+                          "excluded_reasons": dict(Counter(r for q in queries for r in q["excluded_reasons"]))},
+                "row_order_sha256": {n: _hash([(r["query_id"], r["feature_hash"], r["state_hash"]) for r in rows[n]]) for n in PARTITIONS},
+                "files": {name: sha256(output / name) for name in names}}
+    write_json(output / "manifest.json", manifest)
+    return manifest
+
+
+def load_dataset(output, allow_partial=False):
+    """Replay every game/query and verify paired labels before exposing rows."""
+    output = Path(output)
+    manifest = _json(output / "manifest.json")
+    if type(allow_partial) is not bool or manifest.get("schema_version") != 3:
+        raise ValueError("Require paired-target schema 3")
+    if manifest.get("status") not in ("complete", "budget_exhausted", "error", "insufficient_data"):
+        raise ValueError("Invalid completion status")
+    if manifest["status"] == "complete" and (manifest.get("error") is not None or manifest.get("stop_reason") is not None):
+        raise ValueError("Complete generation has an error or stop reason")
+    if not allow_partial and manifest["status"] != "complete":
+        raise ValueError("Partial or insufficient dataset cannot be used for main training")
+    required = {"plan.json", "bank.json", "queries.jsonl", "games.jsonl", "controls.jsonl", "uci.jsonl", "input_collisions.json", *[n + ".jsonl" for n in PARTITIONS]}
+    if not isinstance(manifest.get("files"), dict) or set(manifest["files"]) != required:
+        raise ValueError("Required paired dataset artifacts missing")
+    for name, expected in manifest["files"].items():
+        if Path(name).name != name or sha256(output / name) != expected:
+            raise ValueError("Artifact checksum mismatch: " + name)
+    plan, bank = _json(output / "plan.json"), _json(output / "bank.json")
+    assignments = validate_bank(bank)
+    if (plan.get("schema_version") != 3 or plan.get("bank_sha256") != sha256(output / "bank.json")
+            or manifest.get("bank_sha256") != plan["bank_sha256"] or manifest.get("plan_sha256") != sha256(output / "plan.json")
+            or plan.get("master_partition") != assignments):
+        raise ValueError("Dataset master bank provenance mismatch")
+    if plan.get("target_mapping") != TARGET_MAPPING or manifest.get("target_mapping") != TARGET_MAPPING:
+        raise ValueError("Paired target field mapping changed")
+    requested = plan.get("requested_partitions")
+    if requested not in (["train", "validation"], ["test"]):
+        raise ValueError("Unexpected generation partition request")
+    config = plan.get("config", {})
+    if any(config.get(k) != v for k, v in {"nodes": 10000, "max_plies": 96, "sample_every": 3, "search_timeout": 10, "quiet": True, "hash_mib": 16}.items()):
+        raise ValueError("Frozen search/filter configuration changed")
+    if (isinstance(config.get("max_seconds"), bool) or not isinstance(config.get("max_seconds"), (int, float))
+            or not math.isfinite(config["max_seconds"]) or not 0 < config["max_seconds"] <= (600 if requested == ["test"] else 1200)):
+        raise ValueError("Generation wall budget changed")
+    excluded = set(plan.get("excluded_features", []))
+    if _hash(sorted(excluded)) != plan.get("exclusions_sha256") or not set(bank["exclusions"]["feature_hashes"]) <= excluded:
+        raise ValueError("Previous feature exclusions changed")
+    sources = [s for s in bank["sources"] if s["partition"] in requested]
+    games = _rows(output / "games.jsonl")
+    queries = _rows(output / "queries.jsonl")
+    if (len(games) > len(sources) or len(queries) > len(sources) * 96
+            or plan.get("search_upper_bound") != len(sources) * 96 or plan.get("node_upper_bound") != len(sources) * 96 * 10000):
+        raise ValueError("Generation count exceeds frozen plan")
+    if manifest["status"] == "complete" and len(games) != len(sources):
+        raise ValueError("Complete generation did not process every source")
+    controls = _rows(output / "controls.jsonl")
+    control_by_id = {c.get("query_id"): c for c in controls}
+    if len(control_by_id) != len(controls):
+        raise ValueError("Duplicate control query")
+    expected_rows, selected, query_index, candidate_ids = {n: [] for n in PARTITIONS}, set(), 0, []
+    for index, (game, source) in enumerate(zip(games, sources)):
+        if game.get("game_id") != f"game-{index:04}" or any(game.get(k) != source[k] for k in ("seed_id", "family_id", "partition", "kind", "subtype", "initial_fen")):
+            raise ValueError("Game differs from declared source order or master partition")
+        if game.get("initial_history") != source["history"]:
+            raise ValueError("Game source history changed")
+        history = game.get("moves_uci")
+        generated = game.get("generated_plies")
+        if type(generated) is not int or not 0 <= generated <= 96 or not isinstance(history, list) or history[:len(source["history"])] != source["history"] or len(history) != len(source["history"]) + generated:
+            raise ValueError("Game history/length differs from source")
+        final = board_from(game["initial_fen"], history)
+        if game.get("final_fen") != final.fen(en_passant="fen"):
+            raise ValueError("Final FEN differs from legal replay")
+        outcome = final.outcome(claim_draw=True)
+        if game.get("termination") == "outcome":
+            if outcome is None or game.get("result") != outcome.result() or game.get("outcome_termination") != outcome.termination.name.lower():
+                raise ValueError("Outcome differs from board rules")
+        elif game.get("termination") in ("max_plies", "wall_budget", "search_timeout", "error"):
+            if outcome is not None or game.get("result") is not None or game.get("outcome_termination") is not None or game["termination"] == "max_plies" and generated != 96:
+                raise ValueError("Truncation falsely declares an outcome or length")
+        else:
+            raise ValueError("Unknown game termination")
+        links = game.get("query_ids")
+        if not isinstance(links, list) or len(links) not in ({generated} if game["termination"] in ("outcome", "max_plies") else {generated, generated + 1}):
+            raise ValueError("Search count differs from game")
+        board = board_from(source["initial_fen"], source["history"])
+        for ply, link in enumerate(links):
+            if query_index >= len(queries):
+                raise ValueError("Missing query")
+            q = queries[query_index]
+            if q.get("query_id") != f"query-{query_index:06}" or link != q["query_id"]:
+                raise ValueError("Query order/link changed")
+            query_index += 1
+            if (any(q.get(k) != game[k] for k in ("game_id", "family_id", "partition", "kind", "subtype", "initial_fen"))
+                    or q.get("ply") != ply or q.get("history") != [m.uci() for m in board.move_stack]
+                    or q.get("fen") != board.fen(en_passant="fen") or q.get("feature_hash") != feature_hash(board)
+                    or q.get("state_hash") != state_hash(source["initial_fen"], q["history"])):
+                raise ValueError("Query root differs from full game replay")
+            reasons = validate_query(board, q, 10000, quiet=True)
+            eligible = not reasons and ply % 3 == 0
+            if eligible:
+                candidate_ids.append(q["query_id"])
+            control = control_by_id.get(q["query_id"])
+            if control is not None:
+                if not eligible or control.get("fen") != q["fen"] or control.get("engine_sha256") != plan["engine"]["sha256"]:
+                    raise ValueError("Static control differs from eligible root query")
+                a, b = control.get("classical_static_stm_cp"), control.get("classical_static_white_cp")
+                if type(a) is not int or type(b) is not int or b != a * (1 if board.turn else -1) or q.get("classical_static_stm_cp") != a or q.get("classical_static_white_cp") != b:
+                    raise ValueError("Static control type/perspective/link changed")
+            elif "classical_static_stm_cp" in q or "classical_static_white_cp" in q:
+                raise ValueError("Static query target lacks control provenance")
+            if q.get("completed") is True:
+                if ply % 3:
+                    reasons.append("sampling_interval")
+                if not reasons and control is None:
+                    reasons.append("missing_static_control")
+                if not reasons and (abs(q["classical_static_white_cp"]) > 28000 or abs(q["score"]["stm"]) > 28000):
+                    reasons.append("target_range")
+                if not reasons and q["feature_hash"] in excluded:
+                    reasons.append("previous_features")
+                if not reasons and q["feature_hash"] in selected:
+                    reasons.append("duplicate_features")
+            if type(q.get("completed")) is not bool or type(q.get("sampled")) is not bool or q.get("excluded_reasons") != reasons or q["sampled"] != (not reasons):
+                raise ValueError("Query sampling changed from frozen paired filter")
+            if not reasons:
+                expected_rows[q["partition"]].append(_sample(board, q))
+                selected.add(q["feature_hash"])
+            if ply < generated:
+                if q.get("completed") is not True or q.get("bestmove_uci") != history[len(source["history"]) + ply]:
+                    raise ValueError("Played move differs from teacher root decision")
+                move = chess.Move.from_uci(q["bestmove_uci"])
+                if move not in board.legal_moves:
+                    raise ValueError("Illegal teacher decision")
+                board.push(move)
+    if query_index != len(queries):
+        raise ValueError("Orphan queries")
+    if manifest["status"] == "complete" and set(candidate_ids) != set(control_by_id):
+        raise ValueError("Complete dataset lacks eligible static controls")
+    result = {"manifest": manifest}
+    for name in PARTITIONS:
+        rows = _rows(output / (name + ".jsonl"))
+        meta = manifest.get("partitions", {}).get(name, {})
+        if meta != {"file": name + ".jsonl", "count": len(rows), "sha256": sha256(output / (name + ".jsonl"))} or rows != expected_rows[name]:
+            raise ValueError("Paired sample target/provenance differs from root queries: " + name)
+        if any("classical_stm_cp" in row or type(row.get(k)) is not int for row in rows for k in ("search_stm_cp", "target_white_cp", "classical_static_stm_cp", "classical_static_white_cp")):
+            raise ValueError("Search targets cannot masquerade as static schema 1")
+        if manifest.get("row_order_sha256", {}).get(name) != _hash([(r["query_id"], r["feature_hash"], r["state_hash"]) for r in rows]):
+            raise ValueError("Paired input/row order changed")
+        result[name] = rows
+    minima = _minimum_audit(result, requested)
+    if minima != manifest.get("minimum_audit") or manifest["status"] == "complete" and not all(x["passes"] for x in minima.values()):
+        raise ValueError("Dataset does not meet frozen sample minima")
+    if _json(output / "input_collisions.json") != _collisions(queries):
+        raise ValueError("Pre-dedup collision audit differs from queries")
+    stats = {"searches": len(queries), "games": len(games), "actual_nodes": sum(q.get("nodes") or 0 for q in queries),
+             "excluded_reasons": dict(Counter(r for q in queries for r in q["excluded_reasons"]))}
+    if manifest.get("stats") != stats:
+        raise ValueError("Generation cost or exclusion statistics differ from queries")
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    bank = commands.add_parser("bank")
+    bank.add_argument("--output", type=Path, required=True)
+    bank.add_argument("--exclude", type=Path, action="append", default=[])
+    gen = commands.add_parser("generate")
+    gen.add_argument("--engine", type=Path, required=True)
+    gen.add_argument("--bank", type=Path, required=True)
+    gen.add_argument("--output", type=Path, required=True)
+    gen.add_argument("--test", action="store_true")
+    gen.add_argument("--exclude-dataset", type=Path)
+    gen.add_argument("--max-seconds", type=float)
+    audit = commands.add_parser("audit")
+    audit.add_argument("output", type=Path)
+    args = parser.parse_args()
+    if args.command == "bank":
+        print(make_bank(args.output, args.exclude))
+    elif args.command == "generate":
+        previous = load_dataset(args.exclude_dataset) if args.exclude_dataset else None
+        excluded = {r["feature_hash"] for n in PARTITIONS for r in previous[n]} if previous else set()
+        manifest = generate(args.engine, args.bank, args.output, ("test",) if args.test else ("train", "validation"), excluded,
+                            args.max_seconds or (600 if args.test else 1200))
+        print(json.dumps({k: manifest[k] for k in ("status", "error", "wall_seconds", "minimum_audit")}))
+    else:
+        data = load_dataset(args.output)
+        print(json.dumps({n: len(data[n]) for n in PARTITIONS}))
+
+
+if __name__ == "__main__":
+    main()

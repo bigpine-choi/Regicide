@@ -1,6 +1,7 @@
 #include "regicide/uci.hpp"
 #include "regicide/search.hpp"
 #include "regicide/neural.hpp"
+#include "regicide/nnue.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -141,7 +142,7 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.6.5");
+            send("id name Regicide 0.7.0-dev");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
             send("option name UsePositionalEvaluation type check default true");
@@ -159,6 +160,10 @@ public:
             send("option name UseLMR type check default true");
             send("option name EvalFile type string default <empty>");
             send("option name UseNeuralEvaluation type check default false");
+            send("option name UseNNUEEvaluation type check default false");
+            send("option name NeuralModelFile type string default <builtin>");
+            send("option name UseIncrementalNeuralEvaluation type check default true");
+            send("info string integer NNUE is experimental; default remains classical");
             send("uciok");
         } else if (command == "stop") stop();
         else if (command == "ucinewgame") { stop(); context_.clear(); board_ = Board(); }
@@ -190,6 +195,36 @@ private:
         if (option == "Clear Hash") {
             if (value != tokens.end()) throw std::invalid_argument("Clear Hash is a button without a value");
             context_.clear(); return;
+        }
+        if (option == "NeuralModelFile") {
+            std::istringstream raw(raw_line);
+            std::string token, path;
+            for (int i = 0; i < 4; ++i) raw >> token;
+            std::getline(raw, path);
+            const auto first = path.find_first_not_of(" \t");
+            path = first == std::string::npos ? std::string{} : path.substr(first);
+            if (!path.empty() && path.back() == '\r') path.pop_back();
+            std::shared_ptr<const NeuralModel> replacement;
+            // The original NNUE protocol treats an empty string as builtin.
+            if (!path.empty() && path != "<builtin>") replacement = load_neural_model(path);
+            options_.nnue_model = std::move(replacement);
+            context_.clear();
+            const auto& selected = options_.nnue_model ? *options_.nnue_model : builtin_neural_model();
+            send("info string neural model checksum " + std::to_string(neural_model_checksum(selected)));
+            return;
+        }
+        if (option == "UseNNUEEvaluation" || option == "UseIncrementalNeuralEvaluation") {
+            if (value == tokens.end() || tokens.end() - value != 2 ||
+                (*(value + 1) != "true" && *(value + 1) != "false"))
+                throw std::invalid_argument(option + " requires true or false");
+            const bool enabled = *(value + 1) == "true";
+            if (option == "UseNNUEEvaluation") {
+                if (enabled && neural_enabled_)
+                    throw std::invalid_argument("disable UseNeuralEvaluation before enabling NNUE");
+                options_.nnue = enabled;
+            } else options_.nnue_incremental = enabled;
+            context_.clear();
+            return;
         }
         if (option == "EvalFile") {
             if (value == tokens.end() || value + 1 == tokens.end())
@@ -223,6 +258,8 @@ private:
             const bool enabled = *(value + 1) == "true";
             if (enabled && !loaded_model_)
                 throw std::invalid_argument("load a valid EvalFile before enabling neural evaluation");
+            if (enabled && options_.nnue)
+                throw std::invalid_argument("disable UseNNUEEvaluation before enabling residual neural evaluation");
             neural_enabled_ = enabled;
             options_.neural = enabled ? loaded_model_ : nullptr;
             return;

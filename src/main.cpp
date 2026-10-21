@@ -1,6 +1,8 @@
 #include "regicide/board.hpp"
 #include "regicide/search.hpp"
 #include "regicide/neural.hpp"
+#include "regicide/nnue.hpp"
+#include "regicide/evaluation.hpp"
 #include "regicide/uci.hpp"
 
 #include <algorithm>
@@ -50,6 +52,21 @@ void batch() {
         }
     }
 }
+void evaluation_batch(const regicide::NeuralModel& model) {
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        Board board(line);
+        const regicide::NeuralAccumulator accumulator(board, model);
+        const int full = regicide::evaluate_neural(board, model);
+        const int incremental = accumulator.evaluate(board.position().turn);
+        if (full != incremental) throw std::logic_error("NNUE full/incremental mismatch");
+        // Keep the research teacher's original definition explicit. New pawn
+        // terms must not silently change the first column of old toolchains.
+        std::cout << regicide::evaluate_position(board, false, false) << '\t'
+                  << full << '\t' << incremental << '\n';
+    }
+    if (std::cin.bad()) throw std::runtime_error("evaluation batch input failed");
+}
 int depth_arg(std::string_view text) {
     int value = -1;
     const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
@@ -62,17 +79,29 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.6.5\n"
+            std::cout << "Regicide 0.7.0-dev\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
                          "    --no-quiet-ordering --no-quiescence-checks --no-see --no-pawn-shield --no-pawn-structure --no-lmr\n"
                          "    --eval-file MODEL (experimental neural evaluation; default remains classical)\n"
+                         "    --nnue [--nnue-model FILE] [--nnue-full-refresh] (separate integer NNUE mode)\n"
                          "regicide eval --eval-file MODEL [--fen \"FEN\"] [--play ...] (static cp only)\n"
                          "    optional eval flags: --no-pawn-shield --no-pawn-structure\n"
                          "regicide uci  (UCI engine protocol)\n"
-                         "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
+                         "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n"
+                         "regicide eval-batch [--nnue-model FILE] (stdin: FEN; legacy classical/full/incremental TSV)\n";
+            return 0;
+        }
+        if (command == "eval-batch") {
+            std::shared_ptr<const regicide::NeuralModel> model;
+            if (argc == 4 && (std::string_view(argv[2]) == "--nnue-model" ||
+                              std::string_view(argv[2]) == "--neural-model"))
+                model = regicide::load_neural_model(argv[3]);
+            else if (argc != 2)
+                throw std::invalid_argument("eval-batch expects optional --nnue-model FILE");
+            evaluation_batch(model ? *model : regicide::builtin_neural_model());
             return 0;
         }
         if (command == "batch") {
@@ -101,6 +130,14 @@ int main(int argc, char** argv) {
             if (option == "--fen" && arg < argc) fen = argv[arg++];
             else if ((command == "search" || command == "eval") && option == "--eval-file" && arg < argc)
                 search_options.neural = regicide::NeuralEvaluator::load(argv[arg++]);
+            else if (command == "search" && (option == "--nnue" || option == "--neural"))
+                search_options.nnue = true;
+            else if (command == "search" && (option == "--nnue-model" || option == "--neural-model") && arg < argc) {
+                search_options.nnue_model = regicide::load_neural_model(argv[arg++]);
+                search_options.nnue = true;
+            }
+            else if (command == "search" && (option == "--nnue-full-refresh" || option == "--neural-full-refresh"))
+                search_options.nnue_incremental = false;
             else if (command == "search" && option == "--no-position") search_options.positional = false;
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;

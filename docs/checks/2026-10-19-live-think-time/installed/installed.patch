@@ -1,0 +1,2127 @@
+diff --git a/godot/scripts/main.gd b/godot/scripts/main.gd
+index c86332e..5dd26e7 100644
+--- a/godot/scripts/main.gd
++++ b/godot/scripts/main.gd
+@@ -10,7 +10,9 @@ const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
+ var board_model: ViewModel = ViewModel.new()
+ var state: Dictionary = {}
+ var request_in_flight: bool = false
++var think_time_request_in_flight: bool = false
+ var engine_thinking: bool = false
++var active_think_time_ms: int = 0
+ var offline_mode: bool = false
+ var closing: bool = false
+ var backend_url: String = ""
+@@ -61,6 +63,7 @@ var move_history: RichTextLabel
+ var move_count: Label
+ var color_option: OptionButton
+ var time_option: OptionButton
++var think_time_help: Label
+ var live_settings: GridContainer
+ var live_actions: HBoxContainer
+ var handicap_section: VBoxContainer
+@@ -94,6 +97,7 @@ var evaluation_timer: Timer
+ var hint_http: HTTPRequest
+ var hint_control_http: HTTPRequest
+ var hint_timer: Timer
++var think_time_http: HTTPRequest
+ 
+ 
+ func _ready() -> void:
+@@ -303,7 +307,13 @@ func _build_ui() -> void:
+ 	for option in [["0.1초", 100], ["1초", 1000], ["3초", 3000], ["5초", 5000]]:
+ 		time_option.add_item(option[0], option[1])
+ 	time_option.select(1)
++	time_option.name = "ThinkTime"
++	time_option.tooltip_text = "대국 중에도 바꿀 수 있습니다. 이미 생각 중인 수는 기존 시간으로 마치고, 다음 수부터 적용합니다."
++	time_option.item_selected.connect(_on_think_time_selected)
+ 	settings.add_child(time_option)
++	think_time_help = _label("색 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
++	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	sidebar.add_child(think_time_help)
+ 	new_button = _button("새 대국 시작", _on_new_game_pressed)
+ 	sidebar.add_child(new_button)
+ 	var actions := HBoxContainer.new()
+@@ -363,6 +373,10 @@ func _build_ui() -> void:
+ 	hint_timer.timeout.connect(_poll_hint)
+ 	add_child(hint_timer)
+ 	hint_timer.start()
++	# A settings request can finish while the ordinary client awaits a search.
++	think_time_http = HTTPRequest.new()
++	think_time_http.timeout = 15.0
++	add_child(think_time_http)
+ 	save_dialog = FileDialog.new()
+ 	save_dialog.title = "기보 저장"
+ 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+@@ -505,7 +519,7 @@ func _load_backend_arguments() -> void:
+ 
+ 
+ func _on_library_pressed() -> void:
+-	if request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
++	if request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+ 		return
+ 	request_in_flight = true
+ 	error_message = ""
+@@ -690,8 +704,30 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest =
+ 	return {"ok": true, "data": parsed}
+ 
+ 
++static func merge_state_versions(current: Dictionary, next: Dictionary) -> Dictionary:
++	if current.is_empty():
++		return next.duplicate(true)
++	if current.get("game_id", "") != next.get("game_id", ""):
++		# The host advances board revisions across new games as well. An old
++		# game's delayed response must never replace the current live game.
++		return next.duplicate(true) if int(next.get("revision", 0)) >= int(current.get("revision", 0)) else current.duplicate(true)
++	# Board and settings have independent versions. Neither a delayed search
++	# response nor a delayed settings response may roll the other one back.
++	var newer_board: bool = int(next.get("revision", 0)) >= int(current.get("revision", 0))
++	var merged: Dictionary = next.duplicate(true) if newer_board else current.duplicate(true)
++	var old_engine: Dictionary = current.get("engine", {})
++	var next_engine: Dictionary = next.get("engine", {})
++	var newest_settings: Dictionary = next_engine if int(next_engine.get("settings_revision", 0)) >= int(old_engine.get("settings_revision", 0)) else old_engine
++	var merged_engine: Dictionary = merged.get("engine", {}).duplicate(true)
++	for key in ["movetime_ms", "settings_revision"]:
++		if newest_settings.has(key):
++			merged_engine[key] = newest_settings[key]
++	merged["engine"] = merged_engine
++	return merged
++
++
+ func accept_state(next: Dictionary) -> void:
+-	state = next.duplicate(true)
++	state = merge_state_versions(state, next)
+ 	if _hint_toggle_version == 0 and state.has("hint_enabled"):
+ 		hint_enabled = bool(state.hint_enabled)
+ 	if not _evaluation_matches(evaluation, state):
+@@ -905,7 +941,7 @@ func _handle_response(response: Dictionary) -> bool:
+ 
+ 
+ func _connect_backend() -> void:
+-	if request_in_flight or backend_url.is_empty() or closing or review_mode:
++	if request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or review_mode:
+ 		return
+ 	request_in_flight = true
+ 	error_message = ""
+@@ -917,7 +953,7 @@ func _connect_backend() -> void:
+ 
+ 
+ func _mutate(path: String, payload: Dictionary = {}) -> void:
+-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
++	if request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
+ 		return
+ 	request_in_flight = true
+ 	error_message = ""
+@@ -939,9 +975,36 @@ func _play_engine_if_needed() -> void:
+ 		return
+ 	engine_thinking = true
+ 	_clear_hint()
++	active_think_time_ms = int(state.get("engine", {}).get("movetime_ms", 1000))
+ 	_render()
+ 	_handle_response(await _send_request("/api/engine", {"revision": int(state.revision)}))
+ 	engine_thinking = false
++	active_think_time_ms = 0
++
++
++func _can_change_think_time() -> bool:
++	return not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
++
++
++func _on_think_time_selected(index: int) -> void:
++	if not _can_change_think_time() or index < 0 or index >= time_option.item_count:
++		_render()
++		return
++	var requested_ms: int = time_option.get_item_id(index)
++	var settings: Dictionary = state.get("engine", {})
++	if requested_ms == int(settings.get("movetime_ms", 1000)):
++		return
++	think_time_request_in_flight = true
++	error_message = ""
++	_render()
++	var response: Dictionary = await _send_request("/api/think-time", {
++		"game_id": str(state.get("game_id", "")),
++		"settings_revision": int(settings.get("settings_revision", 0)),
++		"movetime_ms": requested_ms}, think_time_http)
++	if _handle_response(response):
++		_notice_message = "생각 시간을 변경했습니다. 다음 수부터 적용합니다."
++	think_time_request_in_flight = false
++	_render()
+ 
+ 
+ func _on_flip_pressed() -> void:
+@@ -960,7 +1023,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
+ 
+ 
+ func _on_square_pressed(square: String) -> void:
+-	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
++	if request_in_flight or think_time_request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
+ 		return
+ 	if square == board_model.selected_square:
+ 		board_model.selected_square = ""
+@@ -987,7 +1050,7 @@ func _on_square_pressed(square: String) -> void:
+ 
+ 
+ func _on_promotion_pressed(kind: String) -> void:
+-	if review_mode:
++	if review_mode or think_time_request_in_flight:
+ 		return
+ 	for move in board_model.pending_promotions:
+ 		if move.ends_with(kind):
+@@ -1004,7 +1067,7 @@ func _submit_selected_move(move: String) -> void:
+ 
+ 
+ func _on_drag_requested(from_square: String, to_square: String) -> void:
+-	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
++	if request_in_flight or think_time_request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
+ 		return
+ 	# Re-select the logical origin even when pressing an already selected piece
+ 	# toggled its click selection off. A flipped view still supplies the same UCI.
+@@ -1101,7 +1164,7 @@ func _render() -> void:
+ 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
+ 	var ready: bool = not state.is_empty() and not closing
+ 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
+-	var enabled: bool = ready and not request_in_flight and not review_mode
++	var enabled: bool = ready and not request_in_flight and not think_time_request_in_flight and not review_mode
+ 	var replacing: bool = state.get("handicap_mode", false)
+ 	live_settings.visible = not review_mode
+ 	live_actions.visible = not review_mode
+@@ -1109,14 +1172,29 @@ func _render() -> void:
+ 	new_button.visible = not review_mode
+ 	new_button.disabled = not enabled or replacing
+ 	color_option.disabled = not enabled or replacing
+-	time_option.disabled = not enabled or replacing
++	time_option.disabled = not _can_change_think_time()
++	if not think_time_request_in_flight:
++		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
++		if time_index >= 0:
++			time_option.select(time_index)
++	think_time_help.visible = not review_mode
++	var thinking_now: bool = engine_thinking or bool(state.get("engine_thinking", false))
++	if thinking_now:
++		var current_ms: int = active_think_time_ms
++		if engine.get("active_movetime_ms") != null:
++			current_ms = int(engine.active_movetime_ms)
++		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
++	else:
++		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
++	if think_time_request_in_flight:
++		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
+ 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
+ 	resign_button.disabled = not enabled or not active or replacing
+ 	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and review_pgn.is_empty())
+ 	save_button.text = "이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)"
+-	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing or review_mode
++	refresh_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or review_mode
+ 	refresh_button.visible = not review_mode and (not error_message.is_empty() or state.is_empty())
+-	library_button.disabled = request_in_flight or backend_url.is_empty() or closing or replacing
++	library_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or replacing
+ 	review_controls.visible = review_mode
+ 	if review_mode:
+ 		review_position_label.text = "%d / %d수 · %s" % [review_ply, review_moves.size(), "시작 배치" if review_ply == 0 else str(review_moves[review_ply - 1].get("san", ""))]
+@@ -1134,7 +1212,7 @@ func _render() -> void:
+ 	elif review_mode:
+ 		status_label.text = "기보 다시 보기 · 읽기 전용"
+ 		status_detail.text = _record_description(review_summary) + "\n처음·이전·다음·끝으로 수순을 살펴보세요."
+-	elif engine_thinking:
++	elif thinking_now:
+ 		status_label.text = "Regicide가 생각하고 있어요"
+ 		status_detail.text = "기다리는 동안에도 시점을 자유롭게 뒤집어 볼 수 있습니다."
+ 	elif not ready:
+@@ -1161,7 +1239,7 @@ func _render() -> void:
+ 		for move in board_model.pending_promotions:
+ 			if move.ends_with(str(kind)):
+ 				available = true
+-		promotion_buttons[kind].disabled = request_in_flight or not available
++		promotion_buttons[kind].disabled = request_in_flight or think_time_request_in_flight or not available
+ 	_render_history()
+ 
+ 
+@@ -1242,12 +1320,12 @@ func _notification(what: int) -> void:
+ func _close_app() -> void:
+ 	closing = true
+ 	_render()
++	# Both clients may have a response pending; let them finish before closing
++	# or asking an owned backend for its final board revision.
++	var finish_deadline: int = Time.get_ticks_msec() + 20000
++	while (request_in_flight or think_time_request_in_flight) and Time.get_ticks_msec() < finish_deadline:
++		await get_tree().process_frame
+ 	if own_backend and not backend_url.is_empty():
+-		# Let our existing mutation finish before reading its final revision. A
+-		# request may still be queued before the host acquires the game lock.
+-		var finish_deadline: int = Time.get_ticks_msec() + 20000
+-		while request_in_flight and Time.get_ticks_msec() < finish_deadline:
+-			await get_tree().process_frame
+ 		# A separate request then closes the host using the latest revision.
+ 		var shutdown_client := HTTPRequest.new()
+ 		shutdown_client.timeout = 12.0
+diff --git a/scripts/game_archive.py b/scripts/game_archive.py
+index 209a9bd..0bd410f 100644
+--- a/scripts/game_archive.py
++++ b/scripts/game_archive.py
+@@ -298,9 +298,18 @@ class GameArchive:
+             "Termination": "unterminated" if prepared["result"] == "*" else "normal",
+             "TerminationReason": prepared["termination"] or ("engine_error" if prepared["error"] else "in_progress"),
+             "HandicapMoves": str(sum(bool(move.get("forced")) for move in prepared["moves"]))})
++        movetimes = record.get("engine_movetimes_ms", {})
++        if not isinstance(movetimes, dict):
++            movetimes = {}
++        if movetimes or record.get("time_settings_events"):
++            game.headers["EngineMoveTimePolicy"] = "Header is latest setting; move comments record each search budget"
+         for entry, node in zip(prepared["moves"], game.mainline()):
+             if entry.get("forced"):
+                 node.comment = "User-forced Regicide move (handicap)"
++            else:
++                movetime = movetimes.get(str(entry["ply"]))
++                if entry["actor"] == "engine" and type(movetime) is int and 100 <= movetime <= 5000:
++                    node.comment = f"Regicide think time: {movetime} ms"
+         return str(game) + "\n\n"
+ 
+     def get_game(self, game_id, current_game_id=None):
+diff --git a/scripts/play_human.py b/scripts/play_human.py
+index d66e923..ab6dff9 100644
+--- a/scripts/play_human.py
++++ b/scripts/play_human.py
+@@ -16,6 +16,7 @@ import subprocess
+ import sys
+ import tempfile
+ import threading
++import time
+ import uuid
+ import webbrowser
+ 
+@@ -110,6 +111,9 @@ class HumanGame:
+         # Evaluation polling must not wait for the game lock held by a search.
+         self._evaluation_lock = threading.Lock()
+         self._evaluation = {}
++        self._search_lock = threading.Lock()
++        self._engine_searching = False
++        self._active_movetime_ms = None
+         self._engine = None
+         self._hints = None
+         self.revision = 0
+@@ -135,6 +139,9 @@ class HumanGame:
+         self.board = chess.Board()
+         self.human_color = chess.WHITE if color == "white" else chess.BLACK
+         self.movetime_ms = movetime_ms
++        self._settings_revision = 0
++        self._time_settings_events = []
++        self._engine_movetimes = {}
+         self.error = None
+         self._override = None
+         self._forced_plies = set()
+@@ -151,9 +158,44 @@ class HumanGame:
+         self._save()
+ 
+     def _check_revision(self, revision):
++        if not self._game_open:
++            raise ValueError("종료된 대국입니다. 대국 프로그램을 다시 실행해 주세요.")
+         if type(revision) is not int or revision != self.revision:
+             raise RevisionError("다른 작업이 먼저 반영됐습니다. 현재 체스판에서 다시 선택해 주세요.")
+ 
++    def _require_idle(self):
++        if self._engine_searching:
++            raise ValueError("Regicide가 생각하고 있습니다. 현재 수가 끝나면 다시 선택해 주세요.")
++
++    @staticmethod
++    def _validate_movetime(movetime_ms):
++        if type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
++            raise ValueError("100~5000ms의 생각 시간을 선택해 주세요.")
++
++    def set_think_time(self, movetime_ms, game_id, settings_revision):
++        """Persist the next search budget without changing the board revision.
++
++        Settings have their own revision so a time change cannot invalidate an
++        already submitted engine request. The game ID prevents an old window
++        from applying its setting to a newly started game.
++        """
++        with self._lock:
++            if not self._game_open or game_id != self.game_id:
++                raise RevisionError("대국이 바뀌었습니다. 현재 대국에서 생각 시간을 다시 선택해 주세요.")
++            if type(settings_revision) is not int or settings_revision != self._settings_revision:
++                raise RevisionError("생각 시간 설정이 먼저 바뀌었습니다. 다시 선택해 주세요.")
++            self._require_no_handicap()
++            self._validate_movetime(movetime_ms)
++            if movetime_ms != self.movetime_ms:
++                self._time_settings_events.append({
++                    "at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
++                    "after_ply": len(self.board.move_stack), "from_ms": self.movetime_ms,
++                    "to_ms": movetime_ms, "active_search_ms": self._active_movetime_ms})
++                self.movetime_ms = movetime_ms
++                self._settings_revision += 1
++                self._save()
++            return self.state()
++
+     def _outcome(self):
+         if self._override:
+             return self._override
+@@ -234,7 +276,7 @@ class HumanGame:
+         with self._lock:
+             result, termination = self._outcome()
+             handicap_mode = self._handicap_backup is not None
+-            active = result == "*" and not self.error
++            active = self._game_open and result == "*" and not self.error
+             human_turn = active and not handicap_mode and self.board.turn == self.human_color
+             engine_turn = active and not handicap_mode and self.board.turn != self.human_color
+             names = {"checkmate": "체크메이트", "stalemate": "스테일메이트",
+@@ -244,6 +286,8 @@ class HumanGame:
+                      "resignation": "기권"}
+             if handicap_mode:
+                 status = "핸디캡 · Regicide 대신 두세요"
++            elif not self._game_open and result == "*":
++                status = "종료된 대국입니다"
+             elif self.error:
+                 status = "엔진 응답에 문제가 생겼습니다. 기보는 보존됐습니다. 새 대국으로 다시 시작해 주세요."
+             elif result == "1/2-1/2":
+@@ -267,7 +311,7 @@ class HumanGame:
+                 replay.push(move)
+             # Include a human move that itself ended the game (there may be no
+             # engine reply). The initial engine opening is still retained.
+-            can_undo = (not handicap_mode and bool(self.board.move_stack) and
++            can_undo = (self._game_open and not handicap_mode and bool(self.board.move_stack) and
+                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
+             return {"revision": self.revision, "game_id": self.game_id,
+                     "fen": self.board.fen(en_passant="fen"),
+@@ -286,9 +330,12 @@ class HumanGame:
+                     "in_check": self.board.is_check(),
+                     "last_move": self.board.peek().uci() if self.board.move_stack else None,
+                     "can_undo": can_undo, "error": self.error,
++                    "engine_thinking": self._engine_searching,
+                     "handicap_mode": handicap_mode,
+                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
+                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
++                               "settings_revision": self._settings_revision,
++                               "active_movetime_ms": self._active_movetime_ms,
+                                "source_commit": self.source["commit"],
+                                "binary_sha256": self.binary_sha256,
+                                **({"evaluation": self.neural_evaluation_mode, "model_sha256": self.neural_sha256,
+@@ -299,6 +346,7 @@ class HumanGame:
+     def new_game(self, color, movetime_ms, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             self._require_no_handicap()
+             if color not in ("white", "black") or type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
+                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
+@@ -309,6 +357,7 @@ class HumanGame:
+     def human_move(self, uci, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             if not self.state()["human_to_move"]:
+                 raise ValueError("지금은 당신 차례가 아닙니다.")
+             if not isinstance(uci, str) or len(uci) not in (4, 5):
+@@ -326,67 +375,86 @@ class HumanGame:
+             return self.state()
+ 
+     def engine_move(self, revision):
+-        with self._lock:
+-            self._check_revision(revision)
+-            if not self.state()["engine_to_move"]:
+-                raise ValueError("지금은 Regicide 차례가 아닙니다.")
+-            carry_score = False
++        # Keep the installed streamed evaluation and watchdog while releasing
++        # the board lock for settings. Each search retains its own budget.
++        with self._search_lock:
++            with self._lock:
++                self._check_revision(revision)
++                if not self.state()["engine_to_move"]:
++                    raise ValueError("지금은 Regicide 차례가 아닙니다.")
++                try:
++                    self._ensure_engine()
++                except Exception as exc:
++                    self.error = f"{type(exc).__name__}: {exc}"
++                    self.revision += 1
++                    self._sync_evaluation()
++                    self._save()
++                    return self.state()
++                board = self.board.copy(stack=True)
++                movetime_ms = self.movetime_ms
++                token, game_id = self._game_token, self.game_id
++                self._engine_searching = True
++                self._active_movetime_ms = movetime_ms
++                self._sync_evaluation(status="searching")
++            reply, failure, carry_score = None, None, False
+             watchdog = None
+             timed_out = threading.Event()
+             try:
+-                self._ensure_engine()
+-                self._sync_evaluation(status="searching")
+-                limit = chess.engine.Limit(time=self.movetime_ms / 1000)
++                limit = chess.engine.Limit(time=movetime_ms / 1000)
+                 if callable(getattr(self._engine, "analysis", None)):
+                     engine = self._engine
+                     def expire_search():
+                         timed_out.set()
+                         engine.close()
+-                    # Stream iteration itself has no python-chess timeout.
+-                    # Retain the previous play() transport timeout policy.
++                    # Preserve the installed stream timeout policy.
+                     watchdog = threading.Timer(limit.time + float(getattr(engine, "timeout", 10) or 10),
+                                                expire_search)
+                     watchdog.daemon = True
+                     watchdog.start()
+-                    # This is the move search itself, not a second background
+-                    # engine competing for CPU or an external engine's advice.
+-                    with self._engine.analysis(self.board, limit, game=self._game_token,
++                    with self._engine.analysis(board, limit, game=token,
+                                                info=chess.engine.INFO_ALL) as analysis:
+                         for info in analysis:
+                             self._publish_evaluation(info)
+                         reply = analysis.wait()
+                         final_info = analysis.info
+                 else:
+-                    # Lightweight test peers and older injected clients.
+-                    reply = self._engine.play(self.board, limit, game=self._game_token,
++                    reply = self._engine.play(board, limit, game=token,
+                                               info=chess.engine.INFO_ALL)
+                     final_info = reply.info
+                     self._publish_evaluation(final_info)
+                 if timed_out.is_set():
+                     raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
+-                if reply.move is None or reply.move not in self.board.legal_moves:
++                if reply.move is None or reply.move not in board.legal_moves:
+                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
+-                # Do not attach a different principal variation's score to the
+-                # played position. Depth-zero fallback moves have no estimate.
+                 pv = final_info.get("pv", [])
+                 carry_score = bool(pv and pv[0] == reply.move)
+-                self.board.push(reply.move)
+-            except Exception as exc:
+-                self.error = f"{type(exc).__name__}: {exc}"
+-                if self._engine is not None:
+-                    self._engine.close()
+-                    self._engine = None
++            except BaseException as exc:
++                failure = f"{type(exc).__name__}: {exc}"
+             finally:
+                 if watchdog is not None:
+                     watchdog.cancel()
+-            self.revision += 1
+-            self._sync_evaluation(keep_search=not self.error and carry_score)
+-            self._save()
+-            return self.state()
++            with self._lock:
++                self._engine_searching = False
++                self._active_movetime_ms = None
++                if self.game_id != game_id or self._game_token is not token or self.revision != revision:
++                    failure = "RuntimeError: 검색 중 대국 상태가 바뀌어 이전 응답을 적용하지 않았습니다."
++                if failure is None:
++                    self.board.push(reply.move)
++                    self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
++                else:
++                    self.error = failure
++                    if self._engine is not None:
++                        self._engine.close()
++                        self._engine = None
++                self.revision += 1
++                self._sync_evaluation(keep_search=not self.error and carry_score)
++                self._save()
++                return self.state()
+ 
+     def undo(self, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             self._require_no_handicap()
+             if not self.state()["can_undo"]:
+                 raise ValueError("되돌릴 당신의 수가 없습니다.")
+@@ -398,6 +466,8 @@ class HumanGame:
+             self.error = None
+             self._override = None
+             self._forced_plies.intersection_update(range(1, len(self.board.move_stack) + 1))
++            self._engine_movetimes = {ply: ms for ply, ms in self._engine_movetimes.items()
++                                     if ply <= len(self.board.move_stack)}
+             self._game_token = object()
+             if self._engine is None:
+                 self._ensure_engine()
+@@ -409,6 +479,7 @@ class HumanGame:
+     def resign(self, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             self._require_no_handicap()
+             if self._outcome()[0] != "*" or self.error:
+                 raise ValueError("이미 종료된 대국입니다.")
+@@ -426,6 +497,7 @@ class HumanGame:
+         """Preview a replacement without overwriting the durable original line."""
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             self._require_no_handicap()
+             if type(ply) is not int or not 1 <= ply <= len(self.board.move_stack):
+                 raise ValueError("바꿀 Regicide의 수를 선택해 주세요.")
+@@ -436,11 +508,14 @@ class HumanGame:
+                 raise ValueError("당신의 수가 아닌 Regicide의 수를 선택해 주세요.")
+             self._handicap_backup = {"board": self.board.copy(stack=True),
+                                      "forced_plies": self._forced_plies.copy(),
++                                     "engine_movetimes": self._engine_movetimes.copy(),
+                                      "override": self._override, "error": self.error,
+                                      "outcome": self._outcome(), "ply": ply,
+                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
+             self.board = preview
+             self._forced_plies.intersection_update(range(1, ply))
++            self._engine_movetimes = {number: ms for number, ms in self._engine_movetimes.items()
++                                     if number < ply}
+             self.error = None
+             self._override = None
+             self.revision += 1
+@@ -450,6 +525,7 @@ class HumanGame:
+     def forced_move(self, uci, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             if self._handicap_backup is None or self.board.turn == self.human_color:
+                 raise ValueError("먼저 바꿀 Regicide의 수를 선택해 주세요.")
+             if not isinstance(uci, str) or len(uci) not in (4, 5):
+@@ -484,11 +560,13 @@ class HumanGame:
+     def cancel_handicap(self, revision):
+         with self._lock:
+             self._check_revision(revision)
++            self._require_idle()
+             if self._handicap_backup is None:
+                 raise ValueError("현재 바꾸고 있는 Regicide의 수가 없습니다.")
+             backup = self._handicap_backup
+             self.board = backup["board"]
+             self._forced_plies = backup["forced_plies"]
++            self._engine_movetimes = backup["engine_movetimes"]
+             self.error = backup["error"]
+             self._override = backup["override"]
+             self.updated_at = backup["updated_at"]
+@@ -504,6 +582,7 @@ class HumanGame:
+             backup = self._handicap_backup
+             board = backup["board"] if backup else self.board
+             forced_plies = backup["forced_plies"] if backup else self._forced_plies
++            movetimes = backup["engine_movetimes"] if backup else self._engine_movetimes
+             error = backup["error"] if backup else self.error
+             game = chess.pgn.Game.from_board(board)
+             result, termination = backup["outcome"] if backup else self._outcome()
+@@ -524,9 +603,13 @@ class HumanGame:
+                                      "ModelFile": self.neural_model.name})
+                 if self.neural_adopted_generation:
+                     game.headers["ModelGeneration"] = str(self.neural_adopted_generation)
++            if movetimes or self._time_settings_events:
++                game.headers["EngineMoveTimePolicy"] = "Header is latest setting; move comments record each search budget"
+             for ply, node in enumerate(game.mainline(), 1):
+                 if ply in forced_plies:
+                     node.comment = "User-forced Regicide move (handicap)"
++                elif ply in movetimes:
++                    node.comment = f"Regicide think time: {movetimes[ply]} ms"
+             return str(game) + "\n\n"
+ 
+     def _record_status(self):
+@@ -553,6 +636,8 @@ class HumanGame:
+                   "uci_moves": [move.uci() for move in self.board.move_stack],
+                   "state": state, "draw_policy": "always claim available threefold/50-move draws",
+                   "handicap_events": self._handicap_events,
++                  "engine_movetimes_ms": self._engine_movetimes,
++                  "time_settings_events": self._time_settings_events,
+                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
+         for extension, contents in (("pgn", self.pgn()),
+                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
+@@ -564,7 +649,7 @@ class HumanGame:
+     def close(self):
+         if self._hints is not None:
+             self._hints.close()
+-        with self._lock:
++        with self._search_lock, self._lock:
+             try:
+                 if getattr(self, "_game_open", False):
+                     self._game_open = False
+@@ -615,16 +700,46 @@ class HumanHandler(BaseHTTPRequestHandler):
+         self.end_headers()
+         self.wfile.write(data)
+ 
++    def _forbidden(self, message):
++        # Closing a Windows TCP socket with an unread POST body can reset the
++        # connection before the client receives its 403. Discard only a small
++        # declared body, with a bounded wait; rejected data is never processed.
++        if self.command == "POST":
++            try:
++                length = int(self.headers.get("Content-Length", "0"))
++            except ValueError:
++                length = 0
++            if 0 < length <= 4096:
++                timeout = self.connection.gettimeout()
++                try:
++                    deadline = time.monotonic() + 0.1
++                    remaining = length
++                    while remaining > 0:
++                        wait = deadline - time.monotonic()
++                        if wait <= 0:
++                            break
++                        self.connection.settimeout(wait)
++                        chunk = self.rfile.read1(remaining)
++                        if not chunk:
++                            break
++                        remaining -= len(chunk)
++                except (TimeoutError, OSError):
++                    pass
++                finally:
++                    self.connection.settimeout(timeout)
++        self.close_connection = True
++        self._send(403, {"error": message})
++
+     def _allowed(self, api=False):
+         if self.headers.get("Host") != self.server.origin.removeprefix("http://"):
+-            self._send(403, {"error": "허용되지 않은 주소입니다."})
++            self._forbidden("허용되지 않은 주소입니다.")
+             return False
+         origin = self.headers.get("Origin")
+         if origin is not None and origin != self.server.origin:
+-            self._send(403, {"error": "같은 대국 화면에서만 요청할 수 있습니다."})
++            self._forbidden("같은 대국 화면에서만 요청할 수 있습니다.")
+             return False
+         if api and not secrets.compare_digest(self.headers.get("X-Regicide-Token", ""), self.server.token):
+-            self._send(403, {"error": "대국 화면을 새로 열어 주세요."})
++            self._forbidden("대국 화면을 새로 열어 주세요.")
+             return False
+         return True
+ 
+@@ -697,6 +812,8 @@ class HumanHandler(BaseHTTPRequestHandler):
+                     self._send(400, {"error": str(exc), "hint": game.hint()})
+                 return
+             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision),
++                       "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
++                           data.get("game_id"), data.get("settings_revision")),
+                        "/api/move": lambda: game.human_move(data.get("move"), revision),
+                        "/api/engine": lambda: game.engine_move(revision),
+                        "/api/handicap": lambda: game.begin_handicap(data.get("ply"), revision),
+@@ -705,7 +822,9 @@ class HumanHandler(BaseHTTPRequestHandler):
+                        "/api/undo": lambda: game.undo(revision),
+                        "/api/resign": lambda: game.resign(revision)}
+             if self.path == "/api/shutdown":
+-                game._check_revision(revision)
++                with game._lock:
++                    game._check_revision(revision)
++                    game._require_idle()
+                 self._send(200, {"closed": True})
+                 threading.Thread(target=self.server.shutdown, daemon=True).start()
+             elif self.path in actions:
+diff --git a/web/human-play/app.js b/web/human-play/app.js
+index cfa3ce5..67f6929 100644
+--- a/web/human-play/app.js
++++ b/web/human-play/app.js
+@@ -11,6 +11,8 @@
+   let state = null;
+   let selected = null;
+   let busy = true;
++  let timeSaving = false;
++  let timeNotice = "";
+   let closed = false;
+   let errorMessage = "";
+   let pendingPromotion = [];
+@@ -36,7 +38,7 @@
+     byId("error-panel").hidden = !errorMessage;
+   }
+ 
+-  async function request(path, payload, signal) {
++  async function request(path, payload, signal, preserveSelection = false) {
+     let response;
+     try {
+       response = await fetch(path, {
+@@ -53,13 +55,30 @@
+     try { data = await response.json(); }
+     catch (_) { throw new Error("대국 상태를 읽지 못했습니다. 페이지를 새로 열어주세요."); }
+     if (!response.ok) {
+-      if (data.state) applyState(data.state);
++      if (data.state) applyState(data.state, preserveSelection);
+       throw new Error(data.error || "요청을 처리하지 못했습니다. 다시 시도해주세요.");
+     }
+     return data;
+   }
+ 
+-  function applyState(next) {
++  function applyState(next, preserveSelection = false) {
++    // A settings response may arrive after the engine response. Never move
++    // the board or its independently versioned time setting backwards.
++    if (state && next.revision < state.revision) {
++      if (state.game_id === next.game_id &&
++          Number(next.engine.settings_revision || 0) > Number(state.engine.settings_revision || 0)) {
++        state.engine.movetime_ms = next.engine.movetime_ms;
++        state.engine.settings_revision = next.engine.settings_revision;
++        render();
++      }
++      return;
++    }
++    if (state?.game_id === next.game_id &&
++        Number(next.engine.settings_revision || 0) < Number(state.engine.settings_revision || 0)) {
++      next.engine.movetime_ms = state.engine.movetime_ms;
++      next.engine.settings_revision = state.engine.settings_revision;
++    }
++    const unchangedPosition = state?.game_id === next.game_id && state.revision === next.revision;
+     if (!samePosition(state, next)) {
+       evaluation = null;
+       clearHint();
+@@ -71,7 +90,7 @@
+     state = next;
+     if (state.result !== "*" || state.error) clearHint();
+     if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
+-    selected = null;
++    if (!preserveSelection || !unchangedPosition) selected = null;
+     render();
+   }
+ 
+@@ -264,7 +283,7 @@
+         const label = piece ? `${square}, ${colorName(pieceColor)} ${pieceNames[piece.toLowerCase()]}` : `${square}, 빈 칸`;
+         button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : "") + (hintRole ? `, 추천 수 ${hintRole === "from" ? "출발" : "도착"}` : ""));
+         button.setAttribute("aria-pressed", String(square === selected));
+-        button.disabled = busy || closed || !state?.human_to_move;
++        button.disabled = busy || timeSaving || closed || !state?.human_to_move;
+         if (piece) {
+           const symbol = document.createElement("span");
+           symbol.className = "piece " + pieceColor;
+@@ -347,13 +366,19 @@
+       byId("header-engine-version").textContent = engineName.startsWith("Regicide ") ? "v" + engineName.slice("Regicide ".length) : "";
+       byId("human-detail").textContent = active ? `${colorName(humanColor)}으로 두고 있어요. 기물과 도착 칸을 눌러주세요.` : "이번 대국이 끝났습니다.";
+     }
+-    byId("new-game").disabled = !ready || busy;
+-    byId("human-side").disabled = !ready || busy;
+-    byId("think-time").disabled = !ready || busy;
+-    byId("undo").disabled = !ready || busy || !state.can_undo;
+-    byId("resign").disabled = !ready || busy || !active;
++    byId("new-game").disabled = !ready || busy || timeSaving;
++    byId("human-side").disabled = !ready || busy || timeSaving;
++    byId("think-time").disabled = !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
++    if (state && !timeSaving) byId("think-time").value = String(state.engine.movetime_ms);
++    const currentMS = state?.engine.active_movetime_ms;
++    byId("think-time-help").textContent = timeSaving ? "생각 시간을 저장하고 있습니다…" :
++      currentMS != null && currentMS !== state.engine.movetime_ms ?
++      `현재 수는 ${currentMS / 1000}초로 생각 중 · 다음 Regicide 수부터 ${state.engine.movetime_ms / 1000}초` :
++      timeNotice || "대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.";
++    byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
++    byId("resign").disabled = !ready || busy || timeSaving || !active;
+     byId("download-pgn").disabled = !ready || busy;
+-    byId("shutdown").disabled = !ready || busy;
++    byId("shutdown").disabled = !ready || busy || timeSaving;
+     byId("connection-label").textContent = closed ? "프로그램 종료됨" : "내 컴퓨터에서 대국 중";
+     const thinking = busy && ready && state.engine_to_move;
+     byId("status-dot").classList.toggle("thinking", thinking);
+@@ -369,7 +394,7 @@
+   }
+ 
+   async function mutate(path, payload = {}) {
+-    if (busy || closed || !state) return;
++    if (busy || timeSaving || closed || !state) return;
+     busy = true;
+     showError("");
+     selected = null;
+@@ -385,6 +410,23 @@
+     finally { busy = false; render(); }
+   }
+ 
++  async function changeThinkTime() {
++    if (!state || closed || timeSaving || state.handicap_mode || (busy && !state.engine_to_move)) return;
++    const movetime = Number(byId("think-time").value);
++    timeSaving = true;
++    timeNotice = "";
++    showError("");
++    render();
++    try {
++      applyState(await request("/api/think-time", {
++        game_id: state.game_id, settings_revision: state.engine.settings_revision,
++        movetime_ms: movetime
++      }, undefined, true), true);
++      timeNotice = `${movetime / 1000}초로 저장했습니다. 다음 Regicide 수부터 적용됩니다.`;
++    } catch (error) { showError(error.message); }
++    finally { timeSaving = false; render(); }
++  }
++
+   function choosePromotion(moves) {
+     pendingPromotion = moves;
+     const choices = document.createDocumentFragment();
+@@ -411,7 +453,7 @@
+ 
+   boardElement.addEventListener("click", (event) => {
+     const button = event.target.closest("button[data-square]");
+-    if (!button || busy || closed || !state?.human_to_move) return;
++    if (!button || busy || timeSaving || closed || !state?.human_to_move) return;
+     const square = button.dataset.square;
+     if (selected === square) { selected = null; render(); return; }
+     if (selected) {
+@@ -437,6 +479,7 @@
+     event.preventDefault();
+     void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value)});
+   });
++  byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
+   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
+   byId("resign").addEventListener("click", () => { void mutate("/api/resign"); });
+   byId("hint-toggle").addEventListener("click", () => {
+@@ -449,7 +492,7 @@
+     void syncHintToggle();
+   });
+   byId("shutdown").addEventListener("click", async () => {
+-    if (busy || closed || !state) return;
++    if (busy || timeSaving || closed || !state) return;
+     busy = true;
+     showError("");
+     clearHint();
+diff --git a/web/human-play/index.html b/web/human-play/index.html
+index bbf697d..f9aa757 100644
+--- a/web/human-play/index.html
++++ b/web/human-play/index.html
+@@ -49,11 +49,12 @@
+             <label class="field-label" for="human-side">내 기물 색</label>
+             <div class="select-wrap"><select id="human-side" name="color"><option value="white">백 · 내가 먼저 시작</option><option value="black">흑 · Regicide가 먼저 시작</option></select></div>
+             <label class="field-label" for="think-time">Regicide가 한 수를 생각할 시간</label>
+-            <div class="select-wrap"><select id="think-time" name="movetime_ms"><option value="100">0.1초 · 빠르게</option><option value="1000" selected>1초 · 기본</option><option value="3000">3초 · 더 신중하게</option><option value="5000">5초 · 충분히 생각</option></select></div>
++            <div class="select-wrap"><select id="think-time" name="movetime_ms" aria-describedby="think-time-help"><option value="100">0.1초 · 빠르게</option><option value="1000" selected>1초 · 기본</option><option value="3000">3초 · 더 신중하게</option><option value="5000">5초 · 충분히 생각</option></select></div>
++            <p class="help-note" id="think-time-help" aria-live="polite">대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.</p>
+             <button class="primary-button" id="new-game" type="submit" disabled>새 대국 시작<span aria-hidden="true">↗</span></button>
+           </form>
+           <div class="game-actions"><button id="undo" class="secondary-button" type="button" disabled><span aria-hidden="true">↶</span> 한 턴 되돌리기</button><button id="resign" class="secondary-button" type="button" disabled>기권</button></div>
+-          <p class="help-note">설정을 바꾸고 새 대국을 시작하면 적용됩니다.</p>
++          <p class="help-note">기물 색은 새 대국을 시작할 때 적용됩니다. 생각 시간은 새 대국 없이 바꿀 수 있습니다.</p>
+         </section>
+ 
+         <section class="card moves-card" aria-label="이번 대국 기보">
+diff --git a/tests/think_time_tests.py b/tests/think_time_tests.py
+new file mode 100644
+--- /dev/null
++++ b/tests/think_time_tests.py
+@@ -0,0 +1,310 @@
++"""Live practice time changes, including concurrent requests; fake UCI only."""
++
++from concurrent.futures import ThreadPoolExecutor
++import json
++import socket
++import threading
++import time
++import unittest
++
++import human_play_tests as baseline
++
++
++host = baseline.play_human
++
++
++class ThinkTimeTests(baseline.HumanPlayTests):
++    def setting(self, ms, state=None):
++        state = state or self.game.state()
++        return self.game.set_think_time(ms, state["game_id"], state["engine"]["settings_revision"])
++
++    def saved(self):
++        return json.loads((self.game.save_dir / f"{self.game.game_id}.json").read_text(encoding="utf-8"))
++
++    def files(self):
++        return {path.name: path.read_bytes() for path in self.game.save_dir.iterdir()}
++
++    def test_setting_persists_without_changing_game_position_or_search_token(self):
++        self.new(ms=1000)
++        self.human("e2e4")
++        self.engine("e7e5")
++        before, token = self.game.state(), self.game._game_token
++        changed = self.setting(3000)
++        for name in ("revision", "game_id", "board", "turn", "human_color", "moves", "result", "can_undo"):
++            self.assertEqual(changed[name], before[name], name)
++        self.assertIs(self.game._game_token, token)
++        self.assertEqual(changed["engine"]["movetime_ms"], 3000)
++        self.assertEqual(changed["engine"]["settings_revision"], 1)
++        record = self.saved()
++        self.assertEqual(record["state"]["engine"]["movetime_ms"], 3000)
++        self.assertEqual(record["time_settings_events"][-1]["from_ms"], 1000)
++        self.assertEqual(record["time_settings_events"][-1]["after_ply"], 2)
++        self.human("g1f3")
++        self.engine("b8c6")
++        calls = self.factory.instances[-1].calls
++        self.assertEqual([call[1].time for call in calls], [1.0, 3.0])
++        self.assertIs(calls[0][2], calls[1][2])
++        self.assertEqual(self.saved()["engine_movetimes_ms"], {"2": 1000, "4": 3000})
++        for pgn in (self.game.pgn(), host.GameArchive(self.game.save_dir).get_pgn(self.game.game_id)):
++            parsed, _ = baseline.read_pgn(pgn)
++            nodes = list(parsed.mainline())
++            self.assertEqual(parsed.headers["EngineMoveTimeMS"], "3000")
++            self.assertIn("1000 ms", nodes[1].comment)
++            self.assertIn("3000 ms", nodes[3].comment)
++            self.assertEqual(nodes[0].comment, "")
++
++    def test_invalid_and_stale_settings_preserve_board_files_and_settings(self):
++        self.new()
++        for value in (None, True, False, "3000", 3000.0, 99, 5001, float("inf"), float("nan")):
++            before, files = self.game.state(), self.files()
++            with self.subTest(value=value), self.assertRaises(ValueError):
++                self.setting(value)
++            self.assertEqual(self.game.state(), before)
++            self.assertEqual(self.files(), files)
++        old = self.game.state()
++        self.setting(3000)
++        for game_id, revision in ((old["game_id"], 0), ("old-game", 1), (old["game_id"], True)):
++            before, files = self.game.state(), self.files()
++            with self.assertRaises(host.RevisionError):
++                self.game.set_think_time(5000, game_id, revision)
++            self.assertEqual(self.game.state(), before)
++            self.assertEqual(self.files(), files)
++        self.new()
++        with self.assertRaises(host.RevisionError):
++            self.game.set_think_time(5000, old["game_id"], 0)
++
++    def test_same_value_is_idempotent(self):
++        self.new(ms=3000)
++        before, files = self.game.state(), self.files()
++        self.assertEqual(self.setting(3000), before)
++        self.assertEqual(self.files(), files)
++
++    def blocked_search(self):
++        entered, release = threading.Event(), threading.Event()
++        peer = self.factory.instances[-1]
++        original = peer.play
++
++        def delayed(*args, **kwargs):
++            entered.set()
++            if not release.wait(5):
++                raise RuntimeError("test search release timed out")
++            return original(*args, **kwargs)
++
++        peer.play = delayed
++        return entered, release
++
++    def test_change_during_search_is_saved_immediately_and_applies_to_next_search(self):
++        self.new(ms=5000)
++        self.human("e2e4")
++        entered, release = self.blocked_search()
++        with ThreadPoolExecutor(max_workers=2) as workers:
++            running = workers.submit(self.engine, "e7e5")
++            try:
++                self.assertTrue(entered.wait(2))
++                before = self.game.state()
++                self.assertTrue(before["engine_thinking"])
++                self.assertEqual(before["engine"]["active_movetime_ms"], 5000)
++                changed = workers.submit(self.setting, 100).result(timeout=1)
++                self.assertFalse(running.done())
++                self.assertEqual(changed["revision"], before["revision"])
++                self.assertEqual(changed["engine"]["active_movetime_ms"], 5000)
++                self.assertEqual(self.saved()["state"]["engine"]["movetime_ms"], 100)
++                self.assertEqual(self.saved()["time_settings_events"][-1]["active_search_ms"], 5000)
++                for operation in (lambda: self.new("black"), lambda: self.game.undo(before["revision"]),
++                                  lambda: self.game.resign(before["revision"]),
++                                  lambda: self.game.begin_handicap(1, before["revision"]),
++                                  lambda: self.game.forced_move("a7a6", before["revision"]),
++                                  lambda: self.game.cancel_handicap(before["revision"]),
++                                  lambda: self.human("d2d4")):
++                    with self.assertRaises(ValueError):
++                        operation()
++                self.assertEqual(self.game.state()["board"], before["board"])
++            finally:
++                release.set()
++            done = running.result(timeout=2)
++        self.assertFalse(done["engine_thinking"])
++        self.assertIsNone(done["engine"]["active_movetime_ms"])
++        self.human("g1f3")
++        self.engine("b8c6")
++        self.assertEqual([call[1].time for call in self.factory.instances[-1].calls], [5.0, .1])
++
++    def test_close_waits_for_search_without_deadlock_and_rejects_late_setting(self):
++        self.new()
++        self.human("e2e4")
++        entered, release = self.blocked_search()
++        close_entered = threading.Event()
++
++        def close():
++            close_entered.set()
++            self.game.close()
++
++        with ThreadPoolExecutor(max_workers=2) as workers:
++            search = workers.submit(self.engine, "e7e5")
++            try:
++                self.assertTrue(entered.wait(2))
++                closing = workers.submit(close)
++                self.assertTrue(close_entered.wait(2))
++                self.assertFalse(closing.done())
++            finally:
++                release.set()
++            search.result(timeout=2)
++            closing.result(timeout=2)
++        self.assertTrue(self.factory.instances[-1].closed)
++        self.assertEqual(self.saved()["uci_moves"], ["e2e4", "e7e5"])
++        with self.assertRaises(host.RevisionError):
++            self.setting(3000)
++
++    def test_closed_game_rejects_queued_requests_without_restarting_engine(self):
++        self.new()
++        self.human("e2e4")
++        revision = self.game.revision
++        self.game.close()
++        instances = len(self.factory.instances)
++        before = self.game.state()
++        self.assertFalse(before["engine_to_move"])
++        for operation in (lambda: self.game.engine_move(revision),
++                          lambda: self.game.new_game("black", 100, revision),
++                          lambda: self.game.undo(revision), lambda: self.game.resign(revision)):
++            with self.assertRaises(ValueError):
++                operation()
++        self.assertEqual(len(self.factory.instances), instances)
++        self.assertEqual(self.game.state(), before)
++
++    def test_undo_and_handicap_keep_time_setting_and_correct_move_annotations(self):
++        self.new(ms=1000)
++        self.human("e2e4")
++        self.engine("e7e5")
++        self.setting(3000)
++        self.human("g1f3")
++        self.engine("b8c6")
++        before_files = self.files()
++        self.game.begin_handicap(2, self.game.revision)
++        with self.assertRaises(ValueError):
++            self.setting(5000)
++        self.assertEqual(self.files(), before_files)
++        self.game.cancel_handicap(self.game.revision)
++        self.assertEqual(self.saved()["engine_movetimes_ms"], {"2": 1000, "4": 3000})
++        self.game.begin_handicap(2, self.game.revision)
++        self.game.forced_move("a7a6", self.game.revision)
++        self.assertEqual(self.saved()["engine_movetimes_ms"], {})
++        self.assertEqual(self.game.state()["engine"]["movetime_ms"], 3000)
++        self.human("g1f3")
++        self.engine("b8c6")
++        self.game.undo(self.game.revision)
++        self.assertEqual(self.saved()["engine_movetimes_ms"], {})
++        self.assertEqual(self.game.state()["engine"]["movetime_ms"], 3000)
++        parsed, _ = baseline.read_pgn(self.game.pgn())
++        self.assertIn("handicap", list(parsed.mainline())[1].comment)
++
++
++class ThinkTimeHTTPTests(unittest.TestCase):
++    setUp = baseline.HumanHTTPTests.setUp
++    stop_server = baseline.HumanHTTPTests.stop_server
++    request = baseline.HumanHTTPTests.request
++
++    def payload(self, ms):
++        state = self.game.state()
++        return {"game_id": state["game_id"], "settings_revision": state["engine"]["settings_revision"],
++                "movetime_ms": ms}
++
++    def test_api_validates_auth_session_revision_and_value(self):
++        payload = self.payload(3000)
++        before = self.game.state()
++        self.assertEqual(self.request("/api/think-time", payload, token=False)[0], 403)
++        self.assertEqual(self.game.state(), before)
++        for replacement in ({"movetime_ms": True}, {"movetime_ms": 7000},
++                            {"game_id": "old-session"}, {"settings_revision": "0"}):
++            code, _, _ = self.request("/api/think-time", {**payload, **replacement})
++            self.assertIn(code, (400, 409))
++            self.assertEqual(self.game.state(), before)
++        code, _, data = self.request("/api/think-time", payload)
++        self.assertEqual(code, 200)
++        changed = json.loads(data)
++        self.assertEqual(changed["engine"]["movetime_ms"], 3000)
++        self.assertEqual(changed["revision"], before["revision"])
++        self.assertEqual(self.request("/api/think-time", payload)[0], 409)
++
++    def test_forbidden_post_bodies_receive_403_without_mutating_the_game(self):
++        before = self.game.state()
++        payload = self.payload(3000)
++        for _ in range(20):
++            self.assertEqual(self.request("/api/think-time", payload,
++                                         headers={"Host": "attacker.example"})[0], 403)
++        # A peer that promises a body and stops sending cannot hold the
++        # unauthorized request handler indefinitely.
++        with socket.create_connection(self.server.server_address, timeout=2) as client:
++            client.sendall(b"POST /api/think-time HTTP/1.0\r\nHost: attacker.example\r\n"
++                           b"Content-Type: application/json\r\nContent-Length: 20\r\n\r\nx")
++            chunks = []
++            while data := client.recv(4096):
++                chunks.append(data)
++            response = b"".join(chunks)
++        self.assertIn(b"403", response.split(b"\r\n", 1)[0])
++        self.assertEqual(self.game.state(), before)
++
++    def test_http_setting_and_state_respond_while_engine_request_is_pending(self):
++        self.game.human_move("e2e4", self.game.revision)
++        entered, release = threading.Event(), threading.Event()
++        peer = self.factory.instances[-1]
++        original = peer.play
++
++        def delayed(*args, **kwargs):
++            entered.set()
++            if not release.wait(5):
++                raise RuntimeError("test release timed out")
++            return original(*args, **kwargs)
++
++        peer.play = delayed
++        with ThreadPoolExecutor(max_workers=2) as workers:
++            search = workers.submit(self.request, "/api/engine", {"revision": self.game.revision})
++            try:
++                self.assertTrue(entered.wait(2))
++                code, _, data = workers.submit(self.request, "/api/think-time", self.payload(5000)).result(timeout=2)
++                self.assertEqual(code, 200)
++                self.assertTrue(json.loads(data)["engine_thinking"])
++                self.assertFalse(search.done())
++                code, _, data = self.request("/api/state")
++                self.assertEqual(code, 200)
++                self.assertEqual(json.loads(data)["engine"]["movetime_ms"], 5000)
++                self.assertEqual(self.request("/api/shutdown", {"revision": self.game.revision})[0], 400)
++            finally:
++                release.set()
++            self.assertEqual(search.result(timeout=2)[0], 200)
++
++    def test_forbidden_slow_body_has_a_total_wait_deadline(self):
++        before = self.game.state()
++        stop = threading.Event()
++        with socket.create_connection(self.server.server_address, timeout=2) as client:
++            def stream():
++                for _ in range(20):
++                    if stop.wait(.04):
++                        return
++                    try:
++                        client.sendall(b"x")
++                    except OSError:
++                        return
++
++            writer = threading.Thread(target=stream, daemon=True)
++            start = time.monotonic()
++            client.sendall(b"POST /api/think-time HTTP/1.0\r\nHost: attacker.example\r\n"
++                           b"Content-Type: application/json\r\nContent-Length: 20\r\n\r\n")
++            writer.start()
++            try:
++                chunks = []
++                try:
++                    while data := client.recv(4096):
++                        chunks.append(data)
++                except ConnectionResetError:
++                    pass  # An incomplete attacker body need not get a graceful TCP close.
++                self.assertIn(b"403", b"".join(chunks).split(b"\r\n", 1)[0])
++                self.assertLess(time.monotonic() - start, .5,
++                                "A slow body must not extend the drain timeout per received byte")
++            finally:
++                stop.set()
++                writer.join(timeout=2)
++        self.assertFalse(writer.is_alive())
++        self.assertEqual(self.game.state(), before)
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)
+diff --git a/tests/think_time_web_tests.js b/tests/think_time_web_tests.js
+new file mode 100644
+--- /dev/null
++++ b/tests/think_time_web_tests.js
+@@ -0,0 +1,132 @@
++"use strict";
++
++// Execute the shipped browser script with a minimal DOM and controlled HTTP
++// replies. No chess engine, browser rendering or human interaction is claimed.
++const assert = require("node:assert/strict");
++const fs = require("node:fs");
++const path = require("node:path");
++const vm = require("node:vm");
++
++class Element {
++  constructor() {
++    this.children = [];
++    this.style = {};
++    this.dataset = {};
++    this.listeners = {};
++    this.attributes = {};
++    this.classes = new Set();
++    this.classList = {
++      add: value => this.classes.add(value),
++      toggle: (value, enabled) => enabled ? this.classes.add(value) : this.classes.delete(value)
++    };
++    this.value = "";
++    this.textContent = "";
++    this.disabled = false;
++  }
++  append(...items) { this.children.push(...items); }
++  replaceChildren(...items) { this.children = items.flatMap(item => item.fragment ? item.children : [item]); }
++  setAttribute(name, value) { this.attributes[name] = value; }
++  addEventListener(name, callback) { this.listeners[name] = callback; }
++  querySelector() { return null; }
++  showModal() { this.open = true; }
++  close() { this.open = false; }
++}
++
++const elements = new Map();
++const byId = id => {
++  if (!elements.has(id)) elements.set(id, new Element());
++  return elements.get(id);
++};
++const pending = [];
++const calls = [];
++const document = {
++  getElementById: byId, querySelector: () => ({content: "test-session-token"}),
++  createElement: () => new Element(), createDocumentFragment: () => Object.assign(new Element(), {fragment: true}),
++  activeElement: null, body: new Element()
++};
++const source = fs.readFileSync(path.join(__dirname, "../web/human-play/app.js"), "utf8");
++vm.runInNewContext(source, {
++  document, console, setTimeout: () => {}, clearTimeout: () => {}, URL: {},
++  setInterval: () => 1, clearInterval: () => {}, window: {addEventListener: () => {}}, AbortController,
++  fetch: (url, options) => new Promise(resolve => {
++    const call = {url, body: options.body ? JSON.parse(options.body) : null, resolve};
++    calls.push(call);
++    pending.push(call);
++  })
++});
++
++const flush = async () => { for (let i = 0; i < 12; ++i) await Promise.resolve(); };
++async function reply(url, state, ok = true) {
++  const index = pending.findIndex(call => call.url === url);
++  assert.ok(index >= 0, "expected pending HTTP request " + url);
++  const [call] = pending.splice(index, 1);
++  call.resolve({ok, json: async () => structuredClone(state)});
++  await flush();
++  return call;
++}
++function fixture(revision = 1, settingRevision = 0, ms = 1000) {
++  return {revision, game_id: "game-one", board: {e2: "P", g1: "N", e1: "K", e8: "k"},
++    human_color: "white", human_to_move: true, engine_to_move: false,
++    legal_moves: ["e2e4", "g1f3"], moves: [], last_move: null,
++    result: "*", error: null, status: "당신 차례입니다", can_undo: false, in_check: false,
++    engine: {name: "Regicide test", movetime_ms: ms, settings_revision: settingRevision, active_movetime_ms: null}};
++}
++function clickSquare(square) {
++  byId("board").listeners.click({target: {closest: () => ({dataset: {square}})}});
++}
++function isSelected(square) {
++  return byId("board").children.some(child => child.dataset.square === square && child.classes.has("selected"));
++}
++
++(async () => {
++  await reply("/api/state", fixture());
++  assert.equal(byId("think-time").disabled, false);
++  clickSquare("e2");
++  assert.ok(isSelected("e2"));
++  byId("human-side").value = "black"; // A draft color applies only to a new game.
++  byId("think-time").value = "5000";
++  byId("think-time").listeners.change();
++  assert.equal(byId("new-game").disabled, true);
++  assert.equal(pending[0].url, "/api/think-time");
++  assert.deepEqual(pending[0].body, {game_id: "game-one", settings_revision: 0, movetime_ms: 5000});
++  await reply("/api/think-time", fixture(1, 1, 5000));
++  assert.ok(isSelected("e2"), "changing time preserves selected piece");
++  assert.equal(byId("human-side").value, "black", "time does not apply the drafted color");
++  assert.equal(byId("think-time").value, "5000");
++  assert.ok(byId("think-time-help").textContent.includes("다음 Regicide 수부터"));
++  assert.ok(!calls.some(call => call.url === "/api/new"));
++
++  clickSquare("e4");
++  const human = fixture(2, 1, 5000);
++  human.human_to_move = false;
++  human.engine_to_move = true;
++  human.moves = [{ply: 1, san: "e4", uci: "e2e4", actor: "human"}];
++  await reply("/api/move", human);
++  assert.ok(pending.some(call => call.url === "/api/engine"));
++  assert.equal(byId("think-time").disabled, false, "time remains editable while the engine thinks");
++  byId("think-time").value = "3000";
++  byId("think-time").listeners.change();
++  const done = fixture(3, 1, 5000);
++  done.can_undo = true;
++  done.moves = [...human.moves, {ply: 2, san: "e5", uci: "e7e5", actor: "engine"}];
++  await reply("/api/engine", done);
++  const lateSetting = structuredClone(human);
++  lateSetting.engine = {name: "Regicide test", movetime_ms: 3000, settings_revision: 2, active_movetime_ms: 5000};
++  await reply("/api/think-time", lateSetting);
++  assert.equal(byId("move-count").textContent, "2수", "late settings response cannot rewind the board");
++  assert.equal(byId("think-time").value, "3000", "newer settings survive a late board snapshot");
++
++  clickSquare("g1");
++  assert.ok(isSelected("g1"));
++  byId("think-time").value = "100";
++  byId("think-time").listeners.change();
++  const conflict = structuredClone(done);
++  conflict.engine.movetime_ms = 1000;
++  conflict.engine.settings_revision = 3;
++  await reply("/api/think-time", {error: "생각 시간이 먼저 바뀌었습니다.", state: conflict}, false);
++  assert.equal(byId("think-time").value, "1000");
++  assert.ok(isSelected("g1"), "time conflict refresh preserves a legal piece selection");
++  assert.ok(byId("error-text").textContent.includes("먼저 바뀌었습니다"));
++  assert.equal(pending.length, 0);
++  console.log("Browser time-setting checks: PASS (selection, independent color, live search, response order, CAS failure)");
++})().catch(error => { console.error(error); process.exitCode = 1; });
+diff --git a/tests/think_time_live_tests.py b/tests/think_time_live_tests.py
+new file mode 100644
+--- /dev/null
++++ b/tests/think_time_live_tests.py
+@@ -0,0 +1,111 @@
++"""Isolated real-engine smoke for next-search time changes (optional Godot)."""
++
++import argparse
++from concurrent.futures import ThreadPoolExecutor
++import datetime
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "scripts"))
++import play_human as host
++
++
++def run(args):
++    result = {"started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
++              "binary": str(args.binary.resolve()), "godot": str(args.godot) if args.godot else None,
++              "checks": [], "engine_closed": False, "status": "FAIL", "rendered": args.rendered}
++    with tempfile.TemporaryDirectory(prefix="regicide-think-time-live-") as folder:
++        folder = Path(folder)
++        game = host.HumanGame(args.binary, folder / "games")
++        server, thread = None, None
++        try:
++            if args.godot:
++                server = host.HumanServer(game)
++                thread = threading.Thread(target=server.serve_forever, daemon=True)
++                thread.start()
++                config = folder / "backend.json"
++                config.write_text(json.dumps({"url": server.origin, "token": server.token}), encoding="utf-8")
++                command = [str(args.godot), "--path", str(ROOT / "godot")]
++                if not args.rendered:
++                    command.append("--headless")
++                command += ["--script", "res://tests/think_time_live_tests.gd", "--", "--backend-file", str(config)]
++                if args.rendered:
++                    command += ["--evidence-dir", str(args.output.resolve().parent)]
++                completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True,
++                                           encoding="utf-8", errors="replace", timeout=60)
++                result["godot_stdout"] = completed.stdout
++                result["godot_stderr"] = completed.stderr
++                if completed.returncode or "SCRIPT ERROR:" in completed.stdout + completed.stderr or "ERROR:" in completed.stdout + completed.stderr:
++                    raise AssertionError(f"Godot think-time checks failed: {completed.returncode}")
++                result["checks"].append("Godot scene live time settings and search callbacks")
++                if args.rendered:
++                    screenshot = args.output.resolve().parent / "thinking-time-next-move.png"
++                    assert screenshot.is_file()
++                    result["screenshot"] = {"path": str(screenshot),
++                                            "sha256": hashlib.sha256(screenshot.read_bytes()).hexdigest()}
++            else:
++                state = game.new_game("white", 1000, game.revision)
++                state = game.human_move("e2e4", state["revision"])
++                with ThreadPoolExecutor(max_workers=1) as worker:
++                    search = worker.submit(game.engine_move, state["revision"])
++                    deadline = time.monotonic() + 3
++                    while not game.state()["engine_thinking"] and time.monotonic() < deadline:
++                        time.sleep(.005)
++                    current = game.state()
++                    assert current["engine_thinking"] and current["engine"]["active_movetime_ms"] == 1000
++                    changed = game.set_think_time(100, current["game_id"], current["engine"]["settings_revision"])
++                    assert not search.done() and changed["revision"] == state["revision"]
++                    assert changed["engine"]["active_movetime_ms"] == 1000
++                    record = json.loads((game.save_dir / (game.game_id + ".json")).read_text(encoding="utf-8"))
++                    assert record["state"]["engine"]["movetime_ms"] == 100
++                    state = search.result(timeout=5)
++                assert state["human_to_move"] and state["error"] is None
++                legal = state["legal_moves"][0]
++                state = game.human_move(legal, state["revision"])
++                state = game.engine_move(state["revision"])
++                assert state["human_to_move"] and state["error"] is None
++                record = json.loads((game.save_dir / (game.game_id + ".json")).read_text(encoding="utf-8"))
++                assert record["engine_movetimes_ms"] == {"2": 1000, "4": 100}
++                assert len(state["moves"]) == 4
++                result["checks"] += ["real active search retains 1000 ms", "100 ms next budget saved during search",
++                                     "same game continues with legal engine replies", "per-move requested times saved"]
++            result["binary_sha256"] = game.binary_sha256
++            result["status"] = "PASS"
++        finally:
++            if server:
++                server.shutdown()
++                server.server_close()
++            if thread:
++                thread.join(timeout=5)
++                assert not thread.is_alive()
++            game.close()
++            result["engine_closed"] = game._engine is None
++    result["finished_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
++    return result
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--binary", type=Path, required=True)
++    parser.add_argument("--godot", type=Path)
++    parser.add_argument("--rendered", action="store_true", help="Render a native Godot window and capture the current/next budgets")
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    if args.rendered and not args.godot:
++        parser.error("--rendered requires --godot")
++    result = run(args)
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
++        stream.write(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
++    print(json.dumps(result, ensure_ascii=False, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/installed_think_time_stream_tests.py b/tests/installed_think_time_stream_tests.py
+new file mode 100644
+--- /dev/null
++++ b/tests/installed_think_time_stream_tests.py
+@@ -0,0 +1,54 @@
++"""Installed streamed evaluation and live time settings; fake transport only."""
++from concurrent.futures import ThreadPoolExecutor
++import json
++import threading
++import unittest
++
++import evaluation_state_tests as evaluation
++
++
++class InstalledStreamingTimeTests(unittest.TestCase):
++    def setUp(self):
++        evaluation.EvaluationStateTests.setUp(self)
++
++    def test_setting_does_not_reset_live_evaluation_hint_or_active_stream(self):
++        self.game.new_game("white", 3000, self.game.state()["revision"])
++        self.game.human_move("e2e4", self.game.state()["revision"])
++        token = self.game._game_token
++        self.peer.next_move = "e7e5"
++        self.peer.gate = threading.Event()
++        with ThreadPoolExecutor(max_workers=1) as workers:
++            search = workers.submit(self.game.engine_move, self.game.state()["revision"])
++            try:
++                self.assertTrue(self.peer.waiting.wait(2))
++                state = self.game.state()
++                score, hint = self.game.evaluation(), self.game.hint()
++                changed = self.game.set_think_time(5000, state["game_id"],
++                                                   state["engine"]["settings_revision"])
++                self.assertEqual(self.game.evaluation(), score)
++                self.assertEqual(self.game.hint(), hint)
++                self.assertEqual(score["status"], "searching")
++                self.assertEqual(changed["engine"]["active_movetime_ms"], 3000)
++                self.assertEqual(changed["engine"]["movetime_ms"], 5000)
++                self.assertEqual(changed["revision"], state["revision"])
++                self.assertEqual(changed["board"], state["board"])
++                self.assertIs(self.game._game_token, token)
++                self.assertFalse(search.done())
++            finally:
++                self.peer.gate.set()
++            first = search.result(timeout=3)
++        self.assertEqual(first["engine"]["movetime_ms"], 5000)
++        self.assertIsNone(first["engine"]["active_movetime_ms"])
++        self.assertEqual(self.game.evaluation()["source"], "previous_search")
++        self.game.human_move("g1f3", first["revision"])
++        self.peer.gate = None
++        self.peer.next_move = "b8c6"
++        self.game.engine_move(self.game.state()["revision"])
++        self.assertEqual([call[1].time for call in self.peer.analysis_calls], [3.0, 5.0])
++        self.assertTrue(all(call[2] is token for call in self.peer.analysis_calls))
++        saved = json.loads((self.game.save_dir / f"{self.game.game_id}.json").read_text(encoding="utf-8"))
++        self.assertEqual(saved["engine_movetimes_ms"], {"2": 3000, "4": 5000})
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)
+diff --git a/godot/tests/think_time_capture_scene.gd b/godot/tests/think_time_capture_scene.gd
+new file mode 100644
+--- /dev/null
++++ b/godot/tests/think_time_capture_scene.gd
+@@ -0,0 +1,15 @@
++extends "res://scripts/main.gd"
++## Exercise the actual controller while replacing only HTTP transport.
++
++var captured_requests: Array[Dictionary] = []
++var next_response: Dictionary = {}
++var hold_response: bool = false
++
++
++func _send_request(path: String, payload: Variant = null, client: HTTPRequest = null) -> Dictionary:
++	captured_requests.append({"path": path, "payload": payload.duplicate(true) if payload is Dictionary else payload,
++		"settings_client": client == think_time_http})
++	await get_tree().process_frame
++	while hold_response:
++		await get_tree().process_frame
++	return next_response.duplicate(true)
+diff --git a/godot/tests/think_time_offline_tests.gd b/godot/tests/think_time_offline_tests.gd
+new file mode 100644
+--- /dev/null
++++ b/godot/tests/think_time_offline_tests.gd
+@@ -0,0 +1,153 @@
++extends SceneTree
++## No backend or chess engine is started. Only HTTP transport is substituted.
++
++const CaptureApp = preload("res://tests/think_time_capture_scene.gd")
++var checks: int = 0
++var failures: int = 0
++var app: Variant
++
++
++func _initialize() -> void:
++	_run.call_deferred()
++
++
++func verify(condition: bool, message: String) -> void:
++	checks += 1
++	if not condition:
++		failures += 1
++		printerr("FAIL: ", message)
++
++
++func fixture() -> Dictionary:
++	return {"game_id": "offline-game", "revision": 17,
++		"fen": "7k/4P3/8/8/8/8/8/4K3 w - - 0 1",
++		"board": {"e7": "P", "e1": "K", "h8": "k"}, "turn": "white",
++		"human_color": "white", "human_to_move": true, "engine_to_move": false,
++		"legal_moves": ["e7e8q", "e7e8r", "e7e8b", "e7e8n", "e1d1"],
++		"moves": [{"ply": 1, "uci": "h2h1", "san": "Kh1", "actor": "engine"}],
++		"last_move": "h2h1", "in_check": false, "result": "*", "can_undo": true,
++		"status": "offline UI fixture", "termination": null, "error": null,
++		"engine_thinking": false,
++		"engine": {"name": "offline transport", "movetime_ms": 3000,
++			"settings_revision": 5, "active_movetime_ms": null}}
++
++
++func select_time(milliseconds: int) -> void:
++	var index: int = app.time_option.get_item_index(milliseconds)
++	app.time_option.select(index)
++	app.time_option.item_selected.emit(index)
++
++
++func _run() -> void:
++	root.size = Vector2i(1240, 860)
++	app = CaptureApp.new()
++	app.offline_mode = true
++	root.add_child(app)
++	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	await process_frame
++	app.backend_url = "http://127.0.0.1:1"
++	app.accept_state(fixture())
++	verify(app.time_option.get_selected_id() == 3000, "dropdown reflects saved current-game time")
++	verify(not app.time_option.disabled, "current game time can change while idle")
++	app.board_model.selected_square = "e7"
++	app.board_model.pending_promotions.assign(["e7e8q", "e7e8n"])
++	var next: Dictionary = fixture()
++	next.engine.movetime_ms = 5000
++	next.engine.settings_revision = 6
++	app.next_response = {"ok": true, "data": next}
++	app.hold_response = true
++	select_time(5000)
++	verify(app.think_time_request_in_flight, "settings request has separate busy state")
++	verify(not app.request_in_flight, "settings request does not consume board/search busy state")
++	verify(app.captured_requests.size() == 1, "one dropdown selection sends exactly one request")
++	var sent: Dictionary = app.captured_requests[0]
++	verify(sent.path == "/api/think-time" and sent.settings_client, "dedicated settings transport and route")
++	verify(sent.payload == {"game_id": "offline-game", "settings_revision": 5, "movetime_ms": 5000}, "exact game and settings version payload; no board mutation")
++	verify(app.board_model.selected_square == "e7", "pending settings preserve selected square")
++	verify(app.board_model.pending_promotions == ["e7e8q", "e7e8n"], "pending settings preserve promotion choices")
++	verify(app.time_option.disabled and app.new_button.disabled, "only one settings update and no new-game race")
++	app.hold_response = false
++	await process_frame
++	await process_frame
++	verify(not app.think_time_request_in_flight, "settings busy flag clears")
++	verify(int(app.state.revision) == 17 and app.state.moves == next.moves, "settings acknowledgement preserves board revision and history")
++	verify(app.board_model.selected_square == "e7" and app.promotion_panel.visible, "acknowledgement keeps selection and promotion panel")
++	verify(app.time_option.get_selected_id() == 5000, "acknowledged next-search time remains selected")
++	verify(app.think_time_help.text.contains("5"), "saved time is visible")
++	app.request_in_flight = true
++	app.engine_thinking = true
++	app.active_think_time_ms = 5000
++	app._render()
++	verify(not app.time_option.disabled, "dropdown stays usable during engine search")
++	var while_searching: Dictionary = app.state.duplicate(true)
++	while_searching.engine.movetime_ms = 1000
++	while_searching.engine.settings_revision = 7
++	while_searching.engine.active_movetime_ms = 5000
++	while_searching.engine_thinking = true
++	app.next_response = {"ok": true, "data": while_searching}
++	select_time(1000)
++	await process_frame
++	await process_frame
++	verify(app.request_in_flight and app.engine_thinking, "changing settings does not finish or restart the active search")
++	verify(app.active_think_time_ms == 5000, "active search keeps its start-time budget")
++	verify(app.think_time_help.text.contains("이번 수 5") and app.think_time_help.text.contains("다음 수부터 1"), "current and next search times are distinguished")
++	var stale_settings: Dictionary = while_searching.duplicate(true)
++	stale_settings.revision = 18
++	stale_settings.engine.movetime_ms = 3000
++	stale_settings.engine.settings_revision = 5
++	stale_settings.engine.active_movetime_ms = null
++	stale_settings.engine_thinking = false
++	app.accept_state(stale_settings)
++	verify(int(app.state.revision) == 18, "new board response is accepted")
++	verify(int(app.state.engine.movetime_ms) == 1000 and int(app.state.engine.settings_revision) == 7, "old search response cannot roll back newer settings")
++	var late_settings: Dictionary = while_searching.duplicate(true)
++	late_settings.engine.movetime_ms = 3000
++	late_settings.engine.settings_revision = 8
++	late_settings.moves = []
++	app.accept_state(late_settings)
++	verify(int(app.state.revision) == 18 and not app.state.moves.is_empty(), "late settings response cannot roll back board/history")
++	verify(int(app.state.engine.movetime_ms) == 3000 and int(app.state.engine.settings_revision) == 8, "late settings acknowledgement retains its independent newer version")
++	verify(app.state.engine.active_movetime_ms == null and not app.state.engine_thinking, "late settings snapshot cannot revive a completed search")
++	var very_old: Dictionary = fixture()
++	very_old.moves = []
++	var before_old: String = JSON.stringify(app.state)
++	app.accept_state(very_old)
++	verify(JSON.stringify(app.state) == before_old, "older board and older settings are rejected together")
++	app.request_in_flight = false
++	app.engine_thinking = false
++	app.active_think_time_ms = 0
++	app.state.handicap_mode = true
++	app._render()
++	var before_blocked: int = app.captured_requests.size()
++	select_time(5000)
++	verify(app.time_option.disabled and app.captured_requests.size() == before_blocked, "handicap preview blocks setting changes")
++	app.state.handicap_mode = false
++	app.review_mode = true
++	app._render()
++	select_time(5000)
++	verify(app.time_option.disabled and not app.think_time_help.visible and app.captured_requests.size() == before_blocked, "read-only replay cannot alter live settings")
++	app.review_mode = false
++	app.request_in_flight = true
++	app._render()
++	verify(app.time_option.disabled, "non-search board operation briefly blocks a settings race")
++	app.request_in_flight = false
++	app.next_response = {"ok": false, "error": "stale settings version", "state": app.state.duplicate(true)}
++	select_time(5000)
++	await process_frame
++	await process_frame
++	verify(not app.think_time_request_in_flight and app.time_option.get_selected_id() == 3000, "failed request restores acknowledged selection and clears busy state")
++	verify(app.error_message == "stale settings version", "failed settings request remains visible")
++	var fresh_game: Dictionary = fixture()
++	fresh_game.game_id = "new-game"
++	fresh_game.revision = 19
++	fresh_game.engine.settings_revision = 0
++	fresh_game.engine.movetime_ms = 100
++	app.accept_state(fresh_game)
++	verify(app.state.game_id == "new-game" and int(app.state.engine.movetime_ms) == 100, "new game has independent versions and settings")
++	verify(app.time_option.get_selected_id() == 100, "dropdown follows new-game settings")
++	app.accept_state(fixture())
++	verify(app.state.game_id == "new-game" and int(app.state.revision) == 19 and int(app.state.engine.movetime_ms) == 100, "delayed response from an older game cannot restore its board or settings")
++	app.queue_free()
++	await process_frame
++	print("Godot think-time offline checks: %d, failures: %d" % [checks, failures])
++	quit(0 if failures == 0 else 1)
+diff --git a/godot/tests/think_time_live_tests.gd b/godot/tests/think_time_live_tests.gd
+new file mode 100644
+--- /dev/null
++++ b/godot/tests/think_time_live_tests.gd
+@@ -0,0 +1,168 @@
++extends SceneTree
++## Synthetic controls against a private backend; wrapper records actual budgets.
++
++var app: Variant
++var probe: HTTPRequest
++var checks: int = 0
++var failures: int = 0
++var evidence_dir: String = ""
++
++
++func _initialize() -> void:
++	_run.call_deferred()
++
++
++func verify(condition: bool, message: String) -> void:
++	checks += 1
++	if not condition:
++		failures += 1
++		printerr("FAIL: ", message)
++
++
++func wait_for(predicate: Callable, message: String, seconds: float = 12.0) -> bool:
++	var deadline: int = Time.get_ticks_msec() + int(seconds * 1000.0)
++	while not predicate.call():
++		if Time.get_ticks_msec() > deadline:
++			verify(false, "timeout: " + message + "; " + str(app.error_message))
++			return false
++		await create_timer(0.01).timeout
++	verify(true, message)
++	return true
++
++
++func select_time(milliseconds: int) -> void:
++	var index: int = app.time_option.get_item_index(milliseconds)
++	app.time_option.select(index)
++	app.time_option.item_selected.emit(index)
++
++
++func wait_for_backend_search(milliseconds: int) -> bool:
++	var deadline: int = Time.get_ticks_msec() + 3000
++	while Time.get_ticks_msec() < deadline:
++		var response: Dictionary = await app._send_request("/api/state", null, probe)
++		if response.get("ok", false) and response.data.get("engine_thinking", false):
++			verify(int(response.data.engine.get("active_movetime_ms", 0)) == milliseconds,
++				"backend captured actual current search budget %d" % milliseconds)
++			return true
++		await create_timer(0.01).timeout
++	verify(false, "backend search did not start")
++	return false
++
++
++func play_human(preferred: String) -> bool:
++	var legal: Array = app.state.get("legal_moves", [])
++	if legal.is_empty():
++		verify(false, "human has a legal continuation")
++		return false
++	var move: String = preferred if legal.has(preferred) else str(legal[0])
++	app._submit_selected_move(move)
++	return await wait_for(func(): return app.engine_thinking, "native controller is waiting for engine reply")
++
++
++func capture_current_and_next_time() -> void:
++	if evidence_dir.is_empty() or DisplayServer.get_name() == "headless":
++		return
++	await RenderingServer.frame_post_draw
++	var image: Image = root.get_texture().get_image()
++	verify(not image.is_empty(), "rendered current/next time image is available")
++	var destination: String = evidence_dir.path_join("thinking-time-next-move.png")
++	verify(not FileAccess.file_exists(destination), "preserve an existing rendered evidence file")
++	if not FileAccess.file_exists(destination):
++		DirAccess.make_dir_recursive_absolute(evidence_dir)
++		verify(image.save_png(destination) == OK, "current/next time screenshot saved")
++
++
++func finish() -> void:
++	print("Godot think-time live-scene checks: %d, failures: %d" % [checks, failures])
++	if app != null:
++		app.queue_free()
++	await process_frame
++	quit(0 if failures == 0 else 1)
++
++
++func _run() -> void:
++	var arguments := OS.get_cmdline_user_args()
++	for index in range(arguments.size()):
++		if arguments[index] == "--evidence-dir" and index + 1 < arguments.size():
++			evidence_dir = arguments[index + 1]
++	root.size = Vector2i(1240, 860)
++	app = load("res://main.tscn").instantiate()
++	root.add_child(app)
++	probe = HTTPRequest.new()
++	probe.timeout = 3.0
++	root.add_child(probe)
++	if not await wait_for(func(): return not app.state.is_empty() and not app.request_in_flight, "initial authenticated game"):
++		await finish()
++		return
++	var game_id: String = str(app.state.game_id)
++	var initial_revision: int = int(app.state.revision)
++	verify(app.state.human_color == "white", "test starts a white human game")
++	verify(not app.time_option.disabled, "current-game time selector is usable")
++	select_time(3000)
++	if not await wait_for(func(): return not app.think_time_request_in_flight, "save 3-second opening budget"):
++		await finish()
++		return
++	verify(app.state.game_id == game_id and int(app.state.revision) == initial_revision and app.state.moves.is_empty(), "changing time preserves game, board and empty history")
++	verify(app.time_option.get_selected_id() == 3000, "saved initial setting is selected")
++	if not await play_human("e2e4") or not await wait_for_backend_search(3000):
++		await finish()
++		return
++	var during_search: Dictionary = app.state.duplicate(true)
++	verify(not app.time_option.disabled and app.new_button.disabled, "search permits time changes while board actions stay blocked")
++	select_time(5000)
++	if not await wait_for(func(): return not app.think_time_request_in_flight, "save next 5-second budget while first search continues"):
++		await finish()
++		return
++	verify(app.engine_thinking and app.request_in_flight, "settings response leaves first search running")
++	verify(app.state.game_id == game_id and int(app.state.revision) == int(during_search.revision) and app.state.moves == during_search.moves, "live setting update preserves board revision and move history")
++	verify(int(app.state.engine.active_movetime_ms) == 3000 and int(app.state.engine.movetime_ms) == 5000, "current 3-second search is separate from next 5-second setting")
++	verify(app.think_time_help.text.contains("이번 수 3") and app.think_time_help.text.contains("다음 수부터 5"), "current and next budgets have explicit user labels")
++	await capture_current_and_next_time()
++	var view: bool = app.board_model.view_from_white
++	app.flip_button.pressed.emit()
++	verify(app.board_model.view_from_white != view and app.engine_thinking, "perspective remains usable during search and settings changes")
++	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 2, "first real reply finishes"):
++		await finish()
++		return
++	verify(int(app.state.engine.movetime_ms) == 5000, "first engine response does not revert newer 5-second setting")
++	verify(app.state.game_id == game_id and app.state.can_undo, "same game continues with undo available")
++	if not await play_human("g1f3") or not await wait_for_backend_search(5000):
++		await finish()
++		return
++	select_time(1000)
++	if not await wait_for(func(): return not app.think_time_request_in_flight, "save next 1-second budget during second search"):
++		await finish()
++		return
++	verify(app.engine_thinking and int(app.state.engine.active_movetime_ms) == 5000 and int(app.state.engine.movetime_ms) == 1000, "second search retains 5 seconds while next setting becomes 1 second")
++	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 4, "second real reply finishes"):
++		await finish()
++		return
++	if not await play_human("d2d4") or not await wait_for_backend_search(1000):
++		await finish()
++		return
++	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 6, "third reply uses the saved 1-second setting"):
++		await finish()
++		return
++	verify(app.state.game_id == game_id and app.state.human_color == "white" and int(app.state.engine.movetime_ms) == 1000, "all setting changes preserve game and human color")
++	app.undo_button.pressed.emit()
++	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 4, "undo still removes the last human-engine pair"):
++		await finish()
++		return
++	verify(int(app.state.engine.movetime_ms) == 1000, "undo keeps the current thinking-time setting")
++	var before_preview: Dictionary = app.state.duplicate(true)
++	app.handicap_button.pressed.emit()
++	if not await wait_for(func(): return not app.request_in_flight and app.state.get("handicap_mode", false), "enter engine-move replacement preview"):
++		await finish()
++		return
++	verify(app.time_option.disabled, "replacement preview disables time changes")
++	select_time(5000)
++	await process_frame
++	verify(not app.think_time_request_in_flight and int(app.state.engine.movetime_ms) == 1000, "disabled preview callback cannot send or apply a setting change")
++	app.handicap_cancel_button.pressed.emit()
++	if not await wait_for(func(): return not app.request_in_flight and not app.state.get("handicap_mode", true), "cancel replacement preview"):
++		await finish()
++		return
++	verify(app.state.moves == before_preview.moves and app.state.board == before_preview.board, "preview cancel restores the unchanged game")
++	verify(int(app.state.engine.movetime_ms) == 1000 and not app.time_option.disabled, "normal time selection returns after preview")
++	verify(app.error_message.is_empty(), "live setting and undo flow has no UI error")
++	await finish()
+diff --git a/tests/installed_think_time_smoke.py b/tests/installed_think_time_smoke.py
+new file mode 100644
+--- /dev/null
++++ b/tests/installed_think_time_smoke.py
+@@ -0,0 +1,149 @@
++"""Private installed-client smoke: fixed model, streamed score, hints and time.
++
++Starts real engines and Godot only when explicitly invoked. Uses temporary
++games and the existing optional model without changing desktop launch settings.
++"""
++import argparse
++import datetime
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++
++import chess.engine
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "scripts"))
++import play_human as host
++
++
++def digest(path):
++    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
++
++
++class RecordingEngine:
++    def __init__(self, binary, role, records, owned):
++        self.peer = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10)
++        self.role, self.records = role, records
++        owned.append(self)
++
++    def __getattr__(self, name):
++        return getattr(self.peer, name)
++
++    def configure(self, options):
++        self.records.append({"role": self.role, "kind": "configure",
++                             "options": dict(options),
++                             "session_model_sha256": digest(options["EvalFile"])})
++        return self.peer.configure(options)
++
++    def note(self, kind, board, limit):
++        self.records.append({"role": self.role, "kind": kind, "seconds": limit.time,
++                             "history": [move.uci() for move in board.move_stack]})
++
++    def analysis(self, board, limit, **kwargs):
++        self.note("analysis", board, limit)
++        return self.peer.analysis(board, limit, **kwargs)
++
++    def play(self, board, limit, **kwargs):
++        self.note("play", board, limit)
++        return self.peer.play(board, limit, **kwargs)
++
++
++def run(args):
++    started = time.monotonic()
++    result = {"started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
++              "status": "FAIL", "binary": str(args.binary), "binary_sha256": digest(args.binary),
++              "explicit_existing_model": str(args.model), "model_sha256": digest(args.model),
++              "model_selection_scope": "Explicit existing optional model in a private smoke; desktop default remains unchanged.",
++              "rendered": args.rendered, "engine_calls": [], "engines_closed": False}
++    game = server = thread = None
++    owned = []
++    with tempfile.TemporaryDirectory(prefix="regicide-installed-ui-smoke-") as temporary:
++        temporary = Path(temporary)
++        try:
++            game = host.HumanGame(args.binary, temporary / "games",
++                                  engine_factory=lambda binary: RecordingEngine(binary, "opponent", result["engine_calls"], owned),
++                                  hint_engine_factory=lambda binary: RecordingEngine(binary, "hints", result["engine_calls"], owned),
++                                  neural_model=args.model)
++            server = host.HumanServer(game)
++            thread = threading.Thread(target=server.serve_forever, daemon=True)
++            thread.start()
++            config = temporary / "backend.json"
++            config.write_text(json.dumps({"url": server.origin, "token": server.token}), encoding="utf-8")
++            scene_result = temporary / "scene-result.json"
++            command = [str(args.godot), "--path", str(ROOT / "godot")]
++            if not args.rendered:
++                command.append("--headless")
++            command += ["--script", "res://tests/installed_think_time_smoke.gd", "--", "--backend-file", str(config),
++                        "--expected-binary-sha", result["binary_sha256"], "--expected-model-sha", result["model_sha256"],
++                        "--smoke-result", str(scene_result), "--evidence-dir", str(args.output.parent)]
++            remaining = max(1, 55 - (time.monotonic() - started))
++            completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True,
++                                       encoding="utf-8", errors="replace", timeout=remaining)
++            result["godot_stdout"], result["godot_stderr"] = completed.stdout, completed.stderr
++            assert completed.returncode == 0 and "SCRIPT ERROR:" not in completed.stdout + completed.stderr
++            assert "ERROR:" not in completed.stdout + completed.stderr
++            result["scene"] = json.loads(scene_result.read_text(encoding="utf-8"))
++            assert result["scene"]["failures"] == 0
++            configurations = [row for row in result["engine_calls"] if row["kind"] == "configure"]
++            assert {row["role"] for row in configurations} == {"opponent", "hints"}
++            assert all(row["session_model_sha256"] == result["model_sha256"] for row in configurations)
++            assert len({row["options"]["EvalFile"] for row in configurations}) == 1
++            assert all(row["options"]["UseNeuralEvaluation"] is True for row in configurations)
++            main = [row for row in result["engine_calls"] if row["role"] == "opponent" and row["kind"] == "analysis"]
++            hints = [row for row in result["engine_calls"] if row["role"] == "hints" and row["kind"] == "play"]
++            assert len(main) == 1 and main[0]["seconds"] == 3 and main[0]["history"] == ["e2e4"]
++            assert [row["seconds"] for row in hints] == [1, 5]
++            assert not game.error and len(game.board.move_stack) == 2
++            assert digest(args.binary) == result["binary_sha256"] and digest(args.model) == result["model_sha256"]
++            result["status"] = "PASS"
++        except Exception as exc:
++            result["error"] = f"{type(exc).__name__}: {exc}"
++        finally:
++            if server is not None:
++                server.shutdown()
++                server.server_close()
++            if thread is not None:
++                thread.join(timeout=3)
++            if game is not None:
++                game.close()
++                result["session_model_snapshot_cleaned"] = game._model_snapshot is None
++            result["engine_exit_codes"] = []
++            for engine in owned:
++                try:
++                    result["engine_exit_codes"].append(engine.peer.returncode.result(
++                        timeout=max(.1, min(3, 60 - (time.monotonic() - started)))))
++                except TimeoutError:
++                    result["engine_exit_codes"].append(None)
++            result["engines_closed"] = (game is not None and game._engine is None
++                                         and all(code is not None for code in result["engine_exit_codes"]))
++    result["elapsed_seconds"] = time.monotonic() - started
++    result["finished_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
++        stream.write(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
++    print(json.dumps(result, ensure_ascii=False, indent=2))
++    return 0 if result["status"] == "PASS" and result["engines_closed"] else 1
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--binary", type=Path, required=True)
++    parser.add_argument("--model", type=Path, required=True)
++    parser.add_argument("--godot", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--rendered", action="store_true")
++    args = parser.parse_args()
++    args.binary, args.model, args.godot = [path.resolve(strict=True) for path in (args.binary, args.model, args.godot)]
++    args.output = args.output.resolve()
++    if args.output.exists():
++        parser.error("Preserve the previous smoke result")
++    return run(args)
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/godot/tests/installed_think_time_smoke.gd b/godot/tests/installed_think_time_smoke.gd
+new file mode 100644
+--- /dev/null
++++ b/godot/tests/installed_think_time_smoke.gd
+@@ -0,0 +1,114 @@
++extends SceneTree
++## Private real-client smoke; no rule implementation or real game library writes.
++
++var app: Variant
++var checks: int = 0
++var failures: int = 0
++var expected_binary: String = ""
++var expected_model: String = ""
++var output: String = ""
++var evidence: String = ""
++
++
++func _initialize() -> void:
++	_run.call_deferred()
++
++
++func verify(condition: bool, message: String) -> void:
++	checks += 1
++	if not condition:
++		failures += 1
++		printerr("FAIL: ", message)
++
++
++func wait_for(predicate: Callable, label: String, seconds: float = 9.0) -> bool:
++	var deadline: int = Time.get_ticks_msec() + int(seconds * 1000)
++	while not predicate.call():
++		if Time.get_ticks_msec() > deadline:
++			verify(false, "timeout: " + label + "; " + str(app.error_message))
++			return false
++		await create_timer(0.01).timeout
++	verify(true, label)
++	return true
++
++
++func select_time(milliseconds: int) -> void:
++	var index: int = app.time_option.get_item_index(milliseconds)
++	app.time_option.select(index)
++	app.time_option.item_selected.emit(index)
++
++
++func capture(name: String) -> void:
++	if evidence.is_empty() or DisplayServer.get_name() == "headless":
++		return
++	await RenderingServer.frame_post_draw
++	verify(root.get_texture().get_image().save_png(evidence.path_join(name)) == OK, "rendered scene captured")
++
++
++func finish() -> void:
++	var file := FileAccess.open(output, FileAccess.WRITE)
++	if file != null:
++		file.store_string(JSON.stringify({"checks": checks, "failures": failures,
++			"binary_sha256": expected_binary, "model_sha256": expected_model}) + "\n")
++	print("Installed Godot model/evaluation/hint/time checks: %d, failures: %d" % [checks, failures])
++	if app != null:
++		app.queue_free()
++	await process_frame
++	quit(0 if failures == 0 else 1)
++
++
++func _run() -> void:
++	var args := OS.get_cmdline_user_args()
++	for index in range(args.size() - 1):
++		match args[index]:
++			"--expected-binary-sha": expected_binary = args[index + 1]
++			"--expected-model-sha": expected_model = args[index + 1]
++			"--smoke-result": output = args[index + 1]
++			"--evidence-dir": evidence = args[index + 1]
++	root.size = Vector2i(1240, 860)
++	app = load("res://main.tscn").instantiate()
++	root.add_child(app)
++	if not await wait_for(func(): return not app.state.is_empty() and not app.request_in_flight, "authenticated installed client"):
++		await finish()
++		return
++	verify(app.state.engine.binary_sha256 == expected_binary, "installed binary fingerprint reaches UI")
++	verify(app.state.engine.model_sha256 == expected_model, "explicit fixed session model fingerprint reaches UI")
++	var game_id: String = str(app.state.game_id)
++	app._on_hint_pressed()
++	if not await wait_for(func(): return not app.hint_control_in_flight and app.hint.get("status") == "ready" and not app.board.hint_move.is_empty(), "actual fixed-model legal recommendation"):
++		await finish()
++		return
++	verify(app.state.legal_moves.has(app.board.hint_move) and app.state.moves.is_empty(), "recommendation is legal and leaves board unchanged")
++	select_time(3000)
++	if not await wait_for(func(): return not app.think_time_request_in_flight, "save current-game three-second setting"):
++		await finish()
++		return
++	app._submit_selected_move("e2e4")
++	if not await wait_for(func(): return app.engine_thinking and app.evaluation.get("status") == "searching" and int(app.evaluation.get("depth", 0)) > 0, "live streamed evaluation while opponent search runs"):
++		await finish()
++		return
++	select_time(5000)
++	if not await wait_for(func(): return not app.think_time_request_in_flight, "save next five-second setting during streamed search"):
++		await finish()
++		return
++	verify(app.engine_thinking and int(app.state.engine.active_movetime_ms) == 3000 and int(app.state.engine.movetime_ms) == 5000, "active three-second snapshot and next five-second setting remain separate")
++	verify(not app.evaluation.is_empty() and app.evaluation.get("status") == "searching", "time change preserves streamed evaluation")
++	verify(app.think_time_help.text.contains("이번 수 3") and app.think_time_help.text.contains("다음 수부터 5"), "current and next budgets are visible")
++	await capture("installed-thinking-current3-next5.png")
++	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 2, "same game receives actual engine reply"):
++		await finish()
++		return
++	if not await wait_for(func(): return app.evaluation.get("source") == "previous_search", "asynchronous evaluation poll reaches the completed position", 2.0):
++		await finish()
++		return
++	verify(app.state.game_id == game_id and app.evaluation.get("source") == "previous_search", "completed search evaluation is carried to unchanged game")
++	if not await wait_for(func(): return app.hint.get("status") == "ready" and not app.board.hint_move.is_empty(), "recommendation resumes from new position and next setting"):
++		await finish()
++		return
++	verify(app.state.legal_moves.has(app.board.hint_move), "new-position recommendation remains legal")
++	verify(app.state.engine.model_sha256 == expected_model and int(app.state.engine.movetime_ms) == 5000, "same fixed model and saved time survive reply and hint")
++	await capture("installed-live-evaluation-and-hint.png")
++	app._on_hint_pressed()
++	await wait_for(func(): return not app.hint_control_in_flight, "stop advice before private smoke cleanup")
++	verify(app.error_message.is_empty(), "installed client has no request error")
++	await finish()

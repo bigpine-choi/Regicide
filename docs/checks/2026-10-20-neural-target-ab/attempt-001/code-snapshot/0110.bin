@@ -1,0 +1,171 @@
+"""Adversarial checks for explicit-partition, paired own-search data."""
+import copy
+import json
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import chess
+import neural_target_ab_data as data
+from neural_search_data.engine import SearchInterrupted
+
+
+class FakeTeacher:
+    def __init__(self, engine, raw, nodes, deadline, timeout):
+        self.raw, self.options, self.identity = raw, {"Hash": 16}, {"name": "fake-unit-only"}
+        self.cleanup_status, self.count = {"returncode_observed": True}, 0
+
+    def __enter__(self):
+        self.raw.touch()
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def close(self):
+        pass
+
+    def query(self, board, query_id):
+        if self.count == 7:
+            raise SearchInterrupted("wall_budget", {"query_id": query_id, "requested_nodes": 10000,
+                "nodes": None, "depth": None, "pv_uci": [], "bestmove_uci": None,
+                "completed": False, "score": {"kind": "missing", "stm": None}})
+        self.count += 1
+        moves = sorted(board.legal_moves, key=lambda m: (board.is_capture(m), m.promotion is not None, m.uci()))
+        move = moves[0]
+        return {"query_id": query_id, "completed": True, "requested_nodes": 10000, "nodes": 9999,
+                "depth": 2, "score": {"kind": "cp", "stm": 121}, "lowerbound": False,
+                "upperbound": False, "bestmove_uci": move.uci(), "pv_uci": [move.uci()]}
+
+
+class PairedDataTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temporary = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.temporary.name)
+        cls.bank_path = data.make_bank(cls.root / "bank.json")
+        cls.bank = data._json(cls.bank_path)
+        cls.engine = cls.root / "engine.placeholder"
+        cls.engine.write_bytes(b"fake-unit-executable-not-launched")
+        cls.output = cls.root / "partial"
+        cls.manifest = data.generate(cls.engine, cls.bank_path, cls.output, max_seconds=20,
+            teacher_factory=FakeTeacher, control_labeler=lambda engine, rows, deadline: [37] * len(rows))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temporary.cleanup()
+
+    def cloned(self):
+        import shutil
+        path = self.root / self.id().rsplit(".", 1)[-1]
+        shutil.copytree(self.output, path)
+        return path
+
+    def rehash(self, path, changed):
+        manifest = data._json(path / "manifest.json")
+        for name in changed:
+            manifest["files"][name] = data.sha256(path / name)
+        if "plan.json" in changed:
+            manifest["plan_sha256"] = manifest["files"]["plan.json"]
+        if "bank.json" in changed:
+            manifest["bank_sha256"] = manifest["files"]["bank.json"]
+        (path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    def test_bank_exact_stratification_and_source_honesty(self):
+        assignments = data.validate_bank(self.bank)
+        from collections import Counter
+        self.assertEqual(Counter(assignments.values()), {"train": 48, "validation": 16, "test": 16})
+        self.assertFalse(self.bank["review"]["human_authored_moves"])
+        for subtype in ("pawn", "rook", "minor", "queen"):
+            counts = Counter(assignments[f["family_id"]] for f in self.bank["families"] if f["subtype"] == subtype)
+            self.assertEqual(counts, {"train": 6, "validation": 2, "test": 2})
+        self.assertEqual(len({row["family_id"] for block in (100, 1000) for row in self.bank[f"match_openings_{block}"]}), 32)
+
+    def test_rehashed_wrong_master_split_is_rejected(self):
+        bank = copy.deepcopy(self.bank)
+        first = next(f for f, p in bank["master_partition"].items() if p == "train")
+        bank["master_partition"][first] = "test"
+        with self.assertRaisesRegex(ValueError, "Master partition"):
+            data.validate_bank(bank)
+
+    def test_variant_wrong_partition_is_rejected(self):
+        bank = copy.deepcopy(self.bank)
+        bank["sources"][0]["partition"] = "test"
+        with self.assertRaisesRegex(ValueError, "master partition"):
+            data.validate_bank(bank)
+
+    def test_duplicate_mirrored_variant_rejected(self):
+        bank = copy.deepcopy(self.bank)
+        bank["sources"][1].update(initial_fen=bank["sources"][0]["initial_fen"], history=bank["sources"][0]["history"])
+        with self.assertRaisesRegex(ValueError, "Duplicate variant"):
+            data.validate_bank(bank)
+
+    def test_partial_only_explicit_and_replay(self):
+        self.assertEqual(self.manifest["status"], "budget_exhausted")
+        with self.assertRaisesRegex(ValueError, "Partial"):
+            data.load_dataset(self.output)
+        result = data.load_dataset(self.output, allow_partial=True)
+        self.assertGreater(len(result["train"]), 0)
+        self.assertEqual(result["validation"], [])
+        self.assertEqual(result["test"], [])
+        for row in result["train"]:
+            board = data.board_from(row["initial_fen"], row["history"])
+            self.assertEqual(row["target_white_cp"], 121 if board.turn else -121)
+            self.assertEqual(row["classical_static_white_cp"], 37 if board.turn else -37)
+
+    def test_rehashed_target_swap_rejected(self):
+        path = self.cloned()
+        rows = data._rows(path / "train.jsonl")
+        rows[0]["classical_static_white_cp"], rows[0]["target_white_cp"] = rows[0]["target_white_cp"], rows[0]["classical_static_white_cp"]
+        (path / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.rehash(path, ["train.jsonl"])
+        with self.assertRaisesRegex(ValueError, "Paired sample"):
+            data.load_dataset(path, allow_partial=True)
+
+    def test_rehashed_query_static_perspective_forgery_rejected(self):
+        path = self.cloned()
+        rows = data._rows(path / "queries.jsonl")
+        row = next(row for row in rows if "classical_static_white_cp" in row)
+        row["classical_static_white_cp"] *= -1
+        (path / "queries.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.rehash(path, ["queries.jsonl"])
+        with self.assertRaisesRegex(ValueError, "Static control"):
+            data.load_dataset(path, allow_partial=True)
+
+    def test_rehashed_target_mapping_forgery_rejected(self):
+        path = self.cloned()
+        plan = data._json(path / "plan.json")
+        plan["target_mapping"] = {"A": "target_white_cp", "B": "classical_static_white_cp"}
+        (path / "plan.json").write_text(json.dumps(plan))
+        self.rehash(path, ["plan.json"])
+        with self.assertRaisesRegex(ValueError, "mapping"):
+            data.load_dataset(path, allow_partial=True)
+
+    def test_rehashed_game_history_forgery_rejected(self):
+        path = self.cloned()
+        games = data._rows(path / "games.jsonl")
+        games[0]["moves_uci"][-1] = "a1a8"
+        (path / "games.jsonl").write_text("".join(json.dumps(r) + "\n" for r in games))
+        self.rehash(path, ["games.jsonl"])
+        with self.assertRaises(ValueError):
+            data.load_dataset(path, allow_partial=True)
+
+    def test_missing_prior_exclusions_rejected_even_after_rehash(self):
+        path = self.cloned()
+        plan = data._json(path / "plan.json")
+        plan["excluded_features"] = []
+        plan["exclusions_sha256"] = data._hash([])
+        (path / "plan.json").write_text(json.dumps(plan))
+        self.rehash(path, ["plan.json"])
+        with self.assertRaisesRegex(ValueError, "exclusions"):
+            data.load_dataset(path, allow_partial=True)
+
+    def test_overwrite_rejected(self):
+        with self.assertRaises(FileExistsError):
+            data.make_bank(self.bank_path)
+
+
+if __name__ == "__main__":
+    unittest.main()

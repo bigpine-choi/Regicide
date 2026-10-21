@@ -1,0 +1,58 @@
+{
+  "calibration_limitation": "Ranking is in-sample training calibration, not independent validation",
+  "files": {
+    "base_training_source": {
+      "path": "scripts/neural_training.py",
+      "sha256": "367fae9aea605ea2d311c6c2998a45e7588ff977d650d45b30b6b325f756cd38"
+    },
+    "baseline_model": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/training/model.nnue",
+      "sha256": "012baabebc712109b02e0f2ed55dcebf785b0f06f6e2a577d4cfebaad41a57a8"
+    },
+    "dataset_manifest": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/split_manifest.json",
+      "sha256": "7ed9101dfade1e3fbe7a69922bb680499eb2a831162702cc1dc6c0293c26eb2f"
+    },
+    "grid_plan": {
+      "path": "docs/checks/2026-10-19-neural-qat/selection-final/grid_plan.json",
+      "sha256": "1529d1bdd5debe219e0904996ae00ec40f1f9feb7b2fc79b88a9f417f5b69be7"
+    },
+    "initial_floats": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/training/float_weights.npz",
+      "sha256": "954f764f6018993a69d33ec2d9a01ab488c5d9aee7b0996813f8503e5620b79d"
+    },
+    "qat_source": {
+      "path": "scripts/neural_qat.py",
+      "sha256": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d"
+    },
+    "selected_floats": {
+      "path": "docs/checks/2026-10-19-neural-qat/selection-final/float_weights.npz",
+      "sha256": "ee7e25b15d452fe3be8fa25ad19d092d80fe81c47d62aab0ded4467bbe9d7aad"
+    },
+    "selected_model": {
+      "path": "docs/checks/2026-10-19-neural-qat/selection-final/model.nnue",
+      "sha256": "cdbaca3d047ef3d4c5615ce691b4b99fb798c422d9a4bda30a47fa8395f29a13"
+    },
+    "selection": {
+      "path": "docs/checks/2026-10-19-neural-qat/selection-final/selection.json",
+      "sha256": "1b579f8485e949d531d0ff9c19f494bffa32dacfeefaa6cb23a7874e8bbc9e1d"
+    },
+    "training_data": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/train.jsonl",
+      "sha256": "f4584fca5453ea47a2d4eee242d643309e5532a2b261f9940f9bb6c2d8da8ff6"
+    }
+  },
+  "model_checksum_fnv1a64": 4169634320372998457,
+  "policy": "Written last before creating fresh held-out games; selected model/config never change after held-out evaluation",
+  "schema_version": 1,
+  "selected_candidate_id": "lr000020-e120",
+  "selected_config": {
+    "batch_size": 128,
+    "candidate_id": "lr000020-e120",
+    "epochs": 120,
+    "input_bias_lr": 2e-05,
+    "output_lr": 0.005,
+    "seed": 20261021
+  },
+  "selection_data": "Original training partition only; no validation or held-out rows read"
+}

@@ -1,0 +1,52 @@
+# NNUE research: 신경망 평가기 첫 연결 — 2026-10-19
+
+이 문서는 첫 연결 시점의 기록이다. 후속 [첫 학습 파이프라인](NEURAL_TRAINING.md)도 구현·검증했다. 후속 [증분 갱신 구현·검증·비용 비교](NEURAL_INCREMENTAL.md)를 완료했으며, 아래의 “아직 없다”는 첫 연결 당시의 상태를 뜻한다.
+
+기존 평가기를 기본값으로 유지하고, 자체 작성한 작은 신경망 평가기를 선택할 수 있도록 연결했다. 학습 전 연결 검증용이며 NNUE의 증분 갱신은 아직 없다. 현재 구현을 완성된 NNUE나 기력 개선으로 평가하지 않는다.
+
+## 구조와 원리
+
+입력은 기물 색 2 × 종류 6 × 칸 64 = 768개의 이진 특징이다. 각 관점에서 자기 기물을 앞 6종으로 배치하고 흑 관점은 칸을 상하 반전한다. 활성 특징의 가중치 행만 더해 16개 은닉 값을 만들고, 0..127로 제한하는 clipped ReLU를 적용한다. 출력 가중합의 백 관점 점수에서 흑 관점 점수를 뺀 뒤 수 둘 차례의 관점으로 변환한다. 100점은 폰 하나에 해당하는 연결상의 기준이며 학습으로 보정한 점수가 아니다.
+
+예를 들어 백 폰 하나가 더 있으면 자기 폰 채널이 1 증가해 약 100점을 더한다. 다른 10개 채널은 칸에 따른 비선형 계산이 실제 경로를 통과하도록 작은 고정 가중치를 쓴다. 왕 안전 판단을 학습했다고 해석하면 안 된다.
+
+모델 `bootstrap-v1`은 외부 코드·가중치·데이터 없이 자체 작성했다. 앞 6채널은 기물 수, 나머지 10채널은 시드 `0x52454731`, 32비트 LCG `state = state * 1664525 + 1013904223`로 생성한 -3..3의 가중치다. bias는 0, 출력 가중치는 소스에 고정돼 있다. 무작위 실행이나 모델 파일 의존성이 없고 매번 같은 결과를 낸다. 가중치는 컴파일 시 생성하며 학습·파일 불러오기는 이번 범위에 없다. 768×16개의 int32 입력 가중치는 48KiB다.
+
+현재 보드 전체를 읽는 full refresh 방식으로 캐슬링의 두 기물, 앙파상의 제거된 폰, 승격된 기물도 입력에 반영한다. 캐슬링 권리·앙파상 가능 칸·수 카운터 자체는 입력에 포함하지 않는다. 합법 수와 무승부 판정은 기존 규칙·탐색이 담당한다. 과도한 승격 기물에서도 신경망 점수는 ±28000으로 제한해 메이트 점수 영역을 침범하지 않는다.
+
+## 사용과 비교
+
+```powershell
+./scripts/build.ps1 -BuildDirectory build-neural-standard -Test
+./build-neural-standard/regicide.exe search 3
+./build-neural-standard/regicide.exe search 3 --neural
+./build-neural-standard/regicide_evaluation_benchmark.exe
+./.venv-tests/Scripts/python.exe tests/neural_integration_tests.py build-neural-standard/regicide.exe
+```
+
+UCI에서는 `setoption name UseNeuralEvaluation value true`로 켜고 `false`로 되돌린다. 기본은 false다. true는 기존 `UsePositionalEvaluation`보다 우선한다. false일 때 기존 옵션대로 위치 평가 또는 기물 가치 평가를 쓴다. 콘솔의 `--neural`도 `--no-position`보다 우선한다. 탐색 예산·깊이·위치는 동일하게 지정해 비교한다.
+
+일반 탐색, 정지 탐색, 탐색 중단 시 대체 점수 모두 같은 선택을 따른다. 옵션은 진행 중 탐색을 종료한 뒤 바뀌며, 재사용 전이표도 탐색마다 이전 점수를 폐기한다. `SearchOptions`의 새 필드는 마지막에 추가해 기존 집합 초기화 호출의 의미를 유지했다.
+
+## 실행한 검증
+
+Windows Release MSVC /O2 /DNDEBUG /W4 /WX 빌드와 저장소 표준 build.ps1 빌드를 통과했다. 기존 규칙·탐색·위치 평가·보드 상태·전이표·SEE 6종과 새 신경망 검사 538개 assertion이 통과했다. 100 ply 결정적 수순의 관점 대칭·FEN 재구성·상태 불변·undo, 양색 앙파상·양색 캐슬링·4종 승격(캡처 승격 포함), 메이트 판정과 탐색 중단 대체 점수, 평가기 전환 후 캐시 격리를 확인했다.
+
+실제 UCI 프로세스는 4개 위치에서 기존→신경망→기존으로 깊이 2 탐색을 완주하고 합법 수를 반환했다. 잘못된 불리언 옵션 거부도 확인했다. 기준 커밋 `acf2a18`의 main/uci/search를 같은 컴파일러와 나머지 동일 코어로 빌드한 기준 실행 파일과 4위치 × 기존/기물 가치 평가의 깊이 3 총 8쌍을 비교해 시간 외 모든 콘솔 필드가 같았다. 기존 engine_integration.py와 benchmark_search_tests.py도 통과했다. Linux/CI 실행과 Godot 화면 검증은 이번에 수행하지 않았다. CI에는 새 검사를 연결했다.
+
+## 비용 측정
+
+AMD Ryzen AI 7 350, Windows, 단일 프로세스에서 시작 위치·중반·앙파상·승격 직전 4위치를 순환했다. 각 평가기 1,000회 워밍업 후 1,000,000회 호출을 6회씩 측정하고 실행 순서를 번갈았다. 결과 checksum을 출력해 계산 제거를 방지했다. 보드 생성과 합법 수 생성은 측정에서 제외했다.
+
+- 기존 평가 중앙값: **127.94 ns/호출**
+- 신경망 full refresh 중앙값: **580.59 ns/호출**
+- 비율: **약 4.54배**
+
+원자료는 [evaluation-cost.csv](checks/2026-10-19-neural/evaluation-cost.csv), 검증 결과와 SHA256은 [검증 폴더](checks/2026-10-19-neural/)에 있다. CPU 고정·외부 부하 감시·통계적 신뢰구간은 적용하지 않았다. 이 수치는 해당 4위치의 평가 함수 비용이며 전체 탐색 속도나 기력을 뜻하지 않는다. 학습 및 대국 비교는 수행하지 않았다.
+
+## 다음 검증할 가설
+
+먼저 현재 full refresh를 기준 정답으로 유지하며 학습 데이터·목표 점수·검증 분할·모델 저장 형식을 결정한다. 이후 이동한 기물의 특징 행만 빼고 더하는 누적값 갱신을 구현하고, 모든 특수 수와 undo에서 full refresh와 정확히 일치하는지 확인한다. 학습 후 같은 자원 조건의 대국에서 기력을 별도로 검증한다.
+
+
+M1 integration: use `UseNNUEEvaluation` or `--nnue`; residual `UseNeuralEvaluation`/`EvalFile` remain separate. Historical experiment commands retain their original meaning for their frozen source.

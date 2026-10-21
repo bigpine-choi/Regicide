@@ -1,0 +1,67 @@
+QAT implementation and actual-run read-only audit, 2026-10-19
+
+Scope: measured working tree based on 4f27bce9a510937143fd9ded62a6b42438638909.
+No commit, push, equal-time match, Elo estimate, or remote CI run in this step.
+
+Chronology and preserved failures:
+- protocol.json recorded the initial four settings and a future seed20261022 holdout.
+- All four initially worsened in-sample training MAE. They remain under selection/.
+- calibration-plan.json recorded five additional settings using training curves only,
+  while fresh holdout did not exist. They remain under selection-final/.
+- Training reads train.jsonl and split metadata only, never validation targets.
+  The prior float initializer already saw the original entire train partition;
+  ranking is in-sample calibration, not an unseen inner validation result.
+- Final freeze and calibration receipt bind the executed grid, selected model,
+  source, prior data/model and initialization checkpoint. The experimental helper
+  evolved during implementation; its initial protocol hash is historical. The
+  final receipt and holdout manifest bind the actual generator/evaluator source.
+- final-freeze-receipt.json UTC precedes fresh holdout generation.
+- No settings were selected or changed after fresh holdout evaluation.
+- Selected-setting rerun was a reproducibility check; all integer and shadow arrays
+  matched, with no reselection.
+
+Independent subagent audit (read only; this is a written audit record):
+- Verified both stage freezes and every candidate's serialized model, float
+  checkpoint hash, final training metrics, history and ordered tie-breaking.
+- Replayed all 64 holdout game RNG choices and legal moves. Reproduced all 1905
+  FEN/group/ply/normalized-feature rows, with zero prior or mirror overlap.
+- Recomputed holdout MAE33.84619422572178 ->30.533858267716536cp and
+  RMSE43.437244683816964 ->38.838835179627054cp.
+- Re-executed unchanged C++ engine on both models and all 1905 positions; teacher
+  labels and Python/full/incremental predictions matched exactly within each model.
+- Recomputed raw benchmark CSV96 rows and eight-round medians. Full630.8467
+  ->631.4930ns; update/snapshot/restore64.1943 ->62.0792ns;
+  board-play/incremental/undo108.2997 ->109.9450ns. Source/model/binary hash links valid.
+- Confirmed integer changed counts: input0, bias0, output13. No strength inference.
+
+Actual local commands and result files:
+./scripts/build.ps1 -BuildDirectory build-neural-qat -Test
+  windows-build-tests.txt: core regression targets; builtin neural51153 assertions;
+  model stress-test21538 assertions, no failures.
+./.venv-tests/Scripts/python.exe tests/neural_qat_tests.py
+  qat-unit-tests.txt:21 tests OK.
+./.venv-tests/Scripts/python.exe tests/neural_qat_integration.py --engine build-neural-qat/regicide.exe --model-tests build-neural-qat/regicide_neural_model_tests.exe
+  qat-integration.json:126 parity positions,4 UCI pairs, tiny trained-model21538
+  C++ assertions, heldout-label isolation and three adversarial rejections.
+./build-neural-qat/regicide_neural_model_tests.exe docs/checks/2026-10-19-neural-qat/selection-final/model.nnue
+  qat-model-tests.txt: actual selected model,6 groups/21538 assertions/0 failures.
+wsl --exec build-neural-training/model-tests-sanitized docs/checks/2026-10-19-neural-qat/selection-final/model.nnue
+  linux-qat-model-sanitized.txt: actual selected model,6 groups/21538 assertions/0 failures.
+  Reused identical GCC13.3 ASan+UBSan debug executable from prior training stage.
+  Its SHA256 matches prior manifest.json. All linked runtime and model-test sources
+  remain byte-identical. No new Linux compilation is claimed; see sanitizer-reuse.json
+  and prior neural-training/linux-command.txt and linux-sanitized-libraries.txt.
+./.venv-tests/Scripts/python.exe tests/engine_integration.py build-neural-qat/regicide.exe
+  engine-integration.txt:19 groups passed.
+./.venv-tests/Scripts/python.exe tests/neural_integration_tests.py build-neural-qat/regicide.exe
+  neural-integration.json: builtin UCI40 pairs,CLI8 pairs. No old-binary baseline supplied.
+
+Selection/generation/evaluation/benchmark command recipes are in docs/NEURAL_QAT.md.
+Raw results and full artifact/source hashes are in this directory and manifest.json.
+Benchmark models preload outside timing;500000 iterations x8 rounds x6 workloads
+x2 models=96 samples. Models/workloads alternate order; no CPU pinning or external
+process load sampling. Cost differences are small and mixed, not a global speed gain.
+
+Documentation and .gitattributes were added after measurement. Source byte hashes
+bound by freeze/heldout/benchmark were preserved. A test docstring was clarified after
+test execution; test behavior was unchanged. No source or files under sources/ edited.

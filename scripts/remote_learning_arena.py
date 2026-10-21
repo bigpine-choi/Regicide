@@ -70,9 +70,9 @@ def relative_path(root, value, *, must_exist=True):
 def source_inventory(root):
     root = Path(root)
     paths = []
-    for pattern in ("scripts/*.py", "tests/*.py", "src/*.cpp", "include/regicide/*.hpp",
+    for pattern in ("scripts/**/*.py", "tests/**/*.py", "src/*.cpp", "include/regicide/*.hpp",
                     ".github/workflows/*.yml", ".github/workflows/*.yaml"):
-        paths += list(root.glob(pattern))
+        paths += [path for path in root.glob(pattern) if path.is_file()]
     paths += [root / "tests/data" / name for name in (
         "learning_openings_v1.json", "learning_arena_openings_v1.json", "endgame_learning_seeds_v1.json")]
     return {path.relative_to(root).as_posix() for path in paths}

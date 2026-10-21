@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "completed_utc": "2026-10-20T14:29:25.728456+00:00",
+  "sources": {
+    "tests\\audit_neural_target_ab_v2.py": "0a0f80b18a4b8d78ec9c39c90221ee040d57142b271703fc3f557aa53e2e7cfc",
+    "tests\\neural_target_ab_v2_audit_tests.py": "b9e6bdda76b53ac71948d3fb3e5a73ed5dbafbcf1627af84fea08f193450dbf2"
+  },
+  "blocks": [
+    {
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "tests/neural_target_ab_v2_audit_tests.py",
+        "-v"
+      ],
+      "observed_tests": 5,
+      "wall_seconds": 103.789,
+      "result": "OK",
+      "scope": "Bank/prior-exposure integration tests; completed before adding the separate two supplemental tests; the five bank test bodies and bank validation code remain unchanged."
+    },
+    {
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "neural_target_ab_v2_audit_tests.py",
+        "-k",
+        "SupplementAuditTests",
+        "-v"
+      ],
+      "observed_tests": 2,
+      "wall_seconds": 0.01,
+      "result": "OK",
+      "scope": "Final-source temporary fixtures: raw cp/mate/bounds linkage and per-process native CPU-counter tampering."
+    }
+  ]
+}

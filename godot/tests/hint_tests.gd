@@ -122,10 +122,20 @@ func _run_synthetic() -> void:
 	verify(app.board.hint_move.is_empty() and not app.accept_hint(value), "move or undo revision clears and rejects old recommendation")
 	changed = position.duplicate(true)
 	changed.game_id = "new-game"
+	changed.revision = 3
 	app.accept_state(changed)
+	verify(app.state.game_id == "new-game" and int(app.state.revision) == 3,
+		"new game advances the monotonic board revision")
 	verify(app.hint_enabled and not app.accept_hint(value), "new game keeps preference and rejects previous-game callback")
 	app.accept_state(position)
-	app.accept_hint(value)
+	verify(app.state.game_id == "new-game" and int(app.state.revision) == 3,
+		"delayed previous-game response cannot restore its old recommendation")
+	position = fixture()
+	position.game_id = "review-game"
+	position.revision = 4
+	value = hint_for(position)
+	app.accept_state(position)
+	verify(app.accept_hint(value), "fresh live state accepts its matching hint before review")
 	app.review_mode = true
 	app.review_frames = [position.duplicate(true)]
 	app.review_moves = []
@@ -137,18 +147,23 @@ func _run_synthetic() -> void:
 	app._exit_review()
 	for flag in ["handicap_mode", "human_to_move", "result", "error"]:
 		changed = position.duplicate(true)
+		changed.revision = int(app.state.revision) + 1
 		changed[flag] = {"handicap_mode": true, "human_to_move": false, "result": "1-0", "error": "engine error"}[flag]
 		app.accept_state(changed)
-		verify(app.board.hint_move.is_empty() and not app.accept_hint(value), "no recommendation while " + flag)
+		verify(app.board.hint_move.is_empty() and not app.accept_hint(hint_for(changed)), "no recommendation while " + flag)
 	var black := fixture("black")
+	black.game_id = "black-game"
+	black.revision = int(app.state.revision) + 1
 	app.accept_state(black)
 	verify(app.accept_hint(hint_for(black, "e5e4", "e4")), "black-human legal recommendation accepted")
 	points = app.board.hint_centers()
-	verify(points[0].y > points[1].y, "black-view black pawn arrow has correct direction")
+	verify(points.size() == 2 and points[0].y > points[1].y, "black-view black pawn arrow has correct direction")
 	app._on_flip_pressed()
 	points = app.board.hint_centers()
-	verify(points[0].y < points[1].y, "white-view black pawn arrow has correct direction")
+	verify(points.size() == 2 and points[0].y < points[1].y, "white-view black pawn arrow has correct direction")
 	var promotion := position.duplicate(true)
+	promotion.game_id = "promotion-game"
+	promotion.revision = int(app.state.revision) + 1
 	promotion.fen = "8/P7/8/8/8/8/8/4K2k w - - 0 1"
 	promotion.board = {"a7": "P", "e1": "K", "h1": "k"}
 	promotion.legal_moves = ["a7a8q", "a7a8r", "a7a8b", "a7a8n"]

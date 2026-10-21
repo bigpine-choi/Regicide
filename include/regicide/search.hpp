@@ -14,6 +14,7 @@
 namespace regicide {
 
 class NeuralEvaluator;
+struct NeuralModel;
 
 inline constexpr int mate_score = 30000;
 inline constexpr int max_search_depth = 64;
@@ -45,6 +46,11 @@ struct SearchOptions {
     // Optional immutable experimental model. Null preserves the classical path;
     // positional=false still explicitly selects material-only evaluation.
     std::shared_ptr<const NeuralEvaluator> neural = {};
+    // Independent integer NNUE experiment. Explicit NNUE overrides positional;
+    // combining it with a residual/replacement neural model is an error.
+    bool nnue = false;
+    bool nnue_incremental = true; // False selects the exact full-refresh oracle.
+    std::shared_ptr<const NeuralModel> nnue_model{}; // Null selects the untrained builtin.
     // Null searches every legal root move. A present list must be nonempty,
     // legal and duplicate-free. Descendants always retain all legal moves.
     std::optional<std::vector<Move>> root_moves = {};
@@ -98,7 +104,7 @@ private:
 // Searches a copy, including repetition history. Terminal roots have no move.
 // Optional current/intended draw claims are available at value zero; callers
 // must actually claim the draw when choosing that option (UCI cannot claim).
-// Invalid depth (outside 1..64) or negative movetime throws invalid_argument.
+// Invalid limits or simultaneous neural/nnue selection throw invalid_argument.
 SearchResult search(const Board& board, const SearchLimits& limits,
                     const std::atomic_bool* stop = nullptr,
                     SearchCallback on_iteration = {}, SearchOptions options = {},

@@ -1,0 +1,39 @@
+name: Own search training data
+on:
+  push:
+    paths:
+      - 'scripts/neural_search_data/**'
+      - 'tests/neural_search_data/**'
+      - 'src/**'
+      - 'include/**'
+      - 'CMakeLists.txt'
+      - 'requirements-test.txt'
+      - '.github/workflows/neural-search-data.yml'
+  pull_request:
+    paths:
+      - 'scripts/neural_search_data/**'
+      - 'tests/neural_search_data/**'
+      - 'src/**'
+      - 'include/**'
+      - 'CMakeLists.txt'
+      - 'requirements-test.txt'
+      - '.github/workflows/neural-search-data.yml'
+jobs:
+  search-data:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-test.txt
+      - run: python -m unittest discover -s tests/neural_search_data -v
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      - run: cmake --build build --config Release --target regicide
+      - if: runner.os == 'Linux'
+        run: python tests/neural_search_data/integration.py --engine build/regicide --output build/data-ci --nodes 2000 --max-plies 24 --max-seconds 60
+      - if: runner.os == 'Windows'
+        run: python tests/neural_search_data/integration.py --engine build/Release/regicide.exe --output build/data-ci --nodes 2000 --max-plies 24 --max-seconds 60

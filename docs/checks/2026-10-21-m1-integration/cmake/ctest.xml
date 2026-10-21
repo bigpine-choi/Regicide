@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-nmake"
+	tests="9"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="bigpine"
+	time="13"
+	timestamp="2026-10-21T14:15:04"
+	>
+	<testcase name="nnue" classname="nnue" time="3.05146" status="run">
+		<properties/>
+		<system-out>PASS perspective, determinism, history and undo
+PASS special moves
+PASS incremental special moves, sibling branches and exact undo
+PASS incremental raw values survive nonlinear clipping crossings
+PASS seeded deep legal walks, sibling isolation and complete unwind
+PASS incremental/full search parity across search options
+PASS incremental/full cancellation, draw claims and context reuse
+PASS search selection, fallback, terminal and context reuse
+PASS integer NNUE shares LMR reductions, full-depth retries and cancellation exactly
+PASS classical, residual and integer model transitions isolate reusable memory
+10 groups, 51270 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="nnue_model" classname="nnue_model" time="0.818574" status="run">
+		<properties/>
+		<system-out>PASS builtin and custom parameter serialization, checksum and safe save
+PASS malformed headers, checksum, truncation, ranges and trailing data
+PASS fixed-point v2 serialization and exact integer rescaling of v1
+PASS v2 malformed precision headers, numeric limits and checksum rejection
+PASS v2 fractional inputs, one signed division, clipping crossings and undo
+PASS loaded model identity and snapshot model references
+PASS loaded weights: all special moves, sibling branches and undo
+PASS loaded weights: seeded legal walks and complete snapshot unwind
+PASS loaded weights: exact full/incremental search, model and context switching
+tested_model_checksum 18155381136170626874
+9 groups, 26566 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="rules" classname="rules" time="1.46073" status="run">
+		<properties/>
+		<system-out>PASS exact initial moves and FEN
+  depth 5 nodes 4865609
+PASS perft start
+  depth 4 nodes 4085603
+PASS perft kiwipete
+  depth 5 nodes 674624
+PASS perft rook-pawn-endgame
+  depth 4 nodes 422333
+PASS perft promotion-castling
+  depth 4 nodes 2103487
+PASS perft promotion-check
+  depth 4 nodes 3894594
+PASS perft middlegame
+PASS castling moves and exact restoration
+PASS castling through attack and blocked queenside
+PASS castling rights lost on move or capture
+PASS en passant both colors, expiration, restoration
+PASS en passant king safety and check evasion
+PASS all promotions and capture promotions
+PASS pinned piece attacks and double check
+PASS checkmate, stalemate and 75-move priority
+PASS 50-move claim vs automatic 75-move draw
+PASS threefold claims, fivefold draw and history undo
+PASS repetition identity: en passant legality and castling
+PASS conservative dead-material classification
+PASS invalid moves and malformed FEN leave state intact
+20 groups, 8325 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="search" classname="search" time="1.91987" status="run">
+		<properties/>
+		<system-out>PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescenc...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="evaluation" classname="evaluation" time="1.76009" status="run">
+		<properties/>
+		<system-out>PASS initial symmetry and color/rank reflections
+PASS opening development and center beat edge moves and retreat
+PASS bishops develop and queens wait for minor development
+PASS rook exposure loses time while minors remain home
+PASS king shelter in middlegame and activity in endgame
+PASS promotion-rich phase and very large material remain well behaved
+PASS disabled shelter preserves pinned pre-change evaluation values
+PASS nearby pawns shelter both wings and both colors without hiding their advance cost
+PASS edge shelter uses two files and ignores a third outside the king neighborhood
+PASS a pawn behind the king cannot shelter it and the closest forward pawn wins
+PASS shelter fades in pawn endings and uses the opponent's attacking material
+PASS promoted attacking armies clamp shelter rather than magnifying it without bound
+PASS shelter evaluation preserves repetition history hashes and turn antisymmetry
+PASS frozen v0.5.4 oracle across king squares pawn distances phases and home minors
+PASS frozen v0.5.4 oracl...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="board_state" classname="board_state" time="0.692221" status="run">
+		<properties/>
+		<system-out>PASS position identity includes pieces turn and rights, excludes clocks
+PASS canonical EP uses legal captures including pins and check evasion
+PASS history digest retains counts and all reversible past positions
+PASS history digest is independent of order when exact position counts agree
+PASS repetition candidate is conservative and restores across undo
+PASS castling-right loss resets context without resetting halfmove clock
+PASS generated moves and incremental hashes roundtrip normal special positions
+PASS failed external moves leave keys and history unchanged
+PASS generated check prediction handles direct discovered and special checks
+PASS all generated check predictions match full play and preserve repetition history
+10 groups, 18974 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="transposition" classname="transposition" time="0.66266" status="run">
+		<properties/>
+		<system-out>PASS bounded allocation and empty slots
+PASS exact, lower and upper bound windows
+PASS mate distance is normalized from either side
+PASS index collisions verify every key field and prefer deeper work
+PASS history and halfmove distinguish otherwise identical queries
+PASS same-size prepare reuses backing memory but no old entries
+PASS resizing changes storage budget and invalid arguments preserve a table
+PASS generation wrap physically removes old generation-one records once
+8 groups, 97 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="see" classname="see" time="0.690862" status="run">
+		<properties/>
+		<system-out>PASS free material, poisoned capture and optional stopping
+PASS updated occupancy reveals both black and white x-ray attackers
+PASS absolute pins exclude illegal recaptures
+PASS kings may recapture only onto unattacked squares
+PASS en passant removes the off-target pawn and recomputes pins and rays
+PASS initial promotions and promotion recaptures include material increments
+SEE differential: 45 positions, 1442 moves, 57 losing exchanges, 8 promotions, 1 en passant
+PASS LVA agrees with independent legal-move recursion on varied legal positions
+PASS repeated calls preserve castling repetition and undo history
+Compact SEE differential: 80 positions, 2525 moves, 86 losing exchanges
+PASS compact attack lists agree with legal recursion across deterministic walks
+9 groups, 9119 assertions, 0 failures
+</system-out>
+	</testcase>
+	<testcase name="neural" classname="neural" time="1.98663" status="run">
+		<properties/>
+		<system-out>PASS frozen v0.6.3 parity over seeded models both formats and legal histories
+PASS committed learned V2 models match frozen inference over legal histories
+PASS cancellation and half-centipawn boundaries retain original accumulation order
+PASS separate multiply and add semantics remain visible at rounding boundaries
+PASS V2 zero correction preserves every classical option and board state
+PASS V2 correction is bounded and uses classical position rather than material
+PASS V2 feature paths have the same orientation as V1
+PASS V2 retains bounded corrections in legal promotion-heavy positions
+PASS zero residual preserves exact side-to-move material
+PASS hand-computed affine layers use output-major weights
+PASS own and opposing pawn channels remain distinct
+PASS all six piece types use PNBRQK channel order
+PASS later rows and columns are not transposed or omitted
+PASS ReLU is applied independently to both hidden layers
+PASS rounding halves go away from zero
+PASS output clamps protect the search mate-score range
+PASS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

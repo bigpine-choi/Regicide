@@ -10,7 +10,9 @@ const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
 var request_in_flight: bool = false
+var think_time_request_in_flight: bool = false
 var engine_thinking: bool = false
+var active_think_time_ms: int = 0
 var offline_mode: bool = false
 var closing: bool = false
 var backend_url: String = ""
@@ -61,6 +63,7 @@ var move_history: RichTextLabel
 var move_count: Label
 var color_option: OptionButton
 var time_option: OptionButton
+var think_time_help: Label
 var live_settings: GridContainer
 var live_actions: HBoxContainer
 var handicap_section: VBoxContainer
@@ -94,6 +97,7 @@ var evaluation_timer: Timer
 var hint_http: HTTPRequest
 var hint_control_http: HTTPRequest
 var hint_timer: Timer
+var think_time_http: HTTPRequest
 
 
 func _ready() -> void:
@@ -303,7 +307,13 @@ func _build_ui() -> void:
 	for option in [["0.1초", 100], ["1초", 1000], ["3초", 3000], ["5초", 5000]]:
 		time_option.add_item(option[0], option[1])
 	time_option.select(1)
+	time_option.name = "ThinkTime"
+	time_option.tooltip_text = "대국 중에도 바꿀 수 있습니다. 이미 생각 중인 수는 기존 시간으로 마치고, 다음 수부터 적용합니다."
+	time_option.item_selected.connect(_on_think_time_selected)
 	settings.add_child(time_option)
+	think_time_help = _label("색 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
+	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sidebar.add_child(think_time_help)
 	new_button = _button("새 대국 시작", _on_new_game_pressed)
 	sidebar.add_child(new_button)
 	var actions := HBoxContainer.new()
@@ -363,6 +373,10 @@ func _build_ui() -> void:
 	hint_timer.timeout.connect(_poll_hint)
 	add_child(hint_timer)
 	hint_timer.start()
+	# A settings request can finish while the ordinary client awaits a search.
+	think_time_http = HTTPRequest.new()
+	think_time_http.timeout = 15.0
+	add_child(think_time_http)
 	save_dialog = FileDialog.new()
 	save_dialog.title = "기보 저장"
 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
@@ -505,7 +519,7 @@ func _load_backend_arguments() -> void:
 
 
 func _on_library_pressed() -> void:
-	if request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+	if request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
 	request_in_flight = true
 	error_message = ""
@@ -690,8 +704,30 @@ func _send_request(path: String, payload: Variant = null, client: HTTPRequest = 
 	return {"ok": true, "data": parsed}
 
 
+static func merge_state_versions(current: Dictionary, next: Dictionary) -> Dictionary:
+	if current.is_empty():
+		return next.duplicate(true)
+	if current.get("game_id", "") != next.get("game_id", ""):
+		# The host advances board revisions across new games as well. An old
+		# game's delayed response must never replace the current live game.
+		return next.duplicate(true) if int(next.get("revision", 0)) >= int(current.get("revision", 0)) else current.duplicate(true)
+	# Board and settings have independent versions. Neither a delayed search
+	# response nor a delayed settings response may roll the other one back.
+	var newer_board: bool = int(next.get("revision", 0)) >= int(current.get("revision", 0))
+	var merged: Dictionary = next.duplicate(true) if newer_board else current.duplicate(true)
+	var old_engine: Dictionary = current.get("engine", {})
+	var next_engine: Dictionary = next.get("engine", {})
+	var newest_settings: Dictionary = next_engine if int(next_engine.get("settings_revision", 0)) >= int(old_engine.get("settings_revision", 0)) else old_engine
+	var merged_engine: Dictionary = merged.get("engine", {}).duplicate(true)
+	for key in ["movetime_ms", "settings_revision"]:
+		if newest_settings.has(key):
+			merged_engine[key] = newest_settings[key]
+	merged["engine"] = merged_engine
+	return merged
+
+
 func accept_state(next: Dictionary) -> void:
-	state = next.duplicate(true)
+	state = merge_state_versions(state, next)
 	if _hint_toggle_version == 0 and state.has("hint_enabled"):
 		hint_enabled = bool(state.hint_enabled)
 	if not _evaluation_matches(evaluation, state):
@@ -905,7 +941,7 @@ func _handle_response(response: Dictionary) -> bool:
 
 
 func _connect_backend() -> void:
-	if request_in_flight or backend_url.is_empty() or closing or review_mode:
+	if request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or review_mode:
 		return
 	request_in_flight = true
 	error_message = ""
@@ -917,7 +953,7 @@ func _connect_backend() -> void:
 
 
 func _mutate(path: String, payload: Dictionary = {}) -> void:
-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
+	if request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
 		return
 	request_in_flight = true
 	error_message = ""
@@ -939,9 +975,36 @@ func _play_engine_if_needed() -> void:
 		return
 	engine_thinking = true
 	_clear_hint()
+	active_think_time_ms = int(state.get("engine", {}).get("movetime_ms", 1000))
 	_render()
 	_handle_response(await _send_request("/api/engine", {"revision": int(state.revision)}))
 	engine_thinking = false
+	active_think_time_ms = 0
+
+
+func _can_change_think_time() -> bool:
+	return not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
+
+
+func _on_think_time_selected(index: int) -> void:
+	if not _can_change_think_time() or index < 0 or index >= time_option.item_count:
+		_render()
+		return
+	var requested_ms: int = time_option.get_item_id(index)
+	var settings: Dictionary = state.get("engine", {})
+	if requested_ms == int(settings.get("movetime_ms", 1000)):
+		return
+	think_time_request_in_flight = true
+	error_message = ""
+	_render()
+	var response: Dictionary = await _send_request("/api/think-time", {
+		"game_id": str(state.get("game_id", "")),
+		"settings_revision": int(settings.get("settings_revision", 0)),
+		"movetime_ms": requested_ms}, think_time_http)
+	if _handle_response(response):
+		_notice_message = "생각 시간을 변경했습니다. 다음 수부터 적용합니다."
+	think_time_request_in_flight = false
+	_render()
 
 
 func _on_flip_pressed() -> void:
@@ -960,7 +1023,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _on_square_pressed(square: String) -> void:
-	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
+	if request_in_flight or think_time_request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
 		return
 	if square == board_model.selected_square:
 		board_model.selected_square = ""
@@ -987,7 +1050,7 @@ func _on_square_pressed(square: String) -> void:
 
 
 func _on_promotion_pressed(kind: String) -> void:
-	if review_mode:
+	if review_mode or think_time_request_in_flight:
 		return
 	for move in board_model.pending_promotions:
 		if move.ends_with(kind):
@@ -1004,7 +1067,7 @@ func _submit_selected_move(move: String) -> void:
 
 
 func _on_drag_requested(from_square: String, to_square: String) -> void:
-	if request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
+	if request_in_flight or think_time_request_in_flight or closing or not _can_select_move() or not board_model.pending_promotions.is_empty():
 		return
 	# Re-select the logical origin even when pressing an already selected piece
 	# toggled its click selection off. A flipped view still supplies the same UCI.
@@ -1101,7 +1164,7 @@ func _render() -> void:
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
-	var enabled: bool = ready and not request_in_flight and not review_mode
+	var enabled: bool = ready and not request_in_flight and not think_time_request_in_flight and not review_mode
 	var replacing: bool = state.get("handicap_mode", false)
 	live_settings.visible = not review_mode
 	live_actions.visible = not review_mode
@@ -1109,14 +1172,29 @@ func _render() -> void:
 	new_button.visible = not review_mode
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
-	time_option.disabled = not enabled or replacing
+	time_option.disabled = not _can_change_think_time()
+	if not think_time_request_in_flight:
+		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
+		if time_index >= 0:
+			time_option.select(time_index)
+	think_time_help.visible = not review_mode
+	var thinking_now: bool = engine_thinking or bool(state.get("engine_thinking", false))
+	if thinking_now:
+		var current_ms: int = active_think_time_ms
+		if engine.get("active_movetime_ms") != null:
+			current_ms = int(engine.active_movetime_ms)
+		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
+	else:
+		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
+	if think_time_request_in_flight:
+		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
 	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and review_pgn.is_empty())
 	save_button.text = "이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)"
-	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing or review_mode
+	refresh_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or review_mode
 	refresh_button.visible = not review_mode and (not error_message.is_empty() or state.is_empty())
-	library_button.disabled = request_in_flight or backend_url.is_empty() or closing or replacing
+	library_button.disabled = request_in_flight or think_time_request_in_flight or backend_url.is_empty() or closing or replacing
 	review_controls.visible = review_mode
 	if review_mode:
 		review_position_label.text = "%d / %d수 · %s" % [review_ply, review_moves.size(), "시작 배치" if review_ply == 0 else str(review_moves[review_ply - 1].get("san", ""))]
@@ -1134,7 +1212,7 @@ func _render() -> void:
 	elif review_mode:
 		status_label.text = "기보 다시 보기 · 읽기 전용"
 		status_detail.text = _record_description(review_summary) + "\n처음·이전·다음·끝으로 수순을 살펴보세요."
-	elif engine_thinking:
+	elif thinking_now:
 		status_label.text = "Regicide가 생각하고 있어요"
 		status_detail.text = "기다리는 동안에도 시점을 자유롭게 뒤집어 볼 수 있습니다."
 	elif not ready:
@@ -1161,7 +1239,7 @@ func _render() -> void:
 		for move in board_model.pending_promotions:
 			if move.ends_with(str(kind)):
 				available = true
-		promotion_buttons[kind].disabled = request_in_flight or not available
+		promotion_buttons[kind].disabled = request_in_flight or think_time_request_in_flight or not available
 	_render_history()
 
 
@@ -1242,12 +1320,12 @@ func _notification(what: int) -> void:
 func _close_app() -> void:
 	closing = true
 	_render()
+	# Both clients may have a response pending; let them finish before closing
+	# or asking an owned backend for its final board revision.
+	var finish_deadline: int = Time.get_ticks_msec() + 20000
+	while (request_in_flight or think_time_request_in_flight) and Time.get_ticks_msec() < finish_deadline:
+		await get_tree().process_frame
 	if own_backend and not backend_url.is_empty():
-		# Let our existing mutation finish before reading its final revision. A
-		# request may still be queued before the host acquires the game lock.
-		var finish_deadline: int = Time.get_ticks_msec() + 20000
-		while request_in_flight and Time.get_ticks_msec() < finish_deadline:
-			await get_tree().process_frame
 		# A separate request then closes the host using the latest revision.
 		var shutdown_client := HTTPRequest.new()
 		shutdown_client.timeout = 12.0

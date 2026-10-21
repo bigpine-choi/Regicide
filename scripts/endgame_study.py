@@ -58,7 +58,8 @@ def write_summary(run, report):
 
 
 def frozen_sources():
-    paths = list((ROOT / "scripts").glob("*.py")) + list((ROOT / "tests").glob("*.py"))
+    paths = [path for directory in (ROOT / "scripts", ROOT / "tests")
+             for path in directory.rglob("*.py") if path.is_file()]
     paths += list((ROOT / "src").glob("*.cpp")) + list((ROOT / "include/regicide").glob("*.hpp"))
     paths += [ROOT / "tests/data" / name for name in (
         "learning_openings_v1.json", "learning_arena_openings_v1.json", "endgame_learning_seeds_v1.json")]

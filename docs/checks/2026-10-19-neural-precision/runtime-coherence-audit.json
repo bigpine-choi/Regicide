@@ -1,0 +1,41 @@
+{
+  "method": "Independent token parser, FNV1a uint32 little-endian and scalar Python integer forward; no training-module imports",
+  "holdout_read": false,
+  "source_or_model_modified": false,
+  "training_rows": 1498,
+  "models": {
+    "old_qat_v1": {
+      "version": 1,
+      "input_scale": 1,
+      "activation_clip": 127,
+      "denominator": 8,
+      "checksum": 4169634320372998457,
+      "sha256": "cdbaca3d047ef3d4c5615ce691b4b99fb798c422d9a4bda30a47fa8395f29a13",
+      "rows": 1498,
+      "cpp_full_incremental_independent_mismatches": 0,
+      "train_mae_cp": 26.158210947930574,
+      "train_mse_cp2": 1061.375834445928
+    },
+    "selected_v2": {
+      "version": 2,
+      "input_scale": 32,
+      "activation_clip": 4064,
+      "denominator": 256,
+      "checksum": 12850805878070247189,
+      "sha256": "c9ca5f35bb0ef0f61fca9b7eba10cd01d4320cf6c2a1dd4863630b7f87baaa92",
+      "rows": 1498,
+      "cpp_full_incremental_independent_mismatches": 0,
+      "train_mae_cp": 8.68291054739653,
+      "train_mse_cp2": 124.43190921228305
+    }
+  },
+  "exact_rewrite_cpp_rows_per_model": 1498,
+  "exact_v1_rescale_v2_cpp_rows": 1498,
+  "selected_integer_changes_vs_same_scale_initial": {
+    "input_weights": 975,
+    "hidden_bias": 2,
+    "output_weights": 11
+  },
+  "selected_shadow_export_exact": true,
+  "build_sources_and_binaries_match_provenance": true
+}

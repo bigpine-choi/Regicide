@@ -1,5 +1,7 @@
 # 자체 대국 엔진 v0.2 → v0.6.0
 
+현재 통합 개발본은 `0.7.0-dev`다. 기존 보정망의 `EvalFile`/`UseNeuralEvaluation` 계약을 유지하고 정수 NNUE는 `NeuralModelFile`/`UseNNUEEvaluation`로 선택한다. `--eval-file`과 `--nnue`는 별도 모델 계열이며 동시 활성화는 거절한다. [M1 통합 기록과 재현 명령](M1_INTEGRATION.md)을 참고한다. 기존 버전의 실행·실험 설명은 해당 시점의 기록이다.
+
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.
 
 v0.4는 평가를 유지하고 [프로파일링 기반 최적화·전이표](PERFORMANCE.md)를 추가한다. 이전 버전과 [속도·같은 시간 대국 결과](experiments/2026-10-17-profile-transposition.md)를 따로 측정했다.

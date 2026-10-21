@@ -1,0 +1,18 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+FAIL: black-human legal recommendation accepted
+SCRIPT ERROR: Out of bounds get index '0' (on base: 'PackedVector2Array')
+   at: _run_synthetic (res://tests/hint_tests.gd:147)
+   GDScript backtrace (most recent call first):
+       [0] _run_synthetic (res://tests/hint_tests.gd:147)
+Godot hint synthetic checks: 32, failures: 1
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\hint_godot_tests.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\hint_godot_tests.py", line 59, in main
+    integration.run_godot(args, "hint_tests.gd", ["--evidence-dir", args.output], label="hint-synthetic")
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\godot_integration_tests.py", line 62, in run_godot
+    raise AssertionError(f"Godot {script} failed (exit {completed.returncode})")
+AssertionError: Godot hint_tests.gd failed (exit 1)

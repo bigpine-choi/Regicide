@@ -38,6 +38,18 @@ jobs:
       - run: python tests/endgame_remote_study_tests.py
       - run: python tests/remote_learning_arena_tests.py
       - run: python tests/remote_arena_import_tests.py
+      - run: python tests/m1_source_inventory_tests.py
+      - run: python tests/neural_training_unit_tests.py
+      - run: python tests/neural_qat_tests.py
+      - run: python tests/neural_precision_tests.py
+      - run: python tests/neural_strength_driver_tests.py
+      - run: python tests/neural_long_time_driver_tests.py
+      - run: python tests/neural_target_ab_data_tests.py
+      - run: python tests/neural_target_ab_training_tests.py
+      - run: python tests/neural_target_ab_match_tests.py
+      - run: python tests/neural_target_ab_audit_tests.py
+      - run: python tests/neural_target_ab_v2_audit_tests.py
+      - run: python -m unittest discover -s tests/neural_search_data -v
       - name: Build neural cost diagnostic
         run: cmake --build build --config Release --target regicide_profile_neural
       - if: runner.os == 'Linux'
@@ -53,6 +65,10 @@ jobs:
           node-version: '22'
       - run: node --check web/human-play/app.js
       - run: node tests/web_hint_tests.js
+      - run: node tests/think_time_web_tests.js
+      - run: python tests/think_time_tests.py
+      - run: python tests/installed_think_time_stream_tests.py
+      - run: python tests/evaluation_state_tests.py
       - run: python tests/audit_pvs_results.py --self-test
       - run: python tests/audit_see_results.py --self-test
       - run: python tests/see_clean_guard_tests.py
@@ -123,4 +139,26 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/hint_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Both neural model families and learning paths
+        shell: pwsh
+        run: |
+          $binary = if ($IsWindows) { 'build/Release/regicide.exe' } else { 'build/regicide' }
+          $modelTests = if ($IsWindows) { 'build/Release/regicide_neural_model_tests.exe' } else { 'build/regicide_neural_model_tests' }
+          python tests/nnue_integration_tests.py $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/neural_training_integration.py --engine $binary --model-tests $modelTests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/neural_qat_integration.py --engine $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/neural_precision_integration.py --engine $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/neural_precision_experiment_tests.py --engine $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/neural_coexistence_integration.py --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/m1_engine_parity.py --binary $binary --output build/m1-protocol.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/think_time_live_tests.py --binary $binary --godot "$env:REGICIDE_TEST_GODOT" --output build/m1-think-time.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

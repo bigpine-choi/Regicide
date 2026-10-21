@@ -1,0 +1,159 @@
+{
+  "status": "PASS",
+  "original_51_case_self_test": {
+    "status": "PASS",
+    "prior_raw_replay_self_test": {
+      "status": "PASS",
+      "native_corruption_rejections": [
+        "external CPU",
+        "new external PID",
+        "external PID disappearance",
+        "PID reuse",
+        "owned ancestry lie",
+        "wrong transport",
+        "third descendant engine",
+        "sampling gap",
+        "forged gap",
+        "missing snapshot",
+        "missing game interval",
+        "insufficient idle",
+        "missing cleanup coverage",
+        "wrong source",
+        "dirty snapshot"
+      ],
+      "game_corruption_rejections": [
+        "color pair",
+        "WDL summary",
+        "bootstrap interval",
+        "illegal actual move",
+        "final castling rights",
+        "incomplete game"
+      ],
+      "historical_games_replayed": 16,
+      "historical_actual_plies": 1559,
+      "historical_pv_plies": 6848,
+      "fresh_openings_or_engines_used": false
+    },
+    "long_time_corruption_rejections": [
+      "swapped primary",
+      "changed secondary sample",
+      "changed primary game count",
+      "wrong checkout object",
+      "unplanned time",
+      "changed ending policy",
+      "wrong comparison mode",
+      "wrong baseline time",
+      "changed deadline",
+      "3000 wrong game count",
+      "3000 build-checkout confusion",
+      "3000 missing boundary",
+      "5000 wrong game count",
+      "5000 build-checkout confusion",
+      "5000 missing boundary",
+      "3000 asymmetric paired_opening_bootstrap95_descriptive presented as uncertainty",
+      "3000 asymmetric wilson95_descriptive presented as uncertainty",
+      "5000 asymmetric paired_opening_bootstrap95_descriptive presented as uncertainty",
+      "5000 asymmetric wilson95_descriptive presented as uncertainty"
+    ],
+    "synthetic_conditions": [
+      {
+        "movetime_ms": 3000,
+        "role": "primary",
+        "opening_count": 2,
+        "games_requested": 4,
+        "snapshots": 40
+      },
+      {
+        "movetime_ms": 5000,
+        "role": "secondary",
+        "opening_count": 1,
+        "games_requested": 2,
+        "snapshots": 36
+      }
+    ],
+    "raw_uci_corruption_rejections": [
+      "missing sequence",
+      "reversed timestamp",
+      "wrong movetime",
+      "missing full history",
+      "wrong bestmove",
+      "wrong nodes",
+      "wrong score",
+      "wrong PV",
+      "missing fresh game",
+      "wrong model path",
+      "wrong model acknowledgement"
+    ],
+    "historical_raw_uci_fixture_searches": 4,
+    "historical_prefix_summary_cases": [
+      {
+        "movetime_ms": 3000,
+        "historical_games": 4,
+        "completed_pairs": 2,
+        "reports_interval": false
+      },
+      {
+        "movetime_ms": 5000,
+        "historical_games": 2,
+        "completed_pairs": 1,
+        "reports_interval": false
+      }
+    ],
+    "fresh_openings_or_engines_used": false
+  },
+  "two_layer_gate_self_test": {
+    "status": "PASS",
+    "corruption_rejections": [
+      "new failed gate",
+      "new late gate",
+      "new missing check",
+      "new failed check",
+      "new wrong log SHA",
+      "new wrong reused SHA",
+      "new redirected reused path",
+      "old failed gate",
+      "old late gate",
+      "old wrong runtime",
+      "old wrong binary",
+      "old missing regression checks",
+      "old failed check",
+      "old wrong log SHA",
+      "old wrong model",
+      "old wrong checksum",
+      "old wrong handshake SHA",
+      "old wrong model manifest",
+      "gate absent from frozen inputs"
+    ],
+    "frozen_gate_replay": {
+      "status": "PASS",
+      "new_gate": {
+        "path": "docs/matches/2026-10-19-neural-long-time/validation/validation.json",
+        "sha256": "a21eace69135a80da246e19c7dc5db05fb37adefef6aad0dfd367eeab9a164c4"
+      },
+      "new_checks_verified": [
+        "driver-tests.txt",
+        "auditor-self-test.txt"
+      ],
+      "reused_gate": {
+        "path": "docs/matches/2026-10-19-neural-strength/validation/validation.json",
+        "sha256": "bceefae3b88be929d512112b4c255ad6068810e9ce6e24ff68bd9bc1246656a0"
+      },
+      "reused_checks_verified": [
+        "rules-core.txt",
+        "actual-model.txt",
+        "rules-differential.txt",
+        "engine-integration.txt",
+        "comparison-harness.txt",
+        "cpu-guard-tests.txt",
+        "neural-driver-tests.txt",
+        "neural-audit-self-test.txt"
+      ],
+      "new_completed_utc": "2026-10-19T06:23:44.513629+00:00",
+      "reused_completed_utc": "2026-10-19T05:04:04.878122+00:00",
+      "scope": "Two new offline tool checks; original eight-check runtime/model gate and raw model handshake reused, not rerun."
+    },
+    "engines_used": false,
+    "source_files_modified": false
+  },
+  "engines_used": false
+}

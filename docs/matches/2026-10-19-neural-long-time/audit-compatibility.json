@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-19T06:27:40.805194+00:00",
+  "status": "post-freeze audit-schema compatibility addendum; no match conclusion",
+  "freeze": {
+    "path": "docs/matches/2026-10-19-neural-long-time/freeze.json",
+    "sha256": "186f9e96428ed2c60ceedec6cd69c391ad332fcbe4148da720ca84feeb3cba04",
+    "frozen_file_count": 55
+  },
+  "original_auditor": {
+    "path": "tests/audit_neural_long_time_results.py",
+    "sha256": "f65211d49510c63b95330da0281585557dfc037b02ab391f8fc06075f2b3cf6c",
+    "preserved_unchanged": true
+  },
+  "compatibility_auditor": {
+    "path": "tests/audit_neural_extra_time_results.py",
+    "sha256": "0b94ba58423344cd9c61341fe064560da18e5bdc2b701af93e4dbd2efd399936",
+    "created_after_freeze": true
+  },
+  "reason": "Frozen original auditor expects an inline legacy gate with engine_source_commit, binary_sha256 and six or more checks. The frozen new gate instead contains two new offline tool checks and a reused_gate receipt pointing to the eight-check historical engine/model gate.",
+  "change": "Replace only the validation-gate schema check with strict replay of both frozen layers: verify the new two logs, follow reused_gate path and SHA from freeze.files, verify all eight original logs, engine identity, precision manifest and model handshake; retain every existing game, raw UCI, timing, schedule, deadline and CPU audit.",
+  "frozen_inputs_preserved": true,
+  "runtime_model_schedule_limits_or_results_changed": false,
+  "change_was_not_selected_to_avoid_a_match_result": true,
+  "discovery_context": {
+    "reported_by_root_utc_range": [
+      "2026-10-19T06:25:00+00:00",
+      "2026-10-19T06:26:59+00:00"
+    ],
+    "root_reported_first_game_incomplete_at_discovery": true,
+    "exact_discovery_instant_not_preserved": true,
+    "root_reported_second_game_in_progress_utc": "2026-10-19T06:27:03+00:00",
+    "this_addendum_created_at_actual_time_above": true,
+    "all_match_results_complete_before_adapter": false,
+    "scope": "Discovery timing is root-reported. Adapter author read only the initial game-boundary progress checkpoint before implementation and did not select any changed condition or schedule from scores."
+  },
+  "progress_checkpoint_at_addendum": {
+    "path": "docs/matches/2026-10-19-neural-long-time/attempt-001-time3000/progress.json",
+    "sha256_at_read": "885d080badab101527c8c6b7999cebc4cbac300826427bc7c561ea0dfb483456",
+    "checkpoint_utc": "2026-10-19T06:27:01.935331+00:00",
+    "game": 2,
+    "completed": false,
+    "note": "Checkpoint updates only at game boundaries; not a realtime board snapshot."
+  },
+  "self_test": {
+    "path": "docs/matches/2026-10-19-neural-long-time/audit-compatibility-self-test.json",
+    "sha256": "0da1bfd1a56b5e9cadd9bc051d62c95513ab7c00e7562b62e7df01ad245f910d",
+    "status": "PASS",
+    "original_corruption_rejections": 51,
+    "new_gate_corruption_rejections": 19,
+    "engines_used": false
+  },
+  "interpretation": "Original frozen-auditor schema failure and separately identified compatibility-auditor result must both be preserved. A compatibility PASS confirms unchanged recorded evidence under the frozen asymmetric protocol; it does not turn this pilot into equal-time strength evidence."
+}

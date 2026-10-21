@@ -276,7 +276,8 @@ def run_rule_checks(binary, candidate, output):
 def implementation_hashes():
     # Include new evaluator helpers and their regressions automatically. A new
     # dependency such as classical_evaluation.py must not escape source freeze.
-    paths = sorted((ROOT / "scripts").glob("*.py")) + sorted((ROOT / "tests").glob("*.py")) + [
+    paths = sorted(path for directory in (ROOT / "scripts", ROOT / "tests")
+                   for path in directory.rglob("*.py") if path.is_file()) + [
         ROOT / "tests/data/learning_openings_v1.json",
         ROOT / "tests/data/learning_arena_openings_v1.json",
         ROOT / "tests/data/endgame_learning_seeds_v1.json"]

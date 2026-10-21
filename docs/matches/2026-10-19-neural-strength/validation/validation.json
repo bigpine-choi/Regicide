@@ -1,0 +1,96 @@
+{
+  "all_passed": true,
+  "completed_utc": "2026-10-19T05:04:04.878122+00:00",
+  "checks": [
+    {
+      "name": "rules-core.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-precision-runtime\\regicide_tests.exe"
+      ],
+      "exit_code": 0,
+      "log_sha256": "cc81854d5d86170344173efbfb3ecb3ba586abd8ea9bb9a31ed2c28be1c2b3a6"
+    },
+    {
+      "name": "actual-model.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-precision-runtime\\regicide_neural_model_tests.exe",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-19-neural-precision\\selection\\model.nnue"
+      ],
+      "exit_code": 0,
+      "log_sha256": "28d13bdfb9f424f45472d060dd957250d8fa62782559e6be9a61a09ee73ffc00"
+    },
+    {
+      "name": "rules-differential.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/differential.py",
+        "build-neural-strength/baseline/regicide.exe"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b6ef21fdcf6390ea8fe0981976e8a2a6a9fb6e220f3db81e2e85618b8f1d139e"
+    },
+    {
+      "name": "engine-integration.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/engine_integration.py",
+        "build-neural-strength/baseline/regicide.exe"
+      ],
+      "exit_code": 0,
+      "log_sha256": "531c2da5af18a764d85f44c70913ac7208eac358dab24697d8a6c6002cd65beb"
+    },
+    {
+      "name": "comparison-harness.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/compare_engines_tests.py",
+        "build-neural-strength/baseline/regicide.exe"
+      ],
+      "exit_code": 0,
+      "log_sha256": "3050c44a47544384b1dbc9cb4b4b589ea804d8d1d158cecdcd6b36fbc378bf9b"
+    },
+    {
+      "name": "cpu-guard-tests.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/see_clean_guard_tests.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "56cf5d8c2cf7abf1d5d57a55c2c191b47101577527bc324b13bcb000f4be82e9"
+    },
+    {
+      "name": "neural-driver-tests.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/neural_strength_driver_tests.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "c621b9c49dfccdf54fff8c18cba02a543c30c75d2636c7858c4eaf2db277d56d"
+    },
+    {
+      "name": "neural-audit-self-test.txt",
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+        "tests/audit_neural_strength_results.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log_sha256": "1d03eee46be5fb437accbfb4425aee409823d09c71c96bcfb8c6d74096b5be88"
+    }
+  ],
+  "model_uci_handshake_sha256": "758fd0a69242ed5ebbb70f73c1a50266a59aa5baee654424a978a2b536e87668",
+  "prior_precision_manifest": {
+    "path": "docs/checks/2026-10-19-neural-precision/manifest.json",
+    "sha256": "79811ff34179838b7f36f4024b2df32a9a036160221a2411b01aab23f5679559"
+  },
+  "source_unchanged": "Engine/model from committed bb3100c; no source or model changes for matches",
+  "model_io_preflight": {
+    "model_sha256": "c9ca5f35bb0ef0f61fca9b7eba10cd01d4320cf6c2a1dd4863630b7f87baaa92",
+    "expected_checksum": 12850805878070247189,
+    "observed_checksum": 12850805878070247189,
+    "uci_output_path": "docs/matches/2026-10-19-neural-strength/validation/model-uci-handshake.txt",
+    "uci_output_sha256": "758fd0a69242ed5ebbb70f73c1a50266a59aa5baee654424a978a2b536e87668"
+  },
+  "engine_source_commit": "bb3100c460618e888c42066ba9c54618c0127c9d",
+  "binary_sha256": "598ebec433334b2ce053d0ed6b143fbfd34f9dd3a76557adb62764dcd940c705"
+}

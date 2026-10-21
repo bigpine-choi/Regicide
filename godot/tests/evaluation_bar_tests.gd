@@ -110,10 +110,19 @@ func _run() -> void:
 	app.accept_state(changed)
 	verify(not app.evaluation_bar.has_score, "a changed revision clears the old score immediately")
 	verify(not app.accept_evaluation(score), "older-revision response is rejected")
-	app.accept_state(fixture("new-game", 1))
-	verify(not app.accept_evaluation(score), "new-game response at same revision is rejected")
+	# The backend's board revision keeps increasing across new games. A late
+	# response must never roll the active game or its evaluation backwards.
+	app.accept_state(fixture("new-game", 3))
+	verify(app.state.game_id == "new-game" and int(app.state.revision) == 3,
+		"new-game response advances the monotonic board revision")
+	verify(not app.accept_evaluation(score), "new game rejects the previous game's evaluation")
+	app.accept_state(changed)
+	verify(app.state.game_id == "new-game" and int(app.state.revision) == 3,
+		"delayed previous-game state cannot replace the current game")
+	position = fixture("review-game", 4)
+	score = score_for(position, 240)
 	app.accept_state(position)
-	app.accept_evaluation(score)
+	verify(app.accept_evaluation(score), "fresh live position accepts its matching score before review")
 	app.review_mode = true
 	app.review_frames = [position.duplicate(true)]
 	app.review_moves = []
