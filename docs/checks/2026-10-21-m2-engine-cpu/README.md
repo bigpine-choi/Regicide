@@ -100,6 +100,17 @@ not copied or presented as newly played games. New raw main output goes to
 `build-m2-baseline96/run-001`. Old stopped games and preflight scores are
 excluded from the 96 main results.
 
+The 96-game main completed in 1,154.505 seconds. Product and independent audits
+both passed: 9,043 mainline plies, 59,364 PV plies and 7,747 searches with
+3,945.015625 seconds of actual endpoint CPU. Thirteen residual warning windows
+in two episodes peaked at 27.480191%; they remained warning-only. Final Job
+active processes and remaining held handles were zero. See the
+[results and interpretation](../../experiments/2026-10-21-m2-baseline96-outcome.md).
+The original nine synthetic adapter checks missed a JSON string/Path boundary
+in preparation; one line and a real JSON-path regression were added before
+any main game, with ten checks PASS. The failed preparation input is retained.
+No completed preflight or main match was restarted for the 96-game run.
+
 Future change comparisons follow the user's
 [short experiment policy](../../EXPERIMENT_POLICY.md): prioritize engine code
 and learning, compare one change against its baseline in a short paired match,

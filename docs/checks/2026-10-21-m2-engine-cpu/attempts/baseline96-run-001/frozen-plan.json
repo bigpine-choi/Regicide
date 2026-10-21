@@ -1,0 +1,1446 @@
+{
+  "schema_version": 1,
+  "frozen_utc": "2026-10-21T13:07:36.467619+00:00",
+  "plan": {
+    "schema_version": 3,
+    "id": "m2-baseline96-20261021-v6-adapter",
+    "phase": "formal-m2-engine-cpu",
+    "preregistered_utc": "2026-10-21T12:57:21.973218+00:00",
+    "candidates": [
+      {
+        "path": "../../config/engine-profiles/classical.json",
+        "sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2"
+      },
+      {
+        "path": "../../config/engine-profiles/residual-v2.json",
+        "sha256": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0"
+      },
+      {
+        "path": "../../config/engine-profiles/nnue-s32.json",
+        "sha256": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1"
+      }
+    ],
+    "opponents": [
+      {
+        "path": "../../build-m2-opponents/profiles/stockfish18.json",
+        "sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090"
+      },
+      {
+        "path": "../../build-m2-opponents/profiles/sunfish.json",
+        "sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3"
+      }
+    ],
+    "openings": {
+      "path": "../../tests/data/m2_formal_openings_2026-10-21.json",
+      "sha256": "1994d67709942de642b0e577ded78e382195df260b806117edc8aa774e454edd"
+    },
+    "preflight_openings": {
+      "path": "../../tests/data/m2_preflight_openings_2026-10-21.json",
+      "sha256": "1e6b08b689701e95c34adc8809cf1a104d12413c8ad02c02461de1ef2a6817b8"
+    },
+    "preflight_opening_count": 1,
+    "movetimes_ms": [
+      100,
+      1000
+    ],
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "lane_affinity_masks": [
+      15,
+      240,
+      3840,
+      61440
+    ],
+    "topology": {
+      "physical_core_masks": [
+        3,
+        12,
+        48,
+        192,
+        768,
+        3072,
+        12288,
+        49152
+      ],
+      "logical_cpus": 16,
+      "scope": "Single Windows processor group, physical-core affinity masks."
+    },
+    "load_policy": {
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "max_nonworker_cpu_fraction": 0.2,
+      "host_window_seconds": 2.0
+    },
+    "idle_probe_seconds": 5.0,
+    "move_deadline": {
+      "multiplier": 2.0,
+      "slack_seconds": 0.25
+    },
+    "cell_timeout_seconds": 1500,
+    "preflight_timeout_seconds": 1800,
+    "main_timeout_seconds": 14400,
+    "retry_policy": "no-result-based-retries-stop-on-first-failure",
+    "statistics": {
+      "method": "descriptive-paired-colors-preserving-broad-cluster-percentile-bootstrap",
+      "seed": 2026102101,
+      "resamples": 20000,
+      "interval": [
+        0.025,
+        0.975
+      ],
+      "minimum_clusters": 2,
+      "elo_estimate": null,
+      "promotion_rule": null
+    },
+    "preregistration_artifacts": [
+      {
+        "path": "2026-10-21-m2-formal-plan.md",
+        "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/exclusion-audit.json",
+        "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/exposure-index.json.gz",
+        "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/test-report.json",
+        "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/hardware.json",
+        "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/native-before.json",
+        "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/test-report-final.json",
+        "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+      },
+      {
+        "path": "2026-10-21-m2-job-accounting-plan.md",
+        "sha256": "28b40d5bad2c11e137039b11b1a956491ca8a34ba537e736a4fe933592eb416b"
+      },
+      {
+        "path": "2026-10-21-m2-formal-plan.json",
+        "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb"
+      },
+      {
+        "path": "2026-10-21-m2-job-accounting-restart-001.md",
+        "sha256": "c78167b20a77fca1e439a14c774650dd83904a4c6f7944179285432ed1afa995"
+      },
+      {
+        "path": "2026-10-21-m2-job-accounting-plan.json",
+        "sha256": "9ea1427dbb59c3f394ebd3622f91ac1f12ecc4e2828f4e15bcee73c953460c14"
+      },
+      {
+        "path": "2026-10-21-m2-job-accounting-restart-001.json",
+        "sha256": "1f7f1638e0c4d79c84611a4987ce2e496ffc939fe73b6e514528058e72c58f0a"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-plan.md",
+        "sha256": "1e4e176197f7b61dc1b83a1ad34e2046d07db0fa44722c4f7dbf4ff2648b9703"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-plan.json",
+        "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-restart-001.md",
+        "sha256": "324cbcc09996df792f0065b75cb76b5ff646e99c4cc8007273cd695c1af3806e"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-001-main-stopped.json",
+        "sha256": "1e37ff90b906f6a7e61e9e22382c4ff29def40a8ffbd841f31e2583bcde0c4be"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/pid-parent-audit/receipt-r2.json",
+        "sha256": "dd85716111659cf751fac6bf3afd3c927ba83f53e828523d2911dd9881164007"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-restart-001.json",
+        "sha256": "e933ec3c2149f4c62d4f91216afb0a7061ef6afc060bc1f936f14b9f768e78a9"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-restart-002.md",
+        "sha256": "0ba86c68ed3aac275e3298cc4bb26208d6f047c2eaf0d4f54017ce33a9bc6b8b"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/v5-provider-failure-evidence.json",
+        "sha256": "45eba0e8e9552367a9a6b40e5a62cb88536ebb451000216199120e81c90a08cb"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-002-main-stopped.json",
+        "sha256": "48a9b32ef1c3f4cbb99518b19dc5737db873a87d3a931e8b5013c9855eccb0cc"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-002-main-stopped-r2.json",
+        "sha256": "3d2c174bf422f9512befe063317fe9ade7733b9651cd3f6487aca7ae4e8484e2"
+      },
+      {
+        "path": "2026-10-21-m2-engine-cpu-restart-002.json",
+        "sha256": "3864c05d7ee18c1426279cccb328acf9e07509310a6c4428dd52329959a46781"
+      },
+      {
+        "path": "../../build-m2-engine-cpu/attempt-003/frozen-plan.json",
+        "sha256": "f5f9c005454a224cc7b3e48d2b334cd48eeea4081712fd778819c1b32f00f76c"
+      },
+      {
+        "path": "../../build-m2-engine-cpu/attempt-003/seal.json",
+        "sha256": "e873b6c0c6599fa4b662096564ab3d63ac3fc27f422a429b7eb8493d3e23d50e"
+      },
+      {
+        "path": "2026-10-21-m2-baseline96-plan.md",
+        "sha256": "3a6a4f2ebd1992ce506efb0d0e56ed492e7f1386ff6e2819ff0efcb02773377e"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-003-preflight.json",
+        "sha256": "9817e413be725fb9edc69fb03c0c9480ca1be62d8dbcdf2597c9026c8d02d852"
+      },
+      {
+        "path": "../../build-m2-engine-cpu/attempt-003/preflight/product-audit.json",
+        "sha256": "e2dd7ac5d97f776d672969490b5e20adec40581baa48866640f98ffb979bcf99"
+      }
+    ],
+    "scope": "User-selected 96-game descriptive baseline: all three M1 candidate paths, two opponents, two equal-time controls, fixed first four source-bank families and paired colors. Reuse identical v6 runtime33; no Elo, promotion, 768-game completion or pooled partial scores.",
+    "worker_runtime": {
+      "executable": {
+        "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+      },
+      "pythonpath": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages",
+      "package_files": [
+        {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\__init__.py",
+          "sha256": "1fde6a8e932508d14b31f6a584497b49c2969fc3c7cdc675347f819f0d667a5b"
+        },
+        {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\engine.py",
+          "sha256": "40a1407749ea43b4ed3174f0603e0316a9c971b8943113fbea5be47c82bde22b"
+        }
+      ],
+      "python_version": "3.13.16",
+      "chess_version": "1.11.2"
+    },
+    "source_plan": {
+      "path": "2026-10-21-m2-formal-plan.json",
+      "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb"
+    },
+    "accounting_policy": {
+      "mode": "windows-job-plus-coordinator-cpu",
+      "system_api": "GetSystemTimes: delta(kernel + user - idle)",
+      "job_api": "QueryInformationJobObject(JobObjectBasicAccountingInformation): delta(TotalUserTime + TotalKernelTime), active and terminated processes",
+      "coordinator_api": "GetProcessTimes: fixed coordinator PID and creation time; coordinator must not belong to the measured job",
+      "residual_formula": "system_busy_delta_ticks - job_delta_ticks - coordinator_delta_ticks",
+      "approximate": true,
+      "raw_signed_residual_required": true,
+      "read_brackets_and_any_clipping_adjustment_required": true,
+      "pre_assignment_cpu_boundary_role": "diagnostic only; do not assume additive offset or strict residual bounds",
+      "full_process_attribution_role": "additional diagnostic, not an inferred per-app split of residual",
+      "threshold_scope": "whole-host residual CPU fraction using the unchanged load_policy; not a total-busy or per-lane cap",
+      "individual_search_contention_proven": false,
+      "normal_exit_count_not_derived_from_total_terminated_processes": true,
+      "final_job_cpu_before_handle_close_required": true
+    },
+    "exposure_policy": {
+      "previously_exposed_fixed_baseline": true,
+      "fresh_holdout": false,
+      "result_adaptive_reselection": false,
+      "prior_failed_attempts_preserved": true,
+      "new_full_main_games": 96,
+      "new_preflight_games": 0,
+      "previous_partial_games_count_toward_new_completion": false,
+      "inherited_preflight_games_required": 24
+    },
+    "measurement_helper_policy": {
+      "root_runner": "scripts/m2_formal_v6.py",
+      "summary_tool": "scripts/m2_formal_summary_v6.py",
+      "previous_v2_sources_preserved": true,
+      "actual_git_verification_before_measurement": true,
+      "sealed_exact_query_cache_during_measurement": true,
+      "cache_scope": [
+        "root-initial-validation",
+        "root-periodic-validation",
+        "root-final-validation",
+        "root-audit",
+        "worker-validation"
+      ],
+      "unsealed_or_failed_git_queries_rejected": true,
+      "existing_commit_validator_retained": true,
+      "periodic_actual_file_hash_validation_retained": true,
+      "sources_and_sha256_frozen_by_runner": true,
+      "prior_failure_cause_proven": false,
+      "previous_v3_sources_preserved": true,
+      "previous_v4_sources_preserved": true,
+      "previous_v5_sources_preserved": true
+    },
+    "restart_policy": {
+      "reason_kind": "explicit-user-scope-reduction-from-768-to-96-before-new-main",
+      "result_based_retry": false,
+      "source_preflight_attempt": "build-m2-engine-cpu/attempt-003",
+      "previous_attempts_preserved": true,
+      "previous_partial_games_pooled": false,
+      "new_main_requires_complete_clean_preflight": true,
+      "new_full_main_games": 96,
+      "required_preflight_games": 24,
+      "preflight_is_inherited_only_if_identical_and_audited": true,
+      "unchanged_stop_on_first_actual_failure": true,
+      "residual_warning_is_not_actual_failure": true
+    },
+    "parent_plan": {
+      "path": "2026-10-21-m2-engine-cpu-restart-002.json",
+      "sha256": "3864c05d7ee18c1426279cccb328acf9e07509310a6c4428dd52329959a46781"
+    },
+    "residual_load_policy": {
+      "enforcement": "warning-only",
+      "warning_fraction": 0.2,
+      "window_seconds": 2.0,
+      "stops_phase": false,
+      "affects_comparison_validity": false,
+      "warning_count_and_maximum_required": true,
+      "individual_search_contention_threshold_proven": false
+    },
+    "engine_cpu_policy": {
+      "mode": "held-getprocesstimes-per-search",
+      "identity": [
+        "pid",
+        "creation_ticks"
+      ],
+      "raw_counters": [
+        "user_ticks",
+        "kernel_ticks",
+        "cpu_ticks"
+      ],
+      "cpu_ticks_per_second": 10000000,
+      "read_brackets_required": true,
+      "every_actual_search_required": true,
+      "wall_clock": "monotonic",
+      "requested_movetime_and_deadline_required": true,
+      "cpu_and_response_recalculation_required": true,
+      "deadline_policy": "unchanged move_deadline multiplier and slack_seconds",
+      "missing_or_invalid_cpu_receipt": "stop-invalid",
+      "pid_or_creation_change": "stop-invalid",
+      "counter_regression_or_api_failure": "stop-invalid",
+      "low_or_zero_cpu": "descriptive-only-quantized-or-immediate-response-allowed",
+      "cpu_wall_ratio": "descriptive-only-no-pass-floor",
+      "nps_floor": null,
+      "minimum_cpu_fraction": null,
+      "cpu_wall_difference_is_os_waiting_time": false,
+      "response_overrun_vs_request": "descriptive-within-unchanged-deadline",
+      "subprocess_cpu_included_in_engine_process_cpu": false,
+      "preflight_gate": "24 complete legal games; frozen settings, complete per-search CPU/response records, no real failure, product and independent audits PASS",
+      "main_gate": "768 complete legal games under same record and audit requirements",
+      "score_adjustment_using_cpu": false,
+      "actual_endpoint_resolution": {
+        "native": "frozen-image-direct-with-no-observed-child",
+        "sunfish": "frozen-script-profile-native-direct-with-no-observed-child-or-unique-direct-frozen-base-python-child",
+        "base_runtime_binding": "worker_runtime.executable",
+        "held_pid_creation_and_two_matching_parent_inventories_required": true,
+        "meter_rechecks_resolved_endpoint_identity": true,
+        "profiles_and_commands_unchanged": true,
+        "ownership_scope": "calling-worker-current-job-with-no-breakaway-and-creation-order",
+        "job_membership_api": "QueryInformationJobObject(NULL, JobObjectBasicProcessIdList)",
+        "complete_job_pid_lists_required": true,
+        "worker_and_transport_in_job_required": true,
+        "coordinator_outside_worker_job_required": true,
+        "breakaway_and_silent_breakaway_forbidden": true,
+        "raw_global_and_scoped_inventories_required": true,
+        "excluded_parent_matches_require_raw_reason": true,
+        "within_job_stale_edges_require_positive_held_creation_order_proof": true,
+        "within_job_unknown_creation_or_access_failure": "stop-invalid",
+        "global_other_lane_job_churn_is_allowed": true,
+        "selected_endpoint_scope_revalidated_independently": true
+      },
+      "sunfish_launcher_cpu": "if-child-endpoint-selected-launcher-cpu-stays-in-owned-job-and-is-excluded-from-endpoint-search-cpu; direct-endpoint-search-cpu-is-included",
+      "cpu_query_interval_is_wider_than_callable_response": true,
+      "cpu_query_is_atomic_with_response": false,
+      "response_deadline_includes_measurement_envelope": true,
+      "cpu_per_wall_ratio_upper_bound": null,
+      "comparison_outer_elapsed_is_diagnostic_only": true,
+      "comparison_outer_includes_post_response_json_and_flush": true,
+      "comparison_outer_must_contain_measured_envelope": true,
+      "response_deadline_excludes_post_response_trace_logging": true,
+      "response_and_envelope_deadlines_remain_unchanged": true
+    },
+    "process_discovery_policy": {
+      "mode": "explicit-owned-job-membership-before-process-query",
+      "job_handle_scope": "coordinator-explicit-owned-job-handle",
+      "job_pid_api": "QueryInformationJobObject(explicit owned Job, JobObjectBasicProcessIdList)",
+      "raw_guard_schema_version": 4,
+      "raw_scope_schema_version": 1,
+      "complete_job_pid_lists_required": true,
+      "no_breakaway_required": true,
+      "coordinator_outside_owned_job_required": true,
+      "global_numeric_parent_is_not_ownership": true,
+      "outside_job_nonengine_parent_matches_opened": false,
+      "held_exited_owned_identity_and_cpu_retirement_preserved": true,
+      "declared_external_engine_cpu_tolerance_ticks": 0,
+      "raw_global_inventory_selection_queries_and_exclusions_required": true,
+      "scope_index_contiguous": true,
+      "scope_count_reconciled_with_summary": true,
+      "actual_owned_or_declared_external_identity_api_failure": "stop-invalid",
+      "residual_cpu_policy": "warning-only",
+      "whole_os_process_attribution_claim": false,
+      "raw_scope_index_field": "process_ownership_scope_index",
+      "raw_summary_scope_count_field": "process_ownership_scope_count",
+      "maximum_additional_toolhelp_inventory_attempts": 1,
+      "unobserved_before_only_exits": "record-both-job-lists-and-two-inventories-do-not-adopt-individual-identity",
+      "unobserved_after_only_births": "record-both-job-lists-and-two-inventories-do-not-adopt-individual-identity",
+      "unobserved_persistent_member_or_registered_root": "stop-invalid-without-exact-held-final-proof",
+      "native_member_proof": "IsProcessInJob-on-same-held-process-object-and-explicit-owned-Job-handle"
+    },
+    "main_selection_policy": {
+      "mode": "fixed-first-4-families-from-unchanged-32-family-bank",
+      "source_bank_family_count": 32,
+      "source_bank": {
+        "path": "../../tests/data/m2_formal_openings_2026-10-21.json",
+        "sha256": "1994d67709942de642b0e577ded78e382195df260b806117edc8aa774e454edd"
+      },
+      "selected_indices_zero_based": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "selected_indices_one_based": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "selected_family_ids": [
+        "m2-formal-bishop-c6-center-20261021",
+        "m2-formal-center-queen-retreat-20261021",
+        "m2-formal-semi-slav-e3-first-20261021",
+        "m2-formal-sicilian-c3-queen-center-20261021"
+      ],
+      "selected_cluster_ids": [
+        "open-e4-e5",
+        "open-e4-e5",
+        "queen-pawn-d5",
+        "sicilian"
+      ],
+      "selected_family_count": 4,
+      "selected_broad_cluster_count": 3,
+      "selected_cell_ids": [
+        "main-0001",
+        "main-0002",
+        "main-0003",
+        "main-0004",
+        "main-0005",
+        "main-0006",
+        "main-0007",
+        "main-0008",
+        "main-0009",
+        "main-0010",
+        "main-0011",
+        "main-0012",
+        "main-0013",
+        "main-0014",
+        "main-0015",
+        "main-0016",
+        "main-0017",
+        "main-0018",
+        "main-0019",
+        "main-0020",
+        "main-0021",
+        "main-0022",
+        "main-0023",
+        "main-0024",
+        "main-0025",
+        "main-0026",
+        "main-0027",
+        "main-0028",
+        "main-0029",
+        "main-0030",
+        "main-0031",
+        "main-0032",
+        "main-0033",
+        "main-0034",
+        "main-0035",
+        "main-0036",
+        "main-0037",
+        "main-0038",
+        "main-0039",
+        "main-0040",
+        "main-0041",
+        "main-0042",
+        "main-0043",
+        "main-0044",
+        "main-0045",
+        "main-0046",
+        "main-0047",
+        "main-0048"
+      ],
+      "selected_cells_canonical_sha256": "802386f3579282bdfa4db3d7d0f48719c014a63821cf828597e183a76790ddf5",
+      "reference_universe_pairs": 384,
+      "expected_main_pairs": 48,
+      "expected_main_games": 96,
+      "pairs_per_candidate_opponent_movetime": 4,
+      "games_per_candidate_opponent_movetime": 8,
+      "pairs_per_stratum_per_lane": 1,
+      "result_adaptive_selection": false,
+      "main_selection_occurs_before_main_results": true,
+      "canonical_json": "UTF-8 JSON, sort_keys=true, separators=(comma,colon), ensure_ascii=false, allow_nan=false",
+      "copied_main_bank_family_count": 4,
+      "main_schedule_is_generated_from_copied_four_family_bank": true,
+      "original_384_cell_ids_are_not_reused": true
+    },
+    "preflight_transfer_policy": {
+      "mode": "same-conditions-same-runtime33-immutable-audited-preflight-reference",
+      "status_at_plan_registration": "source-preflight-COMPLETE-with-product-and-independent-PASS-before-new-main",
+      "source_attempt": "build-m2-engine-cpu/attempt-003",
+      "source_plan": {
+        "path": "2026-10-21-m2-engine-cpu-restart-002.json",
+        "sha256": "3864c05d7ee18c1426279cccb328acf9e07509310a6c4428dd52329959a46781"
+      },
+      "source_frozen_plan": {
+        "path": "../../build-m2-engine-cpu/attempt-003/frozen-plan.json",
+        "sha256": "f5f9c005454a224cc7b3e48d2b334cd48eeea4081712fd778819c1b32f00f76c"
+      },
+      "source_seal": {
+        "path": "../../build-m2-engine-cpu/attempt-003/seal.json",
+        "sha256": "e873b6c0c6599fa4b662096564ab3d63ac3fc27f422a429b7eb8493d3e23d50e"
+      },
+      "source_frozen_runtime_sha256": {
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v6.py": "100b3413e4a1e4b890f435a6c2e985636a4b1182460551a60bbc00fd04e1bdd7",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v6.py": "d41af1bbf14d220e27471e80d1298c9c9341ea4cef019ae6abfe8a1e0af6f719",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_process_scope.py": "5cc98087d2b630127ed86e5a3b49b4939d6025f6b02b003b2fa4b205cb9f6d1b",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_load_guard_v2.py": "ab9ba84ca4044ccc92dc5897dc912188cb68b492d03690a93d5612076472f133",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v5.py": "1da9fdd16306c6ddd6b8e996946a171c10dff6a99b98dd851236bc0d21747612",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v5.py": "a9a0bbcfd1b16ac3103c327444c0402b43ef8d8a4ee3ad43040c78ff038d46e2",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity_v2.py": "36ab54956ea84cac94abf00f96346defb2abf85edc7163eaeefc7f02ac5f7cc4",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_tracking_v2.py": "f5eb5321ce1bcf6f43cad32dfb45ab601576cf2daafc8d6adcf20fe10136c5e5",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_receipts_v2.py": "7d55ba95623810495ead7a8bc4873d398aed9a935cfd99029e539d742ddee093",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v4.py": "c9597b1739da3640fa04941f547ab70b3499d1ed5d71a9d4f302525c339409c2",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v4.py": "0c228964c5e288c45e6c18e36784efcdfac8eced5da9ea365d4d51e68d2469e5",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_load_guard.py": "1f6156bc1df9a42c6c0e3d78506bafa534d1469ec56d4932b12ad13e9245778c",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_receipts.py": "9cc8aeac11aac33c792f1c5408f3d38e1c6048a0560e58cca251dc1e23c38812",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_receipts.py": "6ffae5ddf98b1c5f3c2375717775f98810d69ed944b708f636e9a93934c4cf8a",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity.py": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_tracking.py": "f24a79484b108cb3ca4243de78802a7463beaea24c36448fbd0ea25f30fd0c93",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v3.py": "31f68fe9184792e7603119178ee32f0d458f90a0c4a8782a79f3256a0569b64c",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v3.py": "dfc47b759b2af9100a6a39df050c26d9177038041cfe985d09da8697bfe38334",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v2.py": "6a3995529cf1ad9289d32b23cf114549b4f2d611074f04a985229500ebd301b4",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_load_guard.py": "c4b5546d61798cd24d82dfba42d272726a84581dd42d597ffb55497482fff743",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_operations.py": "72f25233bad8ad8efef926955e6b4c2e125f75f1ade1ce90fc8283b9fcfda472",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_receipts.py": "5e141c94fd4d6340c72022161e164082d611e379a0176d4d83e9fafa6c2dbd98",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v2.py": "c66c05c47ffc7fd65320196b1d958fc9814aa63d015137c8978555b62b61598e",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal.py": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\external_baseline_matrix.py": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary.py": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea"
+      },
+      "required_source_preflight_games": 24,
+      "required_source_preflight_pairs": 12,
+      "source_preflight_cells_canonical_sha256": "9dffb291cac263cfaa03d0fbc24a7250fd8985e3530b552ac1d0116647882f99",
+      "source_preflight_bank": {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\preflight-openings.json",
+        "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e"
+      },
+      "source_engine_profiles": {
+        "regicide-classical-m1": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\profiles\\regicide-classical-m1\\profile.json",
+          "sha256": "8fc0a382475095914310a867c7f21947d2dc78da638b940a33933a9daa0f020b"
+        },
+        "regicide-residual-v2-quality-attempt4": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\profiles\\regicide-residual-v2-quality-attempt4\\profile.json",
+          "sha256": "86e9c1a6cf8906415330422ac68da321500698cec2676873498a1e108b9a67f7"
+        },
+        "regicide-nnue-s32-precision-20261019": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\profiles\\regicide-nnue-s32-precision-20261019\\profile.json",
+          "sha256": "2ba43eeb63cde02db0393fba478e98ad3a8bbe4878de092a47a164caa4371a8e"
+        },
+        "stockfish18-x86-64": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\profiles\\stockfish18-x86-64\\profile.json",
+          "sha256": "4757c4c063ea6313fb941d8674b589618374f4b86ced0cae68cd8e9e2459c2ea"
+        },
+        "sunfish-e396948-cpython313": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003\\profiles\\sunfish-e396948-cpython313\\profile.json",
+          "sha256": "c2588ea646279465bf7f99d8b2cfc4020c454e3054015cc37bf6feb1671caad9"
+        }
+      },
+      "require_complete_zero_errors_zero_incomplete": true,
+      "require_product_audit_PASS": true,
+      "require_independent_v6_audit_PASS": true,
+      "require_all_twenty_conditions_deep_equal": true,
+      "require_same_preflight_cells_and_input_sha256": true,
+      "require_all_33_runtime_sources_byte_identical": true,
+      "require_receipt_binds_new_plan_sha256_and_source_plan_frozen_raw_audit_sha256": true,
+      "copy_as_newly_played_preflight": false,
+      "scores_count_toward_main96": false,
+      "no_transfer_on_any_source_failure_or_unexplained_difference": true,
+      "initial_registration_preflight_was_pending": true,
+      "source_preflight_actual_completed_games": 24,
+      "source_preflight_peer_sha256": "9817e413be725fb9edc69fb03c0c9480ca1be62d8dbcdf2597c9026c8d02d852",
+      "source_preflight_product_sha256": "e2dd7ac5d97f776d672969490b5e20adec40581baa48866640f98ffb979bcf99"
+    },
+    "execution_adapter_policy": {
+      "mode": "freeze-main-bank-prefix-and-verified-preflight-reference-adapter",
+      "runtime_core": "scripts/m2_formal_v6.py",
+      "runtime_source_count": 33,
+      "runtime_sources_must_remain_byte_identical": true,
+      "adapter_and_selection_manifest_sha256_required_before_main": true,
+      "adapter_final_implementation_pending": false,
+      "rewrite_original_source_or_frozen_records": false,
+      "full_reference_schedule_is_not_execution_target": true,
+      "completion_target_pairs": 48,
+      "completion_target_games": 96,
+      "all_score_summaries_require_same_selected_coverage": true,
+      "adapter_path": "scripts/m2_baseline96.py",
+      "total_harness_source_count": 34,
+      "freeze_load_plan_wrapper": "validate-original-32-family-load-plan-then-copy-main-rows-prefix4",
+      "original_worker_and_verify_frozen_unchanged": true
+    },
+    "baseline96_selection": {
+      "main_opening_count": 4,
+      "main_games": 96,
+      "selection": "first4bybankorder"
+    },
+    "preflight_transfer": {
+      "directory": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-003",
+      "peer_audit": {
+        "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-003-preflight.json",
+        "sha256": "9817e413be725fb9edc69fb03c0c9480ca1be62d8dbcdf2597c9026c8d02d852"
+      },
+      "product_audit": {
+        "path": "../../build-m2-engine-cpu/attempt-003/preflight/product-audit.json",
+        "sha256": "e2dd7ac5d97f776d672969490b5e20adec40581baa48866640f98ffb979bcf99"
+      }
+    },
+    "finalized_before_main_utc": "2026-10-21T13:03:51.744343+00:00"
+  },
+  "source_plan_sha256": "40727583562b8c3c38c375ef9026ad8faa9f380f49dde893f232ac32c9dc679d",
+  "source_plan_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\experiments\\2026-10-21-m2-baseline96-plan.json",
+  "profiles": {
+    "regicide-classical-m1": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\profiles\\regicide-classical-m1\\profile.json",
+      "sha256": "8fc0a382475095914310a867c7f21947d2dc78da638b940a33933a9daa0f020b"
+    },
+    "regicide-residual-v2-quality-attempt4": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\profiles\\regicide-residual-v2-quality-attempt4\\profile.json",
+      "sha256": "86e9c1a6cf8906415330422ac68da321500698cec2676873498a1e108b9a67f7"
+    },
+    "regicide-nnue-s32-precision-20261019": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\profiles\\regicide-nnue-s32-precision-20261019\\profile.json",
+      "sha256": "2ba43eeb63cde02db0393fba478e98ad3a8bbe4878de092a47a164caa4371a8e"
+    },
+    "stockfish18-x86-64": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\profiles\\stockfish18-x86-64\\profile.json",
+      "sha256": "4757c4c063ea6313fb941d8674b589618374f4b86ced0cae68cd8e9e2459c2ea"
+    },
+    "sunfish-e396948-cpython313": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\profiles\\sunfish-e396948-cpython313\\profile.json",
+      "sha256": "c2588ea646279465bf7f99d8b2cfc4020c454e3054015cc37bf6feb1671caad9"
+    }
+  },
+  "harness_source_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v6.py": "100b3413e4a1e4b890f435a6c2e985636a4b1182460551a60bbc00fd04e1bdd7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v6.py": "d41af1bbf14d220e27471e80d1298c9c9341ea4cef019ae6abfe8a1e0af6f719",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_process_scope.py": "5cc98087d2b630127ed86e5a3b49b4939d6025f6b02b003b2fa4b205cb9f6d1b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_load_guard_v2.py": "ab9ba84ca4044ccc92dc5897dc912188cb68b492d03690a93d5612076472f133",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v5.py": "1da9fdd16306c6ddd6b8e996946a171c10dff6a99b98dd851236bc0d21747612",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v5.py": "a9a0bbcfd1b16ac3103c327444c0402b43ef8d8a4ee3ad43040c78ff038d46e2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity_v2.py": "36ab54956ea84cac94abf00f96346defb2abf85edc7163eaeefc7f02ac5f7cc4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_tracking_v2.py": "f5eb5321ce1bcf6f43cad32dfb45ab601576cf2daafc8d6adcf20fe10136c5e5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_receipts_v2.py": "7d55ba95623810495ead7a8bc4873d398aed9a935cfd99029e539d742ddee093",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v4.py": "c9597b1739da3640fa04941f547ab70b3499d1ed5d71a9d4f302525c339409c2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v4.py": "0c228964c5e288c45e6c18e36784efcdfac8eced5da9ea365d4d51e68d2469e5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_load_guard.py": "1f6156bc1df9a42c6c0e3d78506bafa534d1469ec56d4932b12ad13e9245778c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_warning_receipts.py": "9cc8aeac11aac33c792f1c5408f3d38e1c6048a0560e58cca251dc1e23c38812",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_receipts.py": "6ffae5ddf98b1c5f3c2375717775f98810d69ed944b708f636e9a93934c4cf8a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_identity.py": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_engine_tracking.py": "f24a79484b108cb3ca4243de78802a7463beaea24c36448fbd0ea25f30fd0c93",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v3.py": "31f68fe9184792e7603119178ee32f0d458f90a0c4a8782a79f3256a0569b64c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v3.py": "dfc47b759b2af9100a6a39df050c26d9177038041cfe985d09da8697bfe38334",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_v2.py": "6a3995529cf1ad9289d32b23cf114549b4f2d611074f04a985229500ebd301b4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_load_guard.py": "c4b5546d61798cd24d82dfba42d272726a84581dd42d597ffb55497482fff743",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_operations.py": "72f25233bad8ad8efef926955e6b4c2e125f75f1ade1ce90fc8283b9fcfda472",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_receipts.py": "5e141c94fd4d6340c72022161e164082d611e379a0176d4d83e9fafa6c2dbd98",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary_v2.py": "c66c05c47ffc7fd65320196b1d958fc9814aa63d015137c8978555b62b61598e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal.py": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\external_baseline_matrix.py": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary.py": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_baseline96.py": "ccdb2f3562168f02d519fbcc63c9351b73cb7ca05b67c937195b165207872411"
+  },
+  "banks": {
+    "preflight": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preflight-openings.json",
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e"
+    },
+    "main": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\main-openings.json",
+      "sha256": "80aa68f8864af11fb096442e76ec812cf24c690acb092f0ee8e07ed26c66cac2"
+    }
+  },
+  "cells": {
+    "preflight": [
+      {
+        "id": "preflight-0001",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0002",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0003",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0004",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0005",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0006",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0007",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0008",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0009",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0010",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0011",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0012",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      }
+    ],
+    "main": [
+      {
+        "id": "main-0001",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0002",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0003",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0004",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0005",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0006",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0007",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0008",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0009",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0010",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0011",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0012",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0013",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0014",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0015",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0016",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0017",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0018",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0019",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0020",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0021",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0022",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0023",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0024",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0025",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0026",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0027",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0028",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0029",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0030",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0031",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0032",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0033",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0034",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0035",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0036",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0037",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0038",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0039",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0040",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0041",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0042",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0043",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0044",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0045",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0046",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0047",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0048",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      }
+    ]
+  },
+  "preregistration_artifacts": [
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-00-2026-10-21-m2-formal-plan.md",
+      "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-01-exclusion-audit.json",
+      "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-02-exposure-index.json.gz",
+      "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-03-test-report.json",
+      "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-04-hardware.json",
+      "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-05-native-before.json",
+      "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-06-test-report-final.json",
+      "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-07-2026-10-21-m2-job-accounting-plan.md",
+      "sha256": "28b40d5bad2c11e137039b11b1a956491ca8a34ba537e736a4fe933592eb416b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-08-2026-10-21-m2-formal-plan.json",
+      "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-09-2026-10-21-m2-job-accounting-restart-001.md",
+      "sha256": "c78167b20a77fca1e439a14c774650dd83904a4c6f7944179285432ed1afa995"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-10-2026-10-21-m2-job-accounting-plan.json",
+      "sha256": "9ea1427dbb59c3f394ebd3622f91ac1f12ecc4e2828f4e15bcee73c953460c14"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-11-2026-10-21-m2-job-accounting-restart-001.json",
+      "sha256": "1f7f1638e0c4d79c84611a4987ce2e496ffc939fe73b6e514528058e72c58f0a"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-12-2026-10-21-m2-engine-cpu-plan.md",
+      "sha256": "1e4e176197f7b61dc1b83a1ad34e2046d07db0fa44722c4f7dbf4ff2648b9703"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-13-2026-10-21-m2-engine-cpu-plan.json",
+      "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-14-2026-10-21-m2-engine-cpu-restart-001.md",
+      "sha256": "324cbcc09996df792f0065b75cb76b5ff646e99c4cc8007273cd695c1af3806e"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-15-peer-attempt-001-main-stopped.json",
+      "sha256": "1e37ff90b906f6a7e61e9e22382c4ff29def40a8ffbd841f31e2583bcde0c4be"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-16-receipt-r2.json",
+      "sha256": "dd85716111659cf751fac6bf3afd3c927ba83f53e828523d2911dd9881164007"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-17-2026-10-21-m2-engine-cpu-restart-001.json",
+      "sha256": "e933ec3c2149f4c62d4f91216afb0a7061ef6afc060bc1f936f14b9f768e78a9"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-18-2026-10-21-m2-engine-cpu-restart-002.md",
+      "sha256": "0ba86c68ed3aac275e3298cc4bb26208d6f047c2eaf0d4f54017ce33a9bc6b8b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-19-v5-provider-failure-evidence.json",
+      "sha256": "45eba0e8e9552367a9a6b40e5a62cb88536ebb451000216199120e81c90a08cb"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-20-peer-attempt-002-main-stopped.json",
+      "sha256": "48a9b32ef1c3f4cbb99518b19dc5737db873a87d3a931e8b5013c9855eccb0cc"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-21-peer-attempt-002-main-stopped-r2.json",
+      "sha256": "3d2c174bf422f9512befe063317fe9ade7733b9651cd3f6487aca7ae4e8484e2"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-22-2026-10-21-m2-engine-cpu-restart-002.json",
+      "sha256": "3864c05d7ee18c1426279cccb328acf9e07509310a6c4428dd52329959a46781"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-23-frozen-plan.json",
+      "sha256": "f5f9c005454a224cc7b3e48d2b334cd48eeea4081712fd778819c1b32f00f76c"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-24-seal.json",
+      "sha256": "e873b6c0c6599fa4b662096564ab3d63ac3fc27f422a429b7eb8493d3e23d50e"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-25-2026-10-21-m2-baseline96-plan.md",
+      "sha256": "3a6a4f2ebd1992ce506efb0d0e56ed492e7f1386ff6e2819ff0efcb02773377e"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-26-peer-attempt-003-preflight.json",
+      "sha256": "9817e413be725fb9edc69fb03c0c9480ca1be62d8dbcdf2597c9026c8d02d852"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\run-001\\preregistration-27-product-audit.json",
+      "sha256": "e2dd7ac5d97f776d672969490b5e20adec40581baa48866640f98ffb979bcf99"
+    }
+  ],
+  "git_receipts": [
+    {
+      "arguments": [
+        "rev-parse",
+        "--verify",
+        "de799794ebe5a81d3f5b0717b39051fa9d979e08^{commit}"
+      ],
+      "stdout": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T13:07:36.565006+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    },
+    {
+      "arguments": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "stdout": "d2f73e677ff26f5a8a8e2ae8d668a2567f1d93d7",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T13:07:36.698236+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    },
+    {
+      "arguments": [
+        "status",
+        "--porcelain"
+      ],
+      "stdout": "",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T13:07:36.870746+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    }
+  ]
+}
