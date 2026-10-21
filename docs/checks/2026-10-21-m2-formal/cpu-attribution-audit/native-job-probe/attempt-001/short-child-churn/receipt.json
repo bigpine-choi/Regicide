@@ -1,0 +1,55 @@
+{
+  "scenario": "short-child-churn",
+  "started_utc": "2026-10-21T09:55:37.122374+00:00",
+  "subject_module_sha256": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+  "diagnostic_only": true,
+  "threshold_changed": false,
+  "policy_failure": null,
+  "duration_seconds": 4.0,
+  "root_count": 4,
+  "sample_interval_seconds": 0.5,
+  "status": "DIAGNOSTIC_STOPPED",
+  "error": "LoadGuardViolation: rolling nonworker host CPU fraction exceeded the declared threshold",
+  "observations": [],
+  "guard_summary": {
+    "schema_version": 1,
+    "started_utc": "2026-10-21T09:55:37.123437+00:00",
+    "finished_utc": "2026-10-21T09:55:39.227066+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 0.2,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 18408,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 6,
+    "max_sample_gap_seconds": 0.5233223999966867,
+    "max_snapshot_duration_seconds": 0.016695800004526973,
+    "external_cpu_increase_ticks": 0,
+    "max_nonworker_cpu_fraction": 0.31058666155792103,
+    "preflight_complete": false,
+    "completed_idle_seconds": 0.0,
+    "failure": {
+      "kind": "host_nonworker_cpu",
+      "reason": "rolling nonworker host CPU fraction exceeded the declared threshold",
+      "utc": "2026-10-21T09:55:39.212038+00:00"
+    },
+    "workers": [],
+    "valid_for_load_check": false,
+    "scope": "Sampled known-engine CPU/identity and aggregate nonworker CPU estimate; unknown or transient work between samples, power, thermals and OS isolation are not certified."
+  },
+  "guard_policy_status": "FAIL",
+  "diagnostic_continued_after_policy_failure": false,
+  "finished_utc": "2026-10-21T09:55:39.227092+00:00"
+}

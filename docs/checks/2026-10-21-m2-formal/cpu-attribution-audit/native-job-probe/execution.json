@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "COMPLETE_DIAGNOSTIC_NOT_FORMAL",
+  "formal_load_validation": false,
+  "commands": [
+    {
+      "command": ".venv-tests/Scripts/python.exe -B docs/checks/2026-10-21-m2-formal/cpu-attribution-audit/native-job-probe/probe.py --output docs/checks/2026-10-21-m2-formal/cpu-attribution-audit/native-job-probe/attempt-001",
+      "exit_code": 0,
+      "wall_seconds": 9.287983599992003,
+      "strict20_guard_failures_preserved": true
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe -B docs/checks/2026-10-21-m2-formal/cpu-attribution-audit/native-job-probe/attribution_only.py --output docs/checks/2026-10-21-m2-formal/cpu-attribution-audit/native-job-probe/attribution-only-001",
+      "exit_code": 0,
+      "wall_seconds": 6.685762499982957,
+      "diagnostic_threshold": 1.0,
+      "formal_load_validation": false,
+      "would_violate_formal20": true
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe -B docs/checks/2026-10-21-m2-formal/cpu-attribution-audit/native-job-probe/analyze.py",
+      "initial_exit_code": 1,
+      "initial_error": {
+        "source_sha256": "d14babdc8b9cc2da3ec32e2cd5bc0a520623cf965139508f6b1df4f01f9c5e26",
+        "error": "AssertionError: Job total must match held final root/leaf native timers",
+        "resolution": "Rejected exact-additivity assumption; report observed residual explicitly. All raw probe data unchanged."
+      },
+      "final_exit_code": 0
+    }
+  ],
+  "combined_cpu_probe_wall_seconds": 15.97374609997496,
+  "long_lived_job_minus_guard_cpu_seconds": 0.0,
+  "churn_job_minus_guard_cpu_seconds": 7.203125,
+  "churn_unobserved_leaf_cpu_seconds": 7.25,
+  "churn_job_vs_full_timer_residual_seconds": 0.046875,
+  "churn_unobserved_leaf_count": 32,
+  "all_created_jobs_final_active_zero": true,
+  "owned_cpu_processes_finished": true,
+  "user_processes_terminated": 0,
+  "user_application_or_setting_changes": false,
+  "actual_engine_games": 0,
+  "source_hashes_unchanged": true,
+  "original_formal_threshold": 0.2,
+  "original_failure_verdicts_modified": false,
+  "strength_eligible": false,
+  "promotion_performed": false,
+  "artifact_sha256": {
+    "analysis.json": "5814bb8e394d46e4e8dafccd5840a1ecaaa5284b45b877a008fb3d54312a57af",
+    "analyze.py": "df5918bdf41578c5763f7e38721bc9fe4cd58436ae74d0946b371a66d379f0a9",
+    "attempt-001\\long-lived\\gate.json": "02eae71f3d2342883c4f8a56cbc5bb2c4dfcfacdf22ab810c79bcfcf4e9a8d79",
+    "attempt-001\\long-lived\\guard-load.jsonl": "e9644c6271d241b23e0bb96d01ca965875d58db46fcb0d10500f95eaeff1532b",
+    "attempt-001\\long-lived\\ready-0.json": "1572458135751ae159034cbf3ba7eed5f4ec89f8a09b91a06011c3ca5b337b3a",
+    "attempt-001\\long-lived\\ready-1.json": "91b9e63738fda6b1eb1d2ed1ff00d4c40b5b649a95ad95bcf3fc6ffa0fef3c03",
+    "attempt-001\\long-lived\\ready-2.json": "4db97749ee2ed7e757991af8b03a29c4545a5d760523c08a24e4f02e99efb15e",
+    "attempt-001\\long-lived\\ready-3.json": "a027b0e721d65ef44472c75c8261e33055eb27fc1e21c0883cb996aa1dae3802",
+    "attempt-001\\long-lived\\receipt.json": "b23f9c31b4663fa0a974874f06d8894b520711562e34075c0afde8a09617c870",
+    "attempt-001\\long-lived\\worker-0.json": "5ddbde14e628ed66e1d369fe885ce8249df980ad1946249e31b04c74d46d70df",
+    "attempt-001\\long-lived\\worker-1.json": "d2deacf8bb04cca67d7baebefb89b0968ab9e636413ebdd23d74fbeb30221ca6",
+    "attempt-001\\long-lived\\worker-2.json": "f8fcbfbfbaca72e3a51bc4826d4516410cf879d9b2509c1baeec7c3e110ee506",
+    "attempt-001\\long-lived\\worker-3.json": "e68080d43acd4a0692719bc258ede63acae5e3bbfc6bcfcc0608e02599c6e6c0",
+    "attempt-001\\receipt.json": "0fa09b3a449a40045915fc0e8ae6792077c226227416cb4d2b31e4b13d1bc7a1",
+    "attempt-001\\short-child-churn\\guard-load.jsonl": "8f94a117d48ad3bdda6c56d9232f67691d1570ca75cf5141e7e6314c5ce3544f",
+    "attempt-001\\short-child-churn\\receipt.json": "3388b52e92ce9646731bfe68ec258973dedbc1a4d181e70130504d9a00ee081c",
+    "attribution-only-001\\receipt.json": "bfab575a35346eb9e4b83c4b80ac8ea80f83e94cf8e9b1a6e8d8469ee5981c48",
+    "attribution-only-001\\short-child-churn\\gate.json": "ce9fc126cfdd40dfeed2cc1d5b2d236e0f3d3509f6cfc2e74f909a2eacda0d83",
+    "attribution-only-001\\short-child-churn\\guard-load.jsonl": "2bca942809cd07d87b8b52c6660723409710bca8a18d798314477a54997868e1",
+    "attribution-only-001\\short-child-churn\\ready-0.json": "ad0b8afc2c8f0ecde893e9b48a3d841e82ecf65665e76d79f911ffaba7fca848",
+    "attribution-only-001\\short-child-churn\\ready-1.json": "05ff6f49045757ae2e327a5823887385acc8a482e6ecc17ff352b69d03774847",
+    "attribution-only-001\\short-child-churn\\ready-2.json": "3770d4bc7fe4239bb2c72b21ca5daf27928fd88d5bedd3fae845324392e8f469",
+    "attribution-only-001\\short-child-churn\\ready-3.json": "dbb0a5c4e7906cc6f9bd9d40af4ff9436f9de3046061a7bb5c8a99a6610b7753",
+    "attribution-only-001\\short-child-churn\\receipt.json": "bdeb0ca9b0df5882ab52113415aea2b5379ab7f6b0faa345e39821ef8a6ff476",
+    "attribution-only-001\\short-child-churn\\worker-0.json": "a6c3711a4f37572d75f684067f078e75d81bf2b9e6f609f403de8f18d0d7325a",
+    "attribution-only-001\\short-child-churn\\worker-1.json": "2d61f1cdc6d1611a01fd6d1d95cf1ced2d6db9d82bde574d549fb90f196629d6",
+    "attribution-only-001\\short-child-churn\\worker-2.json": "0f273030f2d8b3b6fdddf0d48eb2725e411b16b9fa66014bb99463cd8566fbd5",
+    "attribution-only-001\\short-child-churn\\worker-3.json": "2fc1c3aeac6657d27f32b9d04e7d2118b60e0b180899e48231e2be02073a37a0",
+    "attribution_only.py": "b1b5069b721d6818895637dbaa80efdac94f3ae09c55bb71f250236fa8e9ff20",
+    "probe.py": "aead8cb9e5e39c7a03fabc27850f2797455874933dde726efa23a19f844854c8",
+    "README.md": "d96477aa0e6db4b18d79aa05d4e35b81fea05d19185065bf7523b66a8c8760df"
+  },
+  "claim_scope": "Synthetic independent native accounting diagnostic only. It demonstrates missed between-sample child CPU, not the historical cause of either invalid formal run."
+}

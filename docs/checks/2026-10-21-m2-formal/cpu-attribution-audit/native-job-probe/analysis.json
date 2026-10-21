@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_COUNTER_COMPARISON_COMPLETE",
+  "analysis_source_sha256": "df5918bdf41578c5763f7e38721bc9fe4cd58436ae74d0946b371a66d379f0a9",
+  "scenarios": [
+    {
+      "scenario": "long-lived",
+      "status": "NATIVE_COUNTER_COMPARISON_COMPLETE",
+      "job_total_cpu_ticks": 164531250,
+      "guard_lifetime_owned_delta_ticks": 164531250,
+      "held_final_root_cpu_ticks": 164531250,
+      "held_final_leaf_cpu_ticks": 0,
+      "unobserved_leaf_count": 0,
+      "unobserved_leaf_cpu_ticks": 0,
+      "job_minus_guard_cpu_ticks": 0,
+      "missing_cpu_seconds": 0.0,
+      "guard_matches_final_timers_of_observed_processes": true,
+      "job_vs_sum_held_process_timers_residual_ticks": 0,
+      "job_additivity_exact": true,
+      "guard_max_nonworker_cpu_fraction": 0.34837268213355826,
+      "guard_declared_threshold": 0.2,
+      "guard_recorded_failure": {
+        "kind": "host_nonworker_cpu",
+        "reason": "rolling nonworker host CPU fraction exceeded the declared threshold",
+        "utc": "2026-10-21T09:55:33.085455+00:00"
+      },
+      "would_violate_original_formal20": true,
+      "formal_load_validation": false,
+      "query_endpoint_work_delta_deficit_ticks": 0,
+      "query_endpoint_difference_from_full_unseen_leaf_ticks": 0,
+      "job_active_after_cleanup": 0,
+      "input_sha256": {
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\cpu-attribution-audit\\native-job-probe\\attempt-001\\long-lived\\receipt.json": "b23f9c31b4663fa0a974874f06d8894b520711562e34075c0afde8a09617c870",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\cpu-attribution-audit\\native-job-probe\\attempt-001\\long-lived\\guard-load.jsonl": "e9644c6271d241b23e0bb96d01ca965875d58db46fcb0d10500f95eaeff1532b"
+      }
+    },
+    {
+      "scenario": "short-child-churn",
+      "status": "NATIVE_COUNTER_COMPARISON_COMPLETE",
+      "job_total_cpu_ticks": 81406250,
+      "guard_lifetime_owned_delta_ticks": 9375000,
+      "held_final_root_cpu_ticks": 9375000,
+      "held_final_leaf_cpu_ticks": 72500000,
+      "unobserved_leaf_count": 32,
+      "unobserved_leaf_cpu_ticks": 72500000,
+      "job_minus_guard_cpu_ticks": 72031250,
+      "missing_cpu_seconds": 7.203125,
+      "guard_matches_final_timers_of_observed_processes": true,
+      "job_vs_sum_held_process_timers_residual_ticks": 468750,
+      "job_additivity_exact": false,
+      "guard_max_nonworker_cpu_fraction": 0.34409609140542863,
+      "guard_declared_threshold": 1.0,
+      "guard_recorded_failure": null,
+      "would_violate_original_formal20": true,
+      "formal_load_validation": false,
+      "query_endpoint_work_delta_deficit_ticks": 72031250,
+      "query_endpoint_difference_from_full_unseen_leaf_ticks": -468750,
+      "job_active_after_cleanup": 0,
+      "input_sha256": {
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\cpu-attribution-audit\\native-job-probe\\attribution-only-001\\short-child-churn\\receipt.json": "bdeb0ca9b0df5882ab52113415aea2b5379ab7f6b0faa345e39821ef8a6ff476",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-formal\\cpu-attribution-audit\\native-job-probe\\attribution-only-001\\short-child-churn\\guard-load.jsonl": "2bca942809cd07d87b8b52c6660723409710bca8a18d798314477a54997868e1"
+      }
+    }
+  ],
+  "primary_finding": "Long-lived work has zero Job/guard/final-root CPU deficit. In churn, the guard exactly matches final timers of the four roots; all 32 short-child identities are absent. Their held final CPU is 7.25 seconds; the independent Job-minus-guard deficit is 7.203125 seconds.",
+  "measurement_caveat": "Churn Job total is 0.046875 CPU seconds below the sum of held final root+leaf timers. This residual is preserved, not relabeled as exact additivity. Process creation preceding Job assignment and native counter accounting precision are possible boundaries, not proven explanations. Before/after query endpoints are observations, not certified instantaneous bounds on separately updated counters.",
+  "initial_analysis_failure": {
+    "source_sha256": "d14babdc8b9cc2da3ec32e2cd5bc0a520623cf965139508f6b1df4f01f9c5e26",
+    "error": "AssertionError: Job total must match held final root/leaf native timers",
+    "resolution": "Rejected exact-additivity assumption; report observed residual explicitly. All raw probe data unchanged."
+  },
+  "formal_load_validation": false,
+  "original_threshold_changed": false,
+  "strict20_failures_preserved": true,
+  "strength_eligible": false,
+  "scope": "Demonstrates a synthetic between-snapshot descendant-attribution failure mode. Does not prove that short-child churn caused previous formal failures, authorize a formal threshold change, or certify OS isolation."
+}
