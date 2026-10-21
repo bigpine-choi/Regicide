@@ -1,0 +1,156 @@
+{
+  "command": [
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Scripts\\python.exe",
+    "docs/checks/2026-10-21-m2-job-accounting/retry_termination.py"
+  ],
+  "python_version": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "scope": "Own single sleeping process termination only; no engine games or formal load validation.",
+  "original_failure_preserved": "native-integration-attempt-001/termination/result.json",
+  "test_fix": "Wait for the exact Popen process handle before reading the final per-process exit timestamp.",
+  "source_sha256_before": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py": "419b311b51331d991c3baca0b0ac4a2c74afb31967147b814e3c9f6ae489be55",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_load_guard.py": "c3d9fc77f2d8c5e8a5e0b1cb3b16f75e1348a5df7b6afcc6f176738ced115ea2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967"
+  },
+  "source_sha256_after": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py": "419b311b51331d991c3baca0b0ac4a2c74afb31967147b814e3c9f6ae489be55",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_job_load_guard.py": "c3d9fc77f2d8c5e8a5e0b1cb3b16f75e1348a5df7b6afcc6f176738ced115ea2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967"
+  },
+  "source_unchanged_during_execution": true,
+  "result": {
+    "started_utc": "2026-10-21T10:22:27.212217+00:00",
+    "formal_load_validation": false,
+    "assignment": {
+      "pid": 34780,
+      "creation_ticks": 134370517472139582,
+      "parent_pid": 15124,
+      "process_before": {
+        "pid": 34780,
+        "creation_ticks": 134370517472139582,
+        "kernel_ticks": 0,
+        "user_ticks": 0,
+        "cpu_ticks": 0,
+        "read_started_monotonic": 462473.327825,
+        "read_finished_monotonic": 462473.3278582
+      },
+      "process_after": {
+        "pid": 34780,
+        "creation_ticks": 134370517472139582,
+        "kernel_ticks": 0,
+        "user_ticks": 156250,
+        "cpu_ticks": 156250,
+        "read_started_monotonic": 462473.337581,
+        "read_finished_monotonic": 462473.3376021
+      },
+      "job_before": {
+        "user_ticks": 0,
+        "kernel_ticks": 0,
+        "cpu_ticks": 0,
+        "total_processes": 0,
+        "active_processes": 0,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 0,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462473.3374935,
+        "read_finished_monotonic": 462473.3375148
+      },
+      "job_after": {
+        "user_ticks": 156250,
+        "kernel_ticks": 0,
+        "cpu_ticks": 156250,
+        "total_processes": 1,
+        "active_processes": 1,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 156250,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462473.3376077,
+        "read_finished_monotonic": 462473.3376161
+      },
+      "pre_assignment_cpu_lower_ticks": 0,
+      "pre_assignment_cpu_upper_ticks": 156250,
+      "boundary_semantics": "Popen/gate interval, not suspended startup. Prior root CPU and inclusion in Job totals are not assumed exact."
+    },
+    "before": {
+      "read_started_monotonic": 462473.3376655,
+      "read_finished_monotonic": 462473.3376692,
+      "user_ticks": 156250,
+      "kernel_ticks": 0,
+      "cpu_ticks": 156250,
+      "total_processes": 1,
+      "active_processes": 1,
+      "terminated_processes_by_limit": 0
+    },
+    "terminated": {
+      "user_ticks": 156250,
+      "kernel_ticks": 0,
+      "cpu_ticks": 156250,
+      "total_processes": 1,
+      "active_processes": 0,
+      "terminated_processes_by_limit": 0,
+      "terminated_processes": 0,
+      "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+      "coordinator_in_job": false,
+      "pre_assignment_cpu_lower_ticks_total": 0,
+      "pre_assignment_cpu_upper_ticks_total": 156250,
+      "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+      "read_started_monotonic": 462473.3377039,
+      "read_finished_monotonic": 462473.3377091,
+      "termination_wait_started_monotonic": 462473.3376788,
+      "termination_wait_finished_monotonic": 462473.3377116
+    },
+    "independent_final_job": {
+      "read_started_monotonic": 462473.3377264,
+      "read_finished_monotonic": 462473.3377284,
+      "user_ticks": 156250,
+      "kernel_ticks": 0,
+      "cpu_ticks": 156250,
+      "total_processes": 1,
+      "active_processes": 0,
+      "terminated_processes_by_limit": 0
+    },
+    "exit_code": 1,
+    "final_process_with_handle_held": {
+      "read_started_monotonic": 462473.3419987,
+      "read_finished_monotonic": 462473.3420534,
+      "creation_ticks": 134370517472139582,
+      "exit_ticks": 134370517472356139,
+      "kernel_ticks": 0,
+      "user_ticks": 156250,
+      "cpu_ticks": 156250
+    },
+    "passed": true,
+    "active_zero_while_root_handle_held": true,
+    "cleanup": {
+      "user_ticks": 156250,
+      "kernel_ticks": 0,
+      "cpu_ticks": 156250,
+      "total_processes": 1,
+      "active_processes": 0,
+      "terminated_processes_by_limit": 0,
+      "terminated_processes": 0,
+      "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+      "coordinator_in_job": false,
+      "pre_assignment_cpu_lower_ticks_total": 0,
+      "pre_assignment_cpu_upper_ticks_total": 156250,
+      "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+      "read_started_monotonic": 462473.34214,
+      "read_finished_monotonic": 462473.342164,
+      "termination_wait_started_monotonic": 462473.342113,
+      "termination_wait_finished_monotonic": 462473.3421715
+    },
+    "finished_utc": "2026-10-21T10:22:27.239925+00:00"
+  }
+}

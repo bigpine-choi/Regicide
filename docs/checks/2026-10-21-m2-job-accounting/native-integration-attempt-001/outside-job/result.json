@@ -1,0 +1,113 @@
+{
+  "scenario": "own-child-outside-job",
+  "started_utc": "2026-10-21T10:21:31.134129+00:00",
+  "formal_load_validation": false,
+  "diagnostic_threshold": 1.0,
+  "passed": true,
+  "command": [
+    "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-S",
+    "-B",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py",
+    "--leaf"
+  ],
+  "own_outside_child_final_timer": {
+    "read_started_monotonic": 462419.5901386,
+    "read_finished_monotonic": 462419.5901885,
+    "creation_ticks": 134370516932584325,
+    "exit_ticks": 134370516934829533,
+    "kernel_ticks": 625000,
+    "user_ticks": 1562500,
+    "cpu_ticks": 2187500
+  },
+  "final_job": {
+    "read_started_monotonic": 462420.1638425,
+    "read_finished_monotonic": 462420.1638496,
+    "user_ticks": 0,
+    "kernel_ticks": 0,
+    "cpu_ticks": 0,
+    "total_processes": 0,
+    "active_processes": 0,
+    "terminated_processes_by_limit": 0
+  },
+  "guard_summary": {
+    "schema_version": 2,
+    "started_utc": "2026-10-21T10:21:31.134015+00:00",
+    "finished_utc": "2026-10-21T10:21:34.060833+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 1.0,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 10556,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 9,
+    "max_sample_gap_seconds": 0.5114804999902844,
+    "max_snapshot_duration_seconds": 0.011137399997096509,
+    "external_cpu_increase_ticks": 0,
+    "max_nonworker_cpu_fraction": 0.15121336320951625,
+    "preflight_complete": true,
+    "completed_idle_seconds": 2.111123700044118,
+    "failure": null,
+    "workers": [],
+    "valid_for_load_check": true,
+    "scope": "Job CPU covers active and exited owned descendants; coordinator CPU is measured separately. Residual system/background CPU is an asynchronous, quantized rolling estimate, not application attribution, OS isolation, thermal certification or a bound on individual move contention.",
+    "accounting_method": "windows-job-plus-coordinator-cpu",
+    "approximate": true,
+    "experiment_job_delta_ticks": 0.0,
+    "coordinator_delta_ticks": 1093750.0,
+    "accounting_underflow_ticks": 0,
+    "timer": {
+      "started": true,
+      "samples": 1,
+      "alive": false,
+      "failure": null,
+      "join_bound_seconds": 2.0
+    }
+  },
+  "independent_replay": {
+    "samples": 9,
+    "ready_windows": 5,
+    "job_delta_sum": 0.0,
+    "coordinator_delta_sum": 1093750.0,
+    "minimum_signed_residual_interval": 0.0,
+    "maximum_ready_residual_fraction": 0.15121336320951625,
+    "failure_observations": [],
+    "raw_counter_math_replay_passed": true
+  },
+  "outside_child_was_never_added_to_job": true,
+  "residual_signed_ticks_for_observed_interval": 60781250.0,
+  "residual_minus_own_outside_child_ticks": 58593750.0,
+  "would_violate_formal20": false,
+  "scope": "Only the own outside child has known attribution. Remaining signed system residual includes all other background and measurement boundaries.",
+  "cleanup": {
+    "user_ticks": 0,
+    "kernel_ticks": 0,
+    "cpu_ticks": 0,
+    "total_processes": 0,
+    "active_processes": 0,
+    "terminated_processes_by_limit": 0,
+    "terminated_processes": 0,
+    "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+    "coordinator_in_job": false,
+    "pre_assignment_cpu_lower_ticks_total": 0,
+    "pre_assignment_cpu_upper_ticks_total": 0,
+    "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+    "read_started_monotonic": 462420.1642456,
+    "read_finished_monotonic": 462420.1642547,
+    "termination_wait_started_monotonic": 462420.1642382,
+    "termination_wait_finished_monotonic": 462420.164258
+  },
+  "finished_utc": "2026-10-21T10:21:34.061912+00:00"
+}

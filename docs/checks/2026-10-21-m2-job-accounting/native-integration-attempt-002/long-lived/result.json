@@ -1,0 +1,685 @@
+{
+  "scenario": "long-lived",
+  "formal_load_validation": false,
+  "diagnostic_threshold": 1.0,
+  "started_utc": "2026-10-21T10:22:57.923632+00:00",
+  "native_api_contracts": {
+    "job": [
+      {
+        "user_ticks": 0,
+        "kernel_ticks": 0,
+        "cpu_ticks": 0,
+        "total_processes": 0,
+        "active_processes": 0,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 0,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462504.0259982,
+        "read_finished_monotonic": 462504.0260103
+      },
+      {
+        "read_started_monotonic": 462504.0260377,
+        "read_finished_monotonic": 462504.02604,
+        "user_ticks": 0,
+        "kernel_ticks": 0,
+        "cpu_ticks": 0,
+        "total_processes": 0,
+        "active_processes": 0,
+        "terminated_processes_by_limit": 0
+      },
+      {
+        "user_ticks": 0,
+        "kernel_ticks": 0,
+        "cpu_ticks": 0,
+        "total_processes": 0,
+        "active_processes": 0,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 0,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462504.0260424,
+        "read_finished_monotonic": 462504.0260487
+      }
+    ],
+    "coordinator": [
+      {
+        "pid": 26724,
+        "creation_ticks": 134370517776829885,
+        "kernel_ticks": 625000,
+        "user_ticks": 1562500,
+        "cpu_ticks": 2187500,
+        "read_started_monotonic": 462504.0260988,
+        "read_finished_monotonic": 462504.0261106
+      },
+      {
+        "read_started_monotonic": 462504.0261148,
+        "read_finished_monotonic": 462504.0261216,
+        "creation_ticks": 134370517776829885,
+        "exit_ticks": 0,
+        "kernel_ticks": 625000,
+        "user_ticks": 1562500,
+        "cpu_ticks": 2187500
+      },
+      {
+        "pid": 26724,
+        "creation_ticks": 134370517776829885,
+        "kernel_ticks": 625000,
+        "user_ticks": 1562500,
+        "cpu_ticks": 2187500,
+        "read_started_monotonic": 462504.0261556,
+        "read_finished_monotonic": 462504.0261611
+      }
+    ],
+    "system": [
+      {
+        "idle_ticks": 31213901875000,
+        "kernel_ticks": 32384563437500,
+        "user_ticks": 1503896718750,
+        "total_ticks": 33888460156250,
+        "busy_ticks": 2674558281250,
+        "read_started_monotonic": 462504.0261981,
+        "read_finished_monotonic": 462504.0262137
+      },
+      {
+        "read_started_monotonic": 462504.0262159,
+        "read_finished_monotonic": 462504.0262225,
+        "idle_ticks": 31213901875000,
+        "kernel_ticks": 32384563437500,
+        "user_ticks": 1503896718750,
+        "total_ticks": 33888460156250,
+        "busy_ticks": 2674558281250
+      },
+      {
+        "idle_ticks": 31213901875000,
+        "kernel_ticks": 32384563437500,
+        "user_ticks": 1503896718750,
+        "total_ticks": 33888460156250,
+        "busy_ticks": 2674558281250,
+        "read_started_monotonic": 462504.0262506,
+        "read_finished_monotonic": 462504.0262569
+      }
+    ],
+    "coordinator_cpu_exercise": {
+      "before": {
+        "pid": 26724,
+        "creation_ticks": 134370517776829885,
+        "kernel_ticks": 625000,
+        "user_ticks": 1562500,
+        "cpu_ticks": 2187500,
+        "read_started_monotonic": 462504.0262872,
+        "read_finished_monotonic": 462504.0262912
+      },
+      "after": {
+        "pid": 26724,
+        "creation_ticks": 134370517776829885,
+        "kernel_ticks": 625000,
+        "user_ticks": 2812500,
+        "cpu_ticks": 3437500,
+        "read_started_monotonic": 462504.1424781,
+        "read_finished_monotonic": 462504.1425026
+      },
+      "job_remained_zero": true
+    },
+    "job_excludes_coordinator": true
+  },
+  "coordinator_exercise_during_guard": [
+    {
+      "read_started_monotonic": 462506.5251566,
+      "read_finished_monotonic": 462506.5251784,
+      "creation_ticks": 134370517776829885,
+      "exit_ticks": 0,
+      "kernel_ticks": 2343750,
+      "user_ticks": 3281250,
+      "cpu_ticks": 5625000
+    },
+    {
+      "read_started_monotonic": 462506.625208,
+      "read_finished_monotonic": 462506.6252491,
+      "creation_ticks": 134370517776829885,
+      "exit_ticks": 0,
+      "kernel_ticks": 2500000,
+      "user_ticks": 4218750,
+      "cpu_ticks": 6718750
+    }
+  ],
+  "passed": true,
+  "assignments": [
+    {
+      "pid": 14432,
+      "creation_ticks": 134370517801727718,
+      "parent_pid": 26724,
+      "process_before": {
+        "pid": 14432,
+        "creation_ticks": 134370517801727718,
+        "kernel_ticks": 0,
+        "user_ticks": 0,
+        "cpu_ticks": 0,
+        "read_started_monotonic": 462506.287276,
+        "read_finished_monotonic": 462506.2873021
+      },
+      "process_after": {
+        "pid": 14432,
+        "creation_ticks": 134370517801727718,
+        "kernel_ticks": 156250,
+        "user_ticks": 0,
+        "cpu_ticks": 156250,
+        "read_started_monotonic": 462506.2973832,
+        "read_finished_monotonic": 462506.2973946
+      },
+      "job_before": {
+        "user_ticks": 0,
+        "kernel_ticks": 0,
+        "cpu_ticks": 0,
+        "total_processes": 0,
+        "active_processes": 0,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 0,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.2972948,
+        "read_finished_monotonic": 462506.2973134
+      },
+      "job_after": {
+        "user_ticks": 0,
+        "kernel_ticks": 156250,
+        "cpu_ticks": 156250,
+        "total_processes": 1,
+        "active_processes": 1,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 156250,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.2974008,
+        "read_finished_monotonic": 462506.297408
+      },
+      "pre_assignment_cpu_lower_ticks": 0,
+      "pre_assignment_cpu_upper_ticks": 156250,
+      "boundary_semantics": "Popen/gate interval, not suspended startup. Prior root CPU and inclusion in Job totals are not assumed exact.",
+      "command": [
+        "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-S",
+        "-B",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py",
+        "--worker",
+        "0",
+        "--scenario",
+        "long-lived",
+        "--output",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-job-accounting\\native-integration-attempt-002\\long-lived"
+      ]
+    },
+    {
+      "pid": 39748,
+      "creation_ticks": 134370517802270991,
+      "parent_pid": 26724,
+      "process_before": {
+        "pid": 39748,
+        "creation_ticks": 134370517802270991,
+        "kernel_ticks": 0,
+        "user_ticks": 0,
+        "cpu_ticks": 0,
+        "read_started_monotonic": 462506.3407251,
+        "read_finished_monotonic": 462506.3407541
+      },
+      "process_after": {
+        "pid": 39748,
+        "creation_ticks": 134370517802270991,
+        "kernel_ticks": 0,
+        "user_ticks": 312500,
+        "cpu_ticks": 312500,
+        "read_started_monotonic": 462506.350472,
+        "read_finished_monotonic": 462506.3504819
+      },
+      "job_before": {
+        "user_ticks": 156250,
+        "kernel_ticks": 468750,
+        "cpu_ticks": 625000,
+        "total_processes": 1,
+        "active_processes": 1,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 156250,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.3503827,
+        "read_finished_monotonic": 462506.350403
+      },
+      "job_after": {
+        "user_ticks": 468750,
+        "kernel_ticks": 468750,
+        "cpu_ticks": 937500,
+        "total_processes": 2,
+        "active_processes": 2,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 468750,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.3504867,
+        "read_finished_monotonic": 462506.3504929
+      },
+      "pre_assignment_cpu_lower_ticks": 0,
+      "pre_assignment_cpu_upper_ticks": 312500,
+      "boundary_semantics": "Popen/gate interval, not suspended startup. Prior root CPU and inclusion in Job totals are not assumed exact.",
+      "command": [
+        "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-S",
+        "-B",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py",
+        "--worker",
+        "1",
+        "--scenario",
+        "long-lived",
+        "--output",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-job-accounting\\native-integration-attempt-002\\long-lived"
+      ]
+    },
+    {
+      "pid": 33968,
+      "creation_ticks": 134370517802706823,
+      "parent_pid": 26724,
+      "process_before": {
+        "pid": 33968,
+        "creation_ticks": 134370517802706823,
+        "kernel_ticks": 0,
+        "user_ticks": 0,
+        "cpu_ticks": 0,
+        "read_started_monotonic": 462506.3847281,
+        "read_finished_monotonic": 462506.3847564
+      },
+      "process_after": {
+        "pid": 33968,
+        "creation_ticks": 134370517802706823,
+        "kernel_ticks": 0,
+        "user_ticks": 156250,
+        "cpu_ticks": 156250,
+        "read_started_monotonic": 462506.3943896,
+        "read_finished_monotonic": 462506.3943994
+      },
+      "job_before": {
+        "user_ticks": 781250,
+        "kernel_ticks": 937500,
+        "cpu_ticks": 1718750,
+        "total_processes": 2,
+        "active_processes": 2,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 468750,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.3942997,
+        "read_finished_monotonic": 462506.3943196
+      },
+      "job_after": {
+        "user_ticks": 937500,
+        "kernel_ticks": 937500,
+        "cpu_ticks": 1875000,
+        "total_processes": 3,
+        "active_processes": 3,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 625000,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.3944032,
+        "read_finished_monotonic": 462506.3944096
+      },
+      "pre_assignment_cpu_lower_ticks": 0,
+      "pre_assignment_cpu_upper_ticks": 156250,
+      "boundary_semantics": "Popen/gate interval, not suspended startup. Prior root CPU and inclusion in Job totals are not assumed exact.",
+      "command": [
+        "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-S",
+        "-B",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py",
+        "--worker",
+        "2",
+        "--scenario",
+        "long-lived",
+        "--output",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-job-accounting\\native-integration-attempt-002\\long-lived"
+      ]
+    },
+    {
+      "pid": 38668,
+      "creation_ticks": 134370517803141789,
+      "parent_pid": 26724,
+      "process_before": {
+        "pid": 38668,
+        "creation_ticks": 134370517803141789,
+        "kernel_ticks": 0,
+        "user_ticks": 0,
+        "cpu_ticks": 0,
+        "read_started_monotonic": 462506.4292793,
+        "read_finished_monotonic": 462506.429306
+      },
+      "process_after": {
+        "pid": 38668,
+        "creation_ticks": 134370517803141789,
+        "kernel_ticks": 156250,
+        "user_ticks": 0,
+        "cpu_ticks": 156250,
+        "read_started_monotonic": 462506.4401282,
+        "read_finished_monotonic": 462506.44014
+      },
+      "job_before": {
+        "user_ticks": 1093750,
+        "kernel_ticks": 1718750,
+        "cpu_ticks": 2812500,
+        "total_processes": 3,
+        "active_processes": 3,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 625000,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.4400391,
+        "read_finished_monotonic": 462506.4400594
+      },
+      "job_after": {
+        "user_ticks": 1093750,
+        "kernel_ticks": 1875000,
+        "cpu_ticks": 2968750,
+        "total_processes": 4,
+        "active_processes": 4,
+        "terminated_processes_by_limit": 0,
+        "terminated_processes": 0,
+        "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+        "coordinator_in_job": false,
+        "pre_assignment_cpu_lower_ticks_total": 0,
+        "pre_assignment_cpu_upper_ticks_total": 781250,
+        "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+        "read_started_monotonic": 462506.4401443,
+        "read_finished_monotonic": 462506.4401509
+      },
+      "pre_assignment_cpu_lower_ticks": 0,
+      "pre_assignment_cpu_upper_ticks": 156250,
+      "boundary_semantics": "Popen/gate interval, not suspended startup. Prior root CPU and inclusion in Job totals are not assumed exact.",
+      "command": [
+        "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-S",
+        "-B",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\m2_job_load_guard_integration.py",
+        "--worker",
+        "3",
+        "--scenario",
+        "long-lived",
+        "--output",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-job-accounting\\native-integration-attempt-002\\long-lived"
+      ]
+    }
+  ],
+  "worker_records": [
+    {
+      "pid": 14432,
+      "leaves": [],
+      "self_cpu_before_exit": {
+        "read_started_monotonic": 462510.7252041,
+        "read_finished_monotonic": 462510.7252299,
+        "creation_ticks": 134370517801727718,
+        "exit_ticks": 0,
+        "kernel_ticks": 1718750,
+        "user_ticks": 39218750,
+        "cpu_ticks": 40937500
+      },
+      "utc": "2026-10-21T10:23:04.622880+00:00"
+    },
+    {
+      "pid": 39748,
+      "leaves": [],
+      "self_cpu_before_exit": {
+        "read_started_monotonic": 462510.7251998,
+        "read_finished_monotonic": 462510.7252256,
+        "creation_ticks": 134370517802270991,
+        "exit_ticks": 0,
+        "kernel_ticks": 468750,
+        "user_ticks": 40625000,
+        "cpu_ticks": 41093750
+      },
+      "utc": "2026-10-21T10:23:04.622877+00:00"
+    },
+    {
+      "pid": 33968,
+      "leaves": [],
+      "self_cpu_before_exit": {
+        "read_started_monotonic": 462510.7251731,
+        "read_finished_monotonic": 462510.7252083,
+        "creation_ticks": 134370517802706823,
+        "exit_ticks": 0,
+        "kernel_ticks": 937500,
+        "user_ticks": 40156250,
+        "cpu_ticks": 41093750
+      },
+      "utc": "2026-10-21T10:23:04.622860+00:00"
+    },
+    {
+      "pid": 38668,
+      "leaves": [],
+      "self_cpu_before_exit": {
+        "read_started_monotonic": 462510.7251919,
+        "read_finished_monotonic": 462510.7252171,
+        "creation_ticks": 134370517803141789,
+        "exit_ticks": 0,
+        "kernel_ticks": 781250,
+        "user_ticks": 39687500,
+        "cpu_ticks": 40468750
+      },
+      "utc": "2026-10-21T10:23:04.622867+00:00"
+    }
+  ],
+  "final_root_timers_with_handles_held": [
+    {
+      "read_started_monotonic": 462510.7470179,
+      "read_finished_monotonic": 462510.7470437,
+      "creation_ticks": 134370517801727718,
+      "exit_ticks": 134370517846308544,
+      "kernel_ticks": 1718750,
+      "user_ticks": 39218750,
+      "cpu_ticks": 40937500,
+      "pid": 14432
+    },
+    {
+      "read_started_monotonic": 462510.7470497,
+      "read_finished_monotonic": 462510.7470529,
+      "creation_ticks": 134370517802270991,
+      "exit_ticks": 134370517846308722,
+      "kernel_ticks": 468750,
+      "user_ticks": 40625000,
+      "cpu_ticks": 41093750,
+      "pid": 39748
+    },
+    {
+      "read_started_monotonic": 462510.7470544,
+      "read_finished_monotonic": 462510.7470576,
+      "creation_ticks": 134370517802706823,
+      "exit_ticks": 134370517846308242,
+      "kernel_ticks": 937500,
+      "user_ticks": 40156250,
+      "cpu_ticks": 41093750,
+      "pid": 33968
+    },
+    {
+      "read_started_monotonic": 462510.7470587,
+      "read_finished_monotonic": 462510.7470613,
+      "creation_ticks": 134370517803141789,
+      "exit_ticks": 134370517846308483,
+      "kernel_ticks": 781250,
+      "user_ticks": 39687500,
+      "cpu_ticks": 40468750,
+      "pid": 38668
+    }
+  ],
+  "final_job": {
+    "user_ticks": 159687500,
+    "kernel_ticks": 3906250,
+    "cpu_ticks": 163593750,
+    "total_processes": 4,
+    "active_processes": 0,
+    "terminated_processes_by_limit": 0,
+    "terminated_processes": 0,
+    "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+    "coordinator_in_job": false,
+    "pre_assignment_cpu_lower_ticks_total": 0,
+    "pre_assignment_cpu_upper_ticks_total": 781250,
+    "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+    "read_started_monotonic": 462510.7477514,
+    "read_finished_monotonic": 462510.7477698,
+    "termination_wait_started_monotonic": 462510.7477323,
+    "termination_wait_finished_monotonic": 462510.747775
+  },
+  "independent_final_job": {
+    "read_started_monotonic": 462510.7478218,
+    "read_finished_monotonic": 462510.7478256,
+    "user_ticks": 159687500,
+    "kernel_ticks": 3906250,
+    "cpu_ticks": 163593750,
+    "total_processes": 4,
+    "active_processes": 0,
+    "terminated_processes_by_limit": 0
+  },
+  "root_final_cpu_ticks": 163593750,
+  "leaf_final_cpu_ticks": 0,
+  "all_process_final_cpu_ticks": 163593750,
+  "final_process_minus_job_ticks": 0,
+  "job_minus_root_only_ticks": 0,
+  "descendants_count": 0,
+  "active_zero_while_root_handles_held": true,
+  "guard_summary": {
+    "schema_version": 2,
+    "started_utc": "2026-10-21T10:22:58.041570+00:00",
+    "finished_utc": "2026-10-21T10:23:04.668333+00:00",
+    "policy": {
+      "max_nonworker_cpu_fraction": 1.0,
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "host_window_seconds": 2.0,
+      "engine_names": [
+        "lc0-cpu.exe",
+        "lc0.exe",
+        "regicide.exe",
+        "stockfish.exe",
+        "sunfish.exe"
+      ],
+      "extra_engine_pids": []
+    },
+    "monitor_pid": 26724,
+    "platform": "win32",
+    "cpu_ticks_per_second": 10000000,
+    "external_cpu_tolerance_ticks": 0,
+    "snapshot_count": 16,
+    "max_sample_gap_seconds": 0.5170409000129439,
+    "max_snapshot_duration_seconds": 0.0152591000078246,
+    "external_cpu_increase_ticks": 0,
+    "max_nonworker_cpu_fraction": 0.061147931217326194,
+    "preflight_complete": true,
+    "completed_idle_seconds": 2.114737599971704,
+    "failure": null,
+    "workers": [
+      {
+        "pid": 14432,
+        "creation_ticks": 134370517801727718,
+        "attached_utc": "2026-10-21T10:23:00.215465+00:00",
+        "detached_utc": "2026-10-21T10:23:04.658765+00:00"
+      },
+      {
+        "pid": 39748,
+        "creation_ticks": 134370517802270991,
+        "attached_utc": "2026-10-21T10:23:00.267971+00:00",
+        "detached_utc": "2026-10-21T10:23:04.658856+00:00"
+      },
+      {
+        "pid": 33968,
+        "creation_ticks": 134370517802706823,
+        "attached_utc": "2026-10-21T10:23:00.311948+00:00",
+        "detached_utc": "2026-10-21T10:23:04.658913+00:00"
+      },
+      {
+        "pid": 38668,
+        "creation_ticks": 134370517803141789,
+        "attached_utc": "2026-10-21T10:23:00.359205+00:00",
+        "detached_utc": "2026-10-21T10:23:04.658958+00:00"
+      }
+    ],
+    "valid_for_load_check": true,
+    "scope": "Job CPU covers active and exited owned descendants; coordinator CPU is measured separately. Residual system/background CPU is an asynchronous, quantized rolling estimate, not application attribution, OS isolation, thermal certification or a bound on individual move contention.",
+    "accounting_method": "windows-job-plus-coordinator-cpu",
+    "approximate": true,
+    "experiment_job_delta_ticks": 163593750.0,
+    "coordinator_delta_ticks": 4531250.0,
+    "accounting_underflow_ticks": 0,
+    "timer": {
+      "started": true,
+      "samples": 8,
+      "alive": false,
+      "failure": null,
+      "join_bound_seconds": 2.0
+    }
+  },
+  "independent_replay": {
+    "samples": 16,
+    "ready_windows": 12,
+    "job_delta_sum": 163593750.0,
+    "coordinator_delta_sum": 4531250.0,
+    "minimum_signed_residual_interval": 0.0,
+    "maximum_ready_residual_fraction": 0.061147931217326194,
+    "failure_observations": [],
+    "raw_counter_math_replay_passed": true
+  },
+  "would_violate_formal20": false,
+  "scope": "Accounting diagnostic only. Does not certify formal20, strength, isolation or individual move contention.",
+  "cleanup": {
+    "job": {
+      "user_ticks": 159687500,
+      "kernel_ticks": 3906250,
+      "cpu_ticks": 163593750,
+      "total_processes": 4,
+      "active_processes": 0,
+      "terminated_processes_by_limit": 0,
+      "terminated_processes": 0,
+      "terminated_count_semantics": "Job-limit terminations only; not all normal process exits.",
+      "coordinator_in_job": false,
+      "pre_assignment_cpu_lower_ticks_total": 0,
+      "pre_assignment_cpu_upper_ticks_total": 781250,
+      "offset_semantics": "Diagnostics only. Not automatically added to Job CPU.",
+      "read_started_monotonic": 462510.7716798,
+      "read_finished_monotonic": 462510.7716919,
+      "termination_wait_started_monotonic": 462510.7716607,
+      "termination_wait_finished_monotonic": 462510.7716958
+    },
+    "active_zero": true,
+    "independent_job": {
+      "read_started_monotonic": 462510.7717283,
+      "read_finished_monotonic": 462510.7717314,
+      "user_ticks": 159687500,
+      "kernel_ticks": 3906250,
+      "cpu_ticks": 163593750,
+      "total_processes": 4,
+      "active_processes": 0,
+      "terminated_processes_by_limit": 0
+    }
+  },
+  "finished_utc": "2026-10-21T10:23:04.670120+00:00"
+}
