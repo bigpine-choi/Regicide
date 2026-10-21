@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T18:19:33.273805+00:00",
+  "base_commit": "da0444ea1647ea4124480cc15352706138648cbc",
+  "hypothesis": "Repeated tactical suffixes and PVS/scout work may exhaust qsearch budget. Measure first; add bounded exact-context cache of completed qsearch bounds/full legal PVs, preserving existing tactical candidates and all threat defenses. No newly pruned moves.",
+  "model_policy": "Frozen439583 output-only head, same both arms; no fitting, unchanged MSE/architecture/regularization.",
+  "training_runs": 0,
+  "new_training_teacher_queries": 0,
+  "search_options_common": {
+    "UseQuiescenceThreats": true,
+    "Hash": 16,
+    "UseNNUEEvaluation": true,
+    "UseIncrementalNeuralEvaluation": true
+  },
+  "candidate_only_option": {
+    "UseQuiescenceThreatCache": true
+  },
+  "cache_memory_budget_bytes": 1048576,
+  "native_nodes": 10000,
+  "development_queries_maximum": {
+    "baseline_diagnosis": 6,
+    "candidate_diagnosis": 6
+  },
+  "known_position_policy": {
+    "positions": 3,
+    "expected_moves": [
+      "f6e4",
+      "e5f6",
+      "f3g5"
+    ],
+    "all_required": true,
+    "must_complete_iteration": true,
+    "critical_Ng5_position_must_finish_iteration_within_nodes": true,
+    "native_mismatches": 0,
+    "final_native_queries": 12,
+    "no_teacher_queries": true
+  },
+  "fresh_gate_policy": {
+    "reuse_unused_prior_reservation": true,
+    "positions": 16,
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "maximum_regressions_at_least_200cp": 0,
+    "native_mismatches": 0,
+    "runs_maximum": 1,
+    "only_after_known_pass": true,
+    "no_refill_retries_or_gate_tuning": true
+  },
+  "match_policy": {
+    "only_after_both_gates_pass": true,
+    "games": 16,
+    "pairs": 8,
+    "time_per_move_ms": 100,
+    "maximum_plies": 500,
+    "hash_mb": 16,
+    "draw_policy": "claim",
+    "opponent": "frozen basic classical Regicide",
+    "strength_claim": "Direction screen only; no Elo proof"
+  },
+  "defaults_changed": false,
+  "installed_game_changed": false,
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-tactical-guarded\\regicide.exe": "84ec743a2833abeff327bc2e647230c7ab1be84e2c194445d307da2cfed5acf7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_output_only.py": "48dd2fd97582931adb76752451e0e05121700e340ff605ee0042e698cd1c719b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_head_repair.py": "d655d10461928a3f16706b45220a6e1191d5049ab313768a3613a09e4dcca163",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-tactical-search\\gate-001\\reservation.json": "bff49134b6317ab0977bb926c8be2eca379e7439b6f84d9bb1b7672ad3092451",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp": "c2473a05959859bb21af242c6c40d55630864a707f5c7a2bc5690fc8b9d3783b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp": "1f7f28b7486e2b7f4f3e190681db1a104338b18d514f4cf3d3eade40329eea7a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp": "90bbf68e9ac4ae24d5bfef753b1c4f8faa4c912f4954692c5ee0baf763e20c42"
+  }
+}

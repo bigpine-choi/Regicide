@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 
 using namespace regicide;
 namespace {
@@ -90,7 +91,12 @@ void same_graph(const SearchResult& left, const SearchResult& right) {
                left.lmr_researches == right.lmr_researches &&
                left.quiet_threat_candidates == right.quiet_threat_candidates &&
                left.quiet_threat_extensions == right.quiet_threat_extensions &&
-               left.defensive_qnodes == right.defensive_qnodes && left.qsee_pruned == right.qsee_pruned,
+               left.defensive_qnodes == right.defensive_qnodes && left.qsee_pruned == right.qsee_pruned &&
+               left.qcache_probes == right.qcache_probes && left.qcache_hits == right.qcache_hits &&
+               left.qcache_cutoffs == right.qcache_cutoffs && left.qcache_stores == right.qcache_stores &&
+               left.qcache_bytes == right.qcache_bytes &&
+               left.root_threat_candidates == right.root_threat_candidates &&
+               left.root_threat_searches == right.root_threat_searches,
            "reused memory changed the search graph or transposition work");
 }
 void no_memory_work(const SearchResult& result) {
@@ -1863,6 +1869,235 @@ int main() {
         // SEE cannot prove that every nonchecking sacrifice is bad. This
         // experimental guard is intentionally selective; exhaustive equality
         // above belongs only to those stated fixtures, not arbitrary positions.
+    });
+    test("q cache is an explicit bounded opt-in independent of the normal TT", [] {
+        const Board board;
+        SearchOptions options;
+        options.hash_mb = 1;
+        options.positional = false;
+        const auto off = reference_search(board, {.depth = 3}, nullptr, {}, options);
+        expect(!off.qcache_probes && !off.qcache_hits && !off.qcache_cutoffs &&
+                   !off.qcache_stores && !off.qcache_bytes, "default path performed q cache work");
+        options.quiescence_cache = true;
+        options.transposition = false;
+        const auto cached = reference_search(board, {.depth = 3}, nullptr, {}, options);
+        expect(cached.depth == 3 && !cached.stopped && cached.score == off.score,
+               "independent q cache changed a completed fixed-depth material value");
+        expect(cached.qcache_bytes > 0 && cached.qcache_bytes <= 1024 * 1024,
+               "q cache escaped its separate 1 MiB memory ceiling");
+        expect(cached.qcache_probes == cached.qnodes && cached.qcache_stores > 0 &&
+                   cached.qcache_hits > 0 && cached.qcache_cutoffs > 0,
+               "fixture did not reuse completed quiescence bounds");
+        no_memory_work(cached);
+        valid_pv(board, cached);
+        options.quiescence = false;
+        const auto quiet_off = reference_search(board, {.depth = 3}, nullptr, {}, options);
+        expect(!quiet_off.qcache_bytes && !quiet_off.qcache_probes,
+               "disabled qsearch allocated or consulted its cache");
+    });
+    test("q cache preserves independent bounded-check and tactical oracle values", [] {
+        for (const char* fen : {"7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1",
+                                "1k6/8/7b/8/8/8/2R5/K7 w - - 0 1",
+                                "r6k/3p4/8/4P3/8/8/8/6K1 b - - 0 1",
+                                "6k1/8/8/8/8/8/p7/6KR w - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            for (bool checks : {false, true}) {
+                CheckOracleCoverage coverage;
+                const int expected = checks ? check_minimax(board, 1, 1, coverage) :
+                                               quiet_minimax(board, 1);
+                for (bool pvs : {false, true}) for (bool table : {false, true}) {
+                    auto options = pvs_options(pvs, table, false, true, checks);
+                    const auto uncached = reference_search(board, {.depth = 1}, nullptr, {}, options);
+                    options.quiescence_cache = true;
+                    const auto cached = reference_search(board, {.depth = 1}, nullptr, {}, options);
+                    expect(!cached.stopped && cached.depth == 1 && cached.score == expected &&
+                               cached.score == uncached.score,
+                           "cached bound changed independent qsearch/check oracle value");
+                    expect(board == saved, "cache or independent oracle changed input history");
+                    valid_pv(board, cached);
+                }
+            }
+        }
+    });
+    test("q cache retains full quiet fork witnesses and all legal defense semantics", [] {
+        for (const auto& [fen, root, fork] : std::array<std::tuple<const char*, const char*, const char*>, 2>{{
+                 {"k2q3r/p7/7N/8/8/8/5PPP/3B1RK1 b - - 0 1", "a7a6", "h6f7"},
+                 {"3b1rk1/5ppp/8/8/8/7n/P7/K2Q3R w - - 0 1", "a2a3", "h3f2"}}}) {
+            const Board board(fen);
+            Board oracle = board;
+            oracle.play(root);
+            const int expected = -quiet_minimax(oracle, 2, 1);
+            for (bool table : {false, true}) for (bool pvs : {false, true}) {
+                SearchOptions options;
+                options.hash_mb = 1;
+                options.positional = false;
+                options.quiescence_checks = false;
+                options.quiescence_threats = true;
+                options.transposition = table;
+                options.pvs = pvs;
+                options.root_moves = std::vector<Move>{Move::from_uci(root)};
+                const auto uncached = search(board, {.depth = 1}, nullptr, {}, options);
+                options.quiescence_cache = true;
+                const auto cached = search(board, {.depth = 1}, nullptr, {}, options);
+                expect(cached.score == expected && cached.score == uncached.score && !cached.stopped,
+                       "q cache changed exhaustive fork/quiet defense value");
+                expect(cached.pv.size() >= 3 && cached.pv[1] == Move::from_uci(fork) &&
+                           cached.quiet_threat_extensions > 0 && cached.defensive_qnodes > 0,
+                       "cached result lost the actual quiet fork and defense witness");
+                valid_pv(board, cached);
+            }
+        }
+    });
+    test("q cache preserves draw history counters mate precedence and promotion witnesses", [] {
+        Board repeated("7k/8/8/8/8/q7/8/6K1 w - - 0 1");
+        for (int i = 0; i < 2; ++i)
+            for (const char* move : {"g1h1", "h8g8", "h1g1", "g8h8"}) repeated.play(move);
+        for (const Board& board : {repeated, Board(repeated.fen()),
+                Board("7k/8/8/3P4/8/8/q7/6K1 w - - 99 1"),
+                Board("7k/8/8/3P4/8/8/q7/6K1 w - - 100 1"),
+                Board("7k/6Q1/6K1/8/8/8/8/8 b - - 150 1"),
+                Board("1r4k1/P7/8/8/8/8/8/6K1 b - - 0 1")}) {
+            const auto saved = board;
+            SearchOptions options;
+            options.hash_mb = 1;
+            options.quiescence_threats = true;
+            const auto uncached = reference_search(board, {.depth = 2}, nullptr, {}, options);
+            options.quiescence_cache = true;
+            const auto cached = reference_search(board, {.depth = 2}, nullptr, {}, options);
+            expect(!cached.stopped && cached.depth == uncached.depth && cached.score == uncached.score,
+                   "q cache mixed repetition/halfmove context, mate precedence or promotion state");
+            if (cached.best_move) valid_pv(board, cached);
+            expect(board == saved, "q cache changed root draw history");
+        }
+    });
+    test("q cache obeys exact cancellation and resets across NNUE and option context changes", [] {
+        const Board board("k2q3r/p7/7N/8/8/8/8/6K1 b - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.hash_mb = 1;
+        options.nnue = true;
+        options.quiescence_checks = false;
+        options.quiescence_threats = true;
+        options.quiescence_cache = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("a7a6")};
+        const auto incremental = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        options.nnue_incremental = false;
+        const auto full = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        same_graph(incremental, full);
+        options.nnue_incremental = true;
+        SearchContext context;
+        const auto partial = search(board, {.depth = 3, .nodes = 20}, nullptr, {}, options, &context);
+        expect(partial.stopped && partial.nodes == 20,
+               "cache hit or expansion escaped the exact shared node ceiling");
+        const auto first = search(board, {.depth = 1}, nullptr, {}, options);
+        const auto after_first = search(board, {.depth = 3, .nodes = first.nodes + 1},
+                                        nullptr, {}, options, &context);
+        expect(first.depth == 1 && !first.stopped && after_first.stopped &&
+                   after_first.nodes == first.nodes + 1,
+               "cached interrupted next iteration escaped its shared node ceiling");
+        same_completed(after_first, first);
+        const auto reused = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options, &context);
+        same_graph(incremental, reused);
+        options.quiescence_cache = false;
+        const auto off_fresh = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        const auto off_reused = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options, &context);
+        same_graph(off_fresh, off_reused);
+        options.quiescence_cache = true;
+        options.quiescence_checks = true;
+        options.quiescence_threats = false;
+        options.transposition = false;
+        const auto switched_fresh = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        const auto switched_reused = search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options, &context);
+        same_graph(switched_fresh, switched_reused);
+        std::atomic_bool stop{true};
+        const auto stopped = search(board, {.depth = 3}, &stop, {}, options);
+        expect(stopped.stopped && !stopped.nodes && !stopped.qcache_probes && !stopped.qcache_stores,
+               "preexisting cancellation entered or published cached work");
+        expect(board == saved, "cached cancellation damaged root board, NNUE or repetition history");
+        valid_pv(board, incremental); valid_pv(board, partial);
+    });
+    test("first-root threat ordering preserves independent minimax and every root alternative", [] {
+        Board board("k2q3r/p7/7N/8/8/8/5PPP/3B1RK1 w - - 0 1");
+        const auto saved = board;
+        const auto expected = optimal_moves(board, 2, false);
+        for (bool table : {false, true}) for (bool pvs : {false, true})
+            for (bool see : {false, true}) {
+                auto options = see_options(see, pvs, table);
+                const auto previous = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                options.tactical_threat_ordering = true;
+                const auto ordered = reference_search(board, {.depth = 2}, nullptr, {}, options);
+                expect(!ordered.stopped && ordered.depth == 2 && ordered.score == expected.score &&
+                           ordered.score == previous.score && ordered.best_move &&
+                           std::find(expected.moves.begin(), expected.moves.end(), *ordered.best_move) !=
+                               expected.moves.end(), "root priority changed independent minimax value/optimum");
+                expect(!previous.root_threat_candidates && !previous.root_threat_searches &&
+                           ordered.root_threat_candidates > 0 && ordered.root_threat_searches > 0,
+                       "priority was not an explicit first-root opt-in");
+                valid_pv(board, ordered);
+                expect(board == saved, "root threat classification changed history");
+            }
+    });
+    test("root capture-fork preparation is visited before capture frontiers without changing q policy", [] {
+        // e5 is occupied so Ng5 is the unique nonchecking knight preparation;
+        // otherwise Ne5 can prepare the very same Nxf7 fork and ties correctly.
+        const Board board("3qk2r/5p2/8/4P3/2B5/5N2/8/1b4K1 w - - 0 2");
+        const auto saved = board;
+        SearchOptions options;
+        options.positional = false;
+        options.hash_mb = 1;
+        options.quiescence_threats = true;
+        options.quiescence_cache = true;
+        options.tactical_threat_ordering = true;
+        std::optional<Move> first_observed;
+        options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                 const StaticEvaluationObservation&) {
+            if (!first_observed && !path.empty()) first_observed = path.front();
+        };
+        const auto ordered = reference_search(board, {.depth = 1, .nodes = 1000}, nullptr, {}, options);
+        expect(first_observed == Move::from_uci("f3g5") && ordered.root_threat_candidates > 0 &&
+                   ordered.root_threat_searches > 0,
+               "safe nonchecking capture-fork preparation remained behind a capture frontier");
+        expect(ordered.nodes <= 1000 && board == saved,
+               "root preparation priority escaped node cap or changed history");
+        options.root_moves = std::vector<Move>{Move::from_uci("f3g5")};
+        options.static_evaluation_observer = {};
+        const auto restricted = reference_search(board, {.depth = 1, .nodes = 1000}, nullptr, {}, options);
+        options.tactical_threat_ordering = false;
+        const auto same_subtree = reference_search(board, {.depth = 1, .nodes = 1000}, nullptr, {}, options);
+        expect(restricted.score == same_subtree.score && restricted.depth == same_subtree.depth &&
+                   restricted.nodes == same_subtree.nodes && restricted.pv == same_subtree.pv,
+               "ordering changed a sole root's candidate/evaluation/qsearch subtree");
+        valid_pv(board, ordered); valid_pv(board, restricted);
+    });
+    test("root threat priority preserves NNUE oracle cancellation and disabled graph", [] {
+        const Board board("k2q3r/p7/7N/8/8/8/8/6K1 w - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.hash_mb = 1;
+        options.nnue = true;
+        options.quiescence_threats = true;
+        options.quiescence_cache = true;
+        const auto disabled = reference_search(board, {.depth = 2, .nodes = 1000}, nullptr, {}, options);
+        options.tactical_threat_ordering = false;
+        SearchContext context;
+        const auto explicit_off = reference_search(board, {.depth = 2, .nodes = 1000},
+                                                    nullptr, {}, options, &context);
+        same_graph(disabled, explicit_off);
+        options.tactical_threat_ordering = true;
+        const auto incremental = reference_search(board, {.depth = 2, .nodes = 1000},
+                                                   nullptr, {}, options, &context);
+        options.nnue_incremental = false;
+        const auto full = reference_search(board, {.depth = 2, .nodes = 1000}, nullptr, {}, options);
+        same_graph(incremental, full);
+        std::atomic_bool stop{true};
+        const auto cancelled = reference_search(board, {.depth = 2}, &stop, {}, options);
+        expect(cancelled.stopped && !cancelled.nodes && !cancelled.root_threat_candidates &&
+                   !cancelled.root_threat_searches, "preexisting stop entered root classification");
+        const auto limited = reference_search(board, {.depth = 3, .nodes = 1}, nullptr, {}, options);
+        expect(limited.stopped && limited.nodes == 1 && limited.depth == 0 && board == saved,
+               "root priority violated exact cancellation/fallback/history invariants");
+        valid_pv(board, incremental); valid_pv(board, limited);
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

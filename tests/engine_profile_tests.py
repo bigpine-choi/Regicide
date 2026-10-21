@@ -107,7 +107,22 @@ class EngineProfileTests(unittest.TestCase):
         literal['options']['usequiescencethreats'] = True
         self.rejects(literal)
 
+    def test_quiescence_cache_option_requires_exact_name_and_boolean(self):
+        literal = self.fixture('nnue')
+        literal['options']['UseQuiescenceThreatCache'] = True
+        self.assertIs(self.load(literal)['options']['UseQuiescenceThreatCache'], True)
+        literal['options']['UseQuiescenceThreatCache'] = 1
+        self.rejects(literal)
+        del literal['options']['UseQuiescenceThreatCache']
+        literal['options']['usequiescencethreatcache'] = True
+        self.rejects(literal)
+
     def test_model_family_binding_and_builtin_are_rejected(self):
+        literal = self.fixture('nnue')
+        literal['options']['UseTacticalThreatOrdering'] = True
+        self.assertIs(self.load(literal)['options']['UseTacticalThreatOrdering'], True)
+        literal['options']['UseTacticalThreatOrdering'] = 1
+        self.rejects(literal)
         literal = self.fixture('nnue')
         literal['models'] = {}
         literal['options']['NeuralModelFile'] = '<builtin>'

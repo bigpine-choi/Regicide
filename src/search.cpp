@@ -242,6 +242,43 @@ int static_score(const Board& board, const SearchOptions& options,
 
 struct Interrupted {};
 
+// Normal-node bounds cannot describe a quiescence query: optional quiet checks,
+// fork preparation, mandatory defense and the absolute q ceiling all change its
+// candidate tree. Keep every one of those contexts in a separate cache key,
+// along with the existing draw-aware position/history/counter key.
+struct QuiescenceKey {
+    TranspositionKey board;
+    int remaining = -1;
+    int checks = 0;
+    int threats = 0;
+    bool defensive = false;
+    bool operator==(const QuiescenceKey&) const = default;
+};
+
+struct QuiescenceEntry {
+    QuiescenceKey key;
+    int score = 0; // Root-distance mates use the existing TT normalization.
+    TranspositionBound bound = TranspositionBound::exact;
+    std::array<std::uint16_t, max_quiescence_depth> pv{};
+    std::uint8_t pv_size = 0;
+};
+
+constexpr std::size_t quiescence_cache_limit = 1024 * 1024;
+
+// A full bounded q PV fits in 64 bytes. Never publish only a cached first move:
+// tactical data collection and users must be able to replay its entire witness.
+std::uint16_t encode_qmove(Move move) {
+    const unsigned promotion = move.promotion == 'q' ? 1U : move.promotion == 'r' ? 2U :
+                               move.promotion == 'b' ? 3U : move.promotion == 'n' ? 4U : 0U;
+    return static_cast<std::uint16_t>(static_cast<unsigned>(move.from) |
+        (static_cast<unsigned>(move.to) << 6) | (promotion << 12));
+}
+
+Move decode_qmove(std::uint16_t encoded) {
+    constexpr std::array<char, 5> promotion{{0, 'q', 'r', 'b', 'n'}};
+    return {encoded & 63, (encoded >> 6) & 63, promotion[encoded >> 12]};
+}
+
 class Searcher {
 public:
     Searcher(const SearchLimits& limits, const std::atomic_bool* stop, Clock::time_point start,
@@ -250,6 +287,8 @@ public:
         if (options_.nnue && options_.nnue_incremental)
             nnue_.emplace(root, options_.nnue_model ? *options_.nnue_model : builtin_neural_model());
         if (options_.static_evaluation_observer) observed_path_.reserve(max_search_ply + 1);
+        if (options_.quiescence && options_.quiescence_cache)
+            qcache_.resize(quiescence_cache_limit / sizeof(QuiescenceEntry));
     }
 
     std::uint64_t nodes = 0;
@@ -260,6 +299,9 @@ public:
     std::uint64_t lmr_reductions = 0, lmr_researches = 0;
     std::uint64_t quiet_threat_candidates = 0, quiet_threat_extensions = 0, defensive_qnodes = 0;
     std::uint64_t qsee_pruned = 0;
+    std::uint64_t qcache_probes = 0, qcache_hits = 0, qcache_cutoffs = 0, qcache_stores = 0;
+    std::uint64_t root_threat_candidates = 0, root_threat_searches = 0;
+    std::uint64_t qcache_bytes() const { return qcache_.size() * sizeof(QuiescenceEntry); }
     int seldepth = 0;
     int iteration_depth = 0;
 
@@ -335,12 +377,33 @@ public:
         else if (options_.quiet_ordering)
             order_moves(board, moves, ordered_preferred, &killers_[ply], &history_[color]);
         else order_moves(board, moves, ordered_preferred);
+        std::vector<Move> root_threats;
+        if (options_.tactical_threat_ordering && ply == 0 && depth == 1) {
+            // A forcing quiet preparation can establish alpha before expensive
+            // capture/check frontiers. Classify the same general motif used by
+            // qsearch; keep every legal move and the existing within-class order.
+            // Only the first root iteration changes. Completed-PV ordering and
+            // every descendant keep their original policies, including LMR.
+            for (Move move : moves) {
+                poll(false);
+                if (quiet_move(board, move) && !board.gives_check_generated(move) &&
+                    quiet_knight_fork_threat(board, move, see_calls, [this] { poll(false); })) {
+                    root_threats.push_back(move);
+                    ++root_threat_candidates;
+                }
+            }
+            std::stable_partition(moves.begin(), moves.end(), [&](Move move) {
+                return std::find(root_threats.begin(), root_threats.end(), move) != root_threats.end();
+            });
+        }
         int best = -infinity;
         bool first_move = true;
         std::size_t move_index = 0;
         bool reduced_fail_low = false;
         for (Move move : moves) {
             poll(false);
+            if (std::find(root_threats.begin(), root_threats.end(), move) != root_threats.end())
+                ++root_threat_searches;
             int score;
             bool unverified_reduction = false;
             std::vector<Move> child_pv;
@@ -453,6 +516,55 @@ private:
     std::array<QuietHistory, 2> history_{}; // Bounded, reset for every search.
     std::vector<Move> observed_path_;
     std::uint64_t observed_evaluations_ = 0;
+    // A new Searcher is constructed for every search, including when the caller
+    // reuses SearchContext. No score, PV, model or option state survives a call.
+    std::vector<QuiescenceEntry> qcache_;
+
+    std::size_t qcache_index(const QuiescenceKey& key) const {
+        std::uint64_t mixed = key.board.position ^
+            (key.board.repetition_context * UINT64_C(0x9e3779b97f4a7c15));
+        mixed ^= static_cast<std::uint64_t>(key.board.halfmove) * UINT64_C(0xbf58476d1ce4e5b9);
+        mixed ^= static_cast<std::uint64_t>(key.remaining + 1) * UINT64_C(0x94d049bb133111eb);
+        mixed ^= static_cast<std::uint64_t>(key.checks + 4 * key.threats + 16 * key.defensive);
+        mixed ^= mixed >> 30;
+        mixed *= UINT64_C(0xbf58476d1ce4e5b9);
+        mixed ^= mixed >> 27;
+        return static_cast<std::size_t>(mixed % qcache_.size());
+    }
+
+    std::optional<int> qcache_probe(const QuiescenceKey& key, int ply, int alpha, int beta,
+                                    std::vector<Move>& pv) {
+        if (qcache_.empty()) return {};
+        ++qcache_probes;
+        const auto& entry = qcache_[qcache_index(key)];
+        if (entry.key != key) return {};
+        ++qcache_hits;
+        const int score = score_from_table(entry.score, ply);
+        if (entry.bound != TranspositionBound::exact &&
+            !(entry.bound == TranspositionBound::lower && score >= beta) &&
+            !(entry.bound == TranspositionBound::upper && score <= alpha)) return {};
+        ++qcache_cutoffs;
+        for (std::size_t i = 0; i < entry.pv_size; ++i) pv.push_back(decode_qmove(entry.pv[i]));
+        return score;
+    }
+
+    void qcache_store(const QuiescenceKey& key, int ply, int score,
+                      TranspositionBound bound, const std::vector<Move>& pv) {
+        if (qcache_.empty()) return;
+        // The complete PV must fit the query's absolute extension ceiling.
+        // A defensive/check node at that ceiling throws instead of storing.
+        if (pv.size() > static_cast<std::size_t>(key.remaining))
+            throw std::logic_error("quiescence cache PV exceeds remaining depth");
+        auto& entry = qcache_[qcache_index(key)];
+        if (entry.key == key && entry.bound == TranspositionBound::exact &&
+            bound != TranspositionBound::exact) return;
+        entry.key = key;
+        entry.score = score_to_table(score, ply);
+        entry.bound = bound;
+        entry.pv_size = static_cast<std::uint8_t>(pv.size());
+        for (std::size_t i = 0; i < pv.size(); ++i) entry.pv[i] = encode_qmove(pv[i]);
+        ++qcache_stores;
+    }
 
     int static_evaluation(const Board& board, int& raw_score) const {
         raw_score = static_score(board, options_, nnue_ ? &*nnue_ : nullptr);
@@ -477,10 +589,22 @@ private:
         if (defensive_reply) ++defensive_qnodes;
         seldepth = std::max(seldepth, ply);
         pv.clear();
+        const int original_alpha = alpha;
+        const QuiescenceKey key{{board.position_key(), board.repetition_context_key(),
+                                  board.position().halfmove},
+                                 max_quiescence_depth - qply, checks_left, threats_left, defensive_reply};
+        if (const auto cached = qcache_probe(key, ply, alpha, beta, pv)) return *cached;
+        const auto finish = [&](int score, bool exact = false) {
+            const auto bound = exact ? TranspositionBound::exact :
+                score <= original_alpha ? TranspositionBound::upper :
+                score >= beta ? TranspositionBound::lower : TranspositionBound::exact;
+            qcache_store(key, ply, score, bound, pv);
+            return score;
+        };
         auto moves = board.legal_moves();
         const bool checked = board.in_check();
-        if (moves.empty()) return checked ? -mate_score + ply : 0;
-        if (automatic_draw(board)) return 0;
+        if (moves.empty()) return finish(checked ? -mate_score + ply : 0, true);
+        if (automatic_draw(board)) return finish(0, true);
         const bool current_claim = claimable(board);
         // No position in check may use stand pat. If the absolute extension
         // ceiling is reached, discard this iteration and retain the previous
@@ -497,7 +621,7 @@ private:
             const bool adjusted = best < 0 && (current_claim || intended_claim_available(board, moves));
             observe_evaluation(board, raw_score, best, ply, qply, current_claim, adjusted);
             if (adjusted) best = 0;
-            if (best >= beta || qply >= max_quiescence_depth) return best;
+            if (best >= beta || qply >= max_quiescence_depth) return finish(best);
             alpha = std::max(alpha, best);
             std::erase_if(moves, [&](Move move) {
                 if (!quiet_move(board, move)) {
@@ -532,7 +656,7 @@ private:
         } else if (current_claim) {
             best = 0;
             alpha = std::max(alpha, 0);
-            if (alpha >= beta) return 0;
+            if (alpha >= beta) return finish(0);
         }
         if (options_.see_ordering)
             order_moves_with_see(board, moves, {}, nullptr, nullptr, see_calls, [this] { poll(false); });
@@ -567,7 +691,7 @@ private:
             alpha = std::max(alpha, score);
             if (alpha >= beta) break;
         }
-        return best;
+        return finish(best);
     }
 
     bool intended_claim_available(Board& board, const std::vector<Move>& moves) {
@@ -692,6 +816,13 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.quiet_threat_extensions = searcher.quiet_threat_extensions;
         result.defensive_qnodes = searcher.defensive_qnodes;
         result.qsee_pruned = searcher.qsee_pruned;
+        result.qcache_probes = searcher.qcache_probes;
+        result.qcache_hits = searcher.qcache_hits;
+        result.qcache_cutoffs = searcher.qcache_cutoffs;
+        result.qcache_stores = searcher.qcache_stores;
+        result.qcache_bytes = searcher.qcache_bytes();
+        result.root_threat_candidates = searcher.root_threat_candidates;
+        result.root_threat_searches = searcher.root_threat_searches;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -711,6 +842,13 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.quiet_threat_extensions = searcher.quiet_threat_extensions;
     result.defensive_qnodes = searcher.defensive_qnodes;
     result.qsee_pruned = searcher.qsee_pruned;
+    result.qcache_probes = searcher.qcache_probes;
+    result.qcache_hits = searcher.qcache_hits;
+    result.qcache_cutoffs = searcher.qcache_cutoffs;
+    result.qcache_stores = searcher.qcache_stores;
+    result.qcache_bytes = searcher.qcache_bytes();
+    result.root_threat_candidates = searcher.root_threat_candidates;
+    result.root_threat_searches = searcher.root_threat_searches;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

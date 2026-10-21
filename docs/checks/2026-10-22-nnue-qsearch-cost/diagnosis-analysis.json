@@ -1,0 +1,71 @@
+{
+  "completed": true,
+  "input_sha256": {
+    "docs\\checks\\2026-10-22-nnue-qsearch-cost\\diagnosis-profile.json": "4ceb9a7eb4df27936937b87db5b88f3af04821dcaa36d0836d47455d6aa3994e",
+    "docs\\checks\\2026-10-22-nnue-tactical-search\\known-position-check.json": "a4b4190889ff7a9cb77daf18bc7717221a401069fd9934376358a76a917b2f46"
+  },
+  "production_receipt_comparisons": [
+    {
+      "case": "original_black_choice",
+      "threats": false,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 19,
+      "safe_repeat_fraction": 0.3163234555499749,
+      "same_window_repeat_fraction": 0.20080361627322954
+    },
+    {
+      "case": "original_black_choice",
+      "threats": true,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 19,
+      "safe_repeat_fraction": 0.39551938919027524,
+      "same_window_repeat_fraction": 0.24532851115129597
+    },
+    {
+      "case": "white_reply_after_Bf5",
+      "threats": false,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 22,
+      "safe_repeat_fraction": 0.23206962088626587,
+      "same_window_repeat_fraction": 0.08482544763429029
+    },
+    {
+      "case": "white_reply_after_Bf5",
+      "threats": true,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 19,
+      "safe_repeat_fraction": 0.26286230067194866,
+      "same_window_repeat_fraction": 0.1832313709758299
+    },
+    {
+      "case": "quiet_fork_after_exf6_Bxb1",
+      "threats": false,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 19,
+      "safe_repeat_fraction": 0.21872187218721872,
+      "same_window_repeat_fraction": 0.13671367136713672
+    },
+    {
+      "case": "quiet_fork_after_exf6_Bxb1",
+      "threats": true,
+      "move_depth_nodes_whitecp_match_old_production": true,
+      "maximum_observed_qply": 22,
+      "safe_repeat_fraction": 0.24942494249424943,
+      "same_window_repeat_fraction": 0.16711671167116712
+    }
+  ],
+  "findings": [
+    "All six hook-only profiles reproduce prior native move, completed depth, node count and white score. No production search/evaluator mutation.",
+    "The Ng5-preroot position spends 9999 of 10000 nodes in quiescence even with threats disabled. Stop is node budget, not the unresolved-check 32-ply safety ceiling. Maximum qply is 19 OFF and 22 ON.",
+    "ON: 7705 qnodes go to Qe1; seven distinct root moves visited, Ng5 root branch not reached. OFF: Re1 5261 and Qe1 3307 qnodes; 13 root branches visited. This is root-move starvation under a finite shared budget, not a searched recommendation for fxg7 fallback.",
+    "ON: 2138 checked qnodes (21.38 percent of qnodes); 2494 repeated full-history/budget/ply qstates (24.94 percent), of which 1671 repeats share alpha/beta. Captures, promotion/recapture chains and checks re-encounter equal states after irreversible moves reset repetition context.",
+    "There is no q transposition lookup in the archived production implementation. The normal TT is bypassed at depth zero before quiescence. A separate budget/history aware q bound cache can potentially avoid recomputation while keeping the candidate set and all check evasions/threat defenses.",
+    "A q cache must distinguish position key, repetition context, halfmove counter, remaining qply, check/threat budgets, defensive-reply mode and mate ply; retain valid lower/exact/upper bounds and legal complete PV; store only completed calls. Normal-depth and q entries must never alias.",
+    "Duplicate fractions are diagnostic opportunities, not measurements of actual cache savings. They include terminal/static leaves; table replacement and bound-window compatibility reduce use. The unvisited tail of the first iteration is unknown, so completing within 10000 nodes is not guaranteed."
+  ],
+  "searches_this_diagnosis": 6,
+  "teacher_queries": 0,
+  "training_runs": 0,
+  "fresh_gate_queries": 0,
+  "matches": 0
+}

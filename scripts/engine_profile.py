@@ -32,6 +32,8 @@ _REGICIDE_OPTIONS = set(REQUIRED_OPTIONS) | {
     'Move Overhead', 'UsePositionalEvaluation', 'UseQuiescence', 'UseTranspositionTable',
     'Clear Hash', 'UseFastMoves', 'UseQuietMoveOrdering', 'UseQuiescenceChecks',
     'PVS', 'UseSEE', 'EvalFile', 'NeuralModelFile', 'UseQuiescenceThreats',
+    'UseQuiescenceThreatCache',
+    'UseTacticalThreatOrdering',
 }
 _CANONICAL_OPTIONS = {name.casefold(): name for name in _REGICIDE_OPTIONS}
 _METADATA = {'manifest_path', 'manifest_sha256', 'normalized_sha256'}
@@ -170,6 +172,10 @@ def _normalize(profile, base):
             raise ProfileError('Regicide mode/search flags must be booleans and Hash an integer')
         if 'UseQuiescenceThreats' in options and type(options['UseQuiescenceThreats']) is not bool:
             raise ProfileError('UseQuiescenceThreats must be a boolean')
+        if 'UseQuiescenceThreatCache' in options and type(options['UseQuiescenceThreatCache']) is not bool:
+            raise ProfileError('UseQuiescenceThreatCache must be a boolean')
+        if 'UseTacticalThreatOrdering' in options and type(options['UseTacticalThreatOrdering']) is not bool:
+            raise ProfileError('UseTacticalThreatOrdering must be a boolean')
         if options['UseNeuralEvaluation'] != (evaluation == 'residual') or options['UseNNUEEvaluation'] != (evaluation == 'nnue'):
             raise ProfileError('evaluation family conflicts with neural activation options')
         if evaluation in ('classical', 'residual') and options.get('UsePositionalEvaluation', True) is not True:

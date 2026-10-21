@@ -80,6 +80,13 @@ struct SearchOptions {
     // in quiescence. One quiet threat per path; all opponent replies remain.
     // SEE pruning excludes check evasions, threat replies, checks, EP and promotions.
     bool quiescence_threats = false;
+    // Research-only, independent of the normal-node TT. A search-local 1 MiB
+    // cache reuses completed qsearch bounds with the same draw and extension
+    // context. Disabled by default; it removes no tactical candidates.
+    bool quiescence_cache = false;
+    // Research-only first-iteration root ordering. Quiet knight forks and safe
+    // capture-fork preparation precede the existing order; no move is removed.
+    bool tactical_threat_ordering = false;
 };
 
 struct SearchResult {
@@ -109,6 +116,13 @@ struct SearchResult {
     std::uint64_t quiet_threat_extensions = 0; // Quiet threat branches actually searched.
     std::uint64_t defensive_qnodes = 0; // All-reply quiescence nodes after such a threat.
     std::uint64_t qsee_pruned = 0; // Locally losing ordinary nonchecking q captures omitted by the opt-in.
+    std::uint64_t qcache_probes = 0;
+    std::uint64_t qcache_hits = 0; // Draw state and all q extension budgets match.
+    std::uint64_t qcache_cutoffs = 0;
+    std::uint64_t qcache_stores = 0; // Completed nodes only, including stand pat.
+    std::uint64_t qcache_bytes = 0; // At most 1 MiB, separate from normal Hash.
+    std::uint64_t root_threat_candidates = 0;
+    std::uint64_t root_threat_searches = 0;
 };
 
 using SearchCallback = std::function<void(const SearchResult&)>;
