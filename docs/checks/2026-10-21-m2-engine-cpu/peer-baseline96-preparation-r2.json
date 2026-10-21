@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "READY_FOR_NEW_FREEZE",
+  "audited_utc": "2026-10-21T13:07:20.317514+00:00",
+  "original_preparation_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-engine-cpu\\peer-baseline96-preparation.json",
+  "original_preparation_sha256": "8ff106f3ac41e3f5a9260b2fa993253d653ca09361d9299bf2af26502a033d67",
+  "preserved_failed_freeze_directory": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-baseline96\\attempt-001",
+  "preserved_old_adapter_sha256": "8f3ae8b5cd5218d687a4ebe306a3685cfbb104793e16c844397cfb5abe0da8ec",
+  "fixed_live_adapter_sha256": "ccdb2f3562168f02d519fbcc63c9351b73cb7ca05b67c937195b165207872411",
+  "exact_single_source_change": [
+    "--- preserved-first-freeze-adapter",
+    "+++ fixed-live-adapter",
+    "@@ -65,7 +65,7 @@",
+    "     base = Path(frozen['source_plan_path']).parent",
+    "     original = formal.pilot.referenced_file(frozen['plan']['openings'], base)",
+    "     _, full = formal.comparison.load_openings(original)",
+    "-    _, selected = formal.comparison.load_openings(frozen['banks']['main']['path'])",
+    "+    _, selected = formal.comparison.load_openings(Path(frozen['banks']['main']['path']))",
+    "     require(len(full) == 32 and selected == full[:4], 'copied bank differs from fixed original first four')",
+    "     require(len(frozen['cells']['main']) == 48 and len(frozen['cells']['preflight']) == 12,",
+    "             'exact 48 main pairs/12 separate preflight pairs required')"
+  ],
+  "plan_sha256": "40727583562b8c3c38c375ef9026ad8faa9f380f49dde893f232ac32c9dc679d",
+  "independent_peer96_sha256": "4c18c85b8315293e3759d92b1d6d04e6c6599404ef6f07a1b8fe39190949bda1",
+  "boundary_test_source_sha256": "be9a4ec163772347c8c9f27a0bd98476e6e8731ad3ce7549467d03aabe918828",
+  "product_test_evidence_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-engine-cpu\\offline-baseline96-adapter-confirmation-r2.json",
+  "product_test_evidence_sha256": "6fb8178d828b66240c0e6f8f39e28b23ee9860cd0863dddfebfdde39bc36b37b",
+  "actual_main_games_run": 0,
+  "source_preflight_rerun": false,
+  "scope": "Supplement only: exact single Path conversion at the str/Path opening-reader boundary, old failed freeze/source and original preparation retained. No plan, source33, preflight raw, guard or independent peer edits. New run-001 freeze/transfer validation still required before main."
+}

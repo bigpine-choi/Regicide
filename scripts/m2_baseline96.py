@@ -65,7 +65,7 @@ def verify(directory):
     base = Path(frozen['source_plan_path']).parent
     original = formal.pilot.referenced_file(frozen['plan']['openings'], base)
     _, full = formal.comparison.load_openings(original)
-    _, selected = formal.comparison.load_openings(frozen['banks']['main']['path'])
+    _, selected = formal.comparison.load_openings(Path(frozen['banks']['main']['path']))
     require(len(full) == 32 and selected == full[:4], 'copied bank differs from fixed original first four')
     require(len(frozen['cells']['main']) == 48 and len(frozen['cells']['preflight']) == 12,
             'exact 48 main pairs/12 separate preflight pairs required')

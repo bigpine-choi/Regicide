@@ -97,7 +97,7 @@ both opponents, both thinking times and paired colors. A small adapter reuses
 the unchanged v6 worker and raw validators; its nine synthetic checks passed.
 The completed preflight is referenced with exact audit/input/source hashes,
 not copied or presented as newly played games. New raw main output goes to
-`build-m2-baseline96/attempt-001`. Old stopped games and preflight scores are
+`build-m2-baseline96/run-001`. Old stopped games and preflight scores are
 excluded from the 96 main results.
 
 Future change comparisons follow the user's

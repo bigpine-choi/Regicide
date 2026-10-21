@@ -66,6 +66,22 @@ class SelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'original first four'):
                 baseline.verify(ROOT/'synthetic-new')
 
+    def test_actual_json_string_bank_path_is_converted_to_path_for_reader(self):
+        source = ROOT/'tests/data/m2_formal_openings_2026-10-21.json'
+        bank = json.loads(source.read_text(encoding='utf-8-sig'))
+        bank['openings'] = bank['openings'][:4]
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            copied = directory/'main-openings.json'
+            copied.write_text(json.dumps(bank),encoding='utf-8')
+            frozen = {'plan':dict(self.plan(), openings={'path':str(source),'sha256':baseline.formal.sha256(source)}),
+                'source_plan_path':str(directory/'plan.json'),
+                'harness_source_sha256':{str(ROOT/'scripts'/name):'a'*64 for name in baseline.HARNESS},
+                'banks':{'main':{'path':str(copied)}}, 'cells':{'main':[None]*48,'preflight':[None]*12}}
+            with patch.object(baseline.formal,'verify_frozen',return_value=(frozen,{})):
+                checked,_ = baseline.verify(directory)
+            self.assertIs(checked,frozen)
+
 
 class TransferTests(unittest.TestCase):
     def setUp(self):
