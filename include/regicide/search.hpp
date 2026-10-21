@@ -87,6 +87,11 @@ struct SearchOptions {
     // Research-only first-iteration root ordering. Quiet knight forks and safe
     // capture-fork preparation precede the existing order; no move is removed.
     bool tactical_threat_ordering = false;
+    // Research-only horizon policy. Initiate optional quiet checks and knight
+    // threats only within qply 0..2. Captures/promotions, all check evasions and
+    // every immediate reply to an already launched threat keep their policy.
+    // This is selective: a quiet threat first appearing later can be missed.
+    bool quiescence_horizon_budget = false;
 };
 
 struct SearchResult {

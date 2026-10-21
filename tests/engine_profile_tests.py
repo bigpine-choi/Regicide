@@ -117,6 +117,16 @@ class EngineProfileTests(unittest.TestCase):
         literal['options']['usequiescencethreatcache'] = True
         self.rejects(literal)
 
+    def test_reply_budget_option_requires_exact_name_and_boolean(self):
+        literal = self.fixture('nnue')
+        literal['options']['UseQuiescenceReplyBudget'] = True
+        self.assertIs(self.load(literal)['options']['UseQuiescenceReplyBudget'], True)
+        literal['options']['UseQuiescenceReplyBudget'] = 1
+        self.rejects(literal)
+        del literal['options']['UseQuiescenceReplyBudget']
+        literal['options']['usequiescencereplybudget'] = True
+        self.rejects(literal)
+
     def test_model_family_binding_and_builtin_are_rejected(self):
         literal = self.fixture('nnue')
         literal['options']['UseTacticalThreatOrdering'] = True

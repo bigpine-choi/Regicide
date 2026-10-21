@@ -1645,6 +1645,34 @@ def test_tactical_threat_ordering_protocol(binary):
             assert any(line.startswith("info string rootthreat ") for line in actual[1])
 
 
+def test_quiescence_reply_budget_protocol(binary):
+    with chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=TIMEOUT) as client:
+        option = client.options["UseQuiescenceReplyBudget"]
+        assert option.type == "check" and option.default is False
+    board = chess.Board("r2qkb1r/1pp2ppp/2n2P2/8/p1Bp4/P4N2/RP3PPP/1bBQ1RK1 w kq - 0 11")
+    with UciProcess(binary) as engine:
+        configure(engine, UseQuiescenceThreats=True, UseQuiescenceThreatCache=True)
+        engine.send("setoption name UseQuiescenceReplyBudget value yes")
+        assert any("check option requires" in line for line in engine.ready())
+        for enabled in (False, True, False):
+            options = dict(UseQuiescenceThreats=True, UseQuiescenceThreatCache=True,
+                           UseTacticalThreatOrdering=not enabled, UseQuiescenceReplyBudget=enabled)
+            configure(engine, **options)
+            actual = engine.search(board, "go nodes 2000")
+            with UciProcess(binary) as cold:
+                configure(cold, **options)
+                expected = cold.search(board, "go nodes 2000")
+            assert search_fingerprint(*actual) == search_fingerprint(*expected)
+        configure(engine, UseQuiescenceReplyBudget=True)
+        engine.position(board)
+        engine.send("go infinite")
+        engine.await_search_started()
+        engine.send("setoption name UseQuiescenceReplyBudget value false")
+        output = engine.ready(allow_bestmove=True)
+        assert sum(line.startswith("bestmove ") for line in output) == 1
+        engine.ready()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -1662,7 +1690,7 @@ def main():
               test_pawn_structure_option_lifecycle, test_lmr_protocol_cli_and_gates,
               test_lmr_option_lifecycle, test_lmr_default_client_compatibility,
               test_quiescence_threat_option_lifecycle, test_quiescence_cache_option_lifecycle,
-              test_tactical_threat_ordering_protocol]
+              test_tactical_threat_ordering_protocol, test_quiescence_reply_budget_protocol]
     for check in checks:
         check(binary)
         print("PASS UCI: " + check.__name__.removeprefix("test_"), flush=True)

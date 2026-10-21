@@ -156,6 +156,7 @@ public:
             send("option name UseQuiescenceThreats type check default false");
             send("option name UseQuiescenceThreatCache type check default false");
             send("option name UseTacticalThreatOrdering type check default false");
+            send("option name UseQuiescenceReplyBudget type check default false");
             send("option name PVS type check default true");
             send("option name UseSEE type check default true");
             send("option name UsePawnShield type check default true");
@@ -272,7 +273,8 @@ private:
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
             option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
             option != "UseLMR" && option != "UseQuiescenceThreats" &&
-            option != "UseQuiescenceThreatCache" && option != "UseTacticalThreatOrdering") return;
+            option != "UseQuiescenceThreatCache" && option != "UseTacticalThreatOrdering" &&
+            option != "UseQuiescenceReplyBudget") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -292,6 +294,7 @@ private:
         else if (option == "UseQuiescenceThreats") options_.quiescence_threats = text == "true";
         else if (option == "UseQuiescenceThreatCache") options_.quiescence_cache = text == "true";
         else if (option == "UseTacticalThreatOrdering") options_.tactical_threat_ordering = text == "true";
+        else if (option == "UseQuiescenceReplyBudget") options_.quiescence_horizon_budget = text == "true";
         else if (option == "PVS") options_.pvs = text == "true";
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";

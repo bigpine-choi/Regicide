@@ -614,6 +614,15 @@ private:
         int best = -infinity;
         std::vector<Move> threats;
         if (!checked && !defensive_reply) {
+            // An unused optional extension must not make a long capture chain
+            // launch a second full-width tree arbitrarily far from the normal
+            // horizon. Keep the first three q plies, including a preparation
+            // after two captures. Mandatory defenses/check evasions bypass this
+            // block; checking captures, EP and promotions are never filtered by
+            // this horizon policy. The q cache already keys exact remaining
+            // depth (= max_quiescence_depth - qply), and the policy is immutable
+            // for the lifetime of its search-local cache.
+            const bool optional_quiet = !options_.quiescence_horizon_budget || qply <= 2;
             int raw_score;
             best = static_evaluation(board, raw_score);
             // A quiet intended move can permit a draw even though quiescence
@@ -644,8 +653,8 @@ private:
                     return false;
                 }
                 if ((checks_left > 0 || threats_left > 0) && board.gives_check_generated(move))
-                    return checks_left <= 0;
-                if (threats_left > 0 && qply + 2 < max_quiescence_depth &&
+                    return !optional_quiet || checks_left <= 0;
+                if (optional_quiet && threats_left > 0 && qply + 2 < max_quiescence_depth &&
                     quiet_knight_fork_threat(board, move, see_calls, [this] { poll(false); })) {
                     threats.push_back(move);
                     ++quiet_threat_candidates;

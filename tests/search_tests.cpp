@@ -148,13 +148,16 @@ struct CheckOracleCoverage {
     int zero_budget_counterchecks = 0;
     int captures_with_budget = 0;
     int promotions_with_budget = 0;
+    int late_optional_omitted = 0;
+    int late_tactical = 0;
+    int late_evasions = 0;
 };
 
 // Independent bounded-check oracle: enumerate every legal move and inspect the
 // resulting check state with play(), without the generated-check helper,
 // pruning, ordering, cache or production qsearch code.
 int check_minimax(Board& board, int depth, int checks_left, CheckOracleCoverage& coverage,
-                  int ply = 0) {
+                  int ply = 0, int optional_horizon = -1, int qply = 0) {
     const auto outcome = board.outcome();
     if (outcome == Outcome::checkmate) return -mate_score + ply;
     if (outcome != Outcome::ongoing) return 0;
@@ -169,7 +172,9 @@ int check_minimax(Board& board, int depth, int checks_left, CheckOracleCoverage&
         const bool tactical = capture || move.promotion;
         board.play(move);
         const bool gives_check = board.in_check();
-        if (!depth && !checked && !tactical && !(checks_left && gives_check)) {
+        const bool optional_allowed = optional_horizon < 0 || qply <= optional_horizon;
+        if (!depth && !checked && !tactical && !(optional_allowed && checks_left && gives_check)) {
+            if (checks_left && gives_check && !optional_allowed) ++coverage.late_optional_omitted;
             board.undo();
             continue;
         }
@@ -185,8 +190,11 @@ int check_minimax(Board& board, int depth, int checks_left, CheckOracleCoverage&
             }
             if (capture && checks_left) ++coverage.captures_with_budget;
             if (move.promotion && checks_left) ++coverage.promotions_with_budget;
+            if (qply > 2 && tactical) ++coverage.late_tactical;
+            if (qply > 2 && checked) ++coverage.late_evasions;
         }
-        const int score = -check_minimax(board, std::max(0, depth - 1), child_budget, coverage, ply + 1);
+        const int score = -check_minimax(board, std::max(0, depth - 1), child_budget, coverage,
+                                         ply + 1, optional_horizon, depth ? 0 : qply + 1);
         board.undo();
         best = std::max(best, score);
     }
@@ -1714,6 +1722,12 @@ int main() {
         expect(extended.pv.size() > 1 && extended.pv[1] == Move::from_uci("h6f7"),
                "quiet fork was not retained in the completed principal variation");
         valid_pv(board, extended);
+        options.quiescence_horizon_budget = true;
+        saw_fork = saw_quiet_defense = saw_losing_defense = false;
+        const auto bounded = search(board, {.depth = 1}, nullptr, {}, options);
+        expect(bounded.score == exhaustive && saw_fork && saw_quiet_defense && saw_losing_defense,
+               "optional horizon lost independently checked quiet or locally losing threat defenses");
+        valid_pv(board, bounded);
         expect(board == saved, "fork classification or reply search changed input history");
     });
     test("capture-fork preparation is observed but locally losing hypothetical captures are rejected", [] {
@@ -2098,6 +2112,142 @@ int main() {
         expect(limited.stopped && limited.nodes == 1 && limited.depth == 0 && board == saved,
                "root priority violated exact cancellation/fallback/history invariants");
         valid_pv(board, incremental); valid_pv(board, limited);
+    });
+    test("optional q horizon matches an independent bounded-check oracle without bounding forced replies", [] {
+        CheckOracleCoverage total;
+        for (const char* fen : {"7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1",
+                                "1k6/8/7b/8/8/8/2R5/K7 w - - 0 1",
+                                "r6k/3p4/8/4P3/8/8/8/6K1 b - - 0 1",
+                                "6k1/8/8/8/8/8/p7/6KR w - - 0 1"}) {
+            Board board(fen);
+            const auto saved = board;
+            CheckOracleCoverage coverage;
+            const int expected = check_minimax(board, 1, 1, coverage, 0, 2);
+            total.late_optional_omitted += coverage.late_optional_omitted;
+            total.late_tactical += coverage.late_tactical;
+            total.late_evasions += coverage.late_evasions;
+            total.zero_budget_counterchecks += coverage.zero_budget_counterchecks;
+            for (bool table : {false, true}) for (bool pvs : {false, true})
+                for (bool cache : {false, true}) {
+                    auto options = see_options(true, pvs, table, true, true);
+                    options.quiescence_horizon_budget = true;
+                    options.quiescence_cache = cache;
+                    const auto result = reference_search(board, {.depth = 1}, nullptr, {}, options);
+                    expect(!result.stopped && result.depth == 1 && result.score == expected,
+                           "optional horizon disagrees with independently enumerated tactical value");
+                    expect(board == saved, "optional horizon altered the input board/history");
+                    valid_pv(board, result);
+                }
+        }
+        expect(total.late_optional_omitted > 0 && total.late_tactical > 0 && total.late_evasions > 0,
+               "oracle fixtures must omit late optional checks while retaining late tactics/evasions");
+        expect(total.zero_budget_counterchecks > 0,
+               "mandatory quiet counterchecks at zero optional budget were not covered");
+    });
+    test("optional q horizon retains two-capture knight-fork preparation and mandatory replies", [] {
+        // The preparation begins at qply two after Bf5, exf6 and Bxb1. This
+        // fixture has the same general capture-fork motif without needing an
+        // external teacher, learned model, root ordering or a position special case.
+        // d4 stays occupied and Nxe6 forks d8/f8, so Ne5 is not a tied
+        // alternative preparation of the same capture-fork.
+        const Board board("3qkr2/8/4pnb1/4P3/2BP4/5N2/8/1N4K1 b - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.positional = false;
+        options.quiescence_checks = false;
+        options.quiescence_threats = true;
+        options.quiescence_horizon_budget = true;
+        options.quiescence_cache = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("g6f5")};
+        const std::array<Move, 4> preparation{{Move::from_uci("g6f5"), Move::from_uci("e5f6"),
+                                              Move::from_uci("f5b1"), Move::from_uci("f3g5")}};
+        bool saw_preparation = false;
+        options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                 const StaticEvaluationObservation&) {
+            if (path.size() < preparation.size() + 1 ||
+                !std::equal(preparation.begin(), preparation.end(), path.begin())) return;
+            saw_preparation = true;
+        };
+        const auto result = search(board, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+        expect(!result.stopped && result.depth == 1 && saw_preparation &&
+                   result.quiet_threat_extensions > 0 && result.defensive_qnodes > 0,
+               "horizon budget lost qply-two fork preparation or all-reply defensive semantics; depth=" +
+                   std::to_string(result.depth) + " nodes=" + std::to_string(result.nodes) +
+                   " threats=" + std::to_string(result.quiet_threat_extensions) +
+                   " preparation=" + std::to_string(saw_preparation));
+        expect(board == saved, "bounded preparation damaged board or repetition history");
+        valid_pv(board, result);
+    });
+    test("optional q horizon preserves checking sacrifices promotion and en passant candidates", [] {
+        struct Fixture { const char* fen; const char* root; const char* protected_move; };
+        for (const auto& fixture : std::array<Fixture, 3>{{
+                 {"4k3/p4p2/8/8/2B5/8/8/6K1 b - - 0 1", "a7a6", "c4f7"},
+                 {"1r4k1/P7/8/8/8/8/8/6K1 b - - 0 1", "g8h8", "a7a8n"},
+                 {"3r3k/3p4/8/4P3/8/8/8/6K1 b - - 0 1", "d7d5", "e5d6"}}}) {
+            const Board board(fixture.fen);
+            Board horizon = board;
+            horizon.play(fixture.root);
+            const Move protected_move = Move::from_uci(fixture.protected_move);
+            if (fixture.protected_move != std::string("e5d6"))
+                expect(static_exchange_evaluation(horizon, protected_move) < 0,
+                       "sacrifice/promotion fixture must have negative local SEE");
+            SearchOptions options;
+            options.positional = false;
+            options.quiescence_checks = false;
+            options.quiescence_threats = true;
+            options.quiescence_horizon_budget = true;
+            options.root_moves = std::vector<Move>{Move::from_uci(fixture.root)};
+            bool saw_protected = false;
+            options.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                     const StaticEvaluationObservation&) {
+                if (path.size() >= 2 && path[1] == protected_move) saw_protected = true;
+            };
+            const auto result = search(board, {.depth = 1, .nodes = 10000}, nullptr, {}, options);
+            expect(saw_protected, "optional budget suppressed a protected tactical candidate");
+            valid_pv(board, result);
+        }
+    });
+    test("optional q horizon preserves NNUE cancellation cache reset and inactive search graphs", [] {
+        const Board board("k2q3r/p7/7N/8/8/8/5PPP/3B1RK1 b - - 0 1");
+        const auto saved = board;
+        SearchOptions options;
+        options.hash_mb = 1;
+        options.nnue = true;
+        options.quiescence_checks = false;
+        options.quiescence_cache = true;
+        options.root_moves = std::vector<Move>{Move::from_uci("a7a6")};
+        const auto inactive = reference_search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        options.quiescence_horizon_budget = true;
+        const auto inactive_budget = reference_search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        same_graph(inactive, inactive_budget);
+        options.quiescence_checks = true;
+        options.quiescence_threats = true;
+        SearchContext context;
+        const auto incremental = reference_search(board, {.depth = 2, .nodes = 10000},
+                                                   nullptr, {}, options, &context);
+        options.nnue_incremental = false;
+        const auto full = reference_search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        same_graph(incremental, full);
+        options.nnue_incremental = true;
+        const auto partial = reference_search(board, {.depth = 3, .nodes = 20},
+                                               nullptr, {}, options, &context);
+        expect(partial.stopped && partial.nodes == 20,
+               "optional horizon escaped the exact shared node budget");
+        options.quiescence_horizon_budget = false;
+        const auto old_fresh = reference_search(board, {.depth = 2, .nodes = 10000}, nullptr, {}, options);
+        const auto old_reused = reference_search(board, {.depth = 2, .nodes = 10000},
+                                                  nullptr, {}, options, &context);
+        same_graph(old_fresh, old_reused);
+        options.quiescence_horizon_budget = true;
+        const auto restored = reference_search(board, {.depth = 2, .nodes = 10000},
+                                                nullptr, {}, options, &context);
+        same_graph(incremental, restored);
+        std::atomic_bool stop{true};
+        const auto cancelled = reference_search(board, {.depth = 2}, &stop, {}, options);
+        expect(cancelled.stopped && !cancelled.nodes && !cancelled.qnodes,
+               "preexisting cancellation entered optional extension work");
+        expect(board == saved, "bounded optional work damaged NNUE or root history restoration");
+        valid_pv(board, incremental); valid_pv(board, partial);
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;
