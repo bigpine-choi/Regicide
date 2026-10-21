@@ -105,7 +105,7 @@ def assess_info(board: chess.Board, info: dict, bestmove: chess.Move | None,
 
 def label_rows(engine_path, rows: list[dict], output_dir, *, nodes: int = 10000,
                max_abs_cp: int = 1500, engine_factory=chess.engine.SimpleEngine.popen_uci,
-               progress=None) -> tuple[list[dict], dict]:
+               progress=None, max_depth: int | None = None) -> tuple[list[dict], dict]:
     """Label one frozen small bank with one process, preserving original rows.
 
     Writes a receipt for every attempted row and publishes only accepted labels.
@@ -114,6 +114,8 @@ def label_rows(engine_path, rows: list[dict], output_dir, *, nodes: int = 10000,
     """
     if type(nodes) is not int or nodes < 1 or type(max_abs_cp) is not int or max_abs_cp < 1:
         raise ValueError("Require positive integer node and CP bounds")
+    if max_depth is not None and (type(max_depth) is not int or max_depth < 1):
+        raise ValueError("Require a positive integer optional depth limit")
     if not isinstance(rows, list) or not rows:
         raise ValueError("Require a nonempty source row list")
     # Validate every history before launching any search or creating artifacts.
@@ -137,12 +139,16 @@ def label_rows(engine_path, rows: list[dict], output_dir, *, nodes: int = 10000,
                          "binary_sha256": binary_hash, "engine_id": identity,
                          "options": effective_options, "requested_nodes": nodes,
                          "history_plies": len(board.move_stack)}
+                if max_depth is not None:
+                    query["requested_depth"] = max_depth
                 if board.outcome(claim_draw=True) is not None:
                     reasons = ["terminal"]
                 else:
                     engine.configure({"Clear Hash": None})
                     last_score = {}
-                    with engine.analysis(board, chess.engine.Limit(nodes=nodes), game=object(),
+                    limit = (chess.engine.Limit(nodes=nodes) if max_depth is None
+                             else chess.engine.Limit(nodes=nodes, depth=max_depth))
+                    with engine.analysis(board, limit, game=object(),
                                          info=chess.engine.INFO_ALL) as analysis:
                         for packet in analysis:
                             if "score" in packet:
@@ -181,5 +187,9 @@ def label_rows(engine_path, rows: list[dict], output_dir, *, nodes: int = 10000,
               "exclusion_reasons": dict(exclusions), "elapsed_seconds": time.perf_counter() - started,
               "accepted_by_partition": dict(Counter(row.get("partition") for row in accepted)),
               "files": {name: sha256(output / name) for name in ("teacher-queries.jsonl", "labels.jsonl")}}
+    if max_depth is not None:
+        report["requested_depth"] = max_depth
+        report["policies"] = {**POLICIES, "budget":
+            "go nodes plus depth; stop when either limit is reached. Depth allows a completed iteration; a node-cap interruption can still yield a rejected bound. Actual nodes are recorded and can overshoot the request."}
     write_json(output / "teacher-report.json", report)
     return accepted, report

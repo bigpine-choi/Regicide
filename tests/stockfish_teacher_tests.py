@@ -52,7 +52,7 @@ class FakeEngine:
     def __init__(self, packets=None):
         self.options = {"Clear Hash": None, "MultiPV": None}
         self.id = {"name": "fake-unit-only", "author": "tests"}
-        self.configs, self.games, self.boards = [], [], []
+        self.configs, self.games, self.boards, self.limits = [], [], [], []
         self.packets = packets
 
     def __enter__(self):
@@ -66,6 +66,7 @@ class FakeEngine:
 
     def analysis(self, board, limit, **kwargs):
         assert limit.nodes == 10000
+        self.limits.append(limit)
         self.games.append(kwargs["game"])
         self.boards.append(board.copy(stack=True))
         packet = (self.packets[len(self.boards) - 1] if self.packets
@@ -132,6 +133,9 @@ class StockfishTeacherTests(unittest.TestCase):
             self.assertIsNot(fake.games[0], fake.games[1])
             self.assertEqual(fake.configs, [teacher.OPTIONS, {"Clear Hash": None}, {"Clear Hash": None}])
             self.assertEqual(report["files"]["labels.jsonl"], teacher.sha256(output / "labels.jsonl"))
+            self.assertNotIn("requested_depth", report)
+            self.assertTrue(all("requested_depth" not in row for row in receipts))
+            self.assertTrue(all(limit.depth is None for limit in fake.limits))
             with self.assertRaises(FileExistsError):
                 teacher.label_rows(binary, rows, output, engine_factory=lambda *a, **kw: fake)
 
@@ -154,6 +158,30 @@ class StockfishTeacherTests(unittest.TestCase):
                 teacher.label_rows(binary, [invalid], root / "bad",
                     engine_factory=lambda *a, **kw: self.fail("must not launch"))
             self.assertFalse((root / "bad").exists())
+
+    def test_optional_depth_limit_is_explicit_in_search_and_receipts(self):
+        fake = FakeEngine()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binary = root / "engine.fake"
+            binary.write_bytes(b"unit-test-only")
+            _, report = teacher.label_rows(binary, [source()], root / "labels", max_depth=10,
+                engine_factory=lambda *a, **kw: fake)
+            receipt = json.loads((root / "labels/teacher-queries.jsonl").read_text().strip())
+            self.assertEqual(fake.limits[0].depth, 10)
+            self.assertEqual(receipt["requested_depth"], 10)
+            self.assertEqual(report["requested_depth"], 10)
+            self.assertIn("either limit", report["policies"]["budget"])
+            self.assertNotIn("either limit", teacher.POLICIES["budget"])
+
+    def test_invalid_optional_depth_prevents_engine_launch_and_publication(self):
+        for depth in (0, -1, True, 1.5):
+            with self.subTest(depth=depth), tempfile.TemporaryDirectory() as temporary:
+                output = Path(temporary) / "not-created"
+                with self.assertRaisesRegex(ValueError, "depth"):
+                    teacher.label_rows("missing-binary", [source()], output, max_depth=depth,
+                        engine_factory=lambda *a, **kw: self.fail("must not launch"))
+                self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

@@ -144,6 +144,9 @@ def authenticate(directory):
     require(plan['criteria'] == CRITERIA, 'Frozen criteria differ from implementation')
     require(plan['native_nodes'] == NODES and plan['teacher_nodes'] == TEACHER_NODES,
             'Frozen search budgets differ')
+    if 'teacher_depth' in plan:
+        require(type(plan['teacher_depth']) is int and plan['teacher_depth'] > 0,
+                'Optional frozen teacher depth is invalid')
     require(sha(directory / 'frozen-roots.json') == plan['frozen_roots_sha256'], 'Reserved roots changed')
     require(sha(directory / 'blocked-features.json') == plan['blocked_features_sha256'], 'Blocked features changed')
     for path, digest in plan['input_sha256'].items():
@@ -164,8 +167,11 @@ def label(directory):
         'plan_sha256': sha(directory / 'plan.json'),
         'source_sha256': sha(Path(__file__)), 'teacher_sha256': sha(engine),
         'maximum_queries': len(roots), 'nodes': TEACHER_NODES,
+        **({'teacher_depth': plan['teacher_depth']} if 'teacher_depth' in plan else {}),
         'purpose': 'Reserved gate root answers only; forbidden in learning or model selection'})
-    labels, report = label_rows(engine, roots, output, nodes=TEACHER_NODES, max_abs_cp=1500)
+    teacher_extra = {'max_depth': plan['teacher_depth']} if 'teacher_depth' in plan else {}
+    labels, report = label_rows(engine, roots, output, nodes=TEACHER_NODES, max_abs_cp=1500,
+                                **teacher_extra)
     write(directory / 'root-label-seal.json', {
         'plan_sha256': sha(directory / 'plan.json'),
         'started_sha256': sha(directory / 'label-started.json'),
@@ -281,6 +287,8 @@ def run(directory, candidate_path, output_path):
         receipt = receipts[row['query_id']]
         require(receipt['status'] == 'accepted' and receipt['reasons'] == [] and
                 receipt['requested_nodes'] == TEACHER_NODES, 'Invalid root teacher receipt')
+        require(receipt.get('requested_depth') == plan.get('teacher_depth'),
+                'Root teacher depth differs from the frozen plan')
         require(row['teacher_query_id'] == receipt['query_id'] and
                 row['target_white_cp'] == receipt['score']['white_cp'], 'Root CP differs from receipt')
     exposed, exposure_files = exposure_inventory()
@@ -302,6 +310,7 @@ def run(directory, candidate_path, output_path):
               'input_sha256': {str(path): sha(path) for path in binding_paths},
               'limitations': plan['limitations'], 'candidate_options': options['candidate'],
               'warm_options': options['warm'], 'native_nodes': NODES, 'teacher_nodes': TEACHER_NODES,
+              **({'teacher_depth': plan['teacher_depth']} if 'teacher_depth' in plan else {}),
               'native_validation_mismatches': 0, 'training_runs': 0,
               'maximum_native_searches': 2 * len(roots), 'maximum_child_teacher_queries': 2 * len(roots),
               'cases': [], 'excluded_cases': [], 'actual_native_searches': 0}
@@ -339,8 +348,10 @@ def run(directory, candidate_path, output_path):
             result['pending_cases'] = pending
             write(output, result)
     child_output = output.parent / (output.stem + '-child-teacher')
+    teacher_extra = {'max_depth': plan['teacher_depth']} if 'teacher_depth' in plan else {}
     child_labels, child_report = label_rows(teacher, list(children.values()), child_output,
-                                            nodes=TEACHER_NODES, max_abs_cp=1500)
+                                            nodes=TEACHER_NODES, max_abs_cp=1500,
+                                            **teacher_extra)
     child_by_id = {row['query_id']: row for row in child_labels}
     child_receipts = {row['source_query_id']: row for row in lines(child_output / 'teacher-queries.jsonl')}
     for case in pending:
