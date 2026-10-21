@@ -4,7 +4,7 @@
 기존 NNUE를 추가 학습한다. 실제 대국의 수 선택·탐색·평가망 구현은 Regicide가 담당한다.
 Stockfish 실행 파일이나 신경망을 Regicide 엔진에 편입하지 않는다.
 
-## 고정한 범위
+## 10/21 최초 교사 실행의 범위
 
 - 기존 구조: 기물768+상대 손번1 입력, 공유 은닉16, v3 정수 모델·S32.
 - 손실: 기존 MSE. 현재 손번 모델의 실수 가중치에서 이어서 학습한다.
@@ -67,3 +67,19 @@ Stockfish는 별도 GPL-3.0-or-later 실행 파일로 사용했다. 공식 출�
 [이번 고정 조건](checks/2026-10-21-m3-stockfish-teacher/attempt-001/protocol.json),
 [학습 결과](checks/2026-10-21-m3-stockfish-teacher/attempt-001/training.json),
 [비교 실행 계획](checks/2026-10-21-m3-stockfish-teacher/attempt-001/plan.json)을 보존한다.
+
+## 10/22: 검증 기준으로 중단하고 최적 가중치 복원
+
+`neural_stm_guarded.py`와 `train_nnue_guarded.py`는 기존431라벨과 학습 전 가중치를
+재사용한다. MSE·구조·Adam·학습률은 유지하고 매5회 선택용81위치의 정수 MSE를 확인한다.
+5번 연속 유의미한 개선이 없으면 중단하고 실제 최소 오차 가중치를 복원한다. 학습 전
+가중치도 후보에 포함한다. 기존81개는 튜닝용이며 새 독립 검증 자료라고 부르지 않는다.
+
+```powershell
+.venv-tests/Scripts/python.exe -B -s tests/neural_stm_guarded_tests.py
+.venv-tests/Scripts/python.exe -B -s scripts/train_nnue_guarded.py <new-output>
+```
+
+실제1회 학습은40회에서 멈춰15회 모델을 복원했고 선택용 MAE155.96cp였다.
+기본 엔진과16판은2승3무11패, 정확성·독립 감사 통과다. 기본 엔진은 유지한다.
+[원인 분석·실행 결과](experiments/2026-10-22-nnue-overfit.md)를 따른다.

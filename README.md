@@ -22,9 +22,7 @@
 
 [통합 설계·호환성·실제 검증·재현 방법](docs/M1_INTEGRATION.md), [현황·블루프린트·다음 마일스톤](docs/ROADMAP.md)을 참고합니다. 이 변경은 기존 기능 보존과 연구 연결을 검증하며 경기력 향상을 주장하지 않습니다. 아래 v0.6.x는 통합 전 개발 이력입니다.
 
-후속 NNUE 연구에서는 MSE를 유지하고 손번 입력v3를 구현·학습했습니다. 기존 MSE와16판은5승8무3패(2분45초), 정확성·호환성 검증 통과입니다. 기본 게임 모델은 유지하며 일반 기력 향상은 미확정입니다. [설계·재현](docs/NEURAL_STM.md), [실행 결과](docs/experiments/2026-10-21-m3-nnue-stm.md)를 참고합니다.
-
-이후 Stockfish 교사로 현재 NNUE를 소규모 추가 학습하고 기본 수식 Regicide와16판을 비교했습니다. 결과는0승1무15패로 후보를 채택하지 않았습니다. [교사 구현·재현](docs/STOCKFISH_TEACHER.md), [현재 결과와 한계](docs/experiments/2026-10-21-m3-stockfish-teacher.md)를 기록했습니다.
+후속 NNUE 연구에서는 MSE·손번 입력v3 구조를 유지하며 Stockfish 교사 연결과 과적합 방지 학습을 구현했습니다. 10/22에는 검증 기준 조기 중단으로15회째 가중치를 복원했고 기본 수식 Regicide 상대16판은2승3무11패(2분22초)였습니다. 기본 엔진 우위에는 못 미쳐 기본 게임 모델을 유지합니다. [진단·최신 결과](docs/experiments/2026-10-22-nnue-overfit.md), [교사 구현·재현](docs/STOCKFISH_TEACHER.md), [손번 구조](docs/NEURAL_STM.md)를 참고합니다.
 
 v0.6.5는 **종반 학습 자료의 진단·보강과 자료 규모별 비교**를 추가합니다. 기존 학습용 패배에서 위치 문맥과 실제 손실 근거를 구분하고, 새 종반 보류 자료를 먼저 동결한 뒤 중첩 학습 규모와 두 시드를 비교합니다. 후보는 결과를 보기 전에 고정하고 기존 규칙 검증·예약 아레나·통계 채택 기준을 유지합니다. [원리와 실행 방법](docs/ENDGAME_LEARNING.md), [사전 계획](docs/experiments/2026-10-19-endgame-learning-scale-plan.md)을 참고합니다.
 
