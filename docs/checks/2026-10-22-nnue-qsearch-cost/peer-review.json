@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "completed": true,
+  "created_utc": "2026-10-21T18:32:01.304273+00:00",
+  "procedure_and_correctness_audit_passed": true,
+  "main_tactical_cost_and_move_choice_goal_passed": false,
+  "review_scope": "Saved receipt/hash/source review only; no additional engine, teacher, fit, test or match processes.",
+  "review_training_runs": 0,
+  "review_native_queries": 0,
+  "review_teacher_queries": 0,
+  "review_tests": 0,
+  "verified_receipt_and_source_bindings": 103,
+  "historical_protocol_bindings_resolved": [
+    {
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp",
+      "archived_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\baseline-source-snapshot\\src\\search.cpp",
+      "sha256": "c2473a05959859bb21af242c6c40d55630864a707f5c7a2bc5690fc8b9d3783b"
+    },
+    {
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp",
+      "archived_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\baseline-source-snapshot\\include\\regicide\\search.hpp",
+      "sha256": "1f7f28b7486e2b7f4f3e190681db1a104338b18d514f4cf3d3eade40329eea7a"
+    },
+    {
+      "original_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp",
+      "archived_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\baseline-source-snapshot\\src\\uci.cpp",
+      "sha256": "90bbf68e9ac4ae24d5bfef753b1c4f8faa4c912f4954692c5ee0baf763e20c42"
+    }
+  ],
+  "protected_baseline_commit": "da0444ea1647ea4124480cc15352706138648cbc",
+  "protected_sources_git_identical": [
+    "scripts/neural_stm_output_only.py",
+    "scripts/neural_stm.py",
+    "scripts/train_nnue_head_repair.py",
+    "src/nnue.cpp",
+    "include/regicide/nnue.hpp",
+    "docs/checks/2026-10-22-nnue-head-repair/attempt-001/model.nnue"
+  ],
+  "model_bytes_identical": true,
+  "model_sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+  "native_mismatches_recomputed": 0,
+  "known_expected_matches_recomputed": 0,
+  "known_cases": [
+    {
+      "name": "original_black_choice",
+      "expected_move": "f6e4",
+      "actual_move": "c8f5",
+      "completed_depth": 2,
+      "first_iteration_nodes_baseline": 4206,
+      "first_iteration_nodes_candidate": 2192,
+      "candidate_stats": [
+        "qthreat candidates 119 extensions 63 defenses 63 pruned 856",
+        "qcache probes 2191 hits 135 cutoffs 115 stores 2076 bytes 1048560",
+        "rootthreat candidates 0 searches 0",
+        "qthreat candidates 231 extensions 138 defenses 138 pruned 1597",
+        "qcache probes 4349 hits 302 cutoffs 272 stores 4077 bytes 1048560",
+        "rootthreat candidates 0 searches 0",
+        "qthreat candidates 469 extensions 260 defenses 260 pruned 4236",
+        "qcache probes 9940 hits 635 cutoffs 544 stores 9389 bytes 1048560",
+        "rootthreat candidates 0 searches 0"
+      ]
+    },
+    {
+      "name": "white_reply_after_Bf5",
+      "expected_move": "e5f6",
+      "actual_move": "c1g5",
+      "completed_depth": 1,
+      "first_iteration_nodes_baseline": 2577,
+      "first_iteration_nodes_candidate": 3732,
+      "candidate_stats": [
+        "qthreat candidates 125 extensions 85 defenses 85 pruned 1408",
+        "qcache probes 3731 hits 240 cutoffs 224 stores 3507 bytes 1048560",
+        "rootthreat candidates 1 searches 1",
+        "qthreat candidates 380 extensions 223 defenses 223 pruned 4387",
+        "qcache probes 9971 hits 576 cutoffs 499 stores 9462 bytes 1048560",
+        "rootthreat candidates 1 searches 1"
+      ]
+    },
+    {
+      "name": "quiet_fork_after_exf6_Bxb1",
+      "expected_move": "f3g5",
+      "actual_move": "f6g7",
+      "completed_depth": 0,
+      "first_iteration_nodes_baseline": null,
+      "first_iteration_nodes_candidate": null,
+      "candidate_stats": [
+        "qthreat candidates 199 extensions 161 defenses 161 pruned 3983",
+        "qcache probes 9999 hits 525 cutoffs 488 stores 9499 bytes 1048560",
+        "rootthreat candidates 2 searches 2"
+      ]
+    }
+  ],
+  "critical_first_iteration_completed": false,
+  "critical_cost_goal_passed": false,
+  "new_fresh_gate_queried": false,
+  "reserved_roots": 16,
+  "blocked_features": 594,
+  "later_diagnostic_features": 23565,
+  "reserved_overlap_features": 0,
+  "no_fresh_teacher_native_or_labels_in_all_three_reservations": true,
+  "search_tests": {
+    "groups": 76,
+    "assertions": 31286,
+    "failures": 0
+  },
+  "uci_groups": 30,
+  "actual_model_tests": {
+    "groups": 13,
+    "assertions": 25521,
+    "failures": 0
+  },
+  "engine_profile_tests_reported": 17,
+  "fresh_gate_unit_tests_reported": 11,
+  "training_runs": 0,
+  "teacher_queries": 0,
+  "comparison_games": 0,
+  "default_engine_changed": false,
+  "cache_review": "Search-local bounded1MiB and separate normal TT; complete draw/history/halfmove and remaining-q-depth/check/threat/defense key; normalized mate score; completed lower/upper/exact bounds; full bounded promotion-aware PV; exact shared node poll before hit.",
+  "ordering_review": "Only ply0/depth1 stable-partition of the existing general quiet-fork motif; no removed moves or evaluator changes. Independent native minimax, every-root-alternative and cancellation tests are present and passed in saved76-group log.",
+  "cache_only_variant_archive": {
+    "files": 6,
+    "source_sha256": {
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\scripts\\check_nnue_qsearch_cost.py": "cee27ac9e2527821232353f3b9fb0b50e403c0e6e90d1e9cae5f2b6a4303b078",
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\scripts\\probe_qsearch_cache.cpp": "6ad00abbd1207134c9f53b4717a4457e58732700cbba7ba4a732c6b7501cf447",
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\src\\search.cpp": "3aecf67c54741b664f7eb63c63ebc9c026e0cfead7ed29c6eb09ab92c30c751e",
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\src\\uci.cpp": "3ebf9090697e406d88b5a0ecb7486ab0063f710f462aae26fc8b05056c919f3b",
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\tests\\search_tests.cpp": "b5a32d4afb444231c1c1ea31e9af98e7f21727b742894b102da944b5baeb07c4",
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\cache-only-source-snapshot\\include\\regicide\\search.hpp": "7f8bf64f3e3bc04aecba8a8011536cdf3f40035e701f573b843f5ff3734ec42e"
+    },
+    "limitation": "Cache-only C++ sources were reconstructed and archived after development. Preserved reconstruction evidence does not establish a pre-execution sealed build."
+  },
+  "limitations": [
+    "Exposed known positions are development examples; no independent fresh-screen or strength improvement established.",
+    "Costs are mixed: original first iteration4206->2192, Bf5-child2577->3732, critical still incomplete at10000nodes.",
+    "Critical fallback fxg7 is not a completed search recommendation. Two threat root searches began without completing the full iteration."
+  ],
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\protocol.json": "139f7cde1d39820833f894172115366b55c8a7c0501060d800659bd7bfd9f97b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\protocol-amendment.json": "9830243122d16b34c6de05e378a10fddf0691fa66e0794cacb22b18df2b5dfd1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\build-provenance.json": "3996d6d31a9e42538445b182b8da67c31029047135814065299fa338b28adedf",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\correctness.json": "96632c26b33273de507bfc299b2d9fdc3f5f6ecc84482c3fe44063b35ce628c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\known-position-check.json": "5de24cd7d04c1314a84270dcfe9ccb4a106da7bcfbb662912afeb966e220c63b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\post-known-exposure-check.json": "dd8215b14cee101ec4905306b209b499a87959702de441daeda979def2b06471",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\screen-decision.json": "c17cce61911a268e24fcf4fc9c8d0f9f28a14a78621f0255dbef069359255b72",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\nnue-qsearch-cost.json": "28e29aeafec6c6a4a3bd81a620d0017e808504bf761d2f1777973a62061eec8b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\gate-002\\reservation.json": "8ade02d18b546c9cd092c194c00486f6ed065c93bd60cc01ecfbcaff9fe07b05",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\gate-002\\position-only-verification.json": "e29862bc2a8607a49807bfe1f393f19f207ad8f00222bcf701cac0f930aff040",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-qsearch-cost\\pre-ordering-source-snapshot\\manifest.json": "e7d59cafe5780bae72c82440156a7176a239e670d6135327a90ed9c5bfdbd4d1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp": "73bf1ccf279d9119678a3b8a8f229ada1bc37c4e2484142e67db05d02c918eaa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp": "dade760d7d222e7b247db020f1c08df4910c2c7e3a7846d0710ed3192964eae9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp": "64dd335e5274636f21035202d8e5a4794b19d9f163e39e4360a6fbc4e301e52d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\check_nnue_qsearch_cost.py": "b7df2e4e95811387e917629ef9042d2b46df4180cca97022127aad2ec305dcc6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_qsearch_cost_gate.py": "1255f3d68af74836ff64f1dc9d14ab79317260214036c8c4e8905e514070cabe",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\search_tests.cpp": "da0742f0f78cad6b2c876b64352c26a7e77710bd934e563d51815f1ad2e0ec99",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\nnue_qsearch_cost_gate_tests.py": "e3b54e572fef1a66caa43a25c85136cce9db3a2679c0f465df3a8c601c85b8ab"
+  }
+}

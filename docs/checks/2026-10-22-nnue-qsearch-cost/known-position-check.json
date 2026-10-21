@@ -1,0 +1,1647 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T18:28:06.825212+00:00",
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\move-choice-gate.json": "7c3d4b3f1145acc9dee40d1b544a56d71c078370b95ae01a0237fb98b11497d9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\check_nnue_qsearch_cost.py": "b7df2e4e95811387e917629ef9042d2b46df4180cca97022127aad2ec305dcc6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-tactical-guarded\\regicide.exe": "84ec743a2833abeff327bc2e647230c7ab1be84e2c194445d307da2cfed5acf7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m3-qsearch-priority\\regicide.exe": "23663fb23f0699a6acd1a6cae7ee4d3a47a5fbb23a846ad0c8d8049fb6489529",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\check_nnue_tactical_search.py": "c70e40d6fc06edf8880fae230b366712276ad767a1121d150f0b8e1703bd0a11",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\search.cpp": "73bf1ccf279d9119678a3b8a8f229ada1bc37c4e2484142e67db05d02c918eaa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\include\\regicide\\search.hpp": "dade760d7d222e7b247db020f1c08df4910c2c7e3a7846d0710ed3192964eae9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\src\\uci.cpp": "64dd335e5274636f21035202d8e5a4794b19d9f163e39e4360a6fbc4e301e52d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\classical.json": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_generalization_gate.py": "5de53aad45bc63ca2071927fb06a3b5cfc8e808824202186126c65e761d233ab",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\stockfish_teacher.py": "f338ce2bd2c05f8a5c9957147f17e896cf9820528b08da9967483887961cb1b1"
+  },
+  "model_sha256": "43958337348ce3d16397ed63ffadcea9bbe9b97473e61489653ffdede02eb5ac",
+  "nodes_per_search": 10000,
+  "old_binary_sha256": "84ec743a2833abeff327bc2e647230c7ab1be84e2c194445d307da2cfed5acf7",
+  "new_binary_sha256": "23663fb23f0699a6acd1a6cae7ee4d3a47a5fbb23a846ad0c8d8049fb6489529",
+  "known_position_policy": "All three fixed expected moves and a completed iteration; both searches retain tactical threats and every defense",
+  "source_status": "Previously exposed development examples; not independent generalization",
+  "training_runs": 0,
+  "teacher_queries": 0,
+  "cases": [
+    {
+      "source": {
+        "name": "original_black_choice",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history": [
+          "d2d4",
+          "d7d5",
+          "c2c4",
+          "d5c4",
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "e5d4",
+          "f1c4",
+          "b8c6",
+          "e1g1",
+          "g8f6",
+          "e4e5",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "a1a2"
+        ],
+        "fen": "r1bqkb1r/1pp2ppp/2n2n2/4P3/p1Bp4/P4N2/RP3PPP/1NBQ1RK1 b kq - 1 9",
+        "expected_move": "f6e4",
+        "partition": "exposed_development"
+      },
+      "searches": {
+        "baseline": {
+          "move_uci": "c8f5",
+          "depth": 2,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 4206,
+          "pv_uci": [
+            "c8f5",
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 19,
+              "score": {
+                "pov": "black",
+                "relative": "+42",
+                "white_cp": -42,
+                "white_mate": null
+              },
+              "nodes": 4206,
+              "time": 0.016,
+              "pv": [
+                "c8f5"
+              ]
+            },
+            {
+              "string": "pvs probes 39 researches 4"
+            },
+            {
+              "string": "see calls 8110"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 216 extensions 116 defenses 116 pruned 1604"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 7171,
+              "time": 0.026,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 122 researches 5"
+            },
+            {
+              "string": "see calls 14134"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 336 extensions 199 defenses 199 pruned 2627"
+            },
+            {
+              "string": "tt probes 42 hits 1 cutoffs 0 stores 42 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.035,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 169 researches 8"
+            },
+            {
+              "string": "see calls 20412"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 432 extensions 250 defenses 250 pruned 4313"
+            },
+            {
+              "string": "tt probes 46 hits 3 cutoffs 0 stores 43 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 46 hits 3 cutoffs 0 stores 43 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 2,
+            "seldepth": 21,
+            "score": {
+              "pov": "black",
+              "relative": "+39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.035,
+            "pv": [
+              "c8f5",
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05400320002809167
+        },
+        "candidate_off": {
+          "move_uci": "c8f5",
+          "depth": 2,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 4206,
+          "pv_uci": [
+            "c8f5",
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": false,
+            "UseTacticalThreatOrdering": false
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 19,
+              "score": {
+                "pov": "black",
+                "relative": "+42",
+                "white_cp": -42,
+                "white_mate": null
+              },
+              "nodes": 4206,
+              "time": 0.015,
+              "pv": [
+                "c8f5"
+              ]
+            },
+            {
+              "string": "pvs probes 39 researches 4"
+            },
+            {
+              "string": "see calls 8110"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 216 extensions 116 defenses 116 pruned 1604"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 7171,
+              "time": 0.024,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 122 researches 5"
+            },
+            {
+              "string": "see calls 14134"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 336 extensions 199 defenses 199 pruned 2627"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 42 hits 1 cutoffs 0 stores 42 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.034,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 169 researches 8"
+            },
+            {
+              "string": "see calls 20412"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 432 extensions 250 defenses 250 pruned 4313"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 46 hits 3 cutoffs 0 stores 43 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 46 hits 3 cutoffs 0 stores 43 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 2,
+            "seldepth": 21,
+            "score": {
+              "pov": "black",
+              "relative": "+39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.034,
+            "pv": [
+              "c8f5",
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05385480000404641
+        },
+        "candidate": {
+          "move_uci": "c8f5",
+          "depth": 2,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 2192,
+          "pv_uci": [
+            "c8f5",
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 19,
+              "score": {
+                "pov": "black",
+                "relative": "+42",
+                "white_cp": -42,
+                "white_mate": null
+              },
+              "nodes": 2192,
+              "time": 0.009,
+              "pv": [
+                "c8f5"
+              ]
+            },
+            {
+              "string": "pvs probes 39 researches 4"
+            },
+            {
+              "string": "see calls 4207"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 119 extensions 63 defenses 63 pruned 856"
+            },
+            {
+              "string": "qcache probes 2191 hits 135 cutoffs 115 stores 2076 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 4391,
+              "time": 0.016,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 122 researches 5"
+            },
+            {
+              "string": "see calls 8596"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 231 extensions 138 defenses 138 pruned 1597"
+            },
+            {
+              "string": "qcache probes 4349 hits 302 cutoffs 272 stores 4077 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 42 hits 1 cutoffs 0 stores 42 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 22,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.034,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 216 researches 8"
+            },
+            {
+              "string": "see calls 20522"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 469 extensions 260 defenses 260 pruned 4236"
+            },
+            {
+              "string": "qcache probes 9940 hits 635 cutoffs 544 stores 9389 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 60 hits 3 cutoffs 0 stores 57 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 60 hits 3 cutoffs 0 stores 57 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 2,
+            "seldepth": 22,
+            "score": {
+              "pov": "black",
+              "relative": "+39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.034,
+            "pv": [
+              "c8f5",
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.049793099984526634
+        },
+        "candidate_full": {
+          "move_uci": "c8f5",
+          "depth": 2,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 2192,
+          "pv_uci": [
+            "c8f5",
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": false,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 19,
+              "score": {
+                "pov": "black",
+                "relative": "+42",
+                "white_cp": -42,
+                "white_mate": null
+              },
+              "nodes": 2192,
+              "time": 0.01,
+              "pv": [
+                "c8f5"
+              ]
+            },
+            {
+              "string": "pvs probes 39 researches 4"
+            },
+            {
+              "string": "see calls 4207"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 119 extensions 63 defenses 63 pruned 856"
+            },
+            {
+              "string": "qcache probes 2191 hits 135 cutoffs 115 stores 2076 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 21,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 4391,
+              "time": 0.018,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 122 researches 5"
+            },
+            {
+              "string": "see calls 8596"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 231 extensions 138 defenses 138 pruned 1597"
+            },
+            {
+              "string": "qcache probes 4349 hits 302 cutoffs 272 stores 4077 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 42 hits 1 cutoffs 0 stores 42 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 2,
+              "seldepth": 22,
+              "score": {
+                "pov": "black",
+                "relative": "+39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.04,
+              "pv": [
+                "c8f5",
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 216 researches 8"
+            },
+            {
+              "string": "see calls 20522"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 469 extensions 260 defenses 260 pruned 4236"
+            },
+            {
+              "string": "qcache probes 9940 hits 635 cutoffs 544 stores 9389 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 60 hits 3 cutoffs 0 stores 57 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 60 hits 3 cutoffs 0 stores 57 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 2,
+            "seldepth": 22,
+            "score": {
+              "pov": "black",
+              "relative": "+39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.04,
+            "pv": [
+              "c8f5",
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05673910002224147
+        }
+      },
+      "disabled_path_equal": true,
+      "full_incremental_equal": true,
+      "passed": false
+    },
+    {
+      "source": {
+        "name": "white_reply_after_Bf5",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history": [
+          "d2d4",
+          "d7d5",
+          "c2c4",
+          "d5c4",
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "e5d4",
+          "f1c4",
+          "b8c6",
+          "e1g1",
+          "g8f6",
+          "e4e5",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "a1a2",
+          "c8f5"
+        ],
+        "fen": "r2qkb1r/1pp2ppp/2n2n2/4Pb2/p1Bp4/P4N2/RP3PPP/1NBQ1RK1 w kq - 2 10",
+        "expected_move": "e5f6",
+        "partition": "exposed_development"
+      },
+      "searches": {
+        "baseline": {
+          "move_uci": "c1g5",
+          "depth": 1,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 2577,
+          "pv_uci": [
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 20,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 2577,
+              "time": 0.009,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 38 researches 1"
+            },
+            {
+              "string": "see calls 5129"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 110 extensions 77 defenses 77 pruned 853"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 1,
+              "seldepth": 21,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.032,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 143 researches 4"
+            },
+            {
+              "string": "see calls 20789"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 388 extensions 230 defenses 230 pruned 4360"
+            },
+            {
+              "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 1,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "relative": "-39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.032,
+            "pv": [
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.0482641999842599
+        },
+        "candidate_off": {
+          "move_uci": "c1g5",
+          "depth": 1,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 2577,
+          "pv_uci": [
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": false,
+            "UseTacticalThreatOrdering": false
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 20,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 2577,
+              "time": 0.009,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 38 researches 1"
+            },
+            {
+              "string": "see calls 5129"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 110 extensions 77 defenses 77 pruned 853"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 1,
+              "seldepth": 21,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.034,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 143 researches 4"
+            },
+            {
+              "string": "see calls 20789"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 388 extensions 230 defenses 230 pruned 4360"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 1,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "relative": "-39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.034,
+            "pv": [
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05200770002556965
+        },
+        "candidate": {
+          "move_uci": "c1g5",
+          "depth": 1,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 3732,
+          "pv_uci": [
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 20,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 3732,
+              "time": 0.012,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 38 researches 2"
+            },
+            {
+              "string": "see calls 7902"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 125 extensions 85 defenses 85 pruned 1408"
+            },
+            {
+              "string": "qcache probes 3731 hits 240 cutoffs 224 stores 3507 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 1 searches 1"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 1,
+              "seldepth": 21,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.034,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 143 researches 5"
+            },
+            {
+              "string": "see calls 21252"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 380 extensions 223 defenses 223 pruned 4387"
+            },
+            {
+              "string": "qcache probes 9971 hits 576 cutoffs 499 stores 9462 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 1 searches 1"
+            },
+            {
+              "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 1,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "relative": "-39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.034,
+            "pv": [
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05138789996271953
+        },
+        "candidate_full": {
+          "move_uci": "c1g5",
+          "depth": 1,
+          "white_cp": -39,
+          "completed_iteration": true,
+          "nodes": 10000,
+          "first_iteration_nodes": 3732,
+          "pv_uci": [
+            "c1g5"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": false,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 1,
+              "seldepth": 20,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 3732,
+              "time": 0.014,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 38 researches 2"
+            },
+            {
+              "string": "see calls 7902"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 125 extensions 85 defenses 85 pruned 1408"
+            },
+            {
+              "string": "qcache probes 3731 hits 240 cutoffs 224 stores 3507 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 1 searches 1"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+            },
+            {
+              "depth": 1,
+              "seldepth": 21,
+              "score": {
+                "pov": "white",
+                "relative": "-39",
+                "white_cp": -39,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.037,
+              "pv": [
+                "c1g5"
+              ]
+            },
+            {
+              "string": "pvs probes 143 researches 5"
+            },
+            {
+              "string": "see calls 21252"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 380 extensions 223 defenses 223 pruned 4387"
+            },
+            {
+              "string": "qcache probes 9971 hits 576 cutoffs 499 stores 9462 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 1 searches 1"
+            },
+            {
+              "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 29 hits 1 cutoffs 0 stores 27 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 1,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "relative": "-39",
+              "white_cp": -39,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.037,
+            "pv": [
+              "c1g5"
+            ]
+          },
+          "elapsed_seconds": 0.05347109999274835
+        }
+      },
+      "disabled_path_equal": true,
+      "full_incremental_equal": true,
+      "passed": false
+    },
+    {
+      "source": {
+        "name": "quiet_fork_after_exf6_Bxb1",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history": [
+          "d2d4",
+          "d7d5",
+          "c2c4",
+          "d5c4",
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "e5d4",
+          "f1c4",
+          "b8c6",
+          "e1g1",
+          "g8f6",
+          "e4e5",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "a1a2",
+          "c8f5",
+          "e5f6",
+          "f5b1"
+        ],
+        "fen": "r2qkb1r/1pp2ppp/2n2P2/8/p1Bp4/P4N2/RP3PPP/1bBQ1RK1 w kq - 0 11",
+        "expected_move": "f3g5",
+        "partition": "exposed_development"
+      },
+      "searches": {
+        "baseline": {
+          "move_uci": "f6g7",
+          "depth": 0,
+          "white_cp": -63,
+          "completed_iteration": false,
+          "nodes": 10000,
+          "first_iteration_nodes": null,
+          "pv_uci": [
+            "f6g7"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 0,
+              "seldepth": 23,
+              "score": {
+                "pov": "white",
+                "relative": "-63",
+                "white_cp": -63,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.035,
+              "pv": [
+                "f6g7"
+              ]
+            },
+            {
+              "string": "pvs probes 6 researches 1"
+            },
+            {
+              "string": "see calls 19350"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 251 extensions 211 defenses 211 pruned 3943"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 0,
+            "seldepth": 23,
+            "score": {
+              "pov": "white",
+              "relative": "-63",
+              "white_cp": -63,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.035,
+            "pv": [
+              "f6g7"
+            ]
+          },
+          "elapsed_seconds": 0.05027999996673316
+        },
+        "candidate_off": {
+          "move_uci": "f6g7",
+          "depth": 0,
+          "white_cp": -63,
+          "completed_iteration": false,
+          "nodes": 10000,
+          "first_iteration_nodes": null,
+          "pv_uci": [
+            "f6g7"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": false,
+            "UseTacticalThreatOrdering": false
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 0,
+              "seldepth": 23,
+              "score": {
+                "pov": "white",
+                "relative": "-63",
+                "white_cp": -63,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.03,
+              "pv": [
+                "f6g7"
+              ]
+            },
+            {
+              "string": "pvs probes 6 researches 1"
+            },
+            {
+              "string": "see calls 19350"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 251 extensions 211 defenses 211 pruned 3943"
+            },
+            {
+              "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+            },
+            {
+              "string": "rootthreat candidates 0 searches 0"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 0,
+            "seldepth": 23,
+            "score": {
+              "pov": "white",
+              "relative": "-63",
+              "white_cp": -63,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.03,
+            "pv": [
+              "f6g7"
+            ]
+          },
+          "elapsed_seconds": 0.05084420001367107
+        },
+        "candidate": {
+          "move_uci": "f6g7",
+          "depth": 0,
+          "white_cp": -63,
+          "completed_iteration": false,
+          "nodes": 10000,
+          "first_iteration_nodes": null,
+          "pv_uci": [
+            "f6g7"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": true,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 0,
+              "seldepth": 26,
+              "score": {
+                "pov": "white",
+                "relative": "-63",
+                "white_cp": -63,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.031,
+              "pv": [
+                "f6g7"
+              ]
+            },
+            {
+              "string": "pvs probes 8 researches 3"
+            },
+            {
+              "string": "see calls 18789"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 199 extensions 161 defenses 161 pruned 3983"
+            },
+            {
+              "string": "qcache probes 9999 hits 525 cutoffs 488 stores 9499 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 2 searches 2"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 0,
+            "seldepth": 26,
+            "score": {
+              "pov": "white",
+              "relative": "-63",
+              "white_cp": -63,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.031,
+            "pv": [
+              "f6g7"
+            ]
+          },
+          "elapsed_seconds": 0.05126060004113242
+        },
+        "candidate_full": {
+          "move_uci": "f6g7",
+          "depth": 0,
+          "white_cp": -63,
+          "completed_iteration": false,
+          "nodes": 10000,
+          "first_iteration_nodes": null,
+          "pv_uci": [
+            "f6g7"
+          ],
+          "options": {
+            "UseNeuralEvaluation": false,
+            "UseNNUEEvaluation": true,
+            "EvalFile": "<empty>",
+            "NeuralModelFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-head-repair\\attempt-001\\model.nnue",
+            "UseIncrementalNeuralEvaluation": false,
+            "Hash": 16,
+            "Move Overhead": 20,
+            "UsePositionalEvaluation": true,
+            "UseQuiescence": true,
+            "UseTranspositionTable": true,
+            "UseFastMoves": true,
+            "UseQuietMoveOrdering": true,
+            "UseQuiescenceChecks": true,
+            "PVS": true,
+            "UseSEE": true,
+            "UsePawnShield": true,
+            "UsePawnStructure": true,
+            "UseLMR": true,
+            "UseQuiescenceThreats": true,
+            "UseQuiescenceThreatCache": true,
+            "UseTacticalThreatOrdering": true
+          },
+          "score_packets": [
+            {
+              "string": "neural model checksum 17811711605016134112"
+            },
+            {
+              "depth": 0,
+              "seldepth": 26,
+              "score": {
+                "pov": "white",
+                "relative": "-63",
+                "white_cp": -63,
+                "white_mate": null
+              },
+              "nodes": 10000,
+              "time": 0.034,
+              "pv": [
+                "f6g7"
+              ]
+            },
+            {
+              "string": "pvs probes 8 researches 3"
+            },
+            {
+              "string": "see calls 18789"
+            },
+            {
+              "string": "lmr reductions 0 researches 0"
+            },
+            {
+              "string": "qthreat candidates 199 extensions 161 defenses 161 pruned 3983"
+            },
+            {
+              "string": "qcache probes 9999 hits 525 cutoffs 488 stores 9499 bytes 1048560"
+            },
+            {
+              "string": "rootthreat candidates 2 searches 2"
+            },
+            {
+              "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208"
+            }
+          ],
+          "raw_info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 0 allocations 1 reuses 0 clears 0 bytes 16777208",
+            "depth": 0,
+            "seldepth": 26,
+            "score": {
+              "pov": "white",
+              "relative": "-63",
+              "white_cp": -63,
+              "white_mate": null
+            },
+            "nodes": 10000,
+            "time": 0.034,
+            "pv": [
+              "f6g7"
+            ]
+          },
+          "elapsed_seconds": 0.05159369995817542
+        }
+      },
+      "disabled_path_equal": true,
+      "full_incremental_equal": true,
+      "passed": false
+    }
+  ],
+  "completed": true,
+  "native_searches": 12,
+  "native_mismatches": 0,
+  "critical_first_iteration_completed": false,
+  "critical_first_iteration_nodes": null,
+  "known_position_passed": false
+}
