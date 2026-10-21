@@ -14,6 +14,7 @@ import neural_stm as stm
 import neural_training as base
 import nnue_live_pairs as live
 import nnue_choice_pairs_tests as fixtures
+from prepare_nnue_head_repair import matched_support
 from prepare_neural_huber import sha
 
 
@@ -37,6 +38,12 @@ def live_pair(*, depth=2, history=(), partition='train', family='live-train', mo
 
 
 class LivePairTests(unittest.TestCase):
+    def test_collection_filter_rejects_valid_but_shorter_completed_prefix(self):
+        support = live_pair()['a']['support_receipt']
+        self.assertTrue(matched_support(support, 2))
+        support['last_completed_iteration']['depth'] = 1
+        self.assertFalse(matched_support(support, 2))
+
     def test_both_colors_variable_completed_depth_and_off_pv_shortcuts(self):
         for history in ([], ['a2a3']):
             for depth in (1, 2, 3):

@@ -86,7 +86,10 @@ def train(dataset, output, gate_plan):
     started = time.monotonic()
     fresh_gate = read(gate_plan)
     require(isinstance(fresh_gate, dict), 'Fresh gate plan must be a JSON object')
+    require(fresh_gate.get('warm_sha256') == WARM_SHA, 'Fresh gate must bind the current output-only warm')
     manifest, rows, data_hashes = load_bank(dataset)
+    require(manifest.get('live_warm_model', {}).get('sha256') == WARM_SHA,
+            'Live collection must bind this output-only warm')
     pairs, pair_hashes = load_pairs(dataset, rows, manifest)
     preservation_path = PRESERVATION_BANK / 'train.jsonl'
     preservation_manifest = read(PRESERVATION_BANK / 'manifest.json')
@@ -135,10 +138,12 @@ def train(dataset, output, gate_plan):
             and parity['new_binary_sha256'] == sha(engine) == fresh_gate['binary_sha256'],
             'Observer build must preserve the authenticated prior search behavior')
     sources = [Path(__file__), *[ROOT / 'scripts' / name for name in (
-        'neural_stm_output_only.py', 'nnue_live_pairs.py', 'prepare_nnue_head_repair.py', 'collect_live_choice.cpp', 'live_choice_support.hpp', 'build_live_choice.ps1', 'nnue_choice_pairs.py', 'prepare_nnue_choice.py', 'neural_stm_preservation_step.py', 'neural_stm_preservation.py', 'train_nnue_leaf.py', 'prepare_nnue_leaf.py', 'prepare_nnue_generalization.py', 'train_nnue_ordering.py', 'neural_stm_ordering.py', 'neural_stm.py', 'neural_precision.py', 'neural_training.py',
+        'neural_stm_output_only.py', 'nnue_live_pairs.py', 'prepare_nnue_head_repair.py', 'finalize_nnue_head_repair_cached.py', 'collect_live_choice.cpp', 'live_choice_support.hpp', 'choice_leaf_support.hpp', 'build_live_choice.ps1', 'nnue_choice_pairs.py', 'prepare_nnue_choice.py', 'neural_stm_preservation_step.py', 'neural_stm_preservation.py', 'train_nnue_leaf.py', 'prepare_nnue_leaf.py', 'prepare_nnue_generalization.py', 'train_nnue_ordering.py', 'neural_stm_ordering.py', 'neural_stm.py', 'neural_precision.py', 'neural_training.py',
         'neural_qat.py', 'train_nnue_diverse.py', 'train_nnue_loss_repair.py',
         'neural_stm_guarded.py', 'prepare_neural_huber.py', 'train_neural_stm.py')]]
-    inputs = sources + [gate_plan, blocked_path, roots_path, dataset / 'manifest.json', *[dataset / name for name in (*data_hashes, *pair_hashes)],
+    inputs = sources + [gate_plan, blocked_path, roots_path, dataset / 'manifest.json',
+                       dataset / 'protocol.json', dataset / 'assembly-receipt.json',
+                       *[dataset / name for name in (*data_hashes, *pair_hashes)],
                        preservation_path, PRESERVATION_BANK / 'manifest.json',
                        anchor_path, anchor_path.parent / 'manifest.json', WARM / 'float_weights.npz',
                        WARM / 'model.nnue', WARM / 'training.json', cached_path, old_engine, parity_path, engine, tester,

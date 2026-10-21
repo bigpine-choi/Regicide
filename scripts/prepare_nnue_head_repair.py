@@ -187,6 +187,13 @@ def _collector_call(collector, model, depth, entries, output, label):
     return receipts
 
 
+def matched_support(receipt, depth):
+    """A valid older prefix is insufficient for a requested matched horizon."""
+    complete = receipt.get('last_completed_iteration', {})
+    return (receipt.get('accepted') is True and receipt.get('depth_limit') == depth
+            and complete.get('depth') == depth and complete.get('stopped') is False)
+
+
 def collect(output):
     started = time.monotonic()
     protocol = read(output / 'protocol.json')
@@ -255,7 +262,8 @@ def collect(output):
     usable, children = [], []
     for pair in candidates:
         root = pair['root']
-        if not all(branches[root['query_id'] + '-' + side].get('accepted') for side in ('a', 'b')):
+        if not all(matched_support(branches[root['query_id'] + '-' + side], pair['depth_decision']['branch_depth'])
+                   for side in ('a', 'b')):
             exclusions['unproved_branch_pair'] += 1; continue
         usable.append(pair)
         for side in ('a', 'b'):
