@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T17:25:08.389Z",
+  "reviewer": "output_audit independent read-only source and receipt verification",
+  "source_head": "0a1447f626b0158a00a2c9142dff2933acdd57d5",
+  "passed": true,
+  "blocking_findings": [],
+  "outcome": "Output-only implementation and preservation guards are valid. Candidate improves score MSE but fails the prespecified fresh16 move-choice screen; comparison games0 and stable default unchanged.",
+  "claims": {
+    "architecture_unchanged": true,
+    "representation_frozen": true,
+    "loss_mse_unchanged": true,
+    "old_guards_retained": true,
+    "score_fit_improved": true,
+    "move_choice_improved": false,
+    "playing_strength_improvement_established": false,
+    "automatic_promotion": false
+  },
+  "source_review": {
+    "frozen_keys": [
+      "input_weights",
+      "hidden_bias",
+      "turn_weights"
+    ],
+    "trainable_keys": [
+      "output_weights"
+    ],
+    "frozen_parameters": 12320,
+    "trainable_parameters": 16,
+    "gradient": "Existing deployed-integer point MSE + gap MSE + 4*old-TRAIN warm-output preservation output-gradient slice; frozen derivatives are not formed.",
+    "active_gradient_norm_keys": [
+      "output_weights"
+    ],
+    "adam_moment_keys": [
+      "output_weights"
+    ],
+    "proposal_delta_keys": [
+      "output_weights"
+    ],
+    "guards": [
+      "Same seed20261020, output_lr0.005, batch128, clip10, family pair schedule",
+      "Same six-scale full-TRAIN deployed-integer objective nonincrease backtracking",
+      "Same original263 anchor MSE <= epoch-zero62230.90874524715, no anchor gradients or step-scale use",
+      "Same tuning-only point+gap MSE checkpoint selection, epoch-zero protection, patience5/every5epochs/minDelta1/best restore",
+      "Same oldTRAIN1426 frozen-warm-output MSE weight4; no heldout gradients",
+      "Fresh gate evaluated once only after accepted candidate/native validation seal; no retry or gate-driven refit/reselection"
+    ],
+    "frozen_audit": "Every actual proposal, epoch and validation evaluation checks frozen float dtype/shape/bytes and quantized tensors; wrapper repeats the check after saving and reloading both shadow and deployed model."
+  },
+  "preflight": {
+    "prior_peer_review_input_bindings_checked": 24,
+    "prior_peer_review_input_changes": 0,
+    "reserved_gate_plan_input_bindings_checked": 171,
+    "reserved_gate_plan_input_changes": 0,
+    "gate_was_unlabeled_and_unsearched_before_current_fit": true,
+    "original_gate_files_before_current_fit": 5,
+    "preserved_warm_sha256": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "canonical_data_manifest_sha256": "12eb5f7a96318b362a7fc91cc7a4b6c415614ffb415d71a3e1f7dae5e47e6134",
+    "canonical_data_point_rows": {
+      "train": 1520,
+      "tuning": 369,
+      "test": 69
+    },
+    "canonical_data_pair_rows": {
+      "train": 55,
+      "tuning": 24
+    },
+    "reviewer_data_loader_verifications": 1,
+    "point_file_sha256_checked": 3,
+    "pair_file_sha256_checked": 4,
+    "prior_extended_pv_exposure_proof": {
+      "reused_unchanged_hash_bound_receipt": true,
+      "replayed_or_recorded_features": 107096,
+      "gate_overlap": 0,
+      "repeat_inventory_scan_performed": false
+    },
+    "new_data_teacher_queries": 0,
+    "new_data_native_searches": 0
+  },
+  "independent_training_verification": {
+    "input_binding_counts": {
+      "overall_bindings": 26,
+      "training_bindings": 44,
+      "validation_bindings": 3,
+      "gate_seal_bindings": 11
+    },
+    "input_bindings_total": 84,
+    "metric_maximum_absolute_difference": 0,
+    "frozen_float_and_integer_12320": true,
+    "output_float_changed": 15,
+    "output_quantized_changed": 12,
+    "anchor": {
+      "warm": {
+        "mse_cp2": 62230.90874524715,
+        "mae_cp": 183.57794676806083,
+        "rmse_cp": 249.4612369592662
+      },
+      "ordering": {
+        "mse_cp2": 61507.89733840304,
+        "mae_cp": 182.26235741444867,
+        "rmse_cp": 248.00785741262925
+      }
+    },
+    "selected_epoch": 35,
+    "stopped_epoch": 60,
+    "eligible_checkpoints": 13,
+    "optimizer_steps": 960,
+    "frozen_proposal_checks": 960,
+    "actual_train_objective_nonincrease": true,
+    "pair_observed_exactly_once_each_epoch": true,
+    "training_seconds": 66.95821069995873,
+    "model_sha256": "4e100302474cc3861ee5ef2ec69a641dad0e08cc94c1b685f80c3bb2e8883700",
+    "reviewer_engine_teacher_fit_calls": 0
+  },
+  "native_validation": {
+    "execution": "Checked new actual-candidate hash-bound receipts; reviewer did not rerun native code",
+    "positions": 2078,
+    "special_positions": 46,
+    "python_full_incremental_mismatches": 0,
+    "model_test_summary": "13 groups, 25521 assertions, 0 failures",
+    "model_test_invocations": 1,
+    "old_collector72_assertions_rerun": false,
+    "old_parity36_cases_rerun": false
+  },
+  "independent_gate_verification": {
+    "gate_passed": false,
+    "exact_pairs": 16,
+    "native_searches": 32,
+    "root_teacher_queries": 16,
+    "child_teacher_queries": 17,
+    "all_input_receipt_bindings_verified": 206,
+    "teacher_receipts_verified": 33,
+    "legal_replay_lines": 81,
+    "legal_replay_plies": 724,
+    "warm_matches": 4,
+    "candidate_matches": 4,
+    "mean_mover_quality_gain_cp": -10.6875,
+    "regressions_at_least_200cp": 0,
+    "changed_moves": [
+      {
+        "root_id": "choice-gate-opening-30",
+        "warm": "f6g4",
+        "candidate": "c8f5",
+        "teacher": "f6e4",
+        "delta_cp": -171
+      }
+    ],
+    "same_moves": 15,
+    "match_games": 0,
+    "gate_consumed": true,
+    "teacher_labels_after_candidate_seal": true,
+    "gate_thresholds_changed": false,
+    "reviewer_engine_teacher_training_calls": 0
+  },
+  "execution_counts": {
+    "production_fits": 1,
+    "training_seconds": 66.95821069995873,
+    "output_optimizer_unit_test_invocations": 1,
+    "output_optimizer_unit_tests": 8,
+    "unit_tests_passed": 8,
+    "unit_test_receipt": "unit-tests.json",
+    "wrapper_ast_import_freeze_helper_smoke": 1,
+    "wrapper_smoke_engine_or_fit_calls": 0,
+    "actual_candidate_native_corpus_invocations": 1,
+    "actual_candidate_native_model_test_invocations": 1,
+    "root_teacher_invocations": 1,
+    "root_teacher_queries": 16,
+    "paired_native_gate_invocations": 1,
+    "paired_native_searches": 32,
+    "selected_child_teacher_invocations": 1,
+    "selected_child_teacher_queries": 17,
+    "additional_development_root_searches": 0,
+    "comparison_games": 0,
+    "extra_refit_or_seed_or_gate_retry": 0,
+    "reviewer_unit_tests_or_training_or_engines_or_teacher_invocations": 0,
+    "reviewer_metric_recomputation_passes": 1,
+    "reviewer_gate_receipt_replay_final_passes": 1,
+    "reviewer_gate_audit_note": "One initial read-only profile assertion was corrected to allow the intentionally different NeuralModelFile path; it did not change any engine, experiment, source, label or candidate."
+  },
+  "caveats": [
+    "Lower MSE does not establish improved move choice or Elo. The fresh screen retained4teacher-best matches and changed one move for -171root-mover CP.",
+    "The sixteen positions are now consumed development evidence; future fitting must not reuse them as an independent fresh gate.",
+    "The source opening families were previously observed. The withheld quiet-extended root and all legal child features were fresh under the recorded exposure inventory; this small screen is not an Elo trial.",
+    "Search-backed teacher root-child gaps remain fixed-minimax-support leaf surrogates, not separate Stockfish leaf labels. Collection depth3 with TT/PVS/LMR disabled differs from final default search.",
+    "The old69 point test positions were previously exposed; their post-save scores are descriptive and did not select the candidate."
+  ],
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\peer-review.json": "9fd8efd0a43707917f2029959a074859c5e7d95413f5952a27e8a0ab7023e797",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\manifest.json": "12eb5f7a96318b362a7fc91cc7a4b6c415614ffb415d71a3e1f7dae5e47e6134",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\assembly-receipt.json": "655f261d3ddfa7f1d74783b54c0db60f15dc23cfc39fb0bbd034177836f390f4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\plan.json": "197aa80799d927d425f60a9be02a24f01bf3b9eb234a0ecfb7fdd0d6a9ad101f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\frozen-roots.json": "80fb3270c38a6dfa4ce9b6d9b76b4e6d618bf85332ce1b92970dcac85394a303",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\blocked-features.json": "fe240910b8cefd407b0d0438d0d80e2560503527f4e4f79b9c206412af0d4062",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\label-started.json": "a94658876c9385bef29e512b2ff4064e7544eba8803154e41d3cbf6c988dd884",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\root-label-seal.json": "ad7c6fa119fe2475e3beb3725d01e70f446ffe64da07b342ca461d624d49c689",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\consumed-by-output-only.json": "a668419bd71492f467ba71b0307bb66982f6e178931b7663d2e93a2111b550c2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\protocol.json": "a8559db8a5a9badda9350e6aac2a06f6485796ae4846151a7813fa4391b2fd36",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\unit-tests.json": "615098b4a7585954a47a7197de31525ddb4b42649f3da4972f854410eee8bc18",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\model.nnue": "4e100302474cc3861ee5ef2ec69a641dad0e08cc94c1b685f80c3bb2e8883700",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\float_weights.npz": "d6710876e2d4ed2cf75d608cbb4fb8f95c7f16943a7362069064788c77dab27b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\protocol.json": "a90b8ca0636971a0b267d840197769fb15f75261e533d595ab5a00ae98c2bb6d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\training.json": "610eeeea892fbd8e39c0c989cc8e9c2a1042a61d7ee478380e4a23b395c5d86b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\selection.json": "3cb5bc2af463a6f6c250a725cb3882a1a55fa6ebe7b1976059c24ea4eb1d8686",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\validation.json": "fcfe9df4c5a4316e5a65709941a54b39aade9eedb53416a41292dc5682cce968",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\native-model-tests.txt": "38477007c64154fc2d029130ba2f2855e336d44bc71a5aab324b496f217d5966",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\gate-seal.json": "3eaa261f01e4c3e9fb04ec89d5a59c1cdb795d12eec30dff93278d1e6b792e67",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\move-choice-gate.json": "7c3d4b3f1145acc9dee40d1b544a56d71c078370b95ae01a0237fb98b11497d9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-output-only\\attempt-001\\screen-decision.json": "b9e5be9cd23e511cb154768b555764a7fe2ee4f1bbd7698db90122399a47b118"
+  }
+}
