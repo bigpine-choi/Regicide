@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T17:15:13.919Z",
+  "reviewer": "choice_gate independent read-only audit",
+  "passed": true,
+  "blocking_findings": [],
+  "scope": "Source review plus read-only receipt, replay, model metric, split and checkpoint verification; no additional engines or training",
+  "source_head": "635fec9d63c917980364cc9f6bd98b511895887f",
+  "correctness_separate_from_strength": true,
+  "outcome": "No accepted improvement: every post-training checkpoint violated the unchanged anchor guard, so epoch zero was restored; fresh16-position gate remains unmeasured, match0",
+  "source_review": {
+    "legacy_core_and_learning_sources_unchanged_from": "ffd095d75ea85503aa9101ec4a6eb17ae50240a3",
+    "source_diff_empty": true,
+    "native_support_proof": [
+      "Final completed depth3 full-window forced root search",
+      "TT/PVS/LMR disabled; no selective or TT score accepted",
+      "Actual static invocation path equals final PV with replayed full history and repetition context",
+      "Raw leaf CP equals full-refresh NNUE and backed root value in white perspective",
+      "Terminal, current/intended draw-adjusted, check, mate, clamped and unfinished supports excluded"
+    ],
+    "loss": "Same point teacher MSE + mean gap MSE (old direct-child pairs and new support surrogates together) + 4 * old TRAIN1426 frozen-warm-output MSE",
+    "guards_retained": [
+      "Unchanged NNUEv3 768piece+1turn hidden16 S32",
+      "Same Adam settings, seed, clipping and batch size",
+      "TRAIN-only deployed-integer nonincrease step backtracking",
+      "Original263 anchor MSE at or below epoch zero",
+      "Tuning-only selection, epoch-zero protection, early stopping, best restore",
+      "Fresh gate excluded from fitting/selection; one seed and one production fit"
+    ],
+    "surrogate_limit": "Root-child teacher value gaps are learned through fixed student minimax support leaf differences. These are not separate Stockfish labels at each leaf, and support branches may change after weights update."
+  },
+  "reservation": {
+    "freeze_before_collection_before_fit": true,
+    "gate_seal_hashes_unchanged": true,
+    "roots": 16,
+    "families": 16,
+    "canonical_root_and_all_legal_child_features": 604,
+    "quiet_extension_plies": 4,
+    "fallbacks_or_refills": 0,
+    "prior_inventory_extended_replay": {
+      "files": 184,
+      "position_contexts": 82032,
+      "root_fen_contexts": 425,
+      "root_wrapped_contexts": 141,
+      "pv_lines": 55703,
+      "pv_plies": 283202,
+      "replayed_or_recorded_features": 107096,
+      "gate_overlap": 0,
+      "invalid_pv_contexts": 0,
+      "performed_before_current_fit_or_gate": true,
+      "method": "Recursively bind fen/root_fen/source.fen/root.fen context, replay every pv/pv_uci; reserve's historical input set plus pre-fit current-choice JSON artifacts, excluding current gate directory and source snapshots"
+    },
+    "inventory_caveat": "The reused historical extractor does not bind all root_fen or root-wrapper PV contexts. The independent extended replay above checked these schemas too; none intersect the frozen604-feature block. No reservation/source/candidate was changed as a result."
+  },
+  "raw_collection": {
+    "roots": 64,
+    "accepted_root_teacher_queries": 64,
+    "accepted_child_teacher_queries": 80,
+    "default_searches": 64,
+    "forced_searches": 84,
+    "accepted_forced": 81,
+    "incomplete_forced": 3,
+    "all_recorded_new_probe_gate_overlap": 0,
+    "replayed_probe_features": 1549,
+    "teacher_budget_verified": {
+      "nodes": 100000,
+      "depth": 10
+    },
+    "no_additional_engines": true
+  },
+  "canonical_data": {
+    "historical_input_bindings": 23,
+    "source_hash_resolutions_valid": true,
+    "old_point_and_pair_bytes_unchanged": true,
+    "assembly_only_removed_train_duplicates": 3,
+    "new_native_queries_from_assembly": 0,
+    "new_teacher_queries_from_assembly": 0,
+    "new_training_runs_from_assembly": 0,
+    "point_rows": {
+      "test": 69,
+      "train": 1520,
+      "tuning": 369
+    },
+    "pairs": {
+      "train": {
+        "old_pairs": 26,
+        "new_pairs": 29,
+        "combined_pairs": 55,
+        "new_families": 21
+      },
+      "tuning": {
+        "old_pairs": 16,
+        "new_pairs": 8,
+        "combined_pairs": 24,
+        "new_families": 5
+      }
+    },
+    "all_features_by_split": {
+      "train": 2242,
+      "tuning": 574,
+      "test": 69
+    },
+    "all_families_by_split": {
+      "train": 54,
+      "tuning": 18,
+      "test": 14
+    },
+    "canonical_cross_split_overlap": 0,
+    "family_cross_split_overlap": 0,
+    "gate_overlap": 0
+  },
+  "training": {
+    "input_bindings": 43,
+    "metric_maximum_absolute_difference": 0,
+    "point_counts": {
+      "train": {
+        "unique": 1520,
+        "weighted": 2030
+      },
+      "tuning": {
+        "unique": 369,
+        "weighted": 609
+      },
+      "test": {
+        "unique": 69,
+        "weighted": 69
+      }
+    },
+    "metrics": {
+      "train": {
+        "raw": {
+          "mse_cp2": 57248.63552631579,
+          "mae_cp": 173.96315789473684,
+          "rmse_cp": 239.26687093351597
+        },
+        "weighted": {
+          "mse_cp2": 64785.137931034486,
+          "mae_cp": 183.99211822660098,
+          "rmse_cp": 254.52924769274452
+        },
+        "combined_pair_mse_cp2": 96026.18181818182
+      },
+      "tuning": {
+        "raw": {
+          "mse_cp2": 73647.23848238483,
+          "mae_cp": 202.57181571815718,
+          "rmse_cp": 271.38024703796117
+        },
+        "weighted": {
+          "mse_cp2": 88260.77011494253,
+          "mae_cp": 226.45484400656815,
+          "rmse_cp": 297.08714229152116
+        },
+        "combined_pair_mse_cp2": 53831.166666666664
+      },
+      "test": {
+        "raw": {
+          "mse_cp2": 104178.13043478261,
+          "mae_cp": 246.36231884057972,
+          "rmse_cp": 322.76637128855697
+        },
+        "weighted": {
+          "mse_cp2": 104178.13043478261,
+          "mae_cp": 246.36231884057972,
+          "rmse_cp": 322.76637128855697
+        }
+      }
+    },
+    "same_float_arrays_as_warm": true,
+    "same_integer_model_bytes_as_warm": true,
+    "selected_epoch": 0,
+    "stopped_epoch": 25,
+    "ineligible_post_training_checkpoints": 5,
+    "anchor_limit_cp2": 62230.90874524715,
+    "post_training_anchor_mse_cp2": [
+      62868.859315589354,
+      63130.737642585555,
+      63130.737642585555,
+      62923.43346007605,
+      62914.558935361216
+    ],
+    "optimizer_steps": 400,
+    "pairs_per_epoch": 55,
+    "training_runs": 1,
+    "training_seconds": 32.77696069999365,
+    "test_evaluations": 1,
+    "native_validation_receipt_positions": 2078,
+    "native_receipt_mismatches": 0,
+    "native_tests_receipt": "13 groups, 25521 assertions, 0 failures",
+    "gate_labels": 0,
+    "gate_searches": 0,
+    "match_games": 0,
+    "new_native_or_teacher_calls_by_reviewer": 0
+  },
+  "conditional_gate": {
+    "status": "Not measured; preserved unlabeled/unsearched",
+    "teacher_queries": 0,
+    "native_searches": 0,
+    "development_recheck_searches": 0,
+    "comparison_games": 0,
+    "retry_or_additional_fit": 0,
+    "criteria_relaxation": false,
+    "reason": "Final model bytes and shadow arrays equal warm, so no possible +2 teacher-match gain against itself under the deterministic frozen search"
+  },
+  "native_validation": {
+    "execution": "Checked existing hash-bound receipts only; reviewer did not rerun native code",
+    "model_positions": 2078,
+    "mismatches": 0,
+    "model_test_summary": "13 groups, 25521 assertions, 0 failures",
+    "collector_test_summary": "6 groups, 72 assertions, 0 failures"
+  },
+  "caveats": [
+    "An improved training objective or code path is not evidence of better move choice or Elo.",
+    "The old69 test positions were already exposed; they are not the independent fresh gate.",
+    "Canonical manifest inherited new_leaf_rows94/32, new_leaf_families24/8, native_seconds, actual_native_searches64 and observed_static_evaluations from the previous point dataset. Current work added0point rows and29/8backed pairs; current execution counts are raw_collection counts above.",
+    "Duplicate3 comparisons were removed during cached assembly before any fitting or gate inspection. Original collection and its original source snapshot remain unchanged; no engine or teacher was rerun."
+  ],
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\protocol.json": "fd81de5388faee6d09c30cae89568000034c5568ae90e57a8adc4eca06968cf0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\diagnosis.json": "45ecff19ef0c15504c2a54f3b9ad3c4c671a8cfd8b6d2d1cf717dc12b6259ef0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\native-choice-tests.txt": "2e25a364fb3e5cdc04826bcfc3494963a4ff732df68560577a4dfddd110cb9f5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\plan.json": "197aa80799d927d425f60a9be02a24f01bf3b9eb234a0ecfb7fdd0d6a9ad101f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\frozen-roots.json": "80fb3270c38a6dfa4ce9b6d9b76b4e6d618bf85332ce1b92970dcac85394a303",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\blocked-features.json": "fe240910b8cefd407b0d0438d0d80e2560503527f4e4f79b9c206412af0d4062",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-001\\protocol.json": "441b92681e32f29893b908b5926b9a855e7114a5e2f241ba983fdb03dd93e3bd",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-001\\manifest.json": "348864098b88d79897defafa4570e05e15e730e4354c8bca33dc7cc34d55b308",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-001\\root-teacher\\teacher-queries.jsonl": "34a8e2c04302defd3faa63a5a24fe07ed5069c9b27acadea3ec16b7615652810",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-001\\child-teacher\\teacher-queries.jsonl": "4f984eab2518ace3522ce089c0e4c203784ba83bac690b9d1525917d15b39f0e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-001\\branch-receipts.jsonl": "51bd49a019560c4733f64c6521ff76e2188f1bcab46b804027a56a2794972742",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\protocol.json": "5a9bc147d1569e89806a204fbfc9ca2fef9bf95be513568ff3b5f7f59cbe05ef",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\manifest.json": "12eb5f7a96318b362a7fc91cc7a4b6c415614ffb415d71a3e1f7dae5e47e6134",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\assembly-receipt.json": "655f261d3ddfa7f1d74783b54c0db60f15dc23cfc39fb0bbd034177836f390f4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\model.nnue": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\float_weights.npz": "cf6969db7f06bf6da0a368aa39d3ccf66eb3de2779514ae255daf810c38362f9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\initial-floats.npz": "cf6969db7f06bf6da0a368aa39d3ccf66eb3de2779514ae255daf810c38362f9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\protocol.json": "0fd21e8efcf51c6e165ab18b57f53ac57888c52bc886c04f67af9cab89d1ccde",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\training.json": "442bc4f4db16d411e50a89c442f4e34c53871f935dbd9e55ce529a7d88b04be3",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\selection.json": "b7a7c696abc0c1ec4dd76c01e065b27dbca6bf754d34b73e270e24b7c6bf4c80",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\validation.json": "b858ae5977addfe83d2286663fa5b4b3767ac7675f5bb079d794400411df9fab",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\native-model-tests.txt": "1f4cd5a23b0f2ceb8f2a2b33e4ec23818fdc38c3b5c9db405fd09a927d97d772",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\gate-seal.json": "83cdb23214678cc7378c4c24bff929e6f645c9a6f7bcfd58c1ae5676d435560f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\attempt-001\\screen-decision.json": "527b6662f044e1aa22c3fc994b8b786eb0786b7da3bb50182868dc81776a5d33"
+  }
+}
