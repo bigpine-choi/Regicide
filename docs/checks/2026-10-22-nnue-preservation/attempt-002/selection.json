@@ -1,0 +1,463 @@
+{
+  "anchor_limit_cp2": 62807.95437262357,
+  "anchor_policy": "MSE <= epoch-zero anchor MSE",
+  "anchor_used_in_gradients": false,
+  "eval_interval_epochs": 5,
+  "initial_validation": {
+    "anchor": {
+      "mae_cp": 183.91634980988593,
+      "mse_cp2": 62807.95437262357,
+      "rmse_cp": 250.61515192147417
+    },
+    "anchor_limit_cp2": 62807.95437262357,
+    "eligible": true,
+    "epoch": 0,
+    "mse_cp2": 151746.17333743843,
+    "objective_cp2": 151746.17333743843,
+    "pair": {
+      "mae_cp": 187.5625,
+      "mse_cp2": 62155.5625,
+      "pairs": 16,
+      "predicted_ties": 1,
+      "rmse_cp": 249.31017327818776,
+      "strict_order_matches": 5,
+      "target_ties": 0
+    },
+    "pair_weight": 1.0,
+    "point": {
+      "mae_cp": 227.60919540229884,
+      "mse_cp2": 89590.61083743842,
+      "rmse_cp": 299.31690703573435
+    },
+    "preservation_train": {
+      "integer_scores_changed": 0,
+      "mae_cp": 0.0,
+      "maximum_absolute_drift_cp": 0.0,
+      "mse_cp2": 0.0,
+      "positions": 1426,
+      "rmse_cp": 0.0
+    }
+  },
+  "integer_step_control": {
+    "acceptance": "First scale with finite objective <= current objective; otherwise skip",
+    "adam_moments_policy": "Update moments and optimizer step once per proposal, including skipped proposals; scale only the bounded parameter delta",
+    "anchor_used_for_step_scale": false,
+    "equal_objective_allowed": true,
+    "initial_train_objective_cp2": 247444.59636225842,
+    "last_train_objective_cp2": 235097.19765009376,
+    "objective": "Full TRAIN integer point MSE + all-pair gap MSE + preservation_weight*old-TRAIN warm-output MSE",
+    "scales": [
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625,
+      0.03125
+    ],
+    "total_proposals": 480,
+    "total_skipped": 341,
+    "total_trial_evaluations": 2377,
+    "validation_used_for_step_scale": false
+  },
+  "last_validation": {
+    "anchor": {
+      "mae_cp": 186.55133079847909,
+      "mse_cp2": 63741.01520912548,
+      "rmse_cp": 252.46983029487996
+    },
+    "anchor_limit_cp2": 62807.95437262357,
+    "eligible": false,
+    "epoch": 30,
+    "mse_cp2": 151301.07276272576,
+    "objective_cp2": 151301.07276272576,
+    "pair": {
+      "mae_cp": 187.0625,
+      "mse_cp2": 61710.3125,
+      "pairs": 16,
+      "predicted_ties": 0,
+      "rmse_cp": 248.41560438104528,
+      "strict_order_matches": 5,
+      "target_ties": 0
+    },
+    "pair_weight": 1.0,
+    "point": {
+      "mae_cp": 228.1592775041051,
+      "mse_cp2": 89590.76026272577,
+      "rmse_cp": 299.31715664613307
+    },
+    "preservation_train": {
+      "integer_scores_changed": 1388,
+      "mae_cp": 14.069424964936886,
+      "maximum_absolute_drift_cp": 84.0,
+      "mse_cp2": 320.8884992987377,
+      "positions": 1426,
+      "rmse_cp": 17.913360915772834
+    }
+  },
+  "loss": "mse",
+  "max_epochs": 500,
+  "min_delta_cp2": 1.0,
+  "mode": "validation_mse_early_stopping_with_anchor",
+  "objective": "held_out_integer_point_mse_plus_pair_gap_mse",
+  "observed_pairs_per_epoch": [
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26
+  ],
+  "optimizer_steps": 480,
+  "pair_batch_policy": "Shuffle each family and family order with the training seed; round-robin families, split across point batches; each pair once per epoch",
+  "pair_family_counts": {
+    "ab2-normal-001": 2,
+    "ab2-normal-002": 1,
+    "ab2-normal-012": 1,
+    "ab2-normal-016": 1,
+    "ab2-normal-017": 1,
+    "ab2-normal-021": 1,
+    "ab2-normal-022": 1,
+    "ab2-normal-024": 1,
+    "ab2-normal-027": 2,
+    "ab2-normal-029": 1,
+    "ab2-normal-032": 1,
+    "ab2-normal-036": 1,
+    "loss-pair-01": 2,
+    "loss-pair-02": 2,
+    "loss-pair-03": 2,
+    "loss-pair-04": 2,
+    "loss-pair-05": 2,
+    "loss-pair-06": 2
+  },
+  "pair_weight": 1.0,
+  "patience_evaluations": 5,
+  "preservation_inputs_verified_training_subset": true,
+  "preservation_targets": {
+    "batch_policy": "Full old-TRAIN preservation mean in every point/pair minibatch",
+    "positions": 1426,
+    "selected_drift": {
+      "integer_scores_changed": 1351,
+      "mae_cp": 9.987377279102384,
+      "maximum_absolute_drift_cp": 57.0,
+      "mse_cp2": 185.98316970546983,
+      "positions": 1426,
+      "rmse_cp": 13.637564654492746
+    },
+    "sha256_float64_le": "1f0bb1a7418e98758e6967ef8bf586ed37d313b6f5de01038de992687f5b032e",
+    "source": "Frozen epoch-zero deployed-integer white-CP outputs on old TRAIN inputs only"
+  },
+  "preservation_targets_used_in_selection": false,
+  "preservation_weight": 4.0,
+  "selected_epoch": 5,
+  "selected_validation": {
+    "anchor": {
+      "mae_cp": 183.57794676806083,
+      "mse_cp2": 62230.90874524715,
+      "rmse_cp": 249.4612369592662
+    },
+    "anchor_limit_cp2": 62807.95437262357,
+    "eligible": true,
+    "epoch": 5,
+    "mse_cp2": 149716.2076149425,
+    "objective_cp2": 149716.2076149425,
+    "pair": {
+      "mae_cp": 186.1875,
+      "mse_cp2": 61455.4375,
+      "pairs": 16,
+      "predicted_ties": 0,
+      "rmse_cp": 247.9020723995667,
+      "strict_order_matches": 6,
+      "target_ties": 0
+    },
+    "pair_weight": 1.0,
+    "point": {
+      "mae_cp": 226.45484400656815,
+      "mse_cp2": 88260.77011494253,
+      "rmse_cp": 297.08714229152116
+    },
+    "preservation_train": {
+      "integer_scores_changed": 1351,
+      "mae_cp": 9.987377279102384,
+      "maximum_absolute_drift_cp": 57.0,
+      "mse_cp2": 185.98316970546983,
+      "positions": 1426,
+      "rmse_cp": 13.637564654492746
+    }
+  },
+  "stop_reason": "patience_exhausted",
+  "stopped_early": true,
+  "stopped_epoch": 30,
+  "validation_evaluations": [
+    {
+      "anchor": {
+        "mae_cp": 183.91634980988593,
+        "mse_cp2": 62807.95437262357,
+        "rmse_cp": 250.61515192147417
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": true,
+      "epoch": 0,
+      "mse_cp2": 151746.17333743843,
+      "objective_cp2": 151746.17333743843,
+      "pair": {
+        "mae_cp": 187.5625,
+        "mse_cp2": 62155.5625,
+        "pairs": 16,
+        "predicted_ties": 1,
+        "rmse_cp": 249.31017327818776,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 227.60919540229884,
+        "mse_cp2": 89590.61083743842,
+        "rmse_cp": 299.31690703573435
+      },
+      "preservation_train": {
+        "integer_scores_changed": 0,
+        "mae_cp": 0.0,
+        "maximum_absolute_drift_cp": 0.0,
+        "mse_cp2": 0.0,
+        "positions": 1426,
+        "rmse_cp": 0.0
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 183.57794676806083,
+        "mse_cp2": 62230.90874524715,
+        "rmse_cp": 249.4612369592662
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": true,
+      "epoch": 5,
+      "mse_cp2": 149716.2076149425,
+      "objective_cp2": 149716.2076149425,
+      "pair": {
+        "mae_cp": 186.1875,
+        "mse_cp2": 61455.4375,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 247.9020723995667,
+        "strict_order_matches": 6,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 226.45484400656815,
+        "mse_cp2": 88260.77011494253,
+        "rmse_cp": 297.08714229152116
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1351,
+        "mae_cp": 9.987377279102384,
+        "maximum_absolute_drift_cp": 57.0,
+        "mse_cp2": 185.98316970546983,
+        "positions": 1426,
+        "rmse_cp": 13.637564654492746
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 184.34220532319392,
+        "mse_cp2": 62638.7072243346,
+        "rmse_cp": 250.2772607016758
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": true,
+      "epoch": 10,
+      "mse_cp2": 151781.88382594415,
+      "objective_cp2": 151781.88382594415,
+      "pair": {
+        "mae_cp": 187.125,
+        "mse_cp2": 62623.25,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 250.24637859517568,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 227.247947454844,
+        "mse_cp2": 89158.63382594417,
+        "rmse_cp": 298.59443033309276
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1396,
+        "mae_cp": 16.02945301542777,
+        "maximum_absolute_drift_cp": 77.0,
+        "mse_cp2": 399.0476858345021,
+        "positions": 1426,
+        "rmse_cp": 19.976177958621165
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 185.00380228136882,
+        "mse_cp2": 62937.4752851711,
+        "rmse_cp": 250.87342482848018
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": false,
+      "epoch": 15,
+      "mse_cp2": 151854.69817323482,
+      "objective_cp2": 151854.69817323482,
+      "pair": {
+        "mae_cp": 187.4375,
+        "mse_cp2": 62379.1875,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 249.75825812172857,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 228.68965517241378,
+        "mse_cp2": 89475.5106732348,
+        "rmse_cp": 299.1245738371136
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1383,
+        "mae_cp": 12.538569424964937,
+        "maximum_absolute_drift_cp": 81.0,
+        "mse_cp2": 267.2258064516129,
+        "positions": 1426,
+        "rmse_cp": 16.34704274331027
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 186.55133079847909,
+        "mse_cp2": 63741.01520912548,
+        "rmse_cp": 252.46983029487996
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": false,
+      "epoch": 20,
+      "mse_cp2": 151301.07276272576,
+      "objective_cp2": 151301.07276272576,
+      "pair": {
+        "mae_cp": 187.0625,
+        "mse_cp2": 61710.3125,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 248.41560438104528,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 228.1592775041051,
+        "mse_cp2": 89590.76026272577,
+        "rmse_cp": 299.31715664613307
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1388,
+        "mae_cp": 14.069424964936886,
+        "maximum_absolute_drift_cp": 84.0,
+        "mse_cp2": 320.8884992987377,
+        "positions": 1426,
+        "rmse_cp": 17.913360915772834
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 186.55133079847909,
+        "mse_cp2": 63741.01520912548,
+        "rmse_cp": 252.46983029487996
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": false,
+      "epoch": 25,
+      "mse_cp2": 151301.07276272576,
+      "objective_cp2": 151301.07276272576,
+      "pair": {
+        "mae_cp": 187.0625,
+        "mse_cp2": 61710.3125,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 248.41560438104528,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 228.1592775041051,
+        "mse_cp2": 89590.76026272577,
+        "rmse_cp": 299.31715664613307
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1388,
+        "mae_cp": 14.069424964936886,
+        "maximum_absolute_drift_cp": 84.0,
+        "mse_cp2": 320.8884992987377,
+        "positions": 1426,
+        "rmse_cp": 17.913360915772834
+      }
+    },
+    {
+      "anchor": {
+        "mae_cp": 186.55133079847909,
+        "mse_cp2": 63741.01520912548,
+        "rmse_cp": 252.46983029487996
+      },
+      "anchor_limit_cp2": 62807.95437262357,
+      "eligible": false,
+      "epoch": 30,
+      "mse_cp2": 151301.07276272576,
+      "objective_cp2": 151301.07276272576,
+      "pair": {
+        "mae_cp": 187.0625,
+        "mse_cp2": 61710.3125,
+        "pairs": 16,
+        "predicted_ties": 0,
+        "rmse_cp": 248.41560438104528,
+        "strict_order_matches": 5,
+        "target_ties": 0
+      },
+      "pair_weight": 1.0,
+      "point": {
+        "mae_cp": 228.1592775041051,
+        "mse_cp2": 89590.76026272577,
+        "rmse_cp": 299.31715664613307
+      },
+      "preservation_train": {
+        "integer_scores_changed": 1388,
+        "mae_cp": 14.069424964936886,
+        "maximum_absolute_drift_cp": 84.0,
+        "mse_cp2": 320.8884992987377,
+        "positions": 1426,
+        "rmse_cp": 17.913360915772834
+      }
+    }
+  ],
+  "validation_pairs_used_in_gradients": false,
+  "validation_used_in_gradients": false
+}
