@@ -1,0 +1,4192 @@
+{
+  "schema_version": 1,
+  "frozen_utc": "2026-10-21T08:42:48.366960+00:00",
+  "plan": {
+    "schema_version": 1,
+    "id": "m2-formal-20261021-v1",
+    "phase": "formal-m2",
+    "preregistered_utc": "2026-10-21T08:37:43.896567+00:00",
+    "candidates": [
+      {
+        "path": "../../config/engine-profiles/classical.json",
+        "sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2"
+      },
+      {
+        "path": "../../config/engine-profiles/residual-v2.json",
+        "sha256": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0"
+      },
+      {
+        "path": "../../config/engine-profiles/nnue-s32.json",
+        "sha256": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1"
+      }
+    ],
+    "opponents": [
+      {
+        "path": "../../build-m2-opponents/profiles/stockfish18.json",
+        "sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090"
+      },
+      {
+        "path": "../../build-m2-opponents/profiles/sunfish.json",
+        "sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3"
+      }
+    ],
+    "openings": {
+      "path": "../../tests/data/m2_formal_openings_2026-10-21.json",
+      "sha256": "1994d67709942de642b0e577ded78e382195df260b806117edc8aa774e454edd"
+    },
+    "preflight_openings": {
+      "path": "../../tests/data/m2_preflight_openings_2026-10-21.json",
+      "sha256": "1e6b08b689701e95c34adc8809cf1a104d12413c8ad02c02461de1ef2a6817b8"
+    },
+    "preflight_opening_count": 1,
+    "movetimes_ms": [
+      100,
+      1000
+    ],
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "lane_affinity_masks": [
+      15,
+      240,
+      3840,
+      61440
+    ],
+    "topology": {
+      "physical_core_masks": [
+        3,
+        12,
+        48,
+        192,
+        768,
+        3072,
+        12288,
+        49152
+      ],
+      "logical_cpus": 16,
+      "scope": "Single Windows processor group, physical-core affinity masks."
+    },
+    "load_policy": {
+      "interval_seconds": 0.5,
+      "max_sample_gap_seconds": 2.0,
+      "max_nonworker_cpu_fraction": 0.2,
+      "host_window_seconds": 2.0
+    },
+    "idle_probe_seconds": 5.0,
+    "move_deadline": {
+      "multiplier": 2.0,
+      "slack_seconds": 0.25
+    },
+    "cell_timeout_seconds": 1500,
+    "preflight_timeout_seconds": 1800,
+    "main_timeout_seconds": 14400,
+    "retry_policy": "no-result-based-retries-stop-on-first-failure",
+    "statistics": {
+      "method": "descriptive-paired-colors-preserving-broad-cluster-percentile-bootstrap",
+      "seed": 2026102101,
+      "resamples": 20000,
+      "interval": [
+        0.025,
+        0.975
+      ],
+      "minimum_clusters": 2,
+      "elo_estimate": null,
+      "promotion_rule": null
+    },
+    "preregistration_artifacts": [
+      {
+        "path": "2026-10-21-m2-formal-plan.md",
+        "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/exclusion-audit.json",
+        "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/exposure-index.json.gz",
+        "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/test-report.json",
+        "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/hardware.json",
+        "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/native-before.json",
+        "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+      },
+      {
+        "path": "../checks/2026-10-21-m2-formal/openings/test-report-final.json",
+        "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+      }
+    ],
+    "scope": [
+      "768 main games, 24 distinct preflight games; preflight results are not pooled.",
+      "Three M1 profiles unchanged; H100 candidates excluded from the M2 baseline.",
+      "Four physical-core-disjoint lanes, identical conditions balanced across lanes.",
+      "Known external engine CPU and sampled rolling nonworker host CPU guarded. No complete OS/power/thermal isolation claim.",
+      "Authored new parents checked against declared inventory; historical supplemental PV extraction has documented limitations.",
+      "First failure stops the entire phase. No result-adaptive retries, selection, extra games or default promotion."
+    ],
+    "worker_runtime": {
+      "executable": {
+        "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+      },
+      "pythonpath": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages",
+      "package_files": [
+        {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\__init__.py",
+          "sha256": "1fde6a8e932508d14b31f6a584497b49c2969fc3c7cdc675347f819f0d667a5b"
+        },
+        {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\engine.py",
+          "sha256": "40a1407749ea43b4ed3174f0603e0316a9c971b8943113fbea5be47c82bde22b"
+        }
+      ],
+      "python_version": "3.13.16",
+      "chess_version": "1.11.2"
+    }
+  },
+  "source_plan_sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb",
+  "source_plan_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\experiments\\2026-10-21-m2-formal-plan.json",
+  "profiles": {
+    "regicide-classical-m1": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\profiles\\regicide-classical-m1\\profile.json",
+      "sha256": "8fc0a382475095914310a867c7f21947d2dc78da638b940a33933a9daa0f020b"
+    },
+    "regicide-residual-v2-quality-attempt4": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\profiles\\regicide-residual-v2-quality-attempt4\\profile.json",
+      "sha256": "86e9c1a6cf8906415330422ac68da321500698cec2676873498a1e108b9a67f7"
+    },
+    "regicide-nnue-s32-precision-20261019": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\profiles\\regicide-nnue-s32-precision-20261019\\profile.json",
+      "sha256": "2ba43eeb63cde02db0393fba478e98ad3a8bbe4878de092a47a164caa4371a8e"
+    },
+    "stockfish18-x86-64": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\profiles\\stockfish18-x86-64\\profile.json",
+      "sha256": "4757c4c063ea6313fb941d8674b589618374f4b86ced0cae68cd8e9e2459c2ea"
+    },
+    "sunfish-e396948-cpython313": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\profiles\\sunfish-e396948-cpython313\\profile.json",
+      "sha256": "c2588ea646279465bf7f99d8b2cfc4020c454e3054015cc37bf6feb1671caad9"
+    }
+  },
+  "harness_source_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal.py": "70b1921f1eba798197a469ce672ab0555c5e2d4c7d586603d2d6b8eeafa4c97e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_load_guard.py": "e82b414a177f9506e069bf9cadedc9e610aa5bc046b580157a66d2233a9b26f4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\external_baseline_matrix.py": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\engine_profile.py": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\m2_formal_summary.py": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea"
+  },
+  "banks": {
+    "preflight": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preflight-openings.json",
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e"
+    },
+    "main": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\main-openings.json",
+      "sha256": "8b98ffd73ca4717ddb4ce0f903f53827a6ed2963cb93994778fe7ca7b20052fa"
+    }
+  },
+  "cells": {
+    "preflight": [
+      {
+        "id": "preflight-0001",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0002",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0003",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0004",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0005",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0006",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0007",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0008",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0009",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0010",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0011",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      },
+      {
+        "id": "preflight-0012",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-preflight-preflight-king-fianchetto-20261021",
+        "cluster_id": "preflight-indian-g6"
+      }
+    ],
+    "main": [
+      {
+        "id": "main-0001",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0002",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0003",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0004",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0005",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0006",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0007",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0008",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0009",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0010",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0011",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0012",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0013",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0014",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0015",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0016",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0017",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0018",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0019",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0020",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0021",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0022",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0023",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0024",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0025",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0026",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0027",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0028",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0029",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0030",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0031",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0032",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0033",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0034",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0035",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0036",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0037",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0038",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0039",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0040",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0041",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0042",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0043",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0044",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0045",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0046",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0047",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0048",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0049",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0050",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0051",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0052",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0053",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0054",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0055",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0056",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0057",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0058",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0059",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0060",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0061",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0062",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0063",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0064",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0065",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0066",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0067",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0068",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0069",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0070",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0071",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0072",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0073",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0074",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0075",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0076",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0077",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0078",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0079",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0080",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0081",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0082",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0083",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0084",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0085",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0086",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0087",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0088",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0089",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0090",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0091",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0092",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0093",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0094",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0095",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0096",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0097",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0098",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0099",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0100",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0101",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0102",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0103",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0104",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0105",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0106",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0107",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0108",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0109",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0110",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0111",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0112",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0113",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0114",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0115",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0116",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0117",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0118",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0119",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0120",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0121",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0122",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0123",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0124",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0125",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0126",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0127",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0128",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0129",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0130",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0131",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0132",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0133",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0134",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0135",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0136",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0137",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0138",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0139",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0140",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0141",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0142",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0143",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0144",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0145",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0146",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0147",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0148",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0149",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0150",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0151",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0152",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0153",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0154",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0155",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0156",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0157",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0158",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0159",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0160",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0161",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0162",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0163",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0164",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0165",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0166",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0167",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0168",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0169",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0170",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0171",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0172",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0173",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0174",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0175",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0176",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0177",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0178",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0179",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0180",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0181",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0182",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0183",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0184",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0185",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0186",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0187",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0188",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0189",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0190",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0191",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0192",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 100,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0193",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0194",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0195",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0196",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0197",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0198",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 0,
+        "family_id": "m2-formal-bishop-c6-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0199",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0200",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0201",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0202",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0203",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0204",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 1,
+        "family_id": "m2-formal-center-queen-retreat-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0205",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0206",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0207",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0208",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0209",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0210",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 2,
+        "family_id": "m2-formal-semi-slav-e3-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0211",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0212",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0213",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0214",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0215",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0216",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 3,
+        "family_id": "m2-formal-sicilian-c3-queen-center-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0217",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0218",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0219",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0220",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0221",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0222",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 4,
+        "family_id": "m2-formal-french-tarrasch-bishop-first-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0223",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0224",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0225",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0226",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0227",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0228",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 5,
+        "family_id": "m2-formal-caro-f3-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0229",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0230",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0231",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0232",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0233",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0234",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 6,
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0235",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0236",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0237",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0238",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0239",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0240",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 7,
+        "family_id": "m2-formal-slav-exchanged-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0241",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0242",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0243",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0244",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0245",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0246",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 8,
+        "family_id": "m2-formal-alekhine-c-pawn-space-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0247",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0248",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0249",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0250",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0251",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0252",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 9,
+        "family_id": "m2-formal-french-rubinstein-knight-exchange-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0253",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0254",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0255",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0256",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0257",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0258",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 10,
+        "family_id": "m2-formal-spanish-berlin-d3-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0259",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0260",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0261",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0262",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0263",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0264",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 11,
+        "family_id": "m2-formal-spanish-black-fianchetto-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0265",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0266",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0267",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0268",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0269",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0270",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 12,
+        "family_id": "m2-formal-sicilian-rossolimo-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0271",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0272",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0273",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0274",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0275",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0276",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 13,
+        "family_id": "m2-formal-modern-queenside-castling-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0277",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0278",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0279",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0280",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0281",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0282",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 14,
+        "family_id": "m2-formal-caro-panov-isolated-center-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0283",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0284",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0285",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0286",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0287",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0288",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 15,
+        "family_id": "m2-formal-ponziani-supported-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0289",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0290",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0291",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0292",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0293",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0294",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 16,
+        "family_id": "m2-formal-queen-gambit-bishop-first-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0295",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0296",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0297",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0298",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0299",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0300",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 17,
+        "family_id": "m2-formal-four-knights-bishop-pin-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0301",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0302",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0303",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0304",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0305",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0306",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 18,
+        "family_id": "m2-formal-caro-two-knights-bishop-exchange-20261021",
+        "cluster_id": "caro-kann"
+      },
+      {
+        "id": "main-0307",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0308",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0309",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0310",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0311",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0312",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 19,
+        "family_id": "m2-formal-scandinavian-knight-recapture-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0313",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0314",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0315",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0316",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0317",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0318",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 20,
+        "family_id": "m2-formal-vienna-developed-bishops-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0319",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0320",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0321",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0322",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0323",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0324",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 21,
+        "family_id": "m2-formal-chigorin-queen-center-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0325",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0326",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0327",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0328",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0329",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0330",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 22,
+        "family_id": "m2-formal-kings-gambit-center-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0331",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0332",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0333",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0334",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0335",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0336",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 23,
+        "family_id": "m2-formal-italian-two-knights-quiet-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0337",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0338",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0339",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0340",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0341",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0342",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 24,
+        "family_id": "m2-formal-french-exchanged-center-20261021",
+        "cluster_id": "french"
+      },
+      {
+        "id": "main-0343",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0344",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0345",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0346",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0347",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0348",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 25,
+        "family_id": "m2-formal-queen-gambit-tarrasch-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0349",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0350",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0351",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0352",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0353",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0354",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 26,
+        "family_id": "m2-formal-philidor-open-d-file-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0355",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0356",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0357",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0358",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0359",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0360",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 27,
+        "family_id": "m2-formal-petroff-central-knights-20261021",
+        "cluster_id": "open-e4-e5"
+      },
+      {
+        "id": "main-0361",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0362",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0363",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0364",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0365",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0366",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 28,
+        "family_id": "m2-formal-owen-bishop-pressure-20261021",
+        "cluster_id": "other-e4-defense"
+      },
+      {
+        "id": "main-0367",
+        "lane": 3,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0368",
+        "lane": 3,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0369",
+        "lane": 3,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0370",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0371",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0372",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 29,
+        "family_id": "m2-formal-nimzo-a3-doubled-pawns-20261021",
+        "cluster_id": "indian-e6"
+      },
+      {
+        "id": "main-0373",
+        "lane": 0,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0374",
+        "lane": 0,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0375",
+        "lane": 0,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0376",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0377",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0378",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 30,
+        "family_id": "m2-formal-queen-gambit-accepted-e4-20261021",
+        "cluster_id": "queen-pawn-d5"
+      },
+      {
+        "id": "main-0379",
+        "lane": 1,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0380",
+        "lane": 1,
+        "candidate": "regicide-classical-m1",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0381",
+        "lane": 1,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "stockfish18-x86-64",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0382",
+        "lane": 2,
+        "candidate": "regicide-classical-m1",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0383",
+        "lane": 2,
+        "candidate": "regicide-residual-v2-quality-attempt4",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      },
+      {
+        "id": "main-0384",
+        "lane": 2,
+        "candidate": "regicide-nnue-s32-precision-20261019",
+        "opponent": "sunfish-e396948-cpython313",
+        "movetime_ms": 1000,
+        "opening_index": 31,
+        "family_id": "m2-formal-sicilian-moscow-20261021",
+        "cluster_id": "sicilian"
+      }
+    ]
+  },
+  "preregistration_artifacts": [
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-00-2026-10-21-m2-formal-plan.md",
+      "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-01-exclusion-audit.json",
+      "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-02-exposure-index.json.gz",
+      "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-03-test-report.json",
+      "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-04-hardware.json",
+      "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-05-native-before.json",
+      "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+    },
+    {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-formal\\attempt-001\\preregistration-06-test-report-final.json",
+      "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+    }
+  ]
+}

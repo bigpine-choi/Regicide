@@ -161,7 +161,7 @@ class FormalTests(unittest.TestCase):
         self.frozen['plan'].update(topology={},load_policy={'max_nonworker_cpu_fraction':.2},preflight_timeout_seconds=10)
         with patch.object(formal,'verify_frozen',return_value=(self.frozen,self.profiles)), \
              patch.object(formal,'topology',return_value={}), \
-             patch('m2_load_guard.M2LoadGuard',side_effect=OSError('access denied')), \
+             patch('m2_load_guard.GuardMonitor',side_effect=OSError('access denied')), \
              patch.object(formal.subprocess,'Popen') as popen:
             report=formal.run_phase(self.directory,'preflight')
         self.assertEqual(report['status'],'STOPPED')

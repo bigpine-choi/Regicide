@@ -1,0 +1,30 @@
+{
+  "preflight_attempts": [
+    {
+      "attempt": "attempt-001",
+      "status": "STOPPED",
+      "completed_games": 0,
+      "scheduled_games": 24,
+      "main_started": false,
+      "failure": {
+        "kind": "external_cpu",
+        "reason": "external known engine consumed CPU",
+        "utc": "2026-10-21T08:43:01.157313+00:00"
+      }
+    },
+    {
+      "attempt": "attempt-002",
+      "status": "STOPPED",
+      "completed_games": 0,
+      "scheduled_games": 24,
+      "main_started": false,
+      "failure": {
+        "kind": "sampling_gap",
+        "reason": "sample duration or sampling gap exceeded its declared bound",
+        "utc": "2026-10-21T08:44:53.354869+00:00"
+      }
+    }
+  ],
+  "attempt001_resolution": "User explicitly chose to close the live game themselves. A fresh native process inventory verified no known chess engine remained before attempt002.",
+  "attempt002_resolution": "Preserve strict 2 second bound. Decouple sampling from synchronous hash/replay orchestration using a synchronized background timer. No threshold change or scored-game selection."
+}

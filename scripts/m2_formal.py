@@ -437,8 +437,7 @@ def audit_cell(directory, frozen, profiles, cell):
 
 
 def run_phase(directory, phase):
-    from m2_load_guard import LoadPolicy, M2LoadGuard
-    from see_clean_guard import WindowsProcesses
+    from m2_load_guard import LoadPolicy, GuardMonitor
     directory = Path(directory).resolve()
     frozen, profiles = verify_frozen(directory)
     if topology() != frozen['plan']['topology']:
@@ -459,16 +458,16 @@ def run_phase(directory, phase):
         'runtime': {'python': platform.python_version(), 'chess': chess.__version__, 'platform': platform.platform()}}
     write_json(target/'report.json', report)
     policy = LoadPolicy(**frozen['plan']['load_policy'])
-    guard, identity_provider, job = None, None, None
+    guard, job = None, None
     active, lane_progress = {}, [0]*4
     queues = [[(i,c) for i,c in enumerate(frozen['cells'][phase]) if c['lane']==lane] for lane in range(4)]
     started, next_verify = time.monotonic(), time.monotonic()
     budget = frozen['plan'][phase+'_timeout_seconds']
     try:
-        guard = M2LoadGuard(target/'load.jsonl', policy)
-        identity_provider = WindowsProcesses()
+        guard = GuardMonitor(target/'load.jsonl', policy)
         job=OwnedJob()
         guard.require_idle(frozen['plan']['idle_probe_seconds'])
+        guard.start_timer()
         while any(lane_progress[lane] < len(queues[lane]) for lane in range(4)) or active:
             if time.monotonic()-started > budget:
                 raise TimeoutError('preregistered phase wall budget exhausted')
@@ -511,10 +510,9 @@ def run_phase(directory, phase):
                 active[lane] = (process, index, cell, time.monotonic(), log)
                 job.assign(process)
                 report['launched_cells'].append(dict(cell, pid=process.pid, command=command))
-                measured = identity_provider.times(type('Process', (), {'pid': process.pid, 'parent_pid': os.getpid(), 'name': 'python.exe'})())
-                if measured.error or measured.creation_ticks is None:
-                    raise ValueError('could not establish worker creation identity')
-                guard.attach_worker(process.pid, measured.creation_ticks)
+                identity=guard.identify_worker(process.pid)
+                report['launched_cells'][-1]['creation_ticks']=identity[1]
+                guard.attach_worker(*identity)
                 write_json(start_gate,{'worker_pid':process.pid,'frozen_plan_sha256':sha256(directory/'frozen-plan.json')})
             guard.sample('running')
             guard.assert_clean()
@@ -543,8 +541,6 @@ def run_phase(directory, phase):
             except Exception as error:
                 report['status'], report['valid_for_comparison'] = 'STOPPED', False
                 report.setdefault('stop_reason', f'Final guard check failed: {error}')
-        if identity_provider is not None:
-            identity_provider.close()
         write_json(target/'load-summary.json', guard.summary if guard is not None else
             {'valid_for_load_check':False,'failure':{'kind':'initialization','reason':report.get('stop_reason')}})
         report['guard_summary_sha256'] = sha256(target/'load-summary.json')

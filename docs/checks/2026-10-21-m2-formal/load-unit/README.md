@@ -53,3 +53,58 @@ stability, or isolation from unknown/transient work between samples. The host
 fraction includes this monitor and other nonworker development tools. They do
 not establish engine speed or playing strength. The native probes ran before
 the formal match, after the preparation training workload had stopped.
+
+## Timer follow-up
+
+The actual formal preflight's attempt 002 stopped with zero completed games
+after a 2.0156-second sampling gap. The runner's foreground hashing/auditing
+had delayed manual polling. Its failure evidence remains separate and invalid.
+The declared 2-second maximum gap has not been increased.
+
+`GuardMonitor` now wraps the existing guard with a shared reentrant lock and a
+background sampling timer started after the idle preflight. Worker identity,
+attach/detach, manual samples, timer samples and assertions are serialized.
+The timer runs while the runner hashes or replays evidence. Thread-start,
+sampling, lock-acquisition and bounded-shutdown failures invalidate the result.
+A stuck native query retains its own handles until it returns, when its thread
+does deferred cleanup; another thread does not close a handle being queried.
+The summary adds `timer` state and the log adds timer lifecycle events.
+
+One narrow calculation boundary was also fixed: adjacent manual/timer samples
+may read the same quantized Windows CPU counters. Their zero-CPU interval now
+preserves wall-time coverage in the rolling window. It contributes zero CPU
+ticks to the fraction. A counter that stalls for a full sampling interval still
+fails closed. The regression shows repeated 10ms zero-delta intervals keep the
+full 2-second window ready and reject a 0.30 nonworker fraction.
+
+Wrapper unit attempt 003 passed **32 tests**: the original 24, seven real-thread
+or lifecycle tests, and the quantized-counter regression. It includes a runner
+that makes no polling calls for 2.3 seconds while the timer continues sampling,
+inflight registration serialization, live query/init/start/close failures, and
+bounded stop with deferred cleanup. Attempt 002's initial thread test failed
+because its test policy allowed exactly 0.5 seconds, leaving no scheduling
+overhead for its own 0.5-second idle sleep. That fixture now uses a 1-second
+bound; the formal policy remains 2 seconds. Both test attempts are preserved.
+
+An independent review then identified that a foreground manual sample could
+itself get stuck in a native query, preventing the runner from reaching its
+cleanup even while the timer reported a failure. After timer startup, all
+native sample/identify/attach/detach operations now execute in the sampler's
+request queue. The caller has the declared bounded response wait. A timeout
+returns control to the runner for its owned-Job cleanup and invalid report;
+the sampler keeps ownership of any outstanding query's handles. Assertions
+also use the serialized queue. The timer still checks its scheduled deadline
+between requests, so foreground hashing/auditing does not set its cadence.
+
+Actor unit attempts 004 and 005 passed **33 tests**, including a main-requested
+query that hangs before the first timer deadline. The test verifies the query
+runs on `M2LoadGuard`, the caller gets a bounded timeout, and final handles are
+closed safely after the query is released. Attempt 005 is the final source
+(`7e88a1e4...`) and test (`238c6c0a...`) receipt. Failed and intermediate attempts
+remain preserved. The initial idle preflight still uses the existing
+synchronous implementation before any workers exist; bounded native response
+during that pre-worker phase is outside this wrapper's current guarantee.
+
+The earlier native attempts above certify their recorded pre-wrapper source
+hash only. The coordinator records the new wrapper's native smoke separately;
+the earlier passes are not presented as native validation of later code.

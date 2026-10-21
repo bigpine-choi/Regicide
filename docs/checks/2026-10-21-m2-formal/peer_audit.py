@@ -173,6 +173,13 @@ def invocation(cell_dir, cell, candidate, opponent, plan, frozen, launched, phas
           and worker[3:] == ['worker', '--directory', str(directory), '--phase', phase, '--index', str(index),
                              '--start-gate', str(gate_path)], 'Worker command differs from scheduled cell')
     check(sha(worker[0]) == runtime['executable']['sha256'], 'Actual worker executable leaves frozen runtime binding')
+    check(Path(item['runtime_executable']).resolve() == Path(runtime['executable']['path']).resolve()
+          and item['runtime_sha256'] == runtime['executable']['sha256']
+          and item['python_version'] == runtime['python_version'] and item['chess_version'] == runtime['chess_version']
+          and type(item['no_user_site']) is int and item['no_user_site'] == 1,
+          'Worker runtime self-report differs from frozen executable/version/flags')
+    check(item['environment'] == {'PYTHONPATH': runtime['pythonpath'], 'PYTHONNOUSERSITE': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
+          'Worker environment self-report differs from frozen bindings')
     command = item['comparison_arguments']
     check(command[:2] == [opponent['command'][0], candidate['command'][0]] and len(command) == 20, 'Comparison command differs')
     arguments = dict(zip(command[2::2], command[3::2], strict=True))
@@ -240,6 +247,7 @@ def guard_records(target, plan, report):
     intervals, external_identities = deque(), set()
     ready_windows, underflow_windows, idle_start, idle_end = 0, 0, None, None
     worker_events, phase_events = [], Counter()
+    timer_started = timer_stopped = False
     previous_utc = None
     with path.open(encoding='utf-8') as stream:
         for number, text in enumerate(stream, 1):
@@ -253,12 +261,22 @@ def guard_records(target, plan, report):
                 check(event == 'policy' and row['policy'] == policy and row['monitor_pid'] == summary['monitor_pid']
                       and row['cpu_ticks_per_second'] == 10000000 and row['platform'] == 'win32', 'Missing native policy header')
                 continue
+            if event == 'timer_started':
+                check(not timer_started and not active and row['interval_seconds'] == policy['interval_seconds']
+                      and row['join_bound_seconds'] == policy['max_sample_gap_seconds'], 'Timer startup differs from frozen policy')
+                timer_started = True
+                continue
+            if event == 'timer_stopped':
+                check(timer_started and not timer_stopped and row['timer_samples'] == phase_events['timer'], 'Timer stop counter differs')
+                timer_stopped = True
+                continue
             if event == 'attach':
                 root = tuple(row['identity'])
                 check(len(root) == 2 and all(type(v) is int and v > 0 for v in root)
                       and root[0] not in active and root not in attached, 'Duplicate/invalid worker attach')
                 check(idle_end is not None and idle_end - idle_start >= plan['idle_probe_seconds'] - .01,
                       'Worker attached before complete sampled idle window')
+                check(timer_started and not timer_stopped, 'Worker attached without active sampler timer')
                 active[root[0]], known[root], attached[root] = root, root, row['utc']
                 worker_events.append(('attach', root, row['utc']))
                 continue
@@ -279,6 +297,8 @@ def guard_records(target, plan, report):
             end += gap
             max_gap, max_duration = max(max_gap, gap), max(max_duration, duration)
             phase_events[row['phase']] += 1
+            if row['phase'] == 'timer':
+                check(timer_started and not timer_stopped, 'Timer sample outside active timer lifecycle')
             if row['phase'] == 'idle-start':
                 check(idle_start is None and not active, 'Invalid initial idle sample')
                 idle_start = end
@@ -390,6 +410,10 @@ def guard_records(target, plan, report):
     check(phase_events['closed'] == 1 and previous['phase'] == 'closed' and phase_events['phase-completed'] == 1,
           'Missing final completion/closed native samples')
     check(ready_windows > 0 and samples == summary['snapshot_count'], 'Sample count/window differs')
+    timer = summary['timer']
+    check(timer_started and timer['started'] is True and timer['alive'] is False and timer['failure'] is None
+          and timer['samples'] == phase_events['timer'] and timer['samples'] > 0
+          and timer['join_bound_seconds'] == policy['max_sample_gap_seconds'], 'Sampler final lifecycle/summary differs')
     equal_number(summary['max_sample_gap_seconds'], max_gap, 'Maximum sample gap differs')
     equal_number(summary['max_snapshot_duration_seconds'], max_duration, 'Maximum snapshot duration differs')
     equal_number(summary['max_nonworker_cpu_fraction'], maximum_ready_fraction, 'Maximum ready host nonworker fraction differs')
@@ -405,6 +429,7 @@ def guard_records(target, plan, report):
             'max_snapshot_duration_seconds': max_duration, 'max_host_nonworker_fraction_including_partial_windows': maximum_fraction,
             'max_host_nonworker_fraction_ready_windows': maximum_ready_fraction,
             'accounting_underflow_intervals': underflow_windows, 'policy': policy,
+            'timer': timer, 'timer_stopped_event_recorded': timer_stopped,
             'scope': 'Raw native cumulative counters and retained final process timers independently recomputed. Rolling nonworker CPU is an estimate with proportional partial-interval weighting; unknown/transient work, power, thermals and complete OS isolation are not certified.'}, attached, detached, observed_owned, worker_events
 
 
@@ -536,7 +561,7 @@ def audit(directory, phase):
             'replay': dict(helper.MOVES), 'cells': results, 'strata': strata, 'load': guard,
             'input_sha256': dict(sorted(helper.FILES.items())),
             'source_scope': 'File/model/artifact identities, declared local commit objects and native build receipt/source consistency checked. No independent source-to-binary rebuild; external version/revision/URL remain declarations. Direct worker executable and the two declared chess source files are hashed; these are not a complete frozen Python runtime.',
-            'configuration_scope': 'Serialized actual command including direct executable/-s, file bindings, model SHA, accepted UCI option types/order, worker and launch-time engine affinity, PID+creation ancestry and raw counters checked. PYTHONPATH/PYTHONNOUSERSITE/PYTHONDONTWRITEBYTECODE assignments are in the hash-verified harness; no per-process environment readback, raw UCI wire transcript, general option readback or continuous affinity monitoring is claimed.',
+            'configuration_scope': 'Serialized actual command including direct executable/-s, file bindings, model SHA, accepted UCI option types/order, worker and launch-time engine affinity, PID+creation ancestry and raw counters checked. Worker self-reported executable/hash/versions/no_user_site and three environment variables match frozen bindings; no external OS environment readback, raw UCI wire transcript, general option readback or continuous affinity monitoring is claimed.',
             'score_scope': 'Legal mainlines, root/final FEN, rule endings and WDL are independently replayed. Raw PV legality and recorded mover score type/POV checked; search evaluations are not recomputed by another engine.',
             'valid_for_declared_local_comparison': True, 'strength_eligible': False,
             'elo_estimate': None, 'promotion_performed': False,

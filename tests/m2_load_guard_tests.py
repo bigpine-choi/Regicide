@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -290,6 +292,19 @@ class LoadGuardTests(unittest.TestCase):
         self.assertAlmostEqual(third['host']['window_fraction'], .25)
         self.assertEqual(self.guard.stop_reason['kind'], 'host_nonworker_cpu')
 
+    def test_adjacent_quantized_zero_delta_samples_preserve_full_window_and_threshold(self):
+        # Timer + main-loop samples 10ms apart may share GetSystemTimes ticks.
+        # These short intervals add coverage, but add no denominator/numerator.
+        for index in range(4):
+            start = index * .5
+            self.guard._host_window(start, start + .49, 49_000, 14_700, 0)
+            record = self.guard._host_window(start + .49, start + .5, 0, 0, 0)
+        self.assertTrue(record['window_ready'])
+        self.assertAlmostEqual(record['window_seconds'], 2.)
+        self.assertAlmostEqual(record['window_total_ticks'], 196_000)
+        self.assertAlmostEqual(record['window_fraction'], .3)
+        self.assertEqual(self.guard.stop_reason['kind'], 'host_nonworker_cpu')
+
     def test_old_process_first_seen_has_no_guessed_historical_cpu_subtraction(self):
         self.idle()
         worker = self.worker(created=WALL + 1)
@@ -422,6 +437,160 @@ class LoadGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'live owned'):
             provider.release_finished((reused.identity,))
         self.assertIn(reused.identity, provider.owned_handles)
+
+
+class GuardMonitorTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix='regicide-m2-timer-unit-')
+        self.addCleanup(self.temporary.cleanup)
+        self.folder = Path(self.temporary.name)
+
+    def monitor(self, *, full_window=False, gap=2.):
+        provider = Provider(time.monotonic)
+        policy = load.LoadPolicy(.2, host_window_seconds=2. if full_window else .5,
+                                 max_sample_gap_seconds=gap)
+        monitor = load.GuardMonitor(self.folder / 'load.jsonl', policy, provider)
+        self.addCleanup(monitor.close)
+        monitor.require_idle(policy.host_window_seconds)
+        return monitor, provider
+
+    def test_timer_continues_while_runner_does_no_poll_for_more_than_gap_bound(self):
+        monitor, _provider = self.monitor(full_window=True)
+        monitor.start_timer()
+        time.sleep(2.3)  # Simulate runner blocked in hashing/auditing; no sample calls.
+        monitor.assert_clean()
+        monitor.close()
+        summary = monitor.summary
+        self.assertTrue(summary['valid_for_load_check'])
+        self.assertGreaterEqual(summary['timer']['samples'], 4)
+        self.assertFalse(summary['timer']['alive'])
+        self.assertLess(summary['max_sample_gap_seconds'], 2.)
+        records = [json.loads(line) for line in monitor.output.read_text().splitlines()]
+        self.assertGreaterEqual(sum(row.get('phase') == 'timer' for row in records), 4)
+        self.assertEqual(sum(row['event'] == 'timer_stopped' for row in records), 1)
+
+    def test_live_sampler_query_error_is_sticky_and_invalidates_close(self):
+        monitor, provider = self.monitor()
+        provider.hook = Mock(side_effect=OSError('live timer access denied'))
+        monitor.start_timer()
+        monitor._thread.join(timeout=2.)
+        with self.assertRaises(load.LoadGuardViolation):
+            monitor.assert_clean()
+        monitor.close()
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+        self.assertEqual(monitor.stop_reason['kind'], 'monitor_error')
+        self.assertFalse(monitor.summary['timer']['alive'])
+        self.assertIn('live timer access denied', monitor.stop_reason['reason'])
+
+    def test_start_failure_and_unstarted_timer_cannot_claim_validity(self):
+        monitor, _provider = self.monitor()
+        with patch.object(load.threading, 'Thread') as thread:
+            thread.return_value.start.side_effect = RuntimeError('no thread resource')
+            with self.assertRaises(load.LoadGuardViolation):
+                monitor.start_timer()
+        monitor.close()
+        self.assertEqual(monitor.stop_reason['kind'], 'monitor_thread_start')
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+
+    def test_stuck_native_sample_has_bounded_close_and_deferred_handle_cleanup(self):
+        monitor, provider = self.monitor(gap=1.)
+        entered, release = threading.Event(), threading.Event()
+        def blocked(frame):
+            entered.set()
+            release.wait(timeout=3.)
+            return frame
+        provider.hook = blocked
+        monitor.start_timer()
+        self.assertTrue(entered.wait(timeout=2.))
+        started = time.monotonic()
+        monitor.close()
+        self.assertLess(time.monotonic() - started, 1.5)
+        self.assertFalse(provider.closed)
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+        self.assertEqual(monitor.summary['timer']['failure']['kind'], 'monitor_thread_stop')
+        with self.assertRaises(load.LoadGuardViolation):
+            monitor.assert_clean()
+        release.set()
+        monitor._thread.join(timeout=2.)
+        self.assertFalse(monitor._thread.is_alive())
+        self.assertTrue(provider.closed)
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+
+    def test_provider_close_failure_remains_invalid_with_timer_stopped(self):
+        monitor, provider = self.monitor()
+        provider.close = Mock(side_effect=OSError('close denied'))
+        monitor.start_timer()
+        monitor.close()
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+        self.assertEqual(monitor.stop_reason['kind'], 'monitor_close')
+        self.assertFalse(monitor.summary['timer']['alive'])
+
+    def test_main_requested_native_sample_has_bounded_response_and_safe_cleanup(self):
+        monitor, provider = self.monitor(gap=1.)
+        entered, release = threading.Event(), threading.Event()
+        called_by = []
+        def blocked(frame):
+            called_by.append(threading.current_thread().name)
+            entered.set()
+            release.wait(timeout=4.)
+            return frame
+        provider.hook = blocked
+        monitor.start_timer()
+        started = time.monotonic()
+        with self.assertRaises(load.LoadGuardViolation):
+            monitor.sample('main-request-before-first-timer')
+        self.assertLess(time.monotonic() - started, 1.5)
+        self.assertTrue(entered.is_set())
+        self.assertEqual(called_by, ['M2LoadGuard'])
+        self.assertEqual(monitor.stop_reason['kind'], 'monitor_request_timeout')
+        monitor.close()
+        self.assertFalse(provider.closed)
+        self.assertFalse(monitor.summary['valid_for_load_check'])
+        release.set()
+        monitor._thread.join(timeout=2.)
+        self.assertFalse(monitor._thread.is_alive())
+        self.assertTrue(provider.closed)
+
+    def test_registration_waits_for_inflight_sample_and_final_detach_stays_serial(self):
+        monitor, provider = self.monitor()
+        entered, release, registered = (threading.Event() for _ in range(3))
+        def blocked(frame):
+            entered.set()
+            release.wait(timeout=2.)
+            return frame
+        provider.hook = blocked
+        monitor.start_timer()
+        self.assertTrue(entered.wait(timeout=2.))
+        worker = load.ProcessInfo(100, os.getpid(), 'python.exe', WALL + round(time.monotonic()*1000) + 1, 0)
+        provider.live[100] = worker
+        errors = []
+        def attach():
+            try:
+                monitor.attach_worker(*worker.identity)
+                registered.set()
+            except Exception as error:
+                errors.append(error)
+        registrar = threading.Thread(target=attach)
+        registrar.start()
+        self.assertFalse(registered.wait(timeout=.05))
+        release.set()
+        registrar.join(timeout=2.)
+        self.assertTrue(registered.is_set())
+        self.assertFalse(errors)
+        provider.hook = None
+        monitor.sample('root-live')
+        provider.retire(worker.pid, 10)
+        monitor.sample('root-final')
+        monitor.detach_worker(worker.pid)
+        monitor.close()
+        self.assertTrue(monitor.summary['valid_for_load_check'])
+
+    def test_constructor_failure_never_starts_a_thread(self):
+        with patch.object(load, 'M2LoadGuard', side_effect=OSError('initial access denied')), \
+             patch.object(load.threading, 'Thread') as thread:
+            with self.assertRaisesRegex(OSError, 'initial access denied'):
+                load.GuardMonitor(self.folder / 'load.jsonl', load.LoadPolicy(.2))
+            thread.assert_not_called()
 
 
 if __name__ == '__main__':

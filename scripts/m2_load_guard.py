@@ -7,6 +7,7 @@ The historical see_clean_guard module and its frozen evidence remain unchanged.
 """
 from collections import deque
 from dataclasses import asdict, dataclass
+import copy
 import ctypes
 from ctypes import wintypes
 import datetime
@@ -14,7 +15,9 @@ import json
 import math
 import os
 from pathlib import Path
+import queue
 import time
+import threading
 
 from see_clean_guard import (CPU_TICKS_PER_SECOND, DEFAULT_ENGINE_NAMES,
                              ProcessInfo, WindowsProcesses, descendant_chain)
@@ -295,8 +298,9 @@ class M2LoadGuard:
 
     def _host_window(self, start, end, total, busy, owned):
         nonworker = max(0, busy - owned)
-        if total > 0:
-            self.host_intervals.append((start, end, total, nonworker))
+        # Adjacent timer/manual samples can share quantized Windows counters.
+        # Preserve their wall-time coverage without inventing any CPU ticks.
+        self.host_intervals.append((start, end, total, nonworker))
         cutoff = end - self.policy.host_window_seconds
         while self.host_intervals and self.host_intervals[0][1] <= cutoff:
             self.host_intervals.popleft()
@@ -481,3 +485,219 @@ class M2LoadGuard:
                 self._fail('monitor_close', f'load monitor could not close cleanly: {error}')
             self.summary['finished_utc'] = _utc()
             self.summary['valid_for_load_check'] = self.stop_reason is None and self.summary['preflight_complete']
+
+
+class GuardMonitor:
+    """Serialize guard operations while sampling independently of runner work.
+
+    A hung sampler never permits a valid receipt. Shutdown and lock waits are
+    bounded by the same declared sample-gap limit. If a native query remains
+    stuck, its daemon retains its own handles until it returns; another thread
+    must not close those handles concurrently with an outstanding query.
+    """
+    def __init__(self, output_jsonl, policy, provider=None, *, clock=time.monotonic, sleep=time.sleep):
+        self._guard = M2LoadGuard(output_jsonl, policy, provider, clock=clock, sleep=sleep)
+        self._lock = threading.RLock()
+        self._stop = threading.Event()
+        self._wake = threading.Event()
+        self._requests = queue.Queue()
+        self._thread = None
+        self._failure = None
+        self._close_requested = False
+        self._timer_started = False
+        self._timer_samples = 0
+        self._join_bound = policy.max_sample_gap_seconds
+
+    @property
+    def policy(self):
+        return self._guard.policy
+
+    @property
+    def output(self):
+        return self._guard.output
+
+    @property
+    def provider(self):
+        return self._guard.provider
+
+    def _local_failure(self, kind, reason):
+        if self._failure is None:
+            self._failure = {'kind': kind, 'reason': reason, 'utc': _utc()}
+        self._stop.set()
+        self._wake.set()
+
+    def _raise_local(self):
+        if self._failure is not None:
+            raise LoadGuardViolation(self._failure['reason'])
+
+    def _call(self, method, *args, **kwargs):
+        self._raise_local()
+        if (self._timer_started and self._thread is not None and self._thread.is_alive()
+                and threading.current_thread() is not self._thread):
+            completed, reply = threading.Event(), {}
+            self._requests.put((method, args, kwargs, completed, reply))
+            self._wake.set()
+            if not completed.wait(timeout=self._join_bound):
+                self._local_failure('monitor_request_timeout', 'sampler operation exceeded the sample-gap response bound')
+                self._raise_local()
+            self._raise_local()
+            if 'error' in reply:
+                raise reply['error']
+            return reply['value']
+        return self._direct_call(method, *args, **kwargs)
+
+    def _direct_call(self, method, *args, **kwargs):
+        self._raise_local()
+        if not self._lock.acquire(timeout=self._join_bound):
+            self._local_failure('monitor_lock_timeout', 'sampler lock did not become available within the sample-gap bound')
+            self._raise_local()
+        try:
+            self._raise_local()
+            return getattr(self._guard, method)(*args, **kwargs)
+        finally:
+            self._lock.release()
+
+    @property
+    def summary(self):
+        if self._failure is not None:
+            # Never wait for a stuck native query just to publish invalidity.
+            result = dict(self._guard.summary)
+        elif self._lock.acquire(timeout=self._join_bound):
+            try:
+                result = copy.deepcopy(self._guard.summary)
+            finally:
+                self._lock.release()
+        else:
+            self._local_failure('monitor_lock_timeout', 'sampler summary lock exceeded the sample-gap bound')
+            result = dict(self._guard.summary)
+        if self._failure is not None:
+            result['failure'] = result.get('failure') or dict(self._failure)
+            result['valid_for_load_check'] = False
+        result['timer'] = {'started': self._timer_started, 'samples': self._timer_samples,
+                           'alive': bool(self._thread and self._thread.is_alive()),
+                           'failure': self._failure, 'join_bound_seconds': self._join_bound}
+        return result
+
+    @property
+    def stop_reason(self):
+        return self.summary['failure']
+
+    def require_idle(self, seconds):
+        return self._call('require_idle', seconds)
+
+    def identify_worker(self, pid):
+        return self._call('identify_worker', pid)
+
+    def attach_worker(self, pid, creation_ticks):
+        return self._call('attach_worker', pid, creation_ticks)
+
+    def detach_worker(self, pid):
+        return self._call('detach_worker', pid)
+
+    def sample(self, phase='running'):
+        return self._call('sample', phase)
+
+    def assert_clean(self):
+        return self._call('assert_clean')
+
+    def start_timer(self):
+        self._raise_local()
+        with self._lock:
+            self._guard.assert_clean()
+            if self._guard.closed or self._close_requested:
+                raise RuntimeError('cannot start a closed monitor')
+            if not self._guard.summary['preflight_complete']:
+                raise RuntimeError('complete the idle preflight before starting the timer')
+            if self._timer_started:
+                raise RuntimeError('sampler timer is already started')
+            self._thread = threading.Thread(target=self._run_timer, name='M2LoadGuard', daemon=True)
+            try:
+                self._thread.start()
+            except Exception as error:
+                self._thread = None
+                self._guard._fail('monitor_thread_start', f'cannot start sampler thread: {type(error).__name__}: {error}')
+                self._guard._write({'event': 'timer_start_failed', 'utc': _utc(), 'failure': self._guard.stop_reason})
+                self._guard.assert_clean()
+            self._timer_started = True
+            self._guard._write({'event': 'timer_started', 'utc': _utc(),
+                                'interval_seconds': self.policy.interval_seconds,
+                                'join_bound_seconds': self._join_bound})
+
+    def _run_timer(self):
+        next_sample = time.monotonic() + self.policy.interval_seconds
+        try:
+            while not self._stop.is_set():
+                if time.monotonic() >= next_sample:
+                    self.sample('timer')
+                    self._timer_samples += 1
+                    self.assert_clean()
+                    next_sample = max(next_sample + self.policy.interval_seconds, time.monotonic())
+                try:
+                    method, args, kwargs, completed, reply = self._requests.get_nowait()
+                except queue.Empty:
+                    self._wake.clear()
+                    if not self._requests.empty():
+                        continue
+                    self._wake.wait(timeout=max(0., next_sample - time.monotonic()))
+                    continue
+                try:
+                    reply['value'] = self._direct_call(method, *args, **kwargs)
+                except BaseException as error:
+                    reply['error'] = error
+                finally:
+                    completed.set()
+                self._guard.assert_clean()
+        except BaseException as error:
+            with self._lock:
+                self._guard._fail('monitor_thread', f'sampler thread failed: {type(error).__name__}: {error}')
+                try:
+                    self._guard._write({'event': 'timer_failed', 'utc': _utc(), 'failure': self._guard.stop_reason})
+                except Exception:
+                    pass
+                self._local_failure(self._guard.stop_reason['kind'], self._guard.stop_reason['reason'])
+        finally:
+            if self._close_requested or self._failure:
+                # A previously stuck query can finish after close() timed out.
+                # Its owning thread performs the deferred handle cleanup.
+                with self._lock:
+                    if self._failure:
+                        self._guard._fail(self._failure['kind'], self._failure['reason'])
+                    self._close_guard()
+
+    def _close_guard(self):
+        if self._guard.closed:
+            return
+        try:
+            self._guard._write({'event': 'timer_stopped', 'utc': _utc(), 'timer_samples': self._timer_samples})
+        except Exception as error:
+            self._guard._fail('receipt_error', f'cannot persist timer shutdown: {error}')
+        self._guard.close()
+
+    def close(self):
+        self._close_requested = True
+        self._stop.set()
+        self._wake.set()
+        thread = self._thread
+        if thread is not None:
+            try:
+                thread.join(timeout=self._join_bound)
+            except Exception as error:
+                self._local_failure('monitor_thread_stop', f'cannot join sampler thread: {type(error).__name__}: {error}')
+            if thread.is_alive():
+                self._local_failure('monitor_thread_stop', 'sampler thread did not stop within the sample-gap bound')
+                return
+        if not self._lock.acquire(timeout=self._join_bound):
+            self._local_failure('monitor_lock_timeout', 'sampler shutdown lock exceeded the sample-gap bound')
+            return
+        try:
+            if self._guard.closed:
+                return
+            if self._failure:
+                self._guard._fail(self._failure['kind'], self._failure['reason'])
+            if not self._timer_started and self._guard.summary['preflight_complete']:
+                self._guard._fail('monitor_timer_not_started', 'formal monitor timer was never started')
+            self._close_guard()
+        except Exception as error:
+            self._local_failure('monitor_close', f'monitor close failed: {type(error).__name__}: {error}')
+        finally:
+            self._lock.release()
