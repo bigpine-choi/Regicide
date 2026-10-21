@@ -210,6 +210,32 @@ func _run() -> void:
 	partial_names.opening_guide.current_matches_total = 2
 	app.accept_state(partial_names)
 	verify(app.opening_status.text.contains("이름은 일부만 표시"), "truncated current aliases are disclosed beside the current opening name")
+	# 1. Nf3 d5 2. e3 is an unnamed catalog prefix, not a departure from it.
+	var intermediate := fixture(14)
+	intermediate.opening_guide.current_matches = []
+	intermediate.opening_guide.current_matches_total = 0
+	intermediate.opening_guide.matched_opening = {"name": "Zukertort Opening", "eco": "A06", "ply": 2, "match_type": "exact"}
+	intermediate.opening_guide.continuations = [{"uci": "c7c5", "san": "c5", "immediate_openings": [],
+		"reachable_openings": [{"name": "Zukertort Opening: Pachman Gambit", "eco": "A06", "distance_plies": 4,
+			"remaining_uci": ["c7c5", "c2c4", "d5c4", "b2b3"], "remaining_san": "2...c5 3. c4 dxc4 4. b3"}]}]
+	intermediate.opening_guide.continuations_total = 1
+	app.accept_state(intermediate)
+	verify(app.opening_summary.text == "마지막 확인: Zukertort Opening · A06" and app.opening_status.text.contains("중간 위치")
+		and not app.opening_status.text.contains("등록 수순 밖"), "unnamed catalog prefix keeps the last name without falsely reporting an out-of-catalog position")
+	app._on_opening_line_selected(0)
+	verify(app.opening_preview.get_parsed_text() == "2...c5 3. c4 dxc4 4. b3", "an unnamed intermediate catalog position still previews its reachable named line")
+	intermediate = intermediate.duplicate(true)
+	intermediate.revision = 15
+	intermediate.opening_guide.matched_opening = null
+	app.accept_state(intermediate)
+	verify(app.opening_summary.text == "등록된 오프닝 이름 없음" and app.opening_status.text.contains("중간 위치")
+		and not app.opening_status.text.contains("등록 수순 밖"), "catalog prefix before any recognized name is also distinguished from leaving the catalog")
+	intermediate = intermediate.duplicate(true)
+	intermediate.revision = 16
+	intermediate.opening_guide.status = "unknown"
+	intermediate.opening_guide.matched_opening = {"name": "Zukertort Opening", "eco": "A06"}
+	app.accept_state(intermediate)
+	verify(not app.opening_status.text.contains("등록 수순 밖"), "only beyond_catalog may describe the current position as outside registered sequences")
 	verify(app.captured_requests.is_empty(), "all synthetic opening interactions remain local")
 	app.queue_free()
 	await process_frame

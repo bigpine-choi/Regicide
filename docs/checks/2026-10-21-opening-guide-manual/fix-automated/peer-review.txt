@@ -1,0 +1,14 @@
+Independent staged-code review: PASS
+Scope: only the staged opening-status fix in godot/scripts/main.gd and its added regression cases in godot/tests/opening_guide_tests.gd. No app, process or GUI was controlled, and no source was modified.
+
+The observed bug is resolved: a last-known named opening no longer implies beyond_catalog. An in_catalog position without current_matches now explicitly says it is an intermediate position leading to a registered opening, both with and without matched_opening. Only the explicit beyond_catalog branch uses the outside-catalog wording. Exact current matches and transposition/position labels keep their previous behavior.
+
+The staged diff changes presentation text/branch selection only. It does not change board state, move dispatch, HTTP requests, engine search, opening row construction or preview selection. Added regressions cover the last-known A06 intermediate case, its reachable SAN preview, an intermediate case with no prior named opening, and unknown status without false outside-catalog wording. Existing explicit beyond_catalog regression remains present.
+
+No further actionable P1/P2 issue found in this fix.
+The existing report.json and godot-synthetic.txt were read and report 42 synthetic headless checks, 0 failures, exit 0. Those checks were not independently rerun in this review, and are not described as manual GUI interaction. Root's actual GUI observations are separate evidence.
+
+Staged main.gd blob: d193a744511a05b65a347574c398a9ec30f6f671
+Staged opening_guide_tests.gd blob: bc44baac64e401039882de9147d51f4e550a3727
+Working-file main.gd SHA256: 3cd6571094937fbd2dbdc98a9e048f55df26aa34e8b1dc4bf5a5607d90a68be4
+Working-file opening_guide_tests.gd SHA256: 03f9c1bf0739c8d95e04067e7c3a7db8f51aa6ca1b5bcd71b8373038f8e01eee

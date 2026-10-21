@@ -521,6 +521,7 @@ func _render_opening_guide(shown: Dictionary) -> void:
 	var matches: Variant = guide.get("current_matches", [])
 	var current: Dictionary = matches[0] if matches is Array and not matches.is_empty() and matches[0] is Dictionary else {}
 	var last: Variant = guide.get("matched_opening")
+	var status: String = str(guide.get("status", "unavailable"))
 	var scope: String = "사용자 시작 위치 · " if guide.get("history_scope", "standard") == "custom" else ""
 	if not current.is_empty():
 		opening_summary.text = _opening_name(current)
@@ -534,11 +535,19 @@ func _render_opening_guide(shown: Dictionary) -> void:
 	elif last is Dictionary and not last.is_empty():
 		opening_summary.text = "마지막 확인: " + _opening_name(last)
 		opening_summary.tooltip_text = ""
-		opening_status.text = scope + "현재 위치는 등록 수순 밖입니다."
+		if status == "in_catalog":
+			opening_status.text = scope + "등록된 오프닝으로 이어지는 중간 위치입니다."
+		elif status == "beyond_catalog":
+			opening_status.text = scope + "현재 위치는 등록 수순 밖입니다."
+		else:
+			opening_status.text = scope + "현재 위치의 등록 이름은 없습니다."
 	else:
 		opening_summary.text = "등록된 오프닝 이름 없음" if not guide.is_empty() and guide.get("status", "unavailable") != "unavailable" else "오프닝 자료를 기다립니다."
 		opening_summary.tooltip_text = ""
-		opening_status.text = scope + ("이 자료에서 이름을 찾지 못했습니다." if not guide.is_empty() and guide.get("status", "unavailable") != "unavailable" else "현재 위치의 안내 자료를 받지 못했습니다.")
+		if status == "in_catalog":
+			opening_status.text = scope + "등록된 오프닝으로 이어지는 중간 위치입니다."
+		else:
+			opening_status.text = scope + ("이 자료에서 이름을 찾지 못했습니다." if not guide.is_empty() and status != "unavailable" else "현재 위치의 안내 자료를 받지 못했습니다.")
 	if bool(guide.get("current_matches_truncated", false)):
 		opening_status.text += "\n현재 위치의 이름은 일부만 표시합니다."
 	var source: Variant = guide.get("source", {})
