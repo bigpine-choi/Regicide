@@ -83,3 +83,29 @@ Stockfish는 별도 GPL-3.0-or-later 실행 파일로 사용했다. 공식 출�
 실제1회 학습은40회에서 멈춰15회 모델을 복원했고 선택용 MAE155.96cp였다.
 기본 엔진과16판은2승3무11패, 정확성·독립 감사 통과다. 기본 엔진은 유지한다.
 [원인 분석·실행 결과](experiments/2026-10-22-nnue-overfit.md)를 따른다.
+
+## 10/22: 자료의 양과 초·중반 다양성 확대
+
+`neural_diverse_bank.py`는 기존 합법 기보·질의에서 기물 수·원본 계열·손번을 나눠
+2,000위치를 먼저 고정한다. 기존431정답·색 반전 중복·분할 간 공유 특징·등록 비교 개시
+수순을 제외하고 새 자기대국 없이 Stockfish 정답만 추가한다. 제외한 정답을 채우려고
+질의 수를 늘리지 않는다. 원래 검증 분할은 선택용(tuning)이라고 명시한다.
+
+`prepare_nnue_diverse_data.py`로 새 정답1,195개를 얻어 학습350→1,294개,
+선택81→263개·별도 점검69개로 확대했다. 학습의28기물 이상 비중은11.7→37.2%다.
+기존350개와 이번1,294개를 서로 다른 정적 시험 성적으로 직접 비교하지 않는다.
+
+`train_nnue_diverse.py`는 직전 보호 모델에서 MSE·v3 구조·학습 조건·조기 중단·최적 복원을
+유지하며 한 번 추가 학습한다. 실제45회에서 중단해20회 모델을 복원했다. 모델 저장 후
+한 번 확인한 별도69개 오차는 악화됐다. 원본은 과거 개발 자료이므로 새 독립 확인 자료라고
+부르지 않으며, 이번 결과를 보고 후보나 설정을 다시 선택하지 않는다.
+
+```powershell
+.venv-tests/Scripts/python.exe -B -s tests/neural_diverse_bank_tests.py
+.venv-tests/Scripts/python.exe -B -s tests/nnue_diverse_training_tests.py
+.venv-tests/Scripts/python.exe -B -s scripts/prepare_nnue_diverse_data.py <new-data-output>
+.venv-tests/Scripts/python.exe -B -s scripts/train_nnue_diverse.py <new-data-output> <new-training-output>
+```
+
+[자료·학습·16판 조건과 실제 결과](experiments/2026-10-22-nnue-diversity.md)를 따른다.
+기본 엔진·기존 실험 자료·설치 모델은 유지한다.
