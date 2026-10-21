@@ -1,0 +1,596 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-21T11:42:22.029984+00:00",
+  "harness_checkout": {
+    "commit": "730faca565c477751fe9a61237990867269d8ef4",
+    "status_porcelain": "",
+    "scope": "Git objects/context verified by real root commands at input freeze and served from sealed exact-query receipts. Worker rechecks file/model/harness hashes at match start; no transient Git helper is launched in a measured worker."
+  },
+  "engines": {
+    "baseline": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\binary\\python.exe",
+        "-u",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\artifacts\\engine\\sunfish.py"
+      ],
+      "sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+      "provided_source_commit": null,
+      "source_commit_object_verified": false,
+      "source_provenance_note": "External identity/revision/URL are caller-declared; the executable matches the manifest SHA256. No external commit was fetched or verified, and no source-to-binary build relationship is proven.",
+      "requested_options": {
+        "Hash": 16
+      },
+      "validated_options": {
+        "Hash": 16
+      },
+      "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+      "engine_id": {
+        "name": "sunfish 2026"
+      },
+      "advertised_options": {
+        "QS": {
+          "type": "spin",
+          "default": 36,
+          "min": 0,
+          "max": 300,
+          "var": []
+        },
+        "QS_A": {
+          "type": "spin",
+          "default": 180,
+          "min": 0,
+          "max": 300,
+          "var": []
+        },
+        "LMR": {
+          "type": "spin",
+          "default": 70,
+          "min": -200,
+          "max": 200,
+          "var": []
+        },
+        "EVAL_ROUGHNESS": {
+          "type": "spin",
+          "default": 15,
+          "min": 0,
+          "max": 50,
+          "var": []
+        },
+        "NULL_MARGIN": {
+          "type": "spin",
+          "default": -200,
+          "min": -400,
+          "max": 800,
+          "var": []
+        },
+        "TABLE_SIZE": {
+          "type": "spin",
+          "default": 1000000,
+          "min": 10000,
+          "max": 100000000,
+          "var": []
+        },
+        "Ponder": {
+          "type": "check",
+          "default": false,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 1000,
+          "min": 1,
+          "max": 32768,
+          "var": []
+        }
+      },
+      "external_source": {
+        "name": "Sunfish",
+        "version": "sunfish 2026",
+        "source_url": "https://github.com/thomasahle/sunfish",
+        "revision": "e396948acbd80cdcbad3dccfb07e878fba9df8f4",
+        "binary_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+        "args": [
+          "-u",
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\artifacts\\engine\\sunfish.py"
+        ],
+        "manifest_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\main\\cells\\main-0040\\external-source.json",
+        "manifest_sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942"
+      },
+      "binary_sha256_matches_manifest": true
+    },
+    "candidate": {
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\regicide-residual-v2-quality-attempt4\\binary\\regicide.exe",
+        "uci"
+      ],
+      "sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+      "provided_source_commit": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+      "source_commit_object_verified": true,
+      "source_provenance_note": "Commit is caller-declared and exists in this repository; the harness does not infer or prove the binary was built from it.",
+      "requested_options": {
+        "UseNNUEEvaluation": false,
+        "EvalFile": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\regicide-residual-v2-quality-attempt4\\models\\EvalFile-small-v2.nn",
+        "NeuralModelFile": "<builtin>",
+        "UseIncrementalNeuralEvaluation": true,
+        "Hash": 16,
+        "Move Overhead": 20,
+        "UsePositionalEvaluation": true,
+        "UseQuiescence": true,
+        "UseTranspositionTable": true,
+        "UseFastMoves": true,
+        "UseQuietMoveOrdering": true,
+        "UseQuiescenceChecks": true,
+        "PVS": true,
+        "UseSEE": true,
+        "UsePawnShield": true,
+        "UsePawnStructure": true,
+        "UseLMR": true,
+        "UseNeuralEvaluation": true
+      },
+      "validated_options": {},
+      "configuration_note": "validated_options records values accepted against advertised types/ranges after configure returned. UCI provides no general option readback; advertised defaults and sent settings are not independently verified engine state. python-chess manages Ponder/MultiPV/UCI_Chess960/UCI_Variant during play.",
+      "engine_id": {},
+      "advertised_options": {}
+    }
+  },
+  "python_version": "3.13.16",
+  "chess_version": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD",
+  "logical_cpus": 16,
+  "limits": {
+    "nodes": null,
+    "depth": null,
+    "movetime_ms": 100
+  },
+  "max_plies": 500,
+  "draw_policy": "claim",
+  "draw_policy_detail": "Both players always claim an available threefold or 50-move draw, including an intended legal next move.",
+  "opening_source": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\main\\cells\\main-0040\\openings.json",
+  "opening_file_sha256": "8bb620a68e5fd26634f8d303ad0587e54d57477a4e23cdd1b11b365e56d5b831",
+  "opening_document": {
+    "schema_version": 1,
+    "openings": [
+      {
+        "cluster_id": "sicilian",
+        "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+        "fen_after_opening": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 b kq - 1 7",
+        "moves": [
+          "e2e4",
+          "c7c5",
+          "d2d4",
+          "c5d4",
+          "c2c3",
+          "d4c3",
+          "b1c3",
+          "b8c6",
+          "g1f3",
+          "d7d6",
+          "f1c4",
+          "e7e6",
+          "e1g1"
+        ],
+        "name": "M2 Sicilian c-pawn offer development",
+        "parent_position_identity": "r1bqkbnr/pp1ppppp/2n5/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq -",
+        "parent_prefix_plies": 8,
+        "parent_prefix_uci": [
+          "e2e4",
+          "c7c5",
+          "d2d4",
+          "c5d4",
+          "c2c3",
+          "d4c3",
+          "b1c3",
+          "b8c6"
+        ],
+        "pieces_identity_sha256": "1eb27db49e1bdd38ab3857f04af6fa2438b6ea25d6a67e8b51b17677c3311a15",
+        "plies": 13,
+        "san_moves": [
+          "e4",
+          "c5",
+          "d4",
+          "cxd4",
+          "c3",
+          "dxc3",
+          "Nxc3",
+          "Nc6",
+          "Nf3",
+          "d6",
+          "Bc4",
+          "e6",
+          "O-O"
+        ],
+        "side_to_move": "black"
+      }
+    ]
+  },
+  "selected_openings": [
+    {
+      "cluster_id": "sicilian",
+      "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+      "fen_after_opening": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 b kq - 1 7",
+      "moves": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "e7e6",
+        "e1g1"
+      ],
+      "name": "M2 Sicilian c-pawn offer development",
+      "parent_position_identity": "r1bqkbnr/pp1ppppp/2n5/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq -",
+      "parent_prefix_plies": 8,
+      "parent_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6"
+      ],
+      "pieces_identity_sha256": "1eb27db49e1bdd38ab3857f04af6fa2438b6ea25d6a67e8b51b17677c3311a15",
+      "plies": 13,
+      "san_moves": [
+        "e4",
+        "c5",
+        "d4",
+        "cxd4",
+        "c3",
+        "dxc3",
+        "Nxc3",
+        "Nc6",
+        "Nf3",
+        "d6",
+        "Bc4",
+        "e6",
+        "O-O"
+      ],
+      "side_to_move": "black"
+    }
+  ],
+  "opening_selection": "Ordered prefix fixed by invocation before results; both colors per opening.",
+  "pair_order": "Each opening: candidate White, then candidate Black; openings in file order.",
+  "backtrack_definition": "Adjacent engine-selected moves by the same side, both quiet non-pawn moves and neither a check evasion, form an opportunity. A->B then B->A by the same piece is a backtrack. Opening moves excluded. This is not a judgment that the reversal was unnecessary.",
+  "move_selection": "Supplied binaries only; deterministic opening and color schedule; no runner move randomness.",
+  "games_requested": 2,
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "opening": "M2 Sicilian c-pawn offer development",
+      "opening_uci_moves": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "e7e6",
+        "e1g1"
+      ],
+      "opening_fen": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 b kq - 1 7",
+      "white": "candidate",
+      "black": "baseline",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 b kq - 1 7",
+      "uci_moves": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "e7e6",
+        "e1g1"
+      ],
+      "plies": 13,
+      "search_moves": [],
+      "result": "*",
+      "termination": "engine_error",
+      "completed": false,
+      "candidate_points": null,
+      "elapsed_seconds": 0.0,
+      "error": "EngineIdentityError: OpenProcess query/wait-only engine child identity failed (Windows error 5)",
+      "backtracks": {
+        "baseline": {
+          "count": 0,
+          "opportunities": 0
+        },
+        "candidate": {
+          "count": 0,
+          "opportunities": 0
+        }
+      }
+    }
+  ],
+  "errors": [
+    "EngineIdentityError: OpenProcess query/wait-only engine child identity failed (Windows error 5)",
+    "CPU quality audit: ValueError: two closed CPU process receipts required"
+  ],
+  "total_elapsed_seconds": 0.254546,
+  "completed": false,
+  "summary": {
+    "candidate_wins": 0,
+    "candidate_draws": 0,
+    "candidate_losses": 0,
+    "completed_games": 0,
+    "incomplete_games": 1,
+    "unplayed_games": 1,
+    "scheduled_games": 2,
+    "attempted_games": 1,
+    "incomplete_scope": "incomplete_games counts attempted unfinished games; unplayed_games counts scheduled games never started after an error.",
+    "candidate_points": 0,
+    "candidate_score": null,
+    "score_scope": "Finite match score among completed games only; no Elo estimate.",
+    "wilson95_descriptive": null,
+    "wilson_interpretation": "Approximate descriptive Wilson interval with draws as half a success; independent Bernoulli assumptions do not hold for draws or paired openings and can overstate certainty.",
+    "paired_opening_bootstrap95_descriptive": null,
+    "pairs": [
+      {
+        "pair": 1,
+        "opening": "M2 Sicilian c-pawn offer development",
+        "games": [
+          1
+        ],
+        "completed": false,
+        "results": [
+          "*"
+        ],
+        "candidate_points": null,
+        "candidate_score": null
+      }
+    ],
+    "backtracks": {
+      "baseline": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      },
+      "candidate": {
+        "count": 0,
+        "opportunities": 0,
+        "rate": null
+      }
+    },
+    "resources": {
+      "baseline": {
+        "searched_moves": 0,
+        "reported_nodes": 0,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0
+      },
+      "candidate": {
+        "searched_moves": 0,
+        "reported_nodes": 0,
+        "moves_without_node_report": 0,
+        "elapsed_seconds": 0
+      }
+    }
+  },
+  "exit_code": 2,
+  "formal_cell": {
+    "id": "main-0040",
+    "lane": 3,
+    "candidate": "regicide-residual-v2-quality-attempt4",
+    "opponent": "sunfish-e396948-cpython313",
+    "movetime_ms": 100,
+    "opening_index": 6,
+    "family_id": "m2-formal-sicilian-pawn-offer-20261021",
+    "cluster_id": "sicilian"
+  },
+  "formal_git_receipts": [
+    {
+      "arguments": [
+        "rev-parse",
+        "--verify",
+        "de799794ebe5a81d3f5b0717b39051fa9d979e08^{commit}"
+      ],
+      "stdout": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T11:31:13.546305+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    },
+    {
+      "arguments": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "stdout": "730faca565c477751fe9a61237990867269d8ef4",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T11:31:13.688290+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    },
+    {
+      "arguments": [
+        "status",
+        "--porcelain"
+      ],
+      "stdout": "",
+      "exit_code": 0,
+      "verified_utc": "2026-10-21T11:31:13.862503+00:00",
+      "scope": "Actual root Git command at freeze; stdout uses existing harness strip normalization."
+    }
+  ],
+  "affinity": {
+    "worker_mask": 61440,
+    "expected_mask": 61440,
+    "transports": [
+      {
+        "pid": 27984,
+        "creation_ticks": 134370565421106226,
+        "affinity_mask": 61440,
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\binary\\python.exe",
+          "-u",
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\artifacts\\engine\\sunfish.py"
+        ]
+      },
+      {
+        "pid": 1016,
+        "creation_ticks": 134370565422326671,
+        "affinity_mask": 61440,
+        "command": [
+          "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\regicide-residual-v2-quality-attempt4\\binary\\regicide.exe",
+          "uci"
+        ]
+      }
+    ]
+  },
+  "engine_cpu_trace": [],
+  "engine_cpu_processes": [
+    {
+      "role": "baseline",
+      "transport_index": 0,
+      "transport_pid": 27984,
+      "transport_creation_ticks": 134370565421106226,
+      "endpoint_resolution": {
+        "schema_version": 1,
+        "method": "frozen-image-and-held-creation-with-toolhelp-parent",
+        "profile_id": "sunfish-e396948-cpython313",
+        "mode": "sunfish-venv-child",
+        "transport": {
+          "pid": 27984,
+          "creation_ticks": 134370565421106226,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\binary\\python.exe",
+          "image_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 467269.6737492,
+          "read_finished_monotonic": 467269.6742517,
+          "parent_pid": 39556
+        },
+        "endpoint": {
+          "pid": 34320,
+          "creation_ticks": 134370565421240589,
+          "image_path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "image_sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 467269.6743041,
+          "read_finished_monotonic": 467269.6749681,
+          "parent_pid": 27984
+        },
+        "transport_after": {
+          "pid": 27984,
+          "creation_ticks": 134370565421106226,
+          "image_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\binary\\python.exe",
+          "image_sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 467269.6843311,
+          "read_finished_monotonic": 467269.6847749
+        },
+        "endpoint_after": {
+          "pid": 34320,
+          "creation_ticks": 134370565421240589,
+          "image_path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "image_sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f",
+          "exit_code_diagnostic": 259,
+          "wait_status": 258,
+          "liveness_method": "nonsignaled-held-process-object",
+          "read_started_monotonic": 467269.6847821,
+          "read_finished_monotonic": 467269.6854095
+        },
+        "frozen_binary": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\binary\\python.exe",
+          "sha256": "21bba195c88bcc007c8fd8e99603e9c0d82be1e08cff2f23bd5b2264f3148289"
+        },
+        "frozen_script": {
+          "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\sunfish-e396948-cpython313\\artifacts\\engine\\sunfish.py",
+          "sha256": "5d9ba12a615e6394b634b22ca2ad33fd4720bb6ca38e327717be7891060e2819"
+        },
+        "expected_base_runtime": {
+          "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+        },
+        "observed_direct_children": [
+          34320
+        ],
+        "expected_console_helper": null,
+        "console_helpers": [],
+        "console_helpers_after": [],
+        "matching_inventories": [
+          {
+            "27984": {
+              "pid": 27984,
+              "parent_pid": 39556
+            },
+            "34320": {
+              "pid": 34320,
+              "parent_pid": 27984
+            }
+          },
+          {
+            "27984": {
+              "pid": 27984,
+              "parent_pid": 39556
+            },
+            "34320": {
+              "pid": 34320,
+              "parent_pid": 27984
+            }
+          }
+        ],
+        "query_access_mask": 1052672,
+        "allowed_scope": "Only the frozen Sunfish -u script venv launcher and its unique direct frozen base-Python child; wrapper startup CPU excluded from endpoint CPU and retained in owned Job CPU. At most one explicitly frozen conhost helper; helper CPU excluded from endpoint CPU and retained in owned Job CPU. No other observed descendants.",
+        "scope": "Sampled exact image/creation/parent proof; held during resolution. CPU meter must recheck pid and creation. No whole-system or future-descendant guarantee.",
+        "read_started_monotonic": 467269.6645975,
+        "read_finished_monotonic": 467269.6854182
+      },
+      "baseline": {
+        "pid": 34320,
+        "creation_ticks": 134370565421240589,
+        "kernel_ticks": 0,
+        "user_ticks": 625000,
+        "cpu_ticks": 625000,
+        "read_started_monotonic": 467269.6855797,
+        "read_finished_monotonic": 467269.6855854
+      },
+      "final": {
+        "pid": 34320,
+        "creation_ticks": 134370565421240589,
+        "kernel_ticks": 0,
+        "user_ticks": 625000,
+        "cpu_ticks": 625000,
+        "read_started_monotonic": 467269.7414494,
+        "read_finished_monotonic": 467269.7414861
+      },
+      "meter_closed": true
+    }
+  ],
+  "engine_cpu_trace_file": {
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\main\\cells\\main-0040\\engine-cpu.jsonl",
+    "sha256": "c10178aa823df0836a2939014e4bf05430f5040b8f02c1950b51e605daffec0f"
+  },
+  "engine_cpu_summary": {
+    "valid": false,
+    "errors": [
+      "CPU quality audit: ValueError: two closed CPU process receipts required"
+    ]
+  }
+}

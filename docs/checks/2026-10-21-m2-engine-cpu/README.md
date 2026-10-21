@@ -39,7 +39,22 @@ Historical stopped attempts retain their original validity and evidence.
 
 ## Execution and interpretation
 
-The new raw attempt directory is `build-m2-engine-cpu/attempt-001`. A complete
+Attempt 001 passed the actual 24-game preflight, including seven warning
+windows and a peak residual of 28.793057%. Both audits passed. Main stopped
+at 40/768 games on endpoint setup access error before that pair's first move.
+It remains invalid for comparison. [Outcome and diagnostic limits](../../experiments/2026-10-21-m2-engine-cpu-attempt-001-outcome.md)
+and the original archive preserve the stopped run.
+
+The v5 correction adds mandatory calling-Job membership and held creation
+ordering before treating a numeric parent link as a current engine child.
+Global outside-Job matches and positively proven older relations are recorded
+as excluded; unknown actual children and incomplete scope still fail. A new
+28-source harness retains all 23 earlier source bindings. See the
+[restart plan](../../experiments/2026-10-21-m2-engine-cpu-restart-001.md),
+[native Job evidence](native-job-scope/README.md) and independent native scope
+recalculation. Previous plans, source versions and results remain intact.
+
+The next raw attempt directory is `build-m2-engine-cpu/attempt-002`. A complete
 24-game preflight must pass product and independent audits before 768 main
 games start. Each phase retains its own PGN, per-search CPU stream, metadata,
 raw Job/coordinator/system CPU samples, warning counts, final owned Job state

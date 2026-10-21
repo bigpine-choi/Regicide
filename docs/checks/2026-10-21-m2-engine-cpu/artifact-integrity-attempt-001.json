@@ -1,0 +1,1799 @@
+{
+  "schema_version": 1,
+  "status": "PASS_FOR_BYTE_INTEGRITY_ONLY",
+  "verified_utc": "2026-10-21T11:49:59.082775+00:00",
+  "archives": [
+    {
+      "attempt": "attempt-001",
+      "verified_files": 348,
+      "harness_sources": 23,
+      "profiles": 5,
+      "declared_profile_payloads": 20,
+      "source_plan_sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448",
+      "main_started": true,
+      "phases": {
+        "preflight": {
+          "status": "COMPLETE",
+          "completed_games": 24,
+          "scheduled_games": 24,
+          "stop_reason": null,
+          "valid_for_comparison": true,
+          "failure": null
+        },
+        "main": {
+          "status": "STOPPED",
+          "completed_games": 40,
+          "scheduled_games": 768,
+          "stop_reason": "ValueError: worker failed: main-0040 exit=2",
+          "valid_for_comparison": false,
+          "failure": {
+            "kind": "active_workers_on_close",
+            "reason": "detach every finished worker before closing the load guard",
+            "utc": "2026-10-21T11:42:22.519602+00:00"
+          }
+        }
+      },
+      "excluded_payloads_hashed": [
+        "profiles/regicide-classical-m1/artifacts/0-build-provenance.json",
+        "profiles/regicide-classical-m1/binary/regicide.exe",
+        "profiles/regicide-nnue-s32-precision-20261019/artifacts/0-build-provenance.json",
+        "profiles/regicide-nnue-s32-precision-20261019/artifacts/1-freeze.json",
+        "profiles/regicide-nnue-s32-precision-20261019/artifacts/2-manifest.json",
+        "profiles/regicide-nnue-s32-precision-20261019/binary/regicide.exe",
+        "profiles/regicide-nnue-s32-precision-20261019/models/NeuralModelFile-model.nnue",
+        "profiles/regicide-residual-v2-quality-attempt4/artifacts/0-build-provenance.json",
+        "profiles/regicide-residual-v2-quality-attempt4/artifacts/1-publication-manifest.json",
+        "profiles/regicide-residual-v2-quality-attempt4/artifacts/2-report.json",
+        "profiles/regicide-residual-v2-quality-attempt4/binary/regicide.exe",
+        "profiles/regicide-residual-v2-quality-attempt4/models/EvalFile-small-v2.nn",
+        "profiles/stockfish18-x86-64/artifacts/Copying.txt",
+        "profiles/stockfish18-x86-64/binary/stockfish-windows-x86-64.exe",
+        "profiles/sunfish-e396948-cpython313/artifacts/engine/LICENSE.md",
+        "profiles/sunfish-e396948-cpython313/artifacts/engine/sunfish.py",
+        "profiles/sunfish-e396948-cpython313/artifacts/engine/sunfish_ui/__init__.py",
+        "profiles/sunfish-e396948-cpython313/artifacts/engine/sunfish_ui/uci.py",
+        "profiles/sunfish-e396948-cpython313/binary/python.exe",
+        "profiles/sunfish-e396948-cpython313/binary/pyvenv.cfg"
+      ],
+      "excluded_payloads_not_hashed": []
+    }
+  ],
+  "unchanged_frozen_current_sources": 23,
+  "files": {
+    ".gitattributes": {
+      "sha256": "baf290540535af23616db93fa248645cbb17cf9319d112e0af837db19ec01bfb",
+      "size": 13522
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/.gitignore": {
+      "sha256": "1b7c01abb4d9e16cc4187667732237bf0ee6cee7bbad14c3b860b7216bc9c4b8",
+      "size": 10
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/artifact-integrity-preparation.json": {
+      "sha256": "355458f09881c0a61a4b9f04948ced4876cbaf5f3e89beffbf00acd092462541",
+      "size": 11672
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/archive.json": {
+      "sha256": "ee9581cf78a074656e19d29ef6f8b21e27e423e1a44b4c747d189597369cb47d",
+      "size": 139450
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/frozen-plan.json.gz": {
+      "sha256": "433e044af6a20ec4b60382994e2dc8babb0a17e7f524880cb9175ad4af89505e",
+      "size": 11689
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/compare_engines.py": {
+      "sha256": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+      "size": 31961
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/engine_profile.py": {
+      "sha256": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+      "size": 16155
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/external_baseline_matrix.py": {
+      "sha256": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+      "size": 24618
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_engine_cpu.py": {
+      "sha256": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+      "size": 9196
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_engine_identity.py": {
+      "sha256": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+      "size": 15896
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_engine_receipts.py": {
+      "sha256": "6ffae5ddf98b1c5f3c2375717775f98810d69ed944b708f636e9a93934c4cf8a",
+      "size": 17561
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_engine_tracking.py": {
+      "sha256": "f24a79484b108cb3ca4243de78802a7463beaea24c36448fbd0ea25f30fd0c93",
+      "size": 9509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal.py": {
+      "sha256": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa",
+      "size": 38072
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_summary.py": {
+      "sha256": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea",
+      "size": 4287
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_summary_v2.py": {
+      "sha256": "c66c05c47ffc7fd65320196b1d958fc9814aa63d015137c8978555b62b61598e",
+      "size": 4333
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_summary_v3.py": {
+      "sha256": "dfc47b759b2af9100a6a39df050c26d9177038041cfe985d09da8697bfe38334",
+      "size": 4333
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_summary_v4.py": {
+      "sha256": "0c228964c5e288c45e6c18e36784efcdfac8eced5da9ea365d4d51e68d2469e5",
+      "size": 6416
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_v2.py": {
+      "sha256": "6a3995529cf1ad9289d32b23cf114549b4f2d611074f04a985229500ebd301b4",
+      "size": 38625
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_v3.py": {
+      "sha256": "31f68fe9184792e7603119178ee32f0d458f90a0c4a8782a79f3256a0569b64c",
+      "size": 39256
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_formal_v4.py": {
+      "sha256": "c9597b1739da3640fa04941f547ab70b3499d1ed5d71a9d4f302525c339409c2",
+      "size": 39777
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_job_accounting.py": {
+      "sha256": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+      "size": 15021
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_job_load_guard.py": {
+      "sha256": "c4b5546d61798cd24d82dfba42d272726a84581dd42d597ffb55497482fff743",
+      "size": 7716
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_job_operations.py": {
+      "sha256": "72f25233bad8ad8efef926955e6b4c2e125f75f1ade1ce90fc8283b9fcfda472",
+      "size": 1854
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_job_receipts.py": {
+      "sha256": "5e141c94fd4d6340c72022161e164082d611e379a0176d4d83e9fafa6c2dbd98",
+      "size": 19158
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_load_guard.py": {
+      "sha256": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+      "size": 41235
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_warning_load_guard.py": {
+      "sha256": "1f6156bc1df9a42c6c0e3d78506bafa534d1469ec56d4932b12ad13e9245778c",
+      "size": 3678
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/m2_warning_receipts.py": {
+      "sha256": "9cc8aeac11aac33c792f1c5408f3d38e1c6048a0560e58cca251dc1e23c38812",
+      "size": 20721
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/harness/see_clean_guard.py": {
+      "sha256": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+      "size": 26604
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/engine-cpu.jsonl.gz": {
+      "sha256": "084ce77a052689bfd2d80645eb99e21620be60c3ee7edff0a6f2ebc780870d26",
+      "size": 22604
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/games.json.gz": {
+      "sha256": "850e63b084e1e27afeceee4046f9fcf9d646862945cdcd672fca6c7b206a0bba",
+      "size": 59919
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/games.pgn": {
+      "sha256": "a2da6c6c82f3e6dd5f439b20a8315537e50c6f2a0d055e3a6f798dc73277ec6e",
+      "size": 2795
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/invocation.json": {
+      "sha256": "4034ed75d30e108f30b638685173819a42c1fe4aaf1cbd88eca8e9732e11aefe",
+      "size": 2836
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0001/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/engine-cpu.jsonl.gz": {
+      "sha256": "80cff2fe4ec2d93ecfcfcf054173647e13c35a6584bd3ec9bea3bf95e9cb58b7",
+      "size": 19369
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/games.json.gz": {
+      "sha256": "93914f89e4e78aef0681ac7ab0077ddc275ddb424a2a19f21cdeb3bfa8c52c4a",
+      "size": 51170
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/games.pgn": {
+      "sha256": "b14bbdc76a44ad551fb65c24c03a524af5d993d021dff0555036d23234aa67b8",
+      "size": 2610
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/invocation.json": {
+      "sha256": "650d373e0409552fa7775786764e68c806627aab4ff93b0ce42a3a756887805d",
+      "size": 3103
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0002/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/engine-cpu.jsonl.gz": {
+      "sha256": "47e151318b01bbdae471bf8b566049b7dcd212e874c491b691664459c2a33592",
+      "size": 16057
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/games.json.gz": {
+      "sha256": "1959e03ebb961c45fb0f9fe02c976fc44675a29ded87b27da46bae13429542b4",
+      "size": 42328
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/games.pgn": {
+      "sha256": "0503ea2866333db4d921084fa68ca5441ce7e4d21f06c8a1fa7ef28e4ffbfe6f",
+      "size": 2464
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/invocation.json": {
+      "sha256": "8c4dbaea608ae1d7272d955db142be9113a9854f3ff11ba5da8adb3faac05f44",
+      "size": 3104
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0003/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/engine-cpu.jsonl.gz": {
+      "sha256": "fce56146a7fbf6b7e2581f22dd49d16e90bbf211a50cb2c2e69af3ead0bd8c45",
+      "size": 28373
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/games.json.gz": {
+      "sha256": "52e4d1dceab4a5f1c22487c843156f4fb8f5016ba3423490e3f66e53530e3810",
+      "size": 70840
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/games.pgn": {
+      "sha256": "c71a879c0233ecadaf7fae0544106600d8adb4324c6130b2acf937f3cf70bc48",
+      "size": 3035
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/invocation.json": {
+      "sha256": "3b5b468ad26ee4a7a3755a8aee041cc5e567421361d46afa6cf46c44d97a4f51",
+      "size": 3012
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0004/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/engine-cpu.jsonl.gz": {
+      "sha256": "547b1139d28646d0581a5c8ac056083d3272d68d2aedb5f800f48e4bb7c46860",
+      "size": 17801
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/games.json.gz": {
+      "sha256": "3c9e460119f2fa6189c931d2d2f0a77914d31879ccced8d75d7a661bde9e6dde",
+      "size": 44271
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/games.pgn": {
+      "sha256": "6443d1c9a4796402347e31484ccf744ae135772f3dc5a64aac028b1db09b45c8",
+      "size": 2505
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/invocation.json": {
+      "sha256": "634d05faee4420474e274d873247a5fd89c5f7f9fb0c9ed3af2ed5e873802ab4",
+      "size": 3014
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0005/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/engine-cpu.jsonl.gz": {
+      "sha256": "0390ebd3a460cb27ca6f0c5ecf9a301de0ac6c6d6ba7ffb63f0eba27c543c0ad",
+      "size": 13450
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/games.json.gz": {
+      "sha256": "4c89da2f740543584d40dad1c13b13c827384ecb435ee6c9d502b2aefef89da1",
+      "size": 33359
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/games.pgn": {
+      "sha256": "afc219f5c81c22efd8969763002aae2431694b6794f2718d24d02de4761a9ec3",
+      "size": 2279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/invocation.json": {
+      "sha256": "9820f2668673ff3366e1b7d2bcb7c2b32f55d5cf43b6a810ade873f22ef6b844",
+      "size": 2746
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0006/openings.json": {
+      "sha256": "0bb1663e48eba6cbfebdf3acddf7238490e856973686fda123b2635f03551499",
+      "size": 1247
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/engine-cpu.jsonl.gz": {
+      "sha256": "6f534d470c0d019e36cea7eddf8611d1715583b6bb4f41ea27ab520c37cfa51e",
+      "size": 18098
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/games.json.gz": {
+      "sha256": "1b6951c86f804ddab728337a0d7c969212f6c91198ae10e1b7d8c0142ade2fbe",
+      "size": 47860
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/games.pgn": {
+      "sha256": "5d66e99d16569d360b4a2b684e8f237f79b90065639675424a053389b3abdf04",
+      "size": 2565
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/invocation.json": {
+      "sha256": "5c0e660a1dc5de940ea61b98fc7de4b859a02991c46be5f8d09869536cb4d84b",
+      "size": 3108
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0007/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/engine-cpu.jsonl.gz": {
+      "sha256": "42663b4bb6fe0d67985f3eb17c48db1a778e53f7e20a71bccd10ea51d1c90fa2",
+      "size": 14062
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/games.json.gz": {
+      "sha256": "c44e93f117c32a2aaea005c41269f1179de9cb3af05b44878da75d3c402d3382",
+      "size": 37523
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/games.pgn": {
+      "sha256": "2c41f1777384512539b2b1574ea50f3ef697402e5ceb4bb0448f3c9434fa569b",
+      "size": 2366
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/invocation.json": {
+      "sha256": "747b6b1fa9a8631dd9d07c1973f3bf8f819a01e038787c66e0fdd5282e0a464a",
+      "size": 3109
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0008/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/engine-cpu.jsonl.gz": {
+      "sha256": "c304f24f7cd96afb19a4d9c8949f194ed198631ee0e8157b8c8b42adcf18bb34",
+      "size": 20388
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/games.json.gz": {
+      "sha256": "6a583afd7ee80caeaa69418c9e14bbe3eb54035d103f34e9519979e829ed7bb8",
+      "size": 53406
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/games.pgn": {
+      "sha256": "8029fef85e5434ebc2085dd9ada6631f27c0be97d64a5b8ed3b4758274ab995e",
+      "size": 2711
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/invocation.json": {
+      "sha256": "a83308bd0e9610e1c69b03064335cd8c9128bf3acaa6ccc14788cb54a690e558",
+      "size": 2839
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0009/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/engine-cpu.jsonl.gz": {
+      "sha256": "f70f4821167397646dee494e56f4318318de41f8bdf995f0cf8194902169e65c",
+      "size": 19483
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/games.json.gz": {
+      "sha256": "b3b5fa16235b7cc4e19fe066e3f34abe26e3aad5170e3b55ae0c1145b946abe9",
+      "size": 48484
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/games.pgn": {
+      "sha256": "0ecb359b6023321c746d43ffc16ff4ac6b33db7435207c4344b3313b7c579e5c",
+      "size": 2610
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/invocation.json": {
+      "sha256": "ca34035195789f5d6cdc7fbf9e7ee22c73b1ca59852e7f07726837d98e72b6a7",
+      "size": 3019
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0010/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/engine-cpu.jsonl.gz": {
+      "sha256": "ea1ca1ce316f3bc6e90f60b861c3ea550fdcb893ac83327dfb556dd5d8c002e7",
+      "size": 24670
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/games.json.gz": {
+      "sha256": "ab7e6f5bc4a2163288b12caab4189c6b2b56e27fb5b780eed67ad31f91662cb1",
+      "size": 61422
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/games.pgn": {
+      "sha256": "70d6f01cc0f8da7559e7f3171ab38ca0a5c2bdb969c9af2a5122cdd89c6f38c7",
+      "size": 2853
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/invocation.json": {
+      "sha256": "72c7783c21c738d2855dc569407940977852770dca7db0c2c1d45f85aa645af2",
+      "size": 2751
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0011/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/engine-cpu.jsonl.gz": {
+      "sha256": "bc3847d5d6e8ab327e3de49ea7e5a7f35d2c18d3ae7b37f9917bff7fa05f7a52",
+      "size": 44031
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/games.json.gz": {
+      "sha256": "648c687ef8aa8d2a649d31defd425b3c19fe990a685d99872528afcf05686621",
+      "size": 109432
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/games.pgn": {
+      "sha256": "ad9d19d966c43e386c7605d9a5ac98cf21ac377169f8e2c3b583f08bfb4b7789",
+      "size": 3792
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/invocation.json": {
+      "sha256": "cbe1b3c749405d73181641310f221c3690fe568f0b1e073d9f4d906506fa2f9f",
+      "size": 3018
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0012/openings.json": {
+      "sha256": "8dfe092afb1fdfd6d98bdb07cb63e6f10d82e11c65314c5f0d1308af076dc03e",
+      "size": 1257
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/engine-cpu.jsonl.gz": {
+      "sha256": "e3af9f0da884293be994849df24b3f674b18269b50af82af22a593225a7c6207",
+      "size": 18192
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/games.json.gz": {
+      "sha256": "cad82a2264df3d550052a1086ce4f138f456d68e4bd9a97ae0a5e9cefe8c33f2",
+      "size": 48086
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/games.pgn": {
+      "sha256": "a7113e2d30609eb0bc1fa7787a63c7c50b4efcb2bdf7adcc5747355fc5671474",
+      "size": 2570
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/invocation.json": {
+      "sha256": "688d78df2e15075be804531b0bf39d84e868450d92dac976ae3c638071f3e72a",
+      "size": 3111
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0013/openings.json": {
+      "sha256": "1e2ab92493300334dd5619dcbfa6d8e20ddba2885712eb0503eab401fc839c5a",
+      "size": 1294
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0014/engine-cpu.jsonl.gz": {
+      "sha256": "0a4556d074140d6f510882a4ce1f6a4673a4eab34e924637cae464944f945763",
+      "size": 11788
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0014/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0014/invocation.json": {
+      "sha256": "c8cf9a08d60c814ae0bcd54f5cb76b0cdd0169ca31d38aa79796ae2d6bad4684",
+      "size": 2843
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0014/openings.json": {
+      "sha256": "1e2ab92493300334dd5619dcbfa6d8e20ddba2885712eb0503eab401fc839c5a",
+      "size": 1294
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/engine-cpu.jsonl.gz": {
+      "sha256": "21e88ceabc51c6926a827903581ae48e01a7aa33a77e11b68874b443bff65ebd",
+      "size": 22106
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/games.json.gz": {
+      "sha256": "14408e2e01c56163fab7afd84275d9d50b60266cbe67609994afb9efbc38d3c0",
+      "size": 54751
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/games.pgn": {
+      "sha256": "65238a8a5c4c095db6f329ad62ca31fb6eafeca85d93131d4bb3352d0a64db53",
+      "size": 2725
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/invocation.json": {
+      "sha256": "052892f4687a04537a462549cf6eaf8db82ff4873cfcb6c16b923708e9574d83",
+      "size": 2753
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0016/openings.json": {
+      "sha256": "1e2ab92493300334dd5619dcbfa6d8e20ddba2885712eb0503eab401fc839c5a",
+      "size": 1294
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/engine-cpu.jsonl.gz": {
+      "sha256": "27a7d2f8c4031274257c6003da3f70bfe549e7eaba47a2b1c8e696ad2e8cdfa0",
+      "size": 21852
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/games.json.gz": {
+      "sha256": "62228ef15665ca1ecfe4c0fe28e7330c2a9634e18d32a528f33b53756e456117",
+      "size": 54122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/games.pgn": {
+      "sha256": "9818296512be4639ae57a53a579a878e94b0ab7f22a368ffddf375c4c0c1535d",
+      "size": 2720
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/invocation.json": {
+      "sha256": "b098345a25e84b32051b1c3a6301cc67d82037abcf3118aa38389971e51f0813",
+      "size": 3019
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0017/openings.json": {
+      "sha256": "1e2ab92493300334dd5619dcbfa6d8e20ddba2885712eb0503eab401fc839c5a",
+      "size": 1294
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/engine-cpu.jsonl.gz": {
+      "sha256": "7f650bf3f02934a91bb2f48216e875ae914018d2b8f7eac2a8a39c252d390ab7",
+      "size": 20213
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/games.json.gz": {
+      "sha256": "ee3e44f2bd7cdfa60270f22056bfbc3210005edfef8c089b7ba21176b540e57f",
+      "size": 50073
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/games.pgn": {
+      "sha256": "080f89dc787e5f1a659c517107bd7fed20e33b3ea258cd14e6562d2c3c0d0cdc",
+      "size": 2644
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/invocation.json": {
+      "sha256": "686b5d587bcfaf0705b9bea70877a1448178977468e4143bf116ad24462338ce",
+      "size": 3021
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0018/openings.json": {
+      "sha256": "1e2ab92493300334dd5619dcbfa6d8e20ddba2885712eb0503eab401fc839c5a",
+      "size": 1294
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/engine-cpu.jsonl.gz": {
+      "sha256": "bcef66eb0f04f7299d8c23ecc4508394296760e72c7e6b30f7a3189afe693d8a",
+      "size": 18607
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/games.json.gz": {
+      "sha256": "64e32dd5eae608d67180b29e839f98cb8d1eb3db3ee4795e5b063e724f8bebad",
+      "size": 49188
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/games.pgn": {
+      "sha256": "2282db594c5900fdcd40ff4497f6690d8b846e01452c46018f7ea64a676cee3d",
+      "size": 2609
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/invocation.json": {
+      "sha256": "2cfbffe76831ca564d7ee54df5c899bbcbf04728a7158606072822356b99cd13",
+      "size": 2845
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0019/openings.json": {
+      "sha256": "9ccd5722092432e328869a3b5972b8fc515898525e9f0f72a719d9abac653abd",
+      "size": 1279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/engine-cpu.jsonl.gz": {
+      "sha256": "a54101f3cefc8f2008d37bbe0c80241a1b388f4b77d261849b48fa8b1f048759",
+      "size": 17779
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/games.json.gz": {
+      "sha256": "5a0aa768721b841f348fec2f3cfb82158d8d5899b021e454b6704cfb082ce4ca",
+      "size": 46841
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/games.pgn": {
+      "sha256": "a51ff8fa88745a80aff6c30dc0748a28d25b57607519b4195cc94b667351b73d",
+      "size": 2543
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/invocation.json": {
+      "sha256": "9b764537b7d92a769d4bc165953db145ead7c0213ba6ebc4d174e482dd5073c5",
+      "size": 3111
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0020/openings.json": {
+      "sha256": "9ccd5722092432e328869a3b5972b8fc515898525e9f0f72a719d9abac653abd",
+      "size": 1279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/engine-cpu.jsonl.gz": {
+      "sha256": "574c68adf97fa79e7be175e761232a6039cb29ed1e518d63c1c487fe154b1ee1",
+      "size": 16372
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/games.json.gz": {
+      "sha256": "0bd02e27580469602056d320ed6210fc1c4ab83bd20ccd0b569a0500d4b80314",
+      "size": 42997
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/games.pgn": {
+      "sha256": "0804aa28b7fabc72688cbf33e2a9036b4dc0b06d592931deb6b3a7082915ac26",
+      "size": 2472
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/invocation.json": {
+      "sha256": "1c4aed6ad60d58f610865c5db1c271c57de45c1badb58dc123fa02060b713397",
+      "size": 3113
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0021/openings.json": {
+      "sha256": "9ccd5722092432e328869a3b5972b8fc515898525e9f0f72a719d9abac653abd",
+      "size": 1279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/engine-cpu.jsonl.gz": {
+      "sha256": "c0503fbcb4af6d863b8879bdfd8d79d9d11e825f27a4119d46f5b9cc68ffc604",
+      "size": 43969
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/games.json.gz": {
+      "sha256": "30d2b19a3422f75f5e1934cd81476a7274c50a1d8dd44380638e4537f14c6005",
+      "size": 109185
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/games.pgn": {
+      "sha256": "0ef7da2fc2c6a3e14bb3115246df8b7d5b472fe9b3346b172088f9dedda0b3fd",
+      "size": 3818
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/invocation.json": {
+      "sha256": "956e05ccf81b5d19d064f337438ea97b6ba42d3604b5eec0f4c8f52b75019794",
+      "size": 3018
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0022/openings.json": {
+      "sha256": "9ccd5722092432e328869a3b5972b8fc515898525e9f0f72a719d9abac653abd",
+      "size": 1279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0023/engine-cpu.jsonl.gz": {
+      "sha256": "4d3676333ce0a66552f0025dc1ab61ce9e484e2716d8b35c61581d4cc3431ddc",
+      "size": 15695
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0023/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0023/invocation.json": {
+      "sha256": "4d472773b5763e295c76c63c2000387432d96eb4ad7828c6219e4584e5a009ae",
+      "size": 3019
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0023/openings.json": {
+      "sha256": "9ccd5722092432e328869a3b5972b8fc515898525e9f0f72a719d9abac653abd",
+      "size": 1279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0028/engine-cpu.jsonl": {
+      "sha256": "7cb7f79489aff71a6abfa79e579005ab85826e739f19a2045061a14f6fe8f2bd",
+      "size": 68928
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0028/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0028/invocation.json": {
+      "sha256": "f11134d6a05e4423f74cfdba1c75831553e127ff26579da706d8ff7387a32e17",
+      "size": 3021
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0028/openings.json": {
+      "sha256": "20ad2889691cefca144858904ec55522dbf5212fea07fc7c3daddab52a8eed02",
+      "size": 1270
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/engine-cpu.jsonl": {
+      "sha256": "c10178aa823df0836a2939014e4bf05430f5040b8f02c1950b51e605daffec0f",
+      "size": 9366
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/games.json": {
+      "sha256": "938a8eabff1cb7c3b2ac95ea3a546a65895829629ce9078c7abb9ab8d39a8308",
+      "size": 21822
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/games.pgn": {
+      "sha256": "c885c24ac85dbe56d9386dc5cfa6c36bf0736ade88ea1877d877ff22832673a3",
+      "size": 1005
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/invocation.json": {
+      "sha256": "71386cfed5f8175fde74d08242511cfd65a4ad1e01efc1e6f577b9d44064f454",
+      "size": 3016
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/cells/main-0040/openings.json": {
+      "sha256": "8bb620a68e5fd26634f8d303ad0587e54d57477a4e23cdd1b11b365e56d5b831",
+      "size": 1249
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/job-final-accounting.json": {
+      "sha256": "6a61298322eea12b433e6bdba03efc7bc51875442d9bb64ce8dfb2a606aeb984",
+      "size": 724
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/load-summary.json": {
+      "sha256": "a17d442fb33e771896809d4ecb75b9af3685777fa816be66f805d927b77b2040",
+      "size": 6657
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/load.jsonl.gz": {
+      "sha256": "5b6c5dd4fb7cc87264ff66bdfdc37c74d8f422b9b4d3876ef14709a4a64f0c30",
+      "size": 120863
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0001-worker.log": {
+      "sha256": "1ac7b0725a08d1d55d6733b1fe686addcd3e231ff8588341bf519cd371dad17f",
+      "size": 238
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0002-worker.log": {
+      "sha256": "33ae0b87fd8a0e80563fbc61146b4a43f90e3498567b1221dccc8107c686e223",
+      "size": 223
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0003-worker.log": {
+      "sha256": "221c3bf5c79ebce9d08aef0b1fc816387b32e2e8e8c55e97e4050a13ceeafe56",
+      "size": 222
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0004-worker.log": {
+      "sha256": "aaedd1491fdaa5541fb951947d18ed0cfe128aad67c0fe79d9d966fca8e62d0a",
+      "size": 223
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0005-worker.log": {
+      "sha256": "a5d3a73e5cd83d53aba5b5cddc7e9384f7225b72e53a3d0152b8d2669bc72e61",
+      "size": 223
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0006-worker.log": {
+      "sha256": "c29766e15be1554156820a44d232e44b80d4892df9423e22894106475cd96d4d",
+      "size": 222
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0007-worker.log": {
+      "sha256": "632d9ca06db6f0b1e5bfe7eca1dbbb1796498889c2d8a85fea7340725f04c0c0",
+      "size": 232
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0008-worker.log": {
+      "sha256": "bd0de4c6ac87d3034059b3caee759f96268019d8c521ea1fc1d8be165a63636d",
+      "size": 232
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0009-worker.log": {
+      "sha256": "5bc1b2417552e4537bb015acd6cb9e20c3cac52918457ee438da6469c522a4f8",
+      "size": 233
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0010-worker.log": {
+      "sha256": "774d9439ddb3556b7092313a422cc721cdeb1cfd0d2cead278c31143540cb950",
+      "size": 233
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0011-worker.log": {
+      "sha256": "9c16a3fa6b18f1ebcd23626024f9c0c449ea3396a01a6d3bddd08c98cd14e3ff",
+      "size": 233
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0012-worker.log": {
+      "sha256": "d4fa32a1ba1bc6dda7487c0ff0a129b59c5796e8940c00c0c8d83ed3441f8b0e",
+      "size": 249
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0013-worker.log": {
+      "sha256": "ae1d1a2776613aecd02685c6645273d19349390183fb3af2e419a24a4bb8e7e5",
+      "size": 234
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0014-worker.log": {
+      "sha256": "316d4beffd248f91e8e9ab2e66f485ad8cd07576bea4e63f64c3d61b6bd4e543",
+      "size": 88
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0016-worker.log": {
+      "sha256": "e681535a6507ecdfa17e7913c6772490c069930ccba32760b64107040a2927b1",
+      "size": 235
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0017-worker.log": {
+      "sha256": "32a2df8577a6665220d8567c0e6b59740ba91a99d3220efd9a7ffe35508d14cc",
+      "size": 235
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0018-worker.log": {
+      "sha256": "0e3609abb7243041835cb0a772e57caa319092ce6a102ed5eb11a15e4e839dc3",
+      "size": 235
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0019-worker.log": {
+      "sha256": "cb4600445cf2d976b4b141efc4d956271415610084632c3dd7b3948322c3c079",
+      "size": 237
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0020-worker.log": {
+      "sha256": "f8575ef4ddf599078a7fce4c3429de463a31035a7bf531c565fc3201ac2995d4",
+      "size": 223
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0021-worker.log": {
+      "sha256": "cdfb0427bf21072fd2413f18d5ab59a01874897d1dbe6e8cc15e302c1f911cac",
+      "size": 222
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0022-worker.log": {
+      "sha256": "49d66eae6fd6a9a02129a8c18f27a13d719b120d259e3a1a6e042bdb44143100",
+      "size": 240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0023-worker.log": {
+      "sha256": "025cabaa5a4490549d93f806e6b4bbcea6cfefb9059feaff821a932acc050b56",
+      "size": 82
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0028-worker.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/main-0040-worker.log": {
+      "sha256": "ff408ca4b331fcfb4e4d530b3e37e89678bf5214662355bfa1075ad5046d3d82",
+      "size": 163
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/report.json.gz": {
+      "sha256": "8375942668c985d820f55871b97bf4689e98c09b10b5687959db48f8fef2e71a",
+      "size": 20836
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/run-started.json": {
+      "sha256": "17b18919a1d30b583b7401665b0c31806681d61cdae6ea71dd60fbb5b70c8f91",
+      "size": 65
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0001.json": {
+      "sha256": "9d7ccd23d51dd5f0b5bbd2e9d75b1808f748d24d3675a2baded390221cc2cab4",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0002.json": {
+      "sha256": "f81e5f42f3cdf62c31ecc3f6b9c28ff614c1f449bb748d8509de061fbbc80f12",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0003.json": {
+      "sha256": "24b5ddec83c0546c03fe393226ff031f259b9df394622c5b0bdec20cadfe5a5d",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0004.json": {
+      "sha256": "a349a9d5c43a772eefbbd0dbb209951bd98c4f03b72ddc9b16d471836ec74781",
+      "size": 121
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0005.json": {
+      "sha256": "a27e705e00562b120d16c07189d41032ee05226d3ecd5a16fa21cd9ea31eb38f",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0006.json": {
+      "sha256": "2e701cbe4717644e64351099694b71d805f3b300b7636d2df52518bd5b79d96d",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0007.json": {
+      "sha256": "e73458cfc8573571ffb4ca6ffbaa1607802734545284244ae50b9daaee054707",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0008.json": {
+      "sha256": "a2d711feabd8c69b1f2212715065cc595018cc77924856b4a4089be93255954a",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0009.json": {
+      "sha256": "e178dcf4f99338f3ddb4520ab73f1fb81dd1e0d60ab142c2de2d9eccc1e1d5f7",
+      "size": 120
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0010.json": {
+      "sha256": "f800004a8e515bc2932a81d5090f1ddb0c1e59ad3c21d1345507d6d049469554",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0011.json": {
+      "sha256": "ccb3fddf23aa6ab3296c91ec9ee1f9e5dea3925cd7f0cd07a6d1451fcab5ac63",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0012.json": {
+      "sha256": "0ff5ff9f8a93274b8ac050a1ed4fa51443fea62c8a134237ca83351d465c463c",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0013.json": {
+      "sha256": "f3ddf696ee437a87c9d0f2206acb3390369aaf7ed580bf3a86079fb9ec7670c0",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0014.json": {
+      "sha256": "4f8c8f73d8e0dda83bad10c041a9f98f35efd6421989da72898c4d8b15a5d80e",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0016.json": {
+      "sha256": "f1d7e0fa085a9a32113dee73fd3b11e79a6c9dda6a2cce2a990ea48b1c9be34d",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0017.json": {
+      "sha256": "837bcf50e9c339be3b22656e6aafb090b4d4754306dc3c8eb5fda7f37010282c",
+      "size": 121
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0018.json": {
+      "sha256": "ffef1cb5cf4b6dfd010be65e1c5167d0b3f1e0db37470f47db09b8c78e214064",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0019.json": {
+      "sha256": "32b70155e9ae6b430be226a83c85dab342109da9f2f3861606ff4ef1a039e31a",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0020.json": {
+      "sha256": "5df20f7002726ec48237a8634db1909997eb4a51e811969fdc3478b391bff033",
+      "size": 121
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0021.json": {
+      "sha256": "2b79d93c04facf10420fbbe41b500b298719128b56f5284b8b15f6acdfefe8e3",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0022.json": {
+      "sha256": "77da6975033d9c27ecbfdbf35d7af2be7068b701e4b35ede714e36667e071d4c",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0023.json": {
+      "sha256": "f2cf91458842472d4f6cefd7e4892f38803e113e5023c6fac661547bda2ac383",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0028.json": {
+      "sha256": "f4ba9a56240a84c94dafd4b2d68ccc4d7e6c13fafd665ee6acce29c938dea085",
+      "size": 121
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main/start-gates/main-0040.json": {
+      "sha256": "89d1cc65dd29cca49e5890aa5812c4ce110e31ee732cfeecadd1cb14a1052e23",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main-console.log.gz": {
+      "sha256": "0996e3309ac7bb8fff6794b017e6f8ca52ac46ddf063699826de05382dcbb20d",
+      "size": 20913
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main-openings.json": {
+      "sha256": "8b98ffd73ca4717ddb4ce0f903f53827a6ed2963cb93994778fe7ca7b20052fa",
+      "size": 39834
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main-stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/main-summary.json": {
+      "sha256": "c9e683ca9ea68d514483c3657e8b267f2c94b6a098b43b3748d766873eb92160",
+      "size": 28319
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/engine-cpu.jsonl.gz": {
+      "sha256": "3e679f9be65294757d0296dfe63b257f5f1561f8608be23d5af5934679b1465d",
+      "size": 17173
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/games.json.gz": {
+      "sha256": "a1f87fabf05fe947f944868823274fd3550bb546d2bb5f2d8b7ac617785d3be8",
+      "size": 45225
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/games.pgn": {
+      "sha256": "ad6e4cbd08bf51ac3f8294de68fd59801f01a8ccb5b3e7e9f47a35bc2017dd84",
+      "size": 2510
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/invocation.json": {
+      "sha256": "364bc2c11f934841f29d11740a81d7574c9c044ddab59b3efdcd8dc3de2828ee",
+      "size": 2892
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0001/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/engine-cpu.jsonl.gz": {
+      "sha256": "650d3eca87781fdc2d12fc67bf2d9a58931faeb63a131372920dc1b4c40468e6",
+      "size": 12994
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/games.json.gz": {
+      "sha256": "f833f8002271aeb8175633ab9a11d3fd9fc737054be120686dcbbf95f9eec188",
+      "size": 34627
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/games.pgn": {
+      "sha256": "9bf7e4779ca1271c50fde942351ef817e09aca51c21b3b8c7912405aa6a8894a",
+      "size": 2300
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/invocation.json": {
+      "sha256": "742ec3e40b572795892f2ecaa22b69f1c4de554f96bc0adfaad7ebcc66311c43",
+      "size": 3159
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0002/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/engine-cpu.jsonl.gz": {
+      "sha256": "59b6570c4b994a70244b177f2e81418402aa05df990c7f9e4982d3dc661b6b57",
+      "size": 24322
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/games.json.gz": {
+      "sha256": "65fdaa112972bd9d8e2f076d1081a3a49cbc38a7209e9b6f94e2b8c5958e6c1c",
+      "size": 64092
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/games.pgn": {
+      "sha256": "6f520b877bf2404e179a3e61f07daff70d505d417ef7590a2fea3d0610a34104",
+      "size": 2859
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/invocation.json": {
+      "sha256": "57f870463963a1823a3fb1876b0d4970c6c5eab4a1ec1d9ccc4c76fc5c86a36b",
+      "size": 3160
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0003/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/engine-cpu.jsonl.gz": {
+      "sha256": "0ebcd04cb6cb60912d4496f32395db6a7f5808311abae41a83af416064fc082d",
+      "size": 26963
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/games.json.gz": {
+      "sha256": "141c6c7043dfc0c9a1d5b021f83701f6d23bfbfd92b5634c33ba5fbec61d0335",
+      "size": 67054
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/games.pgn": {
+      "sha256": "036520ab7a16e11b76c3b17449fced0cd9de41564bde600946b5f4df5d29d263",
+      "size": 2995
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/invocation.json": {
+      "sha256": "b00d4a6bb8c3550801105eb6e46a7e3905b2d6371ee0c2f978e865798fa645f7",
+      "size": 3069
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0004/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/engine-cpu.jsonl.gz": {
+      "sha256": "c6f87b53a97e16f1094927e36b205eaba5ab5a4e0930f8b737d1eff70bc23f3a",
+      "size": 42347
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/games.json.gz": {
+      "sha256": "c3659146fe946bda857b95b7da892022206901c1c4891aa4eb90c8cf58e8a595",
+      "size": 105112
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/games.pgn": {
+      "sha256": "b0e1754436fbafb4b2e62d5814c5e8f7cf0c4f0d0ec862184ef2d2ad05dd5f56",
+      "size": 3710
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/invocation.json": {
+      "sha256": "26b7178ac188b27a6b710cffd6eb3db70681c5a825a06b230f39bad62d2be27a",
+      "size": 3070
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0005/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/engine-cpu.jsonl.gz": {
+      "sha256": "42df11d8c75cb10d8a30e74ab1bbf6f3856803411ef25d33708295fb3bd14569",
+      "size": 29467
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/games.json.gz": {
+      "sha256": "9fbf2a410c219ed68ee4c686ad5a6733c048a668bcdac2dd7d3e550206ea5804",
+      "size": 73110
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/games.pgn": {
+      "sha256": "e4d0a354a12093f0c2a13120760473b8f15f3c21427cf574589102552eefe954",
+      "size": 3067
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/invocation.json": {
+      "sha256": "1cfcf4b6677b081b0c1a230e9b33920094879aa3e4ffdb1f1b1e842c73cbfff7",
+      "size": 2802
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0006/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/engine-cpu.jsonl.gz": {
+      "sha256": "1c781f25b035bf52537e5c3122319905bcb67e293a89632f8edd77412a95e44d",
+      "size": 20860
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/games.json.gz": {
+      "sha256": "5f9d9ffaf8e55d028222de162e2b6dc7c5f0c5f69d0cfcc8c06abd08d7e195e8",
+      "size": 55839
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/games.pgn": {
+      "sha256": "92a7fdea49df7433d67c53dad6556e2a90cc4a98d8f3dacf786157fb00887ef7",
+      "size": 2676
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/invocation.json": {
+      "sha256": "115c008bd71dff37191928e881b024477cddfe93337ddab901d1e1cfc94d3605",
+      "size": 3163
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0007/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/engine-cpu.jsonl.gz": {
+      "sha256": "6131b2f014a681ff070beea5bb200ffa2c9bd76715109c5ee22b6ea0d49dd5f8",
+      "size": 24582
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/games.json.gz": {
+      "sha256": "29b79a6cd209364bdfaed437f0a364c9e0767ec6684c8f55e8a1c9d7ec4c33e4",
+      "size": 65636
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/games.pgn": {
+      "sha256": "db843a197e7c10c94e5688361b341f50576586f790a286b2d85b9ca7be7c39e6",
+      "size": 2852
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/invocation.json": {
+      "sha256": "0aea648a6baf1d7c6607edbdb3497620574eb9b0d8c1b9b349d8f86fd7e44ea3",
+      "size": 3164
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0008/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/engine-cpu.jsonl.gz": {
+      "sha256": "9faf2fbec7ad64c221f2c3ffaae6a8a8107bafcb3707be50180e3f2ac43f6cec",
+      "size": 20789
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/external-source.json": {
+      "sha256": "8e5b05cd33269bf11774bf69d754ced12f5e7b1b94dd06eed0664841e12a3202",
+      "size": 279
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/games.json.gz": {
+      "sha256": "c2769fe3a339172852f038586eb40dcffcab5fb1ddbc440971697fff76c421ec",
+      "size": 56044
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/games.pgn": {
+      "sha256": "88f0a4748942dcf85c0ee346656d2dab88c86c6ddf6cff683eadcba0347d50d5",
+      "size": 2684
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/invocation.json": {
+      "sha256": "ce52fe2b38b00afc6986002ecf092ac66c9c2991dcbf98f912030af5601e73a2",
+      "size": 2896
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0009/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/engine-cpu.jsonl.gz": {
+      "sha256": "9c578fa4ffa5d5fd5a69114cbc507b07669e86f540ab6ba61dcf6e07d3a9e1d2",
+      "size": 21238
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/games.json.gz": {
+      "sha256": "d6c2e3abaeec143dab6ad5bc1852582459bb913560d147f7ea35f7db980001c0",
+      "size": 53164
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/games.pgn": {
+      "sha256": "d9bb809f72c85d93cd8ed138176534419cbf63ad439e589f355d7dadc3085ada",
+      "size": 2655
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/invocation.json": {
+      "sha256": "67477ceca22970b748e27431e448e5f22cf01cba1f8bf3a632a7d7700c8a38bf",
+      "size": 3074
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0010/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/engine-cpu.jsonl.gz": {
+      "sha256": "101b348dfe8fd79720a9e8a7374723fb4a870d118487d28ff015e7336967d3f6",
+      "size": 36487
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/games.json.gz": {
+      "sha256": "6dd4733ad9b16cdbb6ee0318981a7cae65ec1a2721c0659986297c411bc651ea",
+      "size": 91741
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/games.pgn": {
+      "sha256": "4730f76b050a0f167b545f84417dc292e6e07af7299db96a285bf3395f13c354",
+      "size": 3323
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/invocation.json": {
+      "sha256": "82ae0674d7d5bd65e6b2fa927b6b0d3ce3b015d3eb8d5ff33b47dfc9c55c3cd5",
+      "size": 2806
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0011/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/engine-cpu.jsonl.gz": {
+      "sha256": "280ca0f5c6f7e3f3d0fb37417e4f04d69681cf0f1951fd1845f401f088ba1865",
+      "size": 24203
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/external-source.json": {
+      "sha256": "1dfc7cf9b260166b8728942a81a476c3223766489033420b19818a9dc3108942",
+      "size": 509
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/games.json.gz": {
+      "sha256": "64ccd6b2d451ad5cdd00185db704db115cb8442457bcf9eb408166a86f56b001",
+      "size": 60753
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/games.pgn": {
+      "sha256": "71516c47ad5fa215a43e13d953b502331ffb6a8be51d01c2a6d5481777095d16",
+      "size": 2764
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/invocation.json": {
+      "sha256": "097ce2895e58389605b86e6f9f17dac2ceb2dcf0b261e25bc179212e22eb9564",
+      "size": 3073
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/cells/preflight-0012/openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/job-final-accounting.json": {
+      "sha256": "c203a413485489cf9643113e42d7d512c57ef6084b28df9d9e391c664d51a7c7",
+      "size": 723
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/load-summary.json": {
+      "sha256": "3d9d1770f09d8615eb622ee1023db1eed7a0720cba8d506f72fd0bb3ba780bcc",
+      "size": 4230
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/load.jsonl.gz": {
+      "sha256": "e7c1c4e06ac176726d46c8aa0628cc8d757000cf110049723b2e74ac9f955041",
+      "size": 519845
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0001-worker.log": {
+      "sha256": "0a1d3bf856b59aa8dc8fe8fa31ccd8fcdc15170be878ed2b3a5acb2a98c6ca60",
+      "size": 251
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0002-worker.log": {
+      "sha256": "453dde3ef3ab2c26ecf6ce30035998943d45b64a3280620fb1d71fa5bf689519",
+      "size": 251
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0003-worker.log": {
+      "sha256": "9404ed9133f86784f0daf4cf9c11898f0d88ab07087a322bb13ece18c14c365c",
+      "size": 252
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0004-worker.log": {
+      "sha256": "ff739db5ab5966264664b60ece973a17c29f60750b114b9f86411da87c19fb03",
+      "size": 268
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0005-worker.log": {
+      "sha256": "9bb8882dbe0de41f9cbcbd5dad88401cef0207d3de13b183580ef472888493c1",
+      "size": 253
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0006-worker.log": {
+      "sha256": "54491cb3a4a5e6b5af844c2b0e10411dfb1bd2f5a814da4d0d598b8ea7636ec6",
+      "size": 252
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0007-worker.log": {
+      "sha256": "5ffe5c44de0923a3808050e0be9dbaca2e34180b98ae9d572bb5452ba3053cf4",
+      "size": 251
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0008-worker.log": {
+      "sha256": "96f43fff6b5e22f19e45947430ac83ccdd43988dbca12eaf4e39a3e1c3cc4374",
+      "size": 252
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0009-worker.log": {
+      "sha256": "ea7f6b6d482671339001c9781a024c4c342ae113b9f5df54680cda6d66146f0c",
+      "size": 267
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0010-worker.log": {
+      "sha256": "7fbc44b31239c40c3d2cf8eda66ee1fdb9d713201d7ee99ad3966b11ea792bd0",
+      "size": 281
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0011-worker.log": {
+      "sha256": "b1629f7251f102d820a12077b88e184b8f72254e44e13d43a69df66d6a4011ba",
+      "size": 253
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/preflight-0012-worker.log": {
+      "sha256": "9965d57e2e0cb01a4a03cbe3928f0d9de50d02ac288402c93d7655799252e50a",
+      "size": 251
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/report.json.gz": {
+      "sha256": "f934f274b61ca0b36f57e4c6e8c8837469098e6e1f34c5b37f140219c8cd6c4c",
+      "size": 13289
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/run-started.json": {
+      "sha256": "dcf4171127d2ac961d01862854f72d88a076a4fe38b55901e795de4a696e4ab8",
+      "size": 65
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0001.json": {
+      "sha256": "9fe96c280e942aa8f2dcdabcd75dca6c1f8dbc318f7403e015e8b0a8dad2aedc",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0002.json": {
+      "sha256": "2d48a5b4cab2dd2033374504a8afa31d0708390d7df810b444a2a9a1008bfece",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0003.json": {
+      "sha256": "6648f708a50eed3278b6475fb1be270787f156299912589468889a2481d56f0c",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0004.json": {
+      "sha256": "1f5ede2f7832195af823878e6425f2818b21c965642eaac0126df472f73558ab",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0005.json": {
+      "sha256": "a65508eae792f3c9234ee90c755e31157c9593b617ba46efc833b4c47ad43774",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0006.json": {
+      "sha256": "b100c26cca610fee394ae9bb090479a749f7c643837ce147d5467655215b8e1a",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0007.json": {
+      "sha256": "94211dca08d3262925a5bb36f0870943b61d74b0628a132f354bb2d1eb494b94",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0008.json": {
+      "sha256": "c4ff41034801b20583c8188bfe5ce85edf24d2d8aa3813b640c92b4f5fc4721b",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0009.json": {
+      "sha256": "23fba76af0a3a15caa04c94fcaf6af98115c9f9aa2869717b1b6090cd5dbaf69",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0010.json": {
+      "sha256": "e3c71ae881b7140a19923096dcba6601b955c3734c5babd3df4906211e472b30",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0011.json": {
+      "sha256": "97092085da74629ae49b55acdc1b4fecc3c49bb169378d5827e0f86a5bfa3f6f",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight/start-gates/preflight-0012.json": {
+      "sha256": "e3aef84d69a7d850fb650a8790b01109fde224d7e69d9e56764fca88b7d37d7b",
+      "size": 122
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight-console.log.gz": {
+      "sha256": "d55bc1ad98f843e0510ba7972e7d9f8f1ec15287e93d2c43d8d4b13af5480858",
+      "size": 13339
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight-openings.json": {
+      "sha256": "4586633f583e40913d86961311f9aa4f7580b7abf15194b2b53c66852605287e",
+      "size": 1240
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight-stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preflight-summary.json": {
+      "sha256": "ec033b08491c4f40002d1016c5e4ebfc251eaa6588ccbc0048c5fa5bc59e7796",
+      "size": 45664
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-00-2026-10-21-m2-formal-plan.md": {
+      "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b",
+      "size": 6524
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-01-exclusion-audit.json.gz": {
+      "sha256": "7931072203bb8479a6177acadd7ada0047798cdb278f33be87641c3acd663e6e",
+      "size": 62191
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-02-exposure-index.json.gz": {
+      "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb",
+      "size": 6951872
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-03-test-report.json": {
+      "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094",
+      "size": 793
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-04-hardware.json": {
+      "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c",
+      "size": 337
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-05-native-before.json": {
+      "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b",
+      "size": 1963
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-06-test-report-final.json": {
+      "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f",
+      "size": 799
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-07-2026-10-21-m2-job-accounting-plan.md": {
+      "sha256": "28b40d5bad2c11e137039b11b1a956491ca8a34ba537e736a4fe933592eb416b",
+      "size": 9410
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-08-2026-10-21-m2-formal-plan.json": {
+      "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb",
+      "size": 5522
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-09-2026-10-21-m2-job-accounting-restart-001.md": {
+      "sha256": "c78167b20a77fca1e439a14c774650dd83904a4c6f7944179285432ed1afa995",
+      "size": 7164
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-10-2026-10-21-m2-job-accounting-plan.json": {
+      "sha256": "9ea1427dbb59c3f394ebd3622f91ac1f12ecc4e2828f4e15bcee73c953460c14",
+      "size": 7722
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-11-2026-10-21-m2-job-accounting-restart-001.json": {
+      "sha256": "1f7f1638e0c4d79c84611a4987ce2e496ffc939fe73b6e514528058e72c58f0a",
+      "size": 9748
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/preregistration-12-2026-10-21-m2-engine-cpu-plan.md": {
+      "sha256": "1e4e176197f7b61dc1b83a1ad34e2046d07db0fa44722c4f7dbf4ff2648b9703",
+      "size": 9819
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/product-main-audit-stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/product-main-audit.json": {
+      "sha256": "0166d70741119cae2a99222c91c9e874233a04c9b7a79d10ac8a22a3bab6ab25",
+      "size": 8667
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/product-preflight-audit-stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/product-preflight-audit.json": {
+      "sha256": "f6446f288a9be47efdc07cd91ee77c95cb83da3588f17c790e13dd66580b1ba7",
+      "size": 5940
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/profiles/regicide-classical-m1/profile.json": {
+      "sha256": "8fc0a382475095914310a867c7f21947d2dc78da638b940a33933a9daa0f020b",
+      "size": 1358
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/profiles/regicide-nnue-s32-precision-20261019/profile.json": {
+      "sha256": "2ba43eeb63cde02db0393fba478e98ad3a8bbe4878de092a47a164caa4371a8e",
+      "size": 2713
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/profiles/regicide-residual-v2-quality-attempt4/profile.json": {
+      "sha256": "86e9c1a6cf8906415330422ac68da321500698cec2676873498a1e108b9a67f7",
+      "size": 2407
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/profiles/stockfish18-x86-64/profile.json": {
+      "sha256": "4757c4c063ea6313fb941d8674b589618374f4b86ced0cae68cd8e9e2459c2ea",
+      "size": 1002
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/profiles/sunfish-e396948-cpython313/profile.json": {
+      "sha256": "c2588ea646279465bf7f99d8b2cfc4020c454e3054015cc37bf6feb1671caad9",
+      "size": 1857
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/seal.json": {
+      "sha256": "ac7645b41b0d16c5fa2525419b979f37aedc7742d0d805bfb7133f2d90d261e5",
+      "size": 98
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/attempts/attempt-001/source-plan.json": {
+      "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448",
+      "size": 13100
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/probe.py": {
+      "sha256": "3ffcda5ab8590baede651330d1a2b90efbb9d9257656ddbf644c53628aad2d3c",
+      "size": 11426
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/probe_children.py": {
+      "sha256": "4c1b43e9d60beda4eacd2478fab7778feb0c6c4dd930f81e13e7aed013f3a8db",
+      "size": 4663
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/probe_children_default.py": {
+      "sha256": "1e0d244b471282ee2440d39e7b8b232e6102034144440e6867cfe34f1a651b39",
+      "size": 4659
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/probe_final.py": {
+      "sha256": "70b5782eba53e72bfb49205d1878fcdef0d940232d08f69a276d4ce122c919da",
+      "size": 11588
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/probe_inventory.py": {
+      "sha256": "e86b1dcc06c1b958c7bb9ccad2013e776d3aaeb5dfae0e2ff77d941b61d6debf",
+      "size": 6727
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/README.md": {
+      "sha256": "fb1a404db7d9678d41d9a8335ffb789d22b38dc9dd5f052ad6286bc0810dc66b",
+      "size": 3518
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/receipt-children-default.json": {
+      "sha256": "eed78cf8b6e4c50f96228f787acc52ae8cccacc4d44fccfe27fdb2c3a4cb35ba",
+      "size": 3831
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/receipt-children.json": {
+      "sha256": "5239346ac6006d639b1914e5fa771bc24e774e1f731e01b2a6c2e6dca55f6a7a",
+      "size": 4884
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/receipt-final.json": {
+      "sha256": "8821fc6c9de6ae793569af6cea2c18c9bfe506bda0c89299b6cccd374def7fab",
+      "size": 26109
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/receipt-inventory.json": {
+      "sha256": "17b43b65d004570d9c09c1bd92455c454d5f667dfa551378320560bae49e84fb",
+      "size": 3521
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/receipt.json": {
+      "sha256": "40b1d6a2f11cdaeae12d53a3bce03b6ea625333c1b5f666c4f91c5e581dff6d6",
+      "size": 4345
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-endpoint/source-initial/m2_engine_identity.py": {
+      "sha256": "c8e41e9ae8862a8e52afb2bf0e3e78a2a2fd441744a59cc38fb77a760f449bac",
+      "size": 13889
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/execution.json": {
+      "sha256": "90c319230761195511840178a783be666eff0b5dfcbd69e7815b439f5b14c002",
+      "size": 3022
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/child-0.001-1.json": {
+      "sha256": "5a5d356e6fb7b977e57765b6cf540201ffb77487622501be67ccf40ff0475ad3",
+      "size": 2388
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/child-0.08-2.json": {
+      "sha256": "fe2f7acbc62b259036dc4b70b863f1795aa731801fd28701221809ba170e11c7",
+      "size": 2408
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/close-preserves-live-child.json": {
+      "sha256": "6934d1b9f53baaa6d6cf03de4e0206e3dfa214f9494906053f61912d7f7fd88d",
+      "size": 695
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/raw/self-process.json": {
+      "sha256": "6f1734920f1558adbea866c1b7be78c014eabee6aafdc13748fb85384c831715",
+      "size": 645
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/native-meter/README.md": {
+      "sha256": "13149dd1bcbd1df9504d2a12b1000b819534d13624ebc69f605448b5d71d2460",
+      "size": 1913
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/offline-tests/m2-formal-v4.log": {
+      "sha256": "2a16d11c6951ec160662105490be292b84d7dc22978b69ef1f50ad4c0f6b1749",
+      "size": 3293
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-attempt-001-main-stopped.json": {
+      "sha256": "1e37ff90b906f6a7e61e9e22382c4ff29def40a8ffbd841f31e2583bcde0c4be",
+      "size": 260860
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-attempt-001-preflight.json": {
+      "sha256": "5589ca089e09d0efcc2343329373ccb09d722177343ba2409946ccb0cc45fe18",
+      "size": 150627
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-native-cpu-recalculation.json": {
+      "sha256": "5b6847b13dd7626115165dc8319cd84f4712e685ff589621e181e3e64984c0ea",
+      "size": 1508
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-plan-preparation-r2.json": {
+      "sha256": "fba915c48ee62c3ae92375161a67895b76e89acd19b10cc09a04de109cb136af",
+      "size": 6425
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-plan-preparation-r3.json": {
+      "sha256": "fd6e3381dfde3f3ea1bb406b2614083d0c175da3859d0610f86b018176f54da0",
+      "size": 6904
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-plan-preparation.json": {
+      "sha256": "4ca8c1a33f630500b9cebfd1224d0b13d7838d8fbe1a81376ba7798787a21524",
+      "size": 6252
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer-tool-preparation.json": {
+      "sha256": "37fca56fa3cb2a8070e313d1f064ae42c7bcc75840e38946d7ffa7592e51d1c0",
+      "size": 3262
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer_cpu_fixture_tests.py": {
+      "sha256": "c47b5e300dda6372817a95685ccac9b9b15f3063c245cb643e838851679b6562",
+      "size": 9464
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer_game_audit_engine_cpu.py": {
+      "sha256": "457be3213c0ddacb2a010142c868e90849348dd9579a849ae6f41814fb128e32",
+      "size": 87260
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/peer_stopped_game_audit_engine_cpu.py": {
+      "sha256": "1d496978cf1a0e9205f210c94d582b063aed26a4b07256fef2c6c9a9ac022cce",
+      "size": 96453
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/pid-parent-audit/probe_readonly.py": {
+      "sha256": "bf4b71ae83e9db04672277af60e133ac60427f4945ff5b4c0bae253256822dff",
+      "size": 8013
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/pid-parent-audit/probe_readonly_r2.py": {
+      "sha256": "3b6f0b2bf15e57e7763eee92c9ebbc89291bc5cc8f5e158e10a1709c42541eb5",
+      "size": 8002
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/pid-parent-audit/README.md": {
+      "sha256": "2c64aa06f8dca9b68a41891b5b83f8227ea7c38357cd5cfb9dc92d75162b4a4f",
+      "size": 4142
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/pid-parent-audit/receipt-diagnostic-error.json": {
+      "sha256": "b026d794b91b883aea7eacb874b4cfd7c37df01df1455e769654d803a86ee324",
+      "size": 357
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/pid-parent-audit/receipt-r2.json": {
+      "sha256": "dd85716111659cf751fac6bf3afd3c927ba83f53e828523d2911dd9881164007",
+      "size": 6801
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/preservation-before.json": {
+      "sha256": "6730b07db626736d30372e0c7c5971aa0ff89264aa79be8af47c3a696325ecee",
+      "size": 6345
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/README.md": {
+      "sha256": "d2bacc41125878f8a17abbdbef44ee644f18ec3e750916f7a7031813007cf19b",
+      "size": 3454
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/regression.json": {
+      "sha256": "b05a7da9b86ea649ecfec461c2a491621eeae7c7754ab99ea8d445193ffbc8a3",
+      "size": 3475
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/regression.log": {
+      "sha256": "01e68278da3289d7e2c380358b4fd0ed09476850b1baf879946ca6a2bab14862",
+      "size": 16700
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/run_regression.py": {
+      "sha256": "b004a4ff89e40d2b4d5278bff5d93325488e2b7ea4bd2adcba54b5ccd7b0bf26",
+      "size": 2644
+    },
+    "docs/checks/2026-10-21-m2-engine-cpu/verify_engine_artifacts.py": {
+      "sha256": "20df4cdf22d34337c074bc44eafea896a6640e566b763d4ebe21568df28b31cc",
+      "size": 19498
+    },
+    "docs/experiments/2026-10-21-m2-engine-cpu-attempt-001-outcome.md": {
+      "sha256": "fa8834e83bd33ebaac7e0c3ff298cdc171dd28ce272d3390734f6a7431fbcf7f",
+      "size": 3719
+    },
+    "docs/experiments/2026-10-21-m2-engine-cpu-plan.json": {
+      "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448",
+      "size": 13100
+    },
+    "docs/experiments/2026-10-21-m2-engine-cpu-plan.md": {
+      "sha256": "1e4e176197f7b61dc1b83a1ad34e2046d07db0fa44722c4f7dbf4ff2648b9703",
+      "size": 9819
+    },
+    "docs/ROADMAP.md": {
+      "sha256": "128ba586e14076ade3d327bed6d787ade908b176f8c4e0cfdbf829719c41e65d",
+      "size": 35107
+    },
+    "scripts/compare_engines.py": {
+      "sha256": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+      "size": 31961
+    },
+    "scripts/engine_profile.py": {
+      "sha256": "75cf962318e5627b31264c3bf92c012ae95fd05ccd8d900e271019e1fb358cdb",
+      "size": 16155
+    },
+    "scripts/external_baseline_matrix.py": {
+      "sha256": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+      "size": 24618
+    },
+    "scripts/m2_engine_cpu.py": {
+      "sha256": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+      "size": 9196
+    },
+    "scripts/m2_engine_identity.py": {
+      "sha256": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+      "size": 15896
+    },
+    "scripts/m2_engine_identity_v2.py": {
+      "sha256": "e40ff30681de0d0cc56733cef53274e823afb4ec94e7060d6dc9f8c937f3c829",
+      "size": 27237
+    },
+    "scripts/m2_engine_receipts.py": {
+      "sha256": "6ffae5ddf98b1c5f3c2375717775f98810d69ed944b708f636e9a93934c4cf8a",
+      "size": 17561
+    },
+    "scripts/m2_engine_receipts_v2.py": {
+      "sha256": "a9277292f36837fb4260e9dbd75e832d64d3e9aa8c8b570b057521fd026c1e9e",
+      "size": 1387
+    },
+    "scripts/m2_engine_tracking.py": {
+      "sha256": "f24a79484b108cb3ca4243de78802a7463beaea24c36448fbd0ea25f30fd0c93",
+      "size": 9509
+    },
+    "scripts/m2_engine_tracking_v2.py": {
+      "sha256": "f5eb5321ce1bcf6f43cad32dfb45ab601576cf2daafc8d6adcf20fe10136c5e5",
+      "size": 9615
+    },
+    "scripts/m2_formal.py": {
+      "sha256": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa",
+      "size": 38072
+    },
+    "scripts/m2_formal_summary.py": {
+      "sha256": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea",
+      "size": 4287
+    },
+    "scripts/m2_formal_summary_v2.py": {
+      "sha256": "c66c05c47ffc7fd65320196b1d958fc9814aa63d015137c8978555b62b61598e",
+      "size": 4333
+    },
+    "scripts/m2_formal_summary_v3.py": {
+      "sha256": "dfc47b759b2af9100a6a39df050c26d9177038041cfe985d09da8697bfe38334",
+      "size": 4333
+    },
+    "scripts/m2_formal_summary_v4.py": {
+      "sha256": "0c228964c5e288c45e6c18e36784efcdfac8eced5da9ea365d4d51e68d2469e5",
+      "size": 6416
+    },
+    "scripts/m2_formal_summary_v5.py": {
+      "sha256": "a9a0bbcfd1b16ac3103c327444c0402b43ef8d8a4ee3ad43040c78ff038d46e2",
+      "size": 6518
+    },
+    "scripts/m2_formal_v2.py": {
+      "sha256": "6a3995529cf1ad9289d32b23cf114549b4f2d611074f04a985229500ebd301b4",
+      "size": 38625
+    },
+    "scripts/m2_formal_v3.py": {
+      "sha256": "31f68fe9184792e7603119178ee32f0d458f90a0c4a8782a79f3256a0569b64c",
+      "size": 39256
+    },
+    "scripts/m2_formal_v4.py": {
+      "sha256": "c9597b1739da3640fa04941f547ab70b3499d1ed5d71a9d4f302525c339409c2",
+      "size": 39777
+    },
+    "scripts/m2_formal_v5.py": {
+      "sha256": "1da9fdd16306c6ddd6b8e996946a171c10dff6a99b98dd851236bc0d21747612",
+      "size": 41070
+    },
+    "scripts/m2_job_accounting.py": {
+      "sha256": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+      "size": 15021
+    },
+    "scripts/m2_job_load_guard.py": {
+      "sha256": "c4b5546d61798cd24d82dfba42d272726a84581dd42d597ffb55497482fff743",
+      "size": 7716
+    },
+    "scripts/m2_job_operations.py": {
+      "sha256": "72f25233bad8ad8efef926955e6b4c2e125f75f1ade1ce90fc8283b9fcfda472",
+      "size": 1854
+    },
+    "scripts/m2_job_receipts.py": {
+      "sha256": "5e141c94fd4d6340c72022161e164082d611e379a0176d4d83e9fafa6c2dbd98",
+      "size": 19158
+    },
+    "scripts/m2_load_guard.py": {
+      "sha256": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+      "size": 41235
+    },
+    "scripts/m2_warning_load_guard.py": {
+      "sha256": "1f6156bc1df9a42c6c0e3d78506bafa534d1469ec56d4932b12ad13e9245778c",
+      "size": 3678
+    },
+    "scripts/m2_warning_receipts.py": {
+      "sha256": "9cc8aeac11aac33c792f1c5408f3d38e1c6048a0560e58cca251dc1e23c38812",
+      "size": 20721
+    },
+    "scripts/see_clean_guard.py": {
+      "sha256": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967",
+      "size": 26604
+    },
+    "tests/m2_engine_cpu_tests.py": {
+      "sha256": "80863f1ce1916d6dce2de9d79cb8e1d7e463b5460f2217402d15025336e71a20",
+      "size": 16026
+    },
+    "tests/m2_engine_identity_tests.py": {
+      "sha256": "0b3b80ca7a01f973bff80a68a9c89a633bedde3cf383447e35c2877bceef7bf4",
+      "size": 16523
+    },
+    "tests/m2_engine_receipts_tests.py": {
+      "sha256": "302ab9922cbaaaa5b29e315b2318c0c982a864c5384a7bf8ebd99a07becc08d5",
+      "size": 16205
+    },
+    "tests/m2_engine_receipts_v2_tests.py": {
+      "sha256": "67a31e84569d19fd5e4f6b485e45ae718ea216a0361c0a84bdaf094a78bbc31b",
+      "size": 16753
+    },
+    "tests/m2_engine_tracking_tests.py": {
+      "sha256": "2bc0f35c5ee94ec68eef52d9dea675b8abd204302d23be303bab88f614ac3069",
+      "size": 14434
+    },
+    "tests/m2_formal_v4_tests.py": {
+      "sha256": "ee882d9f2b2797bab244d97add78a90d5a35b5f37e746d4acb4df370d4d7b050",
+      "size": 19768
+    },
+    "tests/m2_formal_v5_tests.py": {
+      "sha256": "7a6a167cbfc639bc7da2e3ec3bf5de43f9ddbb6332c9c45299d524d79599cb15",
+      "size": 21757
+    },
+    "tests/m2_warning_load_guard_tests.py": {
+      "sha256": "98e3cd64cafcaac4278f20640557c7b325dd35e96c6bb39634e683dd941c4385",
+      "size": 14152
+    }
+  },
+  "ignored_files": [],
+  "excluded_payload_policy": {
+    "verify_all": true,
+    "selectors": [],
+    "unmatched_selectors_without_archives": []
+  },
+  "scope": "Stored/decoded/current raw bytes, sealed inputs and evidence files only. Phase outcomes are reported from records, including successful main completion; this is not a strength pass, Elo estimate or hermetic distribution claim."
+}

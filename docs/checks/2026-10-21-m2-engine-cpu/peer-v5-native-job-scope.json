@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "audited_utc": "2026-10-21T11:55:23.318948+00:00",
+  "audit_script_sha256": "89e6d1f9c745c05bfd6138597e4e108109118c0382399788078c2bef59030220",
+  "input_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-21-m2-engine-cpu\\native-job-scope\\attempt-001\\worker-receipt.json",
+  "input_sha256": "459784f82f1cc9f0597eca4791fae04e288029935593576d8cec8a7cfe425eda",
+  "expected_worker_identity": [
+    8096,
+    134370572629554963
+  ],
+  "results": [
+    {
+      "case": "regicide",
+      "independent_scope_audit": {
+        "status": "PASS",
+        "worker_pid": 8096,
+        "coordinator_pid": 8296,
+        "job_scope_method": "current-immediate-job-and-held-creation",
+        "local_processes": 1,
+        "excluded_outside_job_edges": 0,
+        "excluded_stale_job_edges": 0
+      }
+    },
+    {
+      "case": "regicide-synthetic-parent-edge",
+      "independent_scope_audit": {
+        "status": "PASS",
+        "worker_pid": 8096,
+        "coordinator_pid": 8296,
+        "job_scope_method": "current-immediate-job-and-held-creation",
+        "local_processes": 1,
+        "excluded_outside_job_edges": 1,
+        "excluded_stale_job_edges": 0
+      },
+      "not_historical_reproduction": true
+    },
+    {
+      "case": "stockfish",
+      "independent_scope_audit": {
+        "status": "PASS",
+        "worker_pid": 8096,
+        "coordinator_pid": 8296,
+        "job_scope_method": "current-immediate-job-and-held-creation",
+        "local_processes": 1,
+        "excluded_outside_job_edges": 0,
+        "excluded_stale_job_edges": 0
+      }
+    },
+    {
+      "case": "sunfish",
+      "independent_scope_audit": {
+        "status": "PASS",
+        "worker_pid": 8096,
+        "coordinator_pid": 8296,
+        "job_scope_method": "current-immediate-job-and-held-creation",
+        "local_processes": 2,
+        "excluded_outside_job_edges": 0,
+        "excluded_stale_job_edges": 0
+      }
+    }
+  ],
+  "error": null,
+  "formal_games_run": 0,
+  "scope": "Read-only independent reconstruction of actual native current-Job scope and one explicitly synthetic parent-edge proof; no product validator imported, no workload started, no historical trigger claimed."
+}

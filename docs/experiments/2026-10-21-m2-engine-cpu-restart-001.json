@@ -1,0 +1,341 @@
+{
+  "schema_version": 3,
+  "id": "m2-formal-engine-cpu-20261021-restart-001-v5",
+  "phase": "formal-m2-engine-cpu",
+  "preregistered_utc": "2026-10-21T11:50:39.298191+00:00",
+  "candidates": [
+    {
+      "path": "../../config/engine-profiles/classical.json",
+      "sha256": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2"
+    },
+    {
+      "path": "../../config/engine-profiles/residual-v2.json",
+      "sha256": "a174b52e543430768b7993dbc3c08ef76dad8a8b4f1cd6a7af46d7ae10562ed0"
+    },
+    {
+      "path": "../../config/engine-profiles/nnue-s32.json",
+      "sha256": "58cda6831e0b45163306ae6400091ab1e08bcb20d95708bf2a2464022856fda1"
+    }
+  ],
+  "opponents": [
+    {
+      "path": "../../build-m2-opponents/profiles/stockfish18.json",
+      "sha256": "23fa29ab8b2c9b5cd52e89a92d743487091e9199b51c9a7d8dc5a49126619090"
+    },
+    {
+      "path": "../../build-m2-opponents/profiles/sunfish.json",
+      "sha256": "fff5bb9e1e95ec9e5a993efe4e9993c13a5e19a9d36cb69bbdf0f9fcb68e0fb3"
+    }
+  ],
+  "openings": {
+    "path": "../../tests/data/m2_formal_openings_2026-10-21.json",
+    "sha256": "1994d67709942de642b0e577ded78e382195df260b806117edc8aa774e454edd"
+  },
+  "preflight_openings": {
+    "path": "../../tests/data/m2_preflight_openings_2026-10-21.json",
+    "sha256": "1e6b08b689701e95c34adc8809cf1a104d12413c8ad02c02461de1ef2a6817b8"
+  },
+  "preflight_opening_count": 1,
+  "movetimes_ms": [
+    100,
+    1000
+  ],
+  "max_plies": 500,
+  "draw_policy": "claim",
+  "lane_affinity_masks": [
+    15,
+    240,
+    3840,
+    61440
+  ],
+  "topology": {
+    "physical_core_masks": [
+      3,
+      12,
+      48,
+      192,
+      768,
+      3072,
+      12288,
+      49152
+    ],
+    "logical_cpus": 16,
+    "scope": "Single Windows processor group, physical-core affinity masks."
+  },
+  "load_policy": {
+    "interval_seconds": 0.5,
+    "max_sample_gap_seconds": 2.0,
+    "max_nonworker_cpu_fraction": 0.2,
+    "host_window_seconds": 2.0
+  },
+  "idle_probe_seconds": 5.0,
+  "move_deadline": {
+    "multiplier": 2.0,
+    "slack_seconds": 0.25
+  },
+  "cell_timeout_seconds": 1500,
+  "preflight_timeout_seconds": 1800,
+  "main_timeout_seconds": 14400,
+  "retry_policy": "no-result-based-retries-stop-on-first-failure",
+  "statistics": {
+    "method": "descriptive-paired-colors-preserving-broad-cluster-percentile-bootstrap",
+    "seed": 2026102101,
+    "resamples": 20000,
+    "interval": [
+      0.025,
+      0.975
+    ],
+    "minimum_clusters": 2,
+    "elo_estimate": null,
+    "promotion_rule": null
+  },
+  "preregistration_artifacts": [
+    {
+      "path": "2026-10-21-m2-formal-plan.md",
+      "sha256": "f8e1bd11a1f00631eba54ab6de7eeab0302bbf7c53c04d27c1d75dfbcfdcc36b"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/exclusion-audit.json",
+      "sha256": "0130625316c53abe655feb8a1e4943f2b2aa8725c44fc75c00524f6422fb5436"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/exposure-index.json.gz",
+      "sha256": "2d7d669485b26d69ce51ddc2060efc8e160c9d2b22ef530a18f6f5ff97fb44cb"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/test-report.json",
+      "sha256": "fafe49335cb816133c3478def7a4aa9c2e4acc0008a499cb1e706408160f4094"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/hardware.json",
+      "sha256": "cd4375c0d1d74f9e5570eb57a3a9629d4bc0ad11e0ea5bc05f08a3ec17c3c63c"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/native-before.json",
+      "sha256": "34073df32c36226d68354525229d2c776d23b60e6170a42aaf351490888fe82b"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-formal/openings/test-report-final.json",
+      "sha256": "2fed5cf1506af9af64179aacffe0da5ce2966ece151480392515e301f7cbdd5f"
+    },
+    {
+      "path": "2026-10-21-m2-job-accounting-plan.md",
+      "sha256": "28b40d5bad2c11e137039b11b1a956491ca8a34ba537e736a4fe933592eb416b"
+    },
+    {
+      "path": "2026-10-21-m2-formal-plan.json",
+      "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb"
+    },
+    {
+      "path": "2026-10-21-m2-job-accounting-restart-001.md",
+      "sha256": "c78167b20a77fca1e439a14c774650dd83904a4c6f7944179285432ed1afa995"
+    },
+    {
+      "path": "2026-10-21-m2-job-accounting-plan.json",
+      "sha256": "9ea1427dbb59c3f394ebd3622f91ac1f12ecc4e2828f4e15bcee73c953460c14"
+    },
+    {
+      "path": "2026-10-21-m2-job-accounting-restart-001.json",
+      "sha256": "1f7f1638e0c4d79c84611a4987ce2e496ffc939fe73b6e514528058e72c58f0a"
+    },
+    {
+      "path": "2026-10-21-m2-engine-cpu-plan.md",
+      "sha256": "1e4e176197f7b61dc1b83a1ad34e2046d07db0fa44722c4f7dbf4ff2648b9703"
+    },
+    {
+      "path": "2026-10-21-m2-engine-cpu-plan.json",
+      "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+    },
+    {
+      "path": "2026-10-21-m2-engine-cpu-restart-001.md",
+      "sha256": "324cbcc09996df792f0065b75cb76b5ff646e99c4cc8007273cd695c1af3806e"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-engine-cpu/peer-attempt-001-main-stopped.json",
+      "sha256": "1e37ff90b906f6a7e61e9e22382c4ff29def40a8ffbd841f31e2583bcde0c4be"
+    },
+    {
+      "path": "../checks/2026-10-21-m2-engine-cpu/pid-parent-audit/receipt-r2.json",
+      "sha256": "dd85716111659cf751fac6bf3afd3c927ba83f53e828523d2911dd9881164007"
+    }
+  ],
+  "scope": [
+    "Fix a confirmed endpoint numeric-parent selection defect before a fresh preregistered v5 preflight and 768-game main. No score-based retry or candidate selection.",
+    "768 new main games and 24 separate preflight games with per-engine CPU and response receipts; earlier partial games are not pooled.",
+    "Three original M1 profiles, two original opponents, exposed fixed opening banks, lane assignments and all numerical match limits unchanged.",
+    "Whole-host residual 20 percent / 2 second observations are warnings only and never by themselves stop a phase or invalidate comparison.",
+    "Each actual engine search requires stable held-process PID/creation identity, raw user/kernel CPU before and after, requested time, response wall time and unchanged deadline.",
+    "CPU time, CPU/wall ratio and low or zero CPU are descriptive. No invented CPU percentage or NPS floor; CPU minus wall differences are not certified OS waiting time.",
+    "Known external engine CPU/identity, counter/access/gap failures and response deadlines remain fail-stop. No complete OS/power/thermal or homogeneous-core isolation claim.",
+    "Previously exposed opening families are not a fresh holdout; no result-adaptive reselection or evaluator promotion.",
+    "Old plans, sources, invalid attempts and records stay unchanged; no retroactive PASS or partial-game pooling.",
+    "Require complete current calling-Job PID scope with no-breakaway and raw creation-ordered held endpoint proof; do not open unrelated protected outside-Job parent matches.",
+    "Prior v4 preflight PASS stays historical. Prior main40 remains STOPPED/invalid; no old game counts toward fresh v5 pre24/main768. Failed child PID and first inventory were missing, so the exact historical child cause is not proven."
+  ],
+  "worker_runtime": {
+    "executable": {
+      "path": "C:\\Users\\hanso\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "sha256": "31fe10b4ed82a2f960af0ef9931f46a4b84ff286f8b6ffd9dee098cf4f10f17f"
+    },
+    "pythonpath": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages",
+    "package_files": [
+      {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\__init__.py",
+        "sha256": "1fde6a8e932508d14b31f6a584497b49c2969fc3c7cdc675347f819f0d667a5b"
+      },
+      {
+        "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\.venv-tests\\Lib\\site-packages\\chess\\engine.py",
+        "sha256": "40a1407749ea43b4ed3174f0603e0316a9c971b8943113fbea5be47c82bde22b"
+      }
+    ],
+    "python_version": "3.13.16",
+    "chess_version": "1.11.2"
+  },
+  "source_plan": {
+    "path": "2026-10-21-m2-formal-plan.json",
+    "sha256": "da587c70ede95fe482f00895a5d44c63a577b36686b726225242ed16407431fb"
+  },
+  "accounting_policy": {
+    "mode": "windows-job-plus-coordinator-cpu",
+    "system_api": "GetSystemTimes: delta(kernel + user - idle)",
+    "job_api": "QueryInformationJobObject(JobObjectBasicAccountingInformation): delta(TotalUserTime + TotalKernelTime), active and terminated processes",
+    "coordinator_api": "GetProcessTimes: fixed coordinator PID and creation time; coordinator must not belong to the measured job",
+    "residual_formula": "system_busy_delta_ticks - job_delta_ticks - coordinator_delta_ticks",
+    "approximate": true,
+    "raw_signed_residual_required": true,
+    "read_brackets_and_any_clipping_adjustment_required": true,
+    "pre_assignment_cpu_boundary_role": "diagnostic only; do not assume additive offset or strict residual bounds",
+    "full_process_attribution_role": "additional diagnostic, not an inferred per-app split of residual",
+    "threshold_scope": "whole-host residual CPU fraction using the unchanged load_policy; not a total-busy or per-lane cap",
+    "individual_search_contention_proven": false,
+    "normal_exit_count_not_derived_from_total_terminated_processes": true,
+    "final_job_cpu_before_handle_close_required": true
+  },
+  "exposure_policy": {
+    "previously_exposed_fixed_baseline": true,
+    "fresh_holdout": false,
+    "result_adaptive_reselection": false,
+    "prior_failed_attempts_preserved": true,
+    "new_full_main_games": 768,
+    "new_preflight_games": 24,
+    "previous_partial_games_count_toward_new_completion": false
+  },
+  "measurement_helper_policy": {
+    "root_runner": "scripts/m2_formal_v5.py",
+    "summary_tool": "scripts/m2_formal_summary_v5.py",
+    "previous_v2_sources_preserved": true,
+    "actual_git_verification_before_measurement": true,
+    "sealed_exact_query_cache_during_measurement": true,
+    "cache_scope": [
+      "root-initial-validation",
+      "root-periodic-validation",
+      "root-final-validation",
+      "root-audit",
+      "worker-validation"
+    ],
+    "unsealed_or_failed_git_queries_rejected": true,
+    "existing_commit_validator_retained": true,
+    "periodic_actual_file_hash_validation_retained": true,
+    "sources_and_sha256_frozen_by_runner": true,
+    "prior_failure_cause_proven": false,
+    "previous_v3_sources_preserved": true,
+    "previous_v4_sources_preserved": true
+  },
+  "restart_policy": {
+    "reason_kind": "confirmed-numeric-parent-selection-defect-fixed-with-job-scope-and-creation-proof",
+    "result_based_retry": false,
+    "previous_plan": {
+      "path": "2026-10-21-m2-engine-cpu-plan.json",
+      "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+    },
+    "previous_attempt": "build-m2-engine-cpu/attempt-001",
+    "previous_preflight_completed_games": 24,
+    "previous_preflight_historical_audit_status": "PASS-preserved-not-reused-as-v5-gate",
+    "previous_main_completed_games": 40,
+    "previous_main_valid_for_comparison": false,
+    "previous_attempt_preserved": true,
+    "previous_partial_games_pooled": false,
+    "fresh_preregistered_preflight_required": true,
+    "new_main_requires_complete_clean_preflight": true,
+    "new_full_main_games": 768,
+    "new_preflight_games": 24,
+    "historical_failed_child_identity_proven": false,
+    "unchanged_stop_on_first_actual_failure": true,
+    "residual_warning_is_not_actual_failure": true
+  },
+  "parent_plan": {
+    "path": "2026-10-21-m2-engine-cpu-plan.json",
+    "sha256": "33bf24f3160be1bbd1ea86289e0e1c7485582f70333e5f0e780c5506eee0e448"
+  },
+  "residual_load_policy": {
+    "enforcement": "warning-only",
+    "warning_fraction": 0.2,
+    "window_seconds": 2.0,
+    "stops_phase": false,
+    "affects_comparison_validity": false,
+    "warning_count_and_maximum_required": true,
+    "individual_search_contention_threshold_proven": false
+  },
+  "engine_cpu_policy": {
+    "mode": "held-getprocesstimes-per-search",
+    "identity": [
+      "pid",
+      "creation_ticks"
+    ],
+    "raw_counters": [
+      "user_ticks",
+      "kernel_ticks",
+      "cpu_ticks"
+    ],
+    "cpu_ticks_per_second": 10000000,
+    "read_brackets_required": true,
+    "every_actual_search_required": true,
+    "wall_clock": "monotonic",
+    "requested_movetime_and_deadline_required": true,
+    "cpu_and_response_recalculation_required": true,
+    "deadline_policy": "unchanged move_deadline multiplier and slack_seconds",
+    "missing_or_invalid_cpu_receipt": "stop-invalid",
+    "pid_or_creation_change": "stop-invalid",
+    "counter_regression_or_api_failure": "stop-invalid",
+    "low_or_zero_cpu": "descriptive-only-quantized-or-immediate-response-allowed",
+    "cpu_wall_ratio": "descriptive-only-no-pass-floor",
+    "nps_floor": null,
+    "minimum_cpu_fraction": null,
+    "cpu_wall_difference_is_os_waiting_time": false,
+    "response_overrun_vs_request": "descriptive-within-unchanged-deadline",
+    "subprocess_cpu_included_in_engine_process_cpu": false,
+    "preflight_gate": "24 complete legal games; frozen settings, complete per-search CPU/response records, no real failure, product and independent audits PASS",
+    "main_gate": "768 complete legal games under same record and audit requirements",
+    "score_adjustment_using_cpu": false,
+    "actual_endpoint_resolution": {
+      "native": "frozen-image-direct-with-no-observed-child",
+      "sunfish": "frozen-script-profile-native-direct-with-no-observed-child-or-unique-direct-frozen-base-python-child",
+      "base_runtime_binding": "worker_runtime.executable",
+      "held_pid_creation_and_two_matching_parent_inventories_required": true,
+      "meter_rechecks_resolved_endpoint_identity": true,
+      "profiles_and_commands_unchanged": true,
+      "ownership_scope": "calling-worker-current-job-with-no-breakaway-and-creation-order",
+      "job_membership_api": "QueryInformationJobObject(NULL, JobObjectBasicProcessIdList)",
+      "complete_job_pid_lists_required": true,
+      "worker_and_transport_in_job_required": true,
+      "coordinator_outside_worker_job_required": true,
+      "breakaway_and_silent_breakaway_forbidden": true,
+      "raw_global_and_scoped_inventories_required": true,
+      "excluded_parent_matches_require_raw_reason": true,
+      "within_job_stale_edges_require_positive_held_creation_order_proof": true,
+      "within_job_unknown_creation_or_access_failure": "stop-invalid",
+      "global_other_lane_job_churn_is_allowed": true,
+      "selected_endpoint_scope_revalidated_independently": true
+    },
+    "sunfish_launcher_cpu": "if-child-endpoint-selected-launcher-cpu-stays-in-owned-job-and-is-excluded-from-endpoint-search-cpu; direct-endpoint-search-cpu-is-included",
+    "cpu_query_interval_is_wider_than_callable_response": true,
+    "cpu_query_is_atomic_with_response": false,
+    "response_deadline_includes_measurement_envelope": true,
+    "cpu_per_wall_ratio_upper_bound": null,
+    "comparison_outer_elapsed_is_diagnostic_only": true,
+    "comparison_outer_includes_post_response_json_and_flush": true,
+    "comparison_outer_must_contain_measured_envelope": true,
+    "response_deadline_excludes_post_response_trace_logging": true,
+    "response_and_envelope_deadlines_remain_unchanged": true
+  }
+}
