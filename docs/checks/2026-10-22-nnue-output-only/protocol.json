@@ -1,0 +1,125 @@
+{
+  "active_gradient_norm": "Only16output gradients; frozen tensors have no gradient, moments or proposals",
+  "anchor_limit_cp2": 62230.90874524715,
+  "anchor_policy": "MSE<=epoch0, no anchor gradients or step-scale use",
+  "anchor_rows": 263,
+  "architecture": "Unchanged NNUEv3,768piece+1turn,hidden16,S32, no added parameters",
+  "change": "Freeze existing input, hidden bias and turn representation; train existing16output weights only",
+  "conditional_match": {
+    "automatic_promotion": false,
+    "baseline": "Same native binary with fixed classical profile",
+    "colors_per_start": 2,
+    "draw_policy": "claim",
+    "games_if_fail": 0,
+    "games_if_pass": 16,
+    "hash_mb": 16,
+    "max_plies": 500,
+    "movetime_ms": 100,
+    "only_if_gate_passes": true,
+    "opening_count": 8,
+    "opening_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_choice_match_openings_2026-10-22.json"
+  },
+  "config": {
+    "batch_size": 128,
+    "candidate_id": "sf18-mse-stm-output-only-20261020",
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "input_scale": 32,
+    "loss": "mse",
+    "output_lr": 0.005,
+    "seed": 20261020
+  },
+  "created_utc": "2026-10-21T17:20:26.144002+00:00",
+  "criteria": {
+    "games_if_fail": 0,
+    "games_if_pass": 16,
+    "maximum_regressions_at_least_200cp": 0,
+    "minimum_accepted_positions": 12,
+    "minimum_bestmove_match_gain": 2,
+    "minimum_mean_mover_quality_gain_cp": 20,
+    "native_mismatches": 0,
+    "retry_or_gate_checkpoint_selection": false
+  },
+  "data": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002",
+  "default_changed": false,
+  "development_recheck_searches": 0,
+  "environment": {
+    "blas_threads": 1,
+    "logical_processors": 16,
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "frozen_keys": [
+    "input_weights",
+    "hidden_bias",
+    "turn_weights"
+  ],
+  "frozen_parameters": 12320,
+  "gate_canonical_root_and_all_child_features": 604,
+  "gate_directory": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001",
+  "gate_policy": "Seal accepted changed model and native validation before root teacher labels or gate searches. Same final model bytes as warm cannot pass and preserves gate unused. One final gate only, no gate-guided retraining, reselection, retry or threshold change.",
+  "gate_previously_measured": false,
+  "gate_roots": 16,
+  "gate_runs_maximum": 1,
+  "guards": {
+    "eval_interval": 5,
+    "min_delta_cp2": 1.0,
+    "patience": 5
+  },
+  "initial_model_path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\model.nnue",
+  "initial_model_sha256": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+  "input_sha256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\config\\engine-profiles\\classical.json": "25fb95163f0a48a321389e33b1c1a310e2ec8e49444f3d6217704da708deb3c2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\assembly-receipt.json": "655f261d3ddfa7f1d74783b54c0db60f15dc23cfc39fb0bbd034177836f390f4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\manifest.json": "12eb5f7a96318b362a7fc91cc7a4b6c415614ffb415d71a3e1f7dae5e47e6134",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\pairs-backed-train.jsonl": "d77e45eeeb015ec451945d7670570562a73e9f55bc67738d5986dfb9f61e05a2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\pairs-backed-tuning.jsonl": "350fef7e53b7e62e52c6f9939ecd7be2a33fd64fb4bdeaa03facaff59f0b83c0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\pairs-train.jsonl": "18bfccc31a3dd15ea2abd931558c19d789c53fc7953e14c915649dc911cc700a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\pairs-tuning.jsonl": "c2e2261aba4ae93d0e7d51f380621ddd05b1cd5a1dcec80de29742593f9c47ec",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\protocol.json": "5a9bc147d1569e89806a204fbfc9ca2fef9bf95be513568ff3b5f7f59cbe05ef",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\test.jsonl": "81418d0eac56cf157e013ec5314bbf5d6193baea337539e94306fc14fb099754",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\train.jsonl": "44284d91fc79c2659f06785fd19c4383c5b57f30d26c021e4af7b97041fc7eee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\data-002\\tuning.jsonl": "bfde4c22bd2dead17779be4e1c975661a2e38bb3a5c18127e0d8b6ac936c3d41",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\blocked-features.json": "fe240910b8cefd407b0d0438d0d80e2560503527f4e4f79b9c206412af0d4062",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\frozen-roots.json": "80fb3270c38a6dfa4ce9b6d9b76b4e6d618bf85332ce1b92970dcac85394a303",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\gate-001\\plan.json": "197aa80799d927d425f60a9be02a24f01bf3b9eb234a0ecfb7fdd0d6a9ad101f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-choice\\peer-review.json": "9fd8efd0a43707917f2029959a074859c5e7d95413f5952a27e8a0ab7023e797",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\float_weights.npz": "cf6969db7f06bf6da0a368aa39d3ccf66eb3de2779514ae255daf810c38362f9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-preservation\\attempt-002\\model.nnue": "85e3032a87f3145670aa666f8e1359a610c08937f5f0a20cb14ad81dfd507b33",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_output_only.py": "48dd2fd97582931adb76752451e0e05121700e340ff605ee0042e698cd1c719b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation.py": "c19f66774d95241f6552df0e13327567f6f9b67ef07dadbdff47731a166e3df5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_preservation_step.py": "db36f339e6062b738a28f3a378d2678f56a86202629f61616681bdcc3f8cd425",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_choice_gate.py": "f05d195cc91a9622111ba19e5e5be8cfe617b0058bc1676edc021663ad32dd1a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_output_only.py": "674265f9202bca774765f3d26fc5a6cb6f5d44eff31094ec4444ee73bf91ed99",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_choice_match_openings_2026-10-22.json": "8cc0926ebf579913b8132ca1c5c777d86b80733c58263dd6b2fd825d5222375b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\neural_stm_output_only_tests.py": "396ee44f75234e7ca867e973251ba04019b593084aa7d8fc7f53153c2f59ef3f"
+  },
+  "integer_step_scales": [
+    1.0,
+    0.5,
+    0.25,
+    0.125,
+    0.0625,
+    0.03125
+  ],
+  "loss": "Same point MSE +1.0*mean(all55TRAIN comparison gaps) +4.0*oldTRAIN1426warm-output MSE",
+  "new_data_native_searches": 0,
+  "new_data_teacher_queries": 0,
+  "pair_rows": {
+    "train": 55,
+    "tuning": 24
+  },
+  "point_rows": {
+    "test": 69,
+    "train": 1520,
+    "tuning": 369
+  },
+  "production_training_runs_maximum": 1,
+  "trainable_keys": [
+    "output_weights"
+  ],
+  "trainable_parameters": 16
+}
