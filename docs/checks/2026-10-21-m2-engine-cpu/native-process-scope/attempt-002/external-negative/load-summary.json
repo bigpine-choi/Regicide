@@ -1,0 +1,68 @@
+{
+  "schema_version": 4,
+  "started_utc": "2026-10-21T12:48:05.435822+00:00",
+  "finished_utc": "2026-10-21T12:48:12.574681+00:00",
+  "policy": {
+    "max_nonworker_cpu_fraction": 0.2,
+    "interval_seconds": 0.5,
+    "max_sample_gap_seconds": 2.0,
+    "host_window_seconds": 2.0,
+    "engine_names": [
+      "lc0-cpu.exe",
+      "lc0.exe",
+      "regicide.exe",
+      "stockfish.exe",
+      "sunfish.exe"
+    ],
+    "extra_engine_pids": []
+  },
+  "monitor_pid": 17896,
+  "platform": "win32",
+  "cpu_ticks_per_second": 10000000,
+  "external_cpu_tolerance_ticks": 0,
+  "snapshot_count": 17,
+  "max_sample_gap_seconds": 0.551973800000269,
+  "max_snapshot_duration_seconds": 0.04119130002800375,
+  "external_cpu_increase_ticks": 937500,
+  "max_nonworker_cpu_fraction": 0.14959101137049438,
+  "preflight_complete": true,
+  "completed_idle_seconds": 5.028633199981414,
+  "failure": {
+    "kind": "external_cpu",
+    "reason": "external known engine consumed CPU",
+    "utc": "2026-10-21T12:48:12.523480+00:00"
+  },
+  "workers": [
+    {
+      "pid": 10996,
+      "creation_ticks": 134370604853709813,
+      "attached_utc": "2026-10-21T12:48:11.170772+00:00",
+      "detached_utc": null
+    }
+  ],
+  "valid_for_load_check": false,
+  "scope": "Job CPU covers active and exited owned descendants; coordinator CPU is measured separately. Residual system/background CPU is an asynchronous, quantized rolling estimate, not application attribution, OS isolation, thermal certification or a bound on individual move contention.",
+  "accounting_method": "windows-job-plus-coordinator-cpu",
+  "approximate": true,
+  "experiment_job_delta_ticks": 5312500.0,
+  "coordinator_delta_ticks": 5468750.0,
+  "accounting_underflow_ticks": 0,
+  "residual_cpu_policy": "warning-only",
+  "residual_load_ready_window_count": 13,
+  "residual_load_warning_window_count": 0,
+  "residual_load_warning_episode_count": 0,
+  "residual_load_warning_peak_fraction": 0.0,
+  "process_ownership_method": "explicit-owned-job-membership-before-process-query",
+  "process_ownership_scope_count": 17,
+  "timer": {
+    "started": true,
+    "samples": 4,
+    "alive": false,
+    "failure": {
+      "kind": "external_cpu",
+      "reason": "external known engine consumed CPU",
+      "utc": "2026-10-21T12:48:12.529244+00:00"
+    },
+    "join_bound_seconds": 2.0
+  }
+}

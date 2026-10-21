@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-10-21T11:46:19.099298+00:00",
+  "mode": "read-only-stopped-attempt-diagnosis",
+  "no_engine_started": true,
+  "no_process_or_security_mutation": true,
+  "candidate_transport": {
+    "pid": 1016,
+    "creation_ticks": 134370565422326671,
+    "affinity_mask": 61440,
+    "command": [
+      "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-engine-cpu\\attempt-001\\profiles\\regicide-residual-v2-quality-attempt4\\binary\\regicide.exe",
+      "uci"
+    ]
+  },
+  "candidate_creation_utc": "2026-10-21T11:42:22.232668+00:00",
+  "failed_worker": {
+    "id": "main-0040",
+    "pid": 39556,
+    "creation_ticks": 134370565414190660
+  },
+  "current_native": [
+    {
+      "pid": 1016,
+      "parent_pid": null,
+      "access": [
+        {
+          "access_mask": 4096,
+          "access_label": "query-limited",
+          "opened": false,
+          "windows_error": 87
+        },
+        {
+          "access_mask": 1052672,
+          "access_label": "query-limited-plus-synchronize",
+          "opened": false,
+          "windows_error": 87
+        },
+        {
+          "access_mask": 131072,
+          "access_label": "read-control-only",
+          "opened": false,
+          "windows_error": 87
+        },
+        {
+          "access_mask": 135168,
+          "access_label": "query-limited-plus-read-control",
+          "opened": false,
+          "windows_error": 87
+        }
+      ]
+    },
+    {
+      "pid": 1396,
+      "parent_pid": 1016,
+      "access": [
+        {
+          "access_mask": 4096,
+          "access_label": "query-limited",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 1052672,
+          "access_label": "query-limited-plus-synchronize",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 131072,
+          "access_label": "read-control-only",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 135168,
+          "access_label": "query-limited-plus-read-control",
+          "opened": false,
+          "windows_error": 5
+        }
+      ]
+    },
+    {
+      "pid": 1612,
+      "parent_pid": 1016,
+      "access": [
+        {
+          "access_mask": 4096,
+          "access_label": "query-limited",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 1052672,
+          "access_label": "query-limited-plus-synchronize",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 131072,
+          "access_label": "read-control-only",
+          "opened": false,
+          "windows_error": 5
+        },
+        {
+          "access_mask": 135168,
+          "access_label": "query-limited-plus-read-control",
+          "opened": false,
+          "windows_error": 5
+        }
+      ]
+    }
+  ],
+  "current_cim": [
+    {
+      "ProcessId": 1396,
+      "ParentProcessId": 1016,
+      "Name": "csrss.exe",
+      "ExecutablePath": null,
+      "CreationDate": "2026-10-16T01:55:14.6813890Z",
+      "predates_failed_candidate": true
+    },
+    {
+      "ProcessId": 1612,
+      "ParentProcessId": 1016,
+      "Name": "wininit.exe",
+      "ExecutablePath": null,
+      "CreationDate": "2026-10-16T01:55:18.2682820Z",
+      "predates_failed_candidate": true
+    }
+  ],
+  "native_parent_links_before": {
+    "1396": {
+      "pid": 1396,
+      "parent_pid": 1016
+    },
+    "1612": {
+      "pid": 1612,
+      "parent_pid": 1016
+    }
+  },
+  "native_parent_links_after": {
+    "1396": {
+      "pid": 1396,
+      "parent_pid": 1016
+    },
+    "1612": {
+      "pid": 1612,
+      "parent_pid": 1016
+    }
+  },
+  "raw_load_coverage": {
+    "preflight": {
+      "samples": 1942,
+      "target_observation_counts": {
+        "1016": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        },
+        "1396": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        },
+        "1612": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        }
+      }
+    },
+    "main": {
+      "samples": 330,
+      "target_observation_counts": {
+        "1016": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        },
+        "1396": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        },
+        "1612": {
+          "processes": 0,
+          "retained_owned": 0,
+          "roots": 0
+        }
+      }
+    }
+  },
+  "failure_trace": [
+    {
+      "event": "setup_error",
+      "record": {
+        "role": "candidate",
+        "transport_pid": 1016,
+        "error": "EngineIdentityError: OpenProcess query/wait-only engine child identity failed (Windows error 5)"
+      }
+    }
+  ],
+  "current_identity_source_sha256": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+  "frozen_identity_source_sha256": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+  "source_sha256": {
+    "build-m2-engine-cpu\\attempt-001\\main\\cells\\main-0040\\games.json": "938a8eabff1cb7c3b2ac95ea3a546a65895829629ce9078c7abb9ab8d39a8308",
+    "build-m2-engine-cpu\\attempt-001\\main\\cells\\main-0040\\engine-cpu.jsonl": "c10178aa823df0836a2939014e4bf05430f5040b8f02c1950b51e605daffec0f",
+    "build-m2-engine-cpu\\attempt-001\\main\\main-0040-worker.log": "ff408ca4b331fcfb4e4d530b3e37e89678bf5214662355bfa1075ad5046d3d82",
+    "build-m2-engine-cpu\\attempt-001\\main\\report.json": "46dc6009a6de196f033cdf63ca8225f4b7fa66df44df9faac5da046a055c9b80",
+    "build-m2-engine-cpu\\attempt-001\\main\\load.jsonl": "ec54dba4c9d13c09399fde87f50b1a80356ab1a2778d3bfdd19cf2eb7d0372d9",
+    "build-m2-engine-cpu\\attempt-001\\main\\job-final-accounting.json": "6a61298322eea12b433e6bdba03efc7bc51875442d9bb64ce8dfb2a606aeb984",
+    "scripts\\m2_engine_identity.py": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+    "scripts\\m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\pid-parent-audit\\probe_readonly_r2.py": "3b6f0b2bf15e57e7763eee92c9ebbc89291bc5cc8f5e158e10a1709c42541eb5"
+  },
+  "limits": [
+    "Current inventories and CIM birth timestamps are later corroboration, not a replay of the failed first inventory.",
+    "The failed setup receipt omitted offending child PID and inventory; historical exact culprit is unrecorded.",
+    "Old load receipts contain Job aggregate counters, not JobObjectBasicProcessIdList membership snapshots.",
+    "Access denial alone does not identify the exact DACL or protected-process mechanism; no privilege was changed."
+  ]
+}

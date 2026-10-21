@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-21T12:45:02.099193+00:00",
+  "kind": "read-only-replay-correction",
+  "result": {
+    "status": "PASS",
+    "valid_for_load_check": true,
+    "counts": {
+      "records": 27,
+      "samples": 20,
+      "accepted_samples": 20,
+      "process_ownership_scopes": 20,
+      "recomputed_intervals": 19,
+      "ready_windows": 16,
+      "failure_observations": 0,
+      "warning_windows": 0,
+      "warning_episodes": 0
+    },
+    "recomputed_metrics": {
+      "experiment_job_delta_ticks": 9062500.0,
+      "coordinator_delta_ticks": 3593750.0,
+      "accounting_underflow_ticks": 0.0,
+      "external_cpu_increase_ticks": 0.0,
+      "max_nonworker_cpu_fraction": 0.13535712546173523,
+      "max_sample_gap_seconds": 0.5239696999778971,
+      "max_snapshot_duration_seconds": 0.01466660003643483,
+      "idle_sample_span_seconds": 5.012812000000849,
+      "idle_write_reconciliation_slack_seconds": 0.05
+    },
+    "residual_cpu_policy": "warning-only",
+    "process_ownership_method": "explicit-owned-job-membership-before-process-query",
+    "warnings": {
+      "threshold_fraction": 0.2,
+      "window_count": 0,
+      "episode_count": 0,
+      "peak_fraction": 0.0
+    },
+    "invalid_errors": [],
+    "scope": "Independent raw-counter arithmetic and recorded-coverage audit; asynchronous CPU estimates, not move-level isolation."
+  },
+  "original_driver_result_preserved": "receipt.json: FAIL_RAW_AUDIT",
+  "reason": "The original driver passed an in-memory summary containing tuple policy fields; the real serialized JSON and frozen policy both use arrays. Replaying those saved JSON bytes requires no process/CPU rerun.",
+  "source_sha256": {
+    "scripts\\m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\attempt-001\\owned-burst\\load-summary.json": "35582e80ca79f8906933f2c4fb92c7adc1cc6e2cc4b3cd61c75dc074421314a0",
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\attempt-001\\owned-burst\\load.jsonl": "fd1dd95528ae7e6e3a07089f8fefce0d1f4ecbe3048ff97d7346b70b8c6386ca"
+  }
+}

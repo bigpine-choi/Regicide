@@ -246,11 +246,11 @@ def verify_archive(path, *, verify_excluded_payloads=False, excluded_sources=())
 
 def manifest_paths(output, sources):
     files = set(HERE.rglob('*')) | set(sources)
-    for pattern in ('m2_engine_*.py', 'm2_warning*.py', 'm2_*v[45].py', 'archive_m2_engine*.py'):
+    for pattern in ('m2_engine_*.py', 'm2_warning*.py', 'm2_*v[456].py', 'archive_m2_engine*.py'):
         files.update((ROOT/'scripts').glob(pattern))
-    for pattern in ('m2_engine*_tests.py', 'm2_warning*_tests.py', 'm2_formal_v[45]_tests.py'):
+    for pattern in ('m2_engine*_tests.py', 'm2_warning*_tests.py', 'm2_formal_v[456]_tests.py', 'm2_job_process_scope_tests.py'):
         files.update((ROOT/'tests').glob(pattern))
-    for runner in sorted((ROOT/'scripts').glob('m2_formal_v[45].py')):
+    for runner in sorted((ROOT/'scripts').glob('m2_formal_v[456].py')):
         for node in ast.parse(runner.read_text(encoding='utf-8-sig')).body:
             if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'HARNESS' for t in node.targets):
                 files.update(ROOT/'scripts'/name for name in ast.literal_eval(node.value))

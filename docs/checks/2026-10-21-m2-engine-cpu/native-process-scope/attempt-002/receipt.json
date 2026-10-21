@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "status": "PASS_EXPECTED_NEGATIVE",
+  "formal_games": 0,
+  "playing_strength_claim": false,
+  "started_utc": "2026-10-21T12:48:05.365921+00:00",
+  "original_driver_sha256": "bac1bff889fb8b9943e797ff7d4e6498f0a33a73bb25fb493c045421f8b15916",
+  "preserved_positive": "attempt-001/owned-burst/receipt.json",
+  "preserved_original_result": "attempt-001/receipt.json",
+  "positive_read_only_replay": "attempt-001/owned-burst/replay-correction.json",
+  "positive_load_rerun": false,
+  "diagnostic_adapter": "Read persisted JSON summary before product raw validation.",
+  "source_sha256": {
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\continue_negative.py": "e908e9312512daa5068053d2343fcce968cef54629e1d5010b52ce6a24581d48",
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\probe.py": "bac1bff889fb8b9943e797ff7d4e6498f0a33a73bb25fb493c045421f8b15916",
+    "scripts\\m2_job_process_scope.py": "5cc98087d2b630127ed86e5a3b49b4939d6025f6b02b003b2fa4b205cb9f6d1b",
+    "scripts\\m2_warning_load_guard_v2.py": "ab9ba84ca4044ccc92dc5897dc912188cb68b492d03690a93d5612076472f133",
+    "scripts\\m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+    "scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967"
+  },
+  "case_status": "PASS_EXPECTED_EXTERNAL_CPU_FAILURE",
+  "expected_negative_kind": "external_cpu",
+  "cleanup": {
+    "active_owned_processes": 0,
+    "unknown_owned_processes": 0
+  },
+  "raw_audit": {
+    "status": "INVALID",
+    "valid_for_load_check": false,
+    "counts": {
+      "records": 22,
+      "samples": 17,
+      "accepted_samples": 17,
+      "process_ownership_scopes": 17,
+      "recomputed_intervals": 16,
+      "ready_windows": 13,
+      "failure_observations": 4,
+      "warning_windows": 0,
+      "warning_episodes": 0
+    },
+    "recomputed_metrics": {
+      "experiment_job_delta_ticks": 5312500.0,
+      "coordinator_delta_ticks": 5468750.0,
+      "accounting_underflow_ticks": 0.0,
+      "external_cpu_increase_ticks": 937500.0,
+      "max_nonworker_cpu_fraction": 0.14959101137049438,
+      "max_sample_gap_seconds": 0.551973800000269,
+      "max_snapshot_duration_seconds": 0.04119130002800375,
+      "idle_sample_span_seconds": 5.0261842999607325,
+      "idle_write_reconciliation_slack_seconds": 0.05
+    },
+    "residual_cpu_policy": "warning-only",
+    "process_ownership_method": "explicit-owned-job-membership-before-process-query",
+    "warnings": {
+      "threshold_fraction": 0.2,
+      "window_count": 0,
+      "episode_count": 0,
+      "peak_fraction": 0.0
+    },
+    "invalid_errors": [
+      "summary: external_cpu",
+      "sample: external_cpu",
+      "event timer_failed: external_cpu",
+      "known external CPU increased",
+      "sampler has not closed cleanly",
+      "worker identities remain attached",
+      "summary explicitly invalid"
+    ],
+    "scope": "Independent raw-counter arithmetic and recorded-coverage audit; asynchronous CPU estimates, not move-level isolation."
+  },
+  "owned_idle_engine_pid": 19012,
+  "owned_idle_engine_observations": [
+    {
+      "in_owned_job_at_read": true,
+      "result": {
+        "pid": 19012,
+        "parent_pid": 10996,
+        "name": "regicide.exe",
+        "creation_ticks": 134370604911895029,
+        "cpu_ticks": 0,
+        "error": null,
+        "exited_during_snapshot": false
+      }
+    },
+    {
+      "in_owned_job_at_read": true,
+      "result": {
+        "pid": 19012,
+        "parent_pid": 10996,
+        "name": "regicide.exe",
+        "creation_ticks": 134370604911895029,
+        "cpu_ticks": 0,
+        "error": null,
+        "exited_during_snapshot": false
+      }
+    },
+    {
+      "in_owned_job_at_read": true,
+      "result": {
+        "pid": 19012,
+        "parent_pid": 10996,
+        "name": "regicide.exe",
+        "creation_ticks": 134370604911895029,
+        "cpu_ticks": 0,
+        "error": null,
+        "exited_during_snapshot": false
+      }
+    },
+    {
+      "in_owned_job_at_read": true,
+      "result": {
+        "pid": 19012,
+        "parent_pid": 10996,
+        "name": "regicide.exe",
+        "creation_ticks": 134370604911895029,
+        "cpu_ticks": 0,
+        "error": null,
+        "exited_during_snapshot": false
+      }
+    }
+  ],
+  "outside_exit_proofs": [
+    {
+      "pid": 36932,
+      "creation_ticks": 134370604854026462,
+      "wait_status": 0,
+      "final_cpu": {
+        "pid": 36932,
+        "creation_ticks": 134370604854026462,
+        "kernel_ticks": 0,
+        "user_ticks": 937500,
+        "cpu_ticks": 937500,
+        "read_started_monotonic": 471222.1051306,
+        "read_finished_monotonic": 471222.1054154
+      },
+      "handle_closed": true
+    }
+  ],
+  "source_sha256_after": {
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\continue_negative.py": "e908e9312512daa5068053d2343fcce968cef54629e1d5010b52ce6a24581d48",
+    "docs\\checks\\2026-10-21-m2-engine-cpu\\native-process-scope\\probe.py": "bac1bff889fb8b9943e797ff7d4e6498f0a33a73bb25fb493c045421f8b15916",
+    "scripts\\m2_job_process_scope.py": "5cc98087d2b630127ed86e5a3b49b4939d6025f6b02b003b2fa4b205cb9f6d1b",
+    "scripts\\m2_warning_load_guard_v2.py": "ab9ba84ca4044ccc92dc5897dc912188cb68b492d03690a93d5612076472f133",
+    "scripts\\m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+    "scripts\\m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "scripts\\see_clean_guard.py": "f563d701cd4c2cbcc4fcf5d131a5e28bf3be3ca1aceb0eee11d6e164a9205967"
+  },
+  "source_unchanged": true,
+  "finished_utc": "2026-10-21T12:48:14.816818+00:00"
+}

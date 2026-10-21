@@ -54,11 +54,40 @@ as excluded; unknown actual children and incomplete scope still fail. A new
 [native Job evidence](native-job-scope/README.md) and independent native scope
 recalculation. Previous plans, source versions and results remain intact.
 
-The next raw attempt directory is `build-m2-engine-cpu/attempt-002`. A complete
-24-game preflight must pass product and independent audits before 768 main
-games start. Each phase retains its own PGN, per-search CPU stream, metadata,
-raw Job/coordinator/system CPU samples, warning counts, final owned Job state
-and audits. The old partial games and the new preflight/main are never pooled.
+Attempt 002 passed another actual 24-game preflight, including 19 warning
+windows and a peak residual of 47.758807%. Both audits passed. Its main run
+stopped at 194/768 games because the runtime load sampler still followed global
+numeric parent links before checking Job ownership. A stale link to a protected
+Windows process caused an access error. The recorded process creation times
+predate the experiment launcher; this was a process-discovery defect, not proof
+of user activity. The incomplete run remains invalid. See the
+[attempt 002 outcome](../../experiments/2026-10-21-m2-engine-cpu-attempt-002-outcome.md).
+
+The v6 correction applies explicit owned-Job membership before process queries
+in the runtime sampler as well. Global named external engines remain visible
+and their CPU use remains fatal. Raw Job lists on both sides of the inventory,
+same-handle membership evidence, held exit evidence, excluded parent matches
+and bounded birth/exit races are retained and independently recalculated. A
+process born or ending between inventories without an observed identity is
+not assigned an invented identity; its CPU remains in total Job accounting.
+Persistent unobserved members and real access/API failures remain fatal.
+The new 33-source harness preserves every earlier source binding. See the
+[second restart plan](../../experiments/2026-10-21-m2-engine-cpu-restart-002.md).
+Offline v6 regressions passed: provider 19, warning/scope receipts 33, formal
+integration 27, and independent auditor fixtures 12. Execution receipts
+distinguish direct saved output from reconstructed command context and
+post-execution hashes. [Native runtime evidence](native-process-scope/README.md)
+checks protected-process exclusion, actual owned-engine membership and an
+intentional external-engine CPU failure with complete diagnostic cleanup.
+The first positive diagnostic driver's tuple/JSON policy mismatch and its
+read-only correction are both preserved; the CPU workload was not rerun.
+
+The next raw attempt directory is `build-m2-engine-cpu/attempt-003`. A complete
+fresh 24-game preflight must pass product and independent audits before 768
+main games start. Each phase retains its own PGN, per-search CPU stream,
+metadata, raw Job/coordinator/system CPU samples, process-discovery receipts,
+warning counts, final owned Job state and audits. The old partial games and
+the new preflight/main are never pooled.
 
 This is a local external baseline with a previously exposed fixed authored
 opening bank. CPU time is consumed process CPU, not an exact measurement of

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "regicide-residual-v2-quality-attempt4",
+  "kind": "regicide",
+  "evaluation": "residual",
+  "binary": {
+    "path": "binary/regicide.exe",
+    "sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a"
+  },
+  "args": [
+    "uci"
+  ],
+  "options": {
+    "UseNeuralEvaluation": true,
+    "UseNNUEEvaluation": false,
+    "EvalFile": "models/EvalFile-small-v2.nn",
+    "NeuralModelFile": "<builtin>",
+    "UseIncrementalNeuralEvaluation": true,
+    "Hash": 16,
+    "Move Overhead": 20,
+    "UsePositionalEvaluation": true,
+    "UseQuiescence": true,
+    "UseTranspositionTable": true,
+    "UseFastMoves": true,
+    "UseQuietMoveOrdering": true,
+    "UseQuiescenceChecks": true,
+    "PVS": true,
+    "UseSEE": true,
+    "UsePawnShield": true,
+    "UsePawnStructure": true,
+    "UseLMR": true
+  },
+  "models": {
+    "EvalFile": {
+      "path": "models/EvalFile-small-v2.nn",
+      "sha256": "5b363fa05487d7707d943c26c8a8343c86122315ecd61f88003692ff449291b3"
+    }
+  },
+  "source": {
+    "commit": "de799794ebe5a81d3f5b0717b39051fa9d979e08",
+    "native_core_unchanged_since": "b241995",
+    "native_build_receipt_role": "native-build-receipt",
+    "search_threads": 1,
+    "threads_uci_option": false,
+    "model_provenance": {
+      "historical_source_commit": "426830231d5291991a589cf73b058c88b653d1fe",
+      "format": "REGICIDE_NN_V2 768 32 16 600 100",
+      "representative_reason": "Same preserved V2 file used by M1 engine-parity validation; not selected anew by strength",
+      "seed": 20265054,
+      "epochs": 100,
+      "selected_epoch": 81,
+      "selected_by": "Historical validation MSE including epoch 0",
+      "strength_promoted": false,
+      "adopted": false,
+      "historical_result": "18 wins, 12 draws, 34 losses; candidate rejected"
+    }
+  },
+  "artifacts": [
+    {
+      "path": "artifacts/0-build-provenance.json",
+      "sha256": "85f1c7bc47237ea195bef8c8b2717013d3075b45f4c7b35163eb842fd174f703",
+      "role": "native-build-receipt"
+    },
+    {
+      "path": "artifacts/1-publication-manifest.json",
+      "sha256": "681945e79208947bb6f7c986e79aae4bb28541a89d70a2cbc7954c078807cf4c",
+      "role": "historical-model-publication"
+    },
+    {
+      "path": "artifacts/2-report.json",
+      "sha256": "d360a4c962477d50ff5d01d3598e5b4436a55b3110d60ad58596f26eaba1dbfa",
+      "role": "historical-model-training-report"
+    }
+  ]
+}
