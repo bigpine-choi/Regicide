@@ -1,0 +1,67 @@
+{
+  "created_utc": "2026-10-21T16:05:39.958160+00:00",
+  "training_runs_maximum": 1,
+  "candidate_seeds": 1,
+  "gate_attempts_maximum": 1,
+  "gate_policy": {
+    "known_positions": 10,
+    "warm_teacher_bestmove_matches": 2,
+    "original_diversity_teacher_bestmove_matches": 4,
+    "minimum_candidate_teacher_bestmove_matches": 5,
+    "preserve_all_warm_teacher_bestmove_matches": true,
+    "tuning_pairs": [
+      7,
+      8
+    ],
+    "warm_tuning_teacher_bestmove_matches": 1,
+    "minimum_candidate_tuning_teacher_bestmove_matches": 2,
+    "gate_is_independent_holdout": false,
+    "retry_or_checkpoint_selection_from_gate": false
+  },
+  "config": {
+    "candidate_id": "sf18-mse-stm-ordering-20261020",
+    "input_scale": 32,
+    "epochs": 500,
+    "input_bias_lr": 0.0002,
+    "output_lr": 0.005,
+    "seed": 20261020,
+    "batch_size": 128,
+    "loss": "mse"
+  },
+  "guards": {
+    "patience": 5,
+    "eval_interval": 5,
+    "min_delta_cp2": 1.0
+  },
+  "loss_definition": "point squared error plus sibling white-score-gap squared error; coefficient1; no classification loss",
+  "architecture": "Unchanged NNUE v3 768piece+1relative-turn inputs,16hidden,S32",
+  "overfit_protection": "Epoch0,eval5/patience5,besteligiblecopyrestore,additional original263pointMSE<=epoch0 guard",
+  "match_condition": "Run exactly16games only ifgate.completed andgate.gate.passed, validation0mismatch; otherwise0games",
+  "match": {
+    "opening_file": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_loss_repair_openings_2026-10-22.json",
+    "movetime_ms": 100,
+    "opening_count": 8,
+    "scheduled_games_if_pass": 16,
+    "hash_mb": 16,
+    "max_plies": 500,
+    "draw_policy": "claim",
+    "expected_minutes_if_pass": [
+      2,
+      4
+    ]
+  },
+  "default_changed": false,
+  "no_retry": "No gate-based candidate selection, retraining, threshold relaxation, extra seeds or extra games",
+  "inputs": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\neural_stm_ordering.py": "5909915347fad7d401de09d656fc0debfb76e104176e513aa2c3ffa244f8dc10",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\prepare_nnue_ordering_data.py": "305f21c48ef3daebb85c5fcd40c463a3cd1b8473ce1645366904d506b027fc0d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\train_nnue_ordering.py": "34d9f4388aef27fdf089abcb62a5b0ea4164ef729816211c76b6835616d04605",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\nnue_ordering_gate.py": "175b08f62f31b0cdfe73314f3c7113935fc84312ed6046def136fb093736a6d1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\neural_stm_ordering_tests.py": "880e8f07d6301eaf6d218858300b3663e73ce09f96f00fe8947285268ad39d9c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\nnue_ordering_gate_tests.py": "b6420a7927f5c28663f5670072d202b95eeaaee3b08e89812673738f7ac15697",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\nnue_ordering_data_tests.py": "b2d5c60f33011773c32831c982878b94dee408f165324973e2a1cb88e6e9eb88",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\checks\\2026-10-22-nnue-ordering\\data-001\\manifest.json": "15a21ac28ac9bdc0feef4c124b054f0338c39d4d014eb025450f72f2c4ff4093",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\tests\\data\\nnue_loss_repair_openings_2026-10-22.json": "fa86a188f6fb5865bcc3ce6525ed2d68f647060f8a131f5ebe5979d71fa4ec12",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\scripts\\compare_engines.py": "ececbe63f6bf60b9d751655c808aac228531ad3fc79c6a665a349aef24d6a368"
+  }
+}
