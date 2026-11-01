@@ -78,6 +78,19 @@ function clickSquare(square) {
 function isSelected(square) {
   return byId("board").children.some(child => child.dataset.square === square && child.classes.has("selected"));
 }
+function dynamicFixture(revision, settingRevision, ms, ply) {
+  const value = fixture(revision, settingRevision, ms);
+  value.game_id = "dynamic-game";
+  // These move entries exercise display order only; no chess legality claim.
+  value.moves = Array.from({length: ply}, (_, index) => ({ply: index + 1, san: "Nf3", uci: "g1f3", actor: "human"}));
+  value.engine.dynamic_play_enabled = true;
+  value.engine.extra_budget_schedule = [
+    {until_ply: 16, budget_ms: ms >= 500 ? Math.min(ms, 2000) : 0},
+    {until_ply: 80, budget_ms: ms >= 500 ? Math.min(ms / 2, 750) : 0}
+  ];
+  value.engine.extra_budget_ms = value.engine.extra_budget_schedule.find(stage => ply < stage.until_ply)?.budget_ms ?? 0;
+  return value;
+}
 
 (async () => {
   await reply("/api/state", fixture());
@@ -138,5 +151,53 @@ function isSelected(square) {
   await reply("/api/think-time", fixture(3, 4, 100));
   assert.doesNotMatch(byId("think-time-help").textContent, /오프닝 후보 검토/);
   assert.equal(pending.length, 0);
-  console.log("Browser time-setting checks: PASS (selection, independent color, live search, response order, CAS failure)");
+
+  byId("new-game-form").listeners.submit({preventDefault() {}});
+  await reply("/api/new", dynamicFixture(4, 0, 1000, 14));
+  assert.match(byId("think-time-help").textContent, /구상 검토 시 최대 1초/);
+  assert.doesNotMatch(byId("think-time-help").textContent, /오프닝 후보/);
+  clickSquare("e2");
+  clickSquare("e4");
+  const dynamicHuman = dynamicFixture(5, 0, 1000, 15);
+  dynamicHuman.human_to_move = false;
+  dynamicHuman.engine_to_move = true;
+  dynamicHuman.engine.active_movetime_ms = 1000;
+  dynamicHuman.engine.active_extra_budget_ms = 1000;
+  await reply("/api/move", dynamicHuman);
+  byId("think-time").value = "3000";
+  byId("think-time").listeners.change();
+  await reply("/api/engine", dynamicFixture(6, 0, 1000, 16));
+  assert.match(byId("think-time-help").textContent, /구상 검토 시 최대 0.5초/);
+  const lateDynamicSetting = dynamicFixture(5, 1, 3000, 15);
+  lateDynamicSetting.engine.active_movetime_ms = 1000;
+  lateDynamicSetting.engine.active_extra_budget_ms = 1000;
+  await reply("/api/think-time", lateDynamicSetting);
+  assert.equal(byId("move-count").textContent, "16수");
+  assert.match(byId("think-time-help").textContent, /구상 검토 시 최대 0.75초/,
+    "late opening snapshot uses the latest setting schedule with the current middlegame board");
+
+  clickSquare("g1");
+  clickSquare("f3");
+  const thinkingDynamic = dynamicFixture(7, 1, 3000, 17);
+  thinkingDynamic.human_to_move = false;
+  thinkingDynamic.engine_to_move = true;
+  thinkingDynamic.engine.active_movetime_ms = 3000;
+  thinkingDynamic.engine.active_extra_budget_ms = 750;
+  await reply("/api/move", thinkingDynamic);
+  byId("think-time").value = "1000";
+  byId("think-time").listeners.change();
+  const freshSetting = structuredClone(thinkingDynamic);
+  freshSetting.engine.movetime_ms = 1000;
+  freshSetting.engine.settings_revision = 2;
+  freshSetting.engine.extra_budget_ms = 500;
+  freshSetting.engine.extra_budget_schedule = dynamicFixture(7, 2, 1000, 17).engine.extra_budget_schedule;
+  await reply("/api/think-time", freshSetting);
+  assert.match(byId("think-time-help").textContent, /구상 검토 시 최대 0.75초/,
+    "an in-flight search retains its captured additional budget");
+  await reply("/api/engine", dynamicFixture(8, 1, 3000, 18));
+  assert.equal(byId("think-time").value, "1000");
+  assert.match(byId("think-time-help").textContent, /구상 검토 시 최대 0.5초/,
+    "late engine response must retain the newer settings schedule");
+  assert.equal(pending.length, 0);
+  console.log("Browser time-setting checks: PASS (legacy, dynamic wording, phase crossing, captured budget, selection, response order, CAS failure)");
 })().catch(error => { console.error(error); process.exitCode = 1; });

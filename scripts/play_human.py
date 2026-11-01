@@ -32,6 +32,7 @@ from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 import opening_variety
+import dynamic_play
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,10 +68,13 @@ class RevisionError(ValueError):
 class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
                  neural_adopted_generation=None, *, evaluation_engine_factory=None,
-                 opening_variety_enabled=True):
+                 opening_variety_enabled=True, dynamic_play_enabled=False):
         if type(opening_variety_enabled) is not bool:
             raise ValueError("Opening variety must be enabled or disabled explicitly.")
         self.opening_variety_enabled = opening_variety_enabled
+        if type(dynamic_play_enabled) is not bool:
+            raise ValueError("Dynamic play must be enabled or disabled explicitly.")
+        self.dynamic_play_enabled = dynamic_play_enabled
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -196,6 +200,8 @@ class HumanGame:
         self._opening_seed = secrets.token_hex(16)
         self._opening_decisions = {}
         self._opening_memo = {}
+        self._dynamic_decisions = {}
+        self._dynamic_memo = {}
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -411,10 +417,19 @@ class HumanGame:
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
-                               "opening_variety_enabled": self.opening_variety_enabled,
+                               "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled,
+                               "dynamic_play_enabled": self.dynamic_play_enabled,
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
-                               "extra_budget_ms": opening_variety.extra_budget(self.movetime_ms) if self.opening_variety_enabled else 0,
+                               "extra_budget_ms": (dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                                                   if self.dynamic_play_enabled else
+                                                   opening_variety.extra_budget(self.movetime_ms) if self.opening_variety_enabled else 0),
+                               "extra_budget_schedule": ([
+                                   {"until_ply": opening_variety.MAX_PLIES,
+                                    "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=0)},
+                                   {"until_ply": dynamic_play.MAX_PLIES,
+                                    "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=opening_variety.MAX_PLIES)}]
+                                   if self.dynamic_play_enabled else None),
                                "active_extra_budget_ms": self._active_extra_budget_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
@@ -473,19 +488,21 @@ class HumanGame:
                     return self.state()
                 board = self.board.copy(stack=True)
                 movetime_ms = self.movetime_ms
-                opening_plan = (opening_variety.plan(board, movetime_ms, self._opening_seed,
-                                                    forced=bool(self._forced_plies))
-                                if self.opening_variety_enabled else None)
-                memo_key = (opening_variety.memo_key(board, movetime_ms, self.binary_sha256,
+                move_policy = (dynamic_play if self.dynamic_play_enabled else
+                               opening_variety if self.opening_variety_enabled else None)
+                search_plan = (move_policy.plan(board, movetime_ms, self._opening_seed,
+                                               forced=bool(self._forced_plies)) if move_policy else None)
+                policy_memo = self._dynamic_memo if self.dynamic_play_enabled else self._opening_memo
+                memo_key = (move_policy.memo_key(board, movetime_ms, self.binary_sha256,
                                                      self.neural_sha256 or self.classical_evaluation_mode,
                                                      seed=self._opening_seed,
-                                                     catalog_id=opening_plan["catalog_commit"])
-                            if opening_plan and opening_plan["eligible"] else None)
-                remembered = copy.deepcopy(self._opening_memo.get(memo_key)) if memo_key else None
+                                                     catalog_id=search_plan.get("catalog_commit"))
+                            if search_plan and search_plan["eligible"] else None)
+                remembered = copy.deepcopy(policy_memo.get(memo_key)) if memo_key else None
                 token, game_id = self._game_token, self.game_id
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
-                self._active_extra_budget_ms = opening_plan["extra_budget_ms"] if opening_plan else 0
+                self._active_extra_budget_ms = search_plan["extra_budget_ms"] if search_plan else 0
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
             decision = None
@@ -551,7 +568,7 @@ class HumanGame:
                     reply = chess.engine.BestMove(remembered_move, None)
                 else:
                     first_budget = movetime_ms
-                    compare = bool(opening_plan and opening_plan["eligible"])
+                    compare = bool(search_plan and search_plan["eligible"])
                     baseline_started = time.monotonic()
                     reply, baseline_info, _packets = search(first_budget)
                     baseline_elapsed_ms = (time.monotonic() - baseline_started) * 1000
@@ -563,12 +580,14 @@ class HumanGame:
                         raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
-                    if opening_plan and len(board.move_stack) < opening_variety.MAX_PLIES:
+                    if search_plan and len(board.move_stack) < move_policy.MAX_PLIES:
                         probes, extra_elapsed_ms = [], 0
-                        baseline = opening_variety.score_line(board, baseline_info, reply.move)
-                        if compare and baseline is not None and baseline["depth"] >= opening_variety.MIN_DEPTH:
+                        baseline = move_policy.score_line(board, baseline_info, reply.move)
+                        baseline_guard = getattr(move_policy, "baseline_guard", None)
+                        if (compare and baseline is not None and baseline["depth"] >= move_policy.MIN_DEPTH and
+                                (baseline_guard is None or baseline_guard(board, reply.move, baseline_info) is None)):
                             phase_started = time.monotonic()
-                            extra_ms = opening_plan["extra_budget_ms"]
+                            extra_ms = search_plan["extra_budget_ms"]
                             deadline = phase_started + extra_ms / 1000
                             phase_done, phase_expired = threading.Event(), threading.Event()
                             def expire_verification():
@@ -579,10 +598,10 @@ class HumanGame:
                             verification_guard.daemon = True
                             verification_guard.start()
                             try:
-                                for uci in opening_variety.proposals(opening_plan, reply.move):
+                                for uci in move_policy.proposals(search_plan, reply.move):
                                     remaining_ms = (deadline - time.monotonic()) * 1000
                                     budget_ms = min(remaining_ms, extra_ms / 3)
-                                    if budget_ms < opening_variety.MIN_PROBE_MS or phase_expired.is_set():
+                                    if budget_ms < move_policy.MIN_PROBE_MS or phase_expired.is_set():
                                         break
                                     candidate_move, candidate_final, candidate_packets, candidate_error = None, None, {}, None
                                     probe_done, probe_expired = threading.Event(), threading.Event()
@@ -608,7 +627,7 @@ class HumanGame:
                                     if probe_expired.is_set() or phase_expired.is_set():
                                         candidate_error = "TimeoutError"
                                     elapsed_ms = (time.monotonic() - probe_started) * 1000
-                                    probe = opening_variety.assess(board, reply.move, baseline_info, uci,
+                                    probe = move_policy.assess(board, reply.move, baseline_info, uci,
                                                                   candidate_packets, candidate_final, candidate_move,
                                                                   candidate_error, budget_ms=round(budget_ms, 3), elapsed_ms=elapsed_ms)
                                     probes.append(probe)
@@ -626,7 +645,7 @@ class HumanGame:
                                 if probes:
                                     probes[-1].update(admitted=False, reason="candidate_failed", error="TimeoutError")
                             extra_elapsed_ms = (time.monotonic() - phase_started) * 1000
-                        decision = opening_variety.receipt(board, opening_plan, reply.move, baseline_info, probes,
+                        decision = move_policy.receipt(board, search_plan, reply.move, baseline_info, probes,
                                                            self._opening_seed, baseline_elapsed_ms=baseline_elapsed_ms,
                                                            extra_elapsed_ms=extra_elapsed_ms)
                         reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
@@ -647,9 +666,10 @@ class HumanGame:
                     self.board.push(reply.move)
                     self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
                     if decision is not None:
-                        self._opening_decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
+                        decisions = self._dynamic_decisions if self.dynamic_play_enabled else self._opening_decisions
+                        decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
                         if memo_key:
-                            self._opening_memo[memo_key] = copy.deepcopy(decision)
+                            policy_memo[memo_key] = copy.deepcopy(decision)
                     if discard_engine and self._engine is not None:
                         self._engine.close()
                         self._engine = None
@@ -681,6 +701,8 @@ class HumanGame:
             self._engine_movetimes = {ply: ms for ply, ms in self._engine_movetimes.items()
                                      if ply <= len(self.board.move_stack)}
             self._opening_decisions = {ply: row for ply, row in self._opening_decisions.items()
+                                       if ply <= len(self.board.move_stack)}
+            self._dynamic_decisions = {ply: row for ply, row in self._dynamic_decisions.items()
                                        if ply <= len(self.board.move_stack)}
             self._game_token = object()
             if self._engine is None:
@@ -724,6 +746,7 @@ class HumanGame:
                                      "forced_plies": self._forced_plies.copy(),
                                      "engine_movetimes": self._engine_movetimes.copy(),
                                      "opening_decisions": copy.deepcopy(self._opening_decisions),
+                                     "dynamic_decisions": copy.deepcopy(self._dynamic_decisions),
                                      "override": self._override, "error": self.error,
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
@@ -732,6 +755,8 @@ class HumanGame:
             self._engine_movetimes = {number: ms for number, ms in self._engine_movetimes.items()
                                      if number < ply}
             self._opening_decisions = {number: row for number, row in self._opening_decisions.items()
+                                       if number < ply}
+            self._dynamic_decisions = {number: row for number, row in self._dynamic_decisions.items()
                                        if number < ply}
             self.error = None
             self._override = None
@@ -785,6 +810,7 @@ class HumanGame:
             self._forced_plies = backup["forced_plies"]
             self._engine_movetimes = backup["engine_movetimes"]
             self._opening_decisions = backup["opening_decisions"]
+            self._dynamic_decisions = backup["dynamic_decisions"]
             self.error = backup["error"]
             self._override = backup["override"]
             self.updated_at = backup["updated_at"]
@@ -817,6 +843,7 @@ class HumanGame:
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
             game.headers.update(opening_variety.pgn_headers(self._opening_metadata()))
+            game.headers.update(dynamic_play.pgn_headers(self._dynamic_metadata()))
             if self.neural_model:
                 game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
@@ -840,7 +867,7 @@ class HumanGame:
         return "in_progress" if self._game_open else "unfinished"
 
     def _opening_metadata(self):
-        return {"enabled": self.opening_variety_enabled, "policy": opening_variety.POLICY,
+        return {"enabled": self.opening_variety_enabled and not self.dynamic_play_enabled, "policy": opening_variety.POLICY,
                 "seed": self._opening_seed, "max_plies": opening_variety.MAX_PLIES,
                 "early_plies": opening_variety.EARLY_PLIES,
                 "max_early_probes": opening_variety.MAX_EARLY_PROBES,
@@ -849,6 +876,13 @@ class HumanGame:
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._opening_decisions.items())],
                 "memo": [{"key": key, "decision": copy.deepcopy(row)}
                          for key, row in sorted(self._opening_memo.items())]}
+
+    def _dynamic_metadata(self):
+        return {"enabled": self.dynamic_play_enabled, "policy": dynamic_play.POLICY,
+                "seed": self._opening_seed, "max_plies": dynamic_play.MAX_PLIES,
+                "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._dynamic_decisions.items())],
+                "memo": [{"key": key, "decision": copy.deepcopy(row)}
+                         for key, row in sorted(self._dynamic_memo.items())]}
 
     def _save(self, update_timestamp=True):
         if update_timestamp:
@@ -870,6 +904,7 @@ class HumanGame:
                   "engine_movetimes_ms": self._engine_movetimes,
                   "time_settings_events": self._time_settings_events,
                   "opening_variety": self._opening_metadata(),
+                  "dynamic_play": self._dynamic_metadata(),
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
@@ -1170,7 +1205,7 @@ def main():
     if selected["warning"]:
         print(selected["warning"], file=sys.stderr, flush=True)
     game = HumanGame(args.binary, save_dir, neural_model=selected["model"],
-                     neural_adopted_generation=selected["generation"])
+                     neural_adopted_generation=selected["generation"], dynamic_play_enabled=True)
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),

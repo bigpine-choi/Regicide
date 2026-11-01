@@ -75,6 +75,7 @@
         state.engine.movetime_ms = next.engine.movetime_ms;
         state.engine.settings_revision = next.engine.settings_revision;
         state.engine.extra_budget_ms = next.engine.extra_budget_ms;
+        state.engine.extra_budget_schedule = next.engine.extra_budget_schedule;
         render();
       }
       return;
@@ -84,6 +85,7 @@
       next.engine.movetime_ms = state.engine.movetime_ms;
       next.engine.settings_revision = state.engine.settings_revision;
       next.engine.extra_budget_ms = state.engine.extra_budget_ms;
+      next.engine.extra_budget_schedule = state.engine.extra_budget_schedule;
     }
     const unchangedPosition = state?.game_id === next.game_id && state.revision === next.revision;
     if (!samePosition(state, next)) {
@@ -635,9 +637,15 @@
       currentMS != null && currentMS !== state.engine.movetime_ms ?
       `현재 수는 ${currentMS / 1000}초로 생각 중 · 다음 Regicide 수부터 ${state.engine.movetime_ms / 1000}초` :
       timeNotice || "대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.";
-    const extraMS = currentMS != null ? (state?.engine.active_extra_budget_ms ?? state?.engine.extra_budget_ms ?? 0) :
+    // Settings and board replies can cross a phase boundary out of order.
+    // Use the latest setting's schedule with the current board's move count.
+    const extraSchedule = state?.engine.extra_budget_schedule;
+    const plannedExtraMS = state?.engine.dynamic_play_enabled && Array.isArray(extraSchedule) ?
+      (extraSchedule.find(stage => (state.moves?.length ?? 0) < stage.until_ply)?.budget_ms ?? 0) :
       (state?.engine.extra_budget_ms ?? 0);
-    if (extraMS > 0) byId("think-time-help").textContent += ` 오프닝 후보 검토 시 최대 ${extraMS / 1000}초 더 생각할 수 있습니다.`;
+    const extraMS = currentMS != null ? (state?.engine.active_extra_budget_ms ?? plannedExtraMS) : plannedExtraMS;
+    const extraLabel = state?.engine.dynamic_play_enabled ? "구상 검토" : "오프닝 후보 검토";
+    if (extraMS > 0) byId("think-time-help").textContent += ` ${extraLabel} 시 최대 ${extraMS / 1000}초 더 생각할 수 있습니다.`;
     byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
     byId("resign").disabled = !ready || busy || timeSaving || !active;
     byId("download-pgn").disabled = !ready || busy;

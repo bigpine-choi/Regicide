@@ -22,6 +22,7 @@ import chess.pgn
 
 from opening_presentation import OpeningGuideCache
 from opening_variety import pgn_headers as opening_variety_headers
+from dynamic_play import pgn_headers as dynamic_play_headers
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
@@ -326,6 +327,7 @@ class GameArchive:
             "TerminationReason": prepared["termination"] or ("engine_error" if prepared["error"] else "in_progress"),
             "HandicapMoves": str(sum(bool(move.get("forced")) for move in prepared["moves"]))})
         game.headers.update(opening_variety_headers(record.get("opening_variety")))
+        game.headers.update(dynamic_play_headers(record.get("dynamic_play")))
         movetimes = record.get("engine_movetimes_ms", {})
         if not isinstance(movetimes, dict):
             movetimes = {}
