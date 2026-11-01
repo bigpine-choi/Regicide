@@ -1168,7 +1168,7 @@ static func merge_state_versions(current: Dictionary, next: Dictionary) -> Dicti
 	var next_engine: Dictionary = next.get("engine", {})
 	var newest_settings: Dictionary = next_engine if int(next_engine.get("settings_revision", 0)) >= int(old_engine.get("settings_revision", 0)) else old_engine
 	var merged_engine: Dictionary = merged.get("engine", {}).duplicate(true)
-	for key in ["movetime_ms", "settings_revision"]:
+	for key in ["movetime_ms", "settings_revision", "extra_budget_ms"]:
 		if newest_settings.has(key):
 			merged_engine[key] = newest_settings[key]
 	merged["engine"] = merged_engine
@@ -1806,6 +1806,11 @@ func _render() -> void:
 		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	else:
 		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
+	var extra_ms: int = int(engine.get("extra_budget_ms", 0))
+	if thinking_now and engine.get("active_extra_budget_ms") != null:
+		extra_ms = int(engine.active_extra_budget_ms)
+	if extra_ms > 0:
+		think_time_help.text += "\n오프닝 후보 검토 시 최대 %s초 더 생각할 수 있습니다." % str(float(extra_ms) / 1000.0)
 	if think_time_request_in_flight:
 		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)

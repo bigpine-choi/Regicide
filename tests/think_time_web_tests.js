@@ -69,7 +69,8 @@ function fixture(revision = 1, settingRevision = 0, ms = 1000) {
     human_color: "white", human_to_move: true, engine_to_move: false,
     legal_moves: ["e2e4", "g1f3"], moves: [], last_move: null,
     result: "*", error: null, status: "당신 차례입니다", can_undo: false, in_check: false,
-    engine: {name: "Regicide test", movetime_ms: ms, settings_revision: settingRevision, active_movetime_ms: null}};
+    engine: {name: "Regicide test", movetime_ms: ms, settings_revision: settingRevision, active_movetime_ms: null,
+      extra_budget_ms: ms >= 500 ? Math.min(ms, 2000) : 0, active_extra_budget_ms: null}};
 }
 function clickSquare(square) {
   byId("board").listeners.click({target: {closest: () => ({dataset: {square}})}});
@@ -80,6 +81,7 @@ function isSelected(square) {
 
 (async () => {
   await reply("/api/state", fixture());
+  assert.match(byId("think-time-help").textContent, /최대 1초 더/);
   assert.equal(byId("think-time").disabled, false);
   clickSquare("e2");
   assert.ok(isSelected("e2"));
@@ -93,6 +95,7 @@ function isSelected(square) {
   assert.ok(isSelected("e2"), "changing time preserves selected piece");
   assert.equal(byId("human-side").value, "black", "time does not apply the drafted color");
   assert.equal(byId("think-time").value, "5000");
+  assert.match(byId("think-time-help").textContent, /최대 2초 더/);
   assert.ok(byId("think-time-help").textContent.includes("다음 Regicide 수부터"));
   assert.ok(!calls.some(call => call.url === "/api/new"));
 
@@ -111,7 +114,8 @@ function isSelected(square) {
   done.moves = [...human.moves, {ply: 2, san: "e5", uci: "e7e5", actor: "engine"}];
   await reply("/api/engine", done);
   const lateSetting = structuredClone(human);
-  lateSetting.engine = {name: "Regicide test", movetime_ms: 3000, settings_revision: 2, active_movetime_ms: 5000};
+  lateSetting.engine = {name: "Regicide test", movetime_ms: 3000, settings_revision: 2, active_movetime_ms: 5000,
+    extra_budget_ms: 2000, active_extra_budget_ms: 2000};
   await reply("/api/think-time", lateSetting);
   assert.equal(byId("move-count").textContent, "2수", "late settings response cannot rewind the board");
   assert.equal(byId("think-time").value, "3000", "newer settings survive a late board snapshot");
@@ -122,11 +126,17 @@ function isSelected(square) {
   byId("think-time").listeners.change();
   const conflict = structuredClone(done);
   conflict.engine.movetime_ms = 1000;
+  conflict.engine.extra_budget_ms = 1000;
   conflict.engine.settings_revision = 3;
   await reply("/api/think-time", {error: "생각 시간이 먼저 바뀌었습니다.", state: conflict}, false);
   assert.equal(byId("think-time").value, "1000");
   assert.ok(isSelected("g1"), "time conflict refresh preserves a legal piece selection");
   assert.ok(byId("error-text").textContent.includes("먼저 바뀌었습니다"));
+  assert.match(byId("think-time-help").textContent, /최대 1초 더/);
+  byId("think-time").value = "100";
+  byId("think-time").listeners.change();
+  await reply("/api/think-time", fixture(3, 4, 100));
+  assert.doesNotMatch(byId("think-time-help").textContent, /오프닝 후보 검토/);
   assert.equal(pending.length, 0);
   console.log("Browser time-setting checks: PASS (selection, independent color, live search, response order, CAS failure)");
 })().catch(error => { console.error(error); process.exitCode = 1; });

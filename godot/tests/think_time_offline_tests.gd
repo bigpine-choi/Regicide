@@ -29,7 +29,8 @@ func fixture() -> Dictionary:
 		"status": "offline UI fixture", "termination": null, "error": null,
 		"engine_thinking": false,
 		"engine": {"name": "offline transport", "movetime_ms": 3000,
-			"settings_revision": 5, "active_movetime_ms": null}}
+			"settings_revision": 5, "active_movetime_ms": null,
+			"extra_budget_ms": 2000, "active_extra_budget_ms": null}}
 
 
 func select_time(milliseconds: int) -> void:
@@ -47,6 +48,17 @@ func _run() -> void:
 	await process_frame
 	app.backend_url = "http://127.0.0.1:1"
 	app.accept_state(fixture())
+	verify(app.think_time_help.text.contains("최대 2") and app.think_time_help.text.contains("초 더"), "opening verification allowance is disclosed")
+	await process_frame
+	await process_frame
+	var opening_note_board: Rect2 = app.board.get_global_rect()
+	app.state.engine.extra_budget_ms = 0
+	app._render()
+	await process_frame
+	await process_frame
+	verify(app.board.get_global_rect().is_equal_approx(opening_note_board), "opening time note does not resize the board")
+	app.state.engine.extra_budget_ms = 2000
+	app._render()
 	verify(app.time_option.get_selected_id() == 3000, "dropdown reflects saved current-game time")
 	verify(not app.time_option.disabled, "current game time can change while idle")
 	app.board_model.selected_square = "e7"
@@ -83,6 +95,8 @@ func _run() -> void:
 	while_searching.engine.movetime_ms = 1000
 	while_searching.engine.settings_revision = 7
 	while_searching.engine.active_movetime_ms = 5000
+	while_searching.engine.extra_budget_ms = 1000
+	while_searching.engine.active_extra_budget_ms = 2000
 	while_searching.engine_thinking = true
 	app.next_response = {"ok": true, "data": while_searching}
 	select_time(1000)
@@ -91,23 +105,29 @@ func _run() -> void:
 	verify(app.request_in_flight and app.engine_thinking, "changing settings does not finish or restart the active search")
 	verify(app.active_think_time_ms == 5000, "active search keeps its start-time budget")
 	verify(app.think_time_help.text.contains("이번 수 5") and app.think_time_help.text.contains("다음 수부터 1"), "current and next search times are distinguished")
+	verify(app.think_time_help.text.contains("최대 2") and app.think_time_help.text.contains("초 더"), "active opening allowance is not replaced by next-move setting")
 	var stale_settings: Dictionary = while_searching.duplicate(true)
 	stale_settings.revision = 18
 	stale_settings.engine.movetime_ms = 3000
 	stale_settings.engine.settings_revision = 5
 	stale_settings.engine.active_movetime_ms = null
+	stale_settings.engine.extra_budget_ms = 2000
+	stale_settings.engine.active_extra_budget_ms = null
 	stale_settings.engine_thinking = false
 	app.accept_state(stale_settings)
 	verify(int(app.state.revision) == 18, "new board response is accepted")
 	verify(int(app.state.engine.movetime_ms) == 1000 and int(app.state.engine.settings_revision) == 7, "old search response cannot roll back newer settings")
+	verify(app.state.engine.extra_budget_ms == 1000, "opening allowance follows newest settings revision")
 	var late_settings: Dictionary = while_searching.duplicate(true)
 	late_settings.engine.movetime_ms = 3000
 	late_settings.engine.settings_revision = 8
+	late_settings.engine.extra_budget_ms = 2000
 	late_settings.moves = []
 	app.accept_state(late_settings)
 	verify(int(app.state.revision) == 18 and not app.state.moves.is_empty(), "late settings response cannot roll back board/history")
 	verify(int(app.state.engine.movetime_ms) == 3000 and int(app.state.engine.settings_revision) == 8, "late settings acknowledgement retains its independent newer version")
 	verify(app.state.engine.active_movetime_ms == null and not app.state.engine_thinking, "late settings snapshot cannot revive a completed search")
+	verify(app.state.engine.active_extra_budget_ms == null and app.state.engine.extra_budget_ms == 2000, "late settings cannot revive an old opening allowance")
 	var very_old: Dictionary = fixture()
 	very_old.moves = []
 	var before_old: String = JSON.stringify(app.state)
@@ -116,6 +136,9 @@ func _run() -> void:
 	app.request_in_flight = false
 	app.engine_thinking = false
 	app.active_think_time_ms = 0
+	app.state.engine.extra_budget_ms = 0
+	app._render()
+	verify(not app.think_time_help.text.contains("오프닝 후보 검토"), "no extra time notice when verification is disabled or fast")
 	app.state.handicap_mode = true
 	app._render()
 	var before_blocked: int = app.captured_requests.size()

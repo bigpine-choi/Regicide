@@ -130,6 +130,7 @@ class HumanGame:
         self._search_lock = threading.Lock()
         self._engine_searching = False
         self._active_movetime_ms = None
+        self._active_extra_budget_ms = None
         self._engine = None
         self._hints = None
         self._live_evaluation = None
@@ -378,6 +379,8 @@ class HumanGame:
                                "opening_variety_enabled": self.opening_variety_enabled,
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
+                               "extra_budget_ms": opening_variety.extra_budget(self.movetime_ms) if self.opening_variety_enabled else 0,
+                               "active_extra_budget_ms": self._active_extra_budget_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
                                **({"evaluation": self.neural_evaluation_mode, "model_sha256": self.neural_sha256,
@@ -446,6 +449,7 @@ class HumanGame:
                 token, game_id = self._game_token, self.game_id
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
+                self._active_extra_budget_ms = opening_plan["extra_budget_ms"] if opening_plan else 0
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
             decision = None
@@ -458,14 +462,14 @@ class HumanGame:
                     def expire_search():
                         timed_out.set()
                         engine.close()
-                    # One watchdog covers both searches; splitting the budget
-                    # must not multiply the live move's overall time allowance.
+                    # Baseline retains the existing full-budget watchdog. The
+                    # optional verification phase gets its own much tighter one.
                     watchdog = threading.Timer(movetime_ms / 1000 + float(getattr(engine, "timeout", 10) or 10),
                                                expire_search)
                     watchdog.daemon = True
                     watchdog.start()
-                def search(budget, *, root_move=None, publish=True, fresh=False):
-                    limit = chess.engine.Limit(time=budget / 1000)
+                def search(budget, *, root_move=None, publish=True, fresh=False, depth=None):
+                    limit = chess.engine.Limit(time=budget / 1000, depth=depth)
                     options = {"game": object() if fresh else token, "info": chess.engine.INFO_ALL}
                     if root_move is not None:
                         options["root_moves"] = [root_move]
@@ -510,33 +514,85 @@ class HumanGame:
                     decision["reused"] = True
                     reply = chess.engine.BestMove(remembered_move, None)
                 else:
-                    first_budget = opening_plan["baseline_budget_ms"] if opening_plan else movetime_ms
+                    first_budget = movetime_ms
                     compare = bool(opening_plan and opening_plan["eligible"])
-                    reply, baseline_info, _packets = search(first_budget, fresh=compare)
+                    baseline_started = time.monotonic()
+                    reply, baseline_info, _packets = search(first_budget)
+                    baseline_elapsed_ms = (time.monotonic() - baseline_started) * 1000
+                    if watchdog is not None:
+                        watchdog.cancel()
+                        watchdog.join(timeout=.2)
+                        watchdog = None
                     if timed_out.is_set():
                         raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     if opening_plan and len(board.move_stack) < opening_variety.MAX_PLIES:
-                        candidate_move, candidate_final, candidate_packets, candidate_error = None, None, {}, None
+                        probes, extra_elapsed_ms = [], 0
                         baseline = opening_variety.score_line(board, baseline_info, reply.move)
-                        if (compare and baseline is not None and baseline["depth"] >= opening_variety.MIN_DEPTH
-                                and reply.move.uci() != opening_plan["candidate_uci"]):
+                        if compare and baseline is not None and baseline["depth"] >= opening_variety.MIN_DEPTH:
+                            phase_started = time.monotonic()
+                            extra_ms = opening_plan["extra_budget_ms"]
+                            deadline = phase_started + extra_ms / 1000
+                            phase_done, phase_expired = threading.Event(), threading.Event()
+                            def expire_verification():
+                                if not phase_done.is_set():
+                                    phase_expired.set()
+                                    engine.close()
+                            verification_guard = threading.Timer(extra_ms / 1000 + .1, expire_verification)
+                            verification_guard.daemon = True
+                            verification_guard.start()
                             try:
-                                proposed = chess.Move.from_uci(opening_plan["candidate_uci"])
-                                candidate, candidate_final, candidate_packets = search(
-                                    opening_plan["candidate_budget_ms"], root_move=proposed, publish=False, fresh=True)
-                                if timed_out.is_set():
-                                    raise TimeoutError("Opening candidate search exceeded its time limit")
-                                candidate_move = candidate.move
-                            except Exception as exc:
-                                # Candidate diversity is optional. Keep the
-                                # already legal baseline if its probe fails.
-                                candidate_error = type(exc).__name__
+                                for uci in opening_variety.proposals(opening_plan, reply.move):
+                                    remaining_ms = (deadline - time.monotonic()) * 1000
+                                    budget_ms = min(remaining_ms, extra_ms / 3)
+                                    if budget_ms < opening_variety.MIN_PROBE_MS or phase_expired.is_set():
+                                        break
+                                    candidate_move, candidate_final, candidate_packets, candidate_error = None, None, {}, None
+                                    probe_done, probe_expired = threading.Event(), threading.Event()
+                                    def expire_probe(done=probe_done, expired=probe_expired):
+                                        if not done.is_set():
+                                            expired.set()
+                                            engine.close()
+                                    probe_guard = threading.Timer(budget_ms / 1000 + .1, expire_probe)
+                                    probe_guard.daemon = True
+                                    probe_started = time.monotonic()
+                                    probe_guard.start()
+                                    try:
+                                        candidate, candidate_final, candidate_packets = search(
+                                            budget_ms, root_move=chess.Move.from_uci(uci), publish=False,
+                                            fresh=True, depth=baseline["depth"])
+                                        candidate_move = candidate.move
+                                    except Exception as exc:
+                                        candidate_error = type(exc).__name__
+                                    finally:
+                                        probe_done.set()
+                                        probe_guard.cancel()
+                                        probe_guard.join(timeout=.2)
+                                    if probe_expired.is_set() or phase_expired.is_set():
+                                        candidate_error = "TimeoutError"
+                                    elapsed_ms = (time.monotonic() - probe_started) * 1000
+                                    probe = opening_variety.assess(board, reply.move, baseline_info, uci,
+                                                                  candidate_packets, candidate_final, candidate_move,
+                                                                  candidate_error, budget_ms=round(budget_ms, 3), elapsed_ms=elapsed_ms)
+                                    probes.append(probe)
+                                    if candidate_error:
+                                        discard_engine = True
+                                        break
+                                    if probe["reason"] == "candidate_score_conflict":
+                                        break
+                            finally:
+                                phase_done.set()
+                                verification_guard.cancel()
+                                verification_guard.join(timeout=.2)
+                            if phase_expired.is_set():
                                 discard_engine = True
-                        decision = opening_variety.receipt(board, opening_plan, reply.move, baseline_info,
-                                                           candidate_packets, candidate_final, candidate_move,
-                                                           candidate_error)
+                                if probes:
+                                    probes[-1].update(admitted=False, reason="candidate_failed", error="TimeoutError")
+                            extra_elapsed_ms = (time.monotonic() - phase_started) * 1000
+                        decision = opening_variety.receipt(board, opening_plan, reply.move, baseline_info, probes,
+                                                           self._opening_seed, baseline_elapsed_ms=baseline_elapsed_ms,
+                                                           extra_elapsed_ms=extra_elapsed_ms)
                         reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
@@ -548,6 +604,7 @@ class HumanGame:
             with self._lock:
                 self._engine_searching = False
                 self._active_movetime_ms = None
+                self._active_extra_budget_ms = None
                 if self.game_id != game_id or self._game_token is not token or self.revision != revision:
                     failure = "RuntimeError: 검색 중 대국 상태가 바뀌어 이전 응답을 적용하지 않았습니다."
                 if failure is None:
