@@ -40,7 +40,7 @@ for name, fen, milliseconds in CASES:
         deadline = start + 6
         while time.monotonic() < deadline:
             packet = hints.snapshot()
-            if packet['status'] in ('ready', 'unavailable'):
+            if packet['status'] in ('ready', 'unavailable') and not packet.get('calculating', False):
                 break
             time.sleep(.005)
         assert packet['status'] == 'ready', (name, packet)

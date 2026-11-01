@@ -1,0 +1,72 @@
+{
+  "verified_at_utc": "2026-11-01T17:57:46.042396+00:00",
+  "base_commit": "d0dec20379f4e0aad7423e03200e555ef063787f",
+  "change": "Show current-side top-three candidates on human and Regicide turns. Publish complete same-depth rounds while deeper hint search continues; opponent selection never waits for hints.",
+  "contract": {
+    "hint_legal_moves": "Display validation only; human input legal_moves unchanged",
+    "turn": "Hint packet side must match current state",
+    "status": "ready after a complete ranking",
+    "calculating": "true while improving a ready ranking; false at completion"
+  },
+  "python_suites": {
+    "ranked_hint_tests": {
+      "passed": 15
+    },
+    "hint_state_tests": {
+      "passed": 14,
+      "skipped": 1
+    },
+    "evaluation_state_tests": {
+      "passed": 21
+    },
+    "think_time_tests": {
+      "passed": 27
+    },
+    "human_play_tests": {
+      "passed": 24,
+      "skipped": 1
+    }
+  },
+  "skips": "Optional real-binary unit smoke omitted in those suites; real engine tested separately below.",
+  "web": {
+    "hint_cases_passed": 22,
+    "opening_guide_cases_passed": 8,
+    "think_time_suite": "passed",
+    "actual_browser_render": false
+  },
+  "godot": {
+    "version": "4.7.2.stable.official.ed1daf0bf",
+    "synthetic_rendered_checks": 130,
+    "real_engine_rendered_checks": 46,
+    "command": "python tests/hint_godot_tests.py --godot GODOT --binary build/regicide.exe --output build/both-side-hints/native --rendered",
+    "conditions": "Disposable offline scene and private HTTP server with temporary games; 3s fixture time for both opponent-color captures; no manual mouse-play claim",
+    "visually_inspected": [
+      "hint-live-engine-black.png",
+      "hint-live-engine-white.png"
+    ]
+  },
+  "real_engine": {
+    "fixed_depth_reproduction_cases": 7,
+    "command": "python tests/ranked_hint_real_tests.py build/regicide.exe",
+    "default_time_cases": 2,
+    "default_time_ms": 1000,
+    "default_time_conditions": "Both opponent colors after opening variety ends, 300ms polling. Three legal candidates observed before actual reply; old-position candidates cleared afterwards."
+  },
+  "limits": "Very short turns may finish before a UI poll observes candidates. Separate helper candidates can differ from the actual move. No engine-strength claim or production delay added. User games and running sessions untouched.",
+  "normalized_source_sha256": {
+    "docs/GODOT_PLAY.md": "6157b94e7feea5dc11ab1fb0037a96231447ae5b8a116b30fdd23189e94f1844",
+    "docs/HUMAN_PLAY.md": "c8cdbf9e74d158b999ca6ac68fb01c0d804db35aef6e51f56f99e37eebbf1583",
+    "docs/MOVE_HINTS.md": "88aa0b8bc3b3afe1f397fa0a49b302471c9b484cc7a74a2eabf3e9daed80f213",
+    "godot/scripts/main.gd": "a53b60f36cd2630d824959c5a5751054c3776a544de3f6965e89b1a900a41490",
+    "godot/tests/hint_tests.gd": "2096ea6d77e61704c47c78b1fd704290037390c45d5d56f20053e7c95df99cea",
+    "scripts/move_hints.py": "9ee6dc3c8430ab1766b8257e011e338b9b722b6297445533c1848196ecf30b17",
+    "scripts/play_human.py": "56e3c0af5c3795b2a780d639298bf12d0a32f684bd726f0f2fe2261952bfe0c8",
+    "tests/hint_godot_tests.py": "8e21f7407f9f596e93a03f9b04cfe457170582bf898ec81615c96aed7cffbbaf",
+    "tests/hint_state_tests.py": "d675c391cc9417a0f87b8e9be7439a3186a9324047bb8bb036838654f089e338",
+    "tests/ranked_hint_real_tests.py": "91f0dd1c2bd7329167fe078e127fbe97e0d126d014456ca4e79c7e09de78d125",
+    "tests/ranked_hint_tests.py": "0560535bdfc735283d8ba037fb0fdd93db074afd340576f9bae3bd090f4eaa82",
+    "tests/web_hint_tests.js": "c4078c10c624d2462f3b195ce71fd488febb6d39341ef8ffadb7ce3bcf606dbd",
+    "web/human-play/app.js": "d7646d519a540be9548f72042182d5b9df350348e5ff158e564c3dcc6f6837e0",
+    "web/human-play/index.html": "49f9508d9874444feef1c503d448b8c1a98f11ea83ea0569940c55c0501f25a8"
+  }
+}

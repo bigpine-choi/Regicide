@@ -1,4 +1,4 @@
-"""Optional human-move advice isolation, cancellation and HTTP checks.
+"""Optional both-side advice isolation, cancellation and HTTP checks.
 
 Usage: python tests/hint_state_tests.py [path/to/regicide]
 An optional actual-binary smoke confirms legal advice using Regicide itself.
@@ -103,7 +103,8 @@ class HintStateTests(unittest.TestCase):
         return self.game.state()["revision"]
 
     def ready(self):
-        return wait_for(lambda: self.game.hint() if self.game.hint()["status"] == "ready" else None)
+        return wait_for(lambda: self.game.hint() if self.game.hint()["status"] == "ready"
+                        and not self.game.hint()["calculating"] else None)
 
     def human(self, move="e2e4"):
         return self.game.human_move(move, self.revision())
@@ -157,8 +158,11 @@ class HintStateTests(unittest.TestCase):
     def test_recomputes_for_both_colors_with_selected_time_and_full_history(self):
         self.game.new_game("black", 250, self.revision())
         self.game.set_hint_enabled(True)
-        self.assertEqual(self.game.hint()["status"], "waiting")
-        self.assertEqual(self.hint_factory.instances, [])
+        opening_hint = self.ready()
+        self.assertEqual(opening_hint["turn"], "white")
+        self.assertEqual(opening_hint["fen"], chess.STARTING_FEN)
+        self.assertEqual(self.game.state()["legal_moves"], [])
+        self.assertEqual(set(self.game.state()["hint_legal_moves"]), {m.uci() for m in self.game.board.legal_moves})
         state = self.engine("e2e4")
         hint = self.ready()
         self.assertEqual(hint["revision"], state["revision"])
@@ -170,8 +174,11 @@ class HintStateTests(unittest.TestCase):
         self.assertGreater(limit.time, .2)
         self.assertLessEqual(limit.time, .25)
         self.game.human_move(hint["move"], self.revision())
-        self.assertEqual(self.game.hint()["status"], "waiting")
-        self.assert_empty(self.game.hint())
+        opponent_hint = self.ready()
+        self.assertEqual(opponent_hint["turn"], "white")
+        self.assertEqual(opponent_hint["revision"], self.revision())
+        self.assertIn(opponent_hint["move"], self.game.state()["hint_legal_moves"])
+        self.assertEqual(self.game.state()["legal_moves"], [])
 
     def test_off_cancels_and_discards_completion_even_if_peer_returns_move(self):
         peer = HintPeer("e2e4", blocked=True)
@@ -331,7 +338,7 @@ class HintStateTests(unittest.TestCase):
             self.assertEqual(self.game.hint(), before)
         self.assertEqual(self.hint_factory.instances, [])
 
-    def test_http_auth_and_toggle_stay_responsive_while_opponent_holds_game_lock(self):
+    def test_http_hints_are_available_and_controls_responsive_while_opponent_searches(self):
         state = self.human()
         peer = HintPeer("e7e5", blocked=True)
         self.game._engine = peer
@@ -359,8 +366,18 @@ class HintStateTests(unittest.TestCase):
                 self.assertTrue(peer.started.wait(2))
                 hint = request("POST", {"enabled": True})  # No revision required.
                 self.assertTrue(hint["enabled"])
-                self.assertEqual(hint["status"], "waiting")
-                self.assertEqual(request()["revision"], state["revision"])
+                self.assertIn(hint["status"], ("searching", "ready"))
+                hint = wait_for(lambda: value if (value := request())["status"] == "ready" else None)
+                self.assertEqual((hint["revision"], hint["fen"], hint["turn"]),
+                                 (state["revision"], state["fen"], "black"))
+                self.assertEqual(len(hint["candidates"]), 3)
+                current = self.game.state()
+                self.assertTrue(current["engine_thinking"])
+                self.assertEqual(current["legal_moves"], [])
+                self.assertTrue(all(row["move"] in current["hint_legal_moves"] for row in hint["candidates"]))
+                self.assertEqual(current["moves"], state["moves"])
+                with self.assertRaises(ValueError):
+                    self.game.human_move(hint["move"], current["revision"])
                 self.assertFalse(request("POST", {"enabled": False})["enabled"])
                 self.assertFalse(future.done())
                 for method, payload, token, origin in (
@@ -375,7 +392,7 @@ class HintStateTests(unittest.TestCase):
                     request("POST", {"enabled": "true"})
                 self.assertEqual(invalid.exception.code, 400)
                 invalid.exception.close()
-                self.assertEqual(self.hint_factory.instances, [])
+                self.assertEqual(len(self.hint_factory.instances), 1)
             finally:
                 peer.release.set()
             future.result(timeout=3)

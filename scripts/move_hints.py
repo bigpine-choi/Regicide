@@ -1,4 +1,4 @@
-"""Optional human-move advice, isolated from the live game and opponent search.
+"""Optional current-side advice, isolated from the live game and opponent search.
 
 Only immutable position copies cross this boundary. Preference and snapshot
 reads use this service's lock, never the live game's search lock.
@@ -55,13 +55,12 @@ class MoveHints:
                         movetime_ms, engine_name, active, handicap_mode=False):
         """Called under the game lock; its copy retains repetition/EP history."""
         fen = board.fen(en_passant="fen")
-        eligible = active and not handicap_mode and board.turn == human_color
+        eligible = active and not handicap_mode and (
+            not self._stream_evaluation or board.turn == human_color)
         context = {"game_id": game_id, "revision": revision, "fen": fen,
                    "movetime_ms": movetime_ms, "engine_name": engine_name,
                    "active": active, "handicap_mode": handicap_mode,
-                   "eligible": eligible}
-        if self._stream_evaluation:
-            context["turn"] = "white" if board.turn else "black"
+                   "eligible": eligible, "turn": "white" if board.turn else "black"}
         with self._condition:
             if self._closed:
                 return
@@ -70,7 +69,7 @@ class MoveHints:
                         if self._context else None)
             if previous == identity:
                 return
-            # Even while OFF keep one copy of the current human position, so
+            # Even while OFF keep one copy of the current position, so
             # ON can launch immediately without waiting for the game lock.
             context["board"] = board.copy(stack=True) if eligible else None
             self._context = context
@@ -93,15 +92,16 @@ class MoveHints:
             elif context["handicap_mode"]:
                 status, message = "waiting", "Regicide의 수 바꾸기를 마치면 추천합니다."
             elif not context["eligible"]:
-                status, message = "waiting", "당신 차례가 되면 추천합니다."
+                status, message = "waiting", "현재 차례의 추천을 기다리고 있습니다."
             else:
                 status, message = "searching", "Regicide가 추천수를 찾고 있습니다."
                 self._pending = (self._generation, context)
         self._snapshot = {key: context[key] for key in
-                          ("game_id", "revision", "fen", "movetime_ms", "engine_name")}
+                          ("game_id", "revision", "fen", "turn", "movetime_ms", "engine_name")}
         self._snapshot.update(enabled=enabled, status=status, move=None, san=None,
                               **{"from": None, "to": None}, promotion=None,
-                              depth=None, candidates=[], message=message)
+                              depth=None, candidates=[], message=message,
+                              calculating=status == "searching")
         if self._stream_evaluation:
             self._clear_evaluation_locked("searching" if status == "searching" else
                                           "unavailable" if status == "unavailable" else "waiting")
@@ -193,7 +193,16 @@ class MoveHints:
                 "promotion": chess.piece_symbol(move.promotion) if move.promotion else None,
                 "depth": depth, "_score": score}
 
-    def _ranked_search(self, engine, board, seconds, cancel, timed_out, analysis_ready, analysis_handle):
+    def _publish_ranked(self, generation, context, cancel, timed_out, result):
+        """Publish only complete same-depth rankings for this exact position."""
+        with self._condition:
+            if (self._closed or not self._enabled or generation != self._generation
+                    or context is not self._context or cancel.is_set() or timed_out.is_set()):
+                return
+            self._snapshot.update(copy.deepcopy(result), calculating=True)
+
+    def _ranked_search(self, engine, board, seconds, cancel, timed_out, analysis_ready, analysis_handle,
+                       publish=None):
         """Retain complete equal-depth rounds within one wall-clock budget.
 
         Root exclusions find up to three distinct moves. They do not provide a
@@ -267,7 +276,9 @@ class MoveHints:
                           for rank, item in enumerate(ordered, 1)]
             completed = {**{key: value for key, value in candidates[0].items() if key != "rank"},
                          "candidates": candidates, "status": "ready",
-                         "message": "추천수입니다. 직접 선택해서 두세요."}
+                         "message": "현재 차례의 추천 후보입니다."}
+            if publish is not None:
+                publish(completed)
         return completed
 
     def _run(self):
@@ -328,7 +339,9 @@ class MoveHints:
                 limit = chess.engine.Limit(time=seconds)
                 if not self._stream_evaluation:
                     result = self._ranked_search(engine, board, seconds, cancel, timed_out,
-                                                 analysis_ready, analysis_handle)
+                                                 analysis_ready, analysis_handle,
+                                                 publish=lambda result: self._publish_ranked(
+                                                     generation, context, cancel, timed_out, result))
                     if result is None:
                         if timed_out.is_set():
                             raise TimeoutError("추천수 탐색 시간이 초과됐습니다.")
@@ -403,6 +416,7 @@ class MoveHints:
                     # Invalidation wins even if a cancelled helper returns a
                     # seemingly valid move at the exact cancellation boundary.
                     if not self._closed and generation == self._generation and self._enabled:
+                        self._snapshot["calculating"] = False
                         if result is not None:
                             self._snapshot.update(result)
                             if self._stream_evaluation:
@@ -412,7 +426,9 @@ class MoveHints:
                                     self._snapshot["candidates"][0]["depth"] = self._evaluation["depth"]
                                 self._evaluation["status"] = "ready" if available else "unavailable"
                         elif failure is not None:
-                            self._snapshot.update(status="unavailable", message=failure)
+                            self._snapshot.update(status="unavailable", message=failure,
+                                                  move=None, san=None, promotion=None, depth=None,
+                                                  candidates=[], **{"from": None, "to": None})
                             if self._stream_evaluation:
                                 self._clear_evaluation_locked("unavailable")
 

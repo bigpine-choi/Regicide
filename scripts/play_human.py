@@ -367,6 +367,8 @@ class HumanGame:
                     "hint_enabled": self.hint()["enabled"],
                     "legal_moves": [move.uci() for move in self.board.legal_moves]
                     if human_turn or handicap_mode else [],
+                    "hint_legal_moves": [move.uci() for move in self.board.legal_moves]
+                    if active and not handicap_mode else [],
                     "moves": moves, "status": status, "result": result, "termination": termination,
                     "opening_guide": self._opening_guide.get(self.board),
                     "in_check": self.board.is_check(),

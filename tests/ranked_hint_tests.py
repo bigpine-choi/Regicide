@@ -118,7 +118,8 @@ class RankedHintTests(unittest.TestCase):
         return hints
 
     def done(self, hints):
-        return wait_for(lambda: hints.snapshot() if hints.snapshot()["status"] in ("ready", "unavailable") else None)
+        return wait_for(lambda: hints.snapshot() if hints.snapshot()["status"] in ("ready", "unavailable")
+                        and not hints.snapshot()["calculating"] else None)
 
     def assert_coherent(self, packet, board, count=3, depth=1):
         self.assertEqual(packet["status"], "ready")
@@ -247,10 +248,33 @@ class RankedHintTests(unittest.TestCase):
         peer = RankedPeer([{}, {}, {}, {}, {"blocked": True}], max_depth=2)
         hints = self.start(peer)
         self.assertTrue(peer.waiting.wait(2))
-        self.assertEqual(hints.snapshot()["candidates"], [])  # No progressive partial publication.
+        self.assert_coherent(hints.snapshot(), chess.Board(), depth=1)
+        self.assertTrue(hints.snapshot()["calculating"])
         off = hints.set_enabled(False)
         self.assertEqual((off["status"], off["candidates"]), ("disabled", []))
         self.assertTrue(peer.close_event.wait(2))
+        wait_for(lambda: hints._cancel is None)
+        self.assertEqual(hints.snapshot(), off)
+
+    def test_completed_round_is_visible_before_later_search_finishes_on_engine_turn(self):
+        board = chess.Board(); board.push_uci("e2e4")
+        peer = RankedPeer([{}, {}, {}, {"blocked": True}], max_depth=2)
+        hints = MoveHints("not-executed", lambda _: peer)
+        self.addCleanup(hints.close)
+        hints.update_position(game_id="engine-side", revision=2, board=board, human_color=chess.WHITE,
+                              movetime_ms=1000, engine_name="Regicide test", active=True)
+        hints.set_enabled(True)
+        self.assertTrue(peer.waiting.wait(2))
+        packet = hints.snapshot()
+        self.assert_coherent(packet, board, depth=1)
+        self.assertEqual(packet["turn"], "black")
+        self.assertTrue(packet["calculating"])
+        self.assertFalse(peer.closed)
+        # OFF wins over a delayed later-depth reply, including the published round.
+        off = hints.set_enabled(False)
+        self.assertEqual(off["candidates"], [])
+        self.assertFalse(off["calculating"])
+        peer.release.set()
         wait_for(lambda: hints._cancel is None)
         self.assertEqual(hints.snapshot(), off)
 
@@ -263,13 +287,14 @@ class RankedHintTests(unittest.TestCase):
         self.assertGreater(peer.streams[-1].stops, 0)
 
     def test_stale_generation_cannot_replace_new_position_or_its_history(self):
-        old = RankedPeer([{}, {"blocked": True}])
+        old = RankedPeer([{}, {}, {}, {"blocked": True}], max_depth=2)
         old.close_releases = False
         latest = RankedPeer()
         peers = iter((old, latest))
         board = chess.Board()
         hints = self.start(old, board, factory=lambda _: next(peers))
         self.assertTrue(old.waiting.wait(2))
+        self.assert_coherent(hints.snapshot(), board, depth=1)
         board.push_uci("e2e4"); board.push_uci("e7e5")
         before = board.fen(), tuple(board.move_stack)
         hints.update_position(game_id="ranked", revision=2, board=board, human_color=board.turn,

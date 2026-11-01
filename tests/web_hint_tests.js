@@ -194,14 +194,101 @@ test("new games, undo, terminal states and errors clear existing or late hints",
 });
 
 test("toggle works during opponent search without starting a second game action", async () => {
-  const state = position({human_to_move:false, engine_to_move:true});
+  const state = position({human_to_move:false, engine_to_move:true, turn:"black",
+    legal_moves:[], hint_legal_moves:["e7e5","d7d5"]});
   const ui = await browser(state);
   assert.equal(ui.requests[0].url, "/api/engine");
   assert.equal(ui.element("hint-toggle").disabled, false);
   await ui.click("hint-toggle");
   assert.equal(ui.requests[1].url, "/api/hint");
   assert.equal(ui.api.currentHintMove(), null);
-  assert.match(ui.element("hint-text").textContent, /내 차례/);
+  assert.match(ui.element("hint-text").textContent, /Regicide 후보 수/);
+  const packet = snapshot(state,{turn:"black",calculating:true,
+    candidates:[candidate(1,"e7e5"),candidate(2,"d7d5")]});
+  await ui.finish(ui.requests[1],packet);
+  assert.deepEqual(candidateMoves(ui),["e7e5","d7d5"]);
+  assert.match(ui.element("hint-text").textContent,/실제 착수는 Regicide가 선택/);
+  const pendingPoll = ui.requests[2];
+  await ui.click("hint-toggle");
+  assert.equal(arrows(ui),undefined);
+  await ui.finish(pendingPoll,packet);
+  assert.deepEqual(candidateMoves(ui),[]);
+  assert.equal(ui.requests.filter((item)=>item.url==="/api/engine").length,1);
+  assert.equal(ui.requests.some((item)=>item.url==="/api/move"),false);
+});
+
+test("both opponent colors stream ranked arrows while the move request waits, then clear stale replies", async () => {
+  for (const humanColor of ["white","black"]) {
+    const moves = humanColor === "white" ? ["e7e5","d7d5","g8f6"] : ["e2e4","d2d4","g1f3"];
+    const turn = humanColor === "white" ? "black" : "white";
+    const state = position({human_color:humanColor,human_to_move:false,engine_to_move:true,
+      turn,hint_enabled:true,legal_moves:[],hint_legal_moves:moves,fen:"opponent-"+turn});
+    const ui = await browser(state);
+    const engine = ui.requests.find((item)=>item.url==="/api/engine");
+    const firstPoll = ui.requests.find((item)=>item.url==="/api/hint");
+    assert.ok(engine && firstPoll);
+    const packet = snapshot(state,{turn,calculating:true,
+      candidates:moves.map((move,index)=>candidate(index+1,move))});
+    await ui.finish(firstPoll,packet);
+    assert.deepEqual(candidateMoves(ui),moves);
+    assert.match(ui.element("hint-text").textContent,/Regicide 후보 수 3개/);
+    const svg = arrows(ui);
+    for (let rank=1;rank<=3;rank++) {
+      const group = svg.children.find((item)=>item.attributes["data-hint-rank"]===String(rank));
+      assert.equal(group.children[1].attributes.stroke,["#ef5350","#ff9800","#fdd835"][rank-1]);
+    }
+    for (const square of moves[0].match(/../g)) {
+      const button = ui.element("board").children.find((item)=>item.dataset.square===square);
+      assert.equal(button.disabled,true);
+      ui.element("board").listeners.click({target:{closest:()=>button}});
+    }
+    assert.equal(ui.requests.some((item)=>item.url==="/api/move"),false);
+    void ui.api.pollHint();
+    const deeperPoll = ui.requests.at(-1);
+    const deeper = {...packet,candidates:[moves[1],moves[0],moves[2]].map((move,index)=>({...candidate(index+1,move),depth:11}))};
+    await ui.finish(deeperPoll,deeper);
+    assert.deepEqual(candidateMoves(ui),[moves[1],moves[0],moves[2]]);
+    void ui.api.pollHint();
+    const latePoll = ui.requests.at(-1);
+    const humanMoves = humanColor === "white" ? ["e2e4","d2d4"] : ["e7e5","d7d5"];
+    const after = position({human_color:humanColor,turn:humanColor,revision:1,fen:"after-opponent-"+turn,
+      hint_enabled:true,legal_moves:humanMoves,hint_legal_moves:humanMoves});
+    await ui.finish(engine,after);
+    assert.equal(arrows(ui),undefined);
+    await ui.finish(latePoll,deeper);
+    assert.equal(arrows(ui),undefined);
+    void ui.api.pollHint();
+    await ui.finish(ui.requests.at(-1),snapshot(after,{turn:humanColor,
+      candidates:humanMoves.map((move,index)=>candidate(index+1,move))}));
+    assert.deepEqual(candidateMoves(ui),humanMoves);
+    assert.match(ui.element("hint-text").textContent,/내 추천 수 2개/);
+    assert.equal(ui.requests.filter((item)=>item.url==="/api/engine").length,1);
+  }
+});
+
+test("opponent hint legality, side identity, and unrelated mutations remain isolated", async () => {
+  for (const extra of [{hint_legal_moves:[]},{hint_legal_moves:null},{hint_legal_moves:undefined},{handicap_mode:true}]) {
+    const state = position({human_to_move:false,engine_to_move:true,legal_moves:["e2e4"],turn:"black",...extra});
+    const ui = await browser(state);
+    await ui.click("hint-toggle");
+    await ui.finish(ui.requests.find((item)=>item.url==="/api/hint"),snapshot(state));
+    assert.equal(arrows(ui),undefined);
+  }
+  const state = position({turn:"white",hint_legal_moves:["e2e4"]}), ui = await browser(state);
+  await ui.click("hint-toggle");
+  await ui.finish(ui.requests[0],snapshot(state,{turn:"black"}));
+  assert.equal(arrows(ui),undefined);
+  await ui.finish(ui.requests[1],snapshot(state,{turn:"white"}));
+  assert.ok(arrows(ui));
+  void ui.api.pollHint();
+  const pendingPoll = ui.requests.at(-1);
+  await ui.click("undo");
+  assert.equal(arrows(ui),undefined);
+  await ui.finish(pendingPoll,snapshot(state,{turn:"white"}));
+  assert.equal(arrows(ui),undefined);
+  const count = ui.requests.length;
+  await ui.api.pollHint();
+  assert.equal(ui.requests.length,count);
 });
 
 test("hint request failures leave the game usable and remove the recommendation", async () => {

@@ -12,6 +12,7 @@
   let state = null;
   let selected = null;
   let busy = true;
+  let engineThinking = false;
   let timeSaving = false;
   let timeNotice = "";
   let closed = false;
@@ -94,7 +95,7 @@
       hintPreferenceLoaded = true;
     }
     state = next;
-    if (state.result !== "*" || state.error || !state.human_to_move) clearHint();
+    if (!hintPositionAvailable()) clearHint();
     if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
     if (!preserveSelection || !unchangedPosition) selected = null;
     render();
@@ -322,14 +323,29 @@
     }
   }
 
+  function hintLegalMoves() {
+    // Opponent candidates have their own validation list; legal_moves remains
+    // the list of moves the person may actually submit.
+    if (state && Object.hasOwn(state, "hint_legal_moves")) {
+      return Array.isArray(state.hint_legal_moves) ? state.hint_legal_moves : [];
+    }
+    return state?.human_to_move && Array.isArray(state.legal_moves) ? state.legal_moves : [];
+  }
+
+  function hintPositionAvailable() {
+    return Boolean(!closed && !analysisMode && !coachingMode && state &&
+      (state.human_to_move || state.engine_to_move) && !state.handicap_mode &&
+      state.result === "*" && !state.error &&
+      (!busy || (engineThinking && state.engine_to_move)) && hintLegalMoves().length);
+  }
+
   function currentHintCandidates() {
-    if (closed || busy || analysisMode || coachingMode || !hintEnabled || !state?.human_to_move ||
-        state.result !== "*" || state.error || hint?.enabled !== true || hint.status !== "ready" ||
+    if (!hintEnabled || !hintPositionAvailable() || hint?.enabled !== true || hint.status !== "ready" ||
         !samePosition(state, hint)) return [];
     // An explicit list is authoritative, including an empty or malformed list.
     const supplied = Object.hasOwn(hint, "candidates");
     const candidates = supplied ? (Array.isArray(hint.candidates) ? hint.candidates : []) : [{...hint, rank:1}];
-    const legal = new Set(Array.isArray(state.legal_moves) ? state.legal_moves : []);
+    const legal = new Set(hintLegalMoves());
     const seenMoves = new Set(), seenRanks = new Set();
     return candidates.filter((item) => item && Number.isInteger(item.rank) && item.rank >= 1 && item.rank <= 3)
       .sort((a,b) => a.rank - b.rank).filter((item) => {
@@ -414,14 +430,17 @@
     // This setting stays available while the opponent is thinking.
     button.disabled = !state || closed;
     const candidates = currentHintCandidates();
-    let text = "켜면 내 차례에 최대 3개 후보를 표시합니다.";
+    let text = "켜면 양쪽 차례의 최대 3개 후보를 표시합니다.";
     if (closed) text = "대국 프로그램을 종료했습니다.";
     else if (analysisMode || coachingMode) text = "직접 대국으로 돌아오면 추천을 이어갑니다.";
     else if (hintEnabled && state?.result !== "*") text = "대국이 끝났습니다. 새 대국에서 추천을 이어갑니다.";
     else if (hintEnabled && (state?.error || (samePosition(state, hint) && (hint?.status === "unavailable" || hint?.enabled === false)))) text = "추천 수를 불러오지 못했습니다. 버튼을 껐다 켜서 다시 시도하세요. 대국은 계속할 수 있습니다.";
-    else if (hintEnabled && !state?.human_to_move) text = "내 차례가 되면 추천 수를 찾습니다.";
-    else if (candidates.length) text = "추천 후보 " + candidates.length + "개 · 번호 순서로 살펴보세요.";
-    else if (hintEnabled) text = "다음 수를 생각하고 있어요…";
+    else if (hintEnabled && state?.handicap_mode) text = "Regicide의 수 바꾸기를 마치면 추천을 이어갑니다.";
+    else if (candidates.length) text = state.engine_to_move
+      ? "Regicide 후보 수 " + candidates.length + "개 · 실제 착수는 Regicide가 선택합니다."
+      : "내 추천 수 " + candidates.length + "개 · 번호 순서로 살펴보세요.";
+    else if (hintEnabled && !hintPositionAvailable()) text = "현재 대국 위치의 추천 수를 기다리고 있습니다.";
+    else if (hintEnabled) text = state.engine_to_move ? "Regicide 후보 수를 계산하고 있어요…" : "내 추천 수를 계산하고 있어요…";
     byId("hint-text").textContent = text;
     const rows = document.createDocumentFragment();
     for (const candidate of candidates) {
@@ -444,16 +463,16 @@
   }
 
   function acceptHint(next, position, epoch) {
-    if (closed || analysisMode || coachingMode || !hintEnabled || epoch !== hintEpoch ||
-        !state?.human_to_move || !samePosition(state, position) || !samePosition(state, next)) return;
+    if (!hintEnabled || !hintPositionAvailable() || epoch !== hintEpoch ||
+        !samePosition(state, position) || !samePosition(state, next) ||
+        (next?.turn && state.turn && next.turn !== state.turn)) return;
     hint = next;
     renderHint();
     renderBoard();
   }
 
   async function pollHint() {
-    if (analysisMode || coachingMode || hintPollInFlight || hintToggleInFlight || closed || !hintEnabled || !state || state.result !== "*" || state.error ||
-      !state.human_to_move || busy) return;
+    if (hintPollInFlight || hintToggleInFlight || !hintEnabled || !hintPositionAvailable()) return;
     hintPollInFlight = true;
     const epoch = hintEpoch;
     const position = {game_id:state.game_id, revision:state.revision, fen:state.fen};
@@ -633,8 +652,20 @@
   }
 
   async function engineMove() {
-    if (closed || !state?.engine_to_move || state.result !== "*" || state.error) return;
-    applyState(await request("/api/engine", {revision: state.revision}));
+    if (closed || engineThinking || !state?.engine_to_move || state.handicap_mode || state.result !== "*" || state.error) return;
+    engineThinking = true;
+    clearHint();
+    render();
+    try {
+      // Advice polls run independently while the original move request waits.
+      // They never delay or choose the opponent's actual move.
+      const pendingMove = request("/api/engine", {revision: state.revision});
+      void pollHint();
+      applyState(await pendingMove);
+    } finally {
+      engineThinking = false;
+      render();
+    }
   }
 
   async function mutate(path, payload = {}) {

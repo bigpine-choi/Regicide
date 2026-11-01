@@ -180,6 +180,61 @@ func _run_ranked() -> void:
 		file.close()
 
 
+func _run_opponent_hints() -> void:
+	for human_color in ["white", "black"]:
+		var opponent_color: String = "black" if human_color == "white" else "white"
+		var position: Dictionary = fixture(human_color)
+		position.game_id = "opponent-hints-" + opponent_color
+		position.revision = int(app.state.revision) + 1
+		position.turn = opponent_color
+		position.human_to_move = false
+		position.engine_to_move = true
+		position.fen = "4k3/4p3/8/8/8/8/4P3/4K3 " + ("b" if opponent_color == "black" else "w") + " - - 0 1"
+		position.board = {"e2": "P", "e7": "p", "e1": "K", "e8": "k"}
+		position.legal_moves = []
+		position.hint_legal_moves = ["e7e5", "e7e6", "e8d8"] if opponent_color == "black" else ["e2e4", "e2e3", "e1d1"]
+		app.request_in_flight = true
+		app.engine_thinking = true
+		app.accept_state(position)
+		var value: Dictionary = ranked_hint(position, position.hint_legal_moves, ["e5", "e6", "Kd8"] if opponent_color == "black" else ["e4", "e3", "Kd1"])
+		value.turn = opponent_color
+		value.calculating = true
+		verify(app.accept_hint(value) and app.board.hint_moves.size() == 3, "three " + opponent_color + " candidates render during the engine HTTP request")
+		verify(app.hint_summary.text == "Regicide 후보 수 · 3개 후보" and app.hint_detail.text.contains("Regicide가 선택") and not app.hint_detail.text.contains("직접 선택"), "opponent label explains automatic move choice")
+		verify(app.state.legal_moves.is_empty() and not app._can_select_move(), "displaying opponent candidates does not enable human input")
+		app._on_square_pressed(str(value["from"]))
+		verify(app.board_model.selected_square.is_empty() and app.state.moves.is_empty(), "opponent candidate arrows do not select or play a piece")
+		var wrong_side: Dictionary = value.duplicate(true)
+		wrong_side.turn = human_color
+		verify(not app.accept_hint(wrong_side), "wrong-turn candidate snapshot is rejected")
+		var malformed: Dictionary = value.duplicate(true)
+		malformed.candidates = [{"rank": 1, "move": "a1a8", "san": "Ra8"}]
+		verify(not app.accept_hint(malformed), "opponent candidate must be in the display-only legal list")
+		app.request_in_flight = true
+		app.engine_thinking = false
+		app._render_hint()
+		verify(app.board.hint_moves.is_empty() and not app.accept_hint(value), "unrelated in-flight mutation still hides opponent arrows")
+		app.engine_thinking = true
+		app.accept_hint(value)
+		app._on_hint_pressed()
+		verify(not app.hint_enabled and app.board.hint_moves.is_empty() and not app.accept_hint(value), "OFF clears opponent arrows while its search continues")
+		app._on_hint_pressed()
+		app.accept_hint(value)
+		await settle()
+		await capture("hint-opponent-" + opponent_color)
+		app._on_flip_pressed()
+		for item in app.board.hint_arrow_layouts():
+			verify(item.source.is_equal_approx(item.centers[0]) and item.target.is_equal_approx(item.centers[1]), "flipped opponent arrow retains centered endpoints")
+		var next: Dictionary = fixture(human_color)
+		next.game_id = position.game_id
+		next.revision = position.revision + 1
+		app.engine_thinking = false
+		app.request_in_flight = false
+		app.accept_state(next)
+		verify(app.board.hint_moves.is_empty() and not app.accept_hint(value), "actual reply clears and invalidates the previous opponent candidates")
+		verify(app.accept_hint(hint_for(next, next.legal_moves[0], "e3" if human_color == "white" else "e4")) and app.hint_summary.text.begins_with("내 추천 수"), "turn switch returns to the human's recommendation label")
+
+
 func _run_synthetic() -> void:
 	app.offline_mode = true
 	root.add_child(app)
@@ -206,7 +261,7 @@ func _run_synthetic() -> void:
 	verify(app.board.hint_move.is_empty(), "poll failure removes displayed hint")
 	app.accept_hint(value)
 	verify(app._hint_connection_error.is_empty() and app.board.hint_move == "e2e4", "matching successful poll recovers from transient connection failure")
-	verify(app.hint_summary.text == "Regicide 추천 · e4" and app.hint_detail.text.contains("e2 → e4"), "readable SAN and coordinates shown")
+	verify(app.hint_summary.text == "내 추천 수 · e4" and app.hint_detail.text.contains("e2 → e4"), "readable SAN and coordinates shown")
 	verify(app.state.moves.is_empty(), "displaying a recommendation never plays a move")
 	app.accept_state(position.merged({"hint_enabled": false}, true))
 	verify(app.hint_enabled, "state callback cannot override local toggle preference")
@@ -301,6 +356,7 @@ func _run_synthetic() -> void:
 	await process_frame
 	verify(app.hint_button.get_global_rect().position.x > app.board.get_global_rect().position.x, "small-window hint stays in sidebar")
 	await capture("hint-small-window")
+	await _run_opponent_hints()
 	await _run_ranked()
 	app.closing = true
 	verify(not app.accept_hint(hint_for(promotion, "a7a8q", "a8=Q")), "shutdown ignores late recommendation")
@@ -343,6 +399,11 @@ func _run_live() -> void:
 	verify(not app.hint_button.disabled, "live hint button available while main engine is busy")
 	app._on_hint_pressed()
 	verify(app.hint_enabled and app.request_in_flight, "toggle ON dispatches while main request remains active")
+	if not await wait_for(func(): return app.engine_thinking and app.request_in_flight and app.board.hint_moves.size() == 3, "black opponent's three candidates arrive before its move"):
+		return
+	verify(app.state.legal_moves.is_empty() and app.board.hint_moves.all(func(item: Dictionary): return app.state.hint_legal_moves.has(item.move)), "black opponent arrows are display-only legal candidates")
+	verify(app.hint_summary.text.begins_with("Regicide 후보 수"), "live opponent candidates have their own label")
+	await capture("hint-live-engine-black")
 	app._on_hint_pressed()
 	verify(not app.hint_enabled and app.request_in_flight and app.board.hint_move.is_empty(), "toggle OFF works while main request remains active")
 	await wait_for(func(): return not app.request_in_flight, "main engine completes independently")
@@ -357,6 +418,10 @@ func _run_live() -> void:
 	app.color_option.select(1)
 	app._on_new_game_pressed()
 	verify(app.board.hint_move.is_empty(), "new game clears immediately")
+	if not await wait_for(func(): return app.engine_thinking and app.request_in_flight and app.state.human_color == "black" and app.board.hint_moves.size() == 3, "white opponent's three candidates arrive before its opening move"):
+		return
+	verify(app.state.legal_moves.is_empty() and app.board.hint_moves.all(func(item: Dictionary): return app.state.hint_legal_moves.has(item.move)), "white opponent arrows are display-only legal candidates")
+	await capture("hint-live-engine-white")
 	if not await wait_for(func(): return not app.request_in_flight, "new black-human game receives first engine move"):
 		return
 	verify(app.hint_enabled and app.state.human_color == "black" and app.state.moves.size() == 1, "new game preserves ON preference")

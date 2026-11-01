@@ -85,6 +85,9 @@ def run_checks(args):
     with tempfile.TemporaryDirectory(prefix="regicide-hint-godot-") as temporary:
         temporary = Path(temporary)
         game = backend.HumanGame(args.binary, temporary / "games")
+        # Give rendered polling enough time to observe both sides' candidates
+        # while the real opponent request is still running. Test fixture only.
+        game.new_game("white", 3000, game.revision)
         server = backend.HumanServer(game)
         server.RequestHandlerClass = DelayedHintHandler
         server.audit = []
@@ -104,9 +107,10 @@ def run_checks(args):
             assert not game.error
             result = {"mode": "native rendered synthetic input" if args.rendered else "headless synthetic input",
                       "engine": game.engine_name, "binary_sha256": game.binary_sha256,
+                      "think_time_ms": 3000,
                       "routes": server.audit,
                       "saved_games_independently_replayed": integration.verify_saved_games(temporary / "games"),
-                      "note": "Actual Regicide helper in both human colors. No manual-play validation claimed."}
+                      "note": "Actual Regicide candidates during human and opponent turns, with both human colors. Private fixture uses 3s for reliable rendered capture; production timing is unchanged. No manual-play validation claimed."}
             (args.output / "hint-integration-result.json").write_text(
                 json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             print("Godot recommendation OFF/ON, both colors, cancellation, independent controls and lifecycle passed.")

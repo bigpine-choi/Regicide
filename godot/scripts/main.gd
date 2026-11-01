@@ -311,7 +311,7 @@ func _build_ui() -> void:
 	_build_opening_guide(sidebar)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
-	hint_button.tooltip_text = "Regicide가 다음 수를 최대 3개 추천합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 표시된 수는 직접 선택해서 두세요."
+	hint_button.tooltip_text = "양쪽 차례의 후보를 최대 3개 표시합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 내 수는 직접 두고, 상대 수는 Regicide가 선택합니다."
 	sidebar.add_child(hint_button)
 	hint_summary = _label("", 15, "9bd7ca")
 	hint_summary.name = "MoveHintSummary"
@@ -1245,11 +1245,19 @@ func _render_evaluation() -> void:
 	evaluation_detail.tooltip_text = evaluation_bar.tooltip_text
 
 
+func _hint_legal_moves() -> Array:
+	# Opponent candidates are display-only; legal_moves still controls human input.
+	var moves: Variant = state.get("hint_legal_moves", state.get("legal_moves", []) if state.get("human_to_move", false) else [])
+	return moves if moves is Array else []
+
+
 func _hint_position_available() -> bool:
-	return not review_mode and not _analysis_open() and not _coaching_open() and not closing and not request_in_flight and not engine_thinking \
-		and not state.is_empty() and state.get("human_to_move", false) \
+	var opponent_search: bool = engine_thinking and state.get("engine_to_move", false)
+	return not review_mode and not _analysis_open() and not _coaching_open() and not closing \
+		and (not request_in_flight or opponent_search) and (not engine_thinking or opponent_search) \
+		and not state.is_empty() and (state.get("human_to_move", false) or state.get("engine_to_move", false)) \
 		and not state.get("handicap_mode", false) and state.get("result", "*") == "*" \
-		and state.get("error") == null and not state.get("legal_moves", []).is_empty()
+		and state.get("error") == null and not _hint_legal_moves().is_empty()
 
 
 func _clear_hint() -> void:
@@ -1281,7 +1289,7 @@ func _valid_hint_candidates(value: Dictionary) -> Array[Dictionary]:
 	for item in ordered:
 		var move: String = str(item.get("move", ""))
 		var rank: int = int(item.rank)
-		if seen.has(move) or ranks.has(rank) or not state.get("legal_moves", []).has(move):
+		if seen.has(move) or ranks.has(rank) or not _hint_legal_moves().has(move):
 			continue
 		if item.has("from") and item["from"] != move.substr(0, 2):
 			continue
@@ -1300,6 +1308,8 @@ func _valid_hint_candidates(value: Dictionary) -> Array[Dictionary]:
 func accept_hint(value: Dictionary) -> bool:
 	if not hint_enabled or not _hint_position_available() or not _evaluation_matches(value, state) \
 		or not value.get("enabled", false):
+		return false
+	if value.has("turn") and value.turn != state.get("turn"):
 		return false
 	var candidates: Array[Dictionary] = _valid_hint_candidates(value)
 	if value.get("status", "") == "ready" and candidates.is_empty():
@@ -1354,7 +1364,7 @@ func _flush_hint_toggle() -> void:
 
 func _poll_hint() -> void:
 	if _analysis_open() or _coaching_open() or not hint_enabled or hint_in_flight or hint_control_in_flight or offline_mode \
-		or closing or review_mode or backend_url.is_empty() or state.is_empty():
+		or closing or review_mode or backend_url.is_empty() or not _hint_position_available():
 		return
 	hint_in_flight = true
 	var epoch: int = _hint_epoch
@@ -1382,6 +1392,8 @@ func _render_hint() -> void:
 	hint_summary.visible = hint_enabled and not review_mode
 	hint_detail.visible = hint_enabled and not review_mode
 	hint_legend.visible = hint_enabled and not review_mode
+	var opponent_turn: bool = state.get("engine_to_move", false)
+	var title: String = "Regicide 후보 수" if opponent_turn else "내 추천 수"
 	for row in hint_candidate_labels:
 		row.text = ""
 		row.tooltip_text = ""
@@ -1391,31 +1403,31 @@ func _render_hint() -> void:
 		hint_summary.text = ""
 		hint_detail.text = ""
 	elif not _hint_connection_error.is_empty():
-		hint_summary.text = "Regicide 추천 · 연결 확인 필요"
+		hint_summary.text = title + " · 연결 확인 필요"
 		hint_detail.text = _hint_connection_error
 	elif state.get("result", "*") != "*":
-		hint_summary.text = "Regicide 추천 · 대국 종료"
+		hint_summary.text = "추천 수 · 대국 종료"
 		hint_detail.text = "새 대국에서 다시 추천합니다."
 	elif state.get("handicap_mode", false):
-		hint_summary.text = "Regicide 추천 · 대기"
+		hint_summary.text = title + " · 대기"
 		hint_detail.text = "Regicide의 수를 바꾸는 동안 추천을 쉽니다."
 	elif not _hint_position_available():
-		hint_summary.text = "Regicide 추천 · 대기"
-		hint_detail.text = "당신의 차례가 되면 다음 수를 추천합니다."
+		hint_summary.text = title + " · 대기"
+		hint_detail.text = "현재 대국 위치가 준비되면 후보를 표시합니다."
 	elif not _evaluation_matches(hint, state) or hint.get("status", "") in ["waiting", "disabled"]:
-		hint_summary.text = "Regicide 추천 · 준비 중"
+		hint_summary.text = title + " · 준비 중"
 		hint_detail.text = "현재 위치의 추천 수를 기다리고 있습니다."
 	elif hint.get("status", "") == "searching":
-		hint_summary.text = "Regicide 추천 · 생각 중"
+		hint_summary.text = title + " · 생각 중"
 		hint_detail.text = "현재 위치에서 다음 수를 계산하고 있습니다."
-	elif hint.get("status", "") == "ready" and state.get("legal_moves", []).has(hint.get("move")):
+	elif hint.get("status", "") == "ready" and _hint_legal_moves().has(hint.get("move")):
 		var move: String = str(hint.move)
 		board.hint_move = move
 		board.hint_moves = _valid_hint_candidates(hint)
 		var san: String = str(hint.get("san", ""))
-		hint_summary.text = "Regicide 추천 · " + (san if not san.is_empty() else move)
+		hint_summary.text = title + " · " + (san if not san.is_empty() else move)
 		if board.hint_moves.size() > 1:
-			hint_summary.text = "Regicide 추천 · %d개 후보" % board.hint_moves.size()
+			hint_summary.text = title + " · %d개 후보" % board.hint_moves.size()
 		for candidate in board.hint_moves:
 			var rank: int = int(candidate.rank)
 			var label: String = str(candidate.san) if not str(candidate.san).is_empty() else str(candidate.move)
@@ -1428,11 +1440,12 @@ func _render_hint() -> void:
 		var promotion_text: String = ""
 		if move.length() == 5:
 			promotion_text = " · %s 승격" % {"q": "퀸", "r": "룩", "b": "비숍", "n": "나이트"}.get(move.substr(4), move.substr(4))
-		hint_detail.text = "%s → %s%s\n표시된 수는 직접 선택해서 두세요." % [move.substr(0, 2), move.substr(2, 2), promotion_text]
+		var instruction: String = "실제 수는 Regicide가 선택합니다." if opponent_turn else "표시된 수는 직접 선택해서 두세요."
+		hint_detail.text = "%s → %s%s\n%s" % [move.substr(0, 2), move.substr(2, 2), promotion_text, instruction]
 		if board.hint_moves.size() > 1:
-			hint_detail.text = "1순위 빨강 · 2순위 주황 · 3순위 노랑\n표시된 수는 직접 선택해서 두세요."
+			hint_detail.text = "1순위 빨강 · 2순위 주황 · 3순위 노랑\n" + instruction
 	else:
-		hint_summary.text = "Regicide 추천 · 분석 없음"
+		hint_summary.text = title + " · 분석 없음"
 		hint_detail.text = str(hint.get("message", "추천 수를 얻지 못했습니다. 대국은 계속할 수 있습니다."))
 	board.queue_redraw()
 
@@ -1484,6 +1497,7 @@ func _play_engine_if_needed() -> void:
 	_clear_hint()
 	active_think_time_ms = int(state.get("engine", {}).get("movetime_ms", 1000))
 	_render()
+	_poll_hint()
 	_handle_response(await _send_request("/api/engine", {"revision": int(state.revision)}))
 	engine_thinking = false
 	active_think_time_ms = 0
