@@ -112,9 +112,13 @@ test("a legacy legal recommendation draws a ranked arrow in both orientations", 
     const svg = arrows(ui);
     assert.equal(svg.attributes["pointer-events"], "none");
     assert.equal(svg.attributes["aria-hidden"], "true");
-    const line = svg.children.find((item) => item.attributes["data-hint-rank"] === "1").children[1];
+    const group = svg.children.find((item) => item.attributes["data-hint-rank"] === "1");
+    const line = group.children[1];
     assert.equal(line.attributes.stroke, "#ef5350");
     assert.equal(Number(line.attributes.x1), color === "white" ? 450 : 350);
+    assert.equal(Number(line.attributes.y1), color === "white" ? 650 : 150);
+    assert.equal(group.children[2].attributes.points.split(" ")[0], color === "white" ? "450,450" : "350,350");
+    assert.equal(line.attributes["stroke-linecap"], "butt");
     assert.equal(Math.sign(Number(line.attributes.y2)-Number(line.attributes.y1)), color === "white" ? -1 : 1);
     assert.match(squares.find((square) => square.dataset.square === "e4").attributes["aria-label"], /추천 수 도착/);
     assert.equal(ui.requests.some((item) => item.url === "/api/move"), false);
@@ -248,6 +252,11 @@ test("three candidates are sorted, colored and numbered without choosing a move"
     assert.equal(line.attributes.stroke, colors[rank-1]);
     assert.equal(number.children[0].attributes.fill, colors[rank-1]);
     assert.equal(number.children[1].textContent, String(rank));
+    const centers = [[450,650,450,450],[350,650,350,450],[650,750,550,550]][rank-1];
+    assert.equal(Number(line.attributes.x1), centers[0]);
+    assert.equal(Number(line.attributes.y1), centers[1]);
+    const head = svg.children.find((item) => item.attributes["data-hint-rank"] === String(rank)).children[2];
+    assert.equal(head.attributes.points.split(" ")[0], centers.slice(2).join(","));
     assert.equal(ui.element("hint-candidates").children[rank-1].children[0].style.backgroundColor, colors[rank-1]);
   }
   assert.equal(svg.children.length, 6);
@@ -287,15 +296,23 @@ test("all candidates obey game, revision and FEN identity", async () => {
   }
 });
 
-test("promotion alternatives use separate lanes and named pieces, including edge files after flipping", async () => {
+test("promotion alternatives share centered endpoints with distinct widths and badges, including edge files after flipping", async () => {
   for (const color of ["white","black"]) for (const file of ["a","h"]) {
     const moves = ["q","r","n"].map((piece) => file+"7"+file+"8"+piece);
     const state = position({human_color:color,legal_moves:moves}), ui = await browser(state);
     await ui.click("hint-toggle");
     await ui.finish(ui.requests[0], snapshot(state,{candidates:moves.map((move,index)=>candidate(index+1,move))}));
-    const svg = arrows(ui), lines = svg.children.filter((item)=>item.attributes["data-hint-rank"]).map((item)=>item.children[1]);
-    assert.equal(new Set(lines.map((line)=>line.attributes.x1)).size, 3);
+    const svg = arrows(ui), groups = svg.children.filter((item)=>item.attributes["data-hint-rank"]);
+    const lines = groups.map((item)=>item.children[1]);
+    const x = (file === "a") === (color === "white") ? 50 : 750;
+    for (const group of groups) {
+      assert.equal(Number(group.children[1].attributes.x1), x);
+      assert.equal(Number(group.children[1].attributes.y1), color === "white" ? 150 : 650);
+      assert.equal(group.children[2].attributes.points.split(" ")[0], `${x},${color === "white" ? 50 : 750}`);
+    }
+    assert.equal(new Set(lines.map((line)=>line.attributes["stroke-width"])).size, 3);
     const labels = svg.children.filter((item)=>item.attributes["data-hint-label"]);
+    assert.equal(new Set(labels.map((label)=>label.children[0].attributes.cx)).size, 3);
     for (const label of labels) {
       const circle = label.children[0], x = Number(circle.attributes.cx), y = Number(circle.attributes.cy);
       assert.ok(x>=15 && x<=785 && y>=15 && y<=785);
@@ -306,13 +323,20 @@ test("promotion alternatives use separate lanes and named pieces, including edge
   }
 });
 
-test("collinear shared sources and destinations remain separate arrows", async () => {
+test("collinear shared sources and destinations stay centered with distinct badges", async () => {
   for (const moves of [["e2e3","e2e4"],["e2e4","e3e4"]]) {
     const state = position({legal_moves:moves}), ui = await browser(state);
     await ui.click("hint-toggle");
     await ui.finish(ui.requests[0],snapshot(state,{candidates:moves.map((move,index)=>candidate(index+1,move))}));
-    const lines = arrows(ui).children.filter((item)=>item.attributes["data-hint-rank"]).map((item)=>item.children[1]);
-    assert.equal(new Set(lines.map((line)=>line.attributes.x1)).size,2);
+    const svg = arrows(ui), groups = svg.children.filter((item)=>item.attributes["data-hint-rank"]);
+    for (const group of groups) {
+      const move = group.attributes["data-move"], line = group.children[1];
+      assert.equal(Number(line.attributes.x1),450);
+      assert.equal(Number(line.attributes.y1),(8-Number(move[1]))*100+50);
+      assert.equal(group.children[2].attributes.points.split(" ")[0],`450,${(8-Number(move[3]))*100+50}`);
+    }
+    const labels = svg.children.filter((item)=>item.attributes["data-hint-label"]);
+    assert.equal(new Set(labels.map((label)=>label.children[0].attributes.cx)).size,2);
   }
 });
 

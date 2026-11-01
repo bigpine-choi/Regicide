@@ -315,16 +315,25 @@ func hint_arrow_layouts() -> Array[Dictionary]:
 			continue
 		seen[move] = true
 		ranks[rank] = true
-		var direction: Vector2 = (centers[1] - centers[0]).normalized()
-		var cross := Vector2(-direction.y, direction.x)
-		# Separate parallel and promotion arrows inside the same logical squares.
-		var lane: Vector2 = cross * float(rank - 2) * cell * 0.32
-		var source: Vector2 = centers[0] + lane
-		var target: Vector2 = centers[1] + lane
 		layouts.append({"rank": rank, "move": move, "color": HINT_COLORS[rank - 1],
-			"source": source, "target": target, "marker": source + direction * cell * 0.42,
+			"source": centers[0], "target": centers[1],
 			"centers": centers})
 	layouts.sort_custom(func(a: Dictionary, b: Dictionary): return a.rank < b.rank)
+	for item in layouts:
+		var direction: Vector2 = (item.target - item.source).normalized()
+		var cross := Vector2(-direction.y, direction.x)
+		var overlap_index: int = 0
+		var overlap_count: int = 0
+		for other in layouts:
+			var other_direction: Vector2 = (other.target - other.source).normalized()
+			if (item.source.is_equal_approx(other.source) or item.target.is_equal_approx(other.target)) and is_zero_approx(direction.cross(other_direction)):
+				overlap_count += 1
+				if other.rank < item.rank:
+					overlap_index += 1
+		# Only badges move sideways; every arrow still joins the two square centers.
+		var lane: float = (float(overlap_index) - float(overlap_count - 1) / 2.0) * cell * 0.32
+		item.marker = item.source.lerp(item.target, 0.56) + cross * lane
+		item.overlap_index = overlap_index
 	return layouts
 
 
@@ -335,11 +344,15 @@ func _draw_ranked_hints(cell: float) -> void:
 		var item: Dictionary = layouts[index]
 		var direction: Vector2 = (item.target - item.source).normalized()
 		var cross := Vector2(-direction.y, direction.x)
-		var tip: Vector2 = item.target - direction * cell * 0.08
-		var neck: Vector2 = tip - direction * cell * 0.24
-		draw_line(item.source, neck, outline, cell * 0.11 + 2.0, true)
-		draw_line(item.source, neck, item.color, cell * 0.075, true)
-		var triangle := PackedVector2Array([tip, neck + cross * cell * 0.12, neck - cross * cell * 0.12])
+		var tip: Vector2 = item.target
+		# Wider lower-priority arrows remain visible underneath coincident paths.
+		var overlap_index: int = item.overlap_index
+		var neck: Vector2 = tip - direction * cell * (0.24 + 0.06 * overlap_index)
+		var width: float = cell * (0.075 + 0.10 * overlap_index)
+		var head_width: float = cell * (0.12 + 0.05 * overlap_index)
+		draw_line(item.source, neck, outline, width + cell * 0.035 + 2.0, true)
+		draw_line(item.source, neck, item.color, width, true)
+		var triangle := PackedVector2Array([tip, neck + cross * head_width, neck - cross * head_width])
 		draw_colored_polygon(triangle, item.color)
 		draw_polyline(PackedVector2Array([triangle[0], triangle[1], triangle[2], triangle[0]]), outline, 1.5, true)
 	# Draw all rank markers last so another arrow cannot cover a number.

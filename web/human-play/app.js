@@ -371,31 +371,33 @@
       const [x1,y1] = point(candidate.from), [x2,y2] = point(candidate.to);
       return {...candidate, x1,y1,x2,y2,dx:x2-x1,dy:y2-y1};
     });
-    // Parallel lanes distinguish promotions and collinear shared endpoints.
-    // Shortened tips leave other common-target arrowheads visible.
+    // Keep endpoints on square centers. Only rank badges use separate lanes;
+    // wider lower-priority arrows keep coincident recommendations visible.
     for (const item of moves) {
       const peers = moves.filter((other) => (other.from === item.from || other.to === item.to) &&
         item.dx * other.dy === item.dy * other.dx);
-      item.lane = (peers.findIndex((other) => other.rank === item.rank) - (peers.length-1)/2) * 32;
+      const peerIndex = peers.findIndex((other) => other.rank === item.rank);
+      item.labelLane = (peerIndex - (peers.length-1)/2) * 32;
+      item.width = 12 + peerIndex * 10;
+      item.headWidth = 16 + peerIndex * 5;
+      item.headLength = 31 + peerIndex * 6;
       const length = Math.hypot(item.dx,item.dy);
       item.ux = item.dx/length; item.uy = item.dy/length;
     }
     for (const item of [...moves].reverse()) {
-      const {ux,uy,lane} = item;
-      const x1 = item.x1-uy*lane+ux*12, y1 = item.y1+ux*lane+uy*12;
-      const x2 = item.x2-uy*lane-ux*18, y2 = item.y2+ux*lane-uy*18;
+      const {ux,uy,x1,y1,x2,y2,width,headWidth,headLength} = item;
       const group = make("g", {"data-hint-rank":item.rank, "data-move":item.move});
-      const color = hintColors[item.rank-1], shaft = {x1,y1,x2:x2-ux*22,y2:y2-uy*22,"stroke-linecap":"round"};
-      group.append(make("line", {...shaft, stroke:"#203b32", "stroke-opacity":".65", "stroke-width":18}),
-        make("line", {...shaft, stroke:color, "stroke-width":12}),
-        make("polygon", {points:[x2+","+y2, (x2-ux*31-uy*16)+","+(y2-uy*31+ux*16),
-          (x2-ux*31+uy*16)+","+(y2-uy*31-ux*16)].join(" "),
+      const color = hintColors[item.rank-1], shaft = {x1,y1,x2:x2-ux*(headLength-9),y2:y2-uy*(headLength-9),"stroke-linecap":"butt"};
+      group.append(make("line", {...shaft, stroke:"#203b32", "stroke-opacity":".65", "stroke-width":width+6}),
+        make("line", {...shaft, stroke:color, "stroke-width":width}),
+        make("polygon", {points:[x2+","+y2, (x2-ux*headLength-uy*headWidth)+","+(y2-uy*headLength+ux*headWidth),
+          (x2-ux*headLength+uy*headWidth)+","+(y2-uy*headLength-ux*headWidth)].join(" "),
           fill:color, stroke:"#203b32", "stroke-width":2}));
       svg.append(group);
     }
     // Draw ranks last so crossing arrows cannot cover their numbers.
     for (const item of moves) {
-      const x = item.x1+item.dx*.56-item.uy*item.lane, y = item.y1+item.dy*.56+item.ux*item.lane;
+      const x = item.x1+item.dx*.56-item.uy*item.labelLane, y = item.y1+item.dy*.56+item.ux*item.labelLane;
       const label = make("g", {"data-hint-label":item.rank});
       label.append(make("circle", {cx:x,cy:y,r:15,fill:hintColors[item.rank-1],stroke:"#203b32","stroke-width":2}));
       const number = make("text", {x,y:y+1,"text-anchor":"middle","dominant-baseline":"middle",

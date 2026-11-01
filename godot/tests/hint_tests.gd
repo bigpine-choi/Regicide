@@ -84,7 +84,7 @@ func _run_ranked() -> void:
 	for index in range(3):
 		verify(layouts[index].rank == index + 1 and layouts[index].color == [Color("ef5350"), Color("ff9800"), Color("fdd835")][index], "rank determines exact shared color " + str(index + 1))
 		verify(app.hint_candidate_labels[index].text.begins_with(str(index + 1)) and app.hint_candidate_labels[index].get_theme_color("font_color") == layouts[index].color, "legend and arrow agree for rank " + str(index + 1))
-		verify(app.board.square_at_point(layouts[index].source) == str(layouts[index].move).substr(0, 2) and app.board.square_at_point(layouts[index].target) == str(layouts[index].move).substr(2, 2), "ranked arrow remains inside its logical start and target squares")
+		verify(layouts[index].source.is_equal_approx(layouts[index].centers[0]) and layouts[index].target.is_equal_approx(layouts[index].centers[1]), "ranked arrow starts and ends at exact square centers")
 	verify(app.board.hint_move == "e2e4", "legacy single-move API still exposes the highest ranked valid move")
 	var original: Dictionary = app.state.duplicate(true)
 	app._on_square_pressed("e2")
@@ -96,7 +96,7 @@ func _run_ranked() -> void:
 	app._unhandled_key_input(key)
 	verify(app.board_model.view_from_white != previous_view and app.board.hint_moves.size() == 3, "keyboard flip continues to work with all three hints")
 	for item in app.board.hint_arrow_layouts():
-		verify(app.board.square_at_point(item.source) == str(item.move).substr(0, 2) and app.board.square_at_point(item.target) == str(item.move).substr(2, 2), "flipped candidate preserves square mapping")
+		verify(item.source.is_equal_approx(item.centers[0]) and item.target.is_equal_approx(item.centers[1]) and app.board.square_at_point(item.source) == str(item.move).substr(0, 2) and app.board.square_at_point(item.target) == str(item.move).substr(2, 2), "flipped candidate preserves exact square centers")
 	var malformed: Dictionary = value.duplicate(true)
 	malformed.candidates = [{"rank": 0, "move": "e2e4"}, {"rank": 1.5, "move": "e2e4"}, {"rank": 1, "move": "e2e4", "san": "e4"},
 		{"rank": 2, "move": "e2e4"}, {"rank": 2, "move": "e2e3", "from": "a1"}, {"rank": 3, "move": "e2e5"}, {"rank": 3, "move": "e1d1", "san": "Kd1"}]
@@ -160,7 +160,7 @@ func _run_ranked() -> void:
 		layouts = app.board.hint_arrow_layouts()
 		var cell: float = app.board.get_board_rect().size.x / 8.0
 		for index in range(3):
-			verify(app.board.square_at_point(layouts[index].source) == "a7" and app.board.square_at_point(layouts[index].target) == "a8", "promotion lane stays inside edge squares when flipped=" + str(flipped))
+			verify(layouts[index].source.is_equal_approx(layouts[index].centers[0]) and layouts[index].target.is_equal_approx(layouts[index].centers[1]) and app.board.square_at_point(layouts[index].source) == "a7" and app.board.square_at_point(layouts[index].target) == "a8", "promotion arrow stays centered on edge squares when flipped=" + str(flipped))
 			for other in range(index + 1, 3):
 				verify(layouts[index].marker.distance_to(layouts[other].marker) > cell * 0.27, "different promotions have separated numeric rank markers")
 		verify(app.hint_candidate_labels[1].text.contains("나이트") and app.hint_candidate_labels[2].text.contains("룩"), "promotion legend identifies the piece for every candidate")
