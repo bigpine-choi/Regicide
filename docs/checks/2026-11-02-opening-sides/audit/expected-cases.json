@@ -1,0 +1,702 @@
+{
+  "schema": "regicide.opening-sides.independent-cases.v1",
+  "origin": "Initial 34 public source cases chosen without classifier; one Portuguese role regression added after independent code review",
+  "cases": [
+    {
+      "id": "initial",
+      "san": "",
+      "uci": [],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "white_any": [],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense",
+        "French Defense",
+        "King's Indian Defense"
+      ],
+      "source_id": "catalog"
+    },
+    {
+      "id": "reti_start",
+      "san": "Nf3",
+      "uci": [
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 1 1",
+      "white_any": [
+        "Reti"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense",
+        "King's Indian Defense",
+        "Pirc Defense"
+      ],
+      "source_id": "reti"
+    },
+    {
+      "id": "reti_to_english",
+      "san": "Nf3 Nf6 c4",
+      "uci": [
+        "g1f3",
+        "g8f6",
+        "c2c4"
+      ],
+      "fen": "rnbqkb1r/pppppppp/5n2/8/2P5/5N2/PP1PPPPP/RNBQKB1R b KQkq c3 0 2",
+      "white_any": [
+        "English"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense",
+        "King's Indian Defense",
+        "Pirc Defense"
+      ],
+      "source_id": "reti"
+    },
+    {
+      "id": "reti_sicilian_prefix",
+      "san": "Nf3 c5",
+      "uci": [
+        "g1f3",
+        "c7c5"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/2p5/8/5N2/PPPPPPPP/RNBQKB1R w KQkq c6 0 2",
+      "white_any": [
+        "Reti"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense"
+      ],
+      "source_id": "reti"
+    },
+    {
+      "id": "reti_to_sicilian",
+      "san": "Nf3 c5 e4",
+      "uci": [
+        "g1f3",
+        "c7c5",
+        "e2e4"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq e3 0 2",
+      "white_any": [
+        "King's Pawn",
+        "Open Sicilian",
+        "Sicilian"
+      ],
+      "black_any": [
+        "Sicilian"
+      ],
+      "black_forbidden": [],
+      "source_id": "reti"
+    },
+    {
+      "id": "reti_shared_fianchetto",
+      "san": "Nf3 Nf6 g3 g6",
+      "uci": [
+        "g1f3",
+        "g8f6",
+        "g2g3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/pppppp1p/5np1/8/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 0 3",
+      "white_any": [
+        "Reti",
+        "King's Indian Attack"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "King's Indian Defense",
+        "Pirc Defense"
+      ],
+      "source_id": "reti"
+    },
+    {
+      "id": "e4_waiting",
+      "san": "e4",
+      "uci": [
+        "e2e4"
+      ],
+      "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+      "white_any": [
+        "King's Pawn"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense",
+        "French Defense",
+        "Caro-Kann Defense",
+        "Pirc Defense"
+      ],
+      "source_id": "sicilian"
+    },
+    {
+      "id": "sicilian",
+      "san": "e4 c5",
+      "uci": [
+        "e2e4",
+        "c7c5"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",
+      "white_any": [
+        "King's Pawn",
+        "Sicilian"
+      ],
+      "black_any": [
+        "Sicilian"
+      ],
+      "black_forbidden": [],
+      "source_id": "sicilian"
+    },
+    {
+      "id": "sicilian_french_not_french",
+      "san": "e4 c5 Nf3 e6",
+      "uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "e7e6"
+      ],
+      "fen": "rnbqkbnr/pp1p1ppp/4p3/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+      "white_any": [
+        "King's Pawn",
+        "Sicilian"
+      ],
+      "black_any": [
+        "Sicilian"
+      ],
+      "black_forbidden": [
+        "French Defense"
+      ],
+      "source_id": "sicilian"
+    },
+    {
+      "id": "alapin",
+      "san": "e4 c5 c3",
+      "uci": [
+        "e2e4",
+        "c7c5",
+        "c2c3"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/2p5/4P3/2P5/PP1P1PPP/RNBQKBNR b KQkq - 0 2",
+      "white_any": [
+        "Alapin",
+        "King's Pawn",
+        "Sicilian"
+      ],
+      "black_any": [
+        "Sicilian"
+      ],
+      "black_forbidden": [],
+      "source_id": "sicilian"
+    },
+    {
+      "id": "french",
+      "san": "e4 e6",
+      "uci": [
+        "e2e4",
+        "e7e6"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "white_any": [
+        "King's Pawn"
+      ],
+      "black_any": [
+        "French"
+      ],
+      "black_forbidden": [],
+      "source_id": "french"
+    },
+    {
+      "id": "caro",
+      "san": "e4 c6",
+      "uci": [
+        "e2e4",
+        "c7c6"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "white_any": [
+        "King's Pawn"
+      ],
+      "black_any": [
+        "Caro-Kann"
+      ],
+      "black_forbidden": [],
+      "source_id": "caro"
+    },
+    {
+      "id": "pirc_start",
+      "san": "e4 d6",
+      "uci": [
+        "e2e4",
+        "d7d6"
+      ],
+      "fen": "rnbqkbnr/ppp1pppp/3p4/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "white_any": [
+        "King's Pawn"
+      ],
+      "black_any": [
+        "Pirc"
+      ],
+      "black_forbidden": [
+        "King's Indian Defense"
+      ],
+      "source_id": "pirc"
+    },
+    {
+      "id": "pirc_main",
+      "san": "e4 d6 d4 Nf6 Nc3 g6",
+      "uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "white_any": [
+        "King's Pawn",
+        "Classical",
+        "Austrian"
+      ],
+      "black_any": [
+        "Pirc"
+      ],
+      "black_forbidden": [
+        "King's Indian Defense"
+      ],
+      "source_id": "pirc"
+    },
+    {
+      "id": "english",
+      "san": "c4",
+      "uci": [
+        "c2c4"
+      ],
+      "fen": "rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1",
+      "white_any": [
+        "English"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense"
+      ],
+      "source_id": "english"
+    },
+    {
+      "id": "english_e5_not_sicilian",
+      "san": "c4 e5",
+      "uci": [
+        "c2c4",
+        "e7e5"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq e6 0 2",
+      "white_any": [
+        "English"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense"
+      ],
+      "source_id": "english"
+    },
+    {
+      "id": "english_c5_not_sicilian",
+      "san": "c4 c5",
+      "uci": [
+        "c2c4",
+        "c7c5"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/2p5/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2",
+      "white_any": [
+        "English"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Sicilian Defense"
+      ],
+      "source_id": "english"
+    },
+    {
+      "id": "queens_gambit_waiting",
+      "san": "d4 d5 c4",
+      "uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4"
+      ],
+      "fen": "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2",
+      "white_any": [
+        "Queen's Gambit"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Queen's Gambit Accepted",
+        "Queen's Gambit Declined",
+        "Slav Defense"
+      ],
+      "source_id": "queens_gambit"
+    },
+    {
+      "id": "qgd",
+      "san": "d4 d5 c4 e6",
+      "uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6"
+      ],
+      "fen": "rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "white_any": [
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Queen's Gambit Declined"
+      ],
+      "black_forbidden": [],
+      "source_id": "queens_gambit"
+    },
+    {
+      "id": "slav",
+      "san": "d4 d5 c4 c6",
+      "uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "c7c6"
+      ],
+      "fen": "rnbqkbnr/pp2pppp/2p5/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "white_any": [
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Slav"
+      ],
+      "black_forbidden": [],
+      "source_id": "queens_gambit"
+    },
+    {
+      "id": "qga",
+      "san": "d4 d5 c4 dxc4",
+      "uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "d5c4"
+      ],
+      "fen": "rnbqkbnr/ppp1pppp/8/8/2pP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "white_any": [
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Queen's Gambit Accepted"
+      ],
+      "black_forbidden": [],
+      "source_id": "queens_gambit"
+    },
+    {
+      "id": "ruy_waiting",
+      "san": "e4 e5 Nf3 Nc6 Bb5",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
+      "white_any": [
+        "Ruy Lopez",
+        "Spanish"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Morphy",
+        "Berlin"
+      ],
+      "source_id": "ruy"
+    },
+    {
+      "id": "ruy_morphy",
+      "san": "e4 e5 Nf3 Nc6 Bb5 a6",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6"
+      ],
+      "fen": "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+      "white_any": [
+        "Ruy Lopez",
+        "Spanish"
+      ],
+      "black_any": [
+        "Morphy"
+      ],
+      "black_forbidden": [],
+      "source_id": "morphy"
+    },
+    {
+      "id": "ruy_berlin",
+      "san": "e4 e5 Nf3 Nc6 Bb5 Nf6",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "g8f6"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "white_any": [
+        "Ruy Lopez",
+        "Spanish"
+      ],
+      "black_any": [
+        "Berlin"
+      ],
+      "black_forbidden": [],
+      "source_id": "berlin"
+    },
+    {
+      "id": "italian_waiting",
+      "san": "e4 e5 Nf3 Nc6 Bc4",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
+      "white_any": [
+        "Italian"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Giuoco Piano",
+        "Two Knights"
+      ],
+      "source_id": "italian"
+    },
+    {
+      "id": "italian_piano",
+      "san": "e4 e5 Nf3 Nc6 Bc4 Bc5",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5"
+      ],
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "white_any": [
+        "Italian"
+      ],
+      "black_any": [
+        "Giuoco Piano"
+      ],
+      "black_forbidden": [],
+      "source_id": "italian"
+    },
+    {
+      "id": "italian_two_knights",
+      "san": "e4 e5 Nf3 Nc6 Bc4 Nf6",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "g8f6"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "white_any": [
+        "Italian"
+      ],
+      "black_any": [
+        "Two Knights"
+      ],
+      "black_forbidden": [],
+      "source_id": "two_knights"
+    },
+    {
+      "id": "kid",
+      "san": "d4 Nf6 c4 g6",
+      "uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "white_any": [
+        "Queen's Pawn",
+        "d4",
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "King's Indian"
+      ],
+      "black_forbidden": [
+        "Pirc Defense"
+      ],
+      "source_id": "kid"
+    },
+    {
+      "id": "grunfeld_transition",
+      "san": "d4 Nf6 c4 g6 Nc3 d5",
+      "uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "g7g6",
+        "b1c3",
+        "d7d5"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq d6 0 4",
+      "white_any": [
+        "Queen's Pawn",
+        "d4",
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Grunfeld",
+        "Gruenfeld"
+      ],
+      "black_forbidden": [
+        "King's Indian Defense"
+      ],
+      "source_id": "grunfeld"
+    },
+    {
+      "id": "nimzo_waiting",
+      "san": "d4 Nf6 c4 e6 Nc3",
+      "uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "b1c3"
+      ],
+      "fen": "rnbqkb1r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 3",
+      "white_any": [
+        "Queen's Pawn",
+        "d4",
+        "Queen's Gambit"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Nimzo-Indian"
+      ],
+      "source_id": "nimzo"
+    },
+    {
+      "id": "nimzo",
+      "san": "d4 Nf6 c4 e6 Nc3 Bb4",
+      "uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "f8b4"
+      ],
+      "fen": "rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+      "white_any": [
+        "Queen's Pawn",
+        "d4",
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Nimzo-Indian"
+      ],
+      "black_forbidden": [],
+      "source_id": "nimzo"
+    },
+    {
+      "id": "london",
+      "san": "d4 d5 Bf4",
+      "uci": [
+        "d2d4",
+        "d7d5",
+        "c1f4"
+      ],
+      "fen": "rnbqkbnr/ppp1pppp/8/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR b KQkq - 1 2",
+      "white_any": [
+        "London"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "King's Indian Defense"
+      ],
+      "source_id": "london"
+    },
+    {
+      "id": "london_indian",
+      "san": "d4 Nf6 Bf4 g6",
+      "uci": [
+        "d2d4",
+        "g8f6",
+        "c1f4",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/pppppp1p/5np1/8/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 0 3",
+      "white_any": [
+        "London"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "King's Indian Defense",
+        "Pirc Defense"
+      ],
+      "source_id": "london"
+    },
+    {
+      "id": "modern_queen_pawn",
+      "san": "d4 d6 c4 g6",
+      "uci": [
+        "d2d4",
+        "d7d6",
+        "c2c4",
+        "g7g6"
+      ],
+      "fen": "rnbqkbnr/ppp1pp1p/3p2p1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "white_any": [
+        "Queen's Pawn",
+        "d4",
+        "Queen's Gambit"
+      ],
+      "black_any": [
+        "Modern"
+      ],
+      "black_forbidden": [
+        "Pirc Defense"
+      ],
+      "source_id": "modern"
+    },
+    {
+      "id": "portuguese_white_choice",
+      "san": "e4 e5 Bb5",
+      "uci": [
+        "e2e4",
+        "e7e5",
+        "f1b5"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/1B2p3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2",
+      "white_any": [
+        "Portuguese"
+      ],
+      "black_any": [],
+      "black_forbidden": [
+        "Portuguese Opening"
+      ],
+      "source_id": "portuguese"
+    }
+  ]
+}

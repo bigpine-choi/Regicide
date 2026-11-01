@@ -54,6 +54,8 @@ func _run() -> void:
 	var details := {"rendering": "hidden Windows graphics context, offscreen SubViewport, actual application controls",
 		"manual_play": false, "catalog_state_file": state_file, "size": [1280, 900],
 		"opening_summary": app.opening_summary.text, "opening_status": app.opening_status.text,
+		"white_opening": app.opening_white.text, "black_response": app.opening_black.text,
+		"white_opening_tooltip": app.opening_white.tooltip_text, "black_response_tooltip": app.opening_black.tooltip_text,
 		"selected_name": app.opening_preview_title.text, "remaining_san": app.opening_preview.get_parsed_text(),
 		"live_position_unchanged": JSON.stringify(app.state) == JSON.stringify(shown), "success": ok}
 	var file := FileAccess.open(output.path_join("capture-result.json"), FileAccess.WRITE)

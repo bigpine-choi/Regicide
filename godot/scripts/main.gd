@@ -72,6 +72,8 @@ var hint_detail: Label
 var hint_legend: VBoxContainer
 var hint_candidate_labels: Array[Label] = []
 var opening_summary: Label
+var opening_white: Label
+var opening_black: Label
 var opening_status: Label
 var opening_toggle: Button
 var opening_details: VBoxContainer
@@ -568,6 +570,15 @@ func _build_opening_guide(parent: VBoxContainer) -> void:
 	opening_source_button.name = "OpeningSource"
 	opening_source_button.add_theme_font_size_override("font_size", 12)
 	heading.add_child(opening_source_button)
+	opening_white = _label("백의 오프닝 · 준비 중", 13, "f6f0de")
+	opening_black = _label("흑의 대응 · 준비 중", 13, "bccbd8")
+	for side_label in [opening_white, opening_black]:
+		side_label.clip_text = true
+		side_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		side_label.custom_minimum_size.y = 22
+		contents.add_child(side_label)
+	opening_white.name = "OpeningWhite"
+	opening_black.name = "OpeningBlack"
 	opening_summary = _label("오프닝 자료를 기다립니다.", 14, "9bd7ca")
 	opening_summary.name = "OpeningSummary"
 	opening_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -622,6 +633,29 @@ func _opening_name(value: Dictionary) -> String:
 	return name + (" · " + eco if not eco.is_empty() else "")
 
 
+func _render_opening_side(label: Label, heading: String, value: Variant, unavailable: bool, note: String) -> void:
+	var side: Dictionary = value if value is Dictionary else {}
+	var status: String = str(side.get("status", "unknown"))
+	var name_value: Variant = side.get("name")
+	var detail_value: Variant = side.get("detail")
+	var name: String = name_value.strip_edges().left(250) if name_value is String else ""
+	var detail: String = detail_value.strip_edges().left(500) if detail_value is String else ""
+	if unavailable or status == "unavailable":
+		name = ""
+		detail = "안내 없음"
+	elif status not in ["confirmed", "position", "last_known", "pending", "unknown"]:
+		name = ""
+		detail = "확인 정보 없음"
+	var marker: String = "마지막 확인: " if status == "last_known" else "현재 배치: " if status == "position" else ""
+	var description: String = name if not name.is_empty() else detail if not detail.is_empty() else "확인 정보 없음"
+	label.text = heading + " · " + (marker if not name.is_empty() else "") + description
+	label.tooltip_text = label.text
+	if not name.is_empty() and not detail.is_empty():
+		label.tooltip_text += "\n" + detail
+	if not note.is_empty():
+		label.tooltip_text += "\n" + note
+
+
 func _append_opening_line(value: Dictionary, san: String, uci: String, immediate: bool) -> void:
 	if str(value.get("name", "")).is_empty():
 		return
@@ -660,6 +694,11 @@ func _render_opening_guide(shown: Dictionary) -> void:
 	var current: Dictionary = matches[0] if matches is Array and not matches.is_empty() and matches[0] is Dictionary else {}
 	var last: Variant = guide.get("matched_opening")
 	var status: String = str(guide.get("status", "unavailable"))
+	var sides_value: Variant = guide.get("sides")
+	var sides: Dictionary = sides_value if sides_value is Dictionary else {}
+	var side_note: String = str(sides.get("note", ""))
+	_render_opening_side(opening_white, "백의 오프닝", sides.get("white"), status == "unavailable", side_note)
+	_render_opening_side(opening_black, "흑의 대응", sides.get("black"), status == "unavailable", side_note)
 	var scope: String = "사용자 시작 위치 · " if guide.get("history_scope", "standard") == "custom" else ""
 	if not current.is_empty():
 		opening_summary.text = _opening_name(current)

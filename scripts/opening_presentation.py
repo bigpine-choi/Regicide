@@ -5,6 +5,7 @@ from copy import deepcopy
 import threading
 
 from opening_guide import get_opening_guide
+from opening_sides import empty_sides
 
 
 class OpeningGuideCache:
@@ -32,6 +33,7 @@ class OpeningGuideCache:
                 return {
                     "status": "unavailable", "history_scope": "unknown",
                     "current_matches": [], "matched_opening": None,
+                    "sides": empty_sides(),
                     "continuations": [], "continuations_total": 0,
                     "continuations_truncated": False,
                     "source": {"repository_url": "https://github.com/lichess-org/chess-openings",

@@ -1,0 +1,1367 @@
+{
+  "status": "passed",
+  "counts": {
+    "source_cases": 35,
+    "fen_without_invented_history": 34,
+    "undo_replay_identity": 34,
+    "last_known_departure": 1,
+    "transposition_role_equivalence": 2,
+    "catalog_white_confirmed": 3865,
+    "catalog_black_pending": 1231,
+    "catalog_rows": 3865,
+    "catalog_black_confirmed": 2634
+  },
+  "failures": [],
+  "fixture_sha256": "14b4ae293d1e0128ea881c51d117e544b6f271ff61d6a5d9b8e05ed459b4edd2",
+  "audit_script_sha256": "c0785e364f8f07a2b76de84063103613d59be66d51a5a8cd006d568ceea06880",
+  "product_sources": {
+    "scripts/opening_guide.py": "5dcc8712de3087a9465ed95428c07fc6c57dcdade1bb1c8b0c5758c500045b5b",
+    "scripts/opening_sides.py": "158a9dd5c2bf188cc8cea8a53296825612480608939861150afc522b636f86e9",
+    "scripts/opening_names.py": "bc3dbb4728b752fe359fa2570d10a5974c45162fd2540acce09f008fa475ac61"
+  },
+  "scope": "Source-backed role cases, honest history and schema; full catalogue structural scan does not verify every named role against an external source",
+  "observations": [
+    {
+      "id": "initial",
+      "sides": {
+        "white": {
+          "name": null,
+          "status": "pending",
+          "detail": "아직 첫 수를 두지 않았습니다.",
+          "matched_ply": null
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "백의 첫 수를 기다리고 있습니다.",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [],
+      "matched_opening": null,
+      "errors": []
+    },
+    {
+      "id": "reti_start",
+      "sides": {
+        "white": {
+          "name": "Réti Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 1
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "흑의 첫 대응을 기다리고 있습니다.",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Réti Opening",
+          "eco": "A04",
+          "ply": 1,
+          "match_type": "exact",
+          "catalog_ply": 1,
+          "name_source_url": "https://www.chess.com/openings/Reti-Opening",
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Réti Opening",
+        "eco": "A04",
+        "ply": 1,
+        "match_type": "exact",
+        "catalog_ply": 1,
+        "name_source_url": "https://www.chess.com/openings/Reti-Opening",
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "reti_to_english",
+      "sides": {
+        "white": {
+          "name": "English Opening",
+          "status": "confirmed",
+          "detail": "다른 수순을 거쳐 이 오프닝 위치로 전환됐습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": "Anglo-Indian Defense",
+          "status": "confirmed",
+          "detail": "다른 수순을 거쳐 이 오프닝 위치로 전환됐습니다.",
+          "matched_ply": 3
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "English Opening: Anglo-Indian Defense, King's Knight Variation",
+          "eco": "A15",
+          "ply": 3,
+          "match_type": "transposition",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "English Opening: Anglo-Indian Defense, King's Knight Variation",
+        "eco": "A15",
+        "ply": 3,
+        "match_type": "transposition",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "reti_sicilian_prefix",
+      "sides": {
+        "white": {
+          "name": "Réti Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "Sicilian Invitation",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Réti Opening: Sicilian Invitation",
+          "eco": "A04",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": "https://www.chess.com/openings/Reti-Opening-Sicilian-Invitation",
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Réti Opening: Sicilian Invitation",
+        "eco": "A04",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": "https://www.chess.com/openings/Reti-Opening-Sicilian-Invitation",
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "reti_to_sicilian",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "다른 수순을 거쳐 이 오프닝 위치로 전환됐습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": "Sicilian Defense",
+          "status": "confirmed",
+          "detail": "다른 수순을 거쳐 이 오프닝 위치로 전환됐습니다.",
+          "matched_ply": 3
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Sicilian Defense",
+          "eco": "B27",
+          "ply": 3,
+          "match_type": "transposition",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Sicilian Defense",
+        "eco": "B27",
+        "ply": 3,
+        "match_type": "transposition",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "reti_shared_fianchetto",
+      "sides": {
+        "white": {
+          "name": "King's Indian Attack",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …Nf6, …g6 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "King's Indian Attack: Symmetrical Defense",
+          "eco": "A05",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "King's Indian Attack: Symmetrical Defense",
+        "eco": "A05",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "e4_waiting",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 1
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "흑의 첫 대응을 기다리고 있습니다.",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "King's Pawn Game",
+          "eco": "B00",
+          "ply": 1,
+          "match_type": "exact",
+          "catalog_ply": 1,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "King's Pawn Game",
+        "eco": "B00",
+        "ply": 1,
+        "match_type": "exact",
+        "catalog_ply": 1,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "sicilian",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "Sicilian Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Sicilian Defense",
+          "eco": "B20",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Sicilian Defense",
+        "eco": "B20",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "sicilian_french_not_french",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "Sicilian Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Sicilian Defense: French Variation",
+          "eco": "B40",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Sicilian Defense: French Variation",
+        "eco": "B40",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "alapin",
+      "sides": {
+        "white": {
+          "name": "Alapin Variation (Sicilian)",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": "Sicilian Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 3
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Sicilian Defense: Alapin Variation",
+          "eco": "B22",
+          "ply": 3,
+          "match_type": "exact",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Sicilian Defense: Alapin Variation",
+        "eco": "B22",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "french",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "French Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "French Defense",
+          "eco": "C00",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "French Defense",
+        "eco": "C00",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "caro",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "Caro-Kann Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Caro-Kann Defense",
+          "eco": "B10",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Caro-Kann Defense",
+        "eco": "B10",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "pirc_start",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "Pirc Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Pirc Defense",
+          "eco": "B00",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Pirc Defense",
+        "eco": "B00",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "pirc_main",
+      "sides": {
+        "white": {
+          "name": "King's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Pirc Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Pirc Defense",
+          "eco": "B07",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Pirc Defense",
+        "eco": "B07",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "english",
+      "sides": {
+        "white": {
+          "name": "English Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 1
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "흑의 첫 대응을 기다리고 있습니다.",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "English Opening",
+          "eco": "A10",
+          "ply": 1,
+          "match_type": "exact",
+          "catalog_ply": 1,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "English Opening",
+        "eco": "A10",
+        "ply": 1,
+        "match_type": "exact",
+        "catalog_ply": 1,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "english_e5_not_sicilian",
+      "sides": {
+        "white": {
+          "name": "English Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "King's English Variation",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "English Opening: King's English Variation",
+          "eco": "A20",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "English Opening: King's English Variation",
+        "eco": "A20",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "english_c5_not_sicilian",
+      "sides": {
+        "white": {
+          "name": "English Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "black": {
+          "name": "Symmetrical English",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 2
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "English Opening: Symmetrical Variation",
+          "eco": "A30",
+          "ply": 2,
+          "match_type": "exact",
+          "catalog_ply": 2,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "English Opening: Symmetrical Variation",
+        "eco": "A30",
+        "ply": 2,
+        "match_type": "exact",
+        "catalog_ply": 2,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "queens_gambit_waiting",
+      "sides": {
+        "white": {
+          "name": "Queen's Gambit",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …d5 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Queen's Gambit",
+          "eco": "D06",
+          "ply": 3,
+          "match_type": "exact",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Queen's Gambit",
+        "eco": "D06",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "qgd",
+      "sides": {
+        "white": {
+          "name": "Queen's Gambit",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "Queen's Gambit Declined",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Queen's Gambit Declined",
+          "eco": "D30",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Queen's Gambit Declined",
+        "eco": "D30",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "slav",
+      "sides": {
+        "white": {
+          "name": "Queen's Gambit",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "Slav Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Slav Defense",
+          "eco": "D10",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Slav Defense",
+        "eco": "D10",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "qga",
+      "sides": {
+        "white": {
+          "name": "Queen's Gambit",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "Queen's Gambit Accepted",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Queen's Gambit Accepted",
+          "eco": "D20",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Queen's Gambit Accepted",
+        "eco": "D20",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "ruy_waiting",
+      "sides": {
+        "white": {
+          "name": "Ruy Lopez",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 5
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …e5, …Nc6 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Ruy Lopez",
+          "eco": "C60",
+          "ply": 5,
+          "match_type": "exact",
+          "catalog_ply": 5,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Ruy Lopez",
+        "eco": "C60",
+        "ply": 5,
+        "match_type": "exact",
+        "catalog_ply": 5,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "ruy_morphy",
+      "sides": {
+        "white": {
+          "name": "Ruy Lopez",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Morphy Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Ruy Lopez: Morphy Defense",
+          "eco": "C70",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Ruy Lopez: Morphy Defense",
+        "eco": "C70",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "ruy_berlin",
+      "sides": {
+        "white": {
+          "name": "Ruy Lopez",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Berlin Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Ruy Lopez: Berlin Defense",
+          "eco": "C65",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Ruy Lopez: Berlin Defense",
+        "eco": "C65",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "italian_waiting",
+      "sides": {
+        "white": {
+          "name": "Italian Game",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 5
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …e5, …Nc6 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Italian Game",
+          "eco": "C50",
+          "ply": 5,
+          "match_type": "exact",
+          "catalog_ply": 5,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Italian Game",
+        "eco": "C50",
+        "ply": 5,
+        "match_type": "exact",
+        "catalog_ply": 5,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "italian_piano",
+      "sides": {
+        "white": {
+          "name": "Italian Game",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Giuoco Piano",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Italian Game: Giuoco Piano",
+          "eco": "C50",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Italian Game: Giuoco Piano",
+        "eco": "C50",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "italian_two_knights",
+      "sides": {
+        "white": {
+          "name": "Italian Game",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Two Knights Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Italian Game: Two Knights Defense",
+          "eco": "C55",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Italian Game: Two Knights Defense",
+        "eco": "C55",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "kid",
+      "sides": {
+        "white": {
+          "name": "Queen's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "King's Indian Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "King's Indian Defense",
+          "eco": "E60",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": "https://www.chess.com/openings/Kings-Indian-Defense",
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "King's Indian Defense",
+        "eco": "E60",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": "https://www.chess.com/openings/Kings-Indian-Defense",
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "grunfeld_transition",
+      "sides": {
+        "white": {
+          "name": "Queen's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Grünfeld Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Grünfeld Defense",
+          "eco": "D80",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Grünfeld Defense",
+        "eco": "D80",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "nimzo_waiting",
+      "sides": {
+        "white": {
+          "name": "Queen's Pawn Opening",
+          "status": "last_known",
+          "detail": "마지막으로 확인한 오프닝 구상입니다. 현재 위치의 확정 이름은 아닙니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": "Indian Defense",
+          "status": "last_known",
+          "detail": "마지막으로 확인한 오프닝 구상입니다. 현재 위치의 확정 이름은 아닙니다.",
+          "matched_ply": 3
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [],
+      "matched_opening": {
+        "name": "Indian Defense: Normal Variation",
+        "eco": "A50",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "nimzo",
+      "sides": {
+        "white": {
+          "name": "Queen's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "black": {
+          "name": "Nimzo-Indian Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 6
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Nimzo-Indian Defense",
+          "eco": "E20",
+          "ply": 6,
+          "match_type": "exact",
+          "catalog_ply": 6,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Nimzo-Indian Defense",
+        "eco": "E20",
+        "ply": 6,
+        "match_type": "exact",
+        "catalog_ply": 6,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "london",
+      "sides": {
+        "white": {
+          "name": "London System",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …d5 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Queen's Pawn Game: Accelerated London System",
+          "eco": "D00",
+          "ply": 3,
+          "match_type": "exact",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Queen's Pawn Game: Accelerated London System",
+        "eco": "D00",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "london_indian",
+      "sides": {
+        "white": {
+          "name": "London System",
+          "status": "last_known",
+          "detail": "마지막으로 확인한 오프닝 구상입니다. 현재 위치의 확정 이름은 아닙니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": "Indian Defense",
+          "status": "last_known",
+          "detail": "마지막으로 확인한 오프닝 구상입니다. 현재 위치의 확정 이름은 아닙니다.",
+          "matched_ply": 3
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [],
+      "matched_opening": {
+        "name": "Indian Defense: Accelerated London System",
+        "eco": "A45",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    },
+    {
+      "id": "modern_queen_pawn",
+      "sides": {
+        "white": {
+          "name": "Queen's Pawn Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "black": {
+          "name": "Modern Defense",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 4
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Modern Defense",
+          "eco": "",
+          "ply": 4,
+          "match_type": "exact",
+          "catalog_ply": 4,
+          "name_source_url": "https://www.chess.com/openings/Modern-Defense",
+          "name_origin": "supplemental"
+        }
+      ],
+      "matched_opening": {
+        "name": "Modern Defense",
+        "eco": "",
+        "ply": 4,
+        "match_type": "exact",
+        "catalog_ply": 4,
+        "name_source_url": "https://www.chess.com/openings/Modern-Defense",
+        "name_origin": "supplemental"
+      },
+      "errors": []
+    },
+    {
+      "id": "portuguese_white_choice",
+      "sides": {
+        "white": {
+          "name": "Portuguese Opening",
+          "status": "confirmed",
+          "detail": "실제로 둔 수순에서 확인했습니다.",
+          "matched_ply": 3
+        },
+        "black": {
+          "name": null,
+          "status": "pending",
+          "detail": "확인한 대응: …e5 · 세부 방어 미확정",
+          "matched_ply": null
+        },
+        "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+      },
+      "current_matches": [
+        {
+          "name": "Portuguese Opening",
+          "eco": "C20",
+          "ply": 3,
+          "match_type": "exact",
+          "catalog_ply": 3,
+          "name_source_url": null,
+          "name_origin": "catalog"
+        }
+      ],
+      "matched_opening": {
+        "name": "Portuguese Opening",
+        "eco": "C20",
+        "ply": 3,
+        "match_type": "exact",
+        "catalog_ply": 3,
+        "name_source_url": null,
+        "name_origin": "catalog"
+      },
+      "errors": []
+    }
+  ],
+  "departure": {
+    "white": {
+      "name": "Ruy Lopez",
+      "status": "last_known",
+      "detail": "마지막으로 확인한 오프닝 구상입니다. 현재 위치의 확정 이름은 아닙니다.",
+      "matched_ply": 5
+    },
+    "black": {
+      "name": null,
+      "status": "pending",
+      "detail": "확인한 대응: …e5, …Nc6, …h6 · 세부 방어 미확정",
+      "matched_ply": null
+    },
+    "note": "백의 전개와 흑의 대응을 나눠 표시합니다. 전체 변형명은 두 선수의 수순으로 함께 결정됩니다."
+  }
+}

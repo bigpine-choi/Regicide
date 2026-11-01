@@ -23,13 +23,15 @@ func guide() -> Dictionary:
 	return {"status": "in_catalog", "history_scope": "standard",
 		"current_matches": [{"name": "King's Knight Opening", "eco": "C44", "ply": 4, "match_type": "exact"}],
 		"current_matches_total": 1, "current_matches_truncated": false,
+		"sides": {"white": {"name": "King's Knight Opening", "status": "confirmed", "detail": "백의 전개 수순입니다."},
+			"black": {"name": "Open Game", "status": "confirmed", "detail": "흑의 e5 응수입니다."}},
 		"matched_opening": null,
 		"continuations": [
-			{"uci": "f1b5", "san": "Bb5", "immediate_openings": [{"name": "Ruy Lopez", "eco": "C60"}],
+			{"uci": "f1b5", "san": "Bb5", "immediate_openings": [{"name": "Ruy Lopez Opening", "eco": "C60"}],
 				"reachable_openings": [
-					{"name": "Ruy Lopez", "eco": "C60", "distance_plies": 1, "remaining_uci": ["f1b5"], "remaining_san": "3. Bb5"},
-					{"name": "Ruy Lopez: Morphy Defense", "eco": "C78", "distance_plies": 2, "remaining_uci": ["f1b5", "a7a6"], "remaining_san": "3. Bb5 a6"},
-					{"name": "Ruy Lopez: Marshall Attack", "eco": "C89", "distance_plies": 12,
+					{"name": "Ruy Lopez Opening", "eco": "C60", "distance_plies": 1, "remaining_uci": ["f1b5"], "remaining_san": "3. Bb5"},
+					{"name": "Ruy Lopez Opening: Morphy Defense", "eco": "C78", "distance_plies": 2, "remaining_uci": ["f1b5", "a7a6"], "remaining_san": "3. Bb5 a6"},
+					{"name": "Ruy Lopez Opening: Marshall Attack", "eco": "C89", "distance_plies": 12,
 						"remaining_uci": ["f1b5", "a7a6", "b5a4", "g8f6", "e1g1", "f8e7", "f1e1", "b7b5", "a4b3", "e8g8", "c2c3", "d7d5"],
 						"remaining_san": "3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3 d5"}],
 				"immediate_total": 1, "immediate_truncated": false, "reachable_total": 3, "reachable_lines_total": 3, "reachable_truncated": false},
@@ -80,6 +82,8 @@ func _run() -> void:
 	var position := fixture()
 	app.accept_state(position)
 	verify(app.opening_summary.text.contains("King's Knight Opening") and app.opening_summary.text.contains("C44"), "current opening name and ECO are visible")
+	verify(app.opening_white.text == "백의 오프닝 · King's Knight Opening" and app.opening_black.text == "흑의 대응 · Open Game",
+		"white opening and black response are separate while the combined name remains visible")
 	verify(app.opening_status.text.contains("등록된 수순"), "exact path match is identified")
 	verify(app._opening_rows.size() == 5, "immediate and future names are preserved without duplicate immediate rows")
 	var branch_text: String = app.opening_branch_list.get_parsed_text()
@@ -164,6 +168,7 @@ func _run() -> void:
 	replay_last.opening_guide.status = "beyond_catalog"
 	replay_last.opening_guide.matched_opening = replay_last.opening_guide.current_matches[0].duplicate(true)
 	replay_last.opening_guide.current_matches = []
+	replay_last.opening_guide.sides.black = {"name": "French Defense", "status": "last_known", "detail": "앞선 수순에서 확인했습니다."}
 	app.review_frames = [fixture(), replay_last]
 	app.review_moves = [{"san": "e4"}]
 	app.review_summary = {}
@@ -172,9 +177,11 @@ func _run() -> void:
 	verify(app.opening_summary.text.contains("King's Knight Opening") and app.opening_preview_title.text.contains("Morphy"), "replay shows its own opening and supports line preview")
 	app._set_review_ply(1)
 	verify(app.opening_summary.text.begins_with("마지막 확인:"), "replay navigation updates the displayed frame's opening")
+	verify(app.opening_black.text == "흑의 대응 · 마지막 확인: French Defense", "side classification follows the displayed replay frame")
 	verify(JSON.stringify(app.state) == before, "opening replay leaves the live game unchanged")
 	app._exit_review()
 	verify(app.opening_summary.text.contains("King's Knight Opening"), "returning from replay restores live opening information")
+	verify(app.opening_black.text == "흑의 대응 · Open Game", "leaving replay restores live side labels")
 	root.size = Vector2i(900, 680)
 	await process_frame
 	await process_frame
@@ -214,13 +221,13 @@ func _run() -> void:
 	var intermediate := fixture(14)
 	intermediate.opening_guide.current_matches = []
 	intermediate.opening_guide.current_matches_total = 0
-	intermediate.opening_guide.matched_opening = {"name": "Zukertort Opening", "eco": "A06", "ply": 2, "match_type": "exact"}
+	intermediate.opening_guide.matched_opening = {"name": "Réti Opening", "eco": "A06", "ply": 2, "match_type": "exact"}
 	intermediate.opening_guide.continuations = [{"uci": "c7c5", "san": "c5", "immediate_openings": [],
 		"reachable_openings": [{"name": "Zukertort Opening: Pachman Gambit", "eco": "A06", "distance_plies": 4,
 			"remaining_uci": ["c7c5", "c2c4", "d5c4", "b2b3"], "remaining_san": "2...c5 3. c4 dxc4 4. b3"}]}]
 	intermediate.opening_guide.continuations_total = 1
 	app.accept_state(intermediate)
-	verify(app.opening_summary.text == "마지막 확인: Zukertort Opening · A06" and app.opening_status.text.contains("중간 위치")
+	verify(app.opening_summary.text == "마지막 확인: Réti Opening · A06" and app.opening_status.text.contains("중간 위치")
 		and not app.opening_status.text.contains("등록 수순 밖"), "unnamed catalog prefix keeps the last name without falsely reporting an out-of-catalog position")
 	app._on_opening_line_selected(0)
 	verify(app.opening_preview.get_parsed_text() == "2...c5 3. c4 dxc4 4. b3", "an unnamed intermediate catalog position still previews its reachable named line")
@@ -233,9 +240,43 @@ func _run() -> void:
 	intermediate = intermediate.duplicate(true)
 	intermediate.revision = 16
 	intermediate.opening_guide.status = "unknown"
-	intermediate.opening_guide.matched_opening = {"name": "Zukertort Opening", "eco": "A06"}
+	intermediate.opening_guide.matched_opening = {"name": "Réti Opening", "eco": "A06"}
 	app.accept_state(intermediate)
 	verify(not app.opening_status.text.contains("등록 수순 밖"), "only beyond_catalog may describe the current position as outside registered sequences")
+	await process_frame
+	await process_frame
+	var side_board_size: Vector2 = app.board.size
+	var long_sides := fixture(17)
+	var long_name: String = "Sicilian Defense: " + "Long variation ".repeat(12)
+	long_sides.opening_guide.current_matches[0].name = long_name
+	long_sides.opening_guide.sides.white = {"name": long_name, "status": "confirmed", "detail": "전체 이름은 도움말에 표시합니다."}
+	long_sides.opening_guide.sides.black = {"name": long_name, "status": "last_known", "detail": "앞선 수순에서 확인했습니다."}
+	app.accept_state(long_sides)
+	await process_frame
+	await process_frame
+	verify(app.board.size.is_equal_approx(side_board_size), "long side and full variation names do not change board size in a small window")
+	verify(app.opening_white.clip_text and app.opening_black.clip_text and app.opening_white.tooltip_text.contains(long_name.strip_edges())
+		and app.opening_black.text.contains("마지막 확인:"), "long side names clip in fixed rows while full names and history remain accessible")
+	var by_position := fixture(18)
+	by_position.opening_guide.sides.white.status = "position"
+	by_position.opening_guide.sides.black.status = "position"
+	app.accept_state(by_position)
+	verify(app.opening_white.text.contains("현재 배치:") and app.opening_black.text.contains("현재 배치:"), "FEN-only side classifications describe the position rather than invented history")
+	var no_sides := fixture(19)
+	no_sides.opening_guide.erase("sides")
+	app.accept_state(no_sides)
+	verify(app.opening_white.text == "백의 오프닝 · 확인 정보 없음" and app.opening_black.text == "흑의 대응 · 확인 정보 없음",
+		"legacy response with no sides clears previous labels")
+	var pending := fixture(20)
+	pending.opening_guide.sides.black = {"name": null, "status": "pending", "detail": "아직 흑의 대응 전입니다."}
+	app.accept_state(pending)
+	verify(app.opening_black.text == "흑의 대응 · 아직 흑의 대응 전입니다.", "pending black response is explicit without an invented defense name")
+	var modern := fixture(21)
+	modern.opening_guide.current_matches = [{"name": "Modern Defense", "eco": "", "match_type": "exact"}]
+	modern.opening_guide.sides.black = {"name": "Modern Defense", "status": "confirmed", "detail": "흑의 g6 대응입니다."}
+	app.accept_state(modern)
+	verify(app.opening_summary.text == "Modern Defense" and app.opening_black.text == "흑의 대응 · Modern Defense",
+		"verified supplemental classification without ECO has no invented code or dangling separator")
 	verify(app.captured_requests.is_empty(), "all synthetic opening interactions remain local")
 	app.queue_free()
 	await process_frame

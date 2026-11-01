@@ -21,7 +21,9 @@ import threading
 import chess
 import chess.pgn
 
-from opening_names import VERIFIED_ON, display_name
+from opening_names import (FAMILY_DISPLAY_NAMES, SUPPLEMENTAL_DISPLAY_LINES, VERIFIED_ON,
+                           display_name, family_display_name)
+from opening_sides import empty_sides, get_opening_sides
 
 DATA_DIRECTORY = Path(__file__).resolve().parents[1] / "data/openings"
 MAX_CONTINUATIONS = 20
@@ -44,6 +46,7 @@ class Opening:
     zeroing: tuple[bool, ...]
     catalog_name: str
     name_source_url: str | None
+    family_name_source_url: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,7 +123,8 @@ def _load_catalog(directory: Path) -> Catalog:
                             board.push(move)
                     name, name_source_url = display_name(row["eco"], row["name"], moves)
                     openings.append(Opening(row["eco"], name, moves, tuple(keys), tuple(zeroing),
-                                            row["name"], name_source_url))
+                                            row["name"], name_source_url,
+                                            None if name_source_url else family_display_name(row["name"])[1]))
         source = {
             "repository_url": manifest["repository_url"], "commit": manifest["commit"],
             "license": manifest["license"], "license_url": manifest["license_url"],
@@ -130,6 +134,11 @@ def _load_catalog(directory: Path) -> Catalog:
             "name_verified_on": VERIFIED_ON,
             "name_override_rows": sum(item.name_source_url is not None for item in openings),
             "name_references": tuple(sorted({item.name_source_url for item in openings if item.name_source_url})),
+            "family_title_aliases": len(FAMILY_DISPLAY_NAMES),
+            "family_title_rows": sum(item.family_name_source_url is not None for item in openings),
+            "family_title_references": tuple(sorted({item.family_name_source_url for item in openings
+                                                       if item.family_name_source_url})),
+            "family_title_note": "확인한 계열 이름만 Chess.com 표기로 맞췄으며, 세부 변형명 전체를 확인했다는 뜻은 아닙니다.",
         }
         return Catalog(tuple(openings),
                        MappingProxyType({key: tuple(value) for key, value in positions.items()}),
@@ -154,6 +163,50 @@ def _catalog() -> Catalog:
         return _cached_catalog()
 
 
+_DISPLAY_LOCK = threading.Lock()
+_DISPLAY_BASE = _DISPLAY_VIEW = None
+
+
+def _display_catalog(catalog: Catalog) -> Catalog:
+    """Presentation-only additions; the engine's immutable index is unchanged."""
+    global _DISPLAY_BASE, _DISPLAY_VIEW
+    with _DISPLAY_LOCK:
+        if _DISPLAY_BASE is catalog:
+            return _DISPLAY_VIEW
+        openings = list(catalog.openings)
+        positions, named = dict(catalog.positions), dict(catalog.named)
+        for eco, name, moves, source_url in SUPPLEMENTAL_DISPLAY_LINES:
+            board, keys, zeroing = chess.Board(), [], []
+            line_id = len(openings)
+            for offset in range(len(moves) + 1):
+                key = position_key(board)
+                keys.append(key)
+                positions[key] = (*positions.get(key, ()), (line_id, offset))
+                if offset == len(moves):
+                    named[key] = (*named.get(key, ()), line_id)
+                else:
+                    move = chess.Move.from_uci(moves[offset])
+                    if move not in board.legal_moves or board.is_game_over(claim_draw=False):
+                        raise CatalogError("Invalid supplemental opening line")
+                    zeroing.append(board.is_zeroing(move))
+                    board.push(move)
+            openings.append(Opening(eco, name, moves, tuple(keys), tuple(zeroing), "", source_url))
+        source = {**catalog.source, "supplemental_name_rows": len(SUPPLEMENTAL_DISPLAY_LINES),
+                  "supplemental_name_references": tuple(row[3] for row in SUPPLEMENTAL_DISPLAY_LINES),
+                  "display_rows": len(openings), "display_positions": len(positions)}
+        view = Catalog(tuple(openings), MappingProxyType(positions), MappingProxyType(named), MappingProxyType(source))
+        _DISPLAY_BASE, _DISPLAY_VIEW = catalog, view
+        return view
+
+
+def _name_evidence(opening: Opening) -> dict:
+    return {"name_source_url": opening.name_source_url,
+            "family_name_source_url": opening.family_name_source_url,
+            "name_verification": ("exact_line" if opening.name_source_url else
+                                  "family_only" if opening.family_name_source_url else "catalog"),
+            "name_origin": "supplemental" if not opening.catalog_name else "catalog"}
+
+
 def _matches(catalog: Catalog, key: str, history: tuple[str, ...], scope: str) -> list[dict]:
     result = {}
     for line_id in catalog.named.get(key, ()):
@@ -161,7 +214,8 @@ def _matches(catalog: Catalog, key: str, history: tuple[str, ...], scope: str) -
         match_type = ("position" if scope == "custom" else
                       "exact" if opening.moves == history else "transposition")
         item = {"name": opening.name, "eco": opening.eco, "ply": len(history),
-                "match_type": match_type, "catalog_ply": len(opening.moves)}
+                "match_type": match_type, "catalog_ply": len(opening.moves),
+                **_name_evidence(opening)}
         identity = opening.eco, opening.name
         order = (match_type != "exact", len(opening.moves), opening.eco, opening.name)
         if identity not in result or order < result[identity][0]:
@@ -213,8 +267,12 @@ def _continuations(catalog: Catalog, board: chess.Board, key: str) -> tuple[list
         child.push(move)
         child_key = position_key(child)
         resets_clock = board.is_zeroing(move)
-        immediate = {(catalog.openings[i].eco, catalog.openings[i].name)
-                     for i in catalog.named.get(child_key, ())}
+        immediate = {}
+        for index in catalog.named.get(child_key, ()):
+            opening = catalog.openings[index]
+            identity = opening.eco, opening.name
+            if identity not in immediate or (not immediate[identity].name_source_url and opening.name_source_url):
+                immediate[identity] = opening
         candidates, all_lines = {}, set()
         for line_id, offset in catalog.positions.get(child_key, ()):
             opening = catalog.openings[line_id]
@@ -227,18 +285,20 @@ def _continuations(catalog: Catalog, board: chess.Board, key: str) -> tuple[list
             all_lines.add((identity, suffix))
             order = len(suffix), suffix
             if identity not in candidates or order < candidates[identity][0]:
-                candidates[identity] = order, suffix
+                candidates[identity] = order, suffix, opening
         if not candidates:
             continue
         reachable = []
         selected = sorted(candidates.items(), key=lambda item: (item[1][0][0], *item[0], item[1][1]))
-        for (eco, name), (_, suffix) in selected[:MAX_REACHABLE_OPENINGS]:
+        for (eco, name), (_, suffix, opening) in selected[:MAX_REACHABLE_OPENINGS]:
             moves = [chess.Move.from_uci(token) for token in suffix]
             # variation_san copies the board and formats move numbers from this
             # actual position, rather than from the catalogue's original line.
             reachable.append({"name": name, "eco": eco, "distance_plies": len(suffix),
-                              "remaining_uci": list(suffix), "remaining_san": board.variation_san(moves)})
-        immediate_rows = [{"name": name, "eco": eco} for eco, name in sorted(immediate)]
+                              "remaining_uci": list(suffix), "remaining_san": board.variation_san(moves),
+                              **_name_evidence(opening)})
+        immediate_rows = [{"name": name, "eco": eco, **_name_evidence(immediate[eco, name])}
+                          for eco, name in sorted(immediate)]
         rows.append({"uci": uci, "san": board.san(move),
                      "immediate_openings": immediate_rows[:MAX_IMMEDIATE_MATCHES],
                      "immediate_total": len(immediate_rows),
@@ -260,6 +320,7 @@ def get_opening_guide(board: chess.Board) -> dict:
                 "history_plies": len(board.move_stack), "position_key": position_key(board),
                 "current_matches": [], "current_matches_total": 0, "current_matches_truncated": False,
                 "matched_opening": None, "continuations": [], "continuations_total": 0,
+                "sides": empty_sides(),
                 "continuations_truncated": False, "source": None, "disclaimer": DISCLAIMER,
                 "ordering": "SAN 표기순이며 추천 순위가 아닙니다.",
                 "history_note": ("초기 배치부터의 착수 이력을 사용합니다." if scope == "standard" else
@@ -268,7 +329,7 @@ def get_opening_guide(board: chess.Board) -> dict:
         response.update(status="unavailable", message="표준 체스의 유효한 위치에서 오프닝 안내를 사용할 수 있습니다.")
         return response
     try:
-        catalog = _catalog()
+        catalog = _display_catalog(_catalog())
         response["source"] = dict(catalog.source)
         history = tuple(move.uci() for move in board.move_stack)
         matches = _matches(catalog, response["position_key"], history, scope)
@@ -290,6 +351,7 @@ def get_opening_guide(board: chess.Board) -> dict:
         continuations, total = _continuations(catalog, board, response["position_key"])
         response.update(continuations=continuations, continuations_total=total,
                         continuations_truncated=total > MAX_CONTINUATIONS)
+        response["sides"] = get_opening_sides(board, catalog, response)
         return response
     except (CatalogError, ValueError) as error:
         response.update(status="unavailable", message="오프닝 자료를 불러올 수 없습니다.")

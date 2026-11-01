@@ -1,0 +1,39 @@
+{
+  "verified_on": "2026-11-02",
+  "scope": "Family terminology verified on official Chess.com opening pages. Descendant suffixes remain catalog terminology unless separately verified at an exact position.",
+  "changed_families": [
+    {"catalog_family":"Ruy Lopez","display_family":"Ruy Lopez Opening","official_heading":"Ruy Lopez Opening","source_url":"https://www.chess.com/openings/Ruy-Lopez-Opening","san":"e4 e5 Nf3 Nc6 Bb5","catalog_rows":235},
+    {"catalog_family":"King's Pawn Game","display_family":"King's Pawn Opening","official_heading":"King's Pawn Opening","source_url":"https://www.chess.com/openings/Kings-Pawn-Opening","san":"e4","catalog_rows":38},
+    {"catalog_family":"Queen's Pawn Game","display_family":"Queen's Pawn Opening","official_heading":"Queen's Pawn Opening","source_url":"https://www.chess.com/openings/Queens-Pawn-Opening","san":"d4","catalog_rows":82},
+    {"catalog_family":"Alekhine Defense","display_family":"Alekhine's Defense","official_heading":"Alekhine's Defense","source_url":"https://www.chess.com/openings/Alekhines-Defense","san":"e4 Nf6","catalog_rows":56},
+    {"catalog_family":"Owen Defense","display_family":"Owen's Defense","official_heading":"Owen's Defense","source_url":"https://www.chess.com/openings/Owens-Defense","san":"e4 b6","catalog_rows":8},
+    {"catalog_family":"Bird Opening","display_family":"Bird's Opening","official_heading":"Bird's Opening","source_url":"https://www.chess.com/openings/Birds-Opening","san":"f4","catalog_rows":28},
+    {"catalog_family":"Nimzo-Larsen Attack","display_family":"Nimzowitsch-Larsen Attack","official_heading":"Nimzowitsch-Larsen Attack","source_url":"https://www.chess.com/openings/Nimzowitsch-Larsen-Attack","san":"b3","catalog_rows":18,"note":"The official text explicitly acknowledges the shorter Nimzo-Larsen synonym."},
+    {"catalog_family":"Hungarian Opening","display_family":"King's Fianchetto Opening","official_heading":"King's Fianchetto Opening","source_url":"https://www.chess.com/openings/Kings-Fianchetto-Opening","san":"g3","catalog_rows":20,"note":"The official text explicitly acknowledges Hungarian Opening as a synonym."},
+    {"catalog_family":"Indian Defense","display_family":"Indian Game","official_heading":"Indian Game","source_url":"https://www.chess.com/openings/Indian-Game","san":"d4 Nf6","catalog_rows":53,"note":"A broad opening family; do not overwrite the separately verified exact King's Indian endpoint."}
+  ],
+  "confirmed_unchanged_families": [
+    {"catalog_family":"Petrov's Defense","source_url":"https://www.chess.com/openings/Petrovs-Defense","san":"e4 e5 Nf3 Nf6"},
+    {"catalog_family":"Nimzowitsch Defense","source_url":"https://www.chess.com/openings/Nimzowitsch-Defense","san":"e4 Nc6"},
+    {"catalog_family":"Philidor Defense","source_url":"https://www.chess.com/openings/Philidor-Defense","san":"e4 e5 Nf3 d6"},
+    {"catalog_family":"Queen's Gambit","source_url":"https://www.chess.com/openings/Queens-Gambit","san":"d4 d5 c4"},
+    {"catalog_family":"Grünfeld Defense","source_url":"https://www.chess.com/openings/Grunfeld-Defense","san":"d4 Nf6 c4 g6 Nc3 d5","note":"Official metadata uses Grünfeld while H1 uses Gruenfeld. Both spellings are official; retain the existing diacritic."},
+    {"catalog_family":"Réti Opening","source_url":"https://www.chess.com/openings/Reti-Opening","san":"Nf3","note":"Official metadata uses Réti while H1 uses Reti. Keep existing exact line overrides and the diacritic."}
+  ],
+  "additional_exact_endpoint_candidates": [
+    {"catalog_name":"Zukertort Opening: Tennison Gambit","catalog_eco":"A06","catalog_san":"e4 d5 Nf3","display_name":"Réti Opening: Tennison Gambit","source_url":"https://www.chess.com/openings/Reti-Opening-Tennison-Gambit","official_san":"Nf3 d5 e4","note":"Official text explicitly lists both move orders. Does not verify the Brigg's Trap descendant."},
+    {"catalog_name":"Zukertort Opening: Santasiere's Folly","catalog_eco":"A06","catalog_san":"b4 d5 Nf3","display_name":"Réti Opening: Santasiere's Folly","source_url":"https://www.chess.com/openings/Reti-Opening-Santasieres-Folly","official_san":"Nf3 d5 b4","note":"Different legal move orders reach the same full position key; verify equality before any exact override."}
+  ],
+  "excluded": [
+    {"catalog_family":"Zukertort Opening","reason":"Do not apply a global family alias. Its 47 original rows include independent or differently entered systems; exact verified positions remain the policy."},
+    {"catalog_name":"Zukertort Opening: Lemberger Gambit","attempted_url":"https://www.chess.com/openings/Reti-Opening-Lemberger-Gambit","reason":"Page could not be accessed by the tool; no verified rename."},
+    {"catalog_name":"Zukertort Opening: Tennison Gambit, Brigg's Trap","reason":"The root Tennison page does not establish the complete descendant title for this exact sequence."}
+  ],
+  "rules": [
+    "Replace only an exact family root before a colon, never an arbitrary substring in a variation name.",
+    "Exact full-line verified overrides have priority over a family alias.",
+    "A family reference must not be presented as verification of an unverified full variation title.",
+    "Preserve ECO, representative move sequence, position keys, source catalog checksums, and the engine candidate index.",
+    "The initial recommendation to globally alias Zukertort was withdrawn after checking non-Nf3 catalog entries."
+  ]
+}

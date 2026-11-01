@@ -1,16 +1,50 @@
 """Selected display names verified against official Chess.com opening pages.
 
-Checked 2026-11-02. Keys are exact (ECO, original name, complete UCI line),
-not a global Zukertort replacement. The pinned CC0 source files stay intact.
-Unlisted names retain the catalogue spelling; this is not a full Chess.com DB.
+Checked 2026-11-02. Exact full-line overrides take priority over verified
+family titles. A canonical family title does not verify its variant suffix.
+There is no global Zukertort replacement. The pinned CC0 files stay intact.
 """
 from types import MappingProxyType
 
 VERIFIED_ON = "2026-11-02"
 REFERENCE_ROOT = "https://www.chess.com/openings/"
 
+# Family boundaries only. The suffix after ':' remains catalogue terminology
+# unless a separate exact full-line override below verifies the whole name.
+_FAMILY_ROWS = (
+    ("King's Pawn Game", "King's Pawn Opening", "Kings-Pawn-Opening"),
+    ("Queen's Pawn Game", "Queen's Pawn Opening", "Queens-Pawn-Opening"),
+    ("Ruy Lopez", "Ruy Lopez Opening", "Ruy-Lopez-Opening"),
+    ("Alekhine Defense", "Alekhine's Defense", "Alekhines-Defense"),
+    ("Owen Defense", "Owen's Defense", "Owens-Defense"),
+    ("Bird Opening", "Bird's Opening", "Birds-Opening"),
+    ("Nimzo-Larsen Attack", "Nimzowitsch-Larsen Attack", "Nimzowitsch-Larsen-Attack"),
+    ("Hungarian Opening", "King's Fianchetto Opening", "Kings-Fianchetto-Opening"),
+    ("Indian Defense", "Indian Game", "Indian-Game"),
+)
+FAMILY_DISPLAY_NAMES = MappingProxyType({
+    source: (canonical, REFERENCE_ROOT + slug) for source, canonical, slug in _FAMILY_ROWS
+})
+
+
+def family_display_name(name):
+    family, separator, suffix = name.partition(":")
+    canonical, url = FAMILY_DISPLAY_NAMES.get(family, (family, None))
+    return canonical + separator + suffix, url
+
+
+def catalog_family_name(name):
+    """Internal role lookup only; never rewrite arbitrary parts of a name."""
+    family, separator, suffix = name.partition(":")
+    original = next((source for source, (canonical, _) in FAMILY_DISPLAY_NAMES.items()
+                     if canonical == family), family)
+    return original + separator + suffix
+
 # ECO, original CC0 name, exact line, verified display name, official page.
 _ROWS = (
+    ("A06", "Zukertort Opening: Tennison Gambit", "e2e4 d7d5 g1f3", "Réti Opening: Tennison Gambit", "Reti-Opening-Tennison-Gambit"),
+    ("A06", "Zukertort Opening: Santasiere's Folly", "b2b4 d7d5 g1f3", "Réti Opening: Santasiere's Folly", "Reti-Opening-Santasieres-Folly"),
+    ("E60", "Indian Defense: West Indian Defense", "d2d4 g8f6 c2c4 g7g6", "King's Indian Defense", "Kings-Indian-Defense"),
     ("A00", "Hungarian Opening", "g2g3", "King's Fianchetto Opening", "Kings-Fianchetto-Opening"),
     ("A01", "Nimzo-Larsen Attack", "b2b3", "Nimzowitsch-Larsen Attack", "Nimzowitsch-Larsen-Attack"),
     ("A02", "Bird Opening", "f2f4", "Bird's Opening", "Birds-Opening"),
@@ -53,6 +87,16 @@ DISPLAY_NAME_OVERRIDES = MappingProxyType({
     for eco, source, line, display, slug in _ROWS
 })
 
+# A verified named endpoint absent from the pinned catalogue. This is consumed
+# only by the presentation index, never by the engine's opening candidate index.
+# The official page does not provide an ECO code, so none is invented.
+SUPPLEMENTAL_DISPLAY_LINES = (
+    ("", "Modern Defense", ("d2d4", "d7d6", "c2c4", "g7g6"), REFERENCE_ROOT + "Modern-Defense"),
+)
+
 
 def display_name(eco, source_name, moves):
-    return DISPLAY_NAME_OVERRIDES.get((eco, source_name, moves), (source_name, None))
+    exact = DISPLAY_NAME_OVERRIDES.get((eco, source_name, moves))
+    if exact is not None:
+        return exact
+    return family_display_name(source_name)[0], None

@@ -119,6 +119,23 @@
     return name ? `${name}${eco ? ` · ${eco}` : ""}` : "";
   }
 
+  function renderOpeningSide(id, heading, item, unavailable, note) {
+    const status = openingText(item?.status);
+    let name = openingText(item?.name);
+    let detail = openingText(item?.detail, 500);
+    if (unavailable || status === "unavailable") {
+      name = "";
+      detail = "안내 없음";
+    } else if (!["confirmed", "position", "last_known", "pending", "unknown"].includes(status)) {
+      name = "";
+      detail = "확인 정보 없음";
+    }
+    const marker = status === "last_known" ? "마지막 확인: " : status === "position" ? "현재 배치: " : "";
+    const label = `${heading} · ${name ? marker + name : detail || "확인 정보 없음"}`;
+    byId(id).textContent = label;
+    byId(id).title = [label, name && detail, openingText(note, 500)].filter(Boolean).join("\n");
+  }
+
   function openingLink(url, label) {
     if (typeof URL !== "function" || typeof url !== "string") return null;
     try {
@@ -144,6 +161,8 @@
       unknown:"등록 이름 없음", unavailable:"안내 없음"};
     const status = guide && Object.hasOwn(statuses, guide.status) ? guide.status : "unavailable";
     byId("opening-badge").textContent = !state ? "준비 중" : statuses[status];
+    renderOpeningSide("opening-white", "백의 오프닝", guide?.sides?.white, status === "unavailable", guide?.sides?.note);
+    renderOpeningSide("opening-black", "흑의 대응", guide?.sides?.black, status === "unavailable", guide?.sides?.note);
     const matches = Array.isArray(guide?.current_matches) ? guide.current_matches.filter(openingLabel) : [];
     const matched = openingLabel(guide?.matched_opening);
     byId("opening-name").textContent = !state ? "오프닝 자료를 기다리고 있어요." :

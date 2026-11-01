@@ -9,6 +9,7 @@ import unicodedata
 import chess
 
 from opening_guide import CatalogError, _catalog, position_key
+from opening_names import catalog_family_name, family_display_name
 
 
 MAX_PLIES = 24
@@ -322,13 +323,15 @@ def describe_opening(board_before, row):
     history = tuple(move.uci() for move in after.move_stack)
     # The base e4/e5 node is useful, but do not overwrite separately named
     # gambits or other families merely because their first two moves match.
-    if family is None and opening.name == "King's Pawn Game" and history[:2] == ("e2e4", "e7e5"):
+    if family is None and catalog_family_name(opening.name) == "King's Pawn Game" and history[:2] == ("e2e4", "e7e5"):
         family = "open_game"
     profile = PROFILES.get(family)
     assessment, balance = _assessment(board_before, after, row)
     sources = [catalog.source["repository_url"] + "/tree/" + catalog.source["commit"]]
     if opening.name_source_url:
         sources.append(opening.name_source_url)
+    if opening.family_name_source_url:
+        sources.append(opening.family_name_source_url)
     if profile:
         white_name, black_name, slug, idea, white_text, black_text = profile
         sources.append(SOURCE_ROOT + slug)
@@ -354,6 +357,7 @@ def describe_opening(board_before, row):
         black_text = "Black's position belongs to the same actual game. This opening is outside the detailed plan profiles, so a specific counter-plan isn't invented. The move analysis can still explain concrete threats and mistakes."
     if history[0] == "g1f3" and family not in (None, "reti"):
         destination = profile[1] if family in ('sicilian', 'french', 'caro', 'kid', 'nimzo', 'grunfeld') else profile[0]
+        destination = family_display_name(destination)[0]
         summary = f"The Réti move order led into {destination}. " + idea
         white_text = "The game began with Nf3, but the current family follows the later central choices. " + white_text
     elif recognition["match_type"] == "transposition":
@@ -374,7 +378,8 @@ def describe_opening(board_before, row):
         balance += _center_observation(after)
     move = chess.Move.from_uci(row["uci"])
     return {"title": "Opening: " + opening.name, "summary": summary,
-            "white": {"name": white_name}, "black": {"name": black_name},
+            "white": {"name": family_display_name(white_name)[0]},
+            "black": {"name": family_display_name(black_name)[0]},
             "recognition": recognition, "sections": [
                 {"id": "white", "title": "White's plan", "text": white_text},
                 {"id": "black", "title": "Black's reply", "text": black_text},

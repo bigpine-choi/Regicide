@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import chess
 import opening_guide as guide
-from opening_names import DISPLAY_NAME_OVERRIDES, display_name
+from opening_names import DISPLAY_NAME_OVERRIDES, FAMILY_DISPLAY_NAMES, display_name, family_display_name
 
 
 def position(*moves):
@@ -30,7 +30,7 @@ class OpeningGuideTests(unittest.TestCase):
         cls.catalog = guide._catalog()
 
     def test_real_named_openings(self):
-        cases = [(('e4', 'e5', 'Nf3', 'Nc6', 'Bb5'), "Ruy Lopez", "C60"),
+        cases = [(('e4', 'e5', 'Nf3', 'Nc6', 'Bb5'), "Ruy Lopez Opening", "C60"),
                  (('e4', 'e5', 'Nf3', 'Nc6', 'Bc4'), "Italian Game", "C50"),
                  (('d4', 'd5', 'c4'), "Queen's Gambit", "D06")]
         for moves, name, eco in cases:
@@ -45,8 +45,8 @@ class OpeningGuideTests(unittest.TestCase):
         manifest = json.loads((guide.DATA_DIRECTORY / 'manifest.json').read_text(encoding='utf-8'))
         protected = [guide.DATA_DIRECTORY / name for name in (*manifest['files'], 'manifest.json')]
         before = {path: path.read_bytes() for path in protected}
-        self.assertEqual(len(DISPLAY_NAME_OVERRIDES), 35)
-        self.assertEqual(self.catalog.source['name_override_rows'], 35)
+        self.assertEqual(len(DISPLAY_NAME_OVERRIDES), 38)
+        self.assertEqual(self.catalog.source['name_override_rows'], 38)
         self.assertEqual(self.catalog.source['catalogue_rows'], 3865)
         self.assertEqual(self.catalog.source['catalogue_positions'], 7983)
         indexed = {(item.eco, item.catalog_name, item.moves): item for item in self.catalog.openings}
@@ -100,13 +100,14 @@ class OpeningGuideTests(unittest.TestCase):
         self.assertEqual(transposed['matched_opening']['match_type'], 'transposition')
         self.assertEqual(direct['continuations'], transposed['continuations'])
         queen_pawn = guide.get_opening_guide(position('Nf3', 'd5', 'd4'))
-        self.assertEqual(queen_pawn['matched_opening']['name'], "Queen's Pawn Game: Zukertort Variation")
+        self.assertEqual(queen_pawn['matched_opening']['name'], "Queen's Pawn Opening: Zukertort Variation")
         ruy = guide.get_opening_guide(position('Nf3', 'Nc6', 'e4', 'e5', 'Bb5'))
-        self.assertEqual(ruy['matched_opening']['name'], 'Ruy Lopez')
+        self.assertEqual(ruy['matched_opening']['name'], 'Ruy Lopez Opening')
 
     def test_unverified_and_independent_zukertort_names_are_preserved(self):
-        cases = [(('d4', 'd5', 'Nf3'), "Queen's Pawn Game: Zukertort Variation"),
-                 (('e4', 'd5', 'Nf3'), 'Zukertort Opening: Tennison Gambit'),
+        cases = [(('d4', 'd5', 'Nf3'), "Queen's Pawn Opening: Zukertort Variation"),
+                 (('e4', 'd5', 'Nf3', 'dxe4', 'Ng5', 'Nf6', 'Nc3', 'Bf5', 'Qe2', 'Qd4'),
+                  "Zukertort Opening: Tennison Gambit, Brigg's Trap"),
                  (('Nf3', 'Nf6', 'e4'), 'Zukertort Opening: Lemberger Gambit')]
         for moves, expected in cases:
             with self.subTest(name=expected):
@@ -114,8 +115,11 @@ class OpeningGuideTests(unittest.TestCase):
         for item in self.catalog.openings:
             key = item.eco, item.catalog_name, item.moves
             if key not in DISPLAY_NAME_OVERRIDES:
-                self.assertEqual(item.name, item.catalog_name)
+                family, separator, suffix = item.catalog_name.partition(':')
+                canonical, url = FAMILY_DISPLAY_NAMES.get(family, (family, None))
+                self.assertEqual(item.name, canonical + separator + suffix)
                 self.assertIsNone(item.name_source_url)
+                self.assertEqual(item.family_name_source_url, url)
         # Matching text alone, a different ECO, or an unverified continuation
         # cannot inherit an official display-name correction.
         self.assertEqual(display_name('A04', 'Zukertort Opening', ('g1f3', 'h7h5')),
@@ -123,20 +127,66 @@ class OpeningGuideTests(unittest.TestCase):
         self.assertEqual(display_name('A05', 'Zukertort Opening', ('g1f3',)),
                          ('Zukertort Opening', None))
 
+    def test_canonical_family_boundary_and_exact_override_priority(self):
+        self.assertEqual(len(FAMILY_DISPLAY_NAMES), 9)
+        self.assertEqual(family_display_name("King's Pawn Game: Wayward Queen Attack")[0],
+                         "King's Pawn Opening: Wayward Queen Attack")
+        self.assertEqual(family_display_name("Queen's Pawn Game: Zukertort Variation")[0],
+                         "Queen's Pawn Opening: Zukertort Variation")
+        self.assertEqual(family_display_name("Ruy Lopez Defense"), ("Ruy Lopez Defense", None))
+        self.assertEqual(family_display_name("Unrelated: Ruy Lopez"), ("Unrelated: Ruy Lopez", None))
+        self.assertEqual(family_display_name("Zukertort Opening: Lemberger Gambit"),
+                         ("Zukertort Opening: Lemberger Gambit", None))
+        self.assertEqual(display_name('E60', 'Indian Defense: West Indian Defense',
+                                      ('d2d4', 'g8f6', 'c2c4', 'g7g6'))[0], "King's Indian Defense")
+        self.assertEqual(self.catalog.source['family_title_aliases'], 9)
+        self.assertEqual(self.catalog.source['family_title_rows'], 534)
+
+    def test_family_only_evidence_is_consistent_in_current_and_branches(self):
+        before = guide.get_opening_guide(position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5'))
+        branch = next(row for row in before['continuations'] if row['uci'] == 'a7a6')
+        target = 'Ruy Lopez Opening: Morphy Defense'
+        immediate = next(row for row in branch['immediate_openings'] if row['name'] == target)
+        reachable = next(row for row in branch['reachable_openings'] if row['name'] == target)
+        current_board = position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6')
+        current = guide.get_opening_guide(current_board)['matched_opening']
+        fen = guide.get_opening_guide(chess.Board(current_board.fen()))['matched_opening']
+        for row in (immediate, reachable, current, fen):
+            self.assertEqual(row['name'], target)
+            self.assertEqual(row['name_verification'], 'family_only')
+            self.assertIsNone(row['name_source_url'])
+            self.assertEqual(row['family_name_source_url'], 'https://www.chess.com/openings/Ruy-Lopez-Opening')
+        self.assertEqual(before['sides']['white']['name'], 'Ruy Lopez Opening')
+        kid = guide.get_opening_guide(position('d4', 'Nf6', 'c4', 'g6'))['matched_opening']
+        self.assertEqual(kid['name_verification'], 'exact_line')
+        self.assertIsNone(kid['family_name_source_url'])
+
+    def test_new_verified_reti_gambits_include_source_transpositions(self):
+        cases = [(('e4', 'd5', 'Nf3'), ('Nf3', 'd5', 'e4'), 'Réti Opening: Tennison Gambit'),
+                 (('b4', 'd5', 'Nf3'), ('Nf3', 'd5', 'b4'), "Réti Opening: Santasiere's Folly")]
+        for first, second, name in cases:
+            a, b = guide.get_opening_guide(position(*first)), guide.get_opening_guide(position(*second))
+            self.assertEqual(a['position_key'], b['position_key'])
+            self.assertEqual(a['matched_opening']['name'], name)
+            self.assertEqual(b['matched_opening']['name'], name)
+            self.assertEqual(b['matched_opening']['match_type'], 'transposition')
+            self.assertEqual(a['matched_opening']['name_verification'], 'exact_line')
+            self.assertTrue(a['matched_opening']['name_source_url'].startswith('https://www.chess.com/openings/Reti-Opening-'))
+
     def test_name_policy_provenance_is_explicit_and_response_local(self):
         first = guide.get_opening_guide(position('Nf3'))
         self.assertIn('일부 명칭 Chess.com', first['source']['attribution'])
         self.assertEqual(first['source']['license'], 'CC0-1.0')
         self.assertEqual(first['source']['name_policy'], 'selected_exact_lines_verified_on_chess_com')
-        self.assertEqual(len(first['source']['name_references']), 35)
+        self.assertEqual(len(first['source']['name_references']), 38)
         first['source']['name_override_rows'] = -1
         first['source']['name_references'] += ('changed by caller',)
         second = guide.get_opening_guide(position('Nf3'))
-        self.assertEqual(second['source']['name_override_rows'], 35)
+        self.assertEqual(second['source']['name_override_rows'], 38)
         self.assertNotIn('changed by caller', second['source']['name_references'])
         json.dumps(second, ensure_ascii=False)
 
-    def test_verified_first_move_names_and_unrelated_variants_remain_separate(self):
+    def test_verified_first_move_names_preserve_unverified_variant_suffixes(self):
         cases = [('g3', "King's Fianchetto Opening", 'A00'),
                  ('b3', 'Nimzowitsch-Larsen Attack', 'A01'),
                  ('f4', "Bird's Opening", 'A02'), ('g4', 'Grob Opening', 'A00')]
@@ -150,15 +200,18 @@ class OpeningGuideTests(unittest.TestCase):
             self.assertIn(expected, [item['name'] for item in branch['reachable_openings']])
         for item in self.catalog.openings:
             if len(item.moves) > 1 and item.catalog_name.startswith(('Hungarian Opening', 'Nimzo-Larsen Attack', 'Bird Opening')):
-                self.assertEqual(item.name, item.catalog_name)
+                self.assertEqual(item.name.partition(':')[2], item.catalog_name.partition(':')[2])
+                self.assertEqual(item.name, family_display_name(item.catalog_name)[0])
+                self.assertIsNone(item.name_source_url)
+                self.assertIsNotNone(item.family_name_source_url)
 
     def test_morphy_is_immediate_but_exchange_requires_more_moves(self):
         board = position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5')
         result = guide.get_opening_guide(board)
         branch = next(row for row in result["continuations"] if row["uci"] == "a7a6")
         self.assertEqual(branch["san"], "a6")
-        self.assertIn("Ruy Lopez: Morphy Defense", [row["name"] for row in branch["immediate_openings"]])
-        exchange = next(row for row in branch["reachable_openings"] if row["name"] == "Ruy Lopez: Exchange Variation")
+        self.assertIn("Ruy Lopez Opening: Morphy Defense", [row["name"] for row in branch["immediate_openings"]])
+        exchange = next(row for row in branch["reachable_openings"] if row["name"] == "Ruy Lopez Opening: Exchange Variation")
         self.assertEqual(exchange["distance_plies"], 2)
         self.assertEqual(exchange["remaining_uci"], ["a7a6", "b5c6"])
         self.assertEqual(exchange["remaining_san"], "3...a6 4. Bxc6")
@@ -168,7 +221,7 @@ class OpeningGuideTests(unittest.TestCase):
         direct = guide.get_opening_guide(position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5'))
         transposed = guide.get_opening_guide(position('Nf3', 'Nc6', 'e4', 'e5', 'Bb5'))
         self.assertEqual(direct["position_key"], transposed["position_key"])
-        self.assertEqual(transposed["matched_opening"]["name"], "Ruy Lopez")
+        self.assertEqual(transposed["matched_opening"]["name"], "Ruy Lopez Opening")
         self.assertEqual(transposed["matched_opening"]["match_type"], "transposition")
         self.assertEqual(direct["continuations"], transposed["continuations"])
 
@@ -179,7 +232,7 @@ class OpeningGuideTests(unittest.TestCase):
         after = guide.get_opening_guide(board)
         self.assertEqual(after["status"], "beyond_catalog")
         self.assertEqual(after["current_matches"], [])
-        self.assertEqual(after["matched_opening"]["name"], "Ruy Lopez")
+        self.assertEqual(after["matched_opening"]["name"], "Ruy Lopez Opening")
         self.assertEqual(after["matched_opening"]["ply"], 5)
         self.assertEqual(after["continuations"], [])
         board.pop()
@@ -263,7 +316,7 @@ class OpeningGuideTests(unittest.TestCase):
         board = position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5')
         board.halfmove_clock = 150
         result = guide.get_opening_guide(board)
-        self.assertEqual(result["matched_opening"]["name"], "Ruy Lopez")
+        self.assertEqual(result["matched_opening"]["name"], "Ruy Lopez Opening")
         self.assertEqual(result["continuations"], [])
         self.assertEqual(result["continuations_total"], 0)
 
@@ -281,7 +334,7 @@ class OpeningGuideTests(unittest.TestCase):
         self.assertEqual(branch['reachable_lines_total'], branch['immediate_total'])
         self.assertFalse(branch['reachable_truncated'])
         self.assertTrue(all(line['distance_plies'] == 1 for line in branch['reachable_openings']))
-        self.assertIn('Ruy Lopez: Berlin Defense', [row['name'] for row in branch['reachable_openings']])
+        self.assertIn('Ruy Lopez Opening: Berlin Defense', [row['name'] for row in branch['reachable_openings']])
         child = board.copy(stack=True)
         child.push_uci('g8f6')
         self.assertTrue(child.is_game_over(claim_draw=False))
@@ -303,7 +356,7 @@ class OpeningGuideTests(unittest.TestCase):
         result = guide.get_opening_guide(board)
         branch = next(row for row in result['continuations'] if row['uci'] == 'g8f6')
         self.assertEqual(branch['reachable_total'], 1)
-        self.assertEqual(branch['reachable_openings'][0]['name'], 'Ruy Lopez: Berlin Defense')
+        self.assertEqual(branch['reachable_openings'][0]['name'], 'Ruy Lopez Opening: Berlin Defense')
         self.assertEqual(branch['reachable_openings'][0]['distance_plies'], 1)
         # Every displayed line is independently checked with the full Python
         # rules/history oracle, rather than the catalogue's optimized counters.

@@ -46,9 +46,9 @@ const descendants = element => [element, ...element.children.flatMap(descendants
 const opening = extra => ({
   status:"in_catalog", history_scope:"standard", history_plies:0, position_key:"start",
   current_matches:[], current_matches_total:0, current_matches_truncated:false, matched_opening:null,
-  continuations:[{uci:"e2e4", san:"e4", immediate_openings:[{name:"King's Pawn Game", eco:"B00"}],
+  continuations:[{uci:"e2e4", san:"e4", immediate_openings:[{name:"King's Pawn Opening", eco:"B00"}],
     immediate_total:1, immediate_truncated:false,
-    reachable_openings:[{name:"Ruy Lopez: Morphy Defense", eco:"C70", distance_plies:6,
+    reachable_openings:[{name:"Ruy Lopez Opening: Morphy Defense", eco:"C70", distance_plies:6,
       remaining_uci:["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6"],
       remaining_san:"1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"}],
     reachable_total:1, reachable_lines_total:1, reachable_truncated:false}],
@@ -103,10 +103,10 @@ test("the card sits between settings and moves without moving the board or hints
 });
 
 test("current exact and transposed names keep ECO and source labels", async () => {
-  const guide = opening({current_matches:[{name:"Ruy Lopez", eco:"C60", match_type:"exact"},
+  const guide = opening({current_matches:[{name:"Ruy Lopez Opening", eco:"C60", match_type:"exact"},
     {name:"Spanish Game", eco:"C60", match_type:"position"}]});
   const ui = await browser(state({opening_guide:guide}));
-  assert.equal(ui.element("opening-name").textContent, "Ruy Lopez · C60");
+  assert.equal(ui.element("opening-name").textContent, "Ruy Lopez Opening · C60");
   assert.match(ui.element("opening-aliases").textContent, /Spanish Game · C60/);
   assert.match(ui.element("opening-status").textContent, /현재 수순에 일치/);
   const links = descendants(ui.element("opening-sources")).filter(item => item.tag === "a");
@@ -114,7 +114,7 @@ test("current exact and transposed names keep ECO and source labels", async () =
   assert.equal(links[0].attributes.rel, "noopener noreferrer");
   assert.match(contents(ui.element("opening-sources")), /a6189a3/);
   ui.api.applyState(state({revision:1, fen:"transposed", opening_guide:opening({
-    current_matches:[{name:"Ruy Lopez", eco:"C60", match_type:"transposition"}]})}));
+    current_matches:[{name:"Ruy Lopez Opening", eco:"C60", match_type:"transposition"}]})}));
   assert.match(ui.element("opening-status").textContent, /다른 수순으로 같은 오프닝/);
 });
 
@@ -124,8 +124,8 @@ test("a next-move preview shows future registered names, distance and remaining 
   assert.equal(branch.tag, "details");
   assert.equal(branch.children[0].tag, "summary");
   assert.equal(branch.dataset.uci, "e2e4");
-  assert.match(contents(branch.children[0]), /e4.*King's Pawn Game.*B00/);
-  assert.match(contents(branch), /Ruy Lopez: Morphy Defense · C70/);
+  assert.match(contents(branch.children[0]), /e4.*King's Pawn Opening.*B00/);
+  assert.match(contents(branch), /Ruy Lopez Opening: Morphy Defense · C70/);
   assert.match(contents(branch), /이 수를 포함해 6번 이동 뒤/);
   assert.match(contents(branch), /1\. e4 e5 2\. Nf3 Nc6 3\. Bb5 a6/);
   branch.open = true; // Native details expansion changes only presentation.
@@ -183,6 +183,58 @@ test("outside catalog, unknown and missing data stay useful without stale branch
   assert.match(ui.element("opening-status").textContent, /자료를 읽지 못했습니다.*대국은 계속/);
   assert.equal(ui.element("error-panel").hidden, true);
   assert.equal(ui.element("new-game").disabled, false);
+});
+
+test("white setup and black response are distinct with exact combined classification retained", async () => {
+  const sides = {white:{name:"King's Pawn Opening", status:"confirmed", detail:"백은 e폰을 먼저 전진했습니다."},
+    black:{name:"Sicilian Defense", status:"confirmed", detail:"흑의 c5 응수입니다."}, note:"실제로 확인된 수순입니다."};
+  const ui = await browser(state({opening_guide:opening({sides,
+    current_matches:[{name:"Sicilian Defense: Najdorf Variation", eco:"B90", match_type:"exact"}]})}));
+  assert.equal(ui.element("opening-white").textContent, "백의 오프닝 · King's Pawn Opening");
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · Sicilian Defense");
+  assert.equal(ui.element("opening-name").textContent, "Sicilian Defense: Najdorf Variation · B90");
+  assert.match(ui.element("opening-black").title, /흑의 c5 응수/);
+  assert.equal(ui.requests.length, 1);
+});
+
+test("pending, historical and position-only sides do not claim current confirmed openings", async () => {
+  const ui = await browser(state({opening_guide:opening({sides:{
+    white:{name:"Réti Opening", status:"confirmed", detail:"첫 수 Nf3"},
+    black:{name:null, status:"pending", detail:"아직 흑의 대응 전입니다."}}})}));
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · 아직 흑의 대응 전입니다.");
+  ui.api.applyState(state({revision:1, fen:"past-opening", opening_guide:opening({sides:{
+    white:{name:"Réti Opening", status:"last_known", detail:"앞선 수순에서 확인했습니다."},
+    black:{name:"King's Indian Defense", status:"position", detail:"현재 배치 기준입니다."}}})}));
+  assert.equal(ui.element("opening-white").textContent, "백의 오프닝 · 마지막 확인: Réti Opening");
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · 현재 배치: King's Indian Defense");
+  ui.api.applyState(state({revision:2, fen:"legacy", opening_guide:opening()}));
+  assert.equal(ui.element("opening-white").textContent, "백의 오프닝 · 확인 정보 없음");
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · 확인 정보 없음");
+  ui.api.applyState(state({revision:3, fen:"missing", opening_guide:undefined}));
+  assert.equal(ui.element("opening-white").textContent, "백의 오프닝 · 안내 없음");
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · 안내 없음");
+});
+
+test("long and hostile side names remain plain text with complete tooltip and no actions", async () => {
+  const name = "Sicilian Defense: "+"A very long variation ".repeat(8);
+  const ui = await browser(state({opening_guide:opening({sides:{
+    white:{name, status:"confirmed", detail:"설명"},
+    black:{name:"<svg onload=alert(1)>", status:"confirmed", detail:"<b>literal text</b>"}}})}));
+  assert.equal(ui.element("opening-white").title.split("\n")[0], "백의 오프닝 · "+name.trim());
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · <svg onload=alert(1)>");
+  assert.equal(ui.element("opening-black").children.length, 0);
+  assert.equal(ui.requests.length, 1);
+  const css = fs.readFileSync(path.join(__dirname, "../web/human-play/style.css"), "utf8");
+  assert.match(css, /\.opening-side\s*\{[^}]*height:22px;[^}]*white-space:nowrap;[^}]*overflow:hidden;[^}]*text-overflow:ellipsis/s);
+});
+
+test("verified supplemental names without ECO display no invented code or trailing separator", async () => {
+  const ui = await browser(state({opening_guide:opening({
+    current_matches:[{name:"Modern Defense", eco:"", match_type:"exact"}],
+    sides:{white:{name:"Queen's Pawn Opening", status:"confirmed", detail:"백의 d4 전개입니다."},
+      black:{name:"Modern Defense", status:"confirmed", detail:"흑의 g6 대응입니다."}}})}));
+  assert.equal(ui.element("opening-name").textContent, "Modern Defense");
+  assert.equal(ui.element("opening-black").textContent, "흑의 대응 · Modern Defense");
 });
 
 test("finite coverage and malformed or human-illegal branches are explicit", async () => {

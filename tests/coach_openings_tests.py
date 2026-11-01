@@ -19,9 +19,9 @@ FAMILIES = (
     ("e4 c5", "Sicilian Defense", "sicilian"),
     ("e4 e6 d4 d5", "French Defense", "french"),
     ("e4 c6 d4 d5", "Caro-Kann Defense", "caro"),
-    ("e4 e5", "King's Pawn Game", "open_game"),
+    ("e4 e5", "King's Pawn Opening", "open_game"),
     ("e4 e5 Nf3 Nc6 Bc4", "Italian Game", "italian"),
-    ("e4 e5 Nf3 Nc6 Bb5", "Ruy Lopez", "ruy"),
+    ("e4 e5 Nf3 Nc6 Bb5", "Ruy Lopez Opening", "ruy"),
     ("e4 e5 Nf3 Nc6 d4", "Scotch Game", "scotch"),
     ("e4 e5 Nf3 Nf6", "Petrov's Defense", "petrov"),
     ("d4 d5 c4", "Queen's Gambit", "qg"),
@@ -275,10 +275,27 @@ class CoachOpeningTests(unittest.TestCase):
         self.assertIn("added ...e6", slav["sections"][1]["text"])
 
     def test_shared_indian_start_and_other_defenses_keep_neutral_roles(self):
-        for sans in ("d4 Nf6 c4 g6", "e4 d6 d4 Nf6 Nc3 g6", "e4 d5"):
+        for sans in ("d4 Nf6 c4", "e4 d6 d4 Nf6 Nc3 g6", "e4 d5"):
             result = self.explain(*source(sans))
             self.assertEqual((result["white"]["name"], result["black"]["name"]), ("White setup", "Black response"))
             self.assertNotIn("kingside attack", result["summary"])
+
+    def test_verified_kings_indian_start_keeps_future_structure_conditional(self):
+        result = self.explain(*source("d4 Nf6 c4 g6"))
+        self.assertEqual(result["recognition"]["name"], "King's Indian Defense")
+        self.assertEqual(result["black"]["name"], "King's Indian Defense")
+        self.assertIn("can still lead to other families", result["sections"][1]["text"])
+        self.assertNotIn("kingside attack", result["summary"])
+        changed = self.explain(*source("d4 Nf6 c4 g6 Nc3 d5"))
+        self.assertEqual(changed["black"]["name"], "Grünfeld Defense")
+
+    def test_family_canonical_terms_keep_open_game_plan_and_coach_side_consistent(self):
+        open_game = self.explain(*source("e4 e5"))
+        self.assertEqual(open_game["recognition"]["name"], "King's Pawn Opening")
+        self.assertEqual(open_game["black"]["name"], "Open Game (...e5)")
+        ruy = self.explain(*source("e4 e5 Nf3 Nc6 Bb5"))
+        self.assertEqual(ruy["recognition"]["name"], "Ruy Lopez Opening")
+        self.assertEqual(ruy["white"]["name"], "Ruy Lopez Opening")
 
     def test_same_words_in_unrelated_opening_names_do_not_select_wrong_family(self):
         self.assertIsNone(coach._family("Grob Opening: London Defense"))

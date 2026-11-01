@@ -1,0 +1,32 @@
+{
+  "verified_on": "2026-11-02",
+  "timezone": "Asia/Seoul",
+  "purpose": "Independent references for actual White opening/setup and Black response; no copying of commentary into product",
+  "sources": [
+    {"id":"reti","url":"https://www.chess.com/openings/Reti-Opening","observed":"1.Nf3 is called Reti on Chess.com. Later c4 or d4 can change family; Nf3 c5 e4 reaches Sicilian.","cases":["Nf3","Nf3 Nf6 c4","Nf3 c5 e4"]},
+    {"id":"sicilian","url":"https://www.chess.com/openings/Sicilian-Defense","observed":"Black chooses Sicilian with e4 c5. The line e4 c5 Nf3 e6 remains Sicilian, French Variation. Alapin is White's c3 choice.","cases":["e4 c5","e4 c5 Nf3 e6","e4 c5 c3"]},
+    {"id":"english","url":"https://www.chess.com/openings/English-Opening","observed":"White starts with c4. Black e5 gives Reversed Sicilian; c5 gives Symmetrical English. These are not the same as Black answering e4 with a Sicilian.","cases":["c4","c4 e5","c4 c5"]},
+    {"id":"french","url":"https://www.chess.com/openings/French-Defense","observed":"e4 e6 is French Defense; the response is already named before d4 d5.","cases":["e4 e6"]},
+    {"id":"caro","url":"https://www.chess.com/openings/Caro-Kann-Defense","observed":"e4 c6 is Caro-Kann; d4 d5 is a common continuation, not required to identify the initial response.","cases":["e4 c6"]},
+    {"id":"pirc","url":"https://www.chess.com/openings/Pirc-Defense","observed":"Chess.com gives e4 d6 as the Pirc start, with d4 Nf6 Nc3 g6 as the main line.","cases":["e4 d6","e4 d6 d4 Nf6 Nc3 g6"]},
+    {"id":"kid","url":"https://www.chess.com/openings/Kings-Indian-Defense","observed":"Chess.com's starting position is d4 Nf6 c4 g6. Black's g6 alone is not enough without White's central choice.","cases":["d4 Nf6 c4 g6"]},
+    {"id":"grunfeld","url":"https://www.chess.com/openings/Grunfeld-Defense","observed":"d4 Nf6 c4 g6 Nc3 d5 is Grunfeld, a new classification after Black d5.","cases":["d4 Nf6 c4 g6 Nc3 d5"]},
+    {"id":"nimzo","url":"https://www.chess.com/openings/Nimzo-Indian-Defense","observed":"Nimzo-Indian needs the actual line d4 Nf6 c4 e6 Nc3 Bb4. Do not classify at the shared e6 prefix.","cases":["d4 Nf6 c4 e6 Nc3","d4 Nf6 c4 e6 Nc3 Bb4"]},
+    {"id":"queens_gambit","url":"https://www.chess.com/openings/Queens-Gambit","observed":"White's c4 offer follows d4 d5. Black c6, e6, and dxc4 distinguish Slav, Declined, and Accepted respectively.","cases":["d4 d5 c4","d4 d5 c4 c6","d4 d5 c4 e6","d4 d5 c4 dxc4"]},
+    {"id":"ruy","url":"https://www.chess.com/openings/Ruy-Lopez-Opening","observed":"White chooses the Ruy Lopez at e4 e5 Nf3 Nc6 Bb5; a Black variation cannot be inferred before its defining reply.","cases":["e4 e5 Nf3 Nc6 Bb5"]},
+    {"id":"morphy","url":"https://www.chess.com/openings/Ruy-Lopez-Opening-Morphy-Defense","observed":"Black a6 after the Ruy Lopez confirms Morphy Defense.","cases":["e4 e5 Nf3 Nc6 Bb5 a6"]},
+    {"id":"berlin","url":"https://www.chess.com/openings/Ruy-Lopez-Opening-Berlin-Defense","observed":"Black Nf6 after the Ruy Lopez confirms Berlin Defense.","cases":["e4 e5 Nf3 Nc6 Bb5 Nf6"]},
+    {"id":"italian","url":"https://www.chess.com/openings/Italian-Game","observed":"White chooses the Italian with Bc4 after e4 e5 Nf3 Nc6. Black Bc5 confirms Giuoco Piano.","cases":["e4 e5 Nf3 Nc6 Bc4","e4 e5 Nf3 Nc6 Bc4 Bc5"]},
+    {"id":"two_knights","url":"https://www.chess.com/openings/Italian-Game-Two-Knights-Defense","observed":"Black Nf6 responds to the Italian as Two Knights Defense.","cases":["e4 e5 Nf3 Nc6 Bc4 Nf6"]},
+    {"id":"london","url":"https://www.chess.com/openings/London-System","observed":"White Bf4 before e3 defines the London setup. The d4 Nf6 Bf4 g6 line is described as London's Indian setup; it need not be called King's Indian Defense.","cases":["d4 d5 Bf4","d4 Nf6 Bf4 g6"]},
+    {"id":"modern","url":"https://www.chess.com/openings/Modern-Defense","observed":"The official root page shows d4 d6 c4 g6 as Modern Defense.","cases":["d4 d6 c4 g6"]},
+    {"id":"portuguese","url":"https://www.chess.com/openings/Portuguese-Opening","observed":"Portuguese Opening is White's Bb5 choice in e4 e5 Bb5, not a Black defense.","cases":["e4 e5 Bb5"]},
+    {"id":"catalog","url":"https://github.com/lichess-org/chess-openings","observed":"An aggregated set of names with representative PGN move orders and position EPD; not a complete theory, win-rate, or independent white/black-opening database.","pinned_local_commit":"a6189a30dc273ccb21fc2536a9a2fefd5592a67a","license":"CC0-1.0"}
+  ],
+  "interpretation": [
+    "Side labels are authored presentation of one shared opening, not evidence that two independent opening names must always exist.",
+    "The existing matcher already prefers exact history over transposition for current names. No unsupported claim of a general matching defect.",
+    "Positive line cases and forbidden premature labels are chosen from the sources before examining the new classifier.",
+    "A position-only custom FEN cannot establish the player's original first-move choice. Last-known names must remain visibly historical."
+  ]
+}
