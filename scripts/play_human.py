@@ -807,6 +807,9 @@ class HumanGame:
     def _opening_metadata(self):
         return {"enabled": self.opening_variety_enabled, "policy": opening_variety.POLICY,
                 "seed": self._opening_seed, "max_plies": opening_variety.MAX_PLIES,
+                "early_plies": opening_variety.EARLY_PLIES,
+                "max_early_probes": opening_variety.MAX_EARLY_PROBES,
+                "early_development_weight": opening_variety.EARLY_DEVELOPMENT_WEIGHT,
                 "tolerance_cp": opening_variety.TOLERANCE_CP, "min_total_ms": opening_variety.MIN_TOTAL_MS,
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._opening_decisions.items())],
                 "memo": [{"key": key, "decision": copy.deepcopy(row)}

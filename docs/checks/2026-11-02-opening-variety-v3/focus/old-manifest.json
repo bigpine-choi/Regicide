@@ -1,0 +1,57 @@
+{
+  "label": "old",
+  "policy": "regicide-opening-variety-v2",
+  "created_at_utc": "2026-11-01T18:07:22.724914+00:00",
+  "git_head": "9137e5f815ad9af12649968d9f8e7f0bb694fd9c",
+  "old_ref": "9137e5f815ad9af12649968d9f8e7f0bb694fd9c",
+  "source_sha256": {
+    "scripts/opening_variety.py": "0799bcb1a7b0700d329f288d465a449b06af02d585fdd87787c989c17b91ddc7",
+    "scripts/play_human.py": "7ae24f912b7ce8e4783a11196ecff97baa503fec7bceb26feb792da174f1be8d"
+  },
+  "binary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+  "model": "classical; no neural model supplied",
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "os": "Windows-11-10.0.26200-SP0",
+  "logical_cpus": 16,
+  "time_budget_ms": 1000,
+  "seeds": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000001",
+    "00000000000000000000000000000002",
+    "00000000000000000000000000000003",
+    "00000000000000000000000000000004",
+    "00000000000000000000000000000005",
+    "00000000000000000000000000000006",
+    "00000000000000000000000000000007"
+  ],
+  "catalog_commit": "a6189a30dc273ccb21fc2536a9a2fefd5592a67a",
+  "catalog_rows": 3865,
+  "catalog_cold_load_ms": 1792.841,
+  "cases": [
+    {
+      "name": "white-second-Nc3-Nf6",
+      "history_uci": [
+        "b1c3",
+        "g8f6"
+      ],
+      "fen": "rnbqkb1r/pppppppp/5n2/8/8/2N5/PPPPPPPP/R1BQKBNR w KQkq - 2 2",
+      "position_key": "rnbqkb1r/pppppppp/5n2/8/8/2N5/PPPPPPPP/R1BQKBNR w KQkq -"
+    },
+    {
+      "name": "white-third-Nc3-Nf3",
+      "history_uci": [
+        "b1c3",
+        "g8f6",
+        "g1f3",
+        "d7d6"
+      ],
+      "fen": "rnbqkb1r/ppp1pppp/3p1n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 0 3",
+      "position_key": "rnbqkb1r/ppp1pppp/3p1n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq -"
+    }
+  ],
+  "conditions": "One sequential move per fresh disposable HumanGame; same eight fixed seeds per position. UI-only hints/evaluation disabled for both versions. Catalog preloaded. Each opponent engine is a fresh hidden owned process; no personal game archive or UI access.",
+  "latency_scope": "engine_move wall clock including searches, state construction and private save; excludes engine launch, initial catalog load and fixture construction",
+  "limitations": "Sequential old/new runs on a shared computer, without exclusive CPU isolation. Time-limited search depths can vary with system load. No claim of equal-time strength improvement or Elo.",
+  "metadata_correction": "Corrected inherited template description from16 to8 seeds; actual seedarray and rawrecords unchanged."
+}

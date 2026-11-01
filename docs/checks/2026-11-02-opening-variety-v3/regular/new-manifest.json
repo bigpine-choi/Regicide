@@ -1,0 +1,93 @@
+{
+  "label": "new",
+  "policy": "regicide-opening-variety-v3",
+  "created_at_utc": "2026-11-01T18:12:17.268915+00:00",
+  "git_head": "9137e5f815ad9af12649968d9f8e7f0bb694fd9c",
+  "old_ref": null,
+  "source_sha256": {
+    "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+    "scripts/play_human.py": "d301cb39f2686d8e50f5527dd057b205a416f8641642cc30c42fce2dcb6c4756"
+  },
+  "binary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+  "model": "classical; no neural model supplied",
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "os": "Windows-11-10.0.26200-SP0",
+  "logical_cpus": 16,
+  "time_budget_ms": 1000,
+  "seeds": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000001",
+    "00000000000000000000000000000002",
+    "00000000000000000000000000000003",
+    "00000000000000000000000000000004",
+    "00000000000000000000000000000005",
+    "00000000000000000000000000000006",
+    "00000000000000000000000000000007"
+  ],
+  "catalog_commit": "a6189a30dc273ccb21fc2536a9a2fefd5592a67a",
+  "catalog_rows": 3865,
+  "catalog_cold_load_ms": 1786.296,
+  "cases": [
+    {
+      "name": "white-first",
+      "history_uci": [],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "position_key": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+    },
+    {
+      "name": "black-after-e4",
+      "history_uci": [
+        "e2e4"
+      ],
+      "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+      "position_key": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -"
+    },
+    {
+      "name": "white-second-open",
+      "history_uci": [
+        "e2e4",
+        "e7e5"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
+      "position_key": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -"
+    },
+    {
+      "name": "black-second-open",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "position_key": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -"
+    },
+    {
+      "name": "white-third-open",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "position_key": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -"
+    },
+    {
+      "name": "black-third-italian",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
+      "position_key": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq -"
+    }
+  ],
+  "conditions": "One sequential move per fresh disposable HumanGame; same eight fixed seeds per position. UI-only hints/evaluation disabled for both versions. Catalog preloaded. Each opponent engine is a fresh hidden owned process; no personal game archive or UI access.",
+  "latency_scope": "engine_move wall clock including searches, state construction and private save; excludes engine launch, initial catalog load and fixture construction",
+  "limitations": "Sequential old/new runs on a shared computer, without exclusive CPU isolation. Time-limited search depths can vary with system load. No claim of equal-time strength improvement or Elo.",
+  "metadata_correction": "Corrected inherited template description from16 to8 seeds; actual seedarray and rawrecords unchanged."
+}

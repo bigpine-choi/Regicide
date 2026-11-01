@@ -7,6 +7,7 @@ existing engine. No external engine is imported or queried here.
 
 import hashlib
 import json
+import math
 import re
 
 import chess
@@ -15,13 +16,16 @@ import chess.engine
 from opening_guide import CatalogError, _catalog, position_key
 
 
-POLICY = "regicide-opening-variety-v2"
-KNOWN_POLICIES = ("regicide-opening-variety-v1", POLICY)
+POLICY = "regicide-opening-variety-v3"
+KNOWN_POLICIES = ("regicide-opening-variety-v1", "regicide-opening-variety-v2", POLICY)
 MAX_PLIES = 16
+EARLY_PLIES = 6
+EARLY_DEVELOPMENT_WEIGHT = 3
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
 TOLERANCE_CP = 25
 MAX_PROBES = 6
+MAX_EARLY_PROBES = 10
 MIN_PROBE_MS = 20
 MAX_EXTRA_MS = 2000
 
@@ -43,7 +47,9 @@ def memo_key(board, budget_ms, binary_sha256, evaluation_id, *, seed="", catalog
 
 
 def candidate_moves(board):
-    """Unique legal continuations of this position, including transpositions."""
+    """Explore legal early moves; later use catalogue continuations/transpositions."""
+    if len(board.move_stack) < EARLY_PLIES:
+        return sorted(move.uci() for move in board.legal_moves)
     catalog = _catalog()
     candidates = set()
     legal = {move.uci() for move in board.legal_moves}
@@ -54,6 +60,30 @@ def candidate_moves(board):
             if move in legal:
                 candidates.add(move)
     return sorted(candidates)
+
+
+def early_priority(board, uci):
+    """Favor development in the probe order, never admit a move here.
+
+    This is a search-order hint, not an opening book or strength evaluation.
+    Every legal move remains in the candidate order and needs the same CP gate.
+    """
+    move = chess.Move.from_uci(uci)
+    piece = board.piece_at(move.from_square)
+    if piece is None:
+        return 1
+    if board.is_capture(move) or board.is_castling(move):
+        return 0
+    home = 0 if board.turn == chess.WHITE else 7
+    if piece.piece_type in (chess.KNIGHT, chess.BISHOP):
+        if chess.square_rank(move.from_square) == home and chess.square_file(move.to_square) not in (0, 7):
+            return 0
+    if piece.piece_type == chess.PAWN and chess.square_rank(move.from_square) == (1 if board.turn else 6):
+        file = chess.square_file(move.from_square)
+        steps = abs(chess.square_rank(move.to_square) - chess.square_rank(move.from_square))
+        if file in (2, 3, 4) or (file in (1, 6) and steps == 1):
+            return 0
+    return 1
 
 
 def extra_budget(budget_ms):
@@ -74,8 +104,11 @@ def has_repetition(board):
 
 
 def plan(board, budget_ms, seed, *, forced=False):
+    early = len(board.move_stack) < EARLY_PLIES
     result = {"eligible": False, "reason": "outside_opening", "candidate_uci": None,
               "candidates": [], "candidate_order": [], "catalog_commit": None,
+              "early_exploration": early, "candidate_source": "early_legal" if early else "catalog",
+              "proposal_limit": MAX_EARLY_PROBES if early else MAX_PROBES,
               "baseline_budget_ms": budget_ms, "candidate_budget_ms": 0, "extra_budget_ms": 0}
     if len(board.move_stack) >= MAX_PLIES:
         return result
@@ -94,17 +127,33 @@ def plan(board, budget_ms, seed, *, forced=False):
     else:
         try:
             candidates = candidate_moves(board)
-            result["catalog_commit"] = _catalog().source["commit"]
         except CatalogError:
             result["reason"] = "catalog_unavailable"
             return result
+        try:
+            result["catalog_commit"] = _catalog().source["commit"]
+        except CatalogError:
+            # Legal early exploration does not depend on a catalogue download.
+            if not early:
+                result["reason"] = "catalog_unavailable"
+                return result
         result["candidates"] = candidates
         if not candidates:
             result["reason"] = "insufficient_catalog_candidates"
         else:
             # Candidate selection has no mutable RNG cursor and does not depend
             # on budget, evaluation, revision, process scheduling or UI polling.
-            order = sorted(candidates, key=lambda uci: (_digest([POLICY, seed, history_key(board), "proposal", uci]), uci))
+            history = history_key(board)
+            def order_key(uci):
+                digest = _digest([POLICY, seed, history, "proposal", uci])
+                if early:
+                    # Weighted random permutation: all legal moves retain a
+                    # chance to be examined, not just a fixed development tier.
+                    unit = (int(digest[:13], 16) + 1) / (16 ** 13 + 1)
+                    weight = EARLY_DEVELOPMENT_WEIGHT if early_priority(board, uci) == 0 else 1
+                    return -math.log(unit) / weight, uci
+                return digest, uci
+            order = sorted(candidates, key=order_key)
             extra = extra_budget(budget_ms)
             result.update(eligible=True, reason="compare", candidate_uci=order[0], candidate_order=order,
                           candidate_budget_ms=extra, extra_budget_ms=extra)
@@ -112,7 +161,7 @@ def plan(board, budget_ms, seed, *, forced=False):
 
 
 def proposals(search_plan, baseline_move):
-    return [uci for uci in search_plan["candidate_order"] if uci != baseline_move.uci()][:MAX_PROBES]
+    return [uci for uci in search_plan["candidate_order"] if uci != baseline_move.uci()][:search_plan.get("proposal_limit", MAX_PROBES)]
 
 
 def selected_move(board, seed, pool, weights=None):
@@ -213,11 +262,15 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
             reason = "candidate_score_conflict"
         else:
             selection_pool.update(probe["uci"] for probe in probes if probe["admitted"] and probe["uci"] in proposed)
-            # Baseline inclusion is certain, while each alternative was sampled
-            # from N proposals. Correct that inclusion bias with integer m:N
-            # weights, without relaxing the admission threshold.
-            weights = {uci: (max(1, min(tested_count, proposal_count)) if uci == baseline_move.uci()
-                             else max(1, proposal_count)) for uci in selection_pool}
+            if search_plan.get("early_exploration", False):
+                # Explicit variety preference over verified alternatives. Early
+                # priority tiers are not a uniform sample, so m:N is inapplicable.
+                weights = {uci: (1 if uci == baseline_move.uci() else 2) for uci in selection_pool}
+            else:
+                # Later catalogue probes are uniformly ordered: compensate for
+                # the baseline's certain inclusion with integer m:N weights.
+                weights = {uci: (max(1, min(tested_count, proposal_count)) if uci == baseline_move.uci()
+                                 else max(1, proposal_count)) for uci in selection_pool}
             selected = selected_move(board, seed, selection_pool, weights)
             reason = ("accepted_alternative" if selected != baseline_move.uci() else
                       "baseline_selected" if len(selection_pool) > 1 else
@@ -226,6 +279,10 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
     return {"policy": POLICY, "ply": len(board.move_stack) + 1,
             "before_fen": board.fen(en_passant="fen"), "history_uci": history_key(board)[1],
             "color": "white" if board.turn else "black", "candidates": search_plan["candidates"],
+            "early_exploration": search_plan.get("early_exploration", False),
+            "candidate_source": search_plan.get("candidate_source", "catalog"),
+            "proposal_limit": search_plan.get("proposal_limit", MAX_PROBES),
+            "selection_rule": "early_verified_alternatives" if search_plan.get("early_exploration", False) else "catalog_inclusion_correction",
             "catalog_commit": search_plan["catalog_commit"],
             "candidate_uci": chosen["uci"] if chosen else (proposed[0] if proposed else None),
             "baseline_uci": baseline_move.uci(), "selected_uci": selected, "reason": reason,

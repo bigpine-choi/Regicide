@@ -157,7 +157,7 @@ def manifest(args, label, variety, source_hashes, cold_catalog_ms):
         "cases": [{"name": name, "history_uci": history.split(),
                    "fen": board_for(history).fen(en_passant="fen"),
                    "position_key": position_key(board_for(history))} for name, history in CASES],
-        "conditions": "One sequential move per fresh disposable HumanGame; same 16 seeds per position. UI-only hints/evaluation disabled for both versions. Catalog preloaded. Each opponent engine is a fresh hidden owned process; no game archive or UI access.",
+        "conditions": f"One sequential move per fresh disposable HumanGame; same {len(SEEDS)} seeds per position. UI-only hints/evaluation disabled for both versions. Catalog preloaded. Each opponent engine is a fresh hidden owned process; no game archive or UI access.",
         "latency_scope": "engine_move wall clock including searches, state construction and private save; excludes engine launch, initial catalog load and fixture construction",
         "limitations": "Sequential old/new runs on a shared computer, without exclusive CPU isolation. Time-limited search depths can vary with system load. No claim of equal-time strength improvement or Elo.",
     }

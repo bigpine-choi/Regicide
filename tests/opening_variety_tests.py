@@ -32,8 +32,7 @@ def info(board, move, cp=40, depth=4, **extra):
 
 def seed_for(board, candidate):
     baseline_move = "g1f3" if board.turn else "c7c5"
-    count = len([move for move in variety.candidate_moves(board) if move != baseline_move])
-    weights = {baseline_move: min(6, count), candidate: count}
+    weights = {baseline_move: 1, candidate: 2}
     for value in range(1024):
         seed = f"{value:032x}"
         if (variety.plan(board, 1000, seed)["candidate_uci"] == candidate and
@@ -43,7 +42,7 @@ def seed_for(board, candidate):
 
 
 class PolicyTests(unittest.TestCase):
-    def test_first_moves_use_the_whole_unique_legal_catalogue_pool(self):
+    def test_first_moves_use_the_whole_unique_legal_pool(self):
         white = variety.candidate_moves(chess.Board())
         self.assertEqual(len(white), 20)
         self.assertEqual(set(white), {move.uci() for move in chess.Board().legal_moves})
@@ -84,7 +83,9 @@ class PolicyTests(unittest.TestCase):
 
     def test_catalog_failure_and_repeated_positions_are_safe_fallbacks(self):
         with patch.object(variety, "_catalog", side_effect=variety.CatalogError("missing")):
-            self.assertEqual(variety.plan(chess.Board(), 1000, "00" * 16)["reason"], "catalog_unavailable")
+            self.assertTrue(variety.plan(chess.Board(), 1000, "00" * 16)["eligible"])
+            later = board_after("e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6")
+            self.assertEqual(variety.plan(later, 1000, "00" * 16)["reason"], "catalog_unavailable")
         # A repeated board may have a large catalogue pool, but policy excludes it.
         repeated = board_after("g1f3", "g8f6", "f3g1", "f6g8")
         self.assertEqual(len(variety.candidate_moves(repeated)), 20)
@@ -241,7 +242,7 @@ class LivePolicyTests(unittest.TestCase):
         token = self.game._game_token
         after = self.game.engine_move(before["revision"])
         self.assertEqual(after["last_move"], "e7e5")
-        self.assertEqual(len(self.peer.searches), 7)
+        self.assertEqual(len(self.peer.searches), 11)
         self.assertEqual(self.peer.searches[0]["limit"].time, 1)
         self.assertIs(self.peer.searches[0]["game"], token)
         self.assertIsNone(self.peer.searches[0]["limit"].depth)
@@ -260,7 +261,7 @@ class LivePolicyTests(unittest.TestCase):
         self.assertEqual(saved["decisions"][0]["before_fen"], before["fen"])
         self.assertEqual(saved["decisions"][0]["baseline_budget_ms"], 1000)
         self.assertEqual(saved["decisions"][0]["extra_budget_ms"], 1000)
-        self.assertEqual(len(saved["decisions"][0]["probes"]), 6)
+        self.assertEqual(len(saved["decisions"][0]["probes"]), 10)
         self.assertIn("OpeningVarietySeed", self.game.pgn())
 
     def test_restricted_score_never_overwrites_live_best_evaluation(self):
@@ -351,7 +352,7 @@ class LivePolicyTests(unittest.TestCase):
         self.assertIsNone(after["error"])
         calls = self.peer.searches
         self.assertEqual(calls[0]["limit"].time, 1)
-        self.assertEqual(len(calls), 5)  # Four 250ms probes exhaust E, despite a six-candidate cap.
+        self.assertEqual(len(calls), 5)  # Four 250ms probes exhaust E, despite the larger early cap.
         self.assertAlmostEqual(calls[-1]["limit"].time, .25)
         for call in calls[1:]:
             self.assertLessEqual(call["limit"].time * 1000, 12000 - call["at_ms"] + .001)
@@ -369,7 +370,7 @@ class LivePolicyTests(unittest.TestCase):
             plan = variety.plan(board, 1000, seed)
             proposals = variety.proposals(plan, baseline_move)
             later = proposals[1]
-            weights = {"c7c5": 6, later: len(plan["candidates"]) - 1}
+            weights = {"c7c5": 1, later: 2}
             if variety.selected_move(board, seed, weights, weights) == later:
                 break
         else:
@@ -441,7 +442,7 @@ class LivePolicyTests(unittest.TestCase):
         self.peer.scripts.pop()
         after = self.game.engine_move(before["revision"])
         self.assertEqual(after["last_move"], "c7c5")
-        self.assertEqual(len(self.peer.searches), 7)
+        self.assertEqual(len(self.peer.searches), 11)
         decision = self.game._opening_decisions[2]
         self.assertEqual(decision["reason"], "no_qualified_alternative")
         self.assertNotIn("c7c5", decision["proposals"])
@@ -467,15 +468,15 @@ class LivePolicyTests(unittest.TestCase):
         self.game.human_move("e2e4", self.game.revision)
         after = self.game.engine_move(self.game.revision)
         self.assertEqual(after["last_move"], "e7e5")
-        self.assertEqual(len(self.peer.searches), 7)
+        self.assertEqual(len(self.peer.searches), 11)
         self.assertTrue(self.game._opening_decisions[2]["reused"])
         self.game.undo(self.game.revision)
         self.game.set_think_time(3000, self.game.game_id, self.game._settings_revision)
         before = self.prepare()
         self.game.engine_move(before["revision"])
-        self.assertEqual(len(self.peer.searches), 14)
-        self.assertEqual(self.peer.searches[7]["limit"].time, 3)
-        self.assertTrue(all(abs(call["limit"].time - 2 / 3) < .001 for call in self.peer.searches[8:]))
+        self.assertEqual(len(self.peer.searches), 22)
+        self.assertEqual(self.peer.searches[11]["limit"].time, 3)
+        self.assertTrue(all(abs(call["limit"].time - 2 / 3) < .001 for call in self.peer.searches[12:]))
         self.assertFalse(self.game._opening_decisions[2]["reused"])
 
     def test_handicap_cancel_restores_receipts_and_forced_commit_disables_variety(self):

@@ -47,7 +47,7 @@ def assess(board, baseline, proposed, compared, final=None, *, returned=None, er
 
 class OpeningVarietyV2Tests(unittest.TestCase):
     def test_full_baseline_budget_and_bounded_extra_are_independent(self):
-        self.assertEqual(variety.POLICY, "regicide-opening-variety-v2")
+        self.assertEqual(variety.POLICY, "regicide-opening-variety-v3")
         self.assertEqual((variety.MAX_PLIES, variety.MIN_DEPTH, variety.TOLERANCE_CP, variety.MAX_PROBES),
                          (16, 4, 25, 6))
         for budget, extra, enabled in ((100, 0, False), (499, 0, False), (500, 500, True),
@@ -80,7 +80,7 @@ class OpeningVarietyV2Tests(unittest.TestCase):
             self.assertTrue(all(chess.Move.from_uci(move) in board.legal_moves for move in pool))
 
     def test_duplicate_catalogue_rows_do_not_weight_proposals_or_add_illegal_moves(self):
-        board = chess.Board()
+        board = after("g1f3", "g8f6", "g2g3", "g7g6", "f1g2", "f8g7")
         openings = [SimpleNamespace(moves=(move,)) for move in ("e2e4", "d2d4", "e2e5")]
         small = SimpleNamespace(openings=openings, positions={position_key(board): ((0, 0), (1, 0), (2, 0))},
                                 source={"commit": "fixture-catalogue"})
@@ -103,7 +103,7 @@ class OpeningVarietyV2Tests(unittest.TestCase):
         self.assertEqual(receipts[0]["selected_uci"], receipts[1]["selected_uci"])
 
     def test_single_catalogue_alternative_is_eligible_after_baseline_exclusion(self):
-        board = chess.Board()
+        board = after("g1f3", "g8f6", "g2g3", "g7g6", "f1g2", "f8g7")
         catalogue = SimpleNamespace(openings=[SimpleNamespace(moves=("d2d4",))],
                                     positions={position_key(board): ((0, 0),)},
                                     source={"commit": "single-candidate"})
@@ -113,7 +113,7 @@ class OpeningVarietyV2Tests(unittest.TestCase):
         self.assertEqual(variety.proposals(plan, chess.Move.from_uci("e2e4")), ["d2d4"])
         self.assertEqual(variety.proposals(plan, chess.Move.from_uci("d2d4")), [])
 
-    def test_seed_order_is_budget_independent_and_excludes_baseline_before_six_move_cap(self):
+    def test_seed_order_is_budget_independent_and_excludes_baseline_before_early_cap(self):
         board = chess.Board()
         plans = [variety.plan(board, budget, SEED) for budget in (500, 1000, 5000)]
         self.assertEqual(plans[0]["candidate_order"], plans[1]["candidate_order"])
@@ -121,9 +121,9 @@ class OpeningVarietyV2Tests(unittest.TestCase):
         self.assertEqual(set(plans[0]["candidate_order"]), set(plans[0]["candidates"]))
         baseline = plans[0]["candidate_order"][0]
         proposals = variety.proposals(plans[0], chess.Move.from_uci(baseline))
-        self.assertEqual(len(proposals), 6)
+        self.assertEqual(len(proposals), 10)
         self.assertNotIn(baseline, proposals)
-        self.assertEqual(proposals, plans[0]["candidate_order"][1:7])
+        self.assertEqual(proposals, plans[0]["candidate_order"][1:11])
         self.assertEqual(proposals, variety.proposals(copy.deepcopy(plans[0]), chess.Move.from_uci(baseline)))
 
     def test_twofold_repetition_and_a_previous_repetition_disable_variety(self):
@@ -254,8 +254,10 @@ class OpeningVarietyV2Tests(unittest.TestCase):
             self.assertEqual(len(result["probes"]), 2)
 
     def test_sampling_weights_use_full_proposal_count_and_all_completed_comparisons(self):
-        board, baseline = after("e2e4"), "c7c5"
-        plan = variety.plan(board, 1000, SEED)
+        board, baseline = after("g1f3", "g8f6", "g2g3", "g7g6", "f1g2", "f8g7"), "e2e4"
+        # A broad synthetic catalogue isolates the later-stage weighting rule.
+        with patch.object(variety, "candidate_moves", return_value=sorted(move.uci() for move in board.legal_moves)):
+            plan = variety.plan(board, 1000, SEED)
         proposed = variety.proposals(plan, chess.Move.from_uci(baseline))
         full_count = len(set(plan["candidate_order"]) - {baseline})
         self.assertGreater(full_count, 6)
@@ -304,7 +306,7 @@ class OpeningVarietyV2Tests(unittest.TestCase):
         for policy in ("regicide-opening-variety-v1", "regicide-opening-variety-v2"):
             self.assertEqual(variety.pgn_headers({"enabled": True, "policy": policy, "seed": SEED}),
                              {"OpeningVarietySeed": SEED, "OpeningVarietyPolicy": policy})
-        for policy in ("unknown", "regicide-opening-variety-v3", "v2\nInjected", None, [], {}):
+        for policy in ("unknown", "regicide-opening-variety-v99", "v2\nInjected", None, [], {}):
             self.assertEqual(variety.pgn_headers({"enabled": True, "policy": policy, "seed": SEED}), {})
 
 
