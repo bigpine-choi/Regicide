@@ -181,6 +181,7 @@ func _synthetic() -> void:
 	await _voice_checks(snapshot)
 	_windows_voice_checks(snapshot)
 	_perspective_voice_checks(snapshot)
+	_teaching_voice_checks(snapshot)
 	await _badge_checks(snapshot)
 	var before_flip: Dictionary = panel.board.state.duplicate(true)
 	var old_view: bool = panel.model.view_from_white
@@ -772,6 +773,71 @@ func _perspective_voice_checks(snapshot: Dictionary) -> void:
 	voice.report.moves[1].coach.perspectives = {"black": null}
 	voice._render()
 	verify(voice.coach_dialogue.text == snapshot.moves[1].coach.dialogue, "nullable perspective metadata falls back safely")
+	voice.hide()
+	root.remove_child(voice)
+	voice.free()
+
+
+func _visible_coaching_text(node: Node) -> String:
+	if node is Control and not node.is_visible_in_tree():
+		return ""
+	var parts: Array[String] = []
+	if node is Label or node is RichTextLabel or node is Button:
+		parts.append(str(node.text))
+	if node is ItemList:
+		for index in range(node.item_count):
+			parts.append(node.get_item_text(index))
+	for child in node.get_children():
+		parts.append(_visible_coaching_text(child))
+	return "\n".join(parts)
+
+
+func _teaching_voice_checks(snapshot: Dictionary) -> void:
+	var voice := VoicePanel.new()
+	voice.offline_mode = true
+	root.add_child(voice)
+	voice.report = snapshot.duplicate(true)
+	var principle: String = "Develop pieces before launching a flank attack."
+	var reason: String = "opens a diagonal for the bishop"
+	var teaching := {"concept": "development", "alternative": {"uci": "e2e4", "san": "e4", "reason": reason},
+		"principle": principle, "line": "best", "ply_index": 1, "grounding": "verified_move_effect"}
+	var white_words: String = "Try e4: it " + reason + ". " + principle
+	var black_words: String = "White could play e4: it " + reason + ". " + principle
+	voice.report.moves[2].coach.merge({"dialogue": white_words, "teaching": teaching,
+		"hint": "Check your king's safety before choosing a move.",
+		"perspectives": {
+			"white": {"dialogue": white_words, "hint": "Check your king's safety before choosing a move.", "teaching": teaching.duplicate(true)},
+			"black": {"dialogue": black_words, "hint": "Look for checks before choosing a move.", "teaching": teaching.duplicate(true)}}}, true)
+	var original: Dictionary = voice.report.duplicate(true)
+	voice.show()
+	voice._select_ply(3)
+	voice.flush_voice()
+	verify(voice.coach_dialogue.text == white_words and voice.spoken[-1] == white_words, "normal white coaching displays and automatically reads alternative, reason and chess principle together")
+	voice._change_side(1)
+	voice.flush_voice()
+	verify(voice.coach_dialogue.text == black_words and voice.spoken[-1] == black_words, "normal black perspective reads the same lesson without calling the opponent's move yours")
+	voice._change_side(0)
+	var count: int = voice.spoken.size()
+	voice._begin_retry()
+	voice.flush_voice()
+	verify(voice.retry_active and voice.spoken.size() == count + 1 and not voice.spoken[-1].contains("e4") and not voice.spoken[-1].contains(principle), "entering retry replaces pending full teaching speech with the hidden-answer prompt")
+	for phase in ["prompt", "hint", "feedback"]:
+		if phase == "hint":
+			voice._show_retry_hint()
+		elif phase == "feedback":
+			voice._retry_reply = {"uci": "g2g4", "message": "Check your king's safety before trying again.", "best": voice.report.moves[2].best, "teaching": teaching.duplicate(true)}
+			voice._render()
+		voice.flush_voice()
+		var screen: String = _visible_coaching_text(voice)
+		verify(not screen.contains("e4") and not screen.contains(reason) and not screen.contains(principle) and not screen.contains("verified_move_effect"), "hidden retry " + phase + " does not expose nested teaching metadata, recommendation or principle on screen")
+		verify(not voice.spoken[-1].contains("e4") and not voice.spoken[-1].contains(reason) and not voice.spoken[-1].contains(principle), "hidden retry " + phase + " does not speak the stored solution lesson")
+		voice._render()
+		verify(voice._speech_pending_key.is_empty(), "poll render during retry " + phase + " cannot reschedule hidden teaching")
+	voice._end_retry()
+	voice._select_ply(3)
+	voice.flush_voice()
+	verify(voice.spoken[-1] == white_words and voice.coach_dialogue.text == white_words, "return to normal review restores the complete teaching dialogue")
+	verify(voice.report == original, "teaching and both perspective records remain unchanged by retry or speech")
 	voice.hide()
 	root.remove_child(voice)
 	voice.free()

@@ -57,6 +57,18 @@ function retryResult(extra={}) {
   const line=taughtSnapshot().moves[0].best;
   return {job_id:"job-a",revision:1,ply:1,uci:"e1g1",san:"O-O",verdict:"recommended",message:"좋아요. 충분히 좋은 선택이에요.",line,best:line,loss_cp:0,...extra};
 }
+function teachingSnapshot() {
+  const report=taughtSnapshot(),row=report.moves[2];
+  const teaching={concept:"undefended_piece",alternative:{uci:"a1a8",san:"Rxa8",reason:"wins Black's rook"},
+    principle:"Look for free material before making a quiet move.",line:"best",ply_index:1,grounding:"verified_move_effect"};
+  const white={dialogue:`Instead, Rxa8 ${teaching.alternative.reason}. ${teaching.principle}`,
+    hint:"Check which pieces can be captured before choosing a move.",teaching:structuredClone(teaching)};
+  const black={dialogue:`White could play Rxa8: it ${teaching.alternative.reason}. ${teaching.principle}`,
+    hint:"Check what your opponent can capture before choosing a move.",teaching:structuredClone(teaching)};
+  row.best={...row.best,san:"Rxa8",pv_san:["Rxa8"]};
+  row.coach={...row.coach,...white,teaching,perspectives:{white,black}};
+  return report;
+}
 function annotation(row,kind=row.classification) {
   const symbols={great:"!!",best:"★",good:"✓",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"?",uncertain:"…"};
   return {symbol:symbols[kind],kind,label:kind==="great" ? "탁월 후보" : row.label,square:row.uci.slice(2,4),
@@ -749,6 +761,54 @@ test("overview, variation and retry feedback are read from revealed content only
   await ui.clickSquare("e1");await ui.clickSquare("g1");assert.equal(await ui.voiceStep(),false,"submitted move waits for feedback");
   const result=retryResult({message:"Your move keeps the king safe. Check the next reply."});await ui.finish(result);await ui.voiceStep();
   assert.equal(ui.speech.spoken.at(-1).text,result.message);
+});
+
+test("teaching dialogue automatically reads the better move, reason and principle from either player's perspective",async()=>{
+  const ui=browser({voices:[{name:"Local English",lang:"en-US",localService:true}]}),report=teachingSnapshot();
+  const original=JSON.stringify(report),row=report.moves[2];
+  await ui.start(report);ui.api.seek(3);await ui.voiceStep();
+  assert.equal(ui.get("coach-dialogue").textContent,row.coach.perspectives.white.dialogue);
+  assert.equal(ui.speech.spoken.at(-1).text,row.coach.perspectives.white.dialogue);
+  for(const text of [row.coach.teaching.alternative.san,row.coach.teaching.alternative.reason,row.coach.teaching.principle])
+    assert.ok(ui.speech.spoken.at(-1).text.includes(text),text);
+  ui.get("coaching-side").value="black";ui.get("coaching-side").dispatch("change");await ui.voiceStep();
+  assert.equal(ui.get("coach-dialogue").textContent,row.coach.perspectives.black.dialogue);
+  assert.equal(ui.speech.spoken.at(-1).text,row.coach.perspectives.black.dialogue);
+  ui.api.render();assert.equal(await ui.voiceStep(),false,"unchanged progress must not repeat the full lesson");
+  assert.equal(JSON.stringify(report),original,"selected perspective cannot rewrite stored teaching metadata");
+});
+
+test("unsolved retry hides nested teaching and cancels pending solution speech until explicit reveal",async()=>{
+  for(const side of ["white","black"]) {
+    const ui=browser({voices:[{name:"Local English",lang:"en-US",localService:true}]}),report=teachingSnapshot();
+    const original=JSON.stringify(report),row=report.moves[2],secrets=[row.coach.teaching.alternative.san,row.coach.teaching.alternative.reason,row.coach.teaching.principle,"verified_move_effect"];
+    await ui.start(report);ui.get("coaching-side").value=side;ui.get("coaching-side").dispatch("change");ui.api.seek(3);
+    const staleLesson=[...ui.timeouts.values()].find(item=>item.ms===300).callback;
+    await ui.click("coach-retry");await ui.voiceStep();staleLesson();
+    assert.equal(ui.speech.spoken.length,1,"only the retry prompt, never the pending solution, is spoken");
+    assert.equal(ui.speech.spoken[0].text,row.coach.perspectives[side].hint);
+    const checkHidden=()=>{
+      for(const id of ["coaching-summary-card","coaching-moves-card","coaching-comparison","coach-evidence","coach-overview-box"])
+        assert.equal(ui.get(id).hidden,true,`${side}: ${id}`);
+      for(const id of ["coach-dialogue","coach-scene","coaching-move-title","coaching-position","coaching-classification","coaching-explanation","coaching-played","coaching-best","coaching-pv","coach-retry-feedback"])
+        for(const secret of secrets)assert.equal((ui.get(id).textContent || "").includes(secret),false,`${side}: ${id}: ${secret}`);
+      for(const utterance of ui.speech.spoken)for(const secret of secrets)
+        assert.equal(utterance.text.includes(secret),false,`${side}: spoken ${secret}`);
+      assert.equal(ui.get("coach-retry-revealed").hidden,true);
+      assert.equal(ui.get("coaching-board").children.some(item=>item.tag==="svg"),false);
+      assert.equal(ui.get("coaching-moves").children.length,0);
+    };
+    checkHidden();ui.api.render();assert.equal(await ui.voiceStep(),false,"polling cannot reschedule hidden teaching");
+    await ui.clickSquare("a1");await ui.clickSquare("b1");
+    assert.equal(await ui.voiceStep(),false,"candidate submission waits for its own feedback");
+    await ui.finish(retryResult({ply:3,uci:"a1b1",san:"Rb1",verdict:"try_again",message:"Check which pieces can be captured before trying again.",
+      line:row.played,best:row.best,teaching:structuredClone(row.coach.teaching)}));
+    await ui.voiceStep();checkHidden();
+    await ui.click("coach-retry-reveal");await ui.voiceStep();
+    assert.equal(ui.get("coach-dialogue").textContent,row.coach.perspectives[side].dialogue);
+    assert.equal(ui.speech.spoken.at(-1).text,row.coach.perspectives[side].dialogue,"only explicit reveal restores the complete lesson");
+    assert.equal(JSON.stringify(report),original,"retry keeps both teaching perspectives intact");
+  }
 });
 
 test("pending speech is invalidated on return, pagehide, source replacement and hidden documents",async()=>{

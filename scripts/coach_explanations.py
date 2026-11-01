@@ -2,7 +2,7 @@
 import chess
 
 COACH_NAME = "Rook"
-COACH_VERSION = 3
+COACH_VERSION = 4
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -324,6 +324,144 @@ def _hint(board, kind, actual, played, best, perspective=None):
     return "Identify the immediate threat before starting a new plan."
 
 
+def _has_mate_in_one(board):
+    """A local rule check, not a replacement search/evaluation engine."""
+    for move in list(board.legal_moves):
+        board.push(move)
+        mate = board.is_checkmate()
+        board.pop()
+        if mate:
+            return True
+    return False
+
+
+def _teaching(board, kind, actual, played, best):
+    """Choose one verified effect of the better move and one transferable habit.
+
+    The classification chooses the alternative; geometry never regrades a move.
+    Build facts once, then render both human perspectives without changing them.
+    """
+    if kind not in CRITICAL or not actual or not played or not best or actual["mate"]:
+        return None
+    move = best["events"][0]
+    if move["uci"] == actual["uci"]:
+        return None
+    position = _after_actual(board, move)
+    common = {"uci": move["uci"], "san": move["san"], "line": "best", "ply_index": 1}
+
+    def lesson(concept, principle, **facts):
+        return {**common, "concept": concept, "principle": principle, **facts}
+
+    if move["mate"]:
+        return lesson("mate_first", "Look for mate before settling for a smaller gain.")
+    if len(played["events"]) > 1 and played["events"][1]["mate"] and not _has_mate_in_one(position):
+        return lesson("meet_mating_threat", "Answer mating threats before starting your own attack.")
+    if board.is_check():
+        response = "king_move"
+        if move["piece"] != chess.KING:
+            checkers = board.checkers()
+            if move["captured"] and chess.parse_square(move["capture_square"]) in checkers:
+                response = "capture"
+            elif len(checkers) == 1 and chess.parse_square(move["target"]) in chess.SquareSet(chess.between(next(iter(checkers)), board.king(board.turn))):
+                response = "block"
+        return lesson("answer_check", "When in check, compare king moves, captures, and blocks.", response=response)
+    captures = [event for event in played["events"][1:4] if event["color"] != board.turn and event["captured"]]
+    for capture in sorted(captures, key=lambda event: -PIECE_POINTS[event["captured"]]):
+        source = chess.parse_square(capture["source"])
+        original = chess.parse_square(actual["source"])
+        if (capture["capture_square"] == actual["target"] and move["source"] != actual["source"]
+                and position.piece_type_at(original) == actual["piece"] and position.color_at(original) == actual["color"]
+                and position.piece_type_at(source) == capture["piece"] and position.color_at(source) == capture["color"]
+                and original not in position.attacks(source)):
+            principle = ("Pawns can't retreat; check the destination before pushing." if actual["piece"] == chess.PAWN else
+                         "Before moving a piece, check the attacks on its destination.")
+            return lesson("avoid_moving_into_attack", principle, attacker=PIECE_NAMES[capture["piece"]])
+        if move["source"] != capture["capture_square"] or move["piece"] != capture["captured"]:
+            continue
+        source, target = chess.parse_square(capture["source"]), chess.parse_square(move["target"])
+        if (position.piece_type_at(source) == capture["piece"] and position.color_at(source) == capture["color"]
+                and target not in position.attacks(source)):
+            return lesson("meet_piece_threat", "Check what your opponent can capture before starting your own attack.",
+                          attacker=PIECE_NAMES[capture["piece"]])
+    if _support_advice(actual, move, None):
+        return lesson("choose_defended_square", "When choosing a square, check who could recapture.")
+    if move["captured"]:
+        return lesson("count_recaptures", "Count both sides' recaptures before judging a trade.")
+    if _develops(move):
+        if move["targets"]:
+            target = max(move["targets"], key=lambda item: PIECE_POINTS[item["piece"]])
+            return lesson("develop_with_threat", "Look for development moves that also create a concrete threat.", target=target)
+        return lesson("develop_pieces", "Bring another piece into play when there isn't an urgent threat.")
+    if move["promotion"]:
+        return lesson("compare_promotions", "Compare promotion choices for checks, captures, and stalemate.")
+    if move["castle"]:
+        return lesson("castle_with_care", "After castling, check which pawn moves would open lines toward the king.")
+    if move["check"]:
+        return lesson("calculate_checks", "A check isn't automatically best; calculate the opponent's legal replies.")
+    if move["targets"]:
+        target = max(move["targets"], key=lambda item: PIECE_POINTS[item["piece"]])
+        return lesson("calculate_threats", "Before making a threat, calculate how your opponent can answer it.", target=target)
+    # Do not invent positional understanding when no supported explanation fits.
+    return lesson("compare_forcing_replies", "Compare checks, captures, and threats for both candidate moves.")
+
+
+def _teaching_text(teaching, actual, best, perspective):
+    move = best["events"][0]
+    san, concept = move["san"], teaching["concept"]
+    piece = PIECE_NAMES[move["promotion"] or move["piece"]]
+    own, opposing = _owner(move["color"], perspective), _owner(not move["color"], perspective)
+    if concept == "mate_first":
+        reason = f"Try {san}: that's checkmate right now."
+    elif concept == "meet_mating_threat":
+        reason = f"{san} avoids mate in one."
+    elif concept == "meet_piece_threat":
+        reason = f"{san} moves {own} {piece} out of that {teaching['attacker']}'s attack."
+    elif concept == "avoid_moving_into_attack":
+        reason = f"{san} keeps {own} {PIECE_NAMES[actual['piece']]} on {actual['source']}, out of that {teaching['attacker']}'s attack."
+    elif concept == "choose_defended_square":
+        reason = _support_advice(actual, move, perspective)
+    elif concept == "count_recaptures":
+        reason = f"{san} captures {opposing} {PIECE_NAMES[move['captured']]}"
+        reason += " with check." if move["check"] else "."
+    elif concept == "develop_with_threat":
+        target = teaching["target"]
+        reason = f"{san} develops {own} {piece} and attacks the {PIECE_NAMES[target['piece']]} on {target['square']}."
+    elif concept == "develop_pieces":
+        reason = f"{san} brings {own} {piece} into play."
+    elif concept == "answer_check":
+        reason = (f"{san} removes the checking piece." if teaching["response"] == "capture" else
+                  f"{san} blocks the check." if teaching["response"] == "block" else
+                  f"{san} gets {own} king out of check.")
+    elif concept == "compare_promotions":
+        reason = f"{san} promotes to a {piece}."
+    elif concept == "castle_with_care":
+        reason = f"{san} castles {'kingside' if move['target'][0] == 'g' else 'queenside'}, bringing the rook closer to the center."
+    elif concept == "calculate_checks":
+        reason = f"{san} gives check and makes the king's safety the immediate priority."
+    elif concept == "calculate_threats":
+        target = teaching["target"]
+        reason = f"{san} attacks {opposing} {PIECE_NAMES[target['piece']]} on {target['square']}."
+    else:
+        reason = f"Regicide prefers {san}, but the reason needs a closer look."
+    return {"concept": concept, "alternative": {"uci": teaching["uci"], "san": san, "reason": reason},
+            "principle": teaching["principle"], "line": "best", "ply_index": 1,
+            "grounding": "search_preference" if concept == "compare_forcing_replies" else "verified_move_effect"}
+
+
+def _with_teaching(dialogue, teaching):
+    if teaching is None:
+        return dialogue
+    alternative = teaching["alternative"]
+    explanation = alternative["reason"] + " " + teaching["principle"]
+    # Keep one useful observation about the actual move when it adds information.
+    # All explanations stay below the existing 40-word ceiling; never truncate SAN.
+    observation = dialogue.split(". ", 1)[0].rstrip(".") + "."
+    combined = observation + " " + explanation
+    if alternative["san"] not in observation and len(combined.split()) <= 40:
+        return combined
+    return explanation
+
+
 def describe_move(board, row):
     """Stored SAN/color are not tactical evidence; replay them from the board."""
     kind = row.get("classification", "pending")
@@ -332,7 +470,11 @@ def describe_move(board, row):
     actual_line = _replay(board, {"pv_uci": [row.get("uci")]})
     actual = actual_line["events"][0] if actual_line else None
     played = _replay(board, row.get("played"), required=row.get("uci")) if actual else None
-    best = _replay(board, row.get("best"))
+    candidate = row.get("best")
+    best = _replay(board, candidate, required=candidate.get("uci") if isinstance(candidate, dict) else None)
+    if kind in CRITICAL and any(isinstance(branch, dict) and branch.get("bound") not in (None, "exact")
+                                for branch in (row.get("played"), candidate)):
+        kind = "uncertain"
     window = 2 if kind in ("best", "good") else 4
     show_mate = kind in ("allows_mate", "missed_mate")
     played_facts = _evidence(played, "played", window, show_mate)
@@ -353,11 +495,16 @@ def describe_move(board, row):
         captures = [event for event in played["events"][1:4] if event["color"] != board.turn and event["captured"]]
         if captures:
             focus.append(max(captures, key=lambda event: PIECE_POINTS.get(event["captured"], 0))["capture_square"])
-    return {"mood": mood, "dialogue": _dialogue(board, kind, actual, played, best),
-            "perspectives": {name: {"dialogue": _dialogue(board, kind, actual, played, best, color),
-                                      "hint": _hint(board, kind, actual, played, best, color)}
-                             for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},
-            "hint": _hint(board, kind, actual, played, best), "evidence": facts, "focus_squares": list(dict.fromkeys(focus))}
+    lesson = _teaching(board, kind, actual, played, best)
+
+    def wording(perspective=None):
+        teaching = _teaching_text(lesson, actual, best, perspective) if lesson else None
+        return {"dialogue": _with_teaching(_dialogue(board, kind, actual, played, best, perspective), teaching),
+                "teaching": teaching, "hint": _hint(board, kind, actual, played, best, perspective)}
+
+    return {"mood": mood, **wording(),
+            "perspectives": {name: wording(color) for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},
+            "evidence": facts, "focus_squares": list(dict.fromkeys(focus))}
 
 
 def describe_report(rows, critical_plies):

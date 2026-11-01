@@ -26,7 +26,7 @@ class CoachDialogueTests(unittest.TestCase):
         self.assertEqual(set(packet["perspectives"]), {"white", "black"})
         for view in packet["perspectives"].values():
             self.assertLessEqual(len(view["dialogue"].split()), 40)
-            self.assertLessEqual(view["dialogue"].count("."), 2)
+            self.assertLessEqual(view["dialogue"].count("."), 3 if view.get("teaching") else 2)
             self.assertLessEqual(len(view["hint"].split()), 16)
         self.assertNotRegex(json.dumps(packet, ensure_ascii=False), r"[가-힣]")
         self.assertNotIn("FORGED_SAN", packet["dialogue"])
@@ -83,7 +83,7 @@ class CoachDialogueTests(unittest.TestCase):
         board = chess.Board("4k3/8/8/8/8/8/3P4/4KB2 w - - 0 1")
         result = self.check_packet(board, row("d2d3", ["d2d3"], ["f1d3"], "mistake"))
         self.assertIn("bishop could use d3, but the pawn takes that square", result["dialogue"])
-        self.assertIn("Bd3 brings the bishop into play", result["dialogue"])
+        self.assertIn("Bd3 brings White's bishop into play", result["dialogue"])
 
     def test_black_tactical_loss_keeps_actor_and_victim_correct(self):
         board = chess.Board("3q2k1/8/3b4/8/8/5N2/7P/3Q2K1 w - - 0 1").mirror()
@@ -129,7 +129,7 @@ class CoachDialogueTests(unittest.TestCase):
         self.assertEqual(len(actual["evidence"]), 1)
         board = chess.Board("7k/5K2/6Q1/8/8/8/8/8 w - - 0 1")
         missed = self.check_packet(board, row("g6g5", ["g6g5"], ["g6g7"], "missed_mate"))
-        self.assertIn("White had mate in one with Qg7#", missed["dialogue"])
+        self.assertIn("Try Qg7#: that's checkmate right now", missed["dialogue"])
         self.assertIn("Black's king", missed["hint"])
 
     def test_invalid_or_different_played_line_cannot_explain_actual_move(self):
@@ -156,7 +156,7 @@ class CoachDialogueTests(unittest.TestCase):
                 {"ply": 3, "color": "white", "classification": "pending"}]
         report = describe_report(rows, [1])
         self.assertEqual(report["version"], COACH_VERSION)
-        self.assertEqual(COACH_VERSION, 3)
+        self.assertEqual(COACH_VERSION, 4)
         self.assertEqual(report["lesson_plies"], [1, 2])
         self.assertIn("White has 1", report["summary"])
         self.assertIn("Black has 0", report["summary"])
@@ -185,8 +185,9 @@ class CoachDialogueTests(unittest.TestCase):
         still_attacked = self.check_packet(board, row("a2a3", ["a2a3", "c8c4"], ["c4c5"], "blunder"))
         escaped = self.check_packet(board, row("a2a3", ["a2a3", "c8c4"], ["c4b4"], "blunder"))
         self.assertNotIn("away from that attack", still_attacked["dialogue"])
-        self.assertIn("Look at Rc5 instead", still_attacked["dialogue"])
-        self.assertIn("Rb4 moves the rook away from that attack", escaped["dialogue"])
+        self.assertIn("Rc5 attacks Black's rook on c8", still_attacked["dialogue"])
+        self.assertNotIn("out of that rook's attack", still_attacked["dialogue"])
+        self.assertIn("Rb4 moves White's rook out of that rook's attack", escaped["dialogue"])
 
     def test_pinned_piece_does_not_supply_false_attack_or_protection(self):
         board = chess.Board("7k/8/8/8/1r1b4/8/1B6/K7 w - - 0 1")
@@ -210,7 +211,7 @@ class CoachDialogueTests(unittest.TestCase):
                          row("d1d3", ["d1d3", "d6h2", "f3h2", "d8d3"], ["d1d4"], "blunder")))
         texts = [self.check_packet(board, source)["perspectives"]["white"]["dialogue"] for board, source in fixtures]
         self.assertEqual(len({text.split(".")[0] for text in texts}), 3)
-        self.assertTrue(all(16 <= len(text.split()) <= 28 for text in texts))
+        self.assertTrue(all(16 <= len(text.split()) <= 40 for text in texts))
         self.assertTrue(any("c-pawn" in text for text in texts))
         for text in texts:
             self.assertNotRegex(text, r"Good move|Watch for|evaluation|centipawn|forced|fork|pin|free")

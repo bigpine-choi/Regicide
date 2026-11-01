@@ -73,7 +73,7 @@ class ExplanationTests(unittest.TestCase):
         board = chess.Board("7k/5K2/6Q1/8/8/8/8/8 w - - 0 1")
         row = row_for(board, "g6g5", ["g6g7"], ["g6g5"], "missed_mate")
         coach = describe_move(board, row)
-        self.assertIn("mate in one", coach["dialogue"])
+        self.assertIn("checkmate right now", coach["dialogue"])
         self.assertIn("Qg7#", coach["dialogue"])
         self.assertIn("checks against Black's king", coach["hint"])
         self.assertNotIn("g7", coach["hint"])
@@ -206,6 +206,24 @@ class RetryTests(unittest.TestCase):
                 self.assertEqual(peer.calls[0][1].time, peer.calls[1][1].time)
                 self.assertNotEqual(peer.calls[0][2]["game"], peer.calls[1][2]["game"])
         self.assertEqual({path.name: path.read_bytes() for path in (self.root / "games/coaching").iterdir()}, files)
+
+    def test_legacy_cached_mistake_gets_current_alternative_and_principle_without_search(self):
+        state = self.prepare(peer=FakeEngine([packet(150, pv=["g1f3"]), packet(-150, pv=["e2e4"])]))
+        coach = state["moves"][0]["coach"]
+        self.assertEqual(coach["teaching"]["alternative"]["uci"], "g1f3")
+        self.assertIn(coach["teaching"]["principle"], coach["dialogue"])
+        path = next((self.root / "games/coaching").glob("*.json"))
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw["report"]["coach"]["version"] = 3
+        raw["report"]["moves"][0]["coach"] = {"dialogue": "Old advice", "teaching": {"alternative": {"uci": "e2e5"}, "principle": "Invented lesson"}}
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        before = path.read_bytes()
+        cached = self.session.start(SHORT, "white", 500, self.session.revision)
+        self.assertTrue(cached["cached"])
+        self.assertEqual(cached["coach"]["version"], 4)
+        self.assertEqual(cached["moves"], state["moves"])
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(self.factory.calls, 1)
 
     def test_black_perspective_and_fresh_best_are_not_stale_report_scores(self):
         pgn = '[SetUp "1"]\n[FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"]\n[Result "*"]\n\n1... e5 *'
