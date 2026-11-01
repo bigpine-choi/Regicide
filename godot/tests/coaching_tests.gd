@@ -1,6 +1,31 @@
 extends SceneTree
 ## Native scene/HTTP verification. Synthetic controls are not manual play.
 
+class VoicePanel extends "res://scripts/coaching_mode.gd":
+	var spoken: Array[String] = []
+	var stopped: int = 0
+	var mock_speaking: bool = false
+
+	func _setup_voice() -> void:
+		_english_voice = "mock-local-English"
+		_render_speech_controls()
+
+	func _voice_speak(text: String, _voice: String) -> void:
+		spoken.append(text)
+		mock_speaking = true
+
+	func _voice_stop() -> void:
+		stopped += 1
+		mock_speaking = false
+
+	func _voice_is_speaking() -> bool:
+		return mock_speaking
+
+	func flush_voice() -> void:
+		if not _speech_pending_key.is_empty():
+			speech_timer.stop()
+			speech_timer.timeout.emit()
+
 var app: Variant
 var panel: Variant
 var checks: int = 0
@@ -111,6 +136,7 @@ func _synthetic() -> void:
 	verify(panel.selected_ply == 2, "previous critical control obeys selected filter")
 	await _walkthrough_checks(snapshot)
 	await _character_checks(snapshot)
+	await _voice_checks(snapshot)
 	await _badge_checks(snapshot)
 	var before_flip: Dictionary = panel.board.state.duplicate(true)
 	var old_view: bool = panel.model.view_from_white
@@ -463,7 +489,7 @@ func _character_checks(snapshot: Dictionary) -> void:
 	panel._reveal_retry()
 	verify(not panel.retry_active and panel.line_kind == "retry_best" and panel.board.hint_move == "e2e4", "explicit reveal opens fresh recommendation")
 	verify(panel._selected_line().score_cp_white == 22 and panel.report == report_before, "fresh retry result remains separate from original report")
-	verify(panel.retry_line_button.visible and panel.retry_reveal_button.visible and panel.coach_dialogue.text.contains("새로 분석한"), "fresh analysis retains both line controls and its own explanation")
+	verify(panel.retry_line_button.visible and panel.retry_reveal_button.visible and panel.coach_dialogue.text.contains(reply.message), "fresh analysis retains both line controls and its own explanation")
 	panel.retry_line_button.pressed.emit()
 	verify(panel.line_kind == "retry_candidate" and panel.retry_reveal_button.visible, "fresh candidate response remains reachable after reveal")
 	panel.retry_reveal_button.pressed.emit()
@@ -519,11 +545,103 @@ func _character_checks(snapshot: Dictionary) -> void:
 		row.retry_legal_moves = []
 	panel._accept_snapshot(pending, true, true)
 	verify(not panel.retry_active and panel.retry_button.disabled and not panel.coach_dialogue.text.is_empty(), "nullable pending coaching keeps companion usable and exercise disabled")
-	verify(not panel._speech_owned and panel.stop_speech_button.disabled, "voice never starts automatically")
+	verify(not panel._speech_owned and panel.stop_speech_button.disabled, "test fixtures never use real speech output")
 	if DisplayServer.get_name() == "headless":
-		verify(panel.speak_button.disabled and panel._korean_voice.is_empty(), "missing Korean voice gracefully leaves text coaching available")
+		verify(panel.speak_button.disabled and panel._english_voice.is_empty(), "missing English voice gracefully leaves text coaching available")
 	panel._accept_snapshot(snapshot, true)
 	panel._select_ply(3)
+
+
+func _voice_checks(snapshot: Dictionary) -> void:
+	var voice := VoicePanel.new()
+	voice.offline_mode = true
+	root.add_child(voice)
+	voice.report = snapshot.duplicate(true)
+	voice.revision = int(snapshot.revision)
+	voice.show()
+	voice._select_ply(1)
+	verify(voice._speech_enabled and voice.speak_button.button_pressed and voice.speak_button.text == "음성 켜짐", "voice defaults on with a local English voice")
+	verify(is_equal_approx(voice.speech_timer.wait_time, 0.3) and voice.spoken.is_empty(), "speech is delayed 300ms rather than spoken synchronously")
+	var first_pending: String = voice._speech_pending_key
+	voice._render()
+	verify(voice._speech_pending_key == first_pending, "same render preserves one pending utterance")
+	voice._select_ply(2)
+	voice._select_ply(3)
+	await create_timer(0.34).timeout
+	verify(voice.spoken.size() == 1 and voice.spoken[0] == snapshot.moves[2].coach.dialogue, "rapid steps automatically read only the final scene")
+	voice.report.progress.completed = 2
+	voice._render()
+	voice.flip_view()
+	verify(voice._speech_pending_key.is_empty() and voice.spoken.size() == 1, "progress renders and board flip do not repeat the explanation")
+	voice.report.moves[1].coach.dialogue = voice.report.moves[2].coach.dialogue
+	voice._select_ply(2)
+	voice.flush_voice()
+	verify(voice.spoken.size() == 2 and voice.stopped == 1, "different selected move replaces old speech even if wording is identical")
+	voice._toggle_speech()
+	voice._select_ply(4)
+	voice._render()
+	verify(not voice._speech_enabled and voice._speech_pending_key.is_empty() and voice.speak_button.text == "음성 꺼짐", "muting persists across navigation and renders")
+	voice._toggle_speech()
+	voice.flush_voice()
+	verify(voice.spoken.size() == 3 and voice.spoken[-1] == snapshot.moves[3].coach.dialogue, "unmuting reads only the current scene")
+	voice._toggle_coach_overview()
+	voice.flush_voice()
+	verify(voice.spoken[-1] == snapshot.coach.summary, "overview speaks the visible whole-game summary")
+	voice._select_ply(3)
+	voice._show_line("best")
+	voice.flush_voice()
+	var count: int = voice.spoken.size()
+	voice._show_line("played")
+	voice.flush_voice()
+	verify(voice.spoken.size() == count + 1, "actual versus recommended line change is narrated")
+	voice._line_step(1)
+	verify(voice._speech_pending_key.is_empty(), "PV stepping with unchanged explanation does not restart the same speech")
+	voice._select_ply(1)
+	voice.flush_voice()
+	count = voice.spoken.size()
+	voice._navigate_critical(4)
+	voice.walkthrough_timer.stop()
+	verify(voice._walkthrough_active and voice._speech_pending_key.is_empty() and not voice._speech_owned, "context replay immediately cancels speech")
+	voice._advance_walkthrough()
+	voice._pause_walkthrough()
+	voice._render()
+	verify(voice._speech_pending_key.is_empty(), "paused intermediate replay stays quiet")
+	voice._pause_walkthrough()
+	voice.walkthrough_timer.stop()
+	voice._advance_walkthrough()
+	verify(voice._speech_pending_key.is_empty(), "intermediate actual move does not announce transit text")
+	voice._advance_walkthrough()
+	voice.flush_voice()
+	verify(not voice._walkthrough_active and voice.spoken.size() == count + 1 and voice.spoken[-1] == snapshot.moves[3].coach.dialogue, "target arrival reads its real explanation once")
+	voice._begin_retry()
+	voice.flush_voice()
+	verify(voice.retry_active and not voice.spoken[-1].contains("Qh4") and voice.spoken[-1] == voice.coach_dialogue.text, "retry cancels solution speech and reads only the hidden-answer prompt")
+	voice._show_retry_hint()
+	voice.flush_voice()
+	verify(voice.spoken[-1] == snapshot.moves[3].coach.hint, "explicit hint is read after it becomes visible")
+	voice._retry_reply = {"uci": "d8h4", "message": "Your move gives checkmate. The king has no legal escape."}
+	voice._render()
+	voice.flush_voice()
+	verify(voice.spoken[-1] == voice._retry_reply.message, "retry feedback is read without adding a hidden best move")
+	voice._select_ply(2)
+	voice.hide()
+	verify(voice._speech_pending_key.is_empty() and voice.speech_timer.is_stopped(), "hiding invalidates queued speech")
+	voice.show()
+	voice._render()
+	voice.flush_voice()
+	voice._stop_current_speech()
+	voice._render()
+	verify(voice._speech_pending_key.is_empty(), "explicit stop is not undone by the next poll render")
+	voice._select_ply(1)
+	voice._return()
+	verify(not voice.visible and voice._speech_pending_key.is_empty(), "return clears pending speech")
+	voice.show()
+	voice._select_ply(3)
+	voice.flush_voice()
+	var stopped: int = voice.stopped
+	root.remove_child(voice)
+	verify(voice.stopped == stopped + 1 and voice._speech_pending_key.is_empty(), "closing the panel stops its owned speech")
+	voice.free()
 
 
 func _badge_checks(snapshot: Dictionary) -> void:
@@ -683,6 +801,8 @@ func _run() -> void:
 	app.offline_mode = not live
 	root.add_child(app)
 	panel = app.coaching_overlay
+	# All real audio stays disabled in fixtures, even if this suite is rendered.
+	panel._speech_enabled = false
 	await settle()
 	if live:
 		await _live()

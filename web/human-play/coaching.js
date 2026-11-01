@@ -17,6 +17,8 @@
   let retry = null, retryEpoch = 0, evidenceFocus = null;
   let retryPointer=null, pointerSource=null, pointerTarget=null, suppressRetryClickUntil=0;
   let speaking = false, speechEpoch = 0;
+  let speechEnabled = true, speechTimer = null, pendingSpeechKey = "", lastSpeechKey = "";
+  let speechOverview = false, speechSceneKey = "";
   const returnNotice = document.createElement("p");
   returnNotice.className = "error-panel";
   returnNotice.setAttribute("role", "alert");
@@ -112,32 +114,69 @@
   }
   function stopSpeech() {
     speechEpoch++;
+    if (speechTimer !== null) clearTimeout(speechTimer);
+    speechTimer=null;pendingSpeechKey="";
     if (speaking) window.speechSynthesis?.cancel();
     speaking=false;
     renderSpeech();
   }
-  function localVoice() {
+  function localEnglishVoice() {
     if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return null;
-    try { return window.speechSynthesis.getVoices().find((voice) => voice.localService === true && /^ko(?:[-_]|$)/i.test(voice.lang || "")) || null; }
+    try { return window.speechSynthesis.getVoices().find((voice) => voice.localService === true && /^en(?:[-_]|$)/i.test(voice.lang || "")) || null; }
     catch (_) { return null; }
   }
   function renderSpeech() {
-    const available=Boolean(localVoice());
-    get("coach-speak").disabled=!available || !visible || speaking;
-    get("coach-speech-stop").hidden=!speaking;
-    get("coach-voice-note").textContent=available ? "내 컴퓨터의 한국어 음성 · 눌렀을 때만 읽어요." : "사용 가능한 한국어 음성이 없어 글로 안내합니다.";
+    const available=Boolean(localEnglishVoice());
+    get("coach-speak").disabled=!available || !visible;
+    get("coach-speak").textContent=available ? (speechEnabled ? "음성 켜짐" : "음성 꺼짐") : "영어 음성 없음";
+    get("coach-speak").setAttribute("aria-pressed",String(available && speechEnabled));
+    get("coach-speech-stop").hidden=!speaking && speechTimer===null;
+    get("coach-voice-note").textContent=available ? "내 컴퓨터의 영어 음성 · 수를 넘기면 자동으로 읽어요." : "사용 가능한 영어 음성이 없어 글로 안내합니다.";
   }
-  function speakCoach() {
-    const voice=localVoice();
-    if (!visible || !voice || speaking) return;
-    const text=get("coach-dialogue").textContent;
-    if (!text) return;
+  function spokenCoachText() {
+    // Read only currently visible guidance, including retry feedback after submission.
+    if (speechOverview && !exerciseHidden() && get("coach-overview-box").open) return get("coach-overview").textContent;
+    return get("coach-dialogue").textContent;
+  }
+  function speechContextKey() {
+    return JSON.stringify([epoch,report?.job_id || "",selectedPly,variation || "actual",viewBefore,
+      exerciseHidden(),speechOverview,retry?.feedback?.uci || "",spokenCoachText()]);
+  }
+  function canSpeak() {
+    return visible && !document.hidden && speechEnabled && !busy && !retry?.submitting &&
+      (!contextReplay || contextReplay.done) && Boolean(localEnglishVoice()) && Boolean(spokenCoachText());
+  }
+  function scheduleSpeech() {
+    if (!canSpeak()) { stopSpeech(); return; }
+    const key=speechContextKey();
+    if (key===pendingSpeechKey) return;
+    if (key===lastSpeechKey) { if (speechTimer!==null) stopSpeech(); return; }
+    stopSpeech();pendingSpeechKey=key;
+    const ticket=speechEpoch;
+    speechTimer=setTimeout(()=>{
+      if (ticket!==speechEpoch) return;
+      speechTimer=null;
+      if (!canSpeak() || pendingSpeechKey!==speechContextKey()) { stopSpeech();return; }
+      const text=spokenCoachText(),voice=localEnglishVoice();
+      lastSpeechKey=pendingSpeechKey;pendingSpeechKey="";
+      speakCoach(text,voice);
+    },300);
+    renderSpeech();
+  }
+  function speakCoach(text,voice) {
     const utterance=new window.SpeechSynthesisUtterance(text), ticket=++speechEpoch;
     utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=.95;
     const finish=()=>{if(ticket===speechEpoch){speaking=false;renderSpeech();}};
     utterance.onend=finish;utterance.onerror=finish;speaking=true;renderSpeech();
     try { window.speechSynthesis.speak(utterance); } catch (_) { finish(); }
   }
+  function toggleSpeech() {
+    if (!localEnglishVoice()) return;
+    speechEnabled=!speechEnabled;stopSpeech();
+    if (speechEnabled) {lastSpeechKey="";scheduleSpeech();}
+    renderSpeech();
+  }
+  function stopCurrentSpeech() {lastSpeechKey=speechContextKey();stopSpeech();}
   function cancelExercise() {
     clearRetryPointer();
     if(retry){cursor=selectedPly;viewBefore=false;}
@@ -152,10 +191,10 @@
     get("coach-mascot").dataset.mood=mood;
     get("coach-mascot").setAttribute("aria-label",({encourage:"응원하는",think:"생각하는",celebrate:"기뻐하는",warning:"주의할 점을 알려주는"})[mood]+" 체스 코치 루크");
     get("coach-scene").textContent=row ? positionTitle(row) + (hidden ? " · 다시 두기" : "") : "한 장면씩 함께 살펴봐요.";
-    get("coach-dialogue").textContent=travelling ? "다음 장면까지 실제 수순을 함께 따라가요. 도착하면 그 위치에서 생각할 점을 살펴볼게요." :
-      hidden ? retry.feedback?.message || coach?.hint || "내 왕의 안전과 상대의 다음 수를 먼저 확인해 보세요. 어떤 수를 두고 싶나요?" :
-      coach?.dialogue || (report ? "수별 평가나 장면을 고르면 이 위치를 함께 살펴볼게요." : "기보를 골라 코칭을 시작하면 중요한 장면을 함께 살펴볼게요.");
-    get("coach-overview").textContent=report?.coach?.summary || "분석이 끝나면 이번 대국에서 배울 점을 정리해 드릴게요.";
+    get("coach-dialogue").textContent=travelling ? "Following the moves actually played to the next key moment." :
+      hidden ? retry.feedback?.message || coach?.hint || "Check for threats against the king and pieces that can be captured." :
+      coach?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
+    get("coach-overview").textContent=report?.coach?.summary || "Start the analysis to find the key moments.";
     get("coach-overview-box").hidden=hidden;
     get("coach-lesson-controls").hidden=hidden;
     const lessonPlies=lessons();
@@ -199,7 +238,9 @@
       button.textContent=names[uci[4]];button.addEventListener("click",()=>{void submitRetry(uci);});choices.append(button);
     }
     get("coach-retry-promotion").replaceChildren(choices);get("coach-retry-promotion").hidden=!retry?.promotion?.length;
-    renderSpeech();
+    const sceneKey=JSON.stringify([epoch,report?.job_id,selectedPly,variation,viewBefore,exerciseHidden(),get("coach-dialogue").textContent]);
+    if (sceneKey!==speechSceneKey) {speechOverview=false;speechSceneKey=sceneKey;}
+    renderSpeech();scheduleSpeech();
   }
   function showEvidence(index) {
     if (exerciseHidden() || (contextReplay && !contextReplay.done)) return;
@@ -769,9 +810,10 @@
     stopSpeech();stopContext();variation=null;cursor=selectedPly-1;viewBefore=true;motionStep=false;
     evidenceFocus={ply:selectedPly,line:null,squares:selectedRow().coach.focus_squares};render();
   });
-  get("coach-speak").addEventListener("click",speakCoach);
-  get("coach-speech-stop").addEventListener("click",stopSpeech);
-  window.speechSynthesis?.addEventListener?.("voiceschanged",renderSpeech);
+  get("coach-speak").addEventListener("click",toggleSpeech);
+  get("coach-speech-stop").addEventListener("click",stopCurrentSpeech);
+  get("coach-overview-box").addEventListener("toggle",()=>{speechOverview=Boolean(get("coach-overview-box").open);scheduleSpeech();});
+  window.speechSynthesis?.addEventListener?.("voiceschanged",()=>{renderSpeech();scheduleSpeech();});
   get("coaching-board").addEventListener("click",(event)=>{
     if(Date.now()<suppressRetryClickUntil)return;
     const cell=event.target.closest("[data-coaching-square]");if(cell)retrySquare(cell.dataset.coachingSquare);
@@ -801,6 +843,7 @@
   window.addEventListener("pagehide", () => { cancelExercise();stopContext(); window.RegicideMotion?.cancel(get("coaching-board"),true); ++epoch; visible = false; clearInterval(timer); });
   document.addEventListener?.("visibilitychange", () => {
     if (document.hidden) { cancelExercise();stopContext(); window.RegicideMotion?.cancel(get("coaching-board"),true); render(); }
+    else scheduleSpeech();
   });
   render();
 })();

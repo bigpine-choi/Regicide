@@ -1,5 +1,6 @@
 """Real pinned opening names, legal previews and truthful history boundaries."""
 import copy
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
@@ -13,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import chess
 import opening_guide as guide
+from opening_names import DISPLAY_NAME_OVERRIDES, display_name
 
 
 def position(*moves):
@@ -38,6 +40,117 @@ class OpeningGuideTests(unittest.TestCase):
                 self.assertEqual(result["matched_opening"]["name"], name)
                 self.assertEqual(result["matched_opening"]["eco"], eco)
                 self.assertEqual(result["matched_opening"]["match_type"], "exact")
+
+    def test_verified_reti_names_cover_exact_rows_without_changing_catalogue(self):
+        manifest = json.loads((guide.DATA_DIRECTORY / 'manifest.json').read_text(encoding='utf-8'))
+        protected = [guide.DATA_DIRECTORY / name for name in (*manifest['files'], 'manifest.json')]
+        before = {path: path.read_bytes() for path in protected}
+        self.assertEqual(len(DISPLAY_NAME_OVERRIDES), 35)
+        self.assertEqual(self.catalog.source['name_override_rows'], 35)
+        self.assertEqual(self.catalog.source['catalogue_rows'], 3865)
+        self.assertEqual(self.catalog.source['catalogue_positions'], 7983)
+        indexed = {(item.eco, item.catalog_name, item.moves): item for item in self.catalog.openings}
+        for key, (name, url) in DISPLAY_NAME_OVERRIDES.items():
+            with self.subTest(name=name, moves=key[2]):
+                item = indexed[key]
+                self.assertEqual((item.name, item.name_source_url), (name, url))
+                self.assertTrue(url.startswith('https://www.chess.com/openings/'))
+                board = chess.Board()
+                for uci in key[2]:
+                    board.push_uci(uci)
+                current = guide.get_opening_guide(board)
+                self.assertIn((key[0], name), {(match['eco'], match['name']) for match in current['current_matches']})
+                fen_only = guide.get_opening_guide(chess.Board(board.fen()))
+                self.assertIn(name, [match['name'] for match in fen_only['current_matches']])
+                self.assertTrue(all(match['match_type'] == 'position' for match in fen_only['current_matches']))
+        self.assertEqual({path: path.read_bytes() for path in protected}, before)
+        for name, metadata in manifest['files'].items():
+            self.assertEqual(hashlib.sha256(before[guide.DATA_DIRECTORY / name]).hexdigest(), metadata['sha256'])
+
+    def test_reti_names_match_current_last_known_immediate_and_reachable(self):
+        initial = guide.get_opening_guide(chess.Board())
+        branch = next(item for item in initial['continuations'] if item['uci'] == 'g1f3')
+        self.assertIn('Réti Opening', [item['name'] for item in branch['immediate_openings']])
+        self.assertIn('Réti Opening', [item['name'] for item in branch['reachable_openings']])
+        board = position('Nf3')
+        before = guide.get_opening_guide(board)
+        self.assertEqual(before['matched_opening']['name'], 'Réti Opening')
+        board.push_san('h5')
+        after = guide.get_opening_guide(board)
+        self.assertEqual(after['matched_opening']['name'], 'Réti Opening')
+        self.assertEqual(after['matched_opening']['ply'], 1)
+        board.pop()
+        self.assertEqual(guide.get_opening_guide(board), before)
+        board.push_san('d5')
+        before_gambit = guide.get_opening_guide(board)
+        branch = next(item for item in before_gambit['continuations'] if item['uci'] == 'c2c4')
+        expected = 'Réti Opening: Réti Gambit'
+        self.assertIn(expected, [item['name'] for item in branch['immediate_openings']])
+        self.assertIn(expected, [item['name'] for item in branch['reachable_openings']])
+        board.push_san('c4')
+        self.assertEqual(guide.get_opening_guide(board)['matched_opening']['name'], expected)
+        board.pop()
+        self.assertEqual(guide.get_opening_guide(board), before_gambit)
+
+    def test_reti_position_transposition_and_later_opening_are_not_overwritten(self):
+        direct = guide.get_opening_guide(position('Nf3', 'd5', 'c4'))
+        transposed = guide.get_opening_guide(position('c4', 'd5', 'Nf3'))
+        self.assertEqual(direct['position_key'], transposed['position_key'])
+        self.assertEqual(transposed['matched_opening']['name'], 'Réti Opening: Réti Gambit')
+        self.assertEqual(transposed['matched_opening']['match_type'], 'transposition')
+        self.assertEqual(direct['continuations'], transposed['continuations'])
+        queen_pawn = guide.get_opening_guide(position('Nf3', 'd5', 'd4'))
+        self.assertEqual(queen_pawn['matched_opening']['name'], "Queen's Pawn Game: Zukertort Variation")
+        ruy = guide.get_opening_guide(position('Nf3', 'Nc6', 'e4', 'e5', 'Bb5'))
+        self.assertEqual(ruy['matched_opening']['name'], 'Ruy Lopez')
+
+    def test_unverified_and_independent_zukertort_names_are_preserved(self):
+        cases = [(('d4', 'd5', 'Nf3'), "Queen's Pawn Game: Zukertort Variation"),
+                 (('e4', 'd5', 'Nf3'), 'Zukertort Opening: Tennison Gambit'),
+                 (('Nf3', 'Nf6', 'e4'), 'Zukertort Opening: Lemberger Gambit')]
+        for moves, expected in cases:
+            with self.subTest(name=expected):
+                self.assertEqual(guide.get_opening_guide(position(*moves))['matched_opening']['name'], expected)
+        for item in self.catalog.openings:
+            key = item.eco, item.catalog_name, item.moves
+            if key not in DISPLAY_NAME_OVERRIDES:
+                self.assertEqual(item.name, item.catalog_name)
+                self.assertIsNone(item.name_source_url)
+        # Matching text alone, a different ECO, or an unverified continuation
+        # cannot inherit an official display-name correction.
+        self.assertEqual(display_name('A04', 'Zukertort Opening', ('g1f3', 'h7h5')),
+                         ('Zukertort Opening', None))
+        self.assertEqual(display_name('A05', 'Zukertort Opening', ('g1f3',)),
+                         ('Zukertort Opening', None))
+
+    def test_name_policy_provenance_is_explicit_and_response_local(self):
+        first = guide.get_opening_guide(position('Nf3'))
+        self.assertIn('일부 명칭 Chess.com', first['source']['attribution'])
+        self.assertEqual(first['source']['license'], 'CC0-1.0')
+        self.assertEqual(first['source']['name_policy'], 'selected_exact_lines_verified_on_chess_com')
+        self.assertEqual(len(first['source']['name_references']), 35)
+        first['source']['name_override_rows'] = -1
+        first['source']['name_references'] += ('changed by caller',)
+        second = guide.get_opening_guide(position('Nf3'))
+        self.assertEqual(second['source']['name_override_rows'], 35)
+        self.assertNotIn('changed by caller', second['source']['name_references'])
+        json.dumps(second, ensure_ascii=False)
+
+    def test_verified_first_move_names_and_unrelated_variants_remain_separate(self):
+        cases = [('g3', "King's Fianchetto Opening", 'A00'),
+                 ('b3', 'Nimzowitsch-Larsen Attack', 'A01'),
+                 ('f4', "Bird's Opening", 'A02'), ('g4', 'Grob Opening', 'A00')]
+        initial = guide.get_opening_guide(chess.Board())
+        for san, expected, eco in cases:
+            board = position(san)
+            result = guide.get_opening_guide(board)
+            self.assertEqual((result['matched_opening']['name'], result['matched_opening']['eco']), (expected, eco))
+            branch = next(item for item in initial['continuations'] if item['uci'] == board.peek().uci())
+            self.assertIn(expected, [item['name'] for item in branch['immediate_openings']])
+            self.assertIn(expected, [item['name'] for item in branch['reachable_openings']])
+        for item in self.catalog.openings:
+            if len(item.moves) > 1 and item.catalog_name.startswith(('Hungarian Opening', 'Nimzo-Larsen Attack', 'Bird Opening')):
+                self.assertEqual(item.name, item.catalog_name)
 
     def test_morphy_is_immediate_but_exchange_requires_more_moves(self):
         board = position('e4', 'e5', 'Nf3', 'Nc6', 'Bb5')

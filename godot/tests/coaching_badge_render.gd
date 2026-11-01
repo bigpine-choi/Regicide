@@ -56,6 +56,7 @@ func _run() -> void:
 	root.add_child(app)
 	app.main_contents.hide()
 	panel = app.coaching_overlay
+	panel._speech_enabled = false
 	panel.offline_mode = true
 	panel.open_game(fixture.pgn, "white", "", "")
 	for dimensions in [Vector2i(1240, 860), Vector2i(900, 680)]:

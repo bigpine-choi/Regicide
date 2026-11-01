@@ -35,7 +35,7 @@ class ExplanationTests(unittest.TestCase):
         mate = next(fact for fact in coach["evidence"] if fact["kind"] == "checkmate")
         self.assertEqual((mate["line"], mate["ply_index"]), ("played", 2))
         self.assertIn("e1", mate["squares"])
-        self.assertIn("이 예상 수순에서는", mate["text"])
+        self.assertIn("in this line", mate["text"])
         self.assertEqual(coach["mood"], "warning")
         for solution in ("Nc3", "b1c3", "c3"):
             self.assertNotIn(solution, coach["hint"])
@@ -48,10 +48,10 @@ class ExplanationTests(unittest.TestCase):
         facts = [fact for fact in coach["evidence"] if fact["line"] == "played"]
         capture = next(fact for fact in facts if fact["kind"] == "capture")
         material = next(fact for fact in facts if fact["kind"] == "material")
-        self.assertIn("a2의 퀸", capture["text"])
+        self.assertIn("Black's queen on a2", capture["text"])
         self.assertIn("+9", material["text"])
-        self.assertIn("표시한 1반수의 끝까지", material["text"])
-        self.assertIn("엔진 평가나 그 뒤의 결과를 뜻하지 않습니다", material["text"])
+        self.assertIn("this line's endpoint", material["text"])
+        self.assertIn("counting pieces only", material["text"])
 
     def test_identical_best_and_played_lines_have_one_set_of_actual_evidence(self):
         board = chess.Board()
@@ -73,16 +73,16 @@ class ExplanationTests(unittest.TestCase):
         board = chess.Board("7k/5K2/6Q1/8/8/8/8/8 w - - 0 1")
         row = row_for(board, "g6g5", ["g6g7"], ["g6g5"], "missed_mate")
         coach = describe_move(board, row)
-        self.assertIn("상대 왕을 공격", coach["dialogue"])
+        self.assertIn("checkmate immediately", coach["dialogue"])
         self.assertIn("Qg7#", coach["dialogue"])
-        self.assertIn("상대 왕에게 걸 수 있는 체크", coach["hint"])
+        self.assertIn("checks against Black's king", coach["hint"])
         self.assertNotIn("g7", coach["hint"])
         self.assertIn("h8", coach["focus_squares"])
         report = describe_report([{**row, "color": "white"},
                                   {"ply": 2, "color": "black", "classification": "allows_mate"},
                                   {"ply": 3, "color": "white", "classification": "best"}], [2, 1])
-        self.assertIn("백 1개, 흑 1개", report["summary"])
-        self.assertIn("메이트 허용으로 평가된 1개", report["summary"])
+        self.assertIn("White has 1 move to revisit; Black has 1", report["summary"])
+        self.assertIn("mating threats", report["summary"])
         self.assertLessEqual(report["summary"].count("."), 3)
 
     def test_exchange_does_not_claim_net_gain_after_recapture(self):
@@ -114,7 +114,7 @@ class ExplanationTests(unittest.TestCase):
         row["played"]["pv_san"] = ["Qh4#"]
         coach = describe_move(board, row)
         self.assertFalse(any(fact["line"] == "played" for fact in coach["evidence"]))
-        self.assertNotIn("체크메이트입니다", coach["dialogue"])
+        self.assertNotIn("checkmate", coach["dialogue"])
         self.assertFalse(any(fact["kind"] in ("fork", "pin") for fact in coach["evidence"]))
 
     def test_lessons_are_bounded_chronological_diverse_and_include_positive(self):
@@ -127,7 +127,7 @@ class ExplanationTests(unittest.TestCase):
         self.assertTrue({8, 14, 18}.issubset(coach["lesson_plies"]))
         self.assertNotIn(19, coach["lesson_plies"])
         self.assertNotIn(20, coach["lesson_plies"])
-        self.assertIn("아직 분석 중", coach["summary"])
+        self.assertIn("So far", coach["summary"])
         self.assertEqual(describe_report([], [])["lesson_plies"], [])
 
 
@@ -169,7 +169,7 @@ class RetryTests(unittest.TestCase):
     def test_packet_and_cached_commentary_regenerated_from_evidence(self):
         state = self.prepare()
         row = state["moves"][0]
-        self.assertEqual(state["coach"]["name"], "루크")
+        self.assertEqual(state["coach"]["name"], "Rook")
         self.assertEqual(state["coach"]["lesson_plies"], [1])
         self.assertEqual(set(row["retry_legal_moves"]), {move.uci() for move in chess.Board().legal_moves})
         path = next((self.root / "games/coaching").glob("*.json"))

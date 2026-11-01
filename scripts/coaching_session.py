@@ -471,10 +471,10 @@ class CoachingSession:
             kind, loss = _classify(best, line, "white" if board.turn else "black", same)
             verdict = "recommended" if kind == "best" else "good" if kind == "good" else "uncertain" if kind == "uncertain" else "try_again"
             messages = {
-                "recommended": "좋아요! 새로 탐색한 최선 후보를 찾았어요. 이제 상대의 응수까지 확인해 볼까요?",
-                "good": "좋은 대안이에요. 이번 탐색에서는 최선 후보와 비슷한 평가예요. 수순을 펼쳐 상대의 응수도 확인해 보세요.",
-                "try_again": "다른 후보도 찾아볼까요? 이번 탐색에서는 더 나은 평가를 받는 수가 있었어요. 상대의 위협과 응수를 다시 살펴보세요.",
-                "uncertain": "이번 탐색만으로는 확실하게 비교하기 어려워요. 실패로 단정하지 않을게요. 더 긴 분석에서 다시 확인할 수 있어요.",
+                "recommended": "You found the recommended move. Can you anticipate the opponent's reply?",
+                "good": "This works too: your move scores close to the recommendation.",
+                "try_again": "There's a stronger option. Check the opponent's reply to your move.",
+                "uncertain": "These results aren't conclusive. Try a longer analysis.",
             }
             result = {"job_id": job_id, "revision": revision, "ply": ply, "uci": uci, "san": board.san(move),
                       "verdict": verdict, "message": messages[verdict], "line": line, "best": best, "loss_cp": loss}

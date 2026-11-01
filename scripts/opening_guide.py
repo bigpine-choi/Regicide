@@ -21,6 +21,8 @@ import threading
 import chess
 import chess.pgn
 
+from opening_names import VERIFIED_ON, display_name
+
 DATA_DIRECTORY = Path(__file__).resolve().parents[1] / "data/openings"
 MAX_CONTINUATIONS = 20
 MAX_CURRENT_MATCHES = 6
@@ -40,6 +42,8 @@ class Opening:
     moves: tuple[str, ...]
     keys: tuple[str, ...]
     zeroing: tuple[bool, ...]
+    catalog_name: str
+    name_source_url: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,12 +118,18 @@ def _load_catalog(directory: Path) -> Catalog:
                             move = chess.Move.from_uci(moves[offset])
                             zeroing.append(board.is_zeroing(move))
                             board.push(move)
-                    openings.append(Opening(row["eco"], row["name"], moves, tuple(keys), tuple(zeroing)))
+                    name, name_source_url = display_name(row["eco"], row["name"], moves)
+                    openings.append(Opening(row["eco"], name, moves, tuple(keys), tuple(zeroing),
+                                            row["name"], name_source_url))
         source = {
             "repository_url": manifest["repository_url"], "commit": manifest["commit"],
             "license": manifest["license"], "license_url": manifest["license_url"],
-            "attribution": "Lichess chess-openings · CC0 1.0",
+            "attribution": "Lichess chess-openings · CC0 1.0 · 일부 명칭 Chess.com 기준",
             "catalogue_rows": len(openings), "catalogue_positions": len(positions),
+            "name_policy": "selected_exact_lines_verified_on_chess_com",
+            "name_verified_on": VERIFIED_ON,
+            "name_override_rows": sum(item.name_source_url is not None for item in openings),
+            "name_references": tuple(sorted({item.name_source_url for item in openings if item.name_source_url})),
         }
         return Catalog(tuple(openings),
                        MappingProxyType({key: tuple(value) for key, value in positions.items()}),

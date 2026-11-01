@@ -40,6 +40,7 @@ func _run() -> void:
 	root.add_child(app)
 	app.main_contents.hide()
 	panel = app.coaching_overlay
+	panel._speech_enabled = false
 	panel.offline_mode = true
 	panel.open_game(fixture.pgn, "white", "", "")
 	for dimensions in [Vector2i(1240, 860), Vector2i(900, 680)]:
@@ -67,13 +68,13 @@ func _run() -> void:
 	var voices: Array = []
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		for voice in DisplayServer.tts_get_voices():
-			if str(voice.get("language", "")).begins_with("ko"):
+			if str(voice.get("language", "")).begins_with("en"):
 				voices.append({"name": voice.get("name"), "language": voice.get("language")})
 	var file := FileAccess.open(folder.path_join("native-character-render.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify({"mode": "offline rendered fixture; no speech played", "captures": captures,
-		"korean_voices": voices, "korean_voice_available": not panel._korean_voice.is_empty()}, "  "))
+		"english_voices": voices, "english_voice_available": not panel._english_voice.is_empty()}, "  "))
 	file.close()
-	print("Captured ", captures.size(), " native character screens. Korean voice available: ", not panel._korean_voice.is_empty(), "; no speech played.")
+	print("Captured ", captures.size(), " native character screens. English voice available: ", not panel._english_voice.is_empty(), "; no speech played.")
 	app.queue_free()
 	await process_frame
 	quit()

@@ -11,7 +11,7 @@
 3. 분기나 이름을 선택해 실제로 이어지는 SAN 수순(수를 적는 표준 표기)을 읽는다. 예를 들어 `...a6` 한 수로 확인되는 이름과, 그 뒤 `Bxc6`까지 둬야 확인되는 변형을 구분한다.
 4. 무르기·핸디캡·기보 재생에서는 현재 표시하는 위치에 맞춰 안내가 바뀐다.
 
-분기를 펼치고 수순을 미리 보는 행동은 대국에 착수하지 않는다. 추천 수 기능, 생각 시간과 기보 저장은 기존처럼 사용할 수 있다. 화면 안내는 한국어이며 오프닝·변형의 이름은 원자료의 영어 표기를 사용한다.
+분기를 펼치고 수순을 미리 보는 행동은 대국에 착수하지 않는다. 추천 수 기능, 생각 시간과 기보 저장은 기존처럼 사용할 수 있다. 화면 안내는 한국어이며 오프닝·변형은 영어 이름으로 표시한다. 아래에 명시한 일부 이름은 Chess.com에서 확인한 표기를 우선한다.
 
 예를 들어 `1. e4 e5 2. Nf3 Nc6 3. Bb5 a6`에서는 **Ruy Lopez: Morphy Defense · C70**으로 표시된다. 다음 분기에서 **Bird's Defense Deferred**를 선택하면 `4. Ba4 Nd4`를 볼 수 있다. 백 비숍을 a4로 옮기고 흑 나이트가 d4로 옮겨야 그 이름의 위치에 도달한다는 뜻이다.
 
@@ -31,6 +31,21 @@
 유한한 이름 목록으로 모든 체스 이론·가능한 변형을 담지는 않는다. 목록 밖으로 나간 것은 악수 판정이 아니다. 표시 순서는 SAN 표기순이며 기보 빈도·승률·엔진 추천 순위가 아니다. 한 분기의 이름과 대표 수순도 화면에서 일부만 표시할 수 있으며 생략 여부를 알린다.
 
 대국 중 Regicide의 수 선택은 계속 자체 엔진이 담당한다. 이 자료로 엔진이 대신 수를 고르거나 학습 모델을 바꾸는 기능은 추가하지 않았다.
+
+## Chess.com 기준의 일부 표시 이름 (2026-11-02)
+
+원자료는 `1.Nf3`를 **Zukertort Opening**, `1.Nf3 d5 2.c4`를 **Réti Opening**으로 분류한다. 이는 수의 합법성 문제가 아니라 이름을 붙이는 범위의 차이다. Chess.com의 [공식 Réti 안내](https://www.chess.com/openings/Reti-Opening)는 `1.Nf3`를 **Réti Opening**, `1.Nf3 d5 2.c4`를 [**Réti Opening: Réti Gambit**](https://www.chess.com/openings/Reti-Opening-Reti-Gambit)으로 구분한다고 명시한다.
+
+사용자가 보는 이름을 이에 맞추기 위해 `scripts/opening_names.py`에 **정확한 ECO·원래 이름·전체 수순을 키로 하는 35개 표시 보정**을 두었다. Réti 계열 32개와 추가로 확인한 첫 수 이름 3개이며, 각 항목은 공식 오프닝 페이지의 제목과 시작 수순을 확인하고 해당 URL을 기록했다. `Zukertort` 등의 단어를 전역 치환하지 않는다.
+
+- 기본 Réti 이름 4개 수순: `1.Nf3`, `1.Nf3 Nf6`, `1.Nf3 d5`, `1.Nf3 Nf6 2.Nc3 Nc6`.
+- 확인된 직계 변형 22개: Arctic/Drunken Knight, Basman, Black Mustang, Dutch/Lisitsyn/Deferred Lisitsyn, Herrstrom, Kingside Fianchetto, Pirc, Polish, Queen's Gambit Invitation, Queenside Fianchetto, Sicilian, Slav, St. George, Ware, Nimzo-Larsen, Quiet System, Old Indian, Reversed Mexican, The Potato. `Kingside Fianchetto Variation`과 `The Potato Variation` 등 세부 표기도 확인된 제목에 맞췄다.
+- Réti Gambit 계열 6개: 기본 Gambit, Accepted, Declined Advance, Michel, Penguin, Reversed Blumenfeld.
+- 첫 수 이름 3개: `1.g3`는 [King's Fianchetto Opening](https://www.chess.com/openings/Kings-Fianchetto-Opening), `1.b3`는 [Nimzowitsch-Larsen Attack](https://www.chess.com/openings/Nimzowitsch-Larsen-Attack), `1.f4`는 [Bird's Opening](https://www.chess.com/openings/Birds-Opening). 이 이름의 세부 변형을 연쇄 치환하지 않으며, 확인 결과 같았던 Grob Opening도 그대로 둔다.
+
+현재 이름·마지막 확인 이름·다음 한 수의 이름·몇 수 뒤 도달할 이름은 같은 보정된 색인을 사용한다. FEN에서 직접 시작하거나 다른 수순으로 같은 위치에 도달해도 같은 이름이 나오며, 무르기는 이전 위치의 이름으로 돌아간다. 이후 Ruy Lopez나 Queen's Pawn 등 다른 이름의 위치로 전환되면 그 위치의 분류를 따른다.
+
+원본 TSV·LICENSE·manifest와 그 SHA256은 변경하지 않는다. CC0 자료의 출처는 계속 Lichess이며, 화면 출처에는 **일부 명칭 Chess.com 기준**임을 덧붙인다. 3,865개 전체 이름이 Chess.com과 일치한다는 의미는 아니다. 확인하지 못한 Lemberger Gambit 및 독립적인 Queen's Pawn Zukertort Variation·Tennison Gambit 등은 원래 이름을 유지한다. 확인 URL·이름·수순과 제외 사례는 [명칭 검증 기록](checks/2026-11-02-opening-names/source-verification.json)에 남긴다.
 
 ## 출처와 재현
 

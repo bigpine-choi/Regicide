@@ -55,9 +55,13 @@ var _retry_reply: Dictionary = {}
 var _retry_status: String = ""
 var _retry_hint: bool = false
 var _retry_chosen_uci: String = ""
-var _korean_voice: String = ""
+var _english_voice: String = ""
 var _speech_owned: bool = false
 var _speech_text: String = ""
+var _speech_enabled: bool = true
+var _speech_pending_key: String = ""
+var _speech_last_key: String = ""
+var speech_timer: Timer
 
 var model: ViewModel = ViewModel.new()
 var board: ChessBoard
@@ -134,6 +138,11 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_stop_speech()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		_stop_speech()
 
 
 func _label(text: String, size: int = 14, color: String = "c0cddb") -> Label:
@@ -378,6 +387,11 @@ func _build_ui() -> void:
 	walkthrough_timer.wait_time = 0.65
 	walkthrough_timer.timeout.connect(_advance_walkthrough)
 	add_child(walkthrough_timer)
+	speech_timer = Timer.new()
+	speech_timer.one_shot = true
+	speech_timer.wait_time = 0.3
+	speech_timer.timeout.connect(_speak_coach)
+	add_child(speech_timer)
 
 
 func _build_coach(sidebar: VBoxContainer) -> void:
@@ -407,15 +421,16 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	speech.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	character_row.add_child(speech)
 	speech.add_child(_label("루크  ·  나의 체스 코치", 15, "f4e9c9"))
-	coach_dialogue = _label("안녕! 한 판을 함께 돌아보자. 상대가 잘 둔 수와 놓친 기회도 살펴볼게.", 14, "e5edf3")
+	coach_dialogue = _label("Choose a game to review its key moments.", 14, "e5edf3")
 	coach_dialogue.name = "CoachDialogue"
 	speech.add_child(coach_dialogue)
 	coach_overview_button = _button("한 판 총평", _toggle_coach_overview, "CoachOverview")
 	column.add_child(coach_overview_button)
 	var speech_controls := HBoxContainer.new()
 	column.add_child(speech_controls)
-	speak_button = _button("음성 듣기", _speak_coach, "CoachSpeak")
-	stop_speech_button = _button("음성 정지", _stop_speech, "CoachStopSpeaking")
+	speak_button = _button("음성 켜짐", _toggle_speech, "CoachSpeak")
+	speak_button.toggle_mode = true
+	stop_speech_button = _button("음성 정지", _stop_current_speech, "CoachStopSpeaking")
 	stop_speech_button.disabled = true
 	speech_controls.add_child(speak_button)
 	speech_controls.add_child(stop_speech_button)
@@ -1214,23 +1229,22 @@ func _render_coach() -> void:
 	var coach: Dictionary = row_coach if row_coach is Dictionary else {}
 	var course: Dictionary = report.get("coach", {})
 	var viewing_retry_line: bool = line_kind in ["retry_candidate", "retry_best"] and not _retry_reply.is_empty()
-	var dialogue: String = str(coach.get("dialogue", "분석을 마치면 이 국면에서 무엇을 배울 수 있는지 함께 살펴볼게."))
+	var dialogue: String = str(coach.get("dialogue", "I'm checking this move and the opponent's reply."))
 	avatar.mood = str(coach.get("mood", "encourage"))
 	if viewing_retry_line:
-		dialogue = str(_retry_reply.get("message", "")) + "\n다시 두기에서 새로 분석한 응수야. 네가 고른 수와 새 추천 수순을 번갈아 살펴보자."
+		dialogue = str(_retry_reply.get("message", ""))
 		avatar.mood = "think"
 	if _coach_overview:
-		dialogue = str(course.get("summary", "아직 한 판의 분석을 기다리고 있어. 분석 시작을 눌러 줘."))
+		dialogue = str(course.get("summary", "Start the analysis to find the key moments."))
 		avatar.mood = "think"
 	if _walkthrough_active:
-		dialogue = "다음 배움까지 실제로 둔 수를 따라가 보자. 백과 흑이 어떤 생각으로 응수했는지 살펴봐."
+		dialogue = "Following the moves actually played to the next key moment."
 		avatar.mood = "think"
 	if retry_active:
-		dialogue = str(coach.get("hint", "상대의 위협부터 확인해 보자. 체크나 잡히는 기물이 있는지 살펴봐.")) if _retry_hint else "이번에는 정답을 가려 둘게. 네가 이 차례를 맡는다면 어떤 수를 두겠어?"
+		dialogue = str(coach.get("hint", "Check for threats against the king and pieces that can be captured.")) if _retry_hint else "Your turn: find a move, then check the opponent's strongest reply."
 		avatar.mood = "think" if _retry_reply.is_empty() else ("celebrate" if _retry_reply.get("verdict") in ["recommended", "good"] else "encourage")
 	coach_dialogue.text = dialogue
-	if _speech_owned and dialogue != _speech_text:
-		_stop_speech()
+	_schedule_speech()
 	coach_overview_button.text = "이 국면 이야기" if _coach_overview else "한 판 총평"
 	coach_overview_button.disabled = retry_active
 	var lessons: Array = _lesson_plies()
@@ -1272,38 +1286,111 @@ func _render_coach() -> void:
 
 
 func _setup_voice() -> void:
-	_korean_voice = ""
+	_english_voice = ""
 	if DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
-		var voices: PackedStringArray = DisplayServer.tts_get_voices_for_language("ko")
+		var voices: PackedStringArray = DisplayServer.tts_get_voices_for_language("en")
 		if not voices.is_empty():
-			_korean_voice = voices[0]
-	speak_button.disabled = _korean_voice.is_empty()
-	speak_button.text = "한국어 음성 없음" if _korean_voice.is_empty() else "음성 듣기"
-	speak_button.tooltip_text = "이 컴퓨터에 설치된 한국어 음성이 필요합니다. 글로 된 코칭은 그대로 사용할 수 있습니다." if _korean_voice.is_empty() else "버튼을 누를 때만 현재 설명을 컴퓨터의 한국어 음성으로 읽습니다."
+			_english_voice = voices[0]
+	_render_speech_controls()
+
+
+func _render_speech_controls() -> void:
+	if not is_instance_valid(speak_button):
+		return
+	speak_button.disabled = _english_voice.is_empty()
+	speak_button.set_pressed_no_signal(_speech_enabled and not _english_voice.is_empty())
+	speak_button.text = "영어 음성 없음" if _english_voice.is_empty() else ("음성 켜짐" if _speech_enabled else "음성 꺼짐")
+	speak_button.tooltip_text = "이 컴퓨터에 설치된 영어 음성이 필요합니다. 글로 된 코칭은 그대로 사용할 수 있습니다." if _english_voice.is_empty() else "수를 넘기면 컴퓨터의 영어 음성으로 설명을 읽습니다. 눌러서 켜거나 끌 수 있습니다."
+	stop_speech_button.disabled = not _speech_owned and _speech_pending_key.is_empty()
+
+
+func _toggle_speech() -> void:
+	if _english_voice.is_empty():
+		return
+	_speech_enabled = not _speech_enabled
+	_stop_speech()
+	if _speech_enabled:
+		_speech_last_key = ""
+		_schedule_speech()
+	_render_speech_controls()
+
+
+func _spoken_coach_text() -> String:
+	# Only use text already revealed in the current card. Never read hidden best moves.
+	if retry_active and not _retry_reply.is_empty():
+		return str(_retry_reply.get("message", coach_dialogue.text))
+	return coach_dialogue.text
+
+
+func _speech_context_key() -> String:
+	var mode: String = "overview" if _coach_overview else ("retry" if retry_active else line_kind)
+	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, mode, show_after, _retry_reply.get("uci", "") if retry_active else "", _spoken_coach_text()])
+
+
+func _can_speak() -> bool:
+	return is_visible_in_tree() and _speech_enabled and not _english_voice.is_empty() and not busy and not _walkthrough_active and not _retry_in_flight and not _spoken_coach_text().is_empty()
+
+
+func _schedule_speech() -> void:
+	if not _can_speak():
+		_stop_speech()
+		return
+	var key: String = _speech_context_key()
+	if key == _speech_pending_key:
+		return
+	if key == _speech_last_key:
+		if not _speech_pending_key.is_empty():
+			_stop_speech()
+		return
+	_stop_speech()
+	_speech_pending_key = key
+	speech_timer.start()
+	_render_speech_controls()
 
 
 func _speak_coach() -> void:
-	if not visible or _korean_voice.is_empty() or coach_dialogue.text.is_empty():
+	if not _can_speak() or _speech_pending_key.is_empty() or _speech_pending_key != _speech_context_key():
+		_stop_speech()
 		return
-	_stop_speech()
-	_speech_text = coach_dialogue.text
+	_speech_last_key = _speech_pending_key
+	_speech_pending_key = ""
+	_speech_text = _spoken_coach_text()
 	_speech_owned = true
-	DisplayServer.tts_speak(_speech_text, _korean_voice)
-	stop_speech_button.disabled = false
+	_voice_speak(_speech_text, _english_voice)
+	_render_speech_controls()
+
+
+func _stop_current_speech() -> void:
+	_speech_last_key = _speech_context_key()
+	_stop_speech()
 
 
 func _stop_speech() -> void:
+	if is_instance_valid(speech_timer):
+		speech_timer.stop()
+	_speech_pending_key = ""
 	if _speech_owned:
-		DisplayServer.tts_stop()
+		_voice_stop()
 	_speech_owned = false
 	_speech_text = ""
-	if is_instance_valid(stop_speech_button):
-		stop_speech_button.disabled = true
+	_render_speech_controls()
 
 
 func _poll_speech() -> void:
-	if _speech_owned and (not visible or not DisplayServer.tts_is_speaking()):
+	if _speech_owned and (not is_visible_in_tree() or not _voice_is_speaking()):
 		_stop_speech()
+
+
+func _voice_speak(text: String, voice: String) -> void:
+	DisplayServer.tts_speak(text, voice)
+
+
+func _voice_stop() -> void:
+	DisplayServer.tts_stop()
+
+
+func _voice_is_speaking() -> bool:
+	return DisplayServer.tts_is_speaking()
 
 
 func _score(value: Variant) -> String:

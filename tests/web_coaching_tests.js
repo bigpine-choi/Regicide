@@ -96,6 +96,7 @@ function browser(options={}) {
     badges(){return get("coaching-board").children.flatMap((cell)=>cell.children).filter((child)=>child.classList.contains("coaching-move-badge"));},
     async clickSquare(name){get("coaching-board").dispatch("click",{target:ui.square(name)});await flush();},
     async replayStep(){const item=[...timeouts.entries()].find(([,value])=>value.ms===650);if(!item)return false;timeouts.delete(item[0]);item[1].callback();await flush();return true;},
+    async voiceStep(){const item=[...timeouts.entries()].find(([,value])=>value.ms===300);if(!item)return false;timeouts.delete(item[0]);item[1].callback();await flush();return true;},
     async replayAll(){for(let i=0;i<20;i++)if(!await ui.replayStep())return;throw new Error("replay did not finish");}};
   ui.open=async(extra={})=>{
     void ui.api.enter(extra.library===true);await flush();
@@ -453,7 +454,7 @@ test("Rook uses server dialogue and highlights evidence only at its matching pos
 test("positive lesson navigation follows the actual game with neutral transit guidance",async()=>{
   const ui=browser(),report=taughtSnapshot();report.moves[2].classification="good";report.moves[2].coach.dialogue="이 수가 좋았어요.";
   await ui.start(report);await ui.click("coach-lesson-next");
-  assert.match(ui.get("coach-dialogue").textContent,/실제 수순을 함께/);
+  assert.match(ui.get("coach-dialogue").textContent,/moves actually played/);
   assert.equal(ui.get("coach-evidence").hidden,true);
   assert.equal(ui.get("coach-retry").disabled,true);
   await ui.click("coach-retry");assert.equal(ui.get("coach-retry-panel").hidden,true);
@@ -681,27 +682,81 @@ test("retry is unavailable for running or unanalyzed rows and keyboard input use
   await pending.start(report);await pending.click("coach-retry");assert.equal(pending.get("coach-retry-panel").hidden,true);
 });
 
-test("speech is absent-safe, rejects remote/non-Korean voices and never autoplays",async()=>{
+test("automatic speech is absent-safe and selects only local English voices",async()=>{
   const absent=browser();await absent.start(taughtSnapshot());await absent.click("coach-speak");assert.equal(absent.get("coach-speak").disabled,true);
-  const ui=browser({voices:[{name:"Remote Korean",lang:"ko-KR",localService:false},{name:"English",lang:"en-US",localService:true}]});
+  const ui=browser({voices:[{name:"Remote English",lang:"en-US",localService:false},{name:"Korean",lang:"ko-KR",localService:true}]});
   await ui.start(taughtSnapshot());await ui.click("coach-speak");
   assert.equal(ui.speech.spoken.length,0);assert.equal(ui.get("coach-speak").disabled,true);
-  ui.speech.voices.push({name:"Local Korean",lang:"ko",localService:true});ui.speech.listeners.voiceschanged();
+  ui.speech.voices.push({name:"Local English",lang:"en",localService:true});ui.speech.listeners.voiceschanged();
   assert.equal(ui.get("coach-speak").disabled,false);assert.equal(ui.speech.spoken.length,0);
-  await ui.click("coach-speak");assert.equal(ui.speech.spoken.length,1);assert.equal(ui.speech.spoken[0].voice.localService,true);
-  assert.equal(ui.speech.spoken[0].lang,"ko");assert.equal(ui.speech.spoken[0].text,ui.get("coach-dialogue").textContent);
+  await ui.voiceStep();assert.equal(ui.speech.spoken.length,1);assert.equal(ui.speech.spoken[0].voice.localService,true);
+  assert.equal(ui.speech.spoken[0].lang,"en");assert.equal(ui.speech.spoken[0].text,ui.get("coach-dialogue").textContent);
   await ui.click("coach-speech-stop");assert.equal(ui.speech.cancelled,1);assert.equal(ui.get("coach-speech-stop").hidden,true);
+  ui.api.render();assert.equal(await ui.voiceStep(),false,"explicit stop does not restart on polling");
 });
 
-test("speech stops on retry, navigation and hidden document, and stale callbacks do not stop new speech",async()=>{
-  const ui=browser({voices:[{name:"Local Korean",lang:"ko-KR",localService:true}]});
-  await ui.start(taughtSnapshot());await ui.click("coach-speak");const old=ui.speech.spoken[0];
+test("automatic speech stops on retry, navigation and hidden document; stale callbacks cannot stop newer speech",async()=>{
+  const ui=browser({voices:[{name:"Local English",lang:"en-US",localService:true}]});
+  await ui.start(taughtSnapshot());await ui.voiceStep();const old=ui.speech.spoken[0];
   await ui.click("coach-retry");assert.equal(ui.speech.cancelled,1);
-  await ui.click("coach-speak");assert.equal(ui.speech.spoken.length,2);assert.doesNotMatch(ui.speech.spoken[1].text,/O-O/);
+  await ui.voiceStep();assert.equal(ui.speech.spoken.length,2);assert.doesNotMatch(ui.speech.spoken[1].text,/O-O/);
   old.onend();assert.equal(ui.get("coach-speech-stop").hidden,false);
   ui.api.seek(1);assert.equal(ui.speech.cancelled,2);
-  await ui.click("coach-speak");ui.document.hidden=true;ui.lifecycle["document-visibilitychange"]();
+  await ui.voiceStep();ui.document.hidden=true;ui.lifecycle["document-visibilitychange"]();
   assert.equal(ui.speech.cancelled,3);assert.equal(ui.get("coach-speech-stop").hidden,true);
+  ui.api.render();assert.equal(await ui.voiceStep(),false,"hidden document never reschedules speech");
+});
+
+test("300ms speech debounce keeps only the latest scene and ignores repeated renders and late timers",async()=>{
+  const ui=browser({voices:[{name:"English",lang:"en-GB",localService:true}]});await ui.start(taughtSnapshot());
+  const oldTimer=[...ui.timeouts.values()].find((item)=>item.ms===300).callback;
+  ui.api.seek(2);ui.api.seek(3);ui.api.render();ui.api.render();
+  assert.equal([...ui.timeouts.values()].filter((item)=>item.ms===300).length,1);
+  assert.equal(ui.speech.spoken.length,0);await ui.voiceStep();
+  assert.equal(ui.speech.spoken.length,1);assert.equal(ui.speech.spoken[0].text,ui.get("coach-dialogue").textContent);
+  oldTimer();assert.equal(ui.speech.cancelled,0,"obsolete timer cannot cancel latest voice");
+  ui.api.render();assert.equal(await ui.voiceStep(),false);assert.equal(ui.speech.spoken.length,1);
+  ui.api.seek(2);await ui.voiceStep();assert.equal(ui.speech.spoken.length,2,"a different move is read even when its wording is identical");
+});
+
+test("voice toggle defaults on, mutes navigation and resumes only the current scene",async()=>{
+  const ui=browser({voices:[{name:"English",lang:"en-US",localService:true}]});await ui.start(taughtSnapshot());
+  assert.equal(ui.get("coach-speak").attributes["aria-pressed"],"true");
+  await ui.click("coach-speak");assert.equal(ui.get("coach-speak").textContent,"음성 꺼짐");
+  ui.api.seek(3);ui.api.render();assert.equal(await ui.voiceStep(),false);
+  await ui.click("coach-speak");assert.equal(ui.get("coach-speak").textContent,"음성 켜짐");
+  await ui.voiceStep();assert.equal(ui.speech.spoken.length,1);
+  await ui.click("coach-speak");assert.equal(ui.speech.cancelled,1);
+});
+
+test("actual-game walkthrough remains quiet until its target, including paused intermediate frames",async()=>{
+  const ui=browser({voices:[{name:"English",lang:"en-US",localService:true}]});await ui.start(taughtSnapshot());await ui.voiceStep();
+  ui.api.choosePly(3,true,true);assert.equal(ui.speech.cancelled,1);
+  assert.equal(await ui.voiceStep(),false);await ui.replayStep();assert.equal(await ui.voiceStep(),false);
+  await ui.click("coaching-context-pause");ui.api.render();assert.equal(await ui.voiceStep(),false);
+  await ui.click("coaching-context-pause");await ui.replayAll();await ui.voiceStep();
+  assert.equal(ui.speech.spoken.length,2);assert.doesNotMatch(ui.speech.spoken[1].text,/Following the moves/);
+});
+
+test("overview, variation and retry feedback are read from revealed content only",async()=>{
+  const ui=browser({voices:[{name:"English",lang:"en-US",localService:true}]});await ui.start(taughtSnapshot());await ui.voiceStep();
+  ui.get("coach-overview-box").open=true;ui.get("coach-overview-box").dispatch("toggle");await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,ui.get("coach-overview").textContent);
+  ui.api.seek(2);await ui.voiceStep();assert.equal(ui.speech.spoken.at(-1).text,ui.get("coach-dialogue").textContent);
+  ui.api.seek(1);ui.api.showLine("best");await ui.voiceStep();const count=ui.speech.spoken.length;
+  ui.api.showLine("played");await ui.voiceStep();assert.equal(ui.speech.spoken.length,count+1);
+  await ui.click("coach-retry");await ui.voiceStep();assert.doesNotMatch(ui.speech.spoken.at(-1).text,/O-O/);
+  await ui.clickSquare("e1");await ui.clickSquare("g1");assert.equal(await ui.voiceStep(),false,"submitted move waits for feedback");
+  const result=retryResult({message:"Your move keeps the king safe. Check the next reply."});await ui.finish(result);await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,result.message);
+});
+
+test("pending speech is invalidated on return, pagehide, source replacement and hidden documents",async()=>{
+  for(const operation of [ui=>ui.api.leave(),ui=>ui.lifecycle.pagehide(),ui=>ui.api.loadSource("saved-game"),ui=>{ui.document.hidden=true;ui.lifecycle["document-visibilitychange"]();}]) {
+    const ui=browser({voices:[{name:"English",lang:"en-US",localService:true}]});await ui.start(taughtSnapshot());
+    const pending=[...ui.timeouts.values()].find((item)=>item.ms===300).callback;
+    void operation(ui);await flush();pending();await ui.voiceStep();assert.equal(ui.speech.spoken.length,0);
+  }
 });
 
 test("actual move badges use safe class fallbacks and reserve brilliant symbol for explicit validated metadata",async()=>{

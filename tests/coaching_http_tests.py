@@ -135,7 +135,7 @@ def main():
             checks.append("real engine identifies g4 allowing mate and Qh4#; every returned variation replays legally")
             checks.append("move badges are anchored to the actual destination/FEN; optional alternatives exclude the actual move and !! requires exact comparison evidence")
             checks.append("incremental progress was observed" if partial_seen else "completed report was observed")
-            assert report["coach"]["name"] == "루크"
+            assert report["coach"]["name"] == "Rook"
             lessons = report["coach"]["lesson_plies"]
             assert lessons == sorted(set(lessons)) and 1 <= len(lessons) <= 5
             assert 3 in lessons
@@ -143,6 +143,8 @@ def main():
                 position = chess.Board(row["fen_before"])
                 assert set(row["retry_legal_moves"]) == {move.uci() for move in position.legal_moves}
                 assert row["coach"]["dialogue"] and row["coach"]["hint"]
+                assert len(row["coach"]["dialogue"].split()) <= 40
+                assert row["coach"]["dialogue"].isascii()
                 for evidence in row["coach"]["evidence"]:
                     assert evidence["line"] in ("best", "played")
                     branch = row[evidence["line"]]
