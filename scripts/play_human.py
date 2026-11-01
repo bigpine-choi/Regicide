@@ -18,6 +18,7 @@ import tempfile
 import threading
 import uuid
 import webbrowser
+from urllib.parse import parse_qs, urlsplit
 
 import chess
 import chess.engine
@@ -26,6 +27,8 @@ import chess.pgn
 from play_game import source_version
 from game_archive import GameArchive, default_game_directory
 from move_hints import MoveHints
+from analysis_session import AnalysisSession, AnalysisRevisionError
+from opening_explorer import OpeningExplorer
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
@@ -588,10 +591,13 @@ class HumanGame:
 class HumanServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, game, port=0):
+    def __init__(self, game, port=0, *, analysis=None, opening_explorer=None):
         super().__init__(("127.0.0.1", port), HumanHandler)
         self.game = game
         self.archive = GameArchive(game.save_dir)
+        self.analysis = analysis if analysis is not None else AnalysisSession()
+        self.opening_explorer = (opening_explorer if opening_explorer is not None
+                                 else OpeningExplorer(game.save_dir))
         self.token = secrets.token_urlsafe(32)
         self.origin = f"http://127.0.0.1:{self.server_address[1]}"
 
@@ -637,6 +643,12 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.game.evaluation())
         elif self.path == "/api/hint":
             self._send(200, self.server.game.hint())
+        elif self.path == "/api/analysis":
+            self._send(200, self.server.analysis.state())
+        elif self.path == "/api/analysis/pgn":
+            self._send(200, self.server.analysis.pgn(), "application/x-chess-pgn; charset=utf-8")
+        elif self.path.partition("?")[0] == "/api/opening-stats":
+            self._opening_stats_get()
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
         elif self.path == "/api/games" or self.path.startswith("/api/games/"):
@@ -650,6 +662,47 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, contents, mime + "; charset=utf-8")
         else:
             self._send(404, {"error": "페이지를 찾을 수 없습니다."})
+
+    def _opening_stats_get(self):
+        # Position-only lookup, separate from the live-game/search lock. No
+        # player names, PGNs, paths or service token cross this API boundary.
+        try:
+            if len(self.path) > 1024:
+                raise ValueError("통계 요청이 너무 깁니다.")
+            query = parse_qs(urlsplit(self.path).query, keep_blank_values=True,
+                             strict_parsing=True, max_num_fields=4)
+            if set(query) - {"fen", "source"} or len(query.get("fen", [])) != 1:
+                raise ValueError("통계 포지션을 지정해 주세요.")
+            if len(query.get("source", ["local"])) != 1:
+                raise ValueError("통계 출처는 하나만 선택해 주세요.")
+            fen = query["fen"][0]
+            source = query.get("source", ["local"])[0]
+            if source not in ("local", "masters"):
+                raise ValueError("지원하지 않는 통계 출처입니다.")
+            # The analysis model and explorer use the same valid standard
+            # position policy; reject bad input rather than querying a service.
+            AnalysisSession._board_from_fen(fen)
+        except (ValueError, UnicodeError):
+            self._send(400, {"error": "올바른 통계 포지션과 출처를 지정해 주세요."})
+            return
+        try:
+            self._send(200, self.server.opening_explorer.query(fen, source))
+        except Exception:
+            # Service failures must never reveal credentials or affect play.
+            self._send(503, {"error": "통계를 불러오지 못했습니다. 분석은 계속할 수 있습니다."})
+
+    def _analysis_post(self, data):
+        analysis = self.server.analysis
+        revision = data.get("revision")
+        actions = {"/api/analysis/start": lambda: analysis.start(data.get("fen")),
+                   "/api/analysis/move": lambda: analysis.move(data.get("move"), revision),
+                   "/api/analysis/undo": lambda: analysis.undo(revision),
+                   "/api/analysis/redo": lambda: analysis.redo(revision),
+                   "/api/analysis/reset": lambda: analysis.reset(revision)}
+        if self.path not in actions:
+            self._send(404, {"error": "지원하지 않는 분석 요청입니다."})
+            return
+        self._send(200, actions[self.path]())
 
     def _archive_get(self):
         archive = self.server.archive
@@ -690,6 +743,9 @@ class HumanHandler(BaseHTTPRequestHandler):
                 raise ValueError("올바른 요청이 필요합니다.")
             revision = data.get("revision")
             game = self.server.game
+            if self.path.startswith("/api/analysis/"):
+                self._analysis_post(data)
+                return
             if self.path == "/api/hint":
                 try:
                     self._send(200, game.set_hint_enabled(data.get("enabled")))
@@ -712,14 +768,20 @@ class HumanHandler(BaseHTTPRequestHandler):
                 self._send(200, actions[self.path]())
             else:
                 self._send(404, {"error": "지원하지 않는 요청입니다."})
+        except AnalysisRevisionError as exc:
+            self._send(409, {"error": str(exc), "state": self.server.analysis.state()})
         except RevisionError as exc:
             self._send(409, {"error": str(exc), "state": self.server.game.state()})
         except (ValueError, UnicodeError) as exc:
-            self._send(400, {"error": str(exc), "state": self.server.game.state()})
+            position = (self.server.analysis.state() if self.path.startswith("/api/analysis/")
+                        else self.server.game.state())
+            self._send(400, {"error": str(exc), "state": position})
         except Exception as exc:
             print(f"request failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+            position = (self.server.analysis.state() if self.path.startswith("/api/analysis/")
+                        else self.server.game.state())
             self._send(500, {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요.",
-                             "state": self.server.game.state()})
+                             "state": position})
 
 
 def main():
@@ -784,3 +846,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

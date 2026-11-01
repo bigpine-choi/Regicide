@@ -6,6 +6,7 @@ signal state_changed(revision: int)
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const ChessBoard = preload("res://scripts/chess_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
+const OpeningStatsPanel = preload("res://scripts/opening_stats_panel.gd")
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -27,6 +28,14 @@ var review_moves: Array = []
 var review_ply: int = 0
 var review_summary: Dictionary = {}
 var review_pgn: String = ""
+var analysis_mode: bool = false
+var analysis_state: Dictionary = {}
+var _analysis_selected_square: String = ""
+var _analysis_pending_promotions: Array[String] = []
+var opening_stats: Dictionary = {}
+var stats_in_flight: bool = false
+var _stats_key: String = ""
+var _stats_epoch: int = 0
 var _live_selected_square: String = ""
 var _live_pending_promotions: Array[String] = []
 var _library_games: Array = []
@@ -94,6 +103,17 @@ var evaluation_timer: Timer
 var hint_http: HTTPRequest
 var hint_control_http: HTTPRequest
 var hint_timer: Timer
+var analysis_button: Button
+var analysis_controls: VBoxContainer
+var analysis_undo_button: Button
+var analysis_redo_button: Button
+var analysis_reset_button: Button
+var analysis_return_button: Button
+var opening_stats_panel: OpeningStatsPanel
+var stats_http: HTTPRequest
+var stats_timer: Timer
+var session_note: Label
+var footer_notice: Label
 
 
 func _ready() -> void:
@@ -188,9 +208,9 @@ func _build_ui() -> void:
 	engine_label = _label("엔진 연결 준비 중", 15, "9bd7ca")
 	engine_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header_right.add_child(engine_label)
-	var local_label := _label("LOCAL PRACTICE  ·  기보 자동 저장", 12, "8197aa")
-	local_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	header_right.add_child(local_label)
+	session_note = _label("LOCAL PRACTICE  ·  기보 자동 저장", 12, "8197aa")
+	session_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_right.add_child(session_note)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 20)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -285,6 +305,12 @@ func _build_ui() -> void:
 	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
 	sidebar.add_child(library_button)
 	_build_review_controls(sidebar)
+	_build_analysis_controls(sidebar)
+	opening_stats_panel = OpeningStatsPanel.new()
+	sidebar.add_child(opening_stats_panel)
+	opening_stats_panel.source_changed.connect(_on_stats_source_changed)
+	opening_stats_panel.refresh_requested.connect(_on_stats_source_changed)
+	opening_stats_panel.visible = false
 	sidebar.add_child(HSeparator.new())
 	var settings := GridContainer.new()
 	live_settings = settings
@@ -336,9 +362,9 @@ func _build_ui() -> void:
 	sidebar.add_child(move_history)
 	save_button = _button("기보 파일로 저장 (PGN)", _on_save_pressed)
 	sidebar.add_child(save_button)
-	var footer := _label("시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n반복·50수 청구 무승부는 자동 처리합니다.", 12, "8197aa")
-	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page.add_child(footer)
+	footer_notice = _label("시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n반복·50수 청구 무승부는 자동 처리합니다.", 12, "8197aa")
+	footer_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	page.add_child(footer_notice)
 	http = HTTPRequest.new()
 	http.timeout = 15.0
 	add_child(http)
@@ -363,6 +389,14 @@ func _build_ui() -> void:
 	hint_timer.timeout.connect(_poll_hint)
 	add_child(hint_timer)
 	hint_timer.start()
+	stats_http = HTTPRequest.new()
+	stats_http.timeout = 12.0
+	add_child(stats_http)
+	stats_timer = Timer.new()
+	stats_timer.one_shot = true
+	stats_timer.wait_time = 0.35
+	stats_timer.timeout.connect(_poll_opening_stats)
+	add_child(stats_timer)
 	save_dialog = FileDialog.new()
 	save_dialog.title = "기보 저장"
 	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
@@ -373,6 +407,26 @@ func _build_ui() -> void:
 	save_dialog.file_selected.connect(_save_pgn_file)
 	add_child(save_dialog)
 	_build_library_dialog()
+
+
+func _build_analysis_controls(parent: VBoxContainer) -> void:
+	analysis_button = _button("이 위치에서 분석", _start_analysis)
+	analysis_button.name = "StartPositionAnalysis"
+	analysis_button.tooltip_text = "현재 위치에서 백과 흑의 수를 자유롭게 두고 오프닝 통계를 확인합니다."
+	parent.add_child(analysis_button)
+	analysis_controls = VBoxContainer.new()
+	analysis_controls.name = "PositionAnalysisControls"
+	parent.add_child(analysis_controls)
+	var navigation := HBoxContainer.new()
+	analysis_controls.add_child(navigation)
+	analysis_undo_button = _button("한 수 무르기", _analysis_mutate.bind("/api/analysis/undo"))
+	analysis_redo_button = _button("다시 두기", _analysis_mutate.bind("/api/analysis/redo"))
+	navigation.add_child(analysis_undo_button)
+	navigation.add_child(analysis_redo_button)
+	analysis_reset_button = _button("처음 배치에서 분석", _analysis_mutate.bind("/api/analysis/reset"))
+	analysis_controls.add_child(analysis_reset_button)
+	analysis_return_button = _button("분석 끝내기 · 이전 화면으로", _exit_analysis)
+	analysis_controls.add_child(analysis_return_button)
 
 
 func _build_review_controls(parent: VBoxContainer) -> void:
@@ -620,7 +674,134 @@ func _open_selected_record() -> void:
 	_render()
 
 
+func _start_analysis() -> void:
+	if request_in_flight or closing or analysis_mode or backend_url.is_empty() or state.is_empty() or state.get("handicap_mode", false):
+		return
+	request_in_flight = true
+	error_message = ""
+	var fen := str(_display_state().get("fen", ""))
+	_notice_message = ""
+	_render()
+	var response: Dictionary = await _send_request("/api/analysis/start", {"fen": fen})
+	request_in_flight = false
+	if closing:
+		return
+	if response.get("ok", false) and response.get("data", {}).get("analysis_mode", false):
+		_analysis_selected_square = board_model.selected_square
+		_analysis_pending_promotions = board_model.pending_promotions.duplicate()
+		analysis_mode = true
+		_clear_hint()
+		accept_analysis_state(response.data)
+	else:
+		error_message = str(response.get("error", "분석을 시작하지 못했습니다."))
+	_render()
+
+
+func accept_analysis_state(next: Dictionary) -> void:
+	if not analysis_mode or not next.get("analysis_mode", false):
+		return
+	analysis_state = next.duplicate(true)
+	board_model.selected_square = ""
+	board_model.pending_promotions.clear()
+	board_model.apply_state(analysis_state)
+	_render()
+
+
+func _analysis_mutate(path: String, payload: Dictionary = {}) -> void:
+	if request_in_flight or closing or not analysis_mode or analysis_state.is_empty() or backend_url.is_empty():
+		return
+	request_in_flight = true
+	error_message = ""
+	payload["revision"] = int(analysis_state.get("revision", 0))
+	_notice_message = ""
+	_render()
+	var response: Dictionary = await _send_request(path, payload)
+	request_in_flight = false
+	if closing or not analysis_mode:
+		return
+	if response.get("ok", false):
+		accept_analysis_state(response.data)
+	else:
+		var current: Variant = response.get("state", {})
+		if current is Dictionary and current.get("analysis_mode", false):
+			accept_analysis_state(current)
+		error_message = str(response.get("error", "분석 요청을 처리하지 못했습니다."))
+	_render()
+
+
+func _exit_analysis() -> void:
+	if not analysis_mode or request_in_flight or closing:
+		return
+	analysis_mode = false
+	analysis_state.clear()
+	board_model.selected_square = _analysis_selected_square
+	board_model.pending_promotions = _analysis_pending_promotions.duplicate()
+	board_model.apply_state(_display_state())
+	_notice_message = "분석을 마치고 이전 화면으로 돌아왔습니다."
+	_render()
+
+
+func _stats_available() -> bool:
+	return (analysis_mode or review_mode) and not closing and not _display_state().is_empty()
+
+
+func _on_stats_source_changed() -> void:
+	_stats_key = ""
+	_sync_opening_stats()
+
+
+func _sync_opening_stats() -> void:
+	if opening_stats_panel == null or stats_timer == null:
+		return
+	opening_stats_panel.visible = _stats_available()
+	var key := ""
+	if _stats_available():
+		key = str(_display_state().get("fen", "")) + "|" + opening_stats_panel.selected_source()
+	if key == _stats_key:
+		return
+	_stats_key = key
+	_stats_epoch += 1
+	opening_stats.clear()
+	stats_timer.stop()
+	if not key.is_empty():
+		opening_stats_panel.show_loading()
+		if not offline_mode and not backend_url.is_empty():
+			stats_timer.start()
+
+
+func accept_opening_stats(value: Dictionary, requested_key: String, epoch: int) -> bool:
+	if not _stats_available() or epoch != _stats_epoch or requested_key != _stats_key \
+		or str(value.get("fen", "")) != str(_display_state().get("fen", "")) \
+		or str(value.get("source", "")) != opening_stats_panel.selected_source():
+		return false
+	opening_stats = value.duplicate(true)
+	opening_stats_panel.present(opening_stats)
+	return true
+
+
+func _poll_opening_stats() -> void:
+	if stats_in_flight or offline_mode or not _stats_available() or backend_url.is_empty():
+		return
+	stats_in_flight = true
+	var key := _stats_key
+	var epoch := _stats_epoch
+	var fen := str(_display_state().get("fen", ""))
+	var source: String = opening_stats_panel.selected_source()
+	var response: Dictionary = await _send_request("/api/opening-stats?fen=" + fen.uri_encode() + "&source=" + source, null, stats_http)
+	stats_in_flight = false
+	if response.get("ok", false):
+		accept_opening_stats(response.data, key, epoch)
+	else:
+		accept_opening_stats({"fen": fen, "source": source, "status": "unavailable",
+			"message": "통계 서버에 연결할 수 없습니다. 분석 착수는 계속할 수 있습니다."}, key, epoch)
+	# A newer position may have replaced a pending timer while this request waited.
+	if epoch != _stats_epoch and _stats_available() and not closing:
+		stats_timer.start(0.01)
+
+
 func _display_state() -> Dictionary:
+	if analysis_mode:
+		return analysis_state
 	if not review_mode or review_frames.is_empty():
 		return state
 	var shown: Dictionary = review_frames[review_ply].duplicate(true)
@@ -698,7 +879,7 @@ func accept_state(next: Dictionary) -> void:
 		evaluation.clear()
 	if not _evaluation_matches(hint, state) or not _hint_position_available():
 		_clear_hint()
-	if not review_mode:
+	if not review_mode and not analysis_mode:
 		board_model.apply_state(state)
 	_render()
 	state_changed.emit(int(state.get("revision", 0)))
@@ -713,7 +894,7 @@ func _evaluation_matches(value: Dictionary, position: Dictionary) -> bool:
 
 func accept_evaluation(value: Dictionary) -> bool:
 	# Both a move and a new game can finish before an older GET callback.
-	if review_mode or closing or not _evaluation_matches(value, state):
+	if (review_mode or analysis_mode) or closing or not _evaluation_matches(value, state):
 		return false
 	evaluation = value.duplicate(true)
 	_render_evaluation()
@@ -721,13 +902,13 @@ func accept_evaluation(value: Dictionary) -> bool:
 
 
 func _poll_evaluation() -> void:
-	if evaluation_in_flight or offline_mode or review_mode or closing or backend_url.is_empty() or state.is_empty():
+	if evaluation_in_flight or offline_mode or (review_mode or analysis_mode) or closing or backend_url.is_empty() or state.is_empty():
 		return
 	evaluation_in_flight = true
 	var requested_position: Dictionary = state.duplicate(true)
 	var response: Dictionary = await _send_request("/api/evaluation", null, evaluation_http)
 	evaluation_in_flight = false
-	if review_mode or closing or not _evaluation_matches(requested_position, state):
+	if (review_mode or analysis_mode) or closing or not _evaluation_matches(requested_position, state):
 		return
 	if response.get("ok", false):
 		accept_evaluation(response.data)
@@ -743,7 +924,9 @@ func _render_evaluation() -> void:
 		return
 	var shown: Dictionary = _display_state()
 	var presented: Dictionary = {"status": "waiting"}
-	if review_mode:
+	if analysis_mode:
+		presented = {"status": "unavailable", "message": "분석 모드 · 오른쪽에서 실제 기보 통계를 확인하세요."}
+	elif review_mode:
 		# Older records contain no analysis. A live score must not leak into replay.
 		presented = {"status": "unavailable", "message": "이 기보 위치에는 저장된 평가값이 없습니다."}
 		var saved: Variant = shown.get("evaluation")
@@ -761,7 +944,7 @@ func _render_evaluation() -> void:
 
 
 func _hint_position_available() -> bool:
-	return not review_mode and not closing and not request_in_flight and not engine_thinking \
+	return not (review_mode or analysis_mode) and not closing and not request_in_flight and not engine_thinking \
 		and not state.is_empty() and state.get("human_to_move", false) \
 		and not state.get("handicap_mode", false) and state.get("result", "*") == "*" \
 		and state.get("error") == null and not state.get("legal_moves", []).is_empty()
@@ -791,7 +974,7 @@ func accept_hint(value: Dictionary) -> bool:
 
 
 func _on_hint_pressed() -> void:
-	if closing or review_mode or state.is_empty() or backend_url.is_empty():
+	if closing or (review_mode or analysis_mode) or state.is_empty() or backend_url.is_empty():
 		return
 	hint_enabled = not hint_enabled
 	_hint_toggle_version += 1
@@ -830,7 +1013,7 @@ func _flush_hint_toggle() -> void:
 
 func _poll_hint() -> void:
 	if not hint_enabled or hint_in_flight or hint_control_in_flight or offline_mode \
-		or closing or review_mode or backend_url.is_empty() or state.is_empty():
+		or closing or (review_mode or analysis_mode) or backend_url.is_empty() or state.is_empty():
 		return
 	hint_in_flight = true
 	var epoch: int = _hint_epoch
@@ -838,7 +1021,7 @@ func _poll_hint() -> void:
 	var response: Dictionary = await _send_request("/api/hint", null, hint_http)
 	hint_in_flight = false
 	if epoch != _hint_epoch or not hint_enabled or not _evaluation_matches(position, state) \
-		or review_mode or closing:
+		or (review_mode or analysis_mode) or closing:
 		return
 	if response.get("ok", false):
 		# Keep a failed toggle visible until it is successfully retried.
@@ -854,11 +1037,11 @@ func _render_hint() -> void:
 		return
 	hint_button.text = "추천 수: 켬" if hint_enabled else "추천 수: 끔"
 	# Deliberately independent of request_in_flight and engine_thinking.
-	hint_button.disabled = closing or review_mode or state.is_empty() or backend_url.is_empty()
-	hint_summary.visible = hint_enabled and not review_mode
-	hint_detail.visible = hint_enabled and not review_mode
+	hint_button.disabled = closing or (review_mode or analysis_mode) or state.is_empty() or backend_url.is_empty()
+	hint_summary.visible = hint_enabled and not (review_mode or analysis_mode)
+	hint_detail.visible = hint_enabled and not (review_mode or analysis_mode)
 	board.hint_move = ""
-	if not hint_enabled or review_mode:
+	if not hint_enabled or (review_mode or analysis_mode):
 		hint_summary.text = ""
 		hint_detail.text = ""
 	elif not _hint_connection_error.is_empty():
@@ -905,7 +1088,7 @@ func _handle_response(response: Dictionary) -> bool:
 
 
 func _connect_backend() -> void:
-	if request_in_flight or backend_url.is_empty() or closing or review_mode:
+	if request_in_flight or backend_url.is_empty() or closing or (review_mode or analysis_mode):
 		return
 	request_in_flight = true
 	error_message = ""
@@ -917,7 +1100,7 @@ func _connect_backend() -> void:
 
 
 func _mutate(path: String, payload: Dictionary = {}) -> void:
-	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
+	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or (review_mode or analysis_mode):
 		return
 	request_in_flight = true
 	error_message = ""
@@ -935,7 +1118,7 @@ func _mutate(path: String, payload: Dictionary = {}) -> void:
 
 
 func _play_engine_if_needed() -> void:
-	if closing or review_mode or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
+	if closing or (review_mode or analysis_mode) or state.get("handicap_mode", false) or not state.get("engine_to_move", false) or state.get("result", "*") != "*" or state.get("error") != null:
 		return
 	engine_thinking = true
 	_clear_hint()
@@ -968,7 +1151,7 @@ func _on_square_pressed(square: String) -> void:
 		return
 	var candidates: Array[String] = []
 	if not board_model.selected_square.is_empty():
-		for move in state.get("legal_moves", []):
+		for move in _display_state().get("legal_moves", []):
 			if str(move).begins_with(board_model.selected_square + square):
 				candidates.append(str(move))
 	if candidates.size() > 1 or (candidates.size() == 1 and candidates[0].length() == 5):
@@ -979,7 +1162,7 @@ func _on_square_pressed(square: String) -> void:
 		_submit_selected_move(candidates[0])
 		return
 	board_model.selected_square = ""
-	for move in state.get("legal_moves", []):
+	for move in _display_state().get("legal_moves", []):
 		if str(move).begins_with(square):
 			board_model.selected_square = square
 			break
@@ -987,7 +1170,7 @@ func _on_square_pressed(square: String) -> void:
 
 
 func _on_promotion_pressed(kind: String) -> void:
-	if review_mode:
+	if review_mode and not analysis_mode:
 		return
 	for move in board_model.pending_promotions:
 		if move.ends_with(kind):
@@ -996,10 +1179,15 @@ func _on_promotion_pressed(kind: String) -> void:
 
 
 func _can_select_move() -> bool:
+	if analysis_mode:
+		return analysis_state.get("human_to_move", false)
 	return not review_mode and (state.get("human_to_move", false) or state.get("handicap_mode", false))
 
 
 func _submit_selected_move(move: String) -> void:
+	if analysis_mode:
+		_analysis_mutate("/api/analysis/move", {"move": move})
+		return
 	_mutate("/api/forced-move" if state.get("handicap_mode", false) else "/api/move", {"move": move})
 
 
@@ -1008,7 +1196,7 @@ func _on_drag_requested(from_square: String, to_square: String) -> void:
 		return
 	# Re-select the logical origin even when pressing an already selected piece
 	# toggled its click selection off. A flipped view still supplies the same UCI.
-	for move in state.get("legal_moves", []):
+	for move in _display_state().get("legal_moves", []):
 		if str(move).begins_with(from_square):
 			board_model.selected_square = from_square
 			_on_square_pressed(to_square)
@@ -1049,14 +1237,14 @@ func _on_resign_pressed() -> void:
 func _on_save_pressed() -> void:
 	if request_in_flight or state.is_empty() or closing or backend_url.is_empty() or state.get("handicap_mode", false):
 		return
-	if review_mode:
+	if review_mode and not analysis_mode:
 		_pending_pgn = review_pgn
 		save_dialog.current_file = "Regicide-" + str(review_summary.get("game_id", "record")) + ".pgn"
 		save_dialog.popup_centered_ratio(0.75)
 		return
 	request_in_flight = true
 	_render()
-	var response: Dictionary = await _send_request("/api/pgn")
+	var response: Dictionary = await _send_request("/api/analysis/pgn" if analysis_mode else "/api/pgn")
 	request_in_flight = false
 	if response.get("ok", false):
 		_pending_pgn = response.pgn
@@ -1088,6 +1276,16 @@ func _render() -> void:
 	board.queue_redraw()
 	_render_evaluation()
 	_render_hint()
+	_sync_opening_stats()
+	if analysis_mode:
+		session_note.text = "POSITION ANALYSIS  ·  PGN으로 저장"
+		footer_notice.text = "백·흑을 자유롭게 두고 수순을 살펴보세요.\n분석 수순은 PGN으로 저장하면 보관할 수 있습니다."
+	elif review_mode:
+		session_note.text = "GAME REPLAY  ·  원본 기보 보존"
+		footer_notice.text = "원본 기보를 한 수씩 다시 봅니다. 이 위치에서 분석을 시작할 수 있습니다."
+	else:
+		session_note.text = "LOCAL PRACTICE  ·  기보 자동 저장"
+		footer_notice.text = "시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n반복·50수 청구 무승부는 자동 처리합니다."
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = false
 	var human_color: String = str(shown.get("human_color", "white"))
@@ -1101,23 +1299,31 @@ func _render() -> void:
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
-	var enabled: bool = ready and not request_in_flight and not review_mode
+	var browsing: bool = review_mode or analysis_mode
+	var enabled: bool = ready and not request_in_flight and not browsing
 	var replacing: bool = state.get("handicap_mode", false)
-	live_settings.visible = not review_mode
-	live_actions.visible = not review_mode
-	handicap_section.visible = not review_mode
-	new_button.visible = not review_mode
+	live_settings.visible = not browsing
+	live_actions.visible = not browsing
+	handicap_section.visible = not browsing
+	new_button.visible = not browsing
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
 	time_option.disabled = not enabled or replacing
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
-	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and review_pgn.is_empty())
-	save_button.text = "이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)"
-	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing or review_mode
-	refresh_button.visible = not review_mode and (not error_message.is_empty() or state.is_empty())
-	library_button.disabled = request_in_flight or backend_url.is_empty() or closing or replacing
-	review_controls.visible = review_mode
+	save_button.disabled = not ready or request_in_flight or replacing or (review_mode and not analysis_mode and review_pgn.is_empty())
+	save_button.text = "분석 기보 저장 (PGN)" if analysis_mode else ("이 기보 파일로 저장 (PGN)" if review_mode else "기보 파일로 저장 (PGN)")
+	refresh_button.disabled = request_in_flight or backend_url.is_empty() or closing or browsing
+	refresh_button.visible = not browsing and (not error_message.is_empty() or state.is_empty())
+	library_button.disabled = request_in_flight or backend_url.is_empty() or closing or replacing or analysis_mode
+	review_controls.visible = review_mode and not analysis_mode
+	analysis_button.visible = not analysis_mode
+	analysis_button.disabled = request_in_flight or not ready or backend_url.is_empty() or replacing
+	analysis_controls.visible = analysis_mode
+	analysis_undo_button.disabled = request_in_flight or not shown.get("can_undo", false)
+	analysis_redo_button.disabled = request_in_flight or not shown.get("can_redo", false)
+	analysis_reset_button.disabled = request_in_flight or closing
+	analysis_return_button.disabled = request_in_flight or closing
 	if review_mode:
 		review_position_label.text = "%d / %d수 · %s" % [review_ply, review_moves.size(), "시작 배치" if review_ply == 0 else str(review_moves[review_ply - 1].get("san", ""))]
 		review_first_button.disabled = review_ply == 0
@@ -1129,8 +1335,11 @@ func _render() -> void:
 	error_label.text = error_message if not error_message.is_empty() else str(state.get("error", "") if state.get("error") != null else "")
 	error_label.visible = not error_label.text.is_empty()
 	if closing:
-		status_label.text = "대국을 저장하고 종료합니다"
-		status_detail.text = "진행한 수는 자동 저장돼 있습니다."
+		status_label.text = "Regicide를 종료합니다" if analysis_mode else "대국을 저장하고 종료합니다"
+		status_detail.text = "분석 수순은 PGN으로 저장한 내용만 보관됩니다." if analysis_mode else "진행한 수는 자동 저장돼 있습니다."
+	elif analysis_mode:
+		status_label.text = str(shown.get("status", "자유 분석"))
+		status_detail.text = "백·흑의 수를 직접 두세요. 매 수마다 기보 통계가 갱신됩니다.\n분석 수순을 보관하려면 PGN으로 저장하세요."
 	elif review_mode:
 		status_label.text = "기보 다시 보기 · 읽기 전용"
 		status_detail.text = _record_description(review_summary) + "\n처음·이전·다음·끝으로 수순을 살펴보세요."
@@ -1155,7 +1364,7 @@ func _render() -> void:
 			status_detail.text = "당신은 %s · 한 수에 %s초 생각합니다." % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
-	promotion_panel.visible = not review_mode and not board_model.pending_promotions.is_empty()
+	promotion_panel.visible = (analysis_mode or not review_mode) and not board_model.pending_promotions.is_empty()
 	for kind in promotion_buttons:
 		var available := false
 		for move in board_model.pending_promotions:
@@ -1167,9 +1376,12 @@ func _render() -> void:
 
 func _player_text(color_name: String, human_color: String) -> String:
 	var text := "백" if color_name == "white" else "흑"
-	text += "  ·  당신" if color_name == human_color else "  ·  Regicide"
+	if analysis_mode:
+		text += "  ·  분석"
+	else:
+		text += "  ·  당신" if color_name == human_color else "  ·  Regicide"
 	var shown: Dictionary = _display_state()
-	if shown.get("result", "*") == "*" and shown.get("turn", "") == color_name:
+	if (analysis_mode or shown.get("result", "*") == "*") and shown.get("turn", "") == color_name:
 		text += "   ● 차례"
 	return text
 
@@ -1213,7 +1425,18 @@ func _render_history() -> void:
 	var moves: Array = _display_state().get("moves", [])
 	move_count.text = "%d수" % moves.size()
 	var contents := ""
-	if moves.is_empty():
+	if analysis_mode and not moves.is_empty():
+		# A study can begin with Black to move on move 42. Preserve that numbering.
+		var fields := str(analysis_state.get("root_fen", analysis_state.get("initial_fen", ""))).split(" ", false)
+		var first_black: int = 1 if fields.size() > 1 and fields[1] == "b" else 0
+		var first_number: int = maxi(1, fields[5].to_int()) if fields.size() > 5 else 1
+		contents = "[table=2]"
+		for index in range(moves.size()):
+			var number: int = first_number + (index + first_black) / 2
+			var suffix := "..." if (index + first_black) % 2 == 1 else "."
+			contents += "[cell][color=#8197aa]%d%s  [/color][/cell][cell]%s[/cell]" % [number, suffix, str(moves[index].get("san", ""))]
+		contents += "[/table]"
+	elif moves.is_empty():
 		contents = "[color=#8197aa]시작 배치입니다. 다음 수를 눌러 살펴보세요.[/color]" if review_mode else "[color=#8197aa]첫 수를 기다리고 있습니다.[/color]"
 	else:
 		contents = "[table=3]"
@@ -1268,3 +1491,4 @@ func _capture_if_requested() -> void:
 			var destination: String = args[index + 1]
 			DirAccess.make_dir_recursive_absolute(destination.get_base_dir())
 			image.save_png(destination)
+

@@ -15,6 +15,9 @@ jobs:
       - run: cmake --build build --config Release
       - run: ctest --test-dir build -C Release --output-on-failure
       - run: python -m pip install -r requirements-test.txt
+      - run: python -m unittest discover -s tests -p opening_explorer_tests.py
+      - run: python -m unittest discover -s tests -p analysis_session_tests.py
+      - run: python -m unittest discover -s tests -p opening_stats_http_tests.py
       - run: python -m pip install -r requirements-learning.txt
       - run: python tests/learning_data_tests.py
       - run: python tests/neural_training_tests.py
@@ -129,4 +132,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/hint_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/opening_stats_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/opening_stats_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
