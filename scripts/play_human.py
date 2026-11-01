@@ -36,6 +36,8 @@ from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "web/human-play"
+LIVE_EVALUATION_MIN_MS = 3000
+CLASSICAL_ACTIVITY_ID = "classical_activity_v1"
 
 
 def runtime_evaluation(binary, explicit_model=None, learning_state=None, classical=False):
@@ -84,6 +86,7 @@ class HumanGame:
         self.neural_adopted_generation = neural_adopted_generation
         self.neural_evaluation_mode = "neural_champion" if neural_adopted_generation else "neural_experimental"
         self.neural_sha256 = None
+        self.classical_evaluation_mode = "classical"
         self._model_snapshot = None
         if self.neural_model:
             # One immutable session copy is shared by opponent and advice
@@ -120,6 +123,25 @@ class HumanGame:
                 lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
             evaluation_engine_factory = configured(evaluation_engine_factory or (
                 lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
+        else:
+            def configured_classical(factory):
+                def start(binary):
+                    engine = factory(binary)
+                    # Application policy only: native/research defaults remain
+                    # unchanged, and older binaries keep their existing path.
+                    if "UsePieceActivity" in (getattr(engine, "options", None) or {}):
+                        try:
+                            engine.configure({"UsePieceActivity": True})
+                        except Exception:
+                            engine.close()
+                            raise
+                    return engine
+                return start
+            self._factory = configured_classical(self._factory)
+            hint_engine_factory = configured_classical(hint_engine_factory or (
+                lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
+            evaluation_engine_factory = configured_classical(evaluation_engine_factory or (
+                lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
         self._lock = threading.RLock()
         self._opening_guide = OpeningGuideCache()
         # Evaluation polling must not wait for the game lock held by a search.
@@ -145,7 +167,7 @@ class HumanGame:
             self.analysis = AnalysisSession(self.binary, self.engine_name, hint_engine_factory)
             self.coaching = CoachingSession(self.binary, self.engine_name, self.save_dir,
                                             hint_engine_factory,
-                                            evaluation_id=self.neural_sha256 or "classical")
+                                            evaluation_id=self.neural_sha256 or self.classical_evaluation_mode)
             self._reset("white", 1000)
         except Exception:
             self.close()
@@ -155,6 +177,9 @@ class HumanGame:
         if self._engine is None:
             self._engine = self._factory(self.binary)
         self.engine_name = self._engine.id.get("name", "Regicide")
+        if not self.neural_model:
+            self.classical_evaluation_mode = (CLASSICAL_ACTIVITY_ID if
+                "UsePieceActivity" in (getattr(self._engine, "options", None) or {}) else "classical")
         if self.neural_model:
             self.engine_name += " · 검증 통과 학습 평가" if self.neural_adopted_generation else " · 학습 평가 실험"
 
@@ -241,6 +266,9 @@ class HumanGame:
             # lock. A late worker cannot attach a score to a newer position.
             _, current = self._live_evaluation.snapshot_with_evaluation()
             if all(current.get(key) == snapshot.get(key) for key in ("game_id", "revision", "fen")):
+                # The helper's limit is independent from the opponent's move
+                # time. Keep the captured budget attached to this generation.
+                current["budget_ms"] = snapshot["budget_ms"]
                 return current
             return snapshot
 
@@ -256,13 +284,16 @@ class HumanGame:
         result, termination = self._outcome()
         active = result == "*" and not self.error and self._game_open and not self._closing
         evaluating = active and self._handicap_backup is None and self.board.turn == self.human_color
+        evaluation_budget_ms = (max(LIVE_EVALUATION_MIN_MS, self.movetime_ms) if evaluating else
+                                self._active_movetime_ms or self.movetime_ms)
         snapshot = {"game_id": self.game_id, "revision": self.revision,
                     "fen": self.board.fen(en_passant="fen"),
                     "turn": "white" if self.board.turn else "black",
                     "status": "unavailable" if self.error else "searching" if evaluating else status,
                     "cp": None, "mate": None, "depth": None, "bound": None,
                     "white_share": None, "result": result, "winner": None,
-                    "source": "search", "source_fen": None}
+                    "source": "search", "source_fen": None,
+                    "budget_ms": evaluation_budget_ms if active and self._handicap_backup is None else None}
         if result != "*":
             winner = "white" if result == "1-0" else "black" if result == "0-1" else None
             snapshot.update(status="terminal", source="result", winner=winner,
@@ -275,9 +306,11 @@ class HumanGame:
             # The helper evaluates the current human position independently of
             # advice. On the engine's turn its move search already evaluates
             # the same position, so cancel the helper instead of duplicating it.
+            # Stream shallow results immediately, then refine with a budget of
+            # at least 3s; this never extends the opponent's move limit.
             self._live_evaluation.update_position(
                 game_id=self.game_id, revision=self.revision, board=self.board,
-                human_color=self.human_color, movetime_ms=self.movetime_ms,
+                human_color=self.human_color, movetime_ms=evaluation_budget_ms,
                 engine_name=self.engine_name, active=evaluating)
             if not self._closing:
                 self._live_evaluation.set_enabled(evaluating)
@@ -385,6 +418,7 @@ class HumanGame:
                                "active_extra_budget_ms": self._active_extra_budget_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
+                               "evaluation": self.classical_evaluation_mode,
                                **({"evaluation": self.neural_evaluation_mode, "model_sha256": self.neural_sha256,
                                    "model_file": self.neural_model.name,
                                    **({"model_generation": self.neural_adopted_generation}
@@ -443,7 +477,7 @@ class HumanGame:
                                                     forced=bool(self._forced_plies))
                                 if self.opening_variety_enabled else None)
                 memo_key = (opening_variety.memo_key(board, movetime_ms, self.binary_sha256,
-                                                     self.neural_sha256 or "classical",
+                                                     self.neural_sha256 or self.classical_evaluation_mode,
                                                      seed=self._opening_seed,
                                                      catalog_id=opening_plan["catalog_commit"])
                             if opening_plan and opening_plan["eligible"] else None)
@@ -776,6 +810,7 @@ class HumanGame:
                                  "Black": self.engine_name if self.human_color else "Human",
                                  "Result": result, "EngineMoveTimeMS": str(self.movetime_ms),
                                  "EngineSHA256": self.binary_sha256,
+                                 "Evaluation": self.classical_evaluation_mode,
                                  "InterfaceSourceCommit": self.source["commit"] or "unknown",
                                  "DrawPolicy": "always claim available threefold/50-move draws",
                                  "Termination": "unterminated" if result == "*" else "normal",
@@ -1104,7 +1139,7 @@ class HumanHandler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--binary", type=Path, default=ROOT / ("build/regicide.exe" if sys.platform == "win32" else "build/regicide"))
+    parser.add_argument("--binary", type=Path, default=None)
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--save-dir", type=Path, help="Override the persistent personal game library")
     parser.add_argument("--neural-model", type=Path, help="Optional experimental learned evaluation model")
@@ -1121,6 +1156,11 @@ def main():
         parser.error("port must be in 0..65535")
     if args.desktop_client and not args.startup_file:
         parser.error("--desktop-client requires --startup-file")
+    if args.binary is None:
+        # Resolve only an implicit launch: an explicit binary remains usable
+        # even when the optional next-launch manifest needs repair.
+        from runtime_engine import resolve_runtime_engine
+        args.binary = resolve_runtime_engine(ROOT)
     save_dir = args.save_dir if args.save_dir is not None else default_game_directory()
     imports = list(args.import_games)
     if args.save_dir is None:

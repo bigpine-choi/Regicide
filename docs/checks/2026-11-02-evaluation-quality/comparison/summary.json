@@ -1,0 +1,120 @@
+{
+  "positions": 22,
+  "reference_threshold_cp": 100,
+  "score_units": "No cross-engine CP error or Elo computed",
+  "engines": {
+    "baseline": {
+      "complete": 22,
+      "same_reference_first_move": 6,
+      "direction_categories": {
+        "reference_not_clear": 13,
+        "same_direction": 9
+      },
+      "mate_visibility_reference_own": {
+        "False/False": 22
+      },
+      "mean_wall_ms": 983.2557727272728,
+      "mean_completed_depth": 7,
+      "resource_comparison": "equal requested baseline/candidate time"
+    },
+    "candidate": {
+      "complete": 22,
+      "same_reference_first_move": 10,
+      "direction_categories": {
+        "reference_not_clear": 13,
+        "same_direction": 9
+      },
+      "mate_visibility_reference_own": {
+        "False/False": 22
+      },
+      "mean_wall_ms": 983.3980909090909,
+      "mean_completed_depth": 6.863636363636363,
+      "resource_comparison": "equal requested baseline/candidate time"
+    },
+    "baseline_refined": {
+      "complete": 22,
+      "same_reference_first_move": 8,
+      "direction_categories": {
+        "reference_not_clear": 13,
+        "same_direction": 9
+      },
+      "mate_visibility_reference_own": {
+        "False/False": 22
+      },
+      "mean_wall_ms": 2983.005318181818,
+      "mean_completed_depth": 7.863636363636363,
+      "resource_comparison": "Longer search; compare core at the same budget and time refinement separately"
+    },
+    "candidate_refined": {
+      "complete": 22,
+      "same_reference_first_move": 11,
+      "direction_categories": {
+        "reference_not_clear": 13,
+        "same_direction": 8,
+        "neutral": 1
+      },
+      "mate_visibility_reference_own": {
+        "False/False": 22
+      },
+      "mean_wall_ms": 2983.199090909091,
+      "mean_completed_depth": 7.818181818181818,
+      "resource_comparison": "Longer search; compare core at the same budget and time refinement separately"
+    }
+  },
+  "changed_choice_confirmations": {
+    "core_short": {
+      "old": "baseline",
+      "new": "candidate",
+      "changed_positions": 9,
+      "finite": 9,
+      "reference_prefers_new_over_20cp": 5,
+      "reference_prefers_old_over_20cp": 1,
+      "within_20cp": 3,
+      "mean_new_minus_old_cp_mover": 26.333333333333332,
+      "worst_new_minus_old_cp_mover": -23,
+      "resource_comparison": "equal requested time",
+      "limits": "Separate finite same-reference restricted searches, potentially different completed depths; not proven regret or playing strength."
+    },
+    "core_refined": {
+      "old": "baseline_refined",
+      "new": "candidate_refined",
+      "changed_positions": 10,
+      "finite": 10,
+      "reference_prefers_new_over_20cp": 2,
+      "reference_prefers_old_over_20cp": 1,
+      "within_20cp": 7,
+      "mean_new_minus_old_cp_mover": 11.9,
+      "worst_new_minus_old_cp_mover": -23,
+      "resource_comparison": "equal requested time",
+      "limits": "Separate finite same-reference restricted searches, potentially different completed depths; not proven regret or playing strength."
+    },
+    "baseline_refinement": {
+      "old": "baseline",
+      "new": "baseline_refined",
+      "changed_positions": 5,
+      "finite": 5,
+      "reference_prefers_new_over_20cp": 3,
+      "reference_prefers_old_over_20cp": 0,
+      "within_20cp": 2,
+      "mean_new_minus_old_cp_mover": 27.4,
+      "worst_new_minus_old_cp_mover": -6,
+      "resource_comparison": "unequal: longer search budget",
+      "limits": "Separate finite same-reference restricted searches, potentially different completed depths; not proven regret or playing strength."
+    },
+    "candidate_refinement": {
+      "old": "candidate",
+      "new": "candidate_refined",
+      "changed_positions": 3,
+      "finite": 3,
+      "reference_prefers_new_over_20cp": 1,
+      "reference_prefers_old_over_20cp": 0,
+      "within_20cp": 2,
+      "mean_new_minus_old_cp_mover": 6.333333333333333,
+      "worst_new_minus_old_cp_mover": -7,
+      "resource_comparison": "unequal: longer search budget",
+      "limits": "Separate finite same-reference restricted searches, potentially different completed depths; not proven regret or playing strength."
+    }
+  },
+  "constrained_reference_queries": 27,
+  "inputs_unchanged": true
+}

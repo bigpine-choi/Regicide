@@ -119,6 +119,13 @@ try {
         $dependencyMessages | Out-File -LiteralPath $dependencyFile -Encoding utf8
         throw "체스 도구가 준비되지 않았습니다. .\.venv-tests\Scripts\python.exe -m pip install -r requirements-test.txt를 실행해 주세요. 자세한 기록: $dependencyFile"
     }
+    # A verified side-by-side engine is selected only for this new session.
+    # Running games retain their executable and are never stopped by updates.
+    $resolvedEngine = & $pythonExecutable (Join-Path $PSScriptRoot 'runtime_engine.py') --resolve
+    if ($LASTEXITCODE -ne 0 -or @($resolvedEngine).Count -ne 1) {
+        throw '설치된 체스 엔진을 확인하지 못했습니다. 엔진 선택 기록과 실행 파일을 확인해 주세요.'
+    }
+    $engineExecutable = [string]$resolvedEngine
     if (!(Test-Path -LiteralPath $engineExecutable -PathType Leaf)) {
         $buildFile = Join-Path $logDirectory ($runName + '.build.log')
         try {

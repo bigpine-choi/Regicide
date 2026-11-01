@@ -1,5 +1,7 @@
 # 자체 대국 엔진 v0.2 → v0.6.0
 
+2026-11-02에는 사람 차례의 실시간 형세 분석을 최소 3초로 확장하고, 기물 활동성 수식 평가를 `UsePieceActivity` 옵션으로 추가했다. 게임 앱은 지원되는 바이너리에서 이 항목을 켠다. UCI 기본값과 기존 모델의 기준 평가는 보존한다. [원리·호환성·비교 방법](EVALUATION_QUALITY.md)을 참고한다.
+
 현재 통합 개발본은 `0.7.0-dev`다. 기존 보정망의 `EvalFile`/`UseNeuralEvaluation` 계약을 유지하고 정수 NNUE는 `NeuralModelFile`/`UseNNUEEvaluation`로 선택한다. `--eval-file`과 `--nnue`는 별도 모델 계열이며 동시 활성화는 거절한다. [M1 통합 기록과 재현 명령](M1_INTEGRATION.md)을 참고한다. 기존 버전의 실행·실험 설명은 해당 시점의 기록이다.
 
 v0.3은 아래 첫 대국 엔진의 구조에 자체 위치 평가와 안정화 탐색을 추가한다. [추가 원리·옵션](SEARCH_IMPROVEMENTS.md)과 [고정 조건 비교 결과](experiments/2026-10-17-position-quiescence.md)를 함께 읽는다. 아래 기물 가치 예시는 기본 원리이며 현재 기본 평가는 위치 점수도 포함한다.

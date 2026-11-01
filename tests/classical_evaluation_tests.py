@@ -12,9 +12,11 @@ from pathlib import Path
 import random
 import subprocess
 import sys
+import tempfile
 import unittest
 
 import chess
+import chess.engine
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -22,6 +24,29 @@ import classical_evaluation as EVAL
 
 PROBE = None
 REPORT = None
+BINARY = None
+
+# Independently counted total (middlegame, endgame) terms. The corresponding
+# native test enumerates target squares rather than using python-chess attacks.
+ACTIVITY_COMPONENTS = [
+    ("7k/8/4p3/1P6/3N4/8/8/K7 w - - 0 1", (6, 4)),
+    ("6k1/8/3p4/8/8/3P4/2B5/6K1 w - - 0 1", (-9, -9)),
+    ("6k1/8/3p4/8/8/4P3/2B5/6K1 w - - 0 1", (6, 6)),
+    ("6k1/8/8/8/8/8/8/2B2BK1 w - - 0 1", (20, 30)),
+    ("6k1/8/8/8/8/8/8/2B1B1K1 w - - 0 1", (0, 0)),
+    ("6k1/3p4/8/8/8/8/3P4/3R2K1 w - - 0 1", (-4, -6)),
+    ("6k1/3p4/8/8/8/8/4P3/3R2K1 w - - 0 1", (18, 20)),
+    ("6k1/p7/8/8/8/8/4P3/3R2K1 w - - 0 1", (28, 27)),
+    ("6k1/8/8/8/Q7/8/8/K7 w - - 0 1", (6, 6)),
+    ("7k/8/8/3P4/8/8/8/K7 w - - 0 1", (0, 0)),
+]
+
+SPECIAL_SEQUENCES = [
+    ("r3k2r/pp3ppp/8/8/8/8/PP3PPP/R3K2R w KQkq - 0 1", "e1g1 e8c8"),
+    ("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", "e5d6 h8g8"),
+    ("4k3/P7/8/8/8/8/7p/4K3 w - - 0 1", "a7a8q e8f7 a8h8 h2h1n"),
+    ("1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7b8q e8f7"),
+]
 
 
 def fixtures():
@@ -42,7 +67,7 @@ def fixtures():
         "r3k2r/pp3ppp/8/8/8/6PP/PP3P2/R3K2R w KQkq - 0 1",
         "qqqqkqqq/pppppppp/8/8/8/8/5PPP/6K1 w - - 0 1",
         "7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1",
-    ]
+    ] + [fen for fen, _ in ACTIVITY_COMPONENTS]
 
 
 def legal_cases():
@@ -55,6 +80,13 @@ def legal_cases():
         mirror = board.mirror()
         cases.append((mirror.fen(en_passant="fen"), [], mirror))
     rng = random.Random(2026101901)
+    for fen, moves in SPECIAL_SEQUENCES:
+        board, history = chess.Board(fen), []
+        cases.append((fen, [], board.copy(stack=True)))
+        for move in moves.split():
+            board.push_uci(move)
+            history.append(move)
+            cases.append((fen, list(history), board.copy(stack=True)))
     for game_number in range(12):
         board, history = chess.Board(), []
         for ply in range(100):
@@ -72,7 +104,33 @@ class ClassicalBaselineTests(unittest.TestCase):
     def test_initial_symmetric_position_is_zero_for_all_switches(self):
         for shield in (False, True):
             for structure in (False, True):
-                self.assertEqual(EVAL.classical_cp_stm(chess.Board(), shield, structure), 0)
+                for activity in (False, True):
+                    self.assertEqual(EVAL.classical_cp_stm(chess.Board(), shield, structure, activity), 0)
+
+    def test_manual_activity_components_and_default_off_legacy_contract(self):
+        for fen, expected in ACTIVITY_COMPONENTS:
+            board = chess.Board(fen)
+            self.assertEqual(EVAL._activity_score(board), expected, fen)
+            self.assertEqual(EVAL._activity_score(board.mirror()), tuple(-value for value in expected), fen)
+            for shield in (False, True):
+                for structure in (False, True):
+                    self.assertEqual(EVAL.classical_cp_stm(board, shield, structure),
+                                     EVAL.classical_cp_stm(board, shield, structure, False))
+
+    def test_activity_follows_special_moves_and_undo_without_mutation(self):
+        for fen, moves in SPECIAL_SEQUENCES:
+            board = chess.Board(fen)
+            expected = [EVAL.classical_cp_stm(board, piece_activity=True)]
+            for move in moves.split():
+                board.push_uci(move)
+                state = (board.fen(en_passant="fen"), list(board.move_stack))
+                expected.append(EVAL.classical_cp_stm(board, piece_activity=True))
+                self.assertEqual(state, (board.fen(en_passant="fen"), list(board.move_stack)))
+            while board.move_stack:
+                board.pop()
+                expected.pop()
+                self.assertEqual(EVAL.classical_cp_stm(board, piece_activity=True), expected[-1])
+            self.assertEqual(board.fen(en_passant="fen"), fen)
 
     def test_signed_integer_truncation_matches_cpp_without_float_rounding(self):
         for numerator, expected in ((25, 1), (23, 0), (-25, -1), (-23, 0), (0, 0)):
@@ -123,13 +181,14 @@ class ClassicalBaselineTests(unittest.TestCase):
             board = chess.Board(fen)
             for shield in (False, True):
                 for structure in (False, True):
-                    score = EVAL.classical_cp_stm(board, shield, structure)
-                    self.assertEqual(EVAL.classical_cp_stm(board.mirror(), shield, structure), score)
-                    flipped = board.copy(stack=True)
-                    flipped.turn = not flipped.turn
-                    flipped.ep_square = None
-                    if flipped.is_valid():
-                        self.assertEqual(EVAL.classical_cp_stm(flipped, shield, structure), -score)
+                    for activity in (False, True):
+                        score = EVAL.classical_cp_stm(board, shield, structure, activity)
+                        self.assertEqual(EVAL.classical_cp_stm(board.mirror(), shield, structure, activity), score)
+                        flipped = board.copy(stack=True)
+                        flipped.turn = not flipped.turn
+                        flipped.ep_square = None
+                        if flipped.is_valid():
+                            self.assertEqual(EVAL.classical_cp_stm(flipped, shield, structure, activity), -score)
 
     def test_history_claim_rights_and_piece_state_are_unchanged(self):
         board = chess.Board()
@@ -157,25 +216,88 @@ class ClassicalBaselineTests(unittest.TestCase):
                 EVAL.classical_cp_stm(board)
         with self.assertRaises(ValueError):
             EVAL.classical_cp_stm(chess.Board(), 1)
+        with self.assertRaises(ValueError):
+            EVAL.classical_cp_stm(chess.Board(), piece_activity=1)
+
+    def test_uci_toggle_changes_only_classical_search_and_keeps_model_semantics(self):
+        if BINARY is None:
+            self.skipTest("pass --binary to validate UCI/search evaluator routing")
+        board = chess.Board("6k1/3p4/8/8/8/8/4P3/3R2K1 w - - 0 1")
+        root_move = chess.Move.from_uci("d1d3")
+        leaf = board.copy()
+        leaf.push(root_move)
+        with tempfile.TemporaryDirectory(prefix="regicide-activity-routing-") as directory:
+            models = {}
+            for version in (1, 2):
+                path = Path(directory) / f"zero-v{version}.txt"
+                header = f"REGICIDE_NN_V{version} 768 32 16 600" + (" 100" if version == 2 else "")
+                path.write_text(header + "\n" + "0 " * 25153 + "\n", encoding="ascii")
+                models[version] = path
+            with chess.engine.SimpleEngine.popen_uci([str(BINARY), "uci"], timeout=30) as engine:
+                self.assertIs(engine.options["UsePieceActivity"].default, False)
+                engine.configure({"UseQuiescence": False})
+
+                def score(activity):
+                    engine.configure({"UsePieceActivity": activity})
+                    result = engine.analyse(board, chess.engine.Limit(depth=1), root_moves=[root_move])
+                    self.assertEqual(result["pv"][0], root_move)
+                    return result["score"].white().score()
+
+                baseline, active = score(False), score(True)
+                self.assertEqual(baseline, -EVAL.classical_cp_stm(leaf))
+                self.assertEqual(active, -EVAL.classical_cp_stm(leaf, piece_activity=True))
+                self.assertNotEqual(active, baseline)
+                engine.configure({"UsePositionalEvaluation": False})
+                self.assertEqual(score(False), score(True), "material-only evaluation must ignore activity")
+                engine.configure({"UsePositionalEvaluation": True})
+                for version in (1, 2):
+                    engine.configure({"EvalFile": str(models[version]), "UseNeuralEvaluation": True})
+                    off, on = score(False), score(True)
+                    self.assertEqual(on, off, f"neural V{version} semantics changed with activity")
+                    if version == 2:
+                        self.assertEqual(on, baseline, "zero residual must retain its legacy classical baseline")
+                    engine.configure({"UseNeuralEvaluation": False})
+                engine.configure({"UseNNUEEvaluation": True})
+                for incremental in (False, True):
+                    engine.configure({"UseIncrementalNeuralEvaluation": incremental})
+                    self.assertEqual(score(False), score(True), "NNUE must ignore classical activity")
 
     def test_batched_native_static_parity_on_hundreds_of_new_legal_positions(self):
         if PROBE is None:
             self.skipTest("pass --probe or --binary for native C++ parity")
         cases = legal_cases()
         payload = "".join(fen + "\t" + " ".join(history) + "\n" for fen, history, _ in cases)
-        response = subprocess.run([str(PROBE)], input=payload, capture_output=True, text=True,
+        help_text = subprocess.run([str(PROBE), "--help"], capture_output=True, text=True,
+                                   check=True, timeout=30).stdout
+        activity_args = ["--piece-activity"] if "--piece-activity" in help_text else []
+        response = subprocess.run([str(PROBE), *activity_args], input=payload, capture_output=True, text=True,
                                   check=True, timeout=120)
         native = response.stdout.splitlines()
         self.assertEqual(len(native), len(cases))
+        activity_comparisons = 0
         for (fen, history, board), line in zip(cases, native):
             fields = line.split("\t")
-            self.assertEqual(len(fields), 13)
+            self.assertIn(len(fields), (13, 17))
             self.assertEqual(fields[0], board.fen(en_passant="fen"))
             for index, (shield, structure) in enumerate(((True, True), (True, False), (False, True), (False, False)), 3):
                 self.assertEqual(int(fields[index]), EVAL.classical_cp_stm(board, shield, structure),
                                  f"native/Python classical mismatch options={shield, structure} fen={board.fen()}")
+            if len(fields) == 17:
+                for index, (shield, structure) in enumerate(((True, True), (True, False), (False, True), (False, False)), 13):
+                    self.assertEqual(int(fields[index]), EVAL.classical_cp_stm(board, shield, structure, True),
+                                     f"native/Python activity mismatch options={shield, structure} fen={board.fen()}")
+                    activity_comparisons += 1
+        self.assertIn(activity_comparisons, (0, len(cases) * 4), "probe output mixed legacy and activity schemas")
+        if activity_args:
+            self.assertEqual(activity_comparisons, len(cases) * 4, "activity opt-in did not produce four extra scores")
+            legacy = subprocess.run([str(PROBE)], input=payload, capture_output=True, text=True,
+                                    check=True, timeout=120).stdout.splitlines()
+            self.assertEqual(legacy, ["\t".join(line.split("\t")[:13]) for line in native],
+                             "default probe must preserve the exact original thirteen-field schema")
+        option_count = 8 if activity_comparisons else 4
         result = {"schema": "regicide.classical-python-parity.v1", "status": "passed", "positions": len(cases),
-                  "option_pairs": 4, "comparisons": len(cases) * 4, "max_cp_difference": 0,
+                  "option_pairs": option_count, "comparisons": len(cases) * option_count,
+                  "activity_comparisons": activity_comparisons, "max_cp_difference": 0,
                   "probe_sha256": hashlib.sha256(PROBE.read_bytes()).hexdigest(),
                   "python_mirror_sha256": hashlib.sha256(Path(EVAL.__file__).read_bytes()).hexdigest(),
                   "input_sha256": hashlib.sha256(payload.encode("utf-8")).hexdigest(),
@@ -183,7 +305,7 @@ class ClassicalBaselineTests(unittest.TestCase):
         if REPORT:
             REPORT.parent.mkdir(parents=True, exist_ok=True)
             REPORT.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-        print(f"Python/classical C++ parity: {len(cases)} positions x 4 options, exact 0 cp difference", flush=True)
+        print(f"Python/classical C++ parity: {len(cases)} positions x {option_count} options, exact 0 cp difference", flush=True)
 
 
 if __name__ == "__main__":
@@ -192,6 +314,7 @@ if __name__ == "__main__":
     parser.add_argument("--binary", type=Path)
     parser.add_argument("--report", type=Path)
     args, remainder = parser.parse_known_args()
+    BINARY = args.binary.resolve(strict=True) if args.binary else None
     PROBE = args.probe
     if PROBE is None and args.binary:
         PROBE = args.binary.with_name("regicide_evaluation_probe" + args.binary.suffix)

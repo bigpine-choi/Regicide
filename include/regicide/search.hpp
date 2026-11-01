@@ -60,6 +60,7 @@ struct SearchOptions {
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
     bool king_pawn_shield = true; // Middlegame shelter, scaled by opposing pieces.
     bool pawn_structure = true; // Passed pawns, doubled files and isolated pawns.
+    bool piece_activity = false; // Research-only classical mobility, bishop pair and rook files.
     bool lmr = true; // Late N/B/R/Q quiet reduction; requires PVS and quiet ordering.
     // Optional immutable experimental model. Null preserves the classical path;
     // positional=false still explicitly selects material-only evaluation.

@@ -11,9 +11,12 @@ namespace regicide {
 // only to middlegame scores and scales with opposing non-pawn material. The
 // independent pawn-structure term rewards passed pawns and penalizes doubled
 // and isolated pawns, blended with the same game phase. Disabling pawn structure
-// preserves v0.5.5's evaluation; disabling both terms preserves v0.5.3's.
+// preserves v0.5.5's evaluation; disabling both terms preserves v0.5.3's,
+// provided the separate experimental piece-activity term is disabled (default).
+// Activity adds pawn-filtered pseudo-mobility, opposite-color bishop pairs and
+// rook files. It neither generates legal moves nor resolves pinned-piece safety.
 // Terminal results and draw claims belong to search.
 int evaluate_position(const Board& board, bool king_pawn_shield = true,
-                      bool pawn_structure = true);
+                      bool pawn_structure = true, bool piece_activity = false);
 
 } // namespace regicide

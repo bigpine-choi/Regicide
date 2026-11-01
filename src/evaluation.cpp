@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 
 namespace regicide {
@@ -67,6 +68,113 @@ struct PawnScore {
     int middlegame = 0;
     int endgame = 0;
 };
+
+struct ActivitySide {
+    std::uint64_t occupied = 0;
+    std::uint64_t pawn_attacks = 0;
+    unsigned bishop_colors = 0;
+};
+
+constexpr auto make_knight_attacks() {
+    std::array<std::uint64_t, 64> result{};
+    constexpr std::array<std::array<int, 2>, 8> offsets{{
+        {{1, 2}}, {{2, 1}}, {{2, -1}}, {{1, -2}},
+        {{-1, -2}}, {{-2, -1}}, {{-2, 1}}, {{-1, 2}}}};
+    for (int square = 0; square < 64; ++square) {
+        for (const auto& offset : offsets) {
+            const int file = square % 8 + offset[0];
+            const int rank = square / 8 + offset[1];
+            if (file >= 0 && file < 8 && rank >= 0 && rank < 8)
+                result[square] |= std::uint64_t{1} << (rank * 8 + file);
+        }
+    }
+    return result;
+}
+
+constexpr auto make_pawn_attacks() {
+    std::array<std::array<std::uint64_t, 64>, 2> result{};
+    for (int side = 0; side < 2; ++side) {
+        for (int square = 0; square < 64; ++square) {
+            const int rank = square / 8 + (side == 0 ? 1 : -1);
+            if (rank < 0 || rank >= 8) continue;
+            for (int delta : {-1, 1}) {
+                const int file = square % 8 + delta;
+                if (file >= 0 && file < 8)
+                    result[side][square] |= std::uint64_t{1} << (rank * 8 + file);
+            }
+        }
+    }
+    return result;
+}
+
+constexpr auto knight_attacks = make_knight_attacks();
+constexpr auto pawn_attacks = make_pawn_attacks();
+
+// This is bounded pseudo-mobility, not legal move generation: friendly pieces
+// and enemy pawn attacks are excluded, but pins and other enemy attacks are not.
+// A capturable enemy blocker counts once and stops a ray. Kings are not scored.
+int activity_mobility(const Position& position, int square, PieceKind kind,
+                      std::uint64_t excluded) {
+    if (kind == PieceKind::knight)
+        return std::popcount(knight_attacks[square] & ~excluded);
+    constexpr std::array<std::array<int, 2>, 8> directions{{
+        {{1, 1}}, {{1, -1}}, {{-1, 1}}, {{-1, -1}},
+        {{1, 0}}, {{-1, 0}}, {{0, 1}}, {{0, -1}}}};
+    const int begin = kind == PieceKind::rook ? 4 : 0;
+    const int end = kind == PieceKind::bishop ? 4 : 8;
+    int count = 0;
+    for (int direction = begin; direction < end; ++direction) {
+        const auto& step = directions[direction];
+        int file = square % 8 + step[0], rank = square / 8 + step[1];
+        while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+            const int target = rank * 8 + file;
+            count += (excluded & (std::uint64_t{1} << target)) == 0;
+            if (position.squares[target] != '.') break;
+            file += step[0];
+            rank += step[1];
+        }
+    }
+    return count;
+}
+
+struct ActivityScore {
+    int middlegame = 0;
+    int endgame = 0;
+};
+
+ActivityScore piece_activity_score(const Position& position,
+                                  const std::array<ActivitySide, 2>& sides,
+                                  const std::array<ShieldInfo, 2>& pawns) {
+    // Original conservative starting weights, not trained or imported weights.
+    constexpr std::array<int, 5> neutral{0, 4, 7, 7, 14};
+    constexpr std::array<int, 5> mg_weight{0, 3, 3, 2, 1};
+    constexpr std::array<int, 5> eg_weight{0, 2, 3, 3, 1};
+    ActivityScore result;
+    for (int side = 0; side < 2; ++side) {
+        // Two bishops on the same square color do not constitute the pair.
+        if (sides[side].bishop_colors == 3) {
+            const int sign = side == 0 ? 1 : -1;
+            result.middlegame += sign * 20;
+            result.endgame += sign * 30;
+        }
+    }
+    for (int square = 0; square < 64; ++square) {
+        const auto& info = piece_info[static_cast<unsigned char>(position.squares[square])];
+        if (info.kind < PieceKind::knight || info.kind > PieceKind::queen) continue;
+        const int side = info.is_white ? 0 : 1, sign = info.is_white ? 1 : -1;
+        const auto index = static_cast<std::size_t>(info.kind);
+        const auto excluded = sides[side].occupied | sides[1 - side].pawn_attacks;
+        const int mobility = activity_mobility(position, square, info.kind, excluded) - neutral[index];
+        result.middlegame += sign * mobility * mg_weight[index];
+        result.endgame += sign * mobility * eg_weight[index];
+        if (info.kind == PieceKind::rook && !pawns[side].pawn_ranks[square % 8]) {
+            const bool open = !pawns[1 - side].pawn_ranks[square % 8];
+            result.middlegame += sign * (open ? 18 : 10);
+            result.endgame += sign * (open ? 12 : 8);
+        }
+    }
+    return result;
+}
 
 struct PawnMaskInfo {
     std::int8_t doubled_middlegame = 0;
@@ -220,12 +328,14 @@ static_assert(sizeof(piece_info) + sizeof(position_bonuses) + sizeof(pawn_masks)
               sizeof(passed_middlegame) + sizeof(passed_endgame) <= 15 * 1024);
 } // namespace
 
-int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_structure) {
+int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_structure,
+                      bool piece_activity) {
     const auto& position = board.position();
     const int white_home = home_minors(position, true);
     const int black_home = home_minors(position, false);
     int material_score = 0, middlegame = 0, endgame = 0, phase = 0;
     std::array<ShieldInfo, 2> shields;
+    std::array<ActivitySide, 2> activity;
     for (int square = 0; square < 64; ++square) {
         const char piece = position.squares[square];
         if (piece == '.') continue;
@@ -239,9 +349,17 @@ int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_struc
         endgame += bonus.endgame;
         const int weight = info.phase;
         phase += weight;
-        if ((king_pawn_shield || pawn_structure) && info.kind == PieceKind::pawn) {
+        if ((king_pawn_shield || pawn_structure || piece_activity) && info.kind == PieceKind::pawn) {
             const int rank = is_white ? square / 8 : 7 - square / 8;
             shields[is_white ? 0 : 1].pawn_ranks[square % 8] |= 1U << rank;
+        }
+        if (piece_activity) {
+            const int side = is_white ? 0 : 1;
+            activity[side].occupied |= std::uint64_t{1} << square;
+            if (info.kind == PieceKind::pawn)
+                activity[side].pawn_attacks |= pawn_attacks[side][square];
+            if (info.kind == PieceKind::bishop)
+                activity[side].bishop_colors |= 1U << ((square / 8 + square % 8) % 2);
         }
         if (king_pawn_shield) {
             auto& shield = shields[is_white ? 0 : 1];
@@ -261,6 +379,11 @@ int evaluate_position(const Board& board, bool king_pawn_shield, bool pawn_struc
         const auto black = pawn_structure_score(position, shields[1], shields[0], false);
         middlegame += white.middlegame - black.middlegame;
         endgame += white.endgame - black.endgame;
+    }
+    if (piece_activity) {
+        const auto score = piece_activity_score(position, activity, shields);
+        middlegame += score.middlegame;
+        endgame += score.endgame;
     }
     // Clamp promotions above opening material. Blend the color differences
     // before integer division so reflected positions have exact antisymmetry.

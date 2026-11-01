@@ -4,6 +4,7 @@ This is a training baseline, not an independent chess engine or rule oracle.
 Formulas follow src/evaluation.cpp, including its phase blend and truncation
 towards zero. No neural-model import, search, board mutation or external weights.
 Static scores do not replace rule outcomes or draw-claim decisions.
+Experimental piece activity is opt-in; the default training baseline is unchanged.
 """
 
 import chess
@@ -91,11 +92,44 @@ def _pawn_score(board, own, enemy, color):
     return middlegame, endgame
 
 
-def classical_cp_stm(board, king_pawn_shield=True, pawn_structure=True):
-    """Return the unchanged classical cp score from the side-to-move view."""
+def _activity_score(board):
+    """Original tapered activity terms; python-chess supplies independent geometry.
+
+    Mobility counts pseudo-attacks excluding own pieces and enemy pawn attacks.
+    It does not test king safety, pins, or attacks by other enemy pieces.
+    """
+    pawn_attacks = {chess.WHITE: 0, chess.BLACK: 0}
+    for color in (chess.WHITE, chess.BLACK):
+        for square in board.pieces(chess.PAWN, color):
+            pawn_attacks[color] |= board.attacks_mask(square)
+    weights = {chess.KNIGHT: (4, 3, 2), chess.BISHOP: (7, 3, 3),
+               chess.ROOK: (7, 2, 3), chess.QUEEN: (14, 1, 1)}
+    middlegame = endgame = 0
+    for color in (chess.WHITE, chess.BLACK):
+        sign = 1 if color else -1
+        bishops = board.pieces_mask(chess.BISHOP, color)
+        if bishops & chess.BB_LIGHT_SQUARES and bishops & chess.BB_DARK_SQUARES:
+            middlegame += sign * 20
+            endgame += sign * 30
+        excluded = board.occupied_co[color] | pawn_attacks[not color]
+        for kind, (neutral, mg_weight, eg_weight) in weights.items():
+            for square in board.pieces(kind, color):
+                mobility = (board.attacks_mask(square) & ~excluded).bit_count() - neutral
+                middlegame += sign * mobility * mg_weight
+                endgame += sign * mobility * eg_weight
+                file_mask = chess.BB_FILES[chess.square_file(square)]
+                if kind == chess.ROOK and not board.pieces_mask(chess.PAWN, color) & file_mask:
+                    is_open = not board.pieces_mask(chess.PAWN, not color) & file_mask
+                    middlegame += sign * (18 if is_open else 10)
+                    endgame += sign * (12 if is_open else 8)
+    return middlegame, endgame
+
+
+def classical_cp_stm(board, king_pawn_shield=True, pawn_structure=True, piece_activity=False):
+    """Return classical cp from the side-to-move view; activity defaults off."""
     if not isinstance(board, chess.Board) or not board.is_valid() or board.chess960:
         raise ValueError("classical evaluation requires a valid standard chess board")
-    if type(king_pawn_shield) is not bool or type(pawn_structure) is not bool:
+    if any(type(flag) is not bool for flag in (king_pawn_shield, pawn_structure, piece_activity)):
         raise ValueError("evaluation switches must be booleans")
     homes = {color: _home_minors(board, color) for color in (chess.WHITE, chess.BLACK)}
     pawn_masks = {chess.WHITE: [0] * 8, chess.BLACK: [0] * 8}
@@ -122,6 +156,10 @@ def classical_cp_stm(board, king_pawn_shield=True, pawn_structure=True):
         black_mg, black_eg = _pawn_score(board, pawn_masks[chess.BLACK], pawn_masks[chess.WHITE], chess.BLACK)
         middlegame += white_mg - black_mg
         endgame += white_eg - black_eg
+    if piece_activity:
+        activity_mg, activity_eg = _activity_score(board)
+        middlegame += activity_mg
+        endgame += activity_eg
     phase = min(phase, FULL_PHASE)
     score = material + trunc_div(middlegame * phase + endgame * (FULL_PHASE - phase), FULL_PHASE)
     return score if board.turn else -score

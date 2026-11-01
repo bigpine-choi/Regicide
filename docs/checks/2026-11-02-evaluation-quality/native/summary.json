@@ -1,0 +1,79 @@
+{
+  "schema": "regicide.piece-activity-cost-and-regression.v1",
+  "cost": {
+    "positions": 42,
+    "evaluations_per_run": 1000000,
+    "warmups_per_run": 1000,
+    "alternating_order": true,
+    "modes": {
+      "classical_baseline": {
+        "runs": 6,
+        "median_ns_per_evaluation": 92.07495,
+        "min_ns_per_evaluation": 89.1208,
+        "max_ns_per_evaluation": 93.0923,
+        "checksum_including_1000_warmups": -279548816
+      },
+      "classical_activity": {
+        "runs": 6,
+        "median_ns_per_evaluation": 203.61015,
+        "min_ns_per_evaluation": 200.7649,
+        "max_ns_per_evaluation": 208.8078,
+        "checksum_including_1000_warmups": -270635438
+      }
+    },
+    "on_off_median_ratio": 2.2113522733381883,
+    "on_overhead_percent": 121.13522733381883,
+    "scope": "Static evaluator microbenchmark only; not search throughput, best-move accuracy, or Elo. No process affinity or external-load isolation."
+  },
+  "native_tests": {
+    "binaries": 10,
+    "groups": 206,
+    "assertions": 690964,
+    "failures": 0
+  },
+  "python_tests": {
+    "tests": 14,
+    "failures": 0,
+    "skipped": 0
+  },
+  "parity": {
+    "schema": "regicide.classical-python-parity.v1",
+    "status": "passed",
+    "positions": 457,
+    "option_pairs": 8,
+    "comparisons": 3656,
+    "activity_comparisons": 1828,
+    "max_cp_difference": 0,
+    "probe_sha256": "c16e39877f9cb0c53122ebc08747ff4a159b92cdf06008866bbb493cccaffc64",
+    "python_mirror_sha256": "c539e0a093ac2d4e68cf363a87faf6010de085c28668129e4ee704ac5c11e0d7",
+    "input_sha256": "6dc49c5756d8ebfc3e73a85659c7d22b4a6db00a075862944b48182c184d403e",
+    "provenance": "Self-authored fixtures plus deterministic random legal playouts; no reserved arena positions or labels"
+  },
+  "raw_log_sha256": {
+    "activity-cost.csv": "cdb4969ada7c8ea072545ee0a9904ecc7d2ff2c33fd0e2045d4cadffec34c377",
+    "activity-cost.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "python-classical.stderr.log": "616fdfda14ad20899adad49fa89280dc2eca013cef9a5457cc0adf75d8ad9807",
+    "python-classical.stdout.log": "b5922ac803d0cec605003991a801f2d967700cc2e3f5f1500912c0498c0def07",
+    "python-uci-debug.log": "6b8962cb22ddf61cb6978cce5a99465be99e2a961552878336c0d0adb54bb924",
+    "regicide_board_state_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_board_state_tests.stdout.log": "f5b2a4c8ee732e8ae399bcf638efd84aa10b165658fde782c42135ae88a8e4f9",
+    "regicide_evaluation_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_evaluation_tests.stdout.log": "a337fff7867ccd365ba758e103ecf976edfa9524a99e5e8a578b419dbec5beb4",
+    "regicide_leaf_observer_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_leaf_observer_tests.stdout.log": "53e3b105f0d4df0f3e93ab7552066561d9d36a58e9b939008d7b950a9b7c871f",
+    "regicide_neural_model_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_neural_model_tests.stdout.log": "6d6bb3a44800e6a147a0f392917b63cd0778c1c3361333ee2e47302574cdc2aa",
+    "regicide_neural_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_neural_tests.stdout.log": "b2803c78aa879a61b21368d0aa053701c0d4ef35641361e73eaa753f486e9242",
+    "regicide_nnue_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_nnue_tests.stdout.log": "2ee21ea911d09a63ceeb8188d3e7949c26b67d9590c37f1a73608b75edbc726f",
+    "regicide_search_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_search_tests.stdout.log": "41aa40996b34c106d4528d8431545532ec6569e142b01d334ec385b489fe347e",
+    "regicide_see_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_see_tests.stdout.log": "d89a7f96368fcc17ed90d6901f498277970e47d01cc5c89f44534a480a4d38ed",
+    "regicide_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_tests.stdout.log": "00100d12fe0ed3ad4af606036ba199d50c1cb643b2e6180d27f3b958bc952fd8",
+    "regicide_transposition_tests.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "regicide_transposition_tests.stdout.log": "83d3c903e06ec596fb8898dc363db0247e8299bf7ebd795ba0828b1fcf06a72d"
+  }
+}

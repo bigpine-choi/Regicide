@@ -236,7 +236,8 @@ int static_score(const Board& board, const SearchOptions& options,
     }
     return options.positional ? (options.neural ? options.neural->evaluate(
                board, options.king_pawn_shield, options.pawn_structure) :
-               evaluate_position(board, options.king_pawn_shield, options.pawn_structure)) :
+               evaluate_position(board, options.king_pawn_shield, options.pawn_structure,
+                                 options.piece_activity)) :
                evaluate_material(board);
 }
 

@@ -17,7 +17,8 @@
 // eval_shield_on_structure_on_cp, eval_shield_on_structure_off_cp,
 // eval_shield_off_structure_on_cp, eval_shield_off_structure_off_cp,
 // legal_count, in_check, claim_threefold_now, claim_fifty_moves_now,
-// outcome, repetitions.
+// outcome, repetitions. --piece-activity appends the four configurations above
+// with activity enabled; the default thirteen fields retain their legacy meaning.
 // Side is w/b; booleans are 0/1. Every score favors the side to move.
 // These are static observations of supplied positions, not searched-leaf values.
 // Static evaluation does not replace terminal outcomes or draw-claim decisions.
@@ -27,7 +28,7 @@ namespace {
 void help() {
     std::cout
         << "Regicide static evaluation diagnostic probe\n"
-           "Usage: regicide_evaluation_probe [--help]\n"
+           "Usage: regicide_evaluation_probe [--help | --piece-activity]\n"
            "stdin: initial six-field FEN<TAB>space-separated full UCI history\n"
            "Exactly one TAB is required. Empty history is allowed.\n"
            "Replays the full history with legal-move validation; earlier history\n"
@@ -38,6 +39,9 @@ void help() {
            "eval_shield_off_structure_on_cp\teval_shield_off_structure_off_cp\t"
            "legal_count\tin_check\tclaim_threefold_now\tclaim_fifty_moves_now\t"
            "outcome\trepetitions\n"
+           "With --piece-activity, append four TAB-separated fields:\n"
+           "eval_activity_shield_on_structure_on_cp\teval_activity_shield_on_structure_off_cp\t"
+           "eval_activity_shield_off_structure_on_cp\teval_activity_shield_off_structure_off_cp\n"
            "Side is w/b; booleans are 0/1. Scores favor the side to move.\n"
            "Static scores do not incorporate terminal or draw-claim decisions.\n"
            "Configuration differences are not an additive feature decomposition.\n"
@@ -46,7 +50,7 @@ void help() {
            "Any earlier valid output rows are preserved.\n";
 }
 
-void inspect(std::string line) {
+void inspect(std::string line, bool piece_activity) {
     // Accept redirected CRLF text on platforms whose streams do not translate it.
     if (!line.empty() && line.back() == '\r') line.pop_back();
     const auto split = line.find('\t');
@@ -73,7 +77,13 @@ void inspect(std::string line) {
               << regicide::evaluate_position(board, false, false) << '\t'
               << legal_count << '\t' << board.in_check() << '\t'
               << claims.threefold << '\t' << claims.fifty_moves << '\t'
-              << regicide::name(outcome) << '\t' << board.repetition_count() << '\n';
+              << regicide::name(outcome) << '\t' << board.repetition_count();
+    if (piece_activity)
+        std::cout << '\t' << regicide::evaluate_position(board, true, true, true) << '\t'
+                  << regicide::evaluate_position(board, true, false, true) << '\t'
+                  << regicide::evaluate_position(board, false, true, true) << '\t'
+                  << regicide::evaluate_position(board, false, false, true);
+    std::cout << '\n';
 }
 } // namespace
 
@@ -82,7 +92,8 @@ int main(int argc, char** argv) {
         help();
         return std::cout ? 0 : 1;
     }
-    if (argc != 1) {
+    const bool piece_activity = argc == 2 && std::string_view(argv[1]) == "--piece-activity";
+    if (argc != 1 && !piece_activity) {
         std::cerr << "error: unexpected arguments; see --help\n";
         return 1;
     }
@@ -92,7 +103,7 @@ int main(int argc, char** argv) {
     while (std::getline(std::cin, line)) {
         ++line_number;
         try {
-            inspect(line);
+            inspect(line, piece_activity);
             if (!std::cout) throw std::runtime_error("cannot write diagnostic output");
         } catch (const std::exception& error) {
             std::cerr << "line " << line_number << ": " << error.what() << '\n';

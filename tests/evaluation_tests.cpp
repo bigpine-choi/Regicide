@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace regicide;
 namespace {
@@ -256,7 +257,7 @@ PawnTerms scalar_pawn_terms(const Board& board) {
     return result;
 }
 
-int scalar_position(const Board& board, bool shield, bool structure) {
+int scalar_position(const Board& board, bool shield, bool structure, PawnTerms extra = {}) {
     const auto& squares = board.position().squares;
     auto piece_type = [](char piece) {
         return static_cast<char>(std::tolower(static_cast<unsigned char>(piece)));
@@ -331,9 +332,109 @@ int scalar_position(const Board& board, bool shield, bool structure) {
         middle += pawns.middlegame;
         ending += pawns.endgame;
     }
+    middle += extra.middlegame;
+    ending += extra.endgame;
     phase = std::min(phase, 24);
     const int score = material + (middle * phase + ending * (24 - phase)) / 24;
     return board.position().turn == Color::white ? score : -score;
+}
+
+// Independent geometry: enumerate every destination and test displacement/path,
+// rather than using the production attack masks or directional ray generator.
+bool scalar_attacks(const Position& position, int from, int to) {
+    if (from == to) return false;
+    const char piece = position.squares[from];
+    const char kind = static_cast<char>(std::tolower(static_cast<unsigned char>(piece)));
+    const int dx = to % 8 - from % 8, dy = to / 8 - from / 8;
+    if (kind == 'p') return std::abs(dx) == 1 && dy == (piece == 'P' ? 1 : -1);
+    if (kind == 'n') return std::abs(dx) * std::abs(dy) == 2;
+    const bool diagonal = std::abs(dx) == std::abs(dy);
+    const bool straight = dx == 0 || dy == 0;
+    if (!((kind == 'b' && diagonal) || (kind == 'r' && straight) ||
+          (kind == 'q' && (diagonal || straight)))) return false;
+    const int length = std::max(std::abs(dx), std::abs(dy));
+    for (int distance = 1; distance < length; ++distance) {
+        const int at = (from / 8 + dy / length * distance) * 8 +
+                       from % 8 + dx / length * distance;
+        if (position.squares[at] != '.') return false;
+    }
+    return true;
+}
+
+int scalar_mobility(const Board& board, int from) {
+    const auto& position = board.position();
+    const bool white = std::isupper(static_cast<unsigned char>(position.squares[from])) != 0;
+    int count = 0;
+    for (int to = 0; to < 64; ++to) {
+        const char target = position.squares[to];
+        if (target != '.' && (std::isupper(static_cast<unsigned char>(target)) != 0) == white) continue;
+        if (!scalar_attacks(position, from, to)) continue;
+        bool pawn_attacked = false;
+        for (int pawn = 0; pawn < 64; ++pawn)
+            if (position.squares[pawn] == (white ? 'p' : 'P') && scalar_attacks(position, pawn, to))
+                pawn_attacked = true;
+        count += !pawn_attacked;
+    }
+    return count;
+}
+
+PawnTerms scalar_activity_terms(const Board& board) {
+    PawnTerms result;
+    const auto& squares = board.position().squares;
+    for (bool white : {true, false}) {
+        const int sign = white ? 1 : -1;
+        bool light_bishop = false, dark_bishop = false;
+        for (int from = 0; from < 64; ++from) {
+            const char piece = squares[from];
+            if (piece == '.' || (std::isupper(static_cast<unsigned char>(piece)) != 0) != white) continue;
+            const char kind = static_cast<char>(std::tolower(static_cast<unsigned char>(piece)));
+            int middle = 0, ending = 0;
+            switch (kind) {
+            case 'n': middle = 3 * (scalar_mobility(board, from) - 4); ending = 2 * (scalar_mobility(board, from) - 4); break;
+            case 'b':
+                middle = ending = 3 * (scalar_mobility(board, from) - 7);
+                if ((from % 8 + from / 8) % 2) light_bishop = true; else dark_bishop = true;
+                break;
+            case 'r': {
+                middle = 2 * (scalar_mobility(board, from) - 7);
+                ending = 3 * (scalar_mobility(board, from) - 7);
+                bool own_pawn = false, enemy_pawn = false;
+                for (int rank = 0; rank < 8; ++rank) {
+                    own_pawn |= squares[rank * 8 + from % 8] == (white ? 'P' : 'p');
+                    enemy_pawn |= squares[rank * 8 + from % 8] == (white ? 'p' : 'P');
+                }
+                if (!own_pawn) { middle += enemy_pawn ? 10 : 18; ending += enemy_pawn ? 8 : 12; }
+                break;
+            }
+            case 'q': middle = ending = scalar_mobility(board, from) - 14; break;
+            default: break;
+            }
+            result.middlegame += sign * middle;
+            result.endgame += sign * ending;
+        }
+        if (light_bishop && dark_bishop) {
+            result.middlegame += sign * 20;
+            result.endgame += sign * 30;
+        }
+    }
+    return result;
+}
+
+int activity_positions = 0;
+void compare_activity(const Board& board) {
+    ++activity_positions;
+    const auto saved = board;
+    const auto terms = scalar_activity_terms(board);
+    for (bool shield : {false, true}) for (bool structure : {false, true}) {
+        const int actual = evaluate_position(board, shield, structure, true);
+        expect(actual == scalar_position(board, shield, structure, terms),
+               "independent activity geometry/blend mismatch: " + board.fen());
+        expect(actual == evaluate_position(reflected(board, true), shield, structure, true),
+               "activity color/rank/turn symmetry mismatch: " + board.fen());
+        expect(evaluate_position(board, shield, structure) == evaluate_position(board, shield, structure, false),
+               "piece activity must be disabled by default");
+    }
+    expect(board == saved, "activity evaluation changed position, history, hashes or clocks");
 }
 
 int structure_positions = 0;
@@ -393,6 +494,90 @@ Board legal_pawn_layout(const Position& input) {
 } // namespace
 
 int main() {
+    test("experimental activity matches manually counted geometry and component terms", [] {
+        struct Fixture { const char* fen; const char* piece; int mobility, middle, ending; };
+        for (const auto& fixture : std::array<Fixture, 10>{{
+            // Nd4 has eight destinations; own b5 and the e6 pawn's f5 attack remove two.
+            {"7k/8/4p3/1P6/3N4/8/8/K7 w - - 0 1", "d4", 6, 6, 4},
+            {"6k1/8/3p4/8/8/3P4/2B5/6K1 w - - 0 1", "c2", 4, -9, -9},
+            {"6k1/8/3p4/8/8/4P3/2B5/6K1 w - - 0 1", "c2", 9, 6, 6},
+            // Both bishops have seven available squares; only opposite colors earn the pair.
+            {"6k1/8/8/8/8/8/8/2B2BK1 w - - 0 1", "c1", 7, 20, 30},
+            {"6k1/8/8/8/8/8/8/2B1B1K1 w - - 0 1", "c1", 7, 0, 0},
+            // Closed, semi-open and open d files, with Kg1 ending the rightward ray.
+            {"6k1/3p4/8/8/8/8/3P4/3R2K1 w - - 0 1", "d1", 5, -4, -6},
+            {"6k1/3p4/8/8/8/8/4P3/3R2K1 w - - 0 1", "d1", 11, 18, 20},
+            {"6k1/p7/8/8/8/8/4P3/3R2K1 w - - 0 1", "d1", 12, 28, 27},
+            // Qa4's a1 king removes one otherwise reachable square on its file.
+            {"6k1/8/8/8/Q7/8/8/K7 w - - 0 1", "a4", 20, 6, 6},
+            // Pawns/kings alone contribute no activity; their legacy terms remain.
+            {"7k/8/8/3P4/8/8/8/K7 w - - 0 1", "a1", 0, 0, 0}
+        }}) {
+            const Board board(fixture.fen);
+            const auto terms = scalar_activity_terms(board);
+            expect(scalar_mobility(board, square(fixture.piece)) == fixture.mobility,
+                   "manual mobility fixture is incorrect: " + board.fen());
+            expect(terms.middlegame == fixture.middle && terms.endgame == fixture.ending,
+                   "manual activity component totals differ: " + board.fen());
+            for (bool shield : {false, true}) for (bool structure : {false, true}) {
+                expect(evaluate_position(board, shield, structure, true) ==
+                       scalar_position(board, shield, structure, {fixture.middle, fixture.ending}),
+                       "production disagrees with manually calculated activity terms: " + board.fen());
+            }
+            compare_activity(board);
+            compare_activity(reflected(board, true));
+            Position reversed = board.position();
+            reversed.turn = opposite(reversed.turn);
+            const Board other_turn(fen(reversed));
+            expect(evaluate_position(board, true, true, true) ==
+                   -evaluate_position(other_turn, true, true, true), "activity turn sign differs");
+        }
+    });
+    test("activity includes a capturable blocker once and deliberately retains pinned pseudo-attacks", [] {
+        const Board blocker("6k1/8/8/8/3n4/8/8/3R2K1 w - - 0 1");
+        expect(scalar_mobility(blocker, square("d1")) == 8, "enemy blocker must count once and stop rook ray");
+        compare_activity(blocker);
+        const Board pinned("4r1k1/8/8/8/8/8/4N3/4K3 w - - 0 1");
+        expect(scalar_mobility(pinned, square("e2")) == 6, "pinned knight pseudo-mobility should remain six");
+        for (const auto& move : pinned.legal_moves()) expect(move.from != square("e2"), "fixture knight must be pinned");
+        compare_activity(pinned);
+        compare_activity(Board("qqqqkqqq/pppppppp/8/8/8/8/5PPP/6K1 w - - 0 1"));
+    });
+    test("activity follows legal game positions and preserves castling EP promotion and undo histories", [] {
+        std::uint32_t random = 0x7163d425U;
+        for (int game = 0; game < 16; ++game) {
+            Board board;
+            for (int ply = 0; ply < 64; ++ply) {
+                if (ply % 4 == 0) compare_activity(board);
+                const auto moves = board.legal_moves();
+                if (moves.empty() || board.outcome() != Outcome::ongoing) break;
+                random ^= random << 13; random ^= random >> 17; random ^= random << 5;
+                board.play_generated(moves[random % moves.size()]);
+            }
+        }
+        auto sequence = [](const char* source, std::initializer_list<const char*> moves) {
+            Board board(source);
+            std::vector<Board> states{board};
+            compare_activity(board);
+            for (const char* move : moves) {
+                board.play(move);
+                compare_activity(board);
+                states.push_back(board);
+            }
+            while (states.size() > 1) {
+                board.undo();
+                states.pop_back();
+                expect(board == states.back(), "activity special move undo did not restore full state");
+                compare_activity(board);
+            }
+        };
+        sequence("r3k2r/pp3ppp/8/8/8/8/PP3PPP/R3K2R w KQkq - 0 1", {"e1g1", "e8c8"});
+        sequence("7k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", {"e5d6", "h8g8"});
+        sequence("4k3/P7/8/8/8/8/7p/4K3 w - - 0 1", {"a7a8q", "e8f7", "a8h8", "h2h1n"});
+        sequence("1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1", {"a7b8q", "e8f7"});
+        sequence("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                 {"g1f3", "g8f6", "f3g1", "f6g8", "g1f3", "g8f6", "f3g1", "f6g8"});
+    });
     test("initial symmetry and color/rank reflections", [] {
         expect(evaluate_position(Board{}) == 0, "initial evaluation must be zero");
         for (const char* source : {
@@ -909,6 +1094,7 @@ int main() {
         expect(legal_masks == 64, "the strict-FEN rank-mask corpus is incomplete");
     });
     std::cout << oracle_positions << " frozen v0.5.4 oracle positions (each shield on/off)\n";
+    std::cout << activity_positions << " independent activity oracle positions (all shield/structure combinations)\n";
     std::cout << structure_positions << " independent pawn-structure oracle positions (all option combinations)\n";
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

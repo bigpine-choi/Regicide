@@ -8,10 +8,13 @@ boundaries and HTTP responsiveness deterministic without an engine binary.
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
+import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 import unittest
+from unittest.mock import Mock, patch
 import urllib.error
 import urllib.request
 
@@ -141,7 +144,8 @@ class EvaluationStateTests(unittest.TestCase):
         self.assertFalse(self.game.hint()["enabled"])
         self.assertEqual(self.peer.analysis_calls, [])
         self.assertEqual(len(self.evaluators.instances), 1)
-        self.assertEqual(self.first.analysis_calls[0][1].time, 1)
+        self.assertEqual(self.first.analysis_calls[0][1].time, 3)
+        self.assertEqual(value["budget_ms"], 3000)
         self.first.release.set()
         self.assertEqual(self.ready()["cp"], 35)
 
@@ -202,7 +206,8 @@ class EvaluationStateTests(unittest.TestCase):
                 self.assertEqual(value["cp"], expected)
                 self.assertEqual(value["bound"], bound)
                 self.assertEqual(value["turn"], "black")
-                self.assertEqual(self.evaluators.instances[-1].analysis_calls[0][1].time, .25)
+                self.assertEqual(self.evaluators.instances[-1].analysis_calls[0][1].time, 3)
+                self.assertEqual(value["budget_ms"], 3000)
                 self.assertAlmostEqual(value["white_share"], .5 + .5 * expected / (abs(expected) + 400))
 
     def test_partial_packets_preserve_completed_score_depth(self):
@@ -431,14 +436,189 @@ class EvaluationStateTests(unittest.TestCase):
         before = self.game.state()
         self.game.set_think_time(5000, before["game_id"], before["engine"]["settings_revision"])
         self.assertEqual(len(self.evaluators.instances), 1)
-        self.assertEqual(self.first.analysis_calls[0][1].time, 1)
+        self.assertEqual(self.first.analysis_calls[0][1].time, 3)
         self.assertEqual(self.game.evaluation()["cp"], 35)
+        self.assertEqual(self.game.evaluation()["budget_ms"], 3000)
         self.human()
         fresh = StreamingPeer([packet(90)])
         self.engine(helper=fresh)
         self.ready()
         self.assertEqual(self.peer.analysis_calls[-1][1].time, 5)
         self.assertEqual(fresh.analysis_calls[0][1].time, 5)
+        self.assertEqual(self.game.evaluation()["budget_ms"], 5000)
+
+    def test_human_refinement_streams_first_score_then_later_completed_depth(self):
+        # A controlled stream models a quick shallow iteration followed by
+        # a later completed iteration; no sleep or actual engine is required.
+        self.first.after_gate = [packet(145, depth=8)]
+        initial = self.game.evaluation()
+        self.assertEqual(initial["cp"], 35)
+        self.assertEqual(initial["status"], "searching")
+        self.assertEqual(initial["budget_ms"], 3000)
+        self.assertEqual(self.first.wait_calls, 0)
+        self.assertEqual(len(self.evaluators.instances), 1)
+        self.first.release.set()
+        refined = self.ready()
+        self.assertEqual((refined["cp"], refined["depth"]), (145, 8))
+        self.assertEqual(refined["source_fen"], initial["source_fen"])
+        self.assertEqual(refined["budget_ms"], 3000)
+        self.assertEqual(len(self.first.analysis_calls), 1)
+        self.assertEqual(self.peer.analysis_calls, [])
+
+    def test_cancelled_long_helper_does_not_delay_opponent_or_publish_late_score(self):
+        self.first.close_releases = False
+        self.first.after_gate = [packet(9999, depth=20)]
+        self.human()
+        self.assertTrue(self.first.close_event.wait(2))
+        fresh = StreamingPeer([packet(225)])
+        try:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                # The old three-second helper is deliberately still blocked.
+                # The opponent must finish independently rather than join it.
+                request = pool.submit(self.engine, helper=fresh)
+                after = request.result(timeout=1)
+            self.assertFalse(self.first.release.is_set())
+            self.assertEqual(after["last_move"], "e7e5")
+            self.assertEqual(self.peer.analysis_calls[-1][1].time, 1)
+            self.assertEqual(self.game.movetime_ms, 1000)
+            self.assert_unknown(self.game.evaluation())
+        finally:
+            self.first.release.set()
+        self.assertEqual(self.ready()["cp"], 225)
+        self.identity(self.game.evaluation(), after)
+
+    def test_fast_opponent_and_ranked_hints_keep_their_budget_beside_refinement(self):
+        fast = StreamingPeer([packet(20)], blocked=True)
+        self.fresh_helper(fast, ms=100)
+        self.assertTrue(fast.waiting.wait(2))
+        self.assertEqual(fast.analysis_calls[0][1].time, 3)
+        self.assertEqual(self.game.evaluation()["budget_ms"], 3000)
+        self.assertEqual(self.game.hint()["movetime_ms"], 100)
+        self.human()
+        self.engine()
+        self.assertEqual(self.peer.analysis_calls[-1][1].time, .1)
+        self.assertEqual(self.game.state()["engine"]["movetime_ms"], 100)
+
+
+class ActivityApplicationTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory(prefix="regicide-activity-app-")
+        self.addCleanup(self.folder.cleanup)
+        self.root = Path(self.folder.name)
+        self.binary = self.root / "fake.exe"
+        self.binary.write_bytes(b"Never executed; application policy test")
+        self.peers = []
+
+    def factory(self, support=True, fail=False):
+        def start(_binary, *args, **kwargs):
+            peer = StreamingPeer([packet(35)])
+            if support is not None:
+                peer.options = {"UsePieceActivity": object()} if support else {}
+            peer.configurations = []
+            def configure(options):
+                peer.configurations.append(dict(options))
+                if fail:
+                    raise ValueError("configuration rejected")
+            peer.configure = configure
+            self.peers.append(peer)
+            return peer
+        return start
+
+    def create(self, factory=None, **kwargs):
+        game = play_human.HumanGame(self.binary, self.root / "games",
+                                    engine_factory=factory, hint_engine_factory=factory,
+                                    opening_variety_enabled=False, **kwargs)
+        self.addCleanup(game.close)
+        wait_for(lambda: game.evaluation()["status"] == "ready")
+        return game
+
+    def remaining_helpers(self, game):
+        # Exercise the factories actually retained by each subsystem. Live
+        # evaluation already ran through its worker during construction.
+        for factory in (game._hints._factory, game.analysis._hints._factory, game.coaching._factory):
+            peer = factory(self.binary)
+            peer.close()
+
+    def test_all_classical_factories_enable_activity_and_record_cache_identity(self):
+        game = self.create(self.factory())
+        self.remaining_helpers(game)
+        self.assertEqual(len(self.peers), 5)
+        for peer in self.peers:
+            self.assertEqual(peer.configurations, [{"UsePieceActivity": True}])
+        identity = game.state()["engine"]
+        self.assertEqual(identity["evaluation"], "classical_activity_v1")
+        self.assertEqual(identity["name"], self.peers[0].id["name"])
+        self.assertEqual(baseline.read_pgn(game.pgn())[0].headers["Evaluation"], "classical_activity_v1")
+        self.assertEqual(game.coaching.snapshot()["engine"]["evaluation_id"], "classical_activity_v1")
+        legacy = play_human.CoachingSession(self.binary, game.engine_name, engine_factory=self.factory())
+        self.addCleanup(legacy.close)
+        self.assertEqual(legacy.snapshot()["engine"]["binary_sha256"], game.binary_sha256)
+        self.assertNotEqual(legacy.snapshot()["engine"], game.coaching.snapshot()["engine"])
+        saved = json.loads((game.save_dir / f"{game.game_id}.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["state"]["engine"]["evaluation"], "classical_activity_v1")
+
+    def test_default_popen_factories_share_the_application_policy(self):
+        with patch.object(chess.engine.SimpleEngine, "popen_uci", side_effect=self.factory()):
+            game = self.create()
+            self.remaining_helpers(game)
+        self.assertEqual(len(self.peers), 5)
+        self.assertTrue(all(peer.configurations == [{"UsePieceActivity": True}] for peer in self.peers))
+
+    def test_old_binary_and_optionless_fakes_keep_legacy_identity(self):
+        for support in (False, None):
+            with self.subTest(support=support):
+                self.peers.clear()
+                game = self.create(self.factory(support))
+                self.remaining_helpers(game)
+                self.assertTrue(all(peer.configurations == [] for peer in self.peers))
+                self.assertEqual(game.state()["engine"]["evaluation"], "classical")
+                self.assertEqual(game.coaching.snapshot()["engine"]["evaluation_id"], "classical")
+                self.assertEqual(baseline.read_pgn(game.pgn())[0].headers["Evaluation"], "classical")
+                game.close()
+
+    def test_rejected_configuration_closes_peer_without_claiming_activation(self):
+        with self.assertRaisesRegex(ValueError, "configuration rejected"):
+            self.create(self.factory(fail=True))
+        self.assertEqual(len(self.peers), 1)
+        self.assertTrue(self.peers[0].closed)
+
+    def test_neural_model_keeps_its_existing_configuration_and_identity(self):
+        model = self.root / "fake.nn"
+        model.write_bytes(b"Model payload; validation subprocess is mocked")
+        with patch.object(play_human, "source_version", return_value={"commit": None, "dirty": True}), \
+             patch.object(play_human.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+            game = self.create(self.factory(), neural_model=model)
+            self.remaining_helpers(game)
+        self.assertEqual(len(self.peers), 5)
+        for peer in self.peers:
+            self.assertEqual(len(peer.configurations), 1)
+            self.assertEqual(set(peer.configurations[0]), {"EvalFile", "UseNeuralEvaluation"})
+            self.assertTrue(peer.configurations[0]["UseNeuralEvaluation"])
+        self.assertEqual(game.state()["engine"]["evaluation"], "neural_experimental")
+        self.assertEqual(baseline.read_pgn(game.pgn())[0].headers["Evaluation"], "neural_experimental")
+        self.assertEqual(game.coaching.snapshot()["engine"]["evaluation_id"], game.neural_sha256)
+
+    def test_runtime_manifest_only_resolves_an_implicit_binary(self):
+        for explicit in (False, True):
+            with self.subTest(explicit=explicit):
+                resolved = self.root / "next-launch.exe"
+                resolver = Mock(return_value=resolved)
+                argv = ["play_human.py", "--no-browser", "--save-dir", str(self.root / "entry-games")]
+                if explicit:
+                    argv += ["--binary", str(self.binary)]
+                    resolver.side_effect = ValueError("Invalid manifest must not block an explicit binary")
+                with patch.object(sys, "argv", argv), \
+                     patch.dict(sys.modules, {"runtime_engine": SimpleNamespace(resolve_runtime_engine=resolver)}), \
+                     patch.object(play_human, "GameArchive"), \
+                     patch.object(play_human, "runtime_evaluation", return_value={"warning": None, "model": None, "generation": None}), \
+                     patch.object(play_human, "HumanGame", side_effect=RuntimeError("stop before launching")) as constructor:
+                    with self.assertRaisesRegex(RuntimeError, "stop before launching"):
+                        play_human.main()
+                self.assertEqual(constructor.call_args.args[0], self.binary if explicit else resolved)
+                if explicit:
+                    resolver.assert_not_called()
+                else:
+                    resolver.assert_called_once_with(play_human.ROOT)
 
 
 if __name__ == "__main__":

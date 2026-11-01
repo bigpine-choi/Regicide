@@ -161,6 +161,7 @@ public:
             send("option name UseSEE type check default true");
             send("option name UsePawnShield type check default true");
             send("option name UsePawnStructure type check default true");
+            send("option name UsePieceActivity type check default false");
             send("option name UseLMR type check default true");
             send("option name EvalFile type string default <empty>");
             send("option name UseNeuralEvaluation type check default false");
@@ -272,7 +273,7 @@ private:
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
             option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
-            option != "UseLMR" && option != "UseQuiescenceThreats" &&
+            option != "UsePieceActivity" && option != "UseLMR" && option != "UseQuiescenceThreats" &&
             option != "UseQuiescenceThreatCache" && option != "UseTacticalThreatOrdering" &&
             option != "UseQuiescenceReplyBudget") return;
         if (value == tokens.end() || tokens.end() - value != 2)
@@ -299,6 +300,7 @@ private:
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";
         else if (option == "UsePawnStructure") options_.pawn_structure = text == "true";
+        else if (option == "UsePieceActivity") options_.piece_activity = text == "true";
         else options_.lmr = text == "true";
     }
     void progress(const SearchResult& result) {

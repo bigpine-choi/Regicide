@@ -44,6 +44,13 @@ try {
         throw "체스 도구가 준비되지 않았습니다. .\.venv-tests\Scripts\python.exe -m pip install -r requirements-test.txt를 실행해 주세요. 자세한 기록: $dependencyFile"
     }
 
+    # Resolve an immutable installed engine for this launch without replacing
+    # the executable used by any running game.
+    $resolvedEngine = & $pythonExecutable (Join-Path $PSScriptRoot 'runtime_engine.py') --resolve
+    if ($LASTEXITCODE -ne 0 -or @($resolvedEngine).Count -ne 1) {
+        throw '설치된 체스 엔진을 확인하지 못했습니다. 엔진 선택 기록과 실행 파일을 확인해 주세요.'
+    }
+    $engineExecutable = [string]$resolvedEngine
     if (!(Test-Path -LiteralPath $engineExecutable -PathType Leaf)) {
         $buildFile = Join-Path $logDirectory ($runName + '.build.log')
         try {
