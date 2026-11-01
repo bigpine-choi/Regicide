@@ -10,6 +10,7 @@ const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const CoachAvatar = preload("res://scripts/coach_avatar.gd")
 const WindowsSpeech = preload("res://scripts/windows_speech.gd")
+const LocalSpeech = preload("res://scripts/local_speech.gd")
 
 var backend_url: String = ""
 var backend_token: String = ""
@@ -66,6 +67,7 @@ var speech_timer: Timer
 var _speech_backend: String = "native"
 var _voice_loading: bool = false
 var _speech_error: String = ""
+var _voice_notice: String = ""
 var _speech_generation: int = 0
 var _speech_preparing_audio: bool = false
 var _windows_speech: WindowsSpeech
@@ -1236,9 +1238,21 @@ func _show_retry_line(kind: String) -> void:
 	_render()
 
 
-func _render_coach() -> void:
+func _coach_for_side() -> Dictionary:
 	var row_coach: Variant = _move().get("coach")
-	var coach: Dictionary = row_coach if row_coach is Dictionary else {}
+	var coach: Dictionary = row_coach.duplicate() if row_coach is Dictionary else {}
+	var perspectives: Variant = coach.get("perspectives")
+	if perspectives is Dictionary:
+		var perspective: Variant = perspectives.get(human_color)
+		if perspective is Dictionary:
+			for key in ["dialogue", "hint"]:
+				if perspective.get(key) is String and not str(perspective[key]).strip_edges().is_empty():
+					coach[key] = perspective[key]
+	return coach
+
+
+func _render_coach() -> void:
+	var coach: Dictionary = _coach_for_side()
 	var course: Dictionary = report.get("coach", {})
 	var viewing_retry_line: bool = line_kind in ["retry_candidate", "retry_best"] and not _retry_reply.is_empty()
 	var dialogue: String = str(coach.get("dialogue", "I'm checking this move and the opponent's reply."))
@@ -1300,18 +1314,19 @@ func _render_coach() -> void:
 func _setup_voice() -> void:
 	_english_voice = ""
 	_speech_error = ""
+	_voice_notice = ""
 	_speech_backend = "native"
-	if DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+	if OS.get_name() == "Windows" and DisplayServer.get_name() != "headless":
+		_setup_windows_voice()
+	elif DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		var voices: PackedStringArray = DisplayServer.tts_get_voices_for_language("en")
 		if not voices.is_empty():
 			_english_voice = voices[0]
-	if _english_voice.is_empty() and OS.get_name() == "Windows" and DisplayServer.get_name() != "headless":
-		_setup_windows_voice()
 	_render_speech_controls()
 
 
 func _make_windows_speech() -> WindowsSpeech:
-	return WindowsSpeech.new()
+	return LocalSpeech.new()
 
 
 func _setup_windows_voice() -> void:
@@ -1322,6 +1337,7 @@ func _setup_windows_voice() -> void:
 		_windows_speech.voices_ready.connect(_windows_voices_ready)
 		_windows_speech.audio_ready.connect(_windows_audio_ready)
 		_windows_speech.failed.connect(_windows_speech_failed)
+		_windows_speech.status_changed.connect(_windows_voice_status)
 		add_child(_windows_speech)
 	if not is_instance_valid(_speech_player):
 		_speech_player = AudioStreamPlayer.new()
@@ -1336,6 +1352,11 @@ func _windows_voices_ready(voices: Array, error: String) -> void:
 	_english_voice = str(voices[0].id) if not voices.is_empty() else ""
 	_render_speech_controls()
 	_schedule_speech()
+
+
+func _windows_voice_status(_provider: String, message: String) -> void:
+	_voice_notice = message
+	_render_speech_controls()
 
 
 func _windows_audio_ready(ticket: int, stream: AudioStreamWAV) -> void:
@@ -1380,6 +1401,8 @@ func _render_speech_controls() -> void:
 		speak_button.tooltip_text = _speech_error
 	if is_instance_valid(voice_status_label):
 		voice_status_label.text = _speech_error if not _speech_error.is_empty() else ("컴퓨터의 영어 음성을 찾고 있어요." if _voice_loading else ("영어 음성을 준비하고 있어요." if _speech_preparing_audio else ("내 컴퓨터의 영어 음성 · 수를 넘기면 자동 안내" if not _english_voice.is_empty() else "사용 가능한 영어 음성이 없어 글로 안내합니다.")))
+		if _speech_error.is_empty() and not _voice_loading and not _speech_preparing_audio and not _voice_notice.is_empty() and not _english_voice.is_empty():
+			voice_status_label.text = _voice_notice
 
 
 func _toggle_speech() -> void:

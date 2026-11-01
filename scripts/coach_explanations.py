@@ -2,7 +2,7 @@
 import chess
 
 COACH_NAME = "Rook"
-COACH_VERSION = 2
+COACH_VERSION = 3
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -16,6 +16,20 @@ def _side(color):
 def _material(board, color):
     return sum(points * (len(board.pieces(piece, color)) - len(board.pieces(piece, not color)))
                for piece, points in PIECE_POINTS.items())
+
+
+def _targets(board, square, color):
+    pin = board.pin(color, square)
+    return [{"square": chess.square_name(target), "piece": board.piece_type_at(target)}
+            for target in board.attacks(square)
+            if board.color_at(target) == (not color) and board.piece_type_at(target) != chess.KING
+            and target in pin]
+
+
+def _defenders(board, square, color):
+    return [{"square": chess.square_name(source), "piece": board.piece_type_at(source)}
+            for source in board.attackers(color, square)
+            if board.piece_type_at(source) != chess.KING and square in board.pin(color, source)]
 
 
 def _replay(board, branch, required=None):
@@ -41,6 +55,8 @@ def _replay(board, branch, required=None):
         san, castle, was_check = current.san(move), current.is_castling(move), current.is_check()
         recapture = bool(captured and events and events[-1]["captured"]
                          and events[-1]["target"] == chess.square_name(capture_square))
+        bishop_rooms = {square: len(current.attacks(square) & ~current.occupied_co[color])
+                        for square in current.pieces(chess.BISHOP, color)} if piece == chess.PAWN else {}
         current.push(move)
         king = current.king(current.turn)
         events.append({"uci": uci, "san": san, "index": index, "color": color,
@@ -48,7 +64,11 @@ def _replay(board, branch, required=None):
                        "captured": captured, "capture_square": chess.square_name(capture_square),
                        "recapture": recapture, "castle": castle, "promotion": move.promotion,
                        "was_check": was_check, "check": current.is_check(), "mate": current.is_checkmate(),
-                       "king": chess.square_name(king) if king is not None else None})
+                       "king": chess.square_name(king) if king is not None else None,
+                       "targets": _targets(current, move.to_square, color),
+                       "defenders": _defenders(current, move.to_square, color),
+                       "opens_bishop": any(len(current.attacks(square) & ~current.occupied_co[color]) > room
+                                           for square, room in bishop_rooms.items())})
     return {"events": events, "material_change": _material(current, board.turn) - start_material, "color": board.turn}
 
 
@@ -76,11 +96,15 @@ def _evidence(replay, line_name, max_ply=4, include_later_mate=False):
         elif event["check"]:
             facts.append({**common, "kind": "check", "squares": [event["target"], event["king"]],
                           "text": f"{actor}'s {san} checks {other}'s king."})
+        if event["targets"] and not event["mate"]:
+            target = max(event["targets"], key=lambda target: PIECE_POINTS[target["piece"]])
+            facts.append({**common, "kind": "attack", "squares": [event["target"], target["square"]],
+                          "text": f"{actor}'s {PIECE_NAMES[event['promotion'] or event['piece']]} attacks {other}'s {PIECE_NAMES[target['piece']]} on {target['square']}."})
     difference = replay["material_change"]
     if difference and len(replay["events"]) <= max_ply:
         facts.append({"kind": "material", "line": line_name, "ply_index": len(replay["events"]), "squares": [],
                       "text": f"At this line's endpoint: {_side(replay['color'])}'s material balance changes by {difference:+d}, counting pieces only."})
-    priority = {"checkmate": 0, "capture": 1, "promotion": 2, "castle": 3, "check": 4, "material": 5}
+    priority = {"checkmate": 0, "capture": 1, "promotion": 2, "attack": 3, "castle": 4, "check": 5, "material": 6}
     return sorted(facts, key=lambda fact: (priority[fact["kind"]],
                   -PIECE_POINTS.get(replay["events"][fact["ply_index"] - 1]["captured"], 0) if fact["kind"] == "capture" else 0,
                   fact["ply_index"]))[:4]
@@ -91,115 +115,213 @@ def _develops(event):
     return event["source"] in homes.get(event["piece"], ()) and event["target"][1] != event["source"][1]
 
 
-def _actual_description(event):
-    actor, other, san = _side(event["color"]), _side(not event["color"]), event["san"]
-    if event["mate"]:
-        return f"{actor}'s {san} is checkmate."
-    if event["promotion"]:
-        capture = f"takes {other}'s {PIECE_NAMES[event['captured']]} and " if event["captured"] else ""
-        return f"{actor}'s {san} {capture}promotes to a {PIECE_NAMES[event['promotion']]}."
-    if event["castle"]:
-        rook_to = ("f" if event["target"][0] == "g" else "d") + event["target"][1]
-        return f"{actor}'s {san} moves the king to {event['target']} and rook to {rook_to}."
-    if event["captured"]:
-        return f"{actor}'s {san} takes {other}'s {PIECE_NAMES[event['captured']]} on {event['capture_square']}."
-    if event["was_check"]:
-        return f"{actor}'s {san} gets out of check."
-    if event["check"]:
-        return f"{actor}'s {san} checks {other}'s king."
-    if _develops(event):
-        return f"{actor} develops the {PIECE_NAMES[event['piece']]} with {san}."
-    if event["piece"] == chess.PAWN and event["target"] in ("d4", "e4", "d5", "e5"):
-        return f"{actor} puts a pawn in the center with {san}."
-    return f"{actor} repositions the {PIECE_NAMES[event['piece']]} with {san}."
+def _owner(color, perspective):
+    return "your" if color == perspective else _side(color) + "'s"
 
 
-def _alternative(actual, best):
+def _subject(color, perspective):
+    return "You" if color == perspective else _side(color)
+
+
+def _support_advice(actual, best, perspective):
+    if (best and actual["piece"] == best["piece"] and actual["source"] == best["source"]
+            and not actual["defenders"] and best["defenders"]):
+        support = min(best["defenders"], key=lambda item: (item["piece"] != chess.PAWN, item["square"]))
+        piece = f"{support['square'][0]}-pawn" if support["piece"] == chess.PAWN else PIECE_NAMES[support["piece"]]
+        return f"{best['san']} gives {_owner(actual['color'], perspective)} {PIECE_NAMES[best['promotion'] or best['piece']]} protection from the {piece}."
+    return None
+
+
+def _alternative(board, actual, best, perspective, capture=None):
     if best is None or best["uci"] == actual["uci"]:
-        return "Check that reply before committing."
-    return f"{_side(actual['color'])} should consider {best['san']} instead."
+        return "Check that reply before committing to the move."
+    if capture and best["source"] == capture["capture_square"] and best["piece"] == capture["captured"]:
+        # Only describe escaping this particular attack, never general safety.
+        position = board.copy(stack=True)
+        position.push_uci(best["uci"])
+        source, target = chess.parse_square(capture["source"]), chess.parse_square(best["target"])
+        if (position.piece_type_at(source) == capture["piece"] and position.color_at(source) != actual["color"]
+                and target not in position.attacks(source)):
+            return f"{best['san']} moves the {PIECE_NAMES[best['piece']]} away from that attack."
+    support = _support_advice(actual, best, perspective)
+    if support:
+        return support
+    if actual["target"] == best["target"] and actual["piece"] != best["piece"] and _develops(best):
+        return f"{best['san']} brings the {PIECE_NAMES[best['piece']]} into play on that square instead."
+    if _develops(best):
+        return f"Consider {best['san']} to bring the {PIECE_NAMES[best['piece']]} into play."
+    return f"Look at {best['san']} instead, then check the opponent's strongest reply."
 
 
-def _dialogue(kind, actual, played, best):
+def _after_actual(board, actual):
+    position = board.copy(stack=True)
+    position.push_uci(actual["uci"])
+    return position
+
+
+def _immediate_capture(board, actual, capture):
+    position = _after_actual(board, actual)
+    move = chess.Move.from_uci(capture["uci"])
+    return move in position.legal_moves and position.piece_type_at(chess.parse_square(capture["capture_square"])) == capture["captured"]
+
+
+def _opened_line(board, actual, events, capture):
+    if len(events) < 2 or not events[1]["check"] or capture["index"] <= 2:
+        return None
+    position = _after_actual(board, actual)
+    attacker, victim = chess.parse_square(capture["source"]), chess.parse_square(capture["capture_square"])
+    if (position.piece_type_at(attacker) != capture["piece"] or position.color_at(attacker) != capture["color"]
+            or victim in position.attacks(attacker)):
+        return None
+    position.push_uci(events[1]["uci"])
+    if position.piece_type_at(victim) != capture["captured"] or victim not in position.attacks(attacker):
+        return None
+    if chess.square_file(attacker) == chess.square_file(victim):
+        return capture["source"][0] + "-file"
+    return "diagonal" if abs(chess.square_file(attacker) - chess.square_file(victim)) == abs(chess.square_rank(attacker) - chess.square_rank(victim)) else "rank"
+
+
+def _dialogue(board, kind, actual, played, best, perspective=None):
     if actual is None:
-        return "This move could not be verified from the position."
-    actor, other, san = _side(actual["color"]), _side(not actual["color"]), actual["san"]
+        return "I can't verify that move from this position. Reanalyze it before drawing a lesson."
+    color, san = actual["color"], actual["san"]
+    actor, other = _subject(color, perspective), _subject(not color, perspective)
+    own, opposing = _owner(color, perspective), _owner(not color, perspective)
+    personal = color == perspective
     if kind == "uncertain":
-        return f"The verdict on {actor}'s {san} is unclear; the replies need a closer look."
+        return "This position needs a closer look. Check the forcing replies before deciding whether this move works."
     if played is None:
-        return _actual_description(actual) + " The continuation is unverified."
+        return "The move is legal, but this continuation doesn't check out. Reanalyze the position before relying on the recommendation."
     events, best_event = played["events"], best["events"][0] if best else None
     if kind == "missed_mate" and best:
-        mate = next((event for event in best["events"] if event["mate"] and event["color"] == actual["color"]), None)
+        mate = next((event for event in best["events"] if event["mate"] and event["color"] == color), None)
         if mate:
             if mate["index"] == 1:
-                return f"{actor} had {mate['san']}, checkmate immediately. {san} missed that finish."
-            return f"{actor}'s {best_event['san']} reaches {mate['san']} in the shown line, checkmating {other}. That attack was worth pursuing."
+                return f"{actor} had mate in one with {mate['san']}. Before settling on a move, look for checks that leave no legal reply."
+            return f"{best_event['san']} starts a mating line in the analysis. Test the other defenses before assuming the finish is forced."
     if kind == "allows_mate":
-        mate = next((event for event in events if event["mate"] and event["color"] != actual["color"]), None)
-        if mate:
-            lead = (f"After {actor}'s {san}, {other} can finish with {mate['san']}." if mate["index"] == 2 else
-                    f"{actor}'s {san} reaches {mate['san']} in the shown line, checkmating {actor}.")
+        mate = next((event for event in events if event["mate"] and event["color"] != color), None)
+        if mate and mate["index"] == 2:
+            lead = f"{other} can finish immediately with {mate['san']}."
+        elif mate:
+            lead = f"The shown line after {san} ends in checkmate against {own} king."
         else:
-            lead = f"{actor}'s {san} allows a mating threat in the analysis."
-        return lead + " " + _alternative(actual, best_event)
+            lead = f"The analysis flags a mating threat against {own} king after {san}."
+        return lead + " " + _alternative(board, actual, best_event, perspective)
     if actual["mate"]:
-        return _actual_description(actual) + f" {other} has no legal reply."
+        return "That's checkmate: there isn't a legal reply. Notice that the king can't escape, capture the checking piece, or block the attack."
+    if len(events) > 1 and events[1]["mate"]:
+        return f"{other} can answer with {events[1]['san']}, an immediate checkmate. Check the threats against {own} king before pursuing this idea."
     if kind in CRITICAL:
-        # A near response is relevant; a remote PV event is not a reason for
-        # this move's grade. Captures remain conditional, not forced net losses.
-        captures = [event for event in events[1:4] if event["color"] != actual["color"] and event["captured"]]
+        captures = [event for event in events[1:4] if event["color"] != color and event["captured"]]
         if captures:
-            event = max(captures, key=lambda event: (PIECE_POINTS.get(event["captured"], 0), -event["index"]))
-            piece = PIECE_NAMES[event["captured"]]
-            if event["index"] == 2:
-                verb = "recapture" if event["recapture"] else "take"
-                lead = f"After {actor}'s {san}, {other} can {verb} the {piece} with {event['san']}."
+            capture = max(captures, key=lambda event: (PIECE_POINTS[event["captured"]], -event["index"]))
+            victim, capturer = PIECE_NAMES[capture["captured"]], PIECE_NAMES[capture["piece"]]
+            opened = _opened_line(board, actual, events, capture)
+            if opened:
+                lead = f"After {san}, {events[1]['san']} exposes {own} {victim} on the {opened}."
+            elif _immediate_capture(board, actual, capture):
+                target = max(actual["targets"], key=lambda item: PIECE_POINTS[item["piece"]]) if actual["targets"] else None
+                if target and actual["piece"] == chess.PAWN:
+                    lead = f"{own.capitalize()} pawn attacks the {PIECE_NAMES[target['piece']]}, but {opposing} {capturer} can still take the {victim}."
+                else:
+                    lead = f"{own.capitalize()} {victim} on {capture['capture_square']} can be taken by {opposing} {capturer}."
             else:
-                line = " ".join(step["san"] for step in events[1:event["index"]])
-                lead = f"After {actor}'s {san}, the line {line} captures {actor}'s {piece}."
-            return lead + " " + _alternative(actual, best_event)
+                lead = f"In the shown line after {san}, {other.lower() if other == 'You' else other} can take {own} {victim}."
+            return lead + " " + _alternative(board, actual, best_event, perspective, capture)
         if best_event and best_event["uci"] != actual["uci"]:
+            support = _support_advice(actual, best_event, perspective)
+            if support:
+                return support + " Check how that changes the opponent's captures."
             if actual["target"] == best_event["target"] and actual["piece"] != best_event["piece"]:
-                return (f"{actor}'s {san} puts a {PIECE_NAMES[actual['piece']]} on {actual['target']}. "
-                        f"{best_event['san']} would use that square for the {PIECE_NAMES[best_event['piece']]} instead.")
-            return f"{actor} had a stronger option in {best_event['san']}; check its immediate reply against the one after {san}."
+                return f"The {PIECE_NAMES[best_event['piece']]} could use {best_event['target']}, but the {PIECE_NAMES[actual['piece']]} takes that square. " + _alternative(board, actual, best_event, perspective)
+            return f"Take a closer look at {best_event['san']}. Follow the first reply before deciding what to do with the {PIECE_NAMES[actual['piece']]}."
+    if actual["promotion"]:
+        piece = PIECE_NAMES[actual["promotion"]]
+        lead = f"{actor} {'turn' if personal else 'turns'} the pawn into a {piece}"
+        if actual["captured"]:
+            lead += f" and {'take' if personal else 'takes'} {opposing} {PIECE_NAMES[actual['captured']]}"
+        return lead + ". Check the new position before planning the next move."
+    if actual["castle"]:
+        return f"{actor} {'have' if personal else 'has'} castled {'kingside' if actual['target'][0] == 'g' else 'queenside'}. Before pushing pawns near the king, check which lines that could open."
     if len(events) > 1 and events[1]["recapture"]:
         reply = events[1]
-        taken, given = PIECE_NAMES[actual["captured"]], PIECE_NAMES[reply["captured"]]
-        return f"{actor}'s {san} takes a {taken}, but {other} can recapture a {given} with {reply['san']}. Count both sides of the exchange."
-    lead = _actual_description(actual)
-    if len(events) > 1:
-        reply = events[1]
-        if reply["mate"]:
-            return lead + f" {other} can reply {reply['san']}, checkmating {actor}."
-        if reply["captured"]:
-            return lead + f" {other} can answer {reply['san']}, taking {actor}'s {PIECE_NAMES[reply['captured']]}."
-        return lead + f" Watch for {other}'s {reply['san']} in response."
-    return lead + " The reply still needs checking."
+        return f"{actor} {'take' if personal else 'takes'} a {PIECE_NAMES[actual['captured']]}, and {other.lower() if other == 'You' else other} can recapture the {PIECE_NAMES[reply['captured']]} with {reply['san']}. Count everything that comes off before judging the exchange."
+    if actual["captured"]:
+        lead = f"{actor} {'take' if personal else 'takes'} {opposing} {PIECE_NAMES[actual['captured']]} on {actual['capture_square']}."
+        if len(events) > 1 and events[1]["captured"]:
+            reply = events[1]
+            return lead + f" {other} can answer {reply['san']}, so include that {PIECE_NAMES[reply['captured']]} in the trade."
+        return lead + " Check for a recapture or a stronger threat before calling it a gain."
+    threats = [target for target in actual["targets"] if target["piece"] >= chess.KNIGHT]
+    if threats and not actual["check"]:
+        target = max(threats, key=lambda item: PIECE_POINTS[item["piece"]])
+        victim = PIECE_NAMES[target["piece"]]
+        verb = "develop" if _develops(actual) else "move"
+        lead = f"{actor} {verb if personal else verb + 's'} a {PIECE_NAMES[actual['piece']]} with an attack on {opposing} {victim}."
+        if len(events) > 1:
+            reply = events[1]
+            if reply["captured"] and reply["target"] == actual["target"]:
+                lead = f"{other} can take {own} {PIECE_NAMES[actual['piece']]} with {reply['san']}."
+                if len(events) > 2 and events[2]["recapture"]:
+                    return lead + f" {events[2]['san']} recaptures the {PIECE_NAMES[events[2]['captured']]}; count both sides before judging the exchange."
+                return lead + " Check for a recapture before deciding whether the exchange works."
+            if reply["source"] == target["square"]:
+                after_reply = board.copy(stack=True)
+                after_reply.push_uci(actual["uci"])
+                after_reply.push_uci(reply["uci"])
+                if chess.parse_square(reply["target"]) not in after_reply.attacks(chess.parse_square(actual["target"])):
+                    return lead + f" {reply['san']} moves it out of the {PIECE_NAMES[actual['piece']]}'s reach."
+            ray = chess.SquareSet(chess.between(chess.parse_square(actual["target"]), chess.parse_square(target["square"])))
+            if chess.parse_square(reply["target"]) in ray:
+                return lead + f" {reply['san']} blocks the line, so the {PIECE_NAMES[actual['piece']]} needs a new plan."
+        return lead + " Keep developing once that threat has been answered."
+    if actual["check"]:
+        # Moving a blocker can uncover another piece's check; the mover is not
+        # necessarily the checking piece.
+        lead = f"That move gives check, so {other.lower() if other == 'You' else other} must respond."
+        return lead + (f" Look at {events[1]['san']} before deciding how to continue." if len(events) > 1 else " Check the king's escapes and possible blocks before continuing.")
+    if actual["was_check"]:
+        return f"{actor} {'are' if personal else 'is'} out of check. Now look for a move that improves a piece without allowing another forcing reply."
+    if actual["piece"] == chess.PAWN and actual["target"] in ("d4", "e4", "d5", "e5"):
+        lead = ("You're taking" if personal else actor + " takes") + " space in the center"
+        lead += " and opening a bishop's diagonal." if personal and actual["opens_bishop"] else " and opens a bishop's diagonal." if actual["opens_bishop"] else "."
+        if len(events) > 1 and any(target["square"] == actual["target"] for target in events[1]["targets"]):
+            reply = events[1]
+            return lead + f" {other} can challenge the pawn with {reply['san']}, so plan a response."
+        return lead + " Look for a useful square for a knight or bishop next."
+    if _develops(actual):
+        if len(events) > 1 and any(target["square"] == actual["target"] for target in events[1]["targets"]):
+            return f"{own.capitalize()} {PIECE_NAMES[actual['piece']]} develops, but {other.lower() if other == 'You' else other} can attack it with {events[1]['san']}. Have a retreat ready before placing it on that square."
+        return f"{own.capitalize()} {PIECE_NAMES[actual['piece']]} is off the back rank and in play. Look for a useful square for another piece before moving this one again."
+    if actual["piece"] == chess.PAWN:
+        return f"That pawn move changes which squares {actor.lower() if personal else actor} can control. Check the space it leaves behind before committing another pawn."
+    return f"The {PIECE_NAMES[actual['piece']]} has a new square. Check the opponent's forcing replies before deciding where it should go next."
 
 
-def _hint(board, kind, actual, played, best):
-    actor, other = _side(board.turn), _side(not board.turn)
+def _hint(board, kind, actual, played, best, perspective=None):
+    own, opposing = _owner(board.turn, perspective), _owner(not board.turn, perspective)
     if kind == "allows_mate":
-        return f"Check the threats against {actor}'s king before choosing a move."
+        return f"Deal with the threats against {own} king before looking for anything else."
     if kind == "missed_mate":
-        return f"Look for checks against {other}'s king, then test every escape."
+        return f"Look for checks against {opposing} king, and test every escape."
     if board.is_check():
-        return f"Get {actor}'s king out of check, then test the reply."
+        return f"Get {own} king out of check, then check the next forcing reply."
     if kind == "uncertain":
-        return "Choose a candidate and check the immediate reply before trusting it."
+        return "Choose a candidate, then check the strongest immediate reply before trusting it."
     events = played["events"] if played else []
     if any(event["color"] != board.turn and event["captured"] for event in events[1:4]):
-        return "Look for checks and captures the other side gets after your candidate."
+        return "Check what could be captured after the king's safety has been dealt with."
     best_event = best["events"][0] if best else None
     if any(event and event["captured"] for event in (actual, best_event)):
-        return "Count what each side can take, including the first recapture."
+        return "Count the captures for both sides, including the first recapture."
     if any(event and event["check"] for event in (actual, best_event)):
-        return "Check the king's escapes, captures and blocks against each checking move."
+        return "Start with checks, then look for escapes, captures, and blocks."
+    if any(event and event["targets"] for event in (actual, best_event)):
+        return "Look for a move that improves a piece while making a threat."
     if any(event and _develops(event) for event in (actual, best_event)):
-        return "Consider bringing a back-rank piece into play, then test the reply."
-    return "Identify the immediate threat, then test one reply to your candidate."
+        return "Find a useful square for an undeveloped piece, then test the reply."
+    return "Identify the immediate threat before starting a new plan."
 
 
 def describe_move(board, row):
@@ -225,11 +347,16 @@ def describe_move(board, row):
     focus = [focus_event["source"], focus_event["target"]] if focus_event else []
     if focus_event and focus_event["check"] and focus_event["king"]:
         focus.append(focus_event["king"])
+    elif focus_event and focus_event["targets"]:
+        focus.append(max(focus_event["targets"], key=lambda target: PIECE_POINTS[target["piece"]])["square"])
     if kind in CRITICAL and played:
         captures = [event for event in played["events"][1:4] if event["color"] != board.turn and event["captured"]]
         if captures:
             focus.append(max(captures, key=lambda event: PIECE_POINTS.get(event["captured"], 0))["capture_square"])
-    return {"mood": mood, "dialogue": _dialogue(kind, actual, played, best),
+    return {"mood": mood, "dialogue": _dialogue(board, kind, actual, played, best),
+            "perspectives": {name: {"dialogue": _dialogue(board, kind, actual, played, best, color),
+                                      "hint": _hint(board, kind, actual, played, best, color)}
+                             for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},
             "hint": _hint(board, kind, actual, played, best), "evidence": facts, "focus_squares": list(dict.fromkeys(focus))}
 
 
@@ -254,7 +381,7 @@ def describe_report(rows, critical_plies):
         chosen.append(positive)
     lessons = sorted(set(chosen))[:5]
     if not ready:
-        summary = "I'll select the turning points and a good move to revisit as the analysis comes in."
+        summary = "The analysis is still running. Once a position is ready, we'll look at what mattered and what to try next."
     elif lessons:
         counts = {color: sum(row.get("classification") in CRITICAL and
                             row.get("color", "white" if row["ply"] % 2 else "black") == color for row in ready)
@@ -267,8 +394,9 @@ def describe_report(rows, critical_plies):
         elif any(row.get("classification") == "missed_mate" for row in ready):
             summary += "Start with the missed mating chances. "
         else:
-            summary += "Watch the immediate replies. "
-        summary += f"The {len(lessons)} selected scenes" + (" include a good move, too." if positives and important else " are ready to review.")
+            summary += "Start by checking the opponent's immediate reply. "
+        if positives and important:
+            summary += "There's a good move worth keeping, too."
     else:
         summary = "There isn't a clear lesson yet; the inconclusive positions need a closer look."
     if len(ready) < len(rows) and not lessons:

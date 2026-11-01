@@ -471,10 +471,10 @@ class CoachingSession:
             kind, loss = _classify(best, line, "white" if board.turn else "black", same)
             verdict = "recommended" if kind == "best" else "good" if kind == "good" else "uncertain" if kind == "uncertain" else "try_again"
             messages = {
-                "recommended": "You found the recommended move. Can you anticipate the opponent's reply?",
-                "good": "This works too: your move scores close to the recommendation.",
-                "try_again": "There's a stronger option. Check the opponent's reply to your move.",
-                "uncertain": "These results aren't conclusive. Try a longer analysis.",
+                "recommended": "That's the move I found too. What would you expect them to play next?",
+                "good": "That works too. Now check their strongest reply.",
+                "try_again": "Take another look at their reply. There's a better option here.",
+                "uncertain": "I'm not sure about this one yet. Let's analyze it a little longer.",
             }
             result = {"job_id": job_id, "revision": revision, "ply": ply, "uci": uci, "san": board.san(move),
                       "verdict": verdict, "message": messages[verdict], "line": line, "best": best, "loss_cp": loss}

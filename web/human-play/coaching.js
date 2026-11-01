@@ -185,6 +185,7 @@
   }
   function renderCoach() {
     const row=selectedRow(), hidden=exerciseHidden(), coach=row?.coach;
+    const wording=coach?.perspectives?.[mine()] || coach;
     const travelling=Boolean(contextReplay && !contextReplay.done);
     const mood=retry?.feedback ? ({recommended:"celebrate",good:"encourage",try_again:"think",uncertain:"think"})[retry.feedback.verdict] || "think" :
       hidden || travelling ? "think" : ["encourage","think","celebrate","warning"].includes(coach?.mood) ? coach.mood : "encourage";
@@ -192,8 +193,8 @@
     get("coach-mascot").setAttribute("aria-label",({encourage:"응원하는",think:"생각하는",celebrate:"기뻐하는",warning:"주의할 점을 알려주는"})[mood]+" 체스 코치 루크");
     get("coach-scene").textContent=row ? positionTitle(row) + (hidden ? " · 다시 두기" : "") : "한 장면씩 함께 살펴봐요.";
     get("coach-dialogue").textContent=travelling ? "Following the moves actually played to the next key moment." :
-      hidden ? retry.feedback?.message || coach?.hint || "Check for threats against the king and pieces that can be captured." :
-      coach?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
+      hidden ? retry.feedback?.message || wording?.hint || "Check for threats against the king and pieces that can be captured." :
+      wording?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
     get("coach-overview").textContent=report?.coach?.summary || "Start the analysis to find the key moments.";
     get("coach-overview-box").hidden=hidden;
     get("coach-lesson-controls").hidden=hidden;

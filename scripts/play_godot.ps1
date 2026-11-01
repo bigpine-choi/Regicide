@@ -214,6 +214,10 @@ try {
             '--path', (Quote-ProcessPath $projectDirectory),
             '--', '--backend-file', (Quote-ProcessPath $startupFile), '--own-backend'
         )
+        $voiceConfigPath = Join-Path $repoRoot 'build/voice-models/config.json'
+        if (Test-Path -LiteralPath $voiceConfigPath -PathType Leaf) {
+            $godotArguments += @('--voice-config', (Quote-ProcessPath $voiceConfigPath))
+        }
         # The user explicitly requested an interactive native game window.
         $godotProcess = Start-Process -FilePath $godotExecutable -ArgumentList $godotArguments `
             -WorkingDirectory $repoRoot -PassThru `

@@ -862,6 +862,23 @@ test("badge CSS is an inert overlay sized from the board, and the legend disting
   assert.match(html,/제한 시간 안에 다른 대안까지 비교/);assert.match(html,/객관적인 유일수나 묘수의 증명은 아닙니다/);
 });
 
+test("coach wording and automatic narration follow the selected human side",async()=>{
+  const report=taughtSnapshot();
+  report.moves[0].coach.perspectives={white:{dialogue:"You've developed your rook.",hint:"Look for a safe square for your king."},
+    black:{dialogue:"Your opponent has developed the rook.",hint:"Look for a safe square for their king."}};
+  const ui=browser({voices:[{name:"Local",lang:"en-US",localService:true}]});
+  await ui.start(report);
+  assert.equal(ui.get("coach-dialogue").textContent,"You've developed your rook.");
+  await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,"You've developed your rook.");
+  ui.get("coaching-side").value="black";ui.get("coaching-side").dispatch("change");
+  assert.equal(ui.get("coach-dialogue").textContent,"Your opponent has developed the rook.");
+  await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,"Your opponent has developed the rook.");
+  await ui.click("coach-retry");
+  assert.equal(ui.get("coach-dialogue").textContent,"Look for a safe square for their king.");
+});
+
 test("all UI ids exist and output has no HTML interpolation sink",()=>{
   const js=fs.readFileSync(path.join(__dirname,"../web/human-play/coaching.js"),"utf8");
   const html=fs.readFileSync(path.join(__dirname,"../web/human-play/index.html"),"utf8");

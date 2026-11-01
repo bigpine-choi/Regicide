@@ -180,6 +180,7 @@ func _synthetic() -> void:
 	await _character_checks(snapshot)
 	await _voice_checks(snapshot)
 	_windows_voice_checks(snapshot)
+	_perspective_voice_checks(snapshot)
 	await _badge_checks(snapshot)
 	var before_flip: Dictionary = panel.board.state.duplicate(true)
 	var old_view: bool = panel.model.view_from_white
@@ -714,6 +715,8 @@ func _windows_voice_checks(snapshot: Dictionary) -> void:
 	verify(voice.played == 0 and voice._speech_error.is_empty(), "stale WAV and failure cannot affect the newer scene")
 	backend.audio_ready.emit(current_ticket, wav)
 	verify(voice.played == 1 and voice.playing and not voice._speech_preparing_audio, "only the current WAV reaches the game audio player")
+	backend.status_changed.emit("sapi", "기본 Windows 음성으로 전환했습니다.")
+	verify(voice.voice_status_label.text.contains("기본 Windows") and voice._speech_error.is_empty(), "normal SAPI fallback is visible without being treated as a playback failure")
 	voice._poll_speech()
 	verify(voice._speech_owned, "native polling observes current WAV playback")
 	voice._select_ply(2)
@@ -736,6 +739,40 @@ func _windows_voice_checks(snapshot: Dictionary) -> void:
 	voice.hide()
 	backend.audio_ready.emit(current_ticket, wav)
 	verify(voice.played == 1 and not voice._speech_owned, "a hidden panel cannot play a late WAV")
+	root.remove_child(voice)
+	voice.free()
+
+
+func _perspective_voice_checks(snapshot: Dictionary) -> void:
+	var voice := VoicePanel.new()
+	voice.offline_mode = true
+	root.add_child(voice)
+	voice.report = snapshot.duplicate(true)
+	voice.report.moves[2].coach.perspectives = {
+		"white": {"dialogue": "Your pawn move leaves your king exposed.", "hint": "Check your king's diagonal."},
+		"black": {"dialogue": "White exposes their king. You can give checkmate.", "hint": "Look for checks against White's king."}}
+	var unchanged: Dictionary = voice.report.duplicate(true)
+	voice.show()
+	voice._select_ply(3)
+	voice.flush_voice()
+	verify(voice.coach_dialogue.text.begins_with("Your pawn") and voice.spoken[-1] == voice.coach_dialogue.text, "white perspective is used for visible and spoken coaching")
+	voice._change_side(1)
+	voice.flush_voice()
+	verify(voice.coach_dialogue.text.begins_with("White exposes") and voice.spoken[-1] == voice.coach_dialogue.text, "switching to black narrates the opponent's move from the correct perspective")
+	verify(voice.report == unchanged, "perspective selection never mutates saved coaching metadata")
+	voice._begin_retry()
+	voice.flush_voice()
+	verify(not voice.spoken[-1].contains("checkmate"), "unsolved retry still hides the perspective's solution")
+	voice._show_retry_hint()
+	voice.flush_voice()
+	verify(voice.spoken[-1] == "Look for checks against White's king.", "revealed retry hint uses the selected side")
+	voice._select_ply(2)
+	voice.flush_voice()
+	verify(voice.spoken[-1] == snapshot.moves[1].coach.dialogue, "older reports without perspectives keep their original commentary")
+	voice.report.moves[1].coach.perspectives = {"black": null}
+	voice._render()
+	verify(voice.coach_dialogue.text == snapshot.moves[1].coach.dialogue, "nullable perspective metadata falls back safely")
+	voice.hide()
 	root.remove_child(voice)
 	voice.free()
 

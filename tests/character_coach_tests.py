@@ -73,7 +73,7 @@ class ExplanationTests(unittest.TestCase):
         board = chess.Board("7k/5K2/6Q1/8/8/8/8/8 w - - 0 1")
         row = row_for(board, "g6g5", ["g6g7"], ["g6g5"], "missed_mate")
         coach = describe_move(board, row)
-        self.assertIn("checkmate immediately", coach["dialogue"])
+        self.assertIn("mate in one", coach["dialogue"])
         self.assertIn("Qg7#", coach["dialogue"])
         self.assertIn("checks against Black's king", coach["hint"])
         self.assertNotIn("g7", coach["hint"])

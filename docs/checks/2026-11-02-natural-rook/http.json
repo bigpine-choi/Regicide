@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "GET and POST require the session token",
+    "invalid requests leave coaching and the live game untouched",
+    "real engine identifies g4 allowing mate and Qh4#; every returned variation replays legally",
+    "move badges are anchored to the actual destination/FEN; optional alternatives exclude the actual move and !! requires exact comparison evidence",
+    "incremental progress was observed",
+    "character lessons and per-move evidence refer to legal positions and retry choices",
+    "retry rejects illegal/stale input and independently evaluates g4 without modifying the report",
+    "completed reports are reused from the matching cache",
+    "cancelling an actual retry terminates its search and rejects the stale response",
+    "deep search cancellation is bounded and late results cannot overwrite it",
+    "current game, analysis board and saved JSON/PGN bytes remain unchanged"
+  ],
+  "binary_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+  "engine": "Regicide 0.7.0-dev",
+  "cancel_seconds": 0.027202399913221598,
+  "source": "disposable Fool's Mate PGN; own Regicide engine over authenticated HTTP",
+  "personal_game_files_used": false
+}

@@ -4,6 +4,7 @@ extends Node
 signal voices_ready(voices: Array, error: String)
 signal audio_ready(ticket: int, stream: AudioStreamWAV)
 signal failed(ticket: int, error: String)
+signal status_changed(provider: String, message: String)
 
 const HELPER_RESOURCE: String = "res://scripts/windows_speech.ps1"
 const REQUEST_TIMEOUT_MS: int = 20000
@@ -47,8 +48,8 @@ func _prepare() -> bool:
 		if DirAccess.make_dir_recursive_absolute(_folder) != OK:
 			_folder = ""
 			return false
-		_helper = _folder.path_join("windows_speech.ps1")
-	var script: String = FileAccess.get_file_as_string(HELPER_RESOURCE)
+		_helper = _folder.path_join(_helper_filename())
+	var script: String = FileAccess.get_file_as_string(_helper_resource())
 	if script.is_empty():
 		return false
 	var output := FileAccess.open(_helper, FileAccess.WRITE)
@@ -58,6 +59,19 @@ func _prepare() -> bool:
 	_helper_ready = output.get_error() == OK
 	output.close()
 	return _helper_ready
+
+
+func _helper_resource() -> String:
+	return HELPER_RESOURCE
+
+
+func _helper_filename() -> String:
+	return "windows_speech.ps1"
+
+
+func _command(request_file: String) -> Dictionary:
+	return {"executable": OS.get_environment("SystemRoot").path_join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+		"arguments": PackedStringArray(["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", _helper, "-RequestPath", request_file])}
 
 
 func _launch(action: String, ticket: int, text: String, voice: String) -> void:
@@ -77,8 +91,8 @@ func _launch(action: String, ticket: int, text: String, voice: String) -> void:
 		return
 	file.store_string(JSON.stringify({"request_id": request_id, "action": action, "text": text, "voice_id": voice}))
 	file.close()
-	var executable: String = OS.get_environment("SystemRoot").path_join("System32/WindowsPowerShell/v1.0/powershell.exe")
-	var pid: int = OS.create_process(executable, PackedStringArray(["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", _helper, "-RequestPath", request_file]), false)
+	var command: Dictionary = _command(request_file)
+	var pid: int = OS.create_process(str(command.executable), command.arguments, false)
 	var job: Dictionary = {"pid": pid, "action": action, "ticket": ticket, "request_id": request_id, "folder": directory, "started": Time.get_ticks_msec(), "cancelled": false, "cancelled_at": 0}
 	if pid <= 0:
 		_cleanup(job)
