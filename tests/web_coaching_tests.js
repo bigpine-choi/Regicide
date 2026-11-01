@@ -69,6 +69,31 @@ function teachingSnapshot() {
   row.coach={...row.coach,...white,teaching,perspectives:{white,black}};
   return report;
 }
+function continuationSnapshot(count=6,terminal=false) {
+  const result=taughtSnapshot(),row=result.moves[0];
+  const fourth={fen:"1r3rk1/8/8/8/8/8/8/1R3RK1 w - - 4 44",board:{g1:"K",f1:"R",b1:"R",g8:"k",f8:"r",b8:"r"},turn:"white",last_move:"a8b8",ply:4};
+  const fifth={fen:"1r3rk1/8/8/8/8/8/1R6/5RK1 b - - 5 44",board:{g1:"K",f1:"R",b2:"R",g8:"k",f8:"r",b8:"r"},turn:"black",last_move:"b1b2",ply:5};
+  const sixth={fen:"5rk1/1r6/8/8/8/8/1R6/5RK1 w - - 6 45",board:{g1:"K",f1:"R",b2:"R",g8:"k",f8:"r",b7:"r"},turn:"white",last_move:"b8b7",ply:6};
+  let pv=[initialFrame,castleFrame,bothCastled,finalFrame,fourth,fifth,sixth],uci=["e1g1","e8g8","a1b1","a8b8","b1b2","b8b7"],san=["O-O","O-O","Rb1","Rb8","Rb2","Rb7"];
+  const actual={fen:"r3k2r/8/8/8/8/8/R7/4K2R b Kkq - 1 42",board:{e1:"K",h1:"R",a2:"R",e8:"k",h8:"r",a8:"r"},turn:"black",last_move:"a1a2",ply:1};
+  row.uci="a1a2";row.san="Ra2";row.classification="mistake";row.fen_after=actual.fen;
+  result.frames=[initialFrame,actual];result.moves=[row];result.progress={completed:1,total:1};
+  if(terminal) {
+    const before={fen:"8/8/8/8/8/1qk5/8/K7 b - - 0 1",board:{a1:"K",c3:"k",b3:"q"},turn:"black",ply:0};
+    const after={fen:"8/8/8/8/8/2k5/1q6/K7 w - - 1 2",board:{a1:"K",c3:"k",b2:"q"},turn:"white",ply:1,last_move:"b3b2"};
+    pv=[before,after];uci=["b3b2"];san=["Qb2#"];count=1;
+    row.color="black";row.fen_before=before.fen;row.uci="b3a3";
+  }
+  row.best={...row.best,uci:uci[0],san:san[0],pv_frames:structuredClone(pv.slice(0,count+1)),pv_uci:uci.slice(0,count),pv_san:san.slice(0,count)};
+  const packet={line:"best",target_plies:6,available_plies:count,complete:count===6 || terminal,terminal,
+    intro:"Let's follow the stronger move and the replies it allows.",summary:"Keep your king covered while your rook joins the fight.",
+    steps:uci.slice(0,count).map((move,index)=>({ply_index:index+1,uci:move,san:san[index],color:pv[index].turn,
+      text:`${san[index]} changes the position. Check how the rook and king work together.`,squares:[move.slice(0,2),move.slice(2,4)]}))};
+  row.coach.continuation=packet;
+  row.coach.perspectives={white:{dialogue:"Look at the stronger move.",hint:"Keep your king covered.",continuation:packet},
+    black:{dialogue:"Look at White's stronger move.",hint:"Watch your opponent's threats.",continuation:{...structuredClone(packet),intro:"Let's follow your opponent's stronger move."}}};
+  return result;
+}
 function annotation(row,kind=row.classification) {
   const symbols={great:"!!",best:"★",good:"✓",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"?",uncertain:"…"};
   return {symbol:symbols[kind],kind,label:kind==="great" ? "탁월 후보" : row.label,square:row.uci.slice(2,4),
@@ -99,7 +124,7 @@ function browser(options={}) {
       addEventListener:(name,callback)=>{speech.listeners[name]=callback;}};
     context.window.SpeechSynthesisUtterance=class {constructor(text){this.text=text;}};
   }
-  const source=fs.readFileSync(path.join(__dirname,"../web/human-play/coaching.js"),"utf8").replace("  const timer = setInterval", "  window.testApi={enter,leave,action,poll,loadSource,loadFile,accept,render,choosePly,seek,showLine,startRetry,submitRetry,retrySquare,showEvidence};\n  const timer = setInterval");
+  const source=fs.readFileSync(path.join(__dirname,"../web/human-play/coaching.js"),"utf8").replace("  const timer = setInterval", "  window.testApi={enter,leave,action,poll,loadSource,loadFile,accept,acceptForeign,render,choosePly,seek,showLine,startRetry,submitRetry,retrySquare,showEvidence};\n  const timer = setInterval");
   vm.runInNewContext(source,context);
   const ui={get,requests,events,lifecycle,timeouts,motion,motionCancels,speech,document:context.document,api:context.window.testApi,
     async click(id){get(id).dispatch("click");await flush();},
@@ -109,6 +134,7 @@ function browser(options={}) {
     async clickSquare(name){get("coaching-board").dispatch("click",{target:ui.square(name)});await flush();},
     async replayStep(){const item=[...timeouts.entries()].find(([,value])=>value.ms===650);if(!item)return false;timeouts.delete(item[0]);item[1].callback();await flush();return true;},
     async voiceStep(){const item=[...timeouts.entries()].find(([,value])=>value.ms===300);if(!item)return false;timeouts.delete(item[0]);item[1].callback();await flush();return true;},
+    async continuationStep(){const item=[...timeouts.entries()].find(([,value])=>value.ms===600 || (value.ms>=2200 && value.ms<=9000));if(!item)return false;timeouts.delete(item[0]);item[1].callback();await flush();return true;},
     async replayAll(){for(let i=0;i<20;i++)if(!await ui.replayStep())return;throw new Error("replay did not finish");}};
   ui.open=async(extra={})=>{
     void ui.api.enter(extra.library===true);await flush();
@@ -937,6 +963,147 @@ test("coach wording and automatic narration follow the selected human side",asyn
   assert.equal(ui.speech.spoken.at(-1).text,"Your opponent has developed the rook.");
   await ui.click("coach-retry");
   assert.equal(ui.get("coach-dialogue").textContent,"Look for a safe square for their king.");
+});
+
+test("six-ply explanation animates every server frame, highlights SAN and keeps the final board for its summary",async()=>{
+  const ui=browser(),report=continuationSnapshot(),best=report.moves[0].best;
+  best.pv_frames.push({fen:"5rk1/1r6/8/8/8/8/1R6/5R1K b - - 7 45",board:{h1:"K",f1:"R",b2:"R",g8:"k",f8:"r",b7:"r"},turn:"black",last_move:"g1h1",ply:7});
+  best.pv_san.push("Kh1");best.pv_uci.push("g1h1");const saved=JSON.stringify(report);await ui.start(report);
+  assert.equal(ui.get("coach-continuation").hidden,false);assert.match(ui.get("coach-continuation").textContent,/6수/);
+  const requests=ui.requests.length;await ui.click("coach-continuation");
+  assert.equal(ui.get("coach-dialogue").textContent,report.moves[0].coach.continuation.intro);
+  assert.match(ui.get("coaching-variation-title").textContent,/0\/6수/);
+  assert.match(ui.get("coach-continuation-note").textContent,/상대가 이 응수를.*양쪽 합계 6수/);
+  for(let i=1;i<=6;i++) {
+    assert.equal(await ui.continuationStep(),true);assert.equal(ui.motion.at(-1).ply,i);assert.equal(ui.motion.at(-1).animate,true);
+    assert.equal(ui.get("coach-dialogue").textContent,report.moves[0].coach.continuation.steps[i-1].text);
+    assert.match(ui.get("coaching-position").textContent,new RegExp(i+"/6수"));
+    assert.equal(ui.get("coaching-pv").children[i-1].attributes["aria-current"],"step");
+    for(const square of report.moves[0].coach.continuation.steps[i-1].squares)assert.ok(ui.square(square).classList.contains("coaching-evidence-square"));
+    assert.equal(ui.badges().length,0);
+  }
+  await ui.continuationStep();assert.equal(ui.motion.at(-1).ply,6);assert.equal(ui.motion.at(-1).animate,false);
+  assert.equal(ui.get("coach-dialogue").textContent,report.moves[0].coach.continuation.summary);
+  assert.equal(ui.square("b7").children[0].textContent,"♜");
+  await ui.continuationStep();assert.equal(ui.get("coaching-line-play").textContent,"설명 완료");
+  assert.equal(await ui.continuationStep(),false);assert.equal(ui.requests.length,requests);assert.equal(JSON.stringify(report),saved);
+  await ui.click("coaching-mainline");assert.equal(ui.square("a2").children[0].textContent,"♖");assert.equal(ui.get("coaching-variation").hidden,true);
+});
+
+test("guided speech waits for voice completion without interrupting each step and reads the final summary",async()=>{
+  const ui=browser({voices:[{lang:"en-US",localService:true}]}),report=continuationSnapshot(2);await ui.start(report);
+  await ui.click("coach-continuation");await ui.voiceStep();
+  assert.equal(ui.speech.spoken.length,1);const intro=ui.speech.spoken[0];
+  ui.api.render();assert.equal(await ui.continuationStep(),false);assert.equal(ui.speech.cancelled,0);
+  intro.onend();await ui.continuationStep();assert.equal(ui.motion.at(-1).ply,1);await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.continuation.steps[0].text);
+  assert.equal(await ui.continuationStep(),false);assert.equal(ui.speech.cancelled,0);
+  ui.speech.spoken.at(-1).onend();await ui.continuationStep();await ui.voiceStep();
+  ui.speech.spoken.at(-1).onend();await ui.continuationStep();await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.continuation.summary);
+  ui.speech.spoken.at(-1).onend();await ui.continuationStep();assert.equal(ui.get("coaching-line-play").textContent,"설명 완료");
+  const count=ui.motion.length;intro.onend();intro.onerror();assert.equal(await ui.continuationStep(),false);assert.equal(ui.motion.length,count);
+});
+
+test("guided pause and manual stepping cancel stale work, resume the current explanation and retain the original review",async()=>{
+  const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(continuationSnapshot());await ui.click("coach-continuation");await ui.voiceStep();
+  const oldSpeech=ui.speech.spoken.at(-1);await ui.click("coaching-line-play");
+  oldSpeech.onend();assert.equal(await ui.continuationStep(),false);assert.equal(ui.get("coaching-line-play").textContent,"이어서 보기");
+  await ui.click("coaching-line-next");assert.equal(ui.motion.at(-1).ply,1);assert.equal(await ui.voiceStep(),true);
+  await ui.click("coaching-line-play");await ui.voiceStep();assert.equal(ui.speech.spoken.length,3);
+  ui.speech.spoken.at(-1).onend();const stale=[...ui.timeouts.values()].find((timer)=>timer.ms===600).callback;
+  await ui.click("coaching-line-prev");const count=ui.motion.length;stale();assert.equal(ui.motion.length,count);assert.equal(ui.motion.at(-1).ply,0);
+  await ui.click("coaching-line-play");await ui.voiceStep();assert.equal(ui.speech.spoken.at(-1).text,"Let's follow the stronger move and the replies it allows.");
+});
+
+test("manual continuation steps read once while paused, never auto advance, and reject stale speech or timers",async()=>{
+  const ui=browser({voices:[{lang:"en-US",localService:true}]}),report=continuationSnapshot(2);await ui.start(report);
+  await ui.click("coach-continuation");await ui.click("coaching-line-play");assert.equal(await ui.voiceStep(),false,"pause itself stays silent");
+  await ui.click("coaching-line-next");const staleTimer=[...ui.timeouts.values()].find((item)=>item.ms===300).callback;
+  await ui.voiceStep();const first=ui.speech.spoken.at(-1);
+  assert.equal(first.text,report.moves[0].coach.continuation.steps[0].text);first.onend();assert.equal(ui.get("coach-speech-stop").hidden,true);ui.api.render();
+  assert.equal(await ui.voiceStep(),false);assert.equal(await ui.continuationStep(),false);assert.equal(ui.motion.at(-1).ply,1);
+  await ui.click("coaching-line-next");await ui.voiceStep();const second=ui.speech.spoken.at(-1),count=ui.speech.spoken.length;
+  staleTimer();first.onerror();assert.equal(ui.speech.spoken.length,count);assert.equal(ui.motion.at(-1).ply,2);
+  second.onerror();assert.equal(await ui.continuationStep(),false,"manual speech failure cannot start automatic playback");
+  await ui.click("coaching-line-next");await ui.voiceStep();const summary=ui.speech.spoken.at(-1);
+  assert.equal(summary.text,report.moves[0].coach.continuation.summary);summary.onend();assert.equal(await ui.continuationStep(),false);
+  await ui.click("coaching-line-prev");await ui.voiceStep();const manual=ui.speech.spoken.at(-1);
+  await ui.click("coach-speech-stop");manual.onend();assert.equal(await ui.continuationStep(),false);assert.equal(await ui.voiceStep(),false);
+  await ui.click("coaching-line-play");await ui.voiceStep();assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.continuation.steps[1].text);
+  ui.speech.spoken.at(-1).onend();assert.equal(await ui.continuationStep(),true,"resume restores deliberate automatic playback");
+});
+
+test("manual steps with muted or absent speech remain paused without reading timers",async()=>{
+  for(const voices of [undefined,[{lang:"en-US",localService:true}]]) {
+    const ui=browser({voices});await ui.start(continuationSnapshot());await ui.click("coach-continuation");
+    if(voices)await ui.click("coach-speak");
+    await ui.click("coaching-line-next");ui.api.render();assert.equal(ui.motion.at(-1).ply,1);
+    assert.equal(ui.get("coach-speech-stop").hidden,true);
+    assert.equal(await ui.voiceStep(),false);assert.equal(await ui.continuationStep(),false);
+  }
+});
+
+test("short confirmed lines and terminal lines never promise six available moves",async()=>{
+  for(const terminal of [false,true]) {
+    const report=continuationSnapshot(2,terminal),count=terminal ? 1 : 2,ui=browser();await ui.start(report);await ui.click("coach-continuation");
+    assert.match(ui.get("coach-continuation").textContent,new RegExp(count+"수"));
+    assert.match(ui.get("coach-continuation-note").textContent,terminal ? /대국이 끝납니다/ : /2수까지만 확인/);
+    for(let i=0;i<count+2;i++)await ui.continuationStep();
+    assert.equal(ui.motion.at(-1).ply,count);assert.equal(ui.get("coaching-line-next").disabled,true);assert.equal(await ui.continuationStep(),false);
+  }
+});
+
+test("continuation gate rejects untrusted mismatches, noncritical rows and actual-equals-best",async()=>{
+  for(const mutate of [
+    row=>{row.classification="good";}, row=>{row.uci=row.best.uci;}, row=>{row.best.bound="upper";},
+    row=>{row.best.pv_frames[0].fen="another-root";},row=>{row.best.pv_uci[0]="e1c1";},
+    row=>{row.best.pv_san[1]="different";},row=>{row.best.pv_frames[1].last_move="e1c1";},
+    row=>{row.coach.continuation.steps[0].color="black";},row=>{row.coach.continuation.steps[0].ply_index=2;},
+    row=>{row.coach.continuation.steps[0].text="";},row=>{row.coach.continuation.available_plies=7;},
+    row=>{row.coach.continuation.complete=false;},row=>{row.coach.continuation.steps[0].squares=["z9"];},
+    row=>{row.coach.perspectives.white={dialogue:"No verified line."};}
+  ]) {
+    const report=continuationSnapshot();mutate(report.moves[0]);const ui=browser();await ui.start(report);
+    assert.equal(ui.get("coach-continuation").hidden,true);await ui.click("coach-continuation");
+    assert.equal(await ui.continuationStep(),false);assert.equal(ui.get("coaching-variation").hidden,true);
+  }
+});
+
+test("guided callbacks cannot revive after navigation, overview, evidence, retry, job replacement or leaving",async()=>{
+  for(const operation of [
+    ui=>ui.api.seek(0),ui=>ui.click("coaching-best-line"),ui=>ui.click("coaching-mainline"),
+    ui=>{ui.get("coach-overview-box").open=true;ui.get("coach-overview-box").dispatch("toggle");},
+    ui=>ui.api.showEvidence(0),ui=>ui.click("coach-retry"),ui=>ui.api.acceptForeign(snapshot({revision:2,job_id:"foreign"})),
+    ui=>ui.click("coaching-start"),ui=>{void ui.api.loadSource("another");},ui=>ui.click("coaching-return"),
+    ui=>ui.lifecycle.pagehide(),ui=>{ui.document.hidden=true;ui.lifecycle["document-visibilitychange"]();},
+    ui=>{ui.get("coaching-side").value="black";ui.get("coaching-side").dispatch("change");}
+  ]) {
+    const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(continuationSnapshot());await ui.click("coach-continuation");await ui.voiceStep();
+    const stale=ui.speech.spoken.at(-1);stale.onend();const timer=[...ui.timeouts.values()].find((item)=>item.ms===600).callback;
+    await operation(ui);const count=ui.motion.length;stale.onend();stale.onerror();timer();await flush();
+    assert.equal(ui.motion.length,count);assert.equal(await ui.continuationStep(),false);
+  }
+});
+
+test("retry hides the continuation completely, and revealed retry feedback never starts the original solution",async()=>{
+  const report=continuationSnapshot(),ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(report);
+  await ui.click("coach-continuation");const stale=[...ui.timeouts.values()].find((item)=>item.ms===300).callback;
+  await ui.click("coach-retry");stale();assert.equal(ui.get("coach-continuation").hidden,true);assert.equal(await ui.continuationStep(),false);
+  await ui.click("coach-continuation");await ui.voiceStep();assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.perspectives.white.hint);
+  await ui.click("coach-retry-reveal");assert.equal(ui.get("coach-continuation").hidden,true);await ui.click("coach-continuation");assert.equal(await ui.continuationStep(),false);
+  await ui.click("coach-retry-cancel");assert.equal(ui.get("coach-continuation").hidden,false);
+});
+
+test("muting or unavailable speech uses bounded reading time, errors recover, and selected perspective is spoken",async()=>{
+  const ui=browser({voices:[{lang:"en-US",localService:true}]}),report=continuationSnapshot();
+  report.moves[0].coach.perspectives.black.continuation.intro=Array(40).fill("word").join(" ");
+  await ui.start(report);ui.get("coaching-side").value="black";ui.get("coaching-side").dispatch("change");await ui.click("coach-continuation");await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.perspectives.black.continuation.intro);
+  ui.speech.spoken.at(-1).onerror();assert.ok([...ui.timeouts.values()].some((item)=>item.ms===8800));
+  await ui.click("coach-speak");assert.ok([...ui.timeouts.values()].some((item)=>item.ms===8800));
+  await ui.continuationStep();assert.equal(ui.motion.at(-1).ply,1);assert.equal(await ui.voiceStep(),false);
+  assert.ok([...ui.timeouts.values()].some((item)=>item.ms>=2200 && item.ms<=9000));
 });
 
 test("all UI ids exist and output has no HTML interpolation sink",()=>{

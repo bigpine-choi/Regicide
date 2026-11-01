@@ -14,6 +14,7 @@
   let libraryGames = [];
   let cursor = 0, selectedPly = 1, variation = null, lineCursor = 0, viewBefore=false;
   let contextReplay = null, contextTimer = null, replayEpoch = 0, motionStep = false;
+  let continuationReplay = null, continuationTimer = null, continuationEpoch = 0;
   let retry = null, retryEpoch = 0, evidenceFocus = null;
   let retryPointer=null, pointerSource=null, pointerTarget=null, suppressRetryClickUntil=0;
   let speaking = false, speechEpoch = 0;
@@ -112,6 +113,119 @@
     return visible && !busy && !retry?.submitting && (!contextReplay || contextReplay.done) && ["completed","cancelled"].includes(report?.status) && row?.classification !== "pending" &&
       Array.isArray(row?.retry_legal_moves) && row.retry_legal_moves.length > 0;
   }
+  function continuationPacket() {
+    const row=selectedRow(), coach=row?.coach?.perspectives?.[mine()] || row?.coach;
+    const packet=coach?.continuation, best=row?.best, pv=best?.pv_frames;
+    if (!packet || !criticalKinds.has(row.classification) || best?.bound!=="exact" || best.uci===row.uci ||
+        packet.line!=="best" || packet.target_plies!==6 ||
+        !Number.isInteger(packet.available_plies) || packet.available_plies<1 || packet.available_plies>6 ||
+        typeof packet.terminal!=="boolean" || packet.complete!==(packet.available_plies===6 || packet.terminal) ||
+        !Array.isArray(packet.steps) || packet.steps.length!==packet.available_plies ||
+        ![packet.intro,packet.summary].every((text)=>typeof text==="string" && text.trim()) ||
+        !Array.isArray(pv) || pv.length<=packet.available_plies || pv[0]?.fen!==row.fen_before || pv[0]?.turn!==row.color ||
+        best.uci!==packet.steps[0]?.uci) return null;
+    for(const [index,step] of packet.steps.entries()) {
+      const before=pv[index],after=pv[index+1];
+      if(step.ply_index!==index+1 || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(step.uci || "") ||
+         typeof step.text!=="string" || !step.text.trim() || typeof step.san!=="string" || !step.san.trim() ||
+         best.pv_uci?.[index]!==step.uci || best.pv_san?.[index]!==step.san ||
+         !["white","black"].includes(step.color) || before?.turn!==step.color ||
+         after?.turn!==(step.color==="white" ? "black" : "white") || after?.last_move!==step.uci ||
+         typeof after?.fen!=="string" || !after.board || !before?.board ||
+         !Array.isArray(step.squares) || step.squares.some((square)=>!/^[a-h][1-8]$/.test(square))) return null;
+    }
+    return packet;
+  }
+  function continuationCurrent(active=continuationReplay) {
+    return Boolean(active && active===continuationReplay && visible && !document.hidden && !busy && !retry &&
+      report===active.report && selectedPly===active.ply && mine()===active.side && variation==="best" &&
+      continuationPacket()===active.packet);
+  }
+  function continuationText() {
+    const active=continuationReplay;
+    return active?.stage==="summary" ? active.packet.summary : lineCursor ? active?.packet.steps[lineCursor-1]?.text : active?.packet.intro;
+  }
+  function continuationReadingDelay() {
+    return Math.max(2200,Math.min(9000,(continuationText() || "").trim().split(/\s+/).length*220));
+  }
+  function continuationFocus() {
+    evidenceFocus=continuationReplay?.stage==="step" ? {ply:selectedPly,line:"best",index:lineCursor,
+      squares:continuationReplay.packet.steps[lineCursor-1].squares} : null;
+  }
+  function clearContinuationTimer() {
+    continuationEpoch++;
+    if(continuationTimer!==null)clearTimeout(continuationTimer);
+    continuationTimer=null;
+  }
+  function stopContinuation() {
+    if(!continuationReplay && continuationTimer===null)return;
+    clearContinuationTimer();continuationReplay=null;stopSpeech();
+  }
+  function continuationWait(milliseconds,callback,allowPaused=false) {
+    const ticket=continuationEpoch,active=continuationReplay;
+    continuationTimer=setTimeout(()=>{
+      if(ticket!==continuationEpoch || !continuationCurrent(active) || (active.paused && !allowPaused))return;
+      continuationTimer=null;callback();
+    },milliseconds);
+  }
+  function advanceContinuation() {
+    if(!continuationCurrent() || continuationReplay.paused)return;
+    if(continuationReplay.stage==="summary") {continuationReplay.done=true;render();return;}
+    clearContinuationTimer();stopSpeech();
+    if(lineCursor<continuationReplay.packet.available_plies) {lineCursor++;continuationReplay.stage="step";motionStep=true;}
+    else {continuationReplay.stage="summary";motionStep=false;}
+    continuationReplay.narrated=null;continuationReplay.manualSpeech=false;continuationFocus();render();
+  }
+  function scheduleContinuation() {
+    const active=continuationReplay;
+    if(!continuationCurrent(active) || (active.paused && !active.manualSpeech) || active.done)return;
+    const key=active.stage+":"+lineCursor;
+    if(active.narrated===key)return;
+    active.narrated=key;
+    const voice=speechEnabled ? localEnglishVoice() : null;
+    if(!voice) {
+      active.manualSpeech=false;
+      renderSpeech();
+      if(!active.paused)continuationWait(continuationReadingDelay(),advanceContinuation);
+      return;
+    }
+    const ticket=continuationEpoch;
+    continuationWait(300,()=>{
+      lastSpeechKey=speechContextKey();
+      speakCoach(continuationText(),voice,(failed)=>{
+        if(ticket!==continuationEpoch || !continuationCurrent(active) || active.narrated!==key)return;
+        active.manualSpeech=false;
+        if(active.paused){renderSpeech();return;}
+        continuationWait(failed ? continuationReadingDelay() : 600,advanceContinuation);
+      });
+    },active.paused);
+  }
+  function startContinuation() {
+    const packet=continuationPacket();
+    if(!packet || !visible || busy || running() || retry || document.hidden)return;
+    stopContext();stopSpeech();evidenceFocus=null;speechOverview=false;get("coach-overview-box").open=false;
+    variation="best";lineCursor=0;viewBefore=false;motionStep=false;
+    continuationReplay={packet,report,ply:selectedPly,side:mine(),stage:"intro",paused:false,done:false,narrated:null,manualSpeech:false};
+    render();
+  }
+  function pauseContinuation() {
+    if(!continuationCurrent() || continuationReplay.done)return;
+    clearContinuationTimer();stopSpeech();continuationReplay.paused=!continuationReplay.paused;
+    continuationReplay.narrated=null;continuationReplay.manualSpeech=false;render();
+  }
+  function stepLine(delta) {
+    if(continuationReplay) {
+      if(!continuationCurrent())return;
+      clearContinuationTimer();stopSpeech();const active=continuationReplay,previous=lineCursor;
+      if(delta<0 && active.stage==="summary")active.stage="step";
+      else if(delta>0 && lineCursor===active.packet.available_plies)active.stage="summary";
+      else {lineCursor=Math.max(0,Math.min(active.packet.available_plies,lineCursor+delta));active.stage=lineCursor ? "step" : "intro";}
+      active.paused=true;active.done=false;active.narrated=null;active.manualSpeech=true;
+      motionStep=lineCursor!==previous;continuationFocus();render();return;
+    }
+    stopSpeech();stopContext();
+    if(variation){motionStep=true;lineCursor=Math.max(0,Math.min((line()?.pv_frames?.length || 1)-1,lineCursor+delta));render();}
+  }
   function stopSpeech() {
     speechEpoch++;
     if (speechTimer !== null) clearTimeout(speechTimer);
@@ -130,7 +244,8 @@
     get("coach-speak").disabled=!available || !visible;
     get("coach-speak").textContent=available ? (speechEnabled ? "음성 켜짐" : "음성 꺼짐") : "영어 음성 없음";
     get("coach-speak").setAttribute("aria-pressed",String(available && speechEnabled));
-    get("coach-speech-stop").hidden=!speaking && speechTimer===null;
+    get("coach-speech-stop").hidden=!speaking && speechTimer===null && (!continuationReplay ||
+      (continuationReplay.paused && !continuationReplay.manualSpeech) || continuationReplay.done);
     get("coach-voice-note").textContent=available ? "내 컴퓨터의 영어 음성 · 수를 넘기면 자동으로 읽어요." : "사용 가능한 영어 음성이 없어 글로 안내합니다.";
   }
   function spokenCoachText() {
@@ -147,6 +262,7 @@
       (!contextReplay || contextReplay.done) && Boolean(localEnglishVoice()) && Boolean(spokenCoachText());
   }
   function scheduleSpeech() {
+    if(continuationReplay){scheduleContinuation();return;}
     if (!canSpeak()) { stopSpeech(); return; }
     const key=speechContextKey();
     if (key===pendingSpeechKey) return;
@@ -163,21 +279,28 @@
     },300);
     renderSpeech();
   }
-  function speakCoach(text,voice) {
+  function speakCoach(text,voice,completed=null) {
     const utterance=new window.SpeechSynthesisUtterance(text), ticket=++speechEpoch;
     utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=.95;
-    const finish=()=>{if(ticket===speechEpoch){speaking=false;renderSpeech();}};
-    utterance.onend=finish;utterance.onerror=finish;speaking=true;renderSpeech();
-    try { window.speechSynthesis.speak(utterance); } catch (_) { finish(); }
+    let finished=false;
+    const finish=(failed=false)=>{if(!finished && ticket===speechEpoch){finished=true;speaking=false;renderSpeech();completed?.(failed);}};
+    utterance.onend=()=>finish();utterance.onerror=()=>finish(true);speaking=true;renderSpeech();
+    try { window.speechSynthesis.speak(utterance); } catch (_) { finish(true); }
   }
   function toggleSpeech() {
     if (!localEnglishVoice()) return;
     speechEnabled=!speechEnabled;stopSpeech();
+    if(continuationReplay){clearContinuationTimer();continuationReplay.narrated=null;scheduleContinuation();renderSpeech();return;}
     if (speechEnabled) {lastSpeechKey="";scheduleSpeech();}
     renderSpeech();
   }
-  function stopCurrentSpeech() {lastSpeechKey=speechContextKey();stopSpeech();}
+  function stopCurrentSpeech() {
+    if(continuationReplay && !continuationReplay.paused && !continuationReplay.done){pauseContinuation();return;}
+    if(continuationReplay){clearContinuationTimer();continuationReplay.manualSpeech=false;}
+    lastSpeechKey=speechContextKey();stopSpeech();
+  }
   function cancelExercise() {
+    stopContinuation();
     clearRetryPointer();
     if(retry){cursor=selectedPly;viewBefore=false;}
     if(variation === "retry_candidate" || variation === "retry_best"){variation=null;lineCursor=0;}
@@ -192,11 +315,15 @@
     get("coach-mascot").dataset.mood=mood;
     get("coach-mascot").setAttribute("aria-label",({encourage:"응원하는",think:"생각하는",celebrate:"기뻐하는",warning:"주의할 점을 알려주는"})[mood]+" 체스 코치 루크");
     get("coach-scene").textContent=row ? positionTitle(row) + (hidden ? " · 다시 두기" : "") : "한 장면씩 함께 살펴봐요.";
-    get("coach-dialogue").textContent=travelling ? "Following the moves actually played to the next key moment." :
+    get("coach-dialogue").textContent=continuationReplay ? continuationText() : travelling ? "Following the moves actually played to the next key moment." :
       hidden ? retry.feedback?.message || wording?.hint || "Check for threats against the king and pieces that can be captured." :
       wording?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
     get("coach-overview").textContent=report?.coach?.summary || "Start the analysis to find the key moments.";
     get("coach-overview-box").hidden=hidden;
+    const continuation=continuationPacket();
+    get("coach-continuation").hidden=!continuation || Boolean(retry) || travelling;
+    get("coach-continuation").disabled=busy || running() || Boolean(continuationReplay && !continuationReplay.done);
+    get("coach-continuation").textContent="왜 더 좋은지 · "+(continuation?.available_plies || 6)+"수 보기";
     get("coach-lesson-controls").hidden=hidden;
     const lessonPlies=lessons();
     get("coach-lesson-prev").disabled=!lessonPlies.some((ply)=>ply<selectedPly);
@@ -459,7 +586,8 @@
       viewBefore ? "두기 전 위치 · 실제 착수 평가는 ‘둔 뒤’에서 확인하세요." : "배지는 실제 착수 뒤, 그 수를 둔 기물에 표시합니다.";
     get("coaching-badge-legend").hidden=hidden;
     motionStep = false;
-    get("coaching-position").textContent = hidden ? "다시 두기 · "+sideName(row?.color)+"의 수를 골라 보세요." : variation ? lineTitle() + " 수순 · " + lineCursor + "/" + Math.max(0,(line()?.pv_frames?.length || 1)-1) + "반수" :
+    get("coaching-position").textContent = hidden ? "다시 두기 · "+sideName(row?.color)+"의 수를 골라 보세요." : continuationReplay ?
+      "추천 수순 설명 · "+lineCursor+"/"+continuationReplay.packet.available_plies+"수" : variation ? lineTitle() + " 수순 · " + lineCursor + "/" + Math.max(0,(line()?.pv_frames?.length || 1)-1) + "반수" :
       position ? cursor + "/" + Math.max(0,frames().length-1) + "반수 · " + sideName(position.turn) + " 차례" + (position.in_check ? " · 체크" : "") : "대국을 선택하세요.";
     const comparison = hidden ? null : variation ? line() : cursor === selectedPly - 1 ? row?.best : row?.played;
     let share = null;
@@ -478,6 +606,7 @@
   }
 
   function render() {
+    if(continuationReplay && !continuationCurrent())stopContinuation();
     const locked = busy || running(), row = selectedRow(), allFrames = frames(), pv = line();
     const hidden=exerciseHidden();
     get("coaching-view").hidden = !visible;
@@ -528,10 +657,25 @@
       get("coaching-" + kind + "-line").disabled = hidden || !value?.pv_frames || value.pv_frames.length < 2;
     }
     get("coaching-variation").hidden = !variation;
-    get("coaching-variation-title").textContent = variation ? lineTitle() + " 이후 예상 응수 · " + lineCursor + "반수 진행" : "";
-    get("coaching-pv").textContent = hidden ? "" : pv?.pv_san?.join(" ") || "";
+    get("coaching-variation-title").textContent = continuationReplay ?
+      (continuationReplay.stage==="summary" ? "마무리" : continuationReplay.paused ? "잠깐 멈춤" : lineCursor ? "추천 수순 설명" : "추천 수순 시작")+
+      " · "+lineCursor+"/"+continuationReplay.packet.available_plies+"수" : variation ? lineTitle() + " 이후 예상 응수 · " + lineCursor + "반수 진행" : "";
+    get("coach-continuation-note").hidden=!continuationReplay;
+    get("coach-continuation-note").textContent=continuationReplay ? "상대가 이 응수를 택했을 때의 예상 수순입니다. 양쪽 합계 "+continuationReplay.packet.available_plies+"수"+
+      (continuationReplay.packet.terminal ? "에서 대국이 끝납니다." : continuationReplay.packet.available_plies<6 ? "까지만 확인됐습니다." : "를 따라봅니다.") : "";
+    const sanList=document.createDocumentFragment();
+    if(continuationReplay)for(const step of continuationReplay.packet.steps) {
+      const span=document.createElement("span");span.textContent=step.san;span.className=step.ply_index===lineCursor ? "current" : "";
+      span.setAttribute("aria-current",step.ply_index===lineCursor ? "step" : "false");sanList.append(span);
+    }
+    get("coaching-pv").replaceChildren(sanList);
+    if(!continuationReplay)get("coaching-pv").textContent = hidden ? "" : pv?.pv_san?.join(" ") || "";
     get("coaching-line-prev").disabled = !variation || lineCursor <= 0;
-    get("coaching-line-next").disabled = !variation || lineCursor >= (pv?.pv_frames?.length || 1) - 1;
+    get("coaching-line-next").disabled = continuationReplay ? continuationReplay.stage==="summary" : !variation || lineCursor >= (pv?.pv_frames?.length || 1) - 1;
+    get("coaching-line-next").textContent=continuationReplay && lineCursor===continuationReplay.packet.available_plies ? "마무리 보기" : "다음 응수";
+    get("coaching-line-play").hidden=!continuationReplay;
+    get("coaching-line-play").disabled=Boolean(continuationReplay?.done);
+    get("coaching-line-play").textContent=continuationReplay?.paused ? "이어서 보기" : continuationReplay?.done ? "설명 완료" : "잠깐 멈춤";
     for (const id of ["coaching-first","coaching-prev"]) get(id).disabled = !allFrames.length || (!variation && cursor === 0);
     for (const id of ["coaching-last","coaching-next"]) get(id).disabled = !allFrames.length || (!variation && cursor >= allFrames.length-1);
     get("coaching-prev-critical").disabled = !criticalRows().some((item) => item.ply < selectedPly);
@@ -554,6 +698,7 @@
   }
 
   function stopContext() {
+    stopContinuation();
     replayEpoch++;
     if (contextTimer !== null) clearTimeout(contextTimer);
     contextTimer = null; contextReplay = null;
@@ -731,7 +876,7 @@
       const next = await request("/api/coaching");
       if (ticket === epoch && visible && session?.revision === revision && session?.job_id === job) {
         if (next.job_id !== job) acceptForeign(next);
-        else if (accept(next)) { report = session; failure = session.error || ""; }
+        else if (accept(next)) { stopContinuation();report = session; failure = session.error || ""; }
         render();
       }
     } catch (error) { if (ticket === epoch && visible) { failure = error.message; render(); } }
@@ -779,8 +924,10 @@
   get("coaching-filter").addEventListener("change", () => { cancelExercise();stopContext(); render(); });
   get("coaching-moves").addEventListener("click", (event) => { const button = event.target.closest("button[data-coaching-ply]"); if (button) choosePly(Number(button.dataset.coachingPly)); });
   for (const kind of ["best","played"]) get("coaching-"+kind+"-line").addEventListener("click", () => showLine(kind));
-  get("coaching-line-prev").addEventListener("click", () => { stopSpeech();stopContext(); if (variation && lineCursor > 0) { motionStep=true; lineCursor--; render(); } });
-  get("coaching-line-next").addEventListener("click", () => { stopSpeech();stopContext(); if (variation && lineCursor < (line()?.pv_frames?.length || 1)-1) { motionStep=true; lineCursor++; render(); } });
+  get("coaching-line-prev").addEventListener("click", () => stepLine(-1));
+  get("coaching-line-next").addEventListener("click", () => stepLine(1));
+  get("coaching-line-play").addEventListener("click",pauseContinuation);
+  get("coach-continuation").addEventListener("click",startContinuation);
   get("coaching-mainline").addEventListener("click", () => { stopSpeech();stopContext(); motionStep=false; variation = null;cursor=selectedPly;viewBefore=false; render(); });
   get("coaching-context-pause").addEventListener("click", () => {
     if (!contextReplay || contextReplay.done) return;
@@ -813,7 +960,10 @@
   });
   get("coach-speak").addEventListener("click",toggleSpeech);
   get("coach-speech-stop").addEventListener("click",stopCurrentSpeech);
-  get("coach-overview-box").addEventListener("toggle",()=>{speechOverview=Boolean(get("coach-overview-box").open);scheduleSpeech();});
+  get("coach-overview-box").addEventListener("toggle",()=>{
+    if(get("coach-overview-box").open){stopContinuation();render();}
+    speechOverview=Boolean(get("coach-overview-box").open);scheduleSpeech();
+  });
   window.speechSynthesis?.addEventListener?.("voiceschanged",()=>{renderSpeech();scheduleSpeech();});
   get("coaching-board").addEventListener("click",(event)=>{
     if(Date.now()<suppressRetryClickUntil)return;
@@ -835,7 +985,7 @@
       retrySquare(event.target.dataset.coachingSquare);event.preventDefault();
     } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       const delta = event.key === "ArrowLeft" ? -1 : 1;
-      if (variation) { stopSpeech();stopContext(); motionStep=true; lineCursor = Math.max(0,Math.min((line()?.pv_frames?.length || 1)-1,lineCursor+delta)); render(); }
+      if (variation) stepLine(delta);
       else seek(cursor+delta);
       event.preventDefault();
     }

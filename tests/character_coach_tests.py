@@ -220,7 +220,7 @@ class RetryTests(unittest.TestCase):
         before = path.read_bytes()
         cached = self.session.start(SHORT, "white", 500, self.session.revision)
         self.assertTrue(cached["cached"])
-        self.assertEqual(cached["coach"]["version"], 4)
+        self.assertEqual(cached["coach"]["version"], 5)
         self.assertEqual(cached["moves"], state["moves"])
         self.assertEqual(path.read_bytes(), before)
         self.assertEqual(self.factory.calls, 1)

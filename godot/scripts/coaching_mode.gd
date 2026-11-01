@@ -43,6 +43,19 @@ var _walkthrough_cursor: int = 0
 var _walkthrough_from: int = 0
 var _walkthrough_target: int = 0
 var _walkthrough_job: String = ""
+var _continuation_active: bool = false
+var _continuation_paused: bool = false
+var _continuation_finished: bool = false
+var _continuation_ticket: String = ""
+var _continuation_ready_at: int = 0
+var continuation_timer: Timer
+var continuation_button: Button
+var continuation_controls: VBoxContainer
+var continuation_progress: Label
+var continuation_moves: Label
+var continuation_pause: Button
+var continuation_previous: Button
+var continuation_next: Button
 var _coach_overview: bool = false
 var _coach_evidence_key: String = ""
 var _coach_focus_fen: String = ""
@@ -148,11 +161,13 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_cancel_continuation()
 	_stop_speech()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		_cancel_continuation()
 		_stop_speech()
 
 
@@ -403,6 +418,10 @@ func _build_ui() -> void:
 	speech_timer.wait_time = 0.3
 	speech_timer.timeout.connect(_speak_coach)
 	add_child(speech_timer)
+	continuation_timer = Timer.new()
+	continuation_timer.wait_time = 0.1
+	continuation_timer.timeout.connect(_advance_continuation)
+	add_child(continuation_timer)
 
 
 func _build_coach(sidebar: VBoxContainer) -> void:
@@ -448,6 +467,25 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	voice_status_label = _label("", 12, "9bd7ca")
 	voice_status_label.name = "CoachVoiceStatus"
 	column.add_child(voice_status_label)
+	continuation_button = _button("왜 더 좋은지 · 6수 보기", _begin_continuation, "CoachContinuation")
+	column.add_child(continuation_button)
+	continuation_controls = VBoxContainer.new()
+	continuation_controls.name = "CoachContinuationControls"
+	column.add_child(continuation_controls)
+	continuation_progress = _label("", 13, "f4e9c9")
+	continuation_controls.add_child(continuation_progress)
+	continuation_controls.add_child(_label("예상 전개 · 양쪽이 번갈아 두는 수순이며 상대 응수에 따라 달라질 수 있어요.", 12, "9bd7ca"))
+	continuation_moves = _label("", 14, "f4e9c9")
+	continuation_controls.add_child(continuation_moves)
+	var continuation_navigation := HBoxContainer.new()
+	continuation_controls.add_child(continuation_navigation)
+	continuation_previous = _button("← 이전", _line_step.bind(-1), "CoachContinuationPrevious")
+	continuation_pause = _button("일시정지", _pause_continuation, "CoachContinuationPause")
+	continuation_next = _button("다음 →", _line_step.bind(1), "CoachContinuationNext")
+	for button in [continuation_previous, continuation_pause, continuation_next]:
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		continuation_navigation.add_child(button)
+	continuation_controls.add_child(_button("실제 기보로 돌아가기", _leave_line, "CoachContinuationReturn"))
 	coach_course = _label("분석을 마치면 복습 코스를 준비할게.", 13, "9bd7ca")
 	column.add_child(coach_course)
 	var lessons := HBoxContainer.new()
@@ -578,6 +616,7 @@ func _cancel() -> void:
 
 
 func _mutate(body: Dictionary) -> void:
+	_cancel_continuation()
 	busy = true
 	_mutation_epoch += 1
 	var epoch: int = _epoch
@@ -803,7 +842,13 @@ func _show_line(kind: String) -> void:
 
 
 func _line_step(direction: int) -> void:
-	line_index = clampi(line_index + direction, 0, maxi(0, _line_frames().size() - 1))
+	if _continuation_active:
+		_continuation_paused = true
+		continuation_timer.stop()
+		line_index = clampi(line_index + direction, 0, _continuation_count())
+		_mark_continuation_step()
+	else:
+		line_index = clampi(line_index + direction, 0, maxi(0, _line_frames().size() - 1))
 	_render()
 
 
@@ -988,6 +1033,7 @@ func _clear_coach_focus() -> void:
 func _toggle_coach_overview() -> void:
 	if retry_active:
 		return
+	_cancel_continuation()
 	_coach_overview = not _coach_overview
 	_clear_coach_focus()
 	_render()
@@ -1026,6 +1072,7 @@ func _show_evidence(evidence: Dictionary, ply: int, job: String, source_fen: Str
 	var index: int = int(evidence.get("ply_index", -1))
 	if kind not in ["played", "best"] or not line is Dictionary or index < 0 or index >= line.get("pv_frames", []).size():
 		return
+	_cancel_continuation()
 	_cancel_walkthrough()
 	_coach_overview = false
 	line_kind = kind
@@ -1071,6 +1118,7 @@ func _begin_retry() -> void:
 
 
 func _end_retry(clear_reply: bool = true) -> void:
+	_cancel_continuation()
 	_stop_speech()
 	_retry_epoch += 1
 	retry_active = false
@@ -1248,7 +1296,155 @@ func _coach_for_side() -> Dictionary:
 			for key in ["dialogue", "hint"]:
 				if perspective.get(key) is String and not str(perspective[key]).strip_edges().is_empty():
 					coach[key] = perspective[key]
+			if perspective.get("continuation") is Dictionary:
+				coach["continuation"] = perspective.continuation
 	return coach
+
+
+func _continuation_packet() -> Dictionary:
+	var row: Dictionary = _move()
+	var packet: Variant = _coach_for_side().get("continuation")
+	var best: Variant = row.get("best")
+	if row.get("classification") not in ["inaccuracy", "mistake", "blunder", "missed_mate", "allows_mate"] or not packet is Dictionary or not best is Dictionary:
+		return {}
+	if packet.get("line") != "best" or best.get("bound") != "exact" or best.get("uci") == row.get("uci"):
+		return {}
+	var count: int = int(packet.get("available_plies", 0))
+	var steps: Variant = packet.get("steps")
+	var frames: Variant = best.get("pv_frames")
+	var moves: Variant = best.get("pv_uci")
+	var sans: Variant = best.get("pv_san")
+	if count < 1 or count > 6 or int(packet.get("target_plies", 0)) != 6 or not steps is Array or steps.size() != count or not frames is Array or frames.size() <= count or not moves is Array or moves.size() < count or not sans is Array or sans.size() < count:
+		return {}
+	if typeof(packet.get("complete")) != TYPE_BOOL or typeof(packet.get("terminal")) != TYPE_BOOL or packet.complete != (count == 6 or packet.terminal):
+		return {}
+	if not frames[0] is Dictionary or frames[0].get("fen") != row.get("fen_before") or frames[0].get("turn") != row.get("color") or best.get("uci") != moves[0] or str(packet.get("intro", "")).strip_edges().is_empty() or str(packet.get("summary", "")).strip_edges().is_empty():
+		return {}
+	for index in range(count):
+		var step: Variant = steps[index]
+		if not step is Dictionary or not frames[index + 1] is Dictionary or not frames[index] is Dictionary:
+			return {}
+		if int(step.get("ply_index", 0)) != index + 1 or step.get("uci") != moves[index] or step.get("san") != sans[index] or frames[index + 1].get("last_move") != moves[index] or step.get("color") != frames[index].get("turn"):
+			return {}
+		if str(step.get("text", "")).strip_edges().is_empty() or str(step.get("san", "")).strip_edges().is_empty():
+			return {}
+	return packet
+
+
+func _continuation_count() -> int:
+	return int(_continuation_packet().get("available_plies", 0))
+
+
+func _continuation_key() -> String:
+	var packet: Dictionary = _continuation_packet()
+	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, human_color, _move().get("fen_before", ""), packet, _move().get("best", {})]) if not packet.is_empty() else ""
+
+
+func _continuation_dialogue() -> String:
+	var packet: Dictionary = _continuation_packet()
+	if packet.is_empty():
+		return ""
+	if line_index == 0:
+		return str(packet.intro)
+	var steps: Array = packet.steps
+	var text: String = str(steps[clampi(line_index - 1, 0, steps.size() - 1)].text)
+	if line_index == steps.size():
+		text += "\n\n" + str(packet.summary)
+	return text
+
+
+func _continuation_now() -> int:
+	return Time.get_ticks_msec()
+
+
+func _mark_continuation_step() -> void:
+	_continuation_finished = false
+	# With no voice, leave enough time to read. Speech extends this deadline.
+	var words: int = _continuation_dialogue().split(" ", false).size()
+	_continuation_ready_at = _continuation_now() + clampi(words * 220, 2200, 9000)
+	_clear_coach_focus()
+	var packet: Dictionary = _continuation_packet()
+	if line_index > 0 and line_index <= packet.get("steps", []).size():
+		for square in packet.steps[line_index - 1].get("squares", []):
+			if model.square_to_display(str(square)).x >= 0:
+				_coach_focus.append(str(square))
+		_coach_focus_fen = str(_line_frames()[line_index].get("fen", ""))
+		_coach_focus_line = "best"
+		_coach_focus_index = line_index
+
+
+func _begin_continuation() -> void:
+	if busy or retry_active or _retry_in_flight or _walkthrough_active or _job_replaced or _continuation_packet().is_empty():
+		return
+	_end_retry()
+	_cancel_walkthrough()
+	_clear_coach_focus()
+	_coach_overview = false
+	_local_selection = true
+	line_kind = "best"
+	line_index = 0
+	show_after = false
+	_continuation_active = true
+	_continuation_paused = false
+	_continuation_ticket = _continuation_key()
+	_mark_continuation_step()
+	_render()
+	continuation_timer.start()
+
+
+func _cancel_continuation() -> void:
+	if _continuation_active:
+		line_kind = ""
+		line_index = 0
+		show_after = true
+		_clear_coach_focus()
+		_stop_speech()
+	_continuation_active = false
+	_continuation_paused = false
+	_continuation_finished = false
+	_continuation_ticket = ""
+	if is_instance_valid(continuation_timer):
+		continuation_timer.stop()
+
+
+func _pause_continuation() -> void:
+	if not _continuation_active:
+		return
+	if _continuation_finished:
+		_begin_continuation()
+		return
+	_continuation_paused = not _continuation_paused
+	if _continuation_paused:
+		continuation_timer.stop()
+		_stop_current_speech()
+	else:
+		_speech_last_key = ""
+		_continuation_ready_at = _continuation_now() + 600
+		continuation_timer.start()
+	_render()
+
+
+func _advance_continuation() -> void:
+	if not _continuation_active or _continuation_paused:
+		return
+	if not is_visible_in_tree() or busy or _continuation_ticket != _continuation_key() or line_kind != "best":
+		_cancel_continuation()
+		_render()
+		return
+	if _speech_owned or not _speech_pending_key.is_empty() or _speech_preparing_audio:
+		_continuation_ready_at = maxi(_continuation_ready_at, _continuation_now() + 600)
+		return
+	if _continuation_now() < _continuation_ready_at:
+		return
+	if line_index >= _continuation_count():
+		_continuation_finished = true
+		_continuation_paused = true
+		continuation_timer.stop()
+		_render()
+		return
+	line_index += 1
+	_mark_continuation_step()
+	_render()
 
 
 func _render_coach() -> void:
@@ -1266,11 +1462,32 @@ func _render_coach() -> void:
 	if _walkthrough_active:
 		dialogue = "Following the moves actually played to the next key moment."
 		avatar.mood = "think"
+	if _continuation_active:
+		dialogue = _continuation_dialogue()
+		avatar.mood = "think"
 	if retry_active:
 		dialogue = str(coach.get("hint", "Check for threats against the king and pieces that can be captured.")) if _retry_hint else "Your turn: find a move, then check the opponent's strongest reply."
 		avatar.mood = "think" if _retry_reply.is_empty() else ("celebrate" if _retry_reply.get("verdict") in ["recommended", "good"] else "encourage")
 	coach_dialogue.text = dialogue
 	_schedule_speech()
+	var continuation: Dictionary = _continuation_packet()
+	continuation_button.visible = not continuation.is_empty() and not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview and not _continuation_active
+	continuation_button.disabled = busy or _retry_in_flight or _job_replaced
+	continuation_button.text = "왜 더 좋은지 · %d수 보기" % int(continuation.get("available_plies", 6))
+	continuation_controls.visible = _continuation_active
+	if _continuation_active:
+		var count: int = _continuation_count()
+		continuation_progress.text = ("전개와 결과" if line_index == count else ("일시정지" if _continuation_paused else "추천 수를 따라가는 중")) + "  %d / %d" % [line_index, count]
+		if count < 6:
+			continuation_progress.text += " · 여기서 종료" if continuation.get("terminal", false) else " · 확인된 수순까지"
+		var words := PackedStringArray()
+		for step in continuation.steps:
+			var word: String = str(step.san)
+			words.append("【" + word + "】" if int(step.ply_index) == line_index else word)
+		continuation_moves.text = "  ".join(words)
+		continuation_pause.text = "처음부터" if _continuation_finished else ("계속 재생" if _continuation_paused else "일시정지")
+		continuation_previous.disabled = line_index <= 0
+		continuation_next.disabled = line_index >= count
 	coach_overview_button.text = "이 국면 이야기" if _coach_overview else "한 판 총평"
 	coach_overview_button.disabled = retry_active
 	var lessons: Array = _lesson_plies()
@@ -1280,7 +1497,7 @@ func _render_coach() -> void:
 		coach_course.text = "선택된 복습 코스가 아직 없어요. 분석된 수는 직접 살펴볼 수 있어요."
 	lesson_previous.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply < selected_ply)
 	lesson_next.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply > selected_ply)
-	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active
+	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active and not _continuation_active
 	var evidence_key: String = str(report.get("job_id", "")) + ":" + str(selected_ply) + JSON.stringify(coach.get("evidence", []))
 	if evidence_key != _coach_evidence_key:
 		_coach_evidence_key = evidence_key
@@ -1435,7 +1652,7 @@ func _spoken_coach_text() -> String:
 
 func _speech_context_key() -> String:
 	var mode: String = "overview" if _coach_overview else ("retry" if retry_active else line_kind)
-	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, mode, show_after, _retry_reply.get("uci", "") if retry_active else "", _spoken_coach_text()])
+	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, mode, show_after, _retry_reply.get("uci", "") if retry_active else "", _spoken_coach_text(), line_index if _continuation_active else -1])
 
 
 func _can_speak() -> bool:
@@ -1567,6 +1784,8 @@ func _annotation_for_frame(frame: Dictionary) -> Dictionary:
 func _render() -> void:
 	if board == null:
 		return
+	if _continuation_active and (_continuation_ticket != _continuation_key() or line_kind != "best"):
+		_cancel_continuation()
 	var moves: Array = _moves()
 	var move: Dictionary = _move()
 	var frame: Dictionary = _shown_frame()
@@ -1585,7 +1804,7 @@ func _render() -> void:
 	elif not line_kind.is_empty():
 		var line: Dictionary = _selected_line()
 		var pv: Array = line.get("pv_uci", [])
-		if line_index < pv.size():
+		if line_index < pv.size() and (not _continuation_active or line_index < _continuation_count()):
 			board.hint_move = str(pv[line_index])
 		# A root search score is not an evaluation of later PV positions.
 		if line_index == 0:
@@ -1605,6 +1824,8 @@ func _render() -> void:
 	position_label.text = prefix + (" · 둔 뒤" if show_after else " · 두기 전") if has_moves else "기보 준비"
 	if not line_kind.is_empty():
 		position_label.text = prefix + (" · 추천 수순" if line_kind in ["best", "retry_best"] else (" · 내가 고른 수의 응수" if line_kind == "retry_candidate" else " · 실전 수의 응수")) + " %d/%d" % [line_index, maxi(0, _line_frames().size() - 1)]
+	if _continuation_active:
+		position_label.text = prefix + " · 예상 전개 %d/%d" % [line_index, _continuation_count()]
 	if _walkthrough_active:
 		position_label.text = "실제 기보 · 시작 위치" if _walkthrough_cursor == 0 else _move_prefix(moves[_walkthrough_cursor - 1]) + " " + str(moves[_walkthrough_cursor - 1].get("san", "")) + " · " + _side_label(_row_color(moves[_walkthrough_cursor - 1]))
 		evaluation_label.text = "실제 기보를 따라가는 중 · 별도 평가 없음"
@@ -1665,7 +1886,7 @@ func _render() -> void:
 	best_button.disabled = not best is Dictionary or best.get("pv_frames", []).size() < 2
 	played_button.disabled = not played is Dictionary or played.get("pv_frames", []).size() < 2
 	line_previous.disabled = line_kind.is_empty() or line_index <= 0
-	line_next.disabled = line_kind.is_empty() or line_index >= _line_frames().size() - 1
+	line_next.disabled = line_kind.is_empty() or line_index >= (_continuation_count() if _continuation_active else _line_frames().size() - 1)
 	line_return.disabled = line_kind.is_empty()
 	before_button.disabled = before_button.disabled or _walkthrough_active or retry_active
 	after_button.disabled = after_button.disabled or _walkthrough_active or retry_active
@@ -1682,6 +1903,7 @@ func _render() -> void:
 		for word in line.get("pv_san", []):
 			words.append(str(word))
 		line_label.text = ("추천 수순: " if line_kind in ["best", "retry_best"] else ("내가 고른 수의 응수: " if line_kind == "retry_candidate" else "실전 수 이후 예상 응수: ")) + " ".join(words) + "\n실제 대국과 다른 참고 수순입니다."
+	line_label.visible = not _continuation_active
 	var shown_cursor: int = selected_ply if show_after and line_kind.is_empty() else selected_ply - 1
 	first_button.disabled = not has_moves or shown_cursor <= 0
 	previous_button.disabled = not has_moves or shown_cursor <= 0

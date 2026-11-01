@@ -2,7 +2,7 @@
 import chess
 
 COACH_NAME = "Rook"
-COACH_VERSION = 4
+COACH_VERSION = 5
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -462,6 +462,177 @@ def _with_teaching(dialogue, teaching):
     return explanation
 
 
+def _continuation_facts(board, row, kind, actual, played, best, lesson):
+    """Use the existing legal PV and frames, never extend or search a line.
+
+    Material comparisons use the same root and the same number of plies. Full
+    history is retained for automatic draw rules; a claimable draw is optional.
+    """
+    if kind not in CRITICAL or not lesson or not actual or not played or not best or not board.is_valid():
+        return None
+    for name, replay in (("played", played), ("best", best)):
+        branch = row.get(name)
+        if (not isinstance(branch, dict) or branch.get("bound") != "exact"
+                or branch.get("uci") != replay["events"][0]["uci"]):
+            return None
+    if row.get("fen_before") is not None and row["fen_before"] != board.fen(en_passant="fen"):
+        return None
+    frames = row["best"].get("pv_frames")
+    if not isinstance(frames, list) or len(frames) < min(6, len(best["events"])) + 1:
+        return None
+    position, positions = board.copy(stack=True), []
+    try:
+        for index, event in enumerate([None] + best["events"]):
+            if event:
+                if position.is_game_over(claim_draw=False):
+                    return None
+                position.push_uci(event["uci"])
+            if index <= 6:
+                frame = frames[index]
+                if not isinstance(frame, dict) or frame.get("fen") != position.fen(en_passant="fen"):
+                    return None
+                positions.append(position.copy(stack=True))
+    except (ValueError, KeyError, IndexError, TypeError):
+        return None
+    if positions[0].is_game_over(claim_draw=False):
+        return None
+    events = best["events"][:6]
+    count = len(events)
+    endpoint = positions[-1]
+    outcome = endpoint.outcome(claim_draw=False)
+    comparison, played_outcome, played_terminal_ply = None, None, None
+    other = board.copy(stack=True)
+    for event in played["events"][:count]:
+        other.push_uci(event["uci"])
+        played_outcome = other.outcome(claim_draw=False)
+        if event["index"] == count:
+            comparison = _material(endpoint, board.turn) - _material(other, board.turn)
+        if played_outcome:
+            played_terminal_ply = event["index"]
+            break
+    return {"events": events, "positions": positions, "outcome": outcome,
+            "comparison": comparison, "played_outcome": played_outcome,
+            "played_terminal_ply": played_terminal_ply, "played_endpoint": other,
+            "material_change": _material(endpoint, board.turn) - _material(board, board.turn),
+            "color": board.turn}
+
+
+def _continuation_step(event, before, after, perspective):
+    actor, owner = _subject(event["color"], perspective), _owner(event["color"], perspective)
+    opposing = _owner(not event["color"], perspective)
+    piece = PIECE_NAMES[event["promotion"] or event["piece"]]
+    squares = [event["source"], event["target"]]
+
+    def verb(base):
+        return base if actor == "You" else base + "s"
+
+    if event["mate"]:
+        text = f"{actor} {verb('deliver')} checkmate in this line. {_side(not event['color'])} has no legal reply."
+        squares.append(event["king"])
+    elif after.is_stalemate():
+        text = f"That ends this line in stalemate. {_side(not event['color'])} has no legal move, but the king isn't in check."
+    elif event["promotion"]:
+        capture = f"{verb('capture')} {opposing} {PIECE_NAMES[event['captured']]} and " if event["captured"] else ""
+        text = f"{actor} {capture}{verb('promote')} to a {piece}."
+        if event["captured"]:
+            squares.append(event["capture_square"])
+    elif event["captured"]:
+        action = "recapture" if event["recapture"] else "capture"
+        text = f"{actor} {verb(action)} {opposing} {PIECE_NAMES[event['captured']]} on {event['capture_square']}."
+        squares.append(event["capture_square"])
+        if before.is_en_passant(chess.Move.from_uci(event["uci"])):
+            text += " It's en passant: the captured pawn leaves a different square."
+    elif event["castle"]:
+        flank = "kingside" if event["target"][0] == "g" else "queenside"
+        rook_to = ("f" if flank == "kingside" else "d") + event["target"][1]
+        text = f"{actor} {verb('castle')} {flank}, bringing the rook to {rook_to}."
+        squares.append(rook_to)
+    elif event["was_check"]:
+        if event["piece"] == chess.KING:
+            text = f"{actor} {verb('move')} the king out of check."
+        else:
+            text = f"{actor} {verb('block')} the check with the {piece}."
+    elif event["check"]:
+        # The moved piece may uncover a check from a different piece.
+        text = f"That move gives check. {_side(not event['color'])} must answer the check before pursuing another plan."
+        squares.append(event["king"])
+    elif _develops(event):
+        text = f"{actor} {verb('develop')} the {piece} to {event['target']}."
+        if event["targets"]:
+            target = max(event["targets"], key=lambda value: PIECE_POINTS[value["piece"]])
+            text += f" It also attacks the {PIECE_NAMES[target['piece']]} on {target['square']}."
+            squares.append(target["square"])
+    elif event["targets"]:
+        target = max(event["targets"], key=lambda value: PIECE_POINTS[value["piece"]])
+        text = f"{owner.capitalize() if owner == 'your' else owner} {piece} now attacks {opposing} {PIECE_NAMES[target['piece']]} on {target['square']}."
+        squares.append(target["square"])
+    elif event["opens_bishop"]:
+        text = f"That pawn move gives {owner} bishop more room. Check the newly opened diagonal."
+    elif event["defenders"]:
+        defender = min(event["defenders"], key=lambda value: (value["piece"] != chess.PAWN, value["square"]))
+        text = f"{actor} {verb('place')} the {piece} on {event['target']}, protected by the {PIECE_NAMES[defender['piece']]} on {defender['square']}."
+        squares.append(defender["square"])
+    else:
+        text = f"{actor} {verb('move')} the {piece} to {event['target']}."
+    if event["check"] and not event["mate"] and (event["captured"] or event["promotion"] or event["was_check"] or event["castle"]):
+        text = text.rstrip(".") + "; that also gives check."
+        squares.append(event["king"])
+    return {"ply_index": event["index"], "uci": event["uci"], "san": event["san"],
+            "color": _side(event["color"]).lower(), "text": text,
+            "squares": list(dict.fromkeys(square for square in squares if square is not None))}
+
+
+def _continuation_text(facts, teaching, perspective):
+    if facts is None or teaching is None:
+        return None
+    count, outcome = len(facts["events"]), facts["outcome"]
+    terminal = outcome is not None
+    availability = (f"This {count}-ply line ends the game." if terminal else
+                    "Here's one possible six-ply continuation." if count == 6 else
+                    f"Only {count} {'ply is' if count == 1 else 'plies are'} available; the continuation stops there.")
+    # Introduce the concrete reason now; save the transferable principle for
+    # the endpoint, instead of reading the same advice twice.
+    intro = teaching["alternative"]["reason"] + " " + availability
+    own = _owner(facts["color"], perspective)
+    opposing = _owner(not facts["color"], perspective)
+    horizon = f"{count} {'ply' if count == 1 else 'plies'}"
+    if outcome and outcome.winner is not None:
+        result = f"This line ends in checkmate for {_side(outcome.winner)}."
+        if count > 1:
+            result += " This single line doesn't establish a forced mate."
+    elif outcome:
+        reason = {chess.Termination.STALEMATE: "stalemate", chess.Termination.INSUFFICIENT_MATERIAL: "insufficient mating material",
+                  chess.Termination.SEVENTYFIVE_MOVES: "the seventy-five-move rule",
+                  chess.Termination.FIVEFOLD_REPETITION: "fivefold repetition"}.get(outcome.termination, "a draw rule")
+        result = f"This line ends in a draw by {reason}."
+    elif facts["played_outcome"] and facts["played_outcome"].winner is not None:
+        mate_ply = facts["played_terminal_ply"]
+        result = (f"The played line ends in checkmate for {_side(facts['played_outcome'].winner)} after {mate_ply} "
+                  f"{'ply' if mate_ply == 1 else 'plies'}; this branch hasn't ended after {horizon}.")
+    elif facts["comparison"] is not None:
+        difference = facts["comparison"]
+        endpoint, played_endpoint = facts["positions"][-1], facts["played_endpoint"]
+        color = facts["color"]
+        queens = tuple(len(position.pieces(chess.QUEEN, side)) for position in (endpoint, played_endpoint) for side in (color, not color))
+        if difference > 0 and queens == (1, 0, 1, 1):
+            result = f"After {horizon}, {own} queen survives here while {opposing} queen is gone; the played line still has both queens."
+        elif difference:
+            actor = "you" if color == perspective else _side(color)
+            result = f"At {horizon}, this line is {abs(difference)} points {'better' if difference > 0 else 'worse'} for {actor} on material than the played line."
+        else:
+            result = f"Both lines have the same material balance after {horizon}; captures alone don't explain the preference."
+    else:
+        change = facts["material_change"]
+        result = (f"With these replies, {own} material balance {'improves' if change > 0 else 'falls'} by the shown endpoint."
+                  if change else "The material balance is unchanged at this endpoint.")
+        result += " No equal-length material comparison is available."
+    return {"line": "best", "target_plies": 6, "available_plies": count,
+            "complete": count == 6 or terminal, "terminal": terminal, "intro": intro,
+            "summary": result + " " + teaching["principle"],
+            "steps": [_continuation_step(event, facts["positions"][index], facts["positions"][index + 1], perspective)
+                      for index, event in enumerate(facts["events"])]}
+
+
 def describe_move(board, row):
     """Stored SAN/color are not tactical evidence; replay them from the board."""
     kind = row.get("classification", "pending")
@@ -496,11 +667,13 @@ def describe_move(board, row):
         if captures:
             focus.append(max(captures, key=lambda event: PIECE_POINTS.get(event["captured"], 0))["capture_square"])
     lesson = _teaching(board, kind, actual, played, best)
+    continuation = _continuation_facts(board, row, kind, actual, played, best, lesson)
 
     def wording(perspective=None):
         teaching = _teaching_text(lesson, actual, best, perspective) if lesson else None
         return {"dialogue": _with_teaching(_dialogue(board, kind, actual, played, best, perspective), teaching),
-                "teaching": teaching, "hint": _hint(board, kind, actual, played, best, perspective)}
+                "teaching": teaching, "hint": _hint(board, kind, actual, played, best, perspective),
+                "continuation": _continuation_text(continuation, teaching, perspective)}
 
     return {"mood": mood, **wording(),
             "perspectives": {name: wording(color) for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},
