@@ -8,6 +8,7 @@
   const pieceSymbols = {K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   const pieceNames = {k:"왕",q:"퀸",r:"룩",b:"비숍",n:"나이트",p:"폰"};
   const colorName = (color) => color === "white" ? "백" : "흑";
+  const hintColors = ["#ef5350", "#ff9800", "#fdd835"];
   let state = null;
   let selected = null;
   let busy = true;
@@ -91,7 +92,7 @@
       hintPreferenceLoaded = true;
     }
     state = next;
-    if (state.result !== "*" || state.error) clearHint();
+    if (state.result !== "*" || state.error || !state.human_to_move) clearHint();
     if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
     if (!preserveSelection || !unchangedPosition) selected = null;
     render();
@@ -319,10 +320,87 @@
     }
   }
 
+  function currentHintCandidates() {
+    if (closed || busy || analysisMode || coachingMode || !hintEnabled || !state?.human_to_move ||
+        state.result !== "*" || state.error || hint?.enabled !== true || hint.status !== "ready" ||
+        !samePosition(state, hint)) return [];
+    // An explicit list is authoritative, including an empty or malformed list.
+    const supplied = Object.hasOwn(hint, "candidates");
+    const candidates = supplied ? (Array.isArray(hint.candidates) ? hint.candidates : []) : [{...hint, rank:1}];
+    const legal = new Set(Array.isArray(state.legal_moves) ? state.legal_moves : []);
+    const seenMoves = new Set(), seenRanks = new Set();
+    return candidates.filter((item) => item && Number.isInteger(item.rank) && item.rank >= 1 && item.rank <= 3)
+      .sort((a,b) => a.rank - b.rank).filter((item) => {
+        const move = item.move;
+        if (typeof move !== "string" || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(move) || !legal.has(move) ||
+            move.slice(0,2) === move.slice(2,4) || seenMoves.has(move) || seenRanks.has(item.rank) ||
+            (item.from != null && item.from !== move.slice(0,2)) ||
+            (item.to != null && item.to !== move.slice(2,4)) ||
+            (item.promotion != null && item.promotion !== (move[4] || ""))) return false;
+        seenMoves.add(move); seenRanks.add(item.rank);
+        return true;
+      }).slice(0,3).map((item) => ({...item, from:item.move.slice(0,2), to:item.move.slice(2,4),
+        san:typeof item.san === "string" && item.san.trim() ? item.san.trim().slice(0,64) : item.move}));
+  }
+
   function currentHintMove() {
-    return !closed && !busy && hintEnabled && state?.human_to_move && state.result === "*" && !state.error &&
-      hint?.enabled === true && hint.status === "ready" && samePosition(state, hint) &&
-      (state.legal_moves || []).includes(hint.move) ? hint.move : null;
+    return currentHintCandidates()[0]?.move || null;
+  }
+
+  function hintMoveLabel(candidate) {
+    return candidate.san + " · " + candidate.from + " → " + candidate.to + hintPromotionLabel(candidate.move);
+  }
+
+  function hintPromotionLabel(move) {
+    return move[4] ? " · " + pieceNames[move[4]] + (move[4] === "n" ? "로 승격" : "으로 승격") : "";
+  }
+
+  function hintArrows(candidates, files, ranks) {
+    if (!candidates.length) return null;
+    const make = (tag, attributes = {}) => {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [key,value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+      return node;
+    };
+    const svg = make("svg", {class:"live-hint-arrows", viewBox:"0 0 800 800", "aria-hidden":"true",
+      focusable:"false", "pointer-events":"none"});
+    const point = (square) => [files.indexOf(square[0])*100+50, ranks.indexOf(square[1])*100+50];
+    const moves = candidates.map((candidate) => {
+      const [x1,y1] = point(candidate.from), [x2,y2] = point(candidate.to);
+      return {...candidate, x1,y1,x2,y2,dx:x2-x1,dy:y2-y1};
+    });
+    // Parallel lanes distinguish promotions and collinear shared endpoints.
+    // Shortened tips leave other common-target arrowheads visible.
+    for (const item of moves) {
+      const peers = moves.filter((other) => (other.from === item.from || other.to === item.to) &&
+        item.dx * other.dy === item.dy * other.dx);
+      item.lane = (peers.findIndex((other) => other.rank === item.rank) - (peers.length-1)/2) * 32;
+      const length = Math.hypot(item.dx,item.dy);
+      item.ux = item.dx/length; item.uy = item.dy/length;
+    }
+    for (const item of [...moves].reverse()) {
+      const {ux,uy,lane} = item;
+      const x1 = item.x1-uy*lane+ux*12, y1 = item.y1+ux*lane+uy*12;
+      const x2 = item.x2-uy*lane-ux*18, y2 = item.y2+ux*lane-uy*18;
+      const group = make("g", {"data-hint-rank":item.rank, "data-move":item.move});
+      const color = hintColors[item.rank-1], shaft = {x1,y1,x2:x2-ux*22,y2:y2-uy*22,"stroke-linecap":"round"};
+      group.append(make("line", {...shaft, stroke:"#203b32", "stroke-opacity":".65", "stroke-width":18}),
+        make("line", {...shaft, stroke:color, "stroke-width":12}),
+        make("polygon", {points:[x2+","+y2, (x2-ux*31-uy*16)+","+(y2-uy*31+ux*16),
+          (x2-ux*31+uy*16)+","+(y2-uy*31-ux*16)].join(" "),
+          fill:color, stroke:"#203b32", "stroke-width":2}));
+      svg.append(group);
+    }
+    // Draw ranks last so crossing arrows cannot cover their numbers.
+    for (const item of moves) {
+      const x = item.x1+item.dx*.56-item.uy*item.lane, y = item.y1+item.dy*.56+item.ux*item.lane;
+      const label = make("g", {"data-hint-label":item.rank});
+      label.append(make("circle", {cx:x,cy:y,r:15,fill:hintColors[item.rank-1],stroke:"#203b32","stroke-width":2}));
+      const number = make("text", {x,y:y+1,"text-anchor":"middle","dominant-baseline":"middle",
+        fill:"#172d24","font-size":22,"font-weight":800,"font-family":"system-ui, sans-serif"});
+      number.textContent = String(item.rank); label.append(number); svg.append(label);
+    }
+    return svg;
   }
 
   function renderHint() {
@@ -331,22 +409,39 @@
     button.setAttribute("aria-pressed", String(hintEnabled));
     // This setting stays available while the opponent is thinking.
     button.disabled = !state || closed;
-    const move = currentHintMove();
-    let text = "켜면 내 차례에 추천 수를 표시합니다.";
+    const candidates = currentHintCandidates();
+    let text = "켜면 내 차례에 최대 3개 후보를 표시합니다.";
     if (closed) text = "대국 프로그램을 종료했습니다.";
+    else if (analysisMode || coachingMode) text = "직접 대국으로 돌아오면 추천을 이어갑니다.";
     else if (hintEnabled && state?.result !== "*") text = "대국이 끝났습니다. 새 대국에서 추천을 이어갑니다.";
     else if (hintEnabled && (state?.error || (samePosition(state, hint) && (hint?.status === "unavailable" || hint?.enabled === false)))) text = "추천 수를 불러오지 못했습니다. 버튼을 껐다 켜서 다시 시도하세요. 대국은 계속할 수 있습니다.";
     else if (hintEnabled && !state?.human_to_move) text = "내 차례가 되면 추천 수를 찾습니다.";
-    else if (move) {
-      const promotion = move[4] ? ` · ${pieceNames[move[4]]}으로 승격` : "";
-      text = `${hint.san || move} · ${move.slice(0,2)} → ${move.slice(2,4)}${promotion}`;
-    } else if (hintEnabled) text = "다음 수를 생각하고 있어요…";
+    else if (candidates.length) text = "추천 후보 " + candidates.length + "개 · 번호 순서로 살펴보세요.";
+    else if (hintEnabled) text = "다음 수를 생각하고 있어요…";
     byId("hint-text").textContent = text;
-    byId("hint-panel").classList.toggle("hint-active", Boolean(move));
+    const rows = document.createDocumentFragment();
+    for (const candidate of candidates) {
+      const row = document.createElement("li");
+      row.className = "hint-candidate";
+      const rank = document.createElement("span");
+      rank.className = "hint-candidate-rank";
+      rank.style.backgroundColor = hintColors[candidate.rank-1];
+      rank.textContent = String(candidate.rank);
+      rank.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span");
+      label.className = "hint-candidate-label";
+      label.textContent = hintMoveLabel(candidate);
+      row.setAttribute("aria-label", candidate.rank + "순위 · " + label.textContent);
+      row.setAttribute("title", candidate.rank + "순위 · " + label.textContent);
+      row.append(rank,label); rows.append(row);
+    }
+    byId("hint-candidates").replaceChildren(rows);
+    byId("hint-panel").classList.toggle("hint-active", candidates.length > 0);
   }
 
   function acceptHint(next, position, epoch) {
-    if (closed || !hintEnabled || epoch !== hintEpoch || !samePosition(state, position) || !samePosition(state, next)) return;
+    if (closed || analysisMode || coachingMode || !hintEnabled || epoch !== hintEpoch ||
+        !state?.human_to_move || !samePosition(state, position) || !samePosition(state, next)) return;
     hint = next;
     renderHint();
     renderBoard();
@@ -399,7 +494,7 @@
     const legal = state?.legal_moves || [];
     const destinations = new Set(selected ? legal.filter((move) => move.slice(0,2) === selected).map((move) => move.slice(2,4)) : []);
     const lastSquares = state?.last_move ? [state.last_move.slice(0,2), state.last_move.slice(2,4)] : [];
-    const hintMove = currentHintMove();
+    const hints = currentHintCandidates();
     const focusedSquare = document.activeElement?.dataset?.square;
     const fragment = document.createDocumentFragment();
     for (const rank of ranks) {
@@ -413,14 +508,16 @@
         if ((file.charCodeAt(0) - 97 + Number(rank)) % 2 === 1) button.classList.add("dark");
         if (lastSquares.includes(square)) button.classList.add("last-move");
         if (square === selected) button.classList.add("selected");
-        const hintRole = hintMove && (square === hintMove.slice(0,2) ? "from" : square === hintMove.slice(2,4) ? "to" : null);
-        if (hintRole) button.classList.add(`hint-${hintRole}`);
+        const hintLabels = hints.filter((item) => item.from === square || item.to === square)
+          .map((item) => item.rank + "순위 추천 수 " + (item.from === square ? "출발" : "도착") +
+            hintPromotionLabel(item.move));
         if (destinations.has(square)) button.classList.add("legal-target");
         if (piece) button.classList.add("occupied");
         const pieceColor = piece && piece === piece.toUpperCase() ? "white" : "black";
         if (state?.in_check && piece?.toLowerCase() === "k" && pieceColor === state.turn) button.classList.add("in-check");
         const label = piece ? `${square}, ${colorName(pieceColor)} ${pieceNames[piece.toLowerCase()]}` : `${square}, 빈 칸`;
-        button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : "") + (hintRole ? `, 추천 수 ${hintRole === "from" ? "출발" : "도착"}` : ""));
+        button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : "") +
+          (hintLabels.length ? ", " + hintLabels.join(", ") : ""));
         button.setAttribute("aria-pressed", String(square === selected));
         button.disabled = busy || timeSaving || closed || !state?.human_to_move;
         if (piece) {
@@ -444,16 +541,11 @@
           coordinate.setAttribute("aria-hidden", "true");
           button.append(coordinate);
         }
-        if (hintRole) {
-          const marker = document.createElement("span");
-          marker.className = "hint-square-label";
-          marker.textContent = hintRole === "from" ? "출발" : "도착";
-          marker.setAttribute("aria-hidden", "true");
-          button.append(marker);
-        }
         fragment.append(button);
       }
     }
+    const arrows = hintArrows(hints, files, ranks);
+    if (arrows) fragment.append(arrows);
     if (window.RegicideMotion) window.RegicideMotion.replace(boardElement, fragment, {
       scope:state?.game_id, ply:state?.moves?.length || 0, pieces:state?.board || {},
       turn:state?.turn, lastMove:state?.last_move, legalMoves:state?.legal_moves,
@@ -682,10 +774,19 @@
   window.addEventListener("pagehide", () => {
     closed = true;
     clearHint();
+    renderHint();
+    renderBoard();
     clearInterval(evaluationTimer);
     clearInterval(hintTimer);
   });
-  window.addEventListener("regicide-analysis-mode", (event) => { analysisMode = event.detail === true; if (analysisMode) window.RegicideMotion?.cancel(boardElement, true); });
-  window.addEventListener("regicide-coaching-mode", (event) => { coachingMode = event.detail === true; if (coachingMode) window.RegicideMotion?.cancel(boardElement, true); });
+  function changeHintMode() {
+    clearHint();
+    if (analysisMode || coachingMode) window.RegicideMotion?.cancel(boardElement, true);
+    renderHint();
+    renderBoard();
+    if (!analysisMode && !coachingMode) void pollHint();
+  }
+  window.addEventListener("regicide-analysis-mode", (event) => { analysisMode = event.detail === true; changeHintMode(); });
+  window.addEventListener("regicide-coaching-mode", (event) => { coachingMode = event.detail === true; changeHintMode(); });
   void initialize();
 })();

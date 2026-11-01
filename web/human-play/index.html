@@ -38,8 +38,10 @@
         </div>
         <section id="hint-panel" class="hint-panel" aria-label="내 다음 수 추천">
           <div class="hint-heading"><h2>내 다음 수</h2><button id="hint-toggle" class="hint-toggle" type="button" aria-pressed="false" aria-describedby="hint-note" disabled>추천 수: 끔</button></div>
-          <p id="hint-text" class="hint-text" aria-live="polite" aria-atomic="true">켜면 내 차례에 추천 수를 표시합니다.</p>
-          <p id="hint-note" class="hint-note">Regicide 자체 엔진의 추천입니다. 출발 → 도착 칸을 보고 직접 두세요.</p>
+          <p id="hint-text" class="hint-text" aria-live="polite" aria-atomic="true">켜면 내 차례에 최대 3개 후보를 표시합니다.</p>
+          <ol id="hint-candidates" class="hint-candidates" aria-label="순위별 추천 수" aria-live="polite" aria-atomic="true"></ol>
+          <p class="hint-legend" aria-label="화살표 색상"><span><i class="hint-rank-1" aria-hidden="true"></i>1순위 빨강</span><span><i class="hint-rank-2" aria-hidden="true"></i>2순위 주황</span><span><i class="hint-rank-3" aria-hidden="true"></i>3순위 노랑</span></p>
+          <p id="hint-note" class="hint-note">Regicide 자체 엔진의 최대 3개 후보입니다. 화살표를 보고 직접 두세요.</p>
         </section>
         <div class="player-strip"><div class="avatar human-avatar" aria-hidden="true">♙</div><div><p class="player-name">나</p><p class="player-detail" id="human-detail">기물을 누르고 이동할 칸을 눌러주세요.</p></div><span class="player-color" id="human-color">백</span></div>
         <div class="status-panel" aria-live="polite" aria-atomic="true"><span class="status-dot" id="status-dot" aria-hidden="true"></span><div><p id="status-text">체스판을 준비하고 있어요.</p><p id="status-detail">잠시만 기다려주세요.</p></div></div>

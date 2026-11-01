@@ -22,6 +22,12 @@ var piece_textures: Dictionary = {}
 var label_font: Font
 var pressed_square: String = ""
 var hint_move: String = ""
+## Ranked live-game hints; the single hint_move remains available to analysis.
+const HINT_COLORS: Array[Color] = [Color("ef5350"), Color("ff9800"), Color("fdd835")]
+var hint_moves: Array = []:
+	set(value):
+		hint_moves = value.duplicate(true)
+		queue_redraw()
 ## Presentation-only, supplied by verified coaching evidence for this frame.
 var coach_squares: Array = []
 ## Passive review badge for one verified actual-game position, never a move input.
@@ -276,10 +282,14 @@ func _draw_motion(area: Rect2, cell: float) -> void:
 
 func hint_centers() -> PackedVector2Array:
 	# Use the exact same square mapping as clicks, including the flipped view.
-	if hint_move.length() < 4:
+	return _hint_centers_for(hint_move)
+
+
+func _hint_centers_for(move: String) -> PackedVector2Array:
+	if move.length() < 4:
 		return PackedVector2Array()
-	var source := model.square_to_display(hint_move.substr(0, 2))
-	var target := model.square_to_display(hint_move.substr(2, 2))
+	var source := model.square_to_display(move.substr(0, 2))
+	var target := model.square_to_display(move.substr(2, 2))
 	if source.x < 0 or target.x < 0 or source == target:
 		return PackedVector2Array()
 	var area := get_board_rect()
@@ -288,7 +298,66 @@ func hint_centers() -> PackedVector2Array:
 		area.position + (Vector2(target) + Vector2.ONE * 0.5) * cell])
 
 
+func hint_arrow_layouts() -> Array[Dictionary]:
+	var layouts: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var ranks: Dictionary = {}
+	var cell: float = get_board_rect().size.x / 8.0
+	for candidate in hint_moves:
+		if not candidate is Dictionary:
+			continue
+		var rank: int = int(candidate.get("rank", 0))
+		var move: String = str(candidate.get("move", ""))
+		if rank < 1 or rank > 3 or seen.has(move) or ranks.has(rank):
+			continue
+		var centers: PackedVector2Array = _hint_centers_for(move)
+		if centers.size() != 2:
+			continue
+		seen[move] = true
+		ranks[rank] = true
+		var direction: Vector2 = (centers[1] - centers[0]).normalized()
+		var cross := Vector2(-direction.y, direction.x)
+		# Separate parallel and promotion arrows inside the same logical squares.
+		var lane: Vector2 = cross * float(rank - 2) * cell * 0.32
+		var source: Vector2 = centers[0] + lane
+		var target: Vector2 = centers[1] + lane
+		layouts.append({"rank": rank, "move": move, "color": HINT_COLORS[rank - 1],
+			"source": source, "target": target, "marker": source + direction * cell * 0.42,
+			"centers": centers})
+	layouts.sort_custom(func(a: Dictionary, b: Dictionary): return a.rank < b.rank)
+	return layouts
+
+
+func _draw_ranked_hints(cell: float) -> void:
+	var layouts: Array[Dictionary] = hint_arrow_layouts()
+	var outline := Color("18202b")
+	for index in range(layouts.size() - 1, -1, -1):
+		var item: Dictionary = layouts[index]
+		var direction: Vector2 = (item.target - item.source).normalized()
+		var cross := Vector2(-direction.y, direction.x)
+		var tip: Vector2 = item.target - direction * cell * 0.08
+		var neck: Vector2 = tip - direction * cell * 0.24
+		draw_line(item.source, neck, outline, cell * 0.11 + 2.0, true)
+		draw_line(item.source, neck, item.color, cell * 0.075, true)
+		var triangle := PackedVector2Array([tip, neck + cross * cell * 0.12, neck - cross * cell * 0.12])
+		draw_colored_polygon(triangle, item.color)
+		draw_polyline(PackedVector2Array([triangle[0], triangle[1], triangle[2], triangle[0]]), outline, 1.5, true)
+	# Draw all rank markers last so another arrow cannot cover a number.
+	for item in layouts:
+		var radius: float = cell * 0.135
+		draw_circle(item.marker, radius + 1.5, outline)
+		draw_circle(item.marker, radius, item.color)
+		var font_size: int = clampi(int(cell * 0.20), 10, 15)
+		var value: String = str(item.rank)
+		var width: float = label_font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		draw_string(label_font, item.marker + Vector2(-width * 0.5, font_size * 0.34), value,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline)
+
+
 func _draw_hint(_area: Rect2, cell: float) -> void:
+	if not hint_moves.is_empty():
+		_draw_ranked_hints(cell)
+		return
 	var points := hint_centers()
 	if points.size() != 2:
 		return

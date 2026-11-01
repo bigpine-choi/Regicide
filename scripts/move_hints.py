@@ -4,7 +4,9 @@ Only immutable position copies cross this boundary. Preference and snapshot
 reads use this service's lock, never the live game's search lock.
 """
 
+import copy
 import threading
+import time
 
 import chess
 import chess.engine
@@ -23,7 +25,7 @@ class MoveHints:
         self._closed = False
         self._generation = 0
         self._context = None
-        self._snapshot = {}
+        self._snapshot = {"candidates": []}
         self._evaluation = {}
         self._pending = None
         self._cancel = None
@@ -31,12 +33,12 @@ class MoveHints:
 
     def snapshot(self):
         with self._condition:
-            return dict(self._snapshot)
+            return copy.deepcopy(self._snapshot)
 
     def snapshot_with_evaluation(self):
         """Read the advice and score from the same search generation atomically."""
         with self._condition:
-            return dict(self._snapshot), dict(self._evaluation)
+            return copy.deepcopy(self._snapshot), copy.deepcopy(self._evaluation)
 
     def set_enabled(self, enabled):
         if type(enabled) is not bool:
@@ -47,7 +49,7 @@ class MoveHints:
             if self._enabled != enabled:
                 self._enabled = enabled
                 self._schedule_locked()
-            return dict(self._snapshot)
+            return copy.deepcopy(self._snapshot)
 
     def update_position(self, *, game_id, revision, board, human_color,
                         movetime_ms, engine_name, active, handicap_mode=False):
@@ -99,7 +101,7 @@ class MoveHints:
                           ("game_id", "revision", "fen", "movetime_ms", "engine_name")}
         self._snapshot.update(enabled=enabled, status=status, move=None, san=None,
                               **{"from": None, "to": None}, promotion=None,
-                              depth=None, message=message)
+                              depth=None, candidates=[], message=message)
         if self._stream_evaluation:
             self._clear_evaluation_locked("searching" if status == "searching" else
                                           "unavailable" if status == "unavailable" else "waiting")
@@ -160,6 +162,114 @@ class MoveHints:
         except Exception:
             pass
 
+    @staticmethod
+    def _rank_packet(board, allowed, depth, info):
+        """A rank needs its own exact completed-depth score and legal PV.
+
+        In particular, never inspect AnalysisResult.info: it merges unrelated
+        partial packets and can attach a new depth to an older score/PV.
+        """
+        if (type(info.get("depth")) is not int or info["depth"] != depth
+                or info.get("lowerbound") or info.get("upperbound")
+                or not isinstance(info.get("score"), chess.engine.PovScore)):
+            return None
+        pv = info.get("pv")
+        if not isinstance(pv, (list, tuple)) or not pv or len(pv) > 128:
+            return None
+        if not isinstance(pv[0], chess.Move) or pv[0] not in allowed:
+            return None
+        position = board.copy(stack=True)
+        for move in pv:
+            if not isinstance(move, chess.Move) or move not in position.legal_moves:
+                return None
+            position.push(move)
+        score = info["score"].pov(board.turn)
+        cp, mate = score.score(), score.mate()
+        if (cp is None and mate is None) or (cp is not None and type(cp) is not int) or (mate is not None and type(mate) is not int):
+            return None
+        move = pv[0]
+        return {"move": move.uci(), "san": board.san(move),
+                "from": chess.square_name(move.from_square), "to": chess.square_name(move.to_square),
+                "promotion": chess.piece_symbol(move.promotion) if move.promotion else None,
+                "depth": depth, "_score": score}
+
+    def _ranked_search(self, engine, board, seconds, cancel, timed_out, analysis_ready, analysis_handle):
+        """Retain complete equal-depth rounds within one wall-clock budget.
+
+        Root exclusions find up to three distinct moves. They do not provide a
+        full-position evaluation, so this path never publishes their scores.
+        """
+        deadline = time.monotonic() + seconds
+        legal = sorted(board.legal_moves, key=lambda move: move.uci())
+        count = min(3, len(legal))
+        if not count:
+            return None
+        completed = None
+        for depth in range(1, 65):
+            chosen, round_candidates = set(), []
+            for rank in range(count):
+                remaining = deadline - time.monotonic()
+                if remaining <= .001 or cancel.is_set() or timed_out.is_set():
+                    return completed
+                allowed = [move for move in legal if move.uci() not in chosen]
+                kwargs = {"game": object(), "info": chess.engine.INFO_ALL}
+                if rank:
+                    kwargs["root_moves"] = allowed
+                limit = chess.engine.Limit(time=remaining, depth=depth)
+                candidate = None
+                try:
+                    if callable(getattr(engine, "analysis", None)):
+                        analysis_ready.clear()
+                        analysis_handle[0] = None
+                        with engine.analysis(board.copy(stack=True), limit, **kwargs) as analysis:
+                            analysis_handle[0] = analysis
+                            analysis_ready.set()
+                            waited = False
+                            try:
+                                for info in analysis:
+                                    packet = self._rank_packet(board, allowed, depth, info)
+                                    if packet is not None:
+                                        candidate = packet
+                                waited = True
+                                reply = analysis.wait()
+                            except BaseException:
+                                if not waited:
+                                    try:
+                                        stop = getattr(analysis, "stop", None)
+                                        if callable(stop):
+                                            stop()
+                                        analysis.wait()
+                                    except Exception:
+                                        pass
+                                raise
+                    else:
+                        # Compatibility with lightweight injected peers. Real
+                        # python-chess engines always use the packet path above.
+                        reply = engine.play(board.copy(stack=True), limit, **kwargs)
+                        candidate = self._rank_packet(board, allowed, depth, reply.info)
+                except Exception:
+                    if completed is not None:
+                        return completed
+                    raise
+                finally:
+                    analysis_handle[0] = None
+                    analysis_ready.clear()
+                if (cancel.is_set() or timed_out.is_set() or candidate is None
+                        or reply.move is None or reply.move.uci() != candidate["move"]):
+                    return completed
+                chosen.add(candidate["move"])
+                round_candidates.append(candidate)
+            # Selective root searches can invert the returned order. Compare
+            # exact same-depth scores from the mover's perspective, then use a
+            # stable tie break. Score's ordering handles mate distances directly.
+            ordered = sorted(round_candidates, key=lambda item: (-item["_score"], item["move"]))
+            candidates = [{"rank": rank, **{key: value for key, value in item.items() if key != "_score"}}
+                          for rank, item in enumerate(ordered, 1)]
+            completed = {**{key: value for key, value in candidates[0].items() if key != "rank"},
+                         "candidates": candidates, "status": "ready",
+                         "message": "추천수입니다. 직접 선택해서 두세요."}
+        return completed
+
     def _run(self):
         while True:
             with self._condition:
@@ -193,7 +303,7 @@ class MoveHints:
                     if not completion.is_set():
                         if not cancelled:
                             expired.set()
-                        if self._stream_evaluation:
+                        if self._stream_evaluation or analysis_handle[0] is not None:
                             # Prefer a normal UCI stop so both the iterator and
                             # the analysis completion future can be consumed
                             # before closing the transport. Startup and wedged
@@ -216,7 +326,15 @@ class MoveHints:
                 guard.start()
                 board = context["board"]
                 limit = chess.engine.Limit(time=seconds)
-                if self._stream_evaluation and callable(getattr(engine, "analysis", None)):
+                if not self._stream_evaluation:
+                    result = self._ranked_search(engine, board, seconds, cancel, timed_out,
+                                                 analysis_ready, analysis_handle)
+                    if result is None:
+                        if timed_out.is_set():
+                            raise TimeoutError("추천수 탐색 시간이 초과됐습니다.")
+                        raise ValueError("같은 깊이의 추천수 비교를 완료하지 못했습니다.")
+                    continue
+                if callable(getattr(engine, "analysis", None)):
                     with engine.analysis(board.copy(stack=True), limit,
                                          game=object(), info=chess.engine.INFO_ALL) as analysis:
                         analysis_handle[0] = analysis
@@ -259,6 +377,8 @@ class MoveHints:
                           "promotion": chess.piece_symbol(move.promotion) if move.promotion else None,
                           "depth": depth if type(depth) is int and depth >= 0 else None,
                           "status": "ready", "message": "추천수입니다. 직접 선택해서 두세요."}
+                result["candidates"] = [{"rank": 1, **{key: result[key] for key in
+                                          ("move", "san", "from", "to", "promotion", "depth")}}]
             except Exception:
                 failure = ("추천수 탐색 시간이 초과됐습니다. 껐다 켜면 다시 시도합니다."
                            if timed_out.is_set() else
@@ -289,6 +409,7 @@ class MoveHints:
                                 available = self._evaluation.get("cp") is not None or self._evaluation.get("mate") is not None
                                 if available:
                                     self._snapshot["depth"] = self._evaluation["depth"]
+                                    self._snapshot["candidates"][0]["depth"] = self._evaluation["depth"]
                                 self._evaluation["status"] = "ready" if available else "unavailable"
                         elif failure is not None:
                             self._snapshot.update(status="unavailable", message=failure)

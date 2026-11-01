@@ -47,16 +47,19 @@ class HintPeer(baseline.FakeEngine):
         self.close_releases = True
         self.blocked = blocked
 
-    def play(self, board, limit, *, game=None, info=None):
+    def play(self, board, limit, *, game=None, info=None, root_moves=None):
         self.calls.append((board.copy(stack=True), limit, game, info))
         self.started.set()
         if self.blocked and not self.release.wait(5):
             raise TimeoutError("test peer was not released")
         if self.failure:
             raise self.failure
-        move = chess.Move.from_uci(self.move) if self.move else next(iter(board.legal_moves))
+        allowed = list(root_moves) if root_moves is not None else list(board.legal_moves)
+        preferred = chess.Move.from_uci(self.move) if self.move else None
+        move = preferred if preferred is not None and (preferred in allowed or preferred not in board.legal_moves) else allowed[0]
         # Return even after close to exercise stale-result rejection.
-        return chess.engine.PlayResult(move, None, {"depth": self.depth})
+        return chess.engine.PlayResult(move, None, {"depth": limit.depth or self.depth,
+              "score": chess.engine.PovScore(chess.engine.Cp(100 if move == preferred else 0), board.turn), "pv": [move]})
 
     def close(self):
         super().close()
@@ -110,6 +113,7 @@ class HintStateTests(unittest.TestCase):
         return self.game.engine_move(self.revision())
 
     def assert_empty(self, hint):
+        self.assertEqual(hint["candidates"], [])
         for key in ("move", "san", "from", "to", "promotion", "depth"):
             self.assertIsNone(hint[key], key)
 
@@ -140,11 +144,15 @@ class HintStateTests(unittest.TestCase):
         self.assertEqual(self.game.evaluation(), evaluation)
         self.assertEqual(self.game.pgn(), pgn)
         self.assertEqual({path.name: path.read_bytes() for path in self.game.save_dir.iterdir()}, records)
-        self.assertEqual(self.hint_factory.instances[0].calls[0][1].time, 1)
+        self.assertGreater(self.hint_factory.instances[0].calls[0][1].time, .9)
+        self.assertLessEqual(self.hint_factory.instances[0].calls[0][1].time, 1)
         wait_for(lambda: self.hint_factory.instances[0].closed)
         changed = self.game.hint()
         changed["move"] = "a1a8"
+        changed["candidates"][0]["move"] = "a1a8"
+        changed["candidates"].clear()
         self.assertEqual(self.game.hint()["move"], hint["move"])
+        self.assertEqual(self.game.hint()["candidates"], hint["candidates"])
 
     def test_recomputes_for_both_colors_with_selected_time_and_full_history(self):
         self.game.new_game("black", 250, self.revision())
@@ -159,7 +167,8 @@ class HintStateTests(unittest.TestCase):
         self.assertEqual(searched.turn, chess.BLACK)
         self.assertEqual(searched.move_stack, self.game.board.move_stack)
         self.assertEqual(searched.root().fen(), self.game.board.root().fen())
-        self.assertEqual(limit.time, .25)
+        self.assertGreater(limit.time, .2)
+        self.assertLessEqual(limit.time, .25)
         self.game.human_move(hint["move"], self.revision())
         self.assertEqual(self.game.hint()["status"], "waiting")
         self.assert_empty(self.game.hint())
@@ -381,13 +390,13 @@ class RealHintSmoke(unittest.TestCase):
 
             def hint_engine(binary):
                 engine = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)
-                original_play = engine.play
+                original_analysis = engine.analysis
 
-                def tracked_play(*args, **kwargs):
+                def tracked_analysis(*args, **kwargs):
                     searching.set()
-                    return original_play(*args, **kwargs)
+                    return original_analysis(*args, **kwargs)
 
-                engine.play = tracked_play
+                engine.analysis = tracked_analysis
                 helpers.append(engine)
                 return engine
 
@@ -400,6 +409,9 @@ class RealHintSmoke(unittest.TestCase):
                 game.set_hint_enabled(True)
                 hint = wait_for(lambda: game.hint() if game.hint()["status"] == "ready" else None, 8)
                 self.assertIn(chess.Move.from_uci(hint["move"]), game.board.legal_moves)
+                self.assertEqual(len(hint["candidates"]), 3)
+                self.assertEqual(len({row["depth"] for row in hint["candidates"]}), 1)
+                self.assertEqual(hint["move"], hint["candidates"][0]["move"])
                 self.assertEqual(hint["fen"], before["fen"])
                 self.assertEqual(game.state()["revision"], before["revision"])
                 self.assertEqual(game.pgn(), pgn)
@@ -432,6 +444,7 @@ class RealHintSmoke(unittest.TestCase):
     def assert_empty_result(self, snapshot):
         self.assertEqual(snapshot["status"], "disabled")
         self.assertIsNone(snapshot["move"])
+        self.assertEqual(snapshot["candidates"], [])
 
 
 if __name__ == "__main__":

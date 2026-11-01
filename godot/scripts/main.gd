@@ -69,6 +69,8 @@ var evaluation_detail: Label
 var hint_button: Button
 var hint_summary: Label
 var hint_detail: Label
+var hint_legend: VBoxContainer
+var hint_candidate_labels: Array[Label] = []
 var opening_summary: Label
 var opening_status: Label
 var opening_toggle: Button
@@ -309,12 +311,25 @@ func _build_ui() -> void:
 	_build_opening_guide(sidebar)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
-	hint_button.tooltip_text = "Regicide가 당신의 다음 수를 추천합니다. 추천만 표시하며 직접 착수하지 않습니다."
+	hint_button.tooltip_text = "Regicide가 다음 수를 최대 3개 추천합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 표시된 수는 직접 선택해서 두세요."
 	sidebar.add_child(hint_button)
 	hint_summary = _label("", 15, "9bd7ca")
 	hint_summary.name = "MoveHintSummary"
-	hint_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint_summary.clip_text = true
+	hint_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	sidebar.add_child(hint_summary)
+	hint_legend = VBoxContainer.new()
+	hint_legend.name = "MoveHintCandidates"
+	hint_legend.add_theme_constant_override("separation", 2)
+	sidebar.add_child(hint_legend)
+	for rank in range(1, 4):
+		var row := _label("", 13, ChessBoard.HINT_COLORS[rank - 1].to_html(false))
+		row.name = "MoveHintRank%d" % rank
+		row.custom_minimum_size.y = 20
+		row.clip_text = true
+		row.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		hint_legend.add_child(row)
+		hint_candidate_labels.append(row)
 	hint_detail = _label("", 12, "a3b6c8")
 	hint_detail.name = "MoveHintDetail"
 	hint_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1231,7 +1246,7 @@ func _render_evaluation() -> void:
 
 
 func _hint_position_available() -> bool:
-	return not review_mode and not closing and not request_in_flight and not engine_thinking \
+	return not review_mode and not _analysis_open() and not _coaching_open() and not closing and not request_in_flight and not engine_thinking \
 		and not state.is_empty() and state.get("human_to_move", false) \
 		and not state.get("handicap_mode", false) and state.get("result", "*") == "*" \
 		and state.get("error") == null and not state.get("legal_moves", []).is_empty()
@@ -1243,17 +1258,56 @@ func _clear_hint() -> void:
 	hint.clear()
 	if board != null:
 		board.hint_move = ""
+		board.hint_moves = []
 		board.queue_redraw()
+
+
+func _valid_hint_candidates(value: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var raw: Variant = value.get("candidates", [value.merged({"rank": 1}, true)])
+	if not raw is Array:
+		return result
+	var ordered: Array[Dictionary] = []
+	for item in raw:
+		if not item is Dictionary or typeof(item.get("rank")) not in [TYPE_INT, TYPE_FLOAT]:
+			continue
+		var rank: int = int(item.rank)
+		if rank < 1 or rank > 3 or float(item.rank) != rank:
+			continue
+		ordered.append(item)
+	ordered.sort_custom(func(a: Dictionary, b: Dictionary): return int(a.rank) < int(b.rank))
+	var seen: Dictionary = {}
+	var ranks: Dictionary = {}
+	for item in ordered:
+		var move: String = str(item.get("move", ""))
+		var rank: int = int(item.rank)
+		if seen.has(move) or ranks.has(rank) or not state.get("legal_moves", []).has(move):
+			continue
+		if item.has("from") and item["from"] != move.substr(0, 2):
+			continue
+		if item.has("to") and item.to != move.substr(2, 2):
+			continue
+		var promotion: String = move.substr(4) if move.length() == 5 else ""
+		if item.get("promotion") != null and str(item.promotion) != promotion:
+			continue
+		seen[move] = true
+		ranks[rank] = true
+		result.append({"rank": rank, "move": move, "san": str(item.get("san", "")),
+			"from": move.substr(0, 2), "to": move.substr(2, 2), "promotion": promotion, "depth": item.get("depth", 0)})
+	return result
 
 
 func accept_hint(value: Dictionary) -> bool:
 	if not hint_enabled or not _hint_position_available() or not _evaluation_matches(value, state) \
 		or not value.get("enabled", false):
 		return false
-	var move: String = str(value.get("move", "")) if value.get("move") != null else ""
-	if value.get("status", "") == "ready" and not state.get("legal_moves", []).has(move):
+	var candidates: Array[Dictionary] = _valid_hint_candidates(value)
+	if value.get("status", "") == "ready" and candidates.is_empty():
 		return false
 	hint = value.duplicate(true)
+	hint["candidates"] = candidates
+	if not candidates.is_empty():
+		hint.merge(candidates[0], true)
 	if not _hint_control_failed:
 		_hint_connection_error = ""
 	_render_hint()
@@ -1327,7 +1381,12 @@ func _render_hint() -> void:
 	hint_button.disabled = _file_dialog_busy() or closing or review_mode or state.is_empty() or backend_url.is_empty()
 	hint_summary.visible = hint_enabled and not review_mode
 	hint_detail.visible = hint_enabled and not review_mode
+	hint_legend.visible = hint_enabled and not review_mode
+	for row in hint_candidate_labels:
+		row.text = ""
+		row.tooltip_text = ""
 	board.hint_move = ""
+	board.hint_moves = []
 	if not hint_enabled or review_mode:
 		hint_summary.text = ""
 		hint_detail.text = ""
@@ -1352,12 +1411,26 @@ func _render_hint() -> void:
 	elif hint.get("status", "") == "ready" and state.get("legal_moves", []).has(hint.get("move")):
 		var move: String = str(hint.move)
 		board.hint_move = move
+		board.hint_moves = _valid_hint_candidates(hint)
 		var san: String = str(hint.get("san", ""))
 		hint_summary.text = "Regicide 추천 · " + (san if not san.is_empty() else move)
+		if board.hint_moves.size() > 1:
+			hint_summary.text = "Regicide 추천 · %d개 후보" % board.hint_moves.size()
+		for candidate in board.hint_moves:
+			var rank: int = int(candidate.rank)
+			var label: String = str(candidate.san) if not str(candidate.san).is_empty() else str(candidate.move)
+			var promotion_name: String = ""
+			if not str(candidate.promotion).is_empty():
+				promotion_name = " · %s 승격" % {"q": "퀸", "r": "룩", "b": "비숍", "n": "나이트"}.get(candidate.promotion, candidate.promotion)
+			var text: String = "%d  %s  ·  %s → %s%s" % [rank, label, candidate["from"], candidate.to, promotion_name]
+			hint_candidate_labels[rank - 1].text = text
+			hint_candidate_labels[rank - 1].tooltip_text = text
 		var promotion_text: String = ""
 		if move.length() == 5:
 			promotion_text = " · %s 승격" % {"q": "퀸", "r": "룩", "b": "비숍", "n": "나이트"}.get(move.substr(4), move.substr(4))
 		hint_detail.text = "%s → %s%s\n표시된 수는 직접 선택해서 두세요." % [move.substr(0, 2), move.substr(2, 2), promotion_text]
+		if board.hint_moves.size() > 1:
+			hint_detail.text = "1순위 빨강 · 2순위 주황 · 3순위 노랑\n표시된 수는 직접 선택해서 두세요."
 	else:
 		hint_summary.text = "Regicide 추천 · 분석 없음"
 		hint_detail.text = str(hint.get("message", "추천 수를 얻지 못했습니다. 대국은 계속할 수 있습니다."))

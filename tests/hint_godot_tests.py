@@ -6,7 +6,9 @@ Usage: python tests/hint_godot_tests.py --godot GODOT --binary REGICIDE
 
 import argparse
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -38,6 +40,19 @@ class DelayedHintHandler(integration.AuditedHandler):
         self._send(200, snapshot)
 
 
+def run_godot(args, extra_args, label):
+    command = [str(args.godot), "--path", str(args.project)]
+    command += ["--position", "20000,20000"] if args.rendered else ["--headless"]
+    command += ["--script", "res://tests/hint_tests.gd", "--", *map(str, extra_args)]
+    result = subprocess.run(command, cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120,
+                            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+    (args.output / f"{label}.log").write_text(result.stdout, encoding="utf-8")
+    print(result.stdout, end="")
+    if result.returncode or "SCRIPT ERROR:" in result.stdout or "ERROR:" in result.stdout:
+        raise AssertionError(f"Godot {label} failed (exit {result.returncode})")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot", type=Path, required=True)
@@ -49,14 +64,24 @@ def main():
     args.binary = args.binary.resolve(strict=True)
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
-    imported = subprocess.run([str(args.godot), "--headless", "--path", str(ROOT / "godot"),
+    with tempfile.TemporaryDirectory(prefix="regicide-hint-project-") as temporary:
+        args.project = Path(temporary) / "godot"
+        shutil.copytree(ROOT / "godot", args.project, ignore=shutil.ignore_patterns(".godot"))
+        settings = args.project / "project.godot"
+        settings.write_text(settings.read_text(encoding="utf-8").replace('config/name="Regicide"',
+                            f'config/name="Regicide Hint QA {os.getpid()}"'), encoding="utf-8")
+        run_checks(args)
+
+
+def run_checks(args):
+    imported = subprocess.run([str(args.godot), "--headless", "--path", str(args.project),
                                "--editor", "--import"], cwd=ROOT, text=True,
                               encoding="utf-8", errors="replace", stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT, timeout=90)
     (args.output / "import.log").write_text(imported.stdout, encoding="utf-8")
     if imported.returncode or "SCRIPT ERROR:" in imported.stdout or "ERROR:" in imported.stdout:
         raise AssertionError(f"Godot import failed:\n{imported.stdout}")
-    integration.run_godot(args, "hint_tests.gd", ["--evidence-dir", args.output], label="hint-synthetic")
+    run_godot(args, ["--evidence-dir", args.output], "hint-synthetic")
     with tempfile.TemporaryDirectory(prefix="regicide-hint-godot-") as temporary:
         temporary = Path(temporary)
         game = backend.HumanGame(args.binary, temporary / "games")
@@ -68,9 +93,7 @@ def main():
         config = temporary / "private-backend.json"
         config.write_text(json.dumps({"url": server.origin, "token": server.token}), encoding="utf-8")
         try:
-            integration.run_godot(args, "hint_tests.gd",
-                                  ["--backend-file", config, "--evidence-dir", args.output],
-                                  label="hint-live")
+            run_godot(args, ["--backend-file", config, "--evidence-dir", args.output], "hint-live")
             routes = [entry["path"] for entry in server.audit if entry["method"] == "POST"]
             expected_game_routes = ["/api/move", "/api/engine", "/api/undo", "/api/new",
                                     "/api/engine", "/api/handicap", "/api/handicap-cancel", "/api/resign"]

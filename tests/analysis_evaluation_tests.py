@@ -313,18 +313,17 @@ class AnalysisEvaluationTests(unittest.TestCase):
         self.assertEqual(evaluation["status"], "ready")
         self.assertEqual(len(peer.calls), 1)
 
-    def test_normal_hints_still_use_play_even_if_peer_has_streaming_method(self):
-        class NormalPeer(baseline.FakeEngine):
-            def analysis(self, *_args, **_kwargs):
-                raise AssertionError("normal recommendation path must remain unchanged")
-        peer = NormalPeer()
+    def test_normal_ranked_hints_use_exact_packets_without_publishing_evaluation(self):
+        from ranked_hint_tests import RankedPeer
+        peer = RankedPeer()
         hints = MoveHints(self.binary, lambda _: peer)
         self.addCleanup(hints.close)
         hints.update_position(game_id="normal", revision=1, board=chess.Board(), human_color=chess.WHITE,
                               movetime_ms=100, engine_name="fake", active=True)
         hints.set_enabled(True)
         wait_for(lambda: hints.snapshot()["status"] == "ready")
-        self.assertEqual(len(peer.calls), 1)
+        self.assertEqual(len(peer.calls), 4)  # Three depth-1 ranks; incomplete depth-2 round.
+        self.assertEqual(len(hints.snapshot()["candidates"]), 3)
         self.assertNotIn("evaluation", hints.snapshot())
         self.assertEqual(hints.snapshot_with_evaluation()[1], {})
 

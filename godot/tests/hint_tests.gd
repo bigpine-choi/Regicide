@@ -5,6 +5,7 @@ var app: Variant
 var checks: int = 0
 var failures: int = 0
 var evidence_dir: String = ""
+var ranked_geometries: Array = []
 
 
 func _initialize() -> void:
@@ -34,7 +35,7 @@ func fixture(color: String = "white") -> Dictionary:
 		"fen": "8/8/8/4p3/8/8/4P3/4K2k w - - 0 1",
 		"board": {"e2": "P", "e5": "p", "e1": "K", "h1": "k"},
 		"turn": color, "human_color": color, "human_to_move": true, "engine_to_move": false,
-		"legal_moves": ["e2e3", "e2e4"] if color == "white" else ["e5e4"],
+		"legal_moves": ["e2e3", "e2e4", "e1d1"] if color == "white" else ["e5e4"],
 		"moves": [], "last_move": null, "in_check": false, "result": "*", "can_undo": false,
 		"status": "대국 중", "termination": null, "error": null,
 		"engine": {"name": "Regicide", "movetime_ms": 1000}}
@@ -56,9 +57,133 @@ func capture(name: String) -> void:
 		"rendered screenshot saved: " + name)
 
 
+func ranked_hint(position: Dictionary, moves: Array, sans: Array) -> Dictionary:
+	var value: Dictionary = hint_for(position, moves[0], sans[0])
+	value.candidates = []
+	for index in range(moves.size()):
+		var candidate: Dictionary = hint_for(position, moves[index], sans[index])
+		candidate.rank = index + 1
+		value.candidates.append(candidate)
+	return value
+
+
+func settle() -> void:
+	for _frame in range(10):
+		await process_frame
+
+
+func _run_ranked() -> void:
+	var position: Dictionary = fixture()
+	position.game_id = "ranked-hint-game"
+	position.revision = int(app.state.revision) + 1
+	app.accept_state(position)
+	var value: Dictionary = ranked_hint(position, ["e2e4", "e2e3", "e1d1"], ["e4", "e3", "Kd1"])
+	value.candidates.reverse()
+	verify(app.accept_hint(value) and app.board.hint_moves.size() == 3, "all three legal candidates are accepted even when transport order differs")
+	var layouts: Array = app.board.hint_arrow_layouts()
+	for index in range(3):
+		verify(layouts[index].rank == index + 1 and layouts[index].color == [Color("ef5350"), Color("ff9800"), Color("fdd835")][index], "rank determines exact shared color " + str(index + 1))
+		verify(app.hint_candidate_labels[index].text.begins_with(str(index + 1)) and app.hint_candidate_labels[index].get_theme_color("font_color") == layouts[index].color, "legend and arrow agree for rank " + str(index + 1))
+		verify(app.board.square_at_point(layouts[index].source) == str(layouts[index].move).substr(0, 2) and app.board.square_at_point(layouts[index].target) == str(layouts[index].move).substr(2, 2), "ranked arrow remains inside its logical start and target squares")
+	verify(app.board.hint_move == "e2e4", "legacy single-move API still exposes the highest ranked valid move")
+	var original: Dictionary = app.state.duplicate(true)
+	app._on_square_pressed("e2")
+	verify(app.board_model.selected_square == "e2" and app.state == original, "painted multi-hint markers do not obstruct ordinary piece selection")
+	var key := InputEventKey.new()
+	key.keycode = KEY_F
+	key.pressed = true
+	var previous_view: bool = app.board_model.view_from_white
+	app._unhandled_key_input(key)
+	verify(app.board_model.view_from_white != previous_view and app.board.hint_moves.size() == 3, "keyboard flip continues to work with all three hints")
+	for item in app.board.hint_arrow_layouts():
+		verify(app.board.square_at_point(item.source) == str(item.move).substr(0, 2) and app.board.square_at_point(item.target) == str(item.move).substr(2, 2), "flipped candidate preserves square mapping")
+	var malformed: Dictionary = value.duplicate(true)
+	malformed.candidates = [{"rank": 0, "move": "e2e4"}, {"rank": 1.5, "move": "e2e4"}, {"rank": 1, "move": "e2e4", "san": "e4"},
+		{"rank": 2, "move": "e2e4"}, {"rank": 2, "move": "e2e3", "from": "a1"}, {"rank": 3, "move": "e2e5"}, {"rank": 3, "move": "e1d1", "san": "Kd1"}]
+	verify(app.accept_hint(malformed) and app.board.hint_moves.size() == 2 and app.board.hint_moves[1].rank == 3, "illegal, duplicate, mismatched and invalid-rank candidates are removed without renumbering survivors")
+	verify(app.hint_candidate_labels[1].text.is_empty() and app.hint_candidate_labels[2].text.begins_with("3"), "missing second rank cannot receive another candidate's color")
+	malformed = value.duplicate(true)
+	malformed.candidates = [{"rank": 1, "move": "e2e5"}, {"rank": 2, "move": "e2e3", "san": "e3"}]
+	verify(app.accept_hint(malformed) and app.board.hint_move == "e2e3" and app.board.hint_arrow_layouts()[0].color == Color("ff9800"), "invalid first move does not prevent safe second candidate and retains rank-two color")
+	app.accept_hint(value)
+	for field in ["revision", "fen", "game_id"]:
+		var stale: Dictionary = value.duplicate(true)
+		stale[field] = -1 if field == "revision" else "stale"
+		verify(not app.accept_hint(stale) and app.board.hint_moves.size() == 3, "stale multi-candidate " + field + " never replaces current arrows")
+	for overlay in [app.analysis_overlay, app.coaching_overlay]:
+		overlay.show()
+		app._render_hint()
+		verify(app.board.hint_moves.is_empty() and not app.accept_hint(value), "live ranked hints do not leak into another mode")
+		overlay.hide()
+		app.accept_hint(value)
+	app._on_hint_pressed()
+	verify(app.board.hint_moves.is_empty() and not app.hint_legend.visible, "OFF removes every ranked arrow and legend")
+	verify(not app.accept_hint(value), "delayed multi-candidate response cannot resurrect an OFF hint")
+	app._on_hint_pressed()
+	app.accept_hint(value)
+	for dimensions in [Vector2i(1240, 860), Vector2i(900, 680)]:
+		root.size = dimensions
+		app.board_model.view_from_white = true
+		app._render()
+		app.accept_hint(value)
+		await settle()
+		var before: Rect2 = app.board.get_global_rect()
+		await capture("hint-three-" + str(dimensions.x))
+		for mode in ["waiting", "one", "two", "long", "searching", "three"]:
+			var changed: Dictionary = value.duplicate(true)
+			if mode == "one":
+				changed.candidates = [value.candidates[2]]
+			elif mode == "two":
+				changed.candidates = [value.candidates[2], value.candidates[1]]
+			elif mode == "long":
+				for item in changed.candidates:
+					item.san = "very long unexpected notation ".repeat(15)
+			elif mode in ["searching", "waiting"]:
+				changed.status = mode
+			app.accept_hint(changed)
+			await settle()
+			verify(app.board.get_global_rect().is_equal_approx(before), "board stays fixed at " + str(dimensions.x) + " while hint changes to " + mode)
+			ranked_geometries.append({"viewport": [dimensions.x, dimensions.y], "mode": mode, "board": [before.position.x, before.position.y, before.size.x, before.size.y]})
+	var promotion: Dictionary = position.duplicate(true)
+	promotion.game_id = "ranked-promotion"
+	promotion.revision = int(app.state.revision) + 1
+	promotion.fen = "8/P7/8/8/8/8/8/4K2k w - - 0 1"
+	promotion.board = {"a7": "P", "e1": "K", "h1": "k"}
+	promotion.legal_moves = ["a7a8q", "a7a8r", "a7a8b", "a7a8n"]
+	app.accept_state(promotion)
+	value = ranked_hint(promotion, ["a7a8q", "a7a8n", "a7a8r"], ["a8=Q", "a8=N", "a8=R"])
+	app.accept_hint(value)
+	for flipped in [false, true]:
+		app.board_model.view_from_white = not flipped
+		app._render()
+		await settle()
+		layouts = app.board.hint_arrow_layouts()
+		var cell: float = app.board.get_board_rect().size.x / 8.0
+		for index in range(3):
+			verify(app.board.square_at_point(layouts[index].source) == "a7" and app.board.square_at_point(layouts[index].target) == "a8", "promotion lane stays inside edge squares when flipped=" + str(flipped))
+			for other in range(index + 1, 3):
+				verify(layouts[index].marker.distance_to(layouts[other].marker) > cell * 0.27, "different promotions have separated numeric rank markers")
+		verify(app.hint_candidate_labels[1].text.contains("나이트") and app.hint_candidate_labels[2].text.contains("룩"), "promotion legend identifies the piece for every candidate")
+		await capture("hint-three-promotions-" + ("flipped" if flipped else "white"))
+	app.board.hint_moves = []
+	app.board.hint_move = "a7a8n"
+	verify(app.board.hint_centers().size() == 2 and app.board.hint_arrow_layouts().is_empty(), "analysis and coaching retain their original single-arrow API")
+	app.accept_hint(value)
+	var changed: Dictionary = promotion.duplicate(true)
+	changed.revision += 1
+	changed.human_to_move = false
+	app.accept_state(changed)
+	verify(app.board.hint_moves.is_empty() and not app.accept_hint(value), "turn and revision changes clear all candidates")
+	if not evidence_dir.is_empty():
+		var file := FileAccess.open(evidence_dir.path_join("hint-ranked-layouts.json"), FileAccess.WRITE)
+		file.store_string(JSON.stringify(ranked_geometries, "  "))
+		file.close()
+
+
 func _run_synthetic() -> void:
 	app.offline_mode = true
 	root.add_child(app)
+	app.coaching_overlay._speech_enabled = false
 	await process_frame
 	await process_frame
 	app.backend_url = "http://127.0.0.1:1"
@@ -176,6 +301,7 @@ func _run_synthetic() -> void:
 	await process_frame
 	verify(app.hint_button.get_global_rect().position.x > app.board.get_global_rect().position.x, "small-window hint stays in sidebar")
 	await capture("hint-small-window")
+	await _run_ranked()
 	app.closing = true
 	verify(not app.accept_hint(hint_for(promotion, "a7a8q", "a8=Q")), "shutdown ignores late recommendation")
 
@@ -190,6 +316,7 @@ func _run_live() -> void:
 	if not await wait_for(func(): return not app.board.hint_move.is_empty(), "white-human real engine hint"):
 		return
 	verify(app.state.legal_moves.has(app.board.hint_move), "real white recommendation is legal")
+	verify(app.board.hint_moves.size() == 3 and app.board.hint_moves.all(func(item: Dictionary): return app.state.legal_moves.has(item.move)), "real white helper delivers three distinct legal ranked moves")
 	verify(JSON.stringify(app.state) == before, "helper does not mutate the game")
 	await capture("hint-live-white")
 	app._on_flip_pressed()
@@ -236,6 +363,7 @@ func _run_live() -> void:
 	if not await wait_for(func(): return not app.board.hint_move.is_empty(), "black-human real engine hint"):
 		return
 	verify(app.state.legal_moves.has(app.board.hint_move), "real black recommendation is legal")
+	verify(app.board.hint_moves.size() == 3 and app.board.hint_moves.all(func(item: Dictionary): return app.state.legal_moves.has(item.move)), "real black helper delivers three distinct legal ranked moves")
 	await capture("hint-live-black")
 	old = app.hint.duplicate(true)
 	app._on_handicap_pressed()
