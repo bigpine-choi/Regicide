@@ -11,18 +11,20 @@ import chess.engine
 
 
 class MoveHints:
-    def __init__(self, binary, engine_factory=None, timeout_grace=2.0):
+    def __init__(self, binary, engine_factory=None, timeout_grace=2.0, *, stream_evaluation=False):
         self.binary = binary
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci(
                 [str(binary), "uci"], timeout=3))
         self._timeout_grace = timeout_grace
+        self._stream_evaluation = stream_evaluation
         self._condition = threading.Condition()
         self._enabled = False
         self._closed = False
         self._generation = 0
         self._context = None
         self._snapshot = {}
+        self._evaluation = {}
         self._pending = None
         self._cancel = None
         self._worker = None
@@ -30,6 +32,11 @@ class MoveHints:
     def snapshot(self):
         with self._condition:
             return dict(self._snapshot)
+
+    def snapshot_with_evaluation(self):
+        """Read the advice and score from the same search generation atomically."""
+        with self._condition:
+            return dict(self._snapshot), dict(self._evaluation)
 
     def set_enabled(self, enabled):
         if type(enabled) is not bool:
@@ -51,6 +58,8 @@ class MoveHints:
                    "movetime_ms": movetime_ms, "engine_name": engine_name,
                    "active": active, "handicap_mode": handicap_mode,
                    "eligible": eligible}
+        if self._stream_evaluation:
+            context["turn"] = "white" if board.turn else "black"
         with self._condition:
             if self._closed:
                 return
@@ -91,10 +100,56 @@ class MoveHints:
         self._snapshot.update(enabled=enabled, status=status, move=None, san=None,
                               **{"from": None, "to": None}, promotion=None,
                               depth=None, message=message)
+        if self._stream_evaluation:
+            self._clear_evaluation_locked("searching" if status == "searching" else
+                                          "unavailable" if status == "unavailable" else "waiting")
         if self._pending is not None and self._worker is None:
             self._worker = threading.Thread(target=self._run, name="regicide-move-hints", daemon=True)
             self._worker.start()
         self._condition.notify_all()
+
+    def _clear_evaluation_locked(self, status):
+        context = self._context
+        self._evaluation = {key: context[key] for key in ("game_id", "revision", "fen", "turn")}
+        self._evaluation.update(status=status, cp=None, mate=None, depth=None, bound=None,
+                                white_share=None, winner=None, result="*", source="search", source_fen=None)
+
+    def _publish_evaluation(self, generation, context, cancel, timed_out, info):
+        """Only a score packet with its own completed depth may replace a score.
+
+        AnalysisResult.info merges partial packets; a later depth-only packet
+        must not attach its depth to an earlier iteration's score.
+        """
+        if not self._stream_evaluation:
+            return
+        score, depth = info.get("score"), info.get("depth")
+        if not isinstance(score, chess.engine.PovScore) or type(depth) is not int or depth < 1:
+            return
+        white_score = score.pov(chess.WHITE)
+        cp, mate = white_score.score(), white_score.mate()
+        if cp is None and mate is None:
+            return
+        lower, upper = bool(info.get("lowerbound")), bool(info.get("upperbound"))
+        if score.turn == chess.BLACK:
+            lower, upper = upper, lower
+        if lower and upper:
+            return
+        winner = None
+        if mate is not None:
+            # Mate(0) and MateGiven both expose distance zero; their numeric
+            # mate score retains which side has already been mated.
+            winner = "white" if white_score.score(mate_score=30000) > 0 else "black"
+            share = 1.0 if winner == "white" else 0.0
+        else:
+            share = 0.5 + 0.5 * cp / (abs(cp) + 400.0)
+        with self._condition:
+            if (self._closed or not self._enabled or generation != self._generation
+                    or context is not self._context
+                    or cancel.is_set() or timed_out.is_set()):
+                return
+            self._evaluation.update(status="searching", cp=cp, mate=mate, depth=depth,
+                                    bound="lower" if lower else "upper" if upper else "exact",
+                                    white_share=share, winner=winner, source_fen=self._context["fen"])
 
     @staticmethod
     def _close_engine(engine):
@@ -119,6 +174,8 @@ class MoveHints:
             guard = None
             finished = threading.Event()
             timed_out = threading.Event()
+            analysis_ready = threading.Event()
+            analysis_handle = [None]
             result = None
             failure = None
             try:
@@ -136,6 +193,21 @@ class MoveHints:
                     if not completion.is_set():
                         if not cancelled:
                             expired.set()
+                        if self._stream_evaluation:
+                            # Prefer a normal UCI stop so both the iterator and
+                            # the analysis completion future can be consumed
+                            # before closing the transport. Startup and wedged
+                            # peers retain a bounded force-close fallback.
+                            analysis_ready.wait(.25)
+                            stream = analysis_handle[0]
+                            stop = getattr(stream, "stop", None)
+                            if callable(stop):
+                                try:
+                                    stop()
+                                except Exception:
+                                    pass
+                                if completion.wait(.25):
+                                    return
                         self._close_engine(peer)
 
                 guard = threading.Thread(target=guard_search,
@@ -143,14 +215,44 @@ class MoveHints:
                                          name="regicide-hint-watchdog", daemon=True)
                 guard.start()
                 board = context["board"]
-                reply = engine.play(board.copy(stack=True), chess.engine.Limit(time=seconds),
-                                    game=object(), info=chess.engine.INFO_ALL)
+                limit = chess.engine.Limit(time=seconds)
+                if self._stream_evaluation and callable(getattr(engine, "analysis", None)):
+                    with engine.analysis(board.copy(stack=True), limit,
+                                         game=object(), info=chess.engine.INFO_ALL) as analysis:
+                        analysis_handle[0] = analysis
+                        analysis_ready.set()
+                        waited = False
+                        try:
+                            for info in analysis:
+                                self._publish_evaluation(generation, context, cancel, timed_out, info)
+                            waited = True
+                            reply = analysis.wait()
+                            final_info = analysis.info
+                        except BaseException:
+                            if not waited:
+                                # Iterator failure and analysis completion have
+                                # separate futures in python-chess. Retrieve the
+                                # latter's exception too, preserving this search
+                                # failure and the watchdog's total time bound.
+                                try:
+                                    stop = getattr(analysis, "stop", None)
+                                    if callable(stop):
+                                        stop()
+                                    analysis.wait()
+                                except Exception:
+                                    pass
+                            raise
+                else:
+                    reply = engine.play(board.copy(stack=True), limit,
+                                        game=object(), info=chess.engine.INFO_ALL)
+                    final_info = reply.info
+                    self._publish_evaluation(generation, context, cancel, timed_out, final_info)
                 if timed_out.is_set():
                     raise TimeoutError("추천수 탐색 시간이 초과됐습니다.")
                 move = reply.move
                 if move is None or move not in board.legal_moves:
                     raise ValueError("추천 엔진이 합법 수를 반환하지 않았습니다.")
-                depth = reply.info.get("depth")
+                depth = final_info.get("depth")
                 result = {"move": move.uci(), "san": board.san(move),
                           "from": chess.square_name(move.from_square),
                           "to": chess.square_name(move.to_square),
@@ -183,8 +285,15 @@ class MoveHints:
                     if not self._closed and generation == self._generation and self._enabled:
                         if result is not None:
                             self._snapshot.update(result)
+                            if self._stream_evaluation:
+                                available = self._evaluation.get("cp") is not None or self._evaluation.get("mate") is not None
+                                if available:
+                                    self._snapshot["depth"] = self._evaluation["depth"]
+                                self._evaluation["status"] = "ready" if available else "unavailable"
                         elif failure is not None:
                             self._snapshot.update(status="unavailable", message=failure)
+                            if self._stream_evaluation:
+                                self._clear_evaluation_locked("unavailable")
 
     def close(self):
         with self._condition:

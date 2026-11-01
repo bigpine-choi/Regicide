@@ -6,12 +6,89 @@ signal square_pressed(square: String)
 signal drag_requested(from_square: String, to_square: String)
 
 const ViewModel = preload("res://scripts/board_view_model.gd")
+const BoardMotion = preload("res://scripts/board_motion.gd")
 var model: ViewModel = ViewModel.new()
-var state: Dictionary = {}
+var state: Dictionary:
+	get:
+		return _state
+	set(value):
+		_accept_position(value)
+var animation_enabled: bool = true:
+	set(value):
+		animation_enabled = value
+		if not value:
+			finish_animation()
 var piece_textures: Dictionary = {}
 var label_font: Font
 var pressed_square: String = ""
 var hint_move: String = ""
+## Presentation-only, supplied by verified coaching evidence for this frame.
+var coach_squares: Array = []
+## Passive review badge for one verified actual-game position, never a move input.
+var move_annotation: Dictionary = {}:
+	set(value):
+		move_annotation = value.duplicate(true)
+		queue_redraw()
+var _state: Dictionary = {}
+var _position: Dictionary = {}
+var _motion: Dictionary = {}
+var _motion_elapsed: float = 0.0
+var _motion_duration: float = 0.24
+var _motion_view: bool = true
+const LANDING_SECONDS := 0.12
+
+
+func _motion_allowed() -> bool:
+	return true
+
+
+func _accept_position(value: Dictionary) -> void:
+	var previous: Dictionary = _position
+	_state = value
+	_position = BoardMotion.snapshot(value)
+	if previous == _position:
+		queue_redraw()
+		return
+	finish_animation()
+	if animation_enabled and is_node_ready() and is_visible_in_tree() and _motion_allowed():
+		_motion = BoardMotion.between(previous, _position)
+		if not _motion.is_empty():
+			_motion_elapsed = 0.0
+			_motion_duration = 0.28 if _motion.movements.size() > 1 else 0.24
+			_motion_view = model.view_from_white
+			set_process(true)
+	queue_redraw()
+
+
+func finish_animation() -> void:
+	_motion = {}
+	_motion_elapsed = 0.0
+	set_process(false)
+	queue_redraw()
+
+
+func is_animating() -> bool:
+	return not _motion.is_empty()
+
+
+func _process(delta: float) -> void:
+	if not is_visible_in_tree() or model.view_from_white != _motion_view or not _motion_allowed():
+		finish_animation()
+		return
+	_motion_elapsed += delta
+	if _motion_elapsed >= _motion_duration + LANDING_SECONDS:
+		finish_animation()
+	else:
+		queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		finish_animation()
+
+
+func _on_board_resized() -> void:
+	finish_animation()
 
 
 func _ready() -> void:
@@ -21,7 +98,8 @@ func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	label_font = get_theme_default_font()
 	_make_piece_textures()
-	resized.connect(queue_redraw)
+	resized.connect(_on_board_resized)
+	set_process(false)
 
 
 func get_board_rect() -> Rect2:
@@ -58,6 +136,13 @@ func _draw() -> void:
 	var cell: float = area.size.x / 8.0
 	draw_style_box(_frame_style(), area.grow(7.0))
 	var pieces: Dictionary = state.get("board", {})
+	var moving: bool = is_animating() and model.view_from_white == _motion_view and _motion_allowed()
+	var hidden: Dictionary = {}
+	if moving:
+		for movement in _motion.movements:
+			hidden[movement.to] = true
+		if _motion.reverse and not _motion.capture.is_empty():
+			hidden[_motion.capture.square] = true
 	var last: String = state.get("last_move", "") if state.get("last_move") != null else ""
 	var destinations: Dictionary = {}
 	for move in state.get("legal_moves", []):
@@ -75,12 +160,14 @@ func _draw() -> void:
 			if square == model.selected_square:
 				draw_rect(bounds, Color(0.98, 0.77, 0.22, 0.55))
 				draw_rect(bounds.grow(-2.0), Color("ffd578"), false, 3.0)
+			if coach_squares.has(square):
+				draw_rect(bounds.grow(-4.0), Color("79d9cd"), false, 3.0)
 			var piece: String = str(pieces.get(square, ""))
 			if state.get("in_check", false) and piece.to_lower() == "k":
 				var color := "white" if piece == piece.to_upper() else "black"
 				if color == state.get("turn", ""):
 					draw_rect(bounds, Color(0.9, 0.2, 0.19, 0.53))
-			if not piece.is_empty() and piece_textures.has(piece):
+			if not hidden.has(square) and not piece.is_empty() and piece_textures.has(piece):
 				var inset: float = cell * 0.08
 				draw_texture_rect(piece_textures[piece], bounds.grow(-inset), false)
 			if destinations.has(square):
@@ -88,7 +175,10 @@ func _draw() -> void:
 					draw_circle(bounds.get_center(), cell * 0.11, Color(0.08, 0.23, 0.25, 0.45))
 				else:
 					draw_arc(bounds.get_center(), cell * 0.43, 0, TAU, 48, Color(0.06, 0.25, 0.27, 0.7), cell * 0.055, true)
+	if moving:
+		_draw_motion(area, cell)
 	_draw_hint(area, cell)
+	_draw_move_badge()
 	var font_size: int = clampi(int(cell * 0.20), 12, 18)
 	for index in range(8):
 		var x: float = area.position.x + (index + 0.5) * cell
@@ -97,6 +187,91 @@ func _draw() -> void:
 		_center_text(model.file_label(index), Vector2(x, area.position.y - 12.0), font_size)
 		_center_text(model.rank_label(index), Vector2(area.position.x - 19.0, y + font_size * 0.35), font_size)
 		_center_text(model.rank_label(index), Vector2(area.end.x + 19.0, y + font_size * 0.35), font_size)
+
+
+func _piece_center(square: String, area: Rect2, cell: float) -> Vector2:
+	return area.position + (Vector2(model.square_to_display(square)) + Vector2.ONE * 0.5) * cell
+
+
+func move_badge_rect() -> Rect2:
+	if move_annotation.is_empty() or is_animating():
+		return Rect2()
+	var square: String = str(move_annotation.get("square", ""))
+	var uci: String = str(move_annotation.get("uci", ""))
+	if move_annotation.get("scope") != "actual_move" or str(move_annotation.get("fen_after", "")).is_empty() or move_annotation.get("fen_after") != state.get("fen") or int(move_annotation.get("ply", -1)) != int(state.get("ply", -2)):
+		return Rect2()
+	if uci.length() not in [4, 5] or square != uci.substr(2, 2) or state.get("last_move") != uci or not state.get("board", {}).has(square):
+		return Rect2()
+	var coordinate: Vector2i = model.square_to_display(square)
+	if coordinate.x < 0 or coordinate.y < 0:
+		return Rect2()
+	var area := get_board_rect()
+	var cell: float = area.size.x / 8.0
+	var radius: float = clampf(cell * 0.205, 10.0, 19.0)
+	var center: Vector2 = area.position + (Vector2(coordinate) + Vector2(0.80, 0.17)) * cell
+	center.x = clampf(center.x, area.position.x + radius + 2, area.end.x - radius - 2)
+	center.y = clampf(center.y, area.position.y + radius + 2, area.end.y - radius - 2)
+	return Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+
+
+func _draw_move_badge() -> void:
+	var bounds := move_badge_rect()
+	if bounds.size.x <= 0.0:
+		return
+	var colors := {"great": "42cbbb", "best": "8ecb6b", "good": "8daf8d", "inaccuracy": "e7bc58", "mistake": "e38c49", "blunder": "e76069", "allows_mate": "e76069", "missed_mate": "e38c49", "uncertain": "a5aebc"}
+	var center := bounds.get_center()
+	var radius: float = bounds.size.x / 2.0
+	draw_circle(center + Vector2(0, 2), radius + 1, Color(0.03, 0.07, 0.11, 0.45))
+	draw_circle(center, radius + 1.5, Color("142633"))
+	draw_circle(center, radius, Color(colors.get(str(move_annotation.get("kind", "")), "a5aebc")))
+	var text: String = str(move_annotation.get("symbol", ""))
+	var font_size: int = clampi(int(bounds.size.x * 0.64), 13, 22)
+	var extent: Vector2 = label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var baseline: float = (label_font.get_ascent(font_size) - label_font.get_descent(font_size)) * 0.5
+	draw_string(label_font, center + Vector2(-extent.x * 0.5, baseline), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("112633"))
+
+
+func _draw_piece(piece: String, center: Vector2, cell: float, scale_factor: float = 1.0, opacity: float = 1.0) -> void:
+	if not piece_textures.has(piece) or opacity <= 0.0:
+		return
+	var extent := Vector2.ONE * cell * 0.84 * scale_factor
+	draw_texture_rect(piece_textures[piece], Rect2(center - extent / 2.0, extent), false, Color(1, 1, 1, opacity))
+
+
+func _draw_motion(area: Rect2, cell: float) -> void:
+	var travel := clampf(_motion_elapsed / _motion_duration, 0.0, 1.0)
+	var eased := 1.0 - pow(1.0 - travel, 3.0)
+	var landing := clampf((_motion_elapsed - _motion_duration) / LANDING_SECONDS, 0.0, 1.0)
+	var capture: Dictionary = _motion.capture
+	if not capture.is_empty():
+		var fade := smoothstep(0.3, 0.95, travel)
+		var opacity: float = fade if _motion.reverse else 1.0 - fade
+		_draw_piece(str(capture.piece), _piece_center(str(capture.square), area, cell), cell, 0.84 + opacity * 0.16, opacity)
+	var moving_pieces: Array = _motion.movements.duplicate()
+	if moving_pieces.size() > 1:
+		# The rook travels behind the king when their paths cross in castling.
+		moving_pieces.reverse()
+	for movement in moving_pieces:
+		var origin := _piece_center(str(movement.from), area, cell)
+		var target := _piece_center(str(movement.to), area, cell)
+		var center: Vector2 = origin.lerp(target, eased)
+		var lift: float = sin(PI * travel) * cell * (0.09 if str(movement.piece).to_lower() == "n" else 0.035)
+		if moving_pieces.size() > 1:
+			lift = sin(PI * travel) * cell * (0.16 if str(movement.piece).to_lower() == "k" else -0.07)
+		center.y -= lift
+		if landing > 0.0:
+			draw_circle(target, cell * (0.32 + landing * 0.16), Color(1.0, 0.82, 0.36, (1.0 - landing) * 0.16))
+		# A small shadow and settling pulse add weight without shaking the board.
+		draw_set_transform(center + Vector2(0, cell * 0.33 + lift), 0.0, Vector2(1.0, 0.22))
+		draw_circle(Vector2.ZERO, cell * 0.25, Color(0.06, 0.12, 0.17, (1.0 - landing) * 0.20))
+		draw_set_transform(Vector2.ZERO)
+		var scale_factor: float = 1.0 + sin(PI * landing) * 0.045
+		if movement.piece != movement.arrival:
+			var morph := smoothstep(0.62, 1.0, travel)
+			_draw_piece(str(movement.piece), center, cell, scale_factor, 1.0 - morph)
+			_draw_piece(str(movement.arrival), center, cell, scale_factor, morph)
+		else:
+			_draw_piece(str(movement.arrival), center, cell, scale_factor)
 
 
 func hint_centers() -> PackedVector2Array:

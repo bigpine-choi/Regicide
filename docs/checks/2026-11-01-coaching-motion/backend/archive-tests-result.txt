@@ -1,0 +1,18 @@
+Observed command: .\.venv-tests\Scripts\python.exe tests/game_archive_tests.py
+Recorded from the completed run in this task; no additional rerun for archiving.
+
+----------------------------------------------------------------------
+Ran 22 tests in 16.968s
+
+OK (skipped=2)
+
+20 passed; skipped:
+- test_symlinked_record_cannot_escape_library: This OS account cannot create file symlinks.
+- test_actual_regicide_library_replays_both_colors_after_restart: Supply the Regicide binary for real-engine archive validation.
+
+New tests passed:
+- test_local_date_time_survives_restart_orders_by_instant_and_preserves_bytes
+- test_local_timestamp_uses_saved_season_offset_and_unknown_is_explicit
+
+Saved records were reopened through a new GameArchive. Assertions cover Korean local midnight, UTC instant chronological ordering, preserved legacy UTC fields, per-record winter/summer offsets, explicit unknown timestamps, stable game_id and exact FEN in every replay frame, and unchanged original JSON/PGN bytes.
+All fixtures use disposable directories; no personal saved game was modified.

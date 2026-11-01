@@ -27,6 +27,8 @@ import chess.pgn
 from play_game import source_version
 from game_archive import GameArchive, default_game_directory
 from move_hints import MoveHints
+from analysis_session import AnalysisSession, AnalysisRevisionError
+from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
@@ -119,10 +121,16 @@ class HumanGame:
         self._active_movetime_ms = None
         self._engine = None
         self._hints = None
+        self.analysis = None
+        self.coaching = None
         self.revision = 0
         try:
             self._ensure_engine()
             self._hints = MoveHints(self.binary, hint_engine_factory)
+            self.analysis = AnalysisSession(self.binary, self.engine_name, hint_engine_factory)
+            self.coaching = CoachingSession(self.binary, self.engine_name, self.save_dir,
+                                            hint_engine_factory,
+                                            evaluation_id=self.neural_sha256 or "classical")
             self._reset("white", 1000)
         except Exception:
             self.close()
@@ -651,6 +659,10 @@ class HumanGame:
             temporary.replace(target)
 
     def close(self):
+        if self.coaching is not None:
+            self.coaching.close()
+        if self.analysis is not None:
+            self.analysis.close()
         if self._hints is not None:
             self._hints.close()
         with self._search_lock, self._lock:
@@ -756,13 +768,18 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.game.evaluation())
         elif self.path == "/api/hint":
             self._send(200, self.server.game.hint())
+        elif self.path == "/api/analysis":
+            self._send(200, self.server.game.analysis.snapshot())
+        elif self.path == "/api/coaching":
+            self._send(200, self.server.game.coaching.snapshot())
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
         elif self.path == "/api/games" or self.path.startswith("/api/games/"):
             self._archive_get()
-        elif self.path in ("/", "/index.html", "/style.css", "/app.js"):
+        elif self.path in ("/", "/index.html", "/style.css", "/app.js", "/analysis.js", "/coaching.js", "/board_motion.js"):
             filename = "index.html" if self.path == "/" else self.path[1:]
-            mime = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript"}[filename]
+            mime = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript",
+                    "analysis.js": "text/javascript", "coaching.js": "text/javascript", "board_motion.js": "text/javascript"}[filename]
             contents = (ASSETS / filename).read_text(encoding="utf-8")
             if filename == "index.html":
                 contents = contents.replace("__REGICIDE_TOKEN__", self.server.token)
@@ -802,7 +819,7 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            maximum = MAX_PGN_REQUEST_BYTES if self.path == "/api/pgn-preview" else 4096
+            maximum = MAX_PGN_REQUEST_BYTES if self.path in ("/api/pgn-preview", "/api/coaching") else 4096
             if not 0 < length <= maximum:
                 raise ValueError("요청 크기가 올바르지 않습니다.")
             data = json.loads(self.rfile.read(length))
@@ -815,6 +832,31 @@ class HumanHandler(BaseHTTPRequestHandler):
                 return
             revision = data.get("revision")
             game = self.server.game
+            if self.path == "/api/coaching":
+                coaching = game.coaching
+                action = data.get("action")
+                if action == "start":
+                    result = coaching.start(data.get("pgn"), data.get("human_color"),
+                                            data.get("movetime_ms", 1500), revision)
+                elif action == "cancel":
+                    result = coaching.cancel(revision)
+                elif action == "retry":
+                    result = coaching.retry(data.get("ply"), data.get("uci"), revision, data.get("job_id"))
+                else:
+                    raise ValueError("코칭 작업은 분석 시작·중단·다시 두기 중에서 선택해 주세요.")
+                self._send(200, result)
+                return
+            if self.path == "/api/analysis":
+                analysis = game.analysis
+                actions = {"start": lambda: analysis.start(data.get("fen"), data.get("movetime_ms"), revision),
+                           "move": lambda: analysis.move(data.get("move"), revision),
+                           "undo": lambda: analysis.undo(revision),
+                           "stop": lambda: analysis.stop(revision)}
+                action = data.get("action")
+                if not isinstance(action, str) or action not in actions:
+                    raise ValueError("분석 작업을 확인해 주세요. 분석 시작·착수·무르기·종료를 사용할 수 있습니다.")
+                self._send(200, actions[action]())
+                return
             if self.path == "/api/hint":
                 try:
                     self._send(200, game.set_hint_enabled(data.get("enabled")))
@@ -841,17 +883,29 @@ class HumanHandler(BaseHTTPRequestHandler):
                 self._send(200, actions[self.path]())
             else:
                 self._send(404, {"error": "지원하지 않는 요청입니다."})
+        except CoachingRevisionError as exc:
+            self._send(409, {"error": str(exc), "coaching": self.server.game.coaching.snapshot()})
+        except AnalysisRevisionError as exc:
+            self._send(409, {"error": str(exc), "analysis": self.server.game.analysis.snapshot()})
         except RevisionError as exc:
             self._send(409, {"error": str(exc), "state": self.server.game.state()})
         except (ValueError, UnicodeError) as exc:
             error = {"error": str(exc)}
-            if self.path != "/api/pgn-preview":
+            if self.path == "/api/coaching":
+                error["coaching"] = self.server.game.coaching.snapshot()
+            elif self.path == "/api/analysis":
+                error["analysis"] = self.server.game.analysis.snapshot()
+            elif self.path != "/api/pgn-preview":
                 error["state"] = self.server.game.state()
             self._send(400, error)
         except Exception as exc:
             print(f"request failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
             error = {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요."}
-            if self.path != "/api/pgn-preview":
+            if self.path == "/api/coaching":
+                error["coaching"] = self.server.game.coaching.snapshot()
+            elif self.path == "/api/analysis":
+                error["analysis"] = self.server.game.analysis.snapshot()
+            elif self.path != "/api/pgn-preview":
                 error["state"] = self.server.game.state()
             self._send(500, error)
 

@@ -66,6 +66,25 @@ def _stamp(value):
         return value, 0.0
 
 
+def _local_stamp(value):
+    """Format the saved instant using its historical local UTC offset.
+
+    Do not apply today's offset to an old game: zones with daylight saving may
+    have used a different offset when that particular game was played.
+    """
+    try:
+        parsed = datetime.datetime.fromisoformat(_text(value, limit=100).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+        local = parsed.astimezone()
+        offset = local.strftime("%z")
+        if len(offset) == 5:
+            offset = offset[:3] + ":" + offset[3:]
+        return local.strftime("%Y-%m-%d %H:%M:%S"), offset or None
+    except (ValueError, OverflowError, OSError):
+        return "시간 정보 없음", None
+
+
 def _fingerprint(record):
     # A repeated import of a conflict must find its previous imported copy.
     payload = {key: value for key, value in record.items()
@@ -244,8 +263,12 @@ class GameArchive:
                 status = "사용자 승리" if won else "Regicide 승리"
         else:
             status = {"in_progress": "진행 중", "unfinished": "중단됨", "error": "엔진 오류"}[record_status]
+        started_local, started_offset = _local_stamp(prepared["started_at"])
+        ended_local, ended_offset = _local_stamp(prepared["ended_at"])
         return {"game_id": prepared["game_id"], "started_at": prepared["started_at"],
                 "updated_at": prepared["updated_at"], "ended_at": prepared["ended_at"],
+                "started_at_local": started_local, "ended_at_local": ended_local,
+                "started_at_utc_offset": started_offset, "ended_at_utc_offset": ended_offset,
                 "human_color": prepared["human_color"], "result": prepared["result"],
                 "termination": prepared["termination"], "status": status,
                 "record_status": record_status, "engine_name": prepared["engine_name"],
@@ -324,7 +347,7 @@ class GameArchive:
             for ply in range(len(prepared["moves"]) + 1):
                 final = ply == len(prepared["moves"])
                 frames.append({
-                    "ply": ply,
+                    "ply": ply, "game_id": prepared["game_id"], "fen": board.fen(en_passant="fen"),
                     "board": {chess.square_name(square): piece.symbol()
                               for square, piece in board.piece_map().items()},
                     "turn": "white" if board.turn else "black",

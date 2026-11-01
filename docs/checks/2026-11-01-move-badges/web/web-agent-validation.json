@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01",
+  "scope": "Browser actual-move annotations and after-move review navigation",
+  "automated_checks": [
+    {
+      "command": "node tests/web_coaching_tests.js",
+      "passed": 57,
+      "failed": 0,
+      "coverage": [
+        "Actual frame ply, FEN, UCI, side and occupied destination identity",
+        "Strict metadata validation and no inferred brilliant symbol",
+        "After-move selection, before/after controls and exact first/previous/next/last frames",
+        "Context replay includes the target actual move and displays its own grade",
+        "No actual-game grades in hypothetical lines or retry, including revealed retry lines",
+        "Castling destination king, all four promotions, both colors and both edge files",
+        "Existing click, pointer drag, mouse compatibility, retry isolation and speech regressions"
+      ]
+    },
+    {
+      "command": "node tests/web_board_motion_tests.js",
+      "passed": 21,
+      "failed": 0,
+      "coverage": [
+        "Badge concealed until all animated pieces settle",
+        "Same-frame repaint, interrupted animation and reverse movement do not reveal stale badges",
+        "Reduced motion, animation preference off, resize and flip reveal badges immediately",
+        "Existing capture, castling, promotion and authoritative-board motion regressions"
+      ]
+    }
+  ],
+  "physical_review": {
+    "performed_by": "parent agent",
+    "reported_observation": "IAB displayed ?? on the actual g4 move and stopped after the target move",
+    "screenshot": "actual-blunder.png",
+    "following_adjustment": "Badge width 44% of a square and font size clamp(11px,3.2cqw,18px) to follow board size",
+    "latest_visual_recheck": "Not performed by this agent; app/UI activity stopped after parent reported the user's game closed"
+  },
+  "process_activity": {
+    "browser_or_native_ui_actions_by_this_agent": false,
+    "game_or_server_started_by_this_agent": false,
+    "game_or_server_terminated_by_this_agent": false
+  }
+}

@@ -7,7 +7,10 @@
   <meta name="color-scheme" content="light">
   <title>Regicide · 직접 대국</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/board_motion.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/analysis.js" defer></script>
+  <script src="/coaching.js" defer></script>
 </head>
 <body>
   <div class="page-shell">
@@ -16,7 +19,8 @@
       <span class="local-badge"><span aria-hidden="true"></span><small id="connection-label">내 컴퓨터에서 대국 중</small></span>
     </header>
 
-    <main class="game-layout">
+    <nav class="mode-tabs" aria-label="화면 선택"><button id="live-mode-button" type="button" aria-pressed="true">직접 대국</button><button id="analysis-mode-button" type="button" aria-pressed="false">분석 모드 · 자유 배치</button><button id="coaching-mode-button" type="button" aria-pressed="false">대국 코칭</button><button id="archive-mode-button" type="button" aria-pressed="false">대국 보관함</button><label class="motion-toggle"><input id="piece-animation" type="checkbox" checked> 기물 애니메이션</label></nav>
+    <main class="game-layout" id="live-view">
       <section class="board-panel" aria-label="체스판과 대국 상태">
         <div class="player-strip opponent-strip"><div class="avatar" aria-hidden="true">♜</div><div><p class="player-name">Regicide</p><p class="player-detail" id="opponent-detail">엔진에 연결하는 중</p></div><span class="player-color" id="opponent-color">흑</span></div>
         <div class="board-evaluation-layout">
@@ -82,11 +86,113 @@
         <p class="footer-note">기물을 선택하면 이동할 수 있는 칸이 표시됩니다.<br>캐슬링은 왕을 이동하고, 승격 기물은 직접 고릅니다.<br>반복·50수 규칙으로 청구 가능한 무승부는 자동 처리합니다.</p>
       </aside>
     </main>
+    <section id="analysis-view" class="game-layout analysis-layout" aria-label="자유 배치 분석" hidden>
+      <div class="board-panel">
+        <div class="section-heading"><h2 id="analysis-title">분석 모드 · 기물 배치</h2><button id="analysis-flip" class="secondary-button" type="button">시점 전환</button></div>
+        <div class="board-evaluation-layout">
+          <div id="analysis-evaluation-bar" class="evaluation-bar unknown" role="img" aria-label="형세 분석 대기">
+            <div id="analysis-evaluation-white" class="evaluation-white"></div>
+            <span id="analysis-evaluation-top" class="evaluation-end top" aria-hidden="true">흑</span>
+            <span id="analysis-evaluation-bottom" class="evaluation-end bottom" aria-hidden="true">백</span>
+            <span class="evaluation-middle" aria-hidden="true"></span>
+          </div>
+          <div class="board-frame"><div id="analysis-board" class="board" role="group" aria-label="분석 체스판"></div></div>
+        </div>
+        <div class="evaluation-summary analysis-evaluation-summary" aria-label="분석 위치의 형세">
+          <div class="evaluation-reading" aria-live="polite"><span class="evaluation-title">형세</span><strong id="analysis-evaluation-label">형세 분석 대기</strong><span id="analysis-evaluation-score">—</span></div>
+          <p id="analysis-evaluation-detail">배치를 마치고 분석을 시작하세요.</p>
+          <p class="analysis-evaluation-note">자체 엔진 추정 · 백 기준 · +는 백 / −는 흑 우세 · 1.00 ≈ 폰 한 개<br>막대는 형세의 시각적 척도이며 승률이 아닙니다.</p>
+        </div>
+        <div class="status-panel"><div><p id="analysis-status" aria-live="polite">기물을 고른 뒤 원하는 칸을 누르세요.</p><p class="help-note">분석 중에는 백과 흑을 모두 직접 둘 수 있습니다.</p></div></div>
+        <div id="analysis-error" class="error-panel" role="alert" hidden></div>
+        <section class="hint-panel"><h2>AI 추천 수</h2><p id="analysis-hint" class="hint-text" aria-live="polite">배치를 마치고 분석을 시작하세요.</p><p class="hint-note">Regicide 자체 엔진의 추천입니다. 화살표는 출발 → 도착 칸을 가리킵니다.</p><button id="analysis-apply" class="primary-button" type="button" disabled>추천 수 두기</button></section>
+        <p id="analysis-moves" class="analysis-moves" aria-label="분석 수순"></p>
+      </div>
+      <aside class="side-panel">
+        <section class="card" id="analysis-editor">
+          <p class="eyebrow">원하는 위치에서 시작</p><h2>기물 배치</h2>
+          <p class="help-note" id="analysis-brush-label">배치할 기물을 선택하세요.</p><div id="analysis-palette" class="analysis-palette" aria-label="배치할 기물"></div>
+          <div id="analysis-trash" class="analysis-trash" role="group" aria-label="기물 삭제 영역"><strong>기물 버리기</strong><span>판의 기물을 여기 또는 창 안의 판 밖에 놓으면 삭제합니다.</span></div>
+          <p class="help-note">목록에서 판으로 끌면 기물이 추가됩니다. 판의 기물은 끌어서 옮길 수 있습니다. Esc나 창 밖에 놓기는 취소합니다. 클릭·지우개도 사용할 수 있습니다.</p>
+          <div class="analysis-actions"><button id="analysis-standard" class="secondary-button" type="button">기본 배치</button><button id="analysis-clear" class="secondary-button" type="button">모두 지우기</button><button id="analysis-current" class="secondary-button" type="button">현재 대국 배치</button></div>
+          <label class="field-label" for="analysis-turn">다음에 둘 차례</label><select id="analysis-turn"><option value="w">백</option><option value="b">흑</option></select>
+          <fieldset class="analysis-castling-rights"><legend>캐슬링 권리</legend><div class="analysis-castling-grid">
+            <label><input id="analysis-right-K" type="checkbox" aria-describedby="analysis-castling-note">백 왕쪽 · O-O</label><label><input id="analysis-right-Q" type="checkbox" aria-describedby="analysis-castling-note">백 퀸쪽 · O-O-O</label>
+            <label><input id="analysis-right-k" type="checkbox" aria-describedby="analysis-castling-note">흑 왕쪽 · O-O</label><label><input id="analysis-right-q" type="checkbox" aria-describedby="analysis-castling-note">흑 퀸쪽 · O-O-O</label>
+          </div><p class="help-note" id="analysis-castling-note">왕·룩을 원래 칸에 놓은 뒤, 아직 움직이지 않은 쪽의 권리를 선택하세요. 길이 비었는지와 체크 여부는 실제 착수 전에 확인합니다.</p></fieldset><input id="analysis-castling" type="hidden" value="KQkq">
+          <label class="field-label" for="analysis-ep">앙파상 대상 칸</label><input id="analysis-ep" class="analysis-input" maxlength="2" value="-" aria-describedby="analysis-rule-note">
+          <p class="help-note" id="analysis-rule-note">앙파상 칸이 없으면 - 를 입력하세요. 편집해도 원래 왕·룩이 그대로면 기존 캐슬링 권리를 유지합니다. 해당 왕·룩을 바꾸면 그쪽 권리만 사라지며, 기물을 되놓아도 자동 복구되지 않습니다. 앙파상은 기물 편집 때 초기화됩니다.</p>
+        </section>
+        <section id="analysis-castle-actions" class="card analysis-live-castling" aria-label="분석 캐슬링" hidden>
+          <div><button id="analysis-castle-kingside" class="secondary-button" type="button" aria-describedby="analysis-castle-kingside-reason" disabled>왕쪽 캐슬링 · O-O</button><p id="analysis-castle-kingside-reason" class="help-note"></p></div>
+          <div><button id="analysis-castle-queenside" class="secondary-button" type="button" aria-describedby="analysis-castle-queenside-reason" disabled>퀸쪽 캐슬링 · O-O-O</button><p id="analysis-castle-queenside-reason" class="help-note"></p></div>
+          <p class="help-note analysis-castle-gesture">왕을 g열·c열로 두 칸 클릭하거나 끌어 캐슬링할 수 있습니다. 왕↔자기 룩 조작도 같은 합법 수로 처리합니다.</p>
+        </section>
+        <section class="card">
+          <label class="field-label" for="analysis-time">추천 수를 생각할 시간</label><select id="analysis-time"><option value="100">0.1초</option><option value="1000" selected>1초</option><option value="3000">3초</option><option value="5000">5초</option></select>
+          <button id="analysis-start" class="primary-button" type="button">이 배치에서 분석 시작</button>
+          <div class="analysis-actions"><button id="analysis-undo" class="secondary-button" type="button" disabled>한 수 되돌리기</button><button id="analysis-edit" class="secondary-button" type="button" disabled>배치 다시 편집</button></div>
+          <p class="help-note">시간을 바꾸려면 배치를 다시 편집해 분석을 시작하세요. 진행 중인 대국과 기보는 따로 유지됩니다.</p>
+        </section>
+        <section class="card"><label class="field-label" for="analysis-fen">배치 문자열 · FEN</label><textarea id="analysis-fen" class="analysis-input analysis-fen" rows="3" spellcheck="false" maxlength="160"></textarea><button id="analysis-import" class="secondary-button" type="button">FEN 불러오기</button><p class="help-note">다른 위치를 붙여 넣고 불러오세요. 현재 문자열을 복사하면 배치를 보관할 수 있습니다.</p></section>
+      </aside>
+    </section>
+    <section id="coaching-view" class="game-layout coaching-layout" aria-label="대국 코칭" hidden>
+      <div class="board-panel coaching-board-panel">
+        <div class="section-heading"><h2 id="coaching-title">대국 코칭</h2><button id="coaching-flip" class="secondary-button" type="button">시점 전환</button></div>
+        <p id="coaching-position" class="coaching-position">대국을 선택하세요.</p>
+        <div class="board-evaluation-layout">
+          <div id="coaching-evaluation-bar" class="evaluation-bar unknown" role="img" aria-label="평가 대기"><div id="coaching-evaluation-white" class="evaluation-white"></div><span id="coaching-evaluation-top" class="evaluation-end top" aria-hidden="true">흑</span><span id="coaching-evaluation-bottom" class="evaluation-end bottom" aria-hidden="true">백</span><span class="evaluation-middle" aria-hidden="true"></span></div>
+          <div class="board-frame"><div id="coaching-board" class="board" role="group" aria-label="코칭 체스판 · 읽기 전용"></div></div>
+        </div>
+        <p id="coaching-score" class="coaching-position">분석할 대국을 선택하세요.</p>
+        <p id="coaching-badge-status" class="coaching-position" aria-live="polite">배지는 실제 착수 뒤, 그 수를 둔 기물에 표시합니다.</p>
+        <div class="coaching-navigation" aria-label="대국 수순 탐색"><button id="coaching-first" class="secondary-button" type="button">처음</button><button id="coaching-prev" class="secondary-button" type="button">이전</button><button id="coaching-next" class="secondary-button" type="button">다음</button><button id="coaching-last" class="secondary-button" type="button">끝</button></div>
+        <div id="coaching-position-navigation" class="coaching-navigation" aria-label="선택한 수의 전후 비교"><button id="coaching-before" class="secondary-button" type="button">두기 전</button><button id="coaching-after" class="secondary-button" type="button">둔 뒤</button></div>
+        <div id="coaching-critical-navigation" class="coaching-navigation"><button id="coaching-prev-critical" class="secondary-button" type="button">이전 실수</button><button id="coaching-next-critical" class="secondary-button" type="button">다음 실수까지 따라가기</button></div>
+        <section id="coaching-context" class="coaching-context" aria-label="실수까지 실제 수순 따라가기" hidden><p id="coaching-context-status" aria-live="polite"></p><div id="coaching-context-moves" class="coaching-context-moves" aria-label="이동 중인 실제 기보"></div><div class="coaching-navigation"><button id="coaching-context-pause" class="secondary-button" type="button">잠깐 멈춤</button><button id="coaching-context-skip" class="secondary-button" type="button">바로 이동</button></div></section>
+      </div>
+      <aside class="side-panel coaching-sidebar" aria-label="코칭 결과와 설정">
+        <section id="coach-card" class="card coach-card" aria-label="루크의 체스 코칭">
+          <div class="coach-introduction"><div id="coach-mascot" class="rook-mascot" data-mood="encourage" role="img" aria-label="체스 코치 루크">
+            <svg viewBox="0 0 120 140" aria-hidden="true"><ellipse cx="60" cy="130" rx="36" ry="6" fill="#1b5548" opacity=".13"/><path class="rook-arm left" d="M30 76Q12 75 15 97" fill="none" stroke="#216b59" stroke-width="9" stroke-linecap="round"/><path class="rook-arm right" d="M90 76Q108 75 105 97" fill="none" stroke="#216b59" stroke-width="9" stroke-linecap="round"/><path d="M29 29V12H44V24H53V8H68V24H77V12H92V29L84 39H36Z" fill="#f3d787" stroke="#175341" stroke-width="4" stroke-linejoin="round"/><path d="M36 37H84L80 103H40Z" fill="#fff3cf" stroke="#175341" stroke-width="4"/><path d="M35 102H85L94 122H26Z" fill="#216b59" stroke="#175341" stroke-width="4" stroke-linejoin="round"/><path d="M40 87L60 94L80 87" fill="none" stroke="#d7b75f" stroke-width="4"/><path d="M43 47L53 45M67 45L77 47" class="rook-brows" fill="none" stroke="#175341" stroke-width="3" stroke-linecap="round"/><ellipse class="rook-eye" cx="48" cy="58" rx="4" ry="6" fill="#175341"/><ellipse class="rook-eye" cx="72" cy="58" rx="4" ry="6" fill="#175341"/><circle cx="40" cy="69" r="5" fill="#edb091" opacity=".65"/><circle cx="80" cy="69" r="5" fill="#edb091" opacity=".65"/><path class="rook-mouth smile" d="M50 72Q60 82 70 72" fill="none" stroke="#175341" stroke-width="3" stroke-linecap="round"/><path class="rook-mouth think" d="M54 76L66 74" fill="none" stroke="#175341" stroke-width="3" stroke-linecap="round"/><path class="rook-mouth warning" d="M53 77Q60 71 67 77" fill="none" stroke="#175341" stroke-width="3" stroke-linecap="round"/></svg>
+          </div><div><p class="eyebrow">함께 복기하는 체스 코치</p><h2>루크</h2><p id="coach-scene" class="help-note">한 장면씩 함께 살펴봐요.</p></div></div>
+          <p id="coach-dialogue" class="coach-bubble" aria-live="polite">기보를 골라 코칭을 시작하면 중요한 장면을 함께 살펴볼게요.</p>
+          <div class="coach-voice-controls"><button id="coach-speak" class="secondary-button" type="button" disabled>설명 듣기</button><button id="coach-speech-stop" class="secondary-button" type="button" hidden>읽기 중지</button><span id="coach-voice-note">음성은 직접 눌렀을 때만 재생합니다.</span></div>
+          <details id="coach-overview-box"><summary>루크의 대국 총평</summary><p id="coach-overview" class="help-note"></p></details>
+          <div id="coach-lesson-controls"><div class="coaching-navigation"><button id="coach-lesson-prev" class="secondary-button" type="button" disabled>이전 장면</button><button id="coach-lesson-next" class="secondary-button" type="button" disabled>다음 장면</button></div><div id="coach-lessons" class="coach-lessons" aria-label="루크가 고른 복기 장면"></div></div>
+          <button id="coach-retry" class="primary-button" type="button" disabled>이 장면 다시 두기</button>
+          <div id="coach-evidence" class="coach-evidence" aria-label="설명의 근거 수순"></div><button id="coach-focus" class="secondary-button" type="button" disabled>주목할 칸 보기</button>
+        </section>
+        <section id="coach-retry-panel" class="card coach-retry-panel" aria-label="다시 두기 연습" hidden><h2>내가 다시 둔다면?</h2><p id="coach-retry-status" class="help-note"></p><div id="coach-retry-promotion" class="promotion-choices" aria-label="재도전 승격 기물 선택" hidden></div><p id="coach-retry-feedback" class="coach-bubble" aria-live="polite"></p><p id="coach-retry-revealed" class="help-note" hidden></p><div id="coach-retry-lines" class="coaching-navigation" hidden><button id="coach-retry-candidate-line" class="secondary-button" type="button">내 재도전 수순</button><button id="coach-retry-best-line" class="secondary-button" type="button">새 추천 수순</button></div><div class="coaching-navigation"><button id="coach-retry-again" class="secondary-button" type="button">다시 선택</button><button id="coach-retry-reveal" class="secondary-button" type="button">해설 보기</button><button id="coach-retry-cancel" class="secondary-button" type="button">연습 나가기</button></div></section>
+        <details id="coaching-setup" class="card coaching-setup" open><summary>대국 선택과 분석 설정</summary>
+          <h2>복기할 대국</h2><label class="field-label" for="coaching-source">저장된 대국 · 시작 시각</label><select id="coaching-source"><option value="">대국을 불러오는 중</option></select>
+          <label class="field-label" for="coaching-file">또는 PGN 파일 열기</label><input id="coaching-file" type="file" accept=".pgn,text/plain,application/x-chess-pgn">
+          <p id="coaching-game" class="help-note">끝난 대국이나 보관함의 기보를 선택하세요.</p><p id="coaching-game-time" class="help-note"></p>
+          <label class="field-label" for="coaching-side">내 기물 색</label><select id="coaching-side"><option value="white">백</option><option value="black">흑</option></select>
+          <label class="field-label" for="coaching-time">국면마다 생각할 시간</label><select id="coaching-time"><option value="500">0.5초 · 빠른 검토</option><option value="1500" selected>1.5초 · 기본</option><option value="5000">5초 · 심층 분석</option></select>
+          <p id="coaching-estimate" class="help-note"></p>
+          <div class="coaching-navigation"><button id="coaching-start" class="primary-button" type="button" disabled>코칭 시작</button><button id="coaching-cancel" class="secondary-button" type="button" disabled>분석 중지</button></div>
+          <p id="coaching-progress" class="help-note" aria-live="polite"></p><progress id="coaching-progress-bar" max="1" value="0" aria-label="코칭 진행률" hidden></progress>
+          <p id="coaching-error" class="error-panel" role="alert" hidden></p>
+        </details>
+        <section id="coaching-summary-card" class="card"><h2>이번 대국의 핵심</h2><p id="coaching-summary" class="help-note">분석을 시작하면 중요한 국면을 찾습니다.</p><p id="coaching-notice" class="help-note">Regicide 탐색 기준입니다. 제한된 시간 안에 찾은 추천이며 더 깊게 분석하면 평가가 달라질 수 있습니다.</p></section>
+        <section id="coaching-comparison" class="card coaching-comparison" aria-label="선택한 수 비교"><h2 id="coaching-move-title">수를 선택하세요.</h2><p id="coaching-classification" class="coaching-verdict"></p><p id="coaching-explanation" class="help-note"></p>
+          <div class="coaching-candidate"><strong id="coaching-played-label">실제 둔 수</strong><p id="coaching-played" class="coaching-line"></p><button id="coaching-played-line" class="secondary-button" type="button" disabled>이 수의 응수 보기</button></div>
+          <div class="coaching-candidate"><strong>엔진이 찾은 최선수</strong><p id="coaching-best" class="coaching-line"></p><button id="coaching-best-line" class="secondary-button" type="button" disabled>추천 수순 따라 보기</button></div>
+          <div id="coaching-variation" hidden><p id="coaching-variation-title" class="help-note"></p><p id="coaching-pv" class="coaching-line"></p><div class="coaching-navigation"><button id="coaching-line-prev" class="secondary-button" type="button">이전 응수</button><button id="coaching-line-next" class="secondary-button" type="button">다음 응수</button><button id="coaching-mainline" class="secondary-button" type="button">실제 기보로</button></div></div>
+        </section>
+        <details id="coaching-badge-legend" class="card coaching-badge-legend"><summary>기물 위 평가 읽기</summary><div class="badge-legend-items"><span><b class="badge-key badge-great">!!</b>탁월 후보</span><span><b class="badge-key badge-best">★</b>추천 수</span><span><b class="badge-key badge-good">✓</b>좋은 수</span><span><b class="badge-key badge-inaccuracy">?!</b>아쉬운 수</span><span><b class="badge-key badge-mistake">?</b>실수</span><span><b class="badge-key badge-blunder">??</b>큰 실수</span><span><b class="badge-key badge-uncertain">…</b>판단 보류</span></div><p class="help-note">실제 둔 수에만 표시합니다. !!는 제한 시간 안에 다른 대안까지 비교해 얻은 탁월 후보이며, 객관적인 유일수나 묘수의 증명은 아닙니다. 모든 평가는 더 긴 탐색에서 달라질 수 있습니다.</p></details>
+        <section id="coaching-moves-card" class="card"><div class="section-heading"><h2>수별 평가</h2><label class="coaching-filter" for="coaching-filter">표시할 수<select id="coaching-filter"><option value="both" selected>양쪽 모두</option><option value="mine">내 수</option><option value="opponent">상대 수</option></select></label></div><p class="help-note">수를 고르면 실제로 둔 뒤의 기물 위에 평가를 표시합니다. 앞쪽 실수와 복기 장면은 그 수까지 실제 수순을 따라갑니다.</p><ol id="coaching-moves" class="coaching-moves" aria-label="수별 코칭"></ol></section>
+        <button id="coaching-return" class="secondary-button" type="button">대국 화면으로 돌아가기</button>
+      </aside>
+    </section>
     <footer class="page-footer"><span>직접 만들고, 직접 두고, 함께 개선하는 체스.</span><div class="footer-tools"><span id="engine-version">Regicide v0.5.0</span><button id="shutdown" type="button" disabled>종료</button></div></footer>
   </div>
 
   <dialog id="promotion-dialog" class="promotion-dialog" aria-labelledby="promotion-title">
     <h2 id="promotion-title">어떤 기물로 승격할까요?</h2><p>폰이 마지막 줄에 도착했습니다.</p><div id="promotion-choices" class="promotion-choices"></div><button id="cancel-promotion" class="secondary-button" type="button">취소</button>
   </dialog>
+  <dialog id="analysis-promotion" class="promotion-dialog" aria-labelledby="analysis-promotion-title"><h2 id="analysis-promotion-title">승격할 기물</h2><div id="analysis-promotion-choices" class="promotion-choices"></div><button id="analysis-promotion-cancel" class="secondary-button" type="button">취소</button></dialog>
 </body>
 </html>

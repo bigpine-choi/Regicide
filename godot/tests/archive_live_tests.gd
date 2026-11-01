@@ -122,7 +122,13 @@ func _run() -> void:
 	if index < 0:
 		await finish()
 		return
-	app.library_list.select(index)
+	verify(app.library_list.get_item_metadata(index) == expected.game_id, "library row carries stable selected game id")
+	var selected_summary: Dictionary = app._library_games[index]
+	verify(app.library_list.get_item_text(index).contains(str(selected_summary.get("started_at_local", "MISSING"))), "saved game list displays backend local date and time")
+	app.library_search.text = str(expected.game_id)
+	app._filter_library()
+	verify(app.library_list.item_count == 1 and app._selected_library_game().game_id == expected.game_id, "filtered library selects exact intended record")
+	verify(app.library_detail.text.contains("시작:") and app.library_detail.text.contains("종료:"), "selected saved game shows start/end timestamps")
 	await press(app.library_open_button)
 	if not await wait_for(func(): return app.review_mode and not app.request_in_flight, "selected archived game opened"):
 		await finish()

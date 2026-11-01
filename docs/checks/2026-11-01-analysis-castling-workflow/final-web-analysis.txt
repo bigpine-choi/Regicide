@@ -1,0 +1,43 @@
+PASS editor paints and erases while preserving unrelated castling rights
+PASS FEN import preserves side, castling, en passant and counters; malformed rows reject
+PASS invalid server position stays editable with reason and no game mutations
+PASS recommendation is shown as square markers and arrow without auto playing
+PASS foreign or illegal recommendations never display
+PASS old poll after a move cannot restore the previous recommendation
+PASS both sides move manually; returning cancels analysis and reveals live game
+PASS terminal position has no recommendation and can undo
+PASS promotion requires an explicit piece choice
+PASS a successful poll clears a transient connection error and restores advice
+PASS current-position loading times out and releases the editor controls
+PASS a failed stop still returns to the live screen and discards late advice
+PASS palette drags copy in both orientations and preserve untouched home-piece rights
+PASS board dragging preserves its source until drop, moves and replaces without painting the brush
+PASS completed off-board and trash drops remove board pieces while palette drops cancel
+PASS Escape, release outside the window, same-square and invalid board drops preserve source and metadata
+PASS rotation, FEN changes and busy requests cancel old editor drags
+PASS leaving or starting cancels editor drags and running off-board drops never delete
+PASS a drop suppresses its duplicate click while later click placement and erasing remain available
+PASS evaluation signs always use White's perspective and zero means balance
+PASS same-search streamed evaluation appears before advice completes and updates in place
+PASS search bounds show lower or upper limits instead of declaring an exact advantage
+PASS mate scores including M0 preserve the winner and terminal draws remain balanced
+PASS flipping the board swaps the bar ends while retaining the White POV score
+PASS foreign and unavailable evaluation snapshots never display an old score
+PASS moves, connection errors and returning to the editor clear evaluation immediately
+PASS a late pre-move poll cannot replace the current position's evaluation
+PASS the analysis evaluation explains its units and distinguishes the bar from a win probability
+PASS four castling rights follow FEN imports, manual toggles and standard presets
+PASS rights need their home king and rook and survive unrelated editor changes
+PASS an invalid imported right remains intact for the backend to reject
+PASS both colors can castle on either side through a single move and undo
+PASS castling buttons obey legal moves even with rights during check, blocked or attacked paths
+PASS a pending promotion blocks castle buttons until selection is cancelled
+PASS editor clears only touched home-piece rights and never restores a lost flag
+PASS clearing bishop and knight paths and editing a pawn retain the existing right then standard drag castles
+PASS running two-square and king-rook drags use canonical castling in both colors and orientations
+PASS legal king-rook click aliases work both ways while missing rights remain rejected
+PASS same-position polling keeps a running drag source alive and a position change cancels it
+PASS active illegal and off-board drops preserve position and promotion drag requires a choice
+PASS backend diagnostics stay near the active board and connection errors block castle gestures
+PASS normal opening input events reach both standard two-square castling drags
+42 browser analysis behavior cases passed.

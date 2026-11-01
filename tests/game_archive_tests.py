@@ -6,12 +6,15 @@ Usage: python tests/game_archive_tests.py [path/to/regicide]
 """
 
 import argparse
+import copy
+import datetime
 import hashlib
 import json
 from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import chess
 import chess.pgn
@@ -19,6 +22,7 @@ import chess.pgn
 import human_play_tests as baseline
 
 from game_archive import GameArchive
+import game_archive
 
 
 backend = baseline.play_human
@@ -68,6 +72,8 @@ class ArchiveTests(unittest.TestCase):
         for ply, frame in enumerate(details["frames"]):
             with self.subTest(ply=ply):
                 self.assertEqual(frame["ply"], ply)
+                self.assertEqual(frame["game_id"], details["summary"]["game_id"])
+                self.assertEqual(frame["fen"], board.fen(en_passant="fen"))
                 self.assertEqual(frame["board"], {chess.square_name(square): piece.symbol()
                                                 for square, piece in board.piece_map().items()})
                 self.assertEqual(frame["turn"], "white" if board.turn else "black")
@@ -230,6 +236,67 @@ class ArchiveTests(unittest.TestCase):
         record["started_at"] = "2026-10-18T00:30:00+09:00"
         (self.folder / (self.game.game_id + ".json")).write_text(json.dumps(record), encoding="utf-8")
         self.assertEqual(self.summary()["started_at"], "2026-10-17T15:30:00+00:00")
+
+    def test_local_date_time_survives_restart_orders_by_instant_and_preserves_bytes(self):
+        self.opening()
+        self.game.resign(self.revision())
+        self.game.close()
+        original = self.record()
+        korean_time = datetime.timezone(datetime.timedelta(hours=9))
+
+        class LocalDateTime(datetime.datetime):
+            def astimezone(self, tz=None):
+                return super().astimezone(korean_time if tz is None else tz)
+
+        values = (("archive-evening", "2026-10-31T14:55:00Z", "2026-10-31T15:05:00Z"),
+                  ("archive-after-midnight", "2026-11-01T00:30:00+09:00", "2026-11-01T00:49:02+09:00"),
+                  ("archive-latest", "2026-10-31T17:05:00+00:00", "2026-10-31T17:25:10+00:00"))
+        for game_id, started, ended in values:
+            record = copy.deepcopy(original)
+            record.update(game_id=game_id, started_at=started, ended_at=ended)
+            (self.folder / (game_id + ".json")).write_text(json.dumps(record), encoding="utf-8")
+        before = {path.name: path.read_bytes() for path in self.folder.iterdir() if path.is_file()}
+        with mock.patch.object(game_archive.datetime, "datetime", LocalDateTime):
+            reopened = GameArchive(self.folder)
+            games = [item for item in reopened.list_games()["games"] if item["game_id"].startswith("archive-")]
+            self.assertEqual([item["game_id"] for item in games],
+                             ["archive-latest", "archive-after-midnight", "archive-evening"])
+            self.assertEqual([item["started_at_local"] for item in games],
+                             ["2026-11-01 02:05:00", "2026-11-01 00:30:00", "2026-10-31 23:55:00"])
+            self.assertEqual(games[1]["ended_at_local"], "2026-11-01 00:49:02")
+            self.assertEqual(games[1]["started_at"], "2026-10-31T15:30:00+00:00")
+            self.assertEqual(games[1]["started_at_utc_offset"], "+09:00")
+            self.assertEqual(games[1]["ended_at_utc_offset"], "+09:00")
+            details = reopened.get_game("archive-after-midnight")
+            self.assertEqual(details["summary"], games[1])
+            self.assert_replay(details)
+        self.assertEqual({path.name: path.read_bytes() for path in self.folder.iterdir() if path.is_file()}, before)
+
+    def test_local_timestamp_uses_saved_season_offset_and_unknown_is_explicit(self):
+        self.opening()
+        base = self.record()
+        winter = datetime.timezone(datetime.timedelta(hours=-5))
+        summer = datetime.timezone(datetime.timedelta(hours=-4))
+
+        class SeasonalLocalDateTime(datetime.datetime):
+            def astimezone(self, tz=None):
+                return super().astimezone((summer if 4 <= self.month <= 10 else winter) if tz is None else tz)
+
+        for game_id, started in (("winter", "2026-01-20T15:00:00Z"), ("summer", "2026-07-20T15:00:00Z"),
+                                 ("unknown", "not a date")):
+            record = copy.deepcopy(base)
+            record.update(game_id=game_id, started_at=started, ended_at=None)
+            (self.folder / (game_id + ".json")).write_text(json.dumps(record), encoding="utf-8")
+        with mock.patch.object(game_archive.datetime, "datetime", SeasonalLocalDateTime):
+            cold = self.archive.get_game("winter")["summary"]
+            warm = self.archive.get_game("summer")["summary"]
+            unknown = self.archive.get_game("unknown")["summary"]
+        self.assertEqual((cold["started_at_local"], cold["started_at_utc_offset"]), ("2026-01-20 10:00:00", "-05:00"))
+        self.assertEqual((warm["started_at_local"], warm["started_at_utc_offset"]), ("2026-07-20 11:00:00", "-04:00"))
+        self.assertEqual(unknown["started_at_local"], "시간 정보 없음")
+        self.assertIsNone(unknown["started_at_utc_offset"])
+        self.assertEqual(unknown["ended_at_local"], "시간 정보 없음")
+        self.assertIsNone(unknown["ended_at_utc_offset"])
 
     def test_bad_files_do_not_hide_other_games(self):
         self.opening()

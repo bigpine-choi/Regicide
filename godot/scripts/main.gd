@@ -6,6 +6,17 @@ signal state_changed(revision: int)
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const ChessBoard = preload("res://scripts/chess_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
+const AnalysisMode = preload("res://scripts/analysis_mode.gd")
+const CoachingMode = preload("res://scripts/coaching_mode.gd")
+
+var analysis_overlay: AnalysisMode
+var analysis_entry_button: Button
+var coaching_overlay: CoachingMode
+var coaching_entry_button: Button
+var main_contents: MarginContainer
+var animation_toggle: CheckBox
+var animation_enabled: bool = true
+var preferences_path: String = "user://preferences.cfg"
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -35,6 +46,7 @@ var review_pgn: String = ""
 var _live_selected_square: String = ""
 var _live_pending_promotions: Array[String] = []
 var _library_games: Array = []
+var _library_status_note: String = ""
 var evaluation: Dictionary = {}
 var evaluation_in_flight: bool = false
 var hint: Dictionary = {}
@@ -103,6 +115,7 @@ var library_dialog: AcceptDialog
 var library_list: ItemList
 var library_open_button: Button
 var library_detail: Label
+var library_search: LineEdit
 var review_controls: VBoxContainer
 var review_position_label: Label
 var review_first_button: Button
@@ -127,6 +140,7 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	_install_theme()
 	_build_ui()
+	_load_display_preferences()
 	_render()
 	if not offline_mode:
 		_load_backend_arguments()
@@ -195,6 +209,7 @@ func _build_ui() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 	var margins := MarginContainer.new()
+	main_contents = margins
 	margins.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
 		margins.add_theme_constant_override("margin_" + side, 22)
@@ -232,6 +247,9 @@ func _build_ui() -> void:
 	view_label = _label("백 시점 · 백이 아래", 15, "b4c7d3")
 	view_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_toolbar.add_child(view_label)
+	analysis_entry_button = _button("분석 모드", _on_analysis_pressed)
+	analysis_entry_button.name = "OpenAnalysis"
+	board_toolbar.add_child(analysis_entry_button)
 	flip_button = _button("시점 뒤집기  ⇅", _on_flip_pressed)
 	flip_button.name = "FlipView"
 	flip_button.tooltip_text = "언제든 백·흑 시점을 전환합니다. 내 색과 대국 상태는 그대로입니다. (F)"
@@ -310,7 +328,18 @@ func _build_ui() -> void:
 	sidebar.add_child(error_label)
 	refresh_button = _button("연결 다시 확인", _connect_backend)
 	sidebar.add_child(refresh_button)
-	library_button = _button("내 대국 기보", _on_library_pressed)
+	coaching_entry_button = _button("대국 코칭 · 실수와 최선수 복기", _on_coaching_pressed)
+	coaching_entry_button.name = "OpenCoaching"
+	coaching_entry_button.tooltip_text = "끝난 대국이나 보관함의 기보에서 실수와 최선수를 살펴봅니다."
+	sidebar.add_child(coaching_entry_button)
+	animation_toggle = CheckBox.new()
+	animation_toggle.name = "PieceAnimationToggle"
+	animation_toggle.text = "기물 애니메이션"
+	animation_toggle.tooltip_text = "대국·분석·코칭에서 기물이 움직이는 모습을 보여줍니다."
+	animation_toggle.button_pressed = true
+	animation_toggle.toggled.connect(_on_animation_toggled)
+	sidebar.add_child(animation_toggle)
+	library_button = _button("대국 보관함", _on_library_pressed)
 	library_button.name = "GameLibrary"
 	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
 	var library_actions := HBoxContainer.new()
@@ -442,6 +471,105 @@ func _build_ui() -> void:
 	open_pgn_dialog.get_ok_button().text = "열기"
 	open_pgn_dialog.get_cancel_button().text = "취소"
 	_build_library_dialog()
+	analysis_overlay = AnalysisMode.new()
+	analysis_overlay.name = "AnalysisMode"
+	analysis_overlay.returned.connect(_on_analysis_returned)
+	add_child(analysis_overlay)
+	coaching_overlay = CoachingMode.new()
+	coaching_overlay.name = "CoachingMode"
+	coaching_overlay.returned.connect(_on_coaching_returned)
+	add_child(coaching_overlay)
+
+
+func _analysis_open() -> bool:
+	return analysis_overlay != null and analysis_overlay.visible
+
+
+func _load_display_preferences() -> void:
+	var preferences := ConfigFile.new()
+	animation_enabled = true
+	if not preferences_path.is_empty() and preferences.load(preferences_path) == OK:
+		var value: Variant = preferences.get_value("display", "piece_animation_enabled", true)
+		if value is bool:
+			animation_enabled = value
+	_apply_animation_preference()
+
+
+func _apply_animation_preference() -> void:
+	animation_toggle.set_pressed_no_signal(animation_enabled)
+	for target in [board, analysis_overlay.board, coaching_overlay.board]:
+		target.set("animation_enabled", animation_enabled)
+
+
+func _on_animation_toggled(enabled: bool) -> void:
+	animation_enabled = enabled
+	_apply_animation_preference()
+	if preferences_path.is_empty():
+		return
+	var preferences := ConfigFile.new()
+	preferences.load(preferences_path)
+	preferences.set_value("display", "piece_animation_enabled", enabled)
+	if preferences.save(preferences_path) != OK:
+		_notice_message = "기물 애니메이션 설정은 적용했지만 다음 실행을 위한 저장은 하지 못했습니다."
+		_render()
+
+
+func _coaching_open() -> bool:
+	return coaching_overlay != null and coaching_overlay.visible
+
+
+func _can_open_coaching() -> bool:
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty() or state.get("handicap_mode", false):
+		return false
+	if review_mode:
+		return not review_pgn.is_empty() and not review_moves.is_empty()
+	return state.get("result", "*") != "*" and not state.get("moves", []).is_empty()
+
+
+func _on_coaching_pressed() -> void:
+	if not _can_open_coaching():
+		return
+	var pgn: String = review_pgn
+	var color: String = str(review_summary.get("human_color", "white")) if review_mode else str(state.get("human_color", "white"))
+	if not review_mode:
+		request_in_flight = true
+		_render()
+		var response: Dictionary = await _send_request("/api/pgn")
+		request_in_flight = false
+		if closing:
+			return
+		if not response.get("ok", false):
+			error_message = str(response.get("error", "기보를 읽지 못했습니다."))
+			_render()
+			return
+		pgn = str(response.pgn)
+	main_contents.hide()
+	_clear_hint()
+	coaching_overlay.offline_mode = offline_mode
+	coaching_overlay.open_game(pgn, color, backend_url, backend_token)
+
+
+func _on_coaching_returned() -> void:
+	main_contents.show()
+	if not coaching_overlay.return_warning.is_empty():
+		error_message = coaching_overlay.return_warning
+	_render()
+
+
+func _on_analysis_pressed() -> void:
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty():
+		return
+	main_contents.hide()
+	_clear_hint()
+	analysis_overlay.offline_mode = offline_mode
+	analysis_overlay.open_position(str(_display_state().get("fen", "")), backend_url, backend_token)
+
+
+func _on_analysis_returned() -> void:
+	main_contents.show()
+	if not analysis_overlay._error.is_empty():
+		error_message = analysis_overlay._error
+	_render()
 
 
 func _build_opening_guide(parent: VBoxContainer) -> void:
@@ -687,22 +815,39 @@ func _build_review_controls(parent: VBoxContainer) -> void:
 func _build_library_dialog() -> void:
 	library_dialog = AcceptDialog.new()
 	library_dialog.name = "GameLibraryDialog"
-	library_dialog.title = "내 대국 기보"
-	library_dialog.min_size = Vector2i(620, 360)
-	library_dialog.size = Vector2i(780, 440)
+	library_dialog.title = "대국 보관함"
+	library_dialog.min_size = Vector2i(620, 560)
+	library_dialog.size = Vector2i(780, 600)
 	library_dialog.unresizable = false
 	library_dialog.dialog_hide_on_ok = false
-	library_dialog.add_cancel_button("닫기")
+	var close_button: Button = library_dialog.add_cancel_button("닫기")
+	close_button.name = "GameLibraryClose"
 	library_dialog.confirmed.connect(_open_selected_record)
 	add_child(library_dialog)
+	# Wrapped labels briefly report their height at zero width during setup.
+	# Let the requested window size own layout instead of latching that height.
+	library_dialog.wrap_controls = false
 	library_open_button = library_dialog.get_ok_button()
 	library_open_button.text = "선택한 대국 보기"
 	var contents := VBoxContainer.new()
+	contents.name = "GameLibraryContents"
 	contents.add_theme_constant_override("separation", 10)
 	library_dialog.add_child(contents)
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.name = "GameLibraryDetailScroll"
+	detail_scroll.custom_minimum_size.y = 108
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	contents.add_child(detail_scroll)
 	library_detail = _label("보관된 대국을 불러오고 있습니다.", 14, "a3b6c8")
 	library_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	contents.add_child(library_detail)
+	library_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.add_child(library_detail)
+	library_search = LineEdit.new()
+	library_search.name = "GameLibrarySearch"
+	library_search.placeholder_text = "날짜·시간·결과 검색 (예: 2026-11-01, 21:30, 백 승)"
+	library_search.clear_button_enabled = true
+	library_search.text_changed.connect(_filter_library)
+	contents.add_child(library_search)
 	library_list = ItemList.new()
 	library_list.name = "ArchivedGames"
 	library_list.custom_minimum_size = Vector2(580, 260)
@@ -711,7 +856,9 @@ func _build_library_dialog() -> void:
 	library_list.item_selected.connect(_on_library_selection_changed)
 	library_list.item_activated.connect(_on_library_item_activated)
 	contents.add_child(library_list)
-	contents.add_child(_label("대국을 다시 봐도 현재 진행 중인 대국은 바뀌지 않습니다.", 13, "9bd7ca"))
+	var footer := _label("첫 수부터 자동 저장합니다. 날짜를 골라 열고, 대국 코칭으로 이어서 복기할 수 있습니다.\n현재 진행 중인 대국은 그대로 유지됩니다.", 13, "9bd7ca")
+	footer.name = "GameLibraryFooter"
+	contents.add_child(footer)
 
 
 func _build_handicap(parent: VBoxContainer) -> void:
@@ -796,6 +943,8 @@ func _on_library_pressed() -> void:
 	request_in_flight = true
 	error_message = ""
 	_library_games.clear()
+	_library_status_note = ""
+	library_search.text = ""
 	library_list.clear()
 	library_open_button.disabled = true
 	library_detail.text = "보관된 대국을 불러오고 있습니다."
@@ -806,18 +955,12 @@ func _on_library_pressed() -> void:
 	if response.get("ok", false):
 		var data: Dictionary = response.data
 		_library_games = data.get("games", [])
-		for game in _library_games:
-			var description := _record_description(game)
-			library_list.add_item(description)
-			library_list.set_item_tooltip(library_list.item_count - 1, description)
 		var total: int = int(data.get("total", _library_games.size()))
-		library_detail.text = "자동 보관된 대국 %d개 · 최근 대국부터 표시합니다." % total if total > 0 else "아직 보관된 대국이 없습니다. 첫 수부터 자동으로 차곡차곡 보관합니다."
+		_library_status_note = "자동 보관된 대국 %d개 · 최근 대국부터 표시합니다." % total if total > 0 else "아직 보관된 대국이 없습니다. 첫 수부터 자동으로 차곡차곡 보관합니다."
 		if int(data.get("invalid_count", 0)) > 0:
-			library_detail.text += "\n읽을 수 없는 기보 %d개는 원본을 보존하고 목록에서 제외했습니다." % int(data.invalid_count)
+			_library_status_note += "\n읽을 수 없는 기보 %d개는 원본을 보존하고 목록에서 제외했습니다." % int(data.invalid_count)
 		library_detail.tooltip_text = str(data.get("storage_path", ""))
-		if not _library_games.is_empty():
-			library_list.select(0)
-			library_open_button.disabled = false
+		_filter_library()
 	else:
 		library_detail.text = str(response.get("error", "기보 목록을 불러오지 못했습니다."))
 	_render()
@@ -826,7 +969,7 @@ func _on_library_pressed() -> void:
 func _record_description(game: Dictionary) -> String:
 	if game.get("source_kind", "") == "pgn":
 		return "%s  ·  %d수  ·  %s" % [str(game.get("title", "PGN 파일")), int(game.get("ply_count", 0)), str(game.get("result", "*"))]
-	var date := _record_local_date(str(game.get("started_at", game.get("updated_at", ""))))
+	var date := _record_timestamp(game, "started")
 	var color_name := "백" if game.get("human_color", "white") == "white" else "흑"
 	var result_text: String = str(game.get("result", "*"))
 	match result_text:
@@ -850,8 +993,62 @@ func _record_local_date(value: String) -> String:
 	return Time.get_datetime_string_from_unix_time(utc_seconds + bias_minutes * 60).replace("T", " ")
 
 
+func _record_timestamp(game: Dictionary, kind: String) -> String:
+	var local_key: String = kind + "_at_local"
+	if game.has(local_key):
+		return str(game[local_key])
+	var legacy: String = str(game.get(kind + "_at", "") if game.get(kind + "_at") != null else "")
+	return _record_local_date(legacy) if not legacy.is_empty() else "시간 정보 없음"
+
+
+func _record_details(game: Dictionary) -> String:
+	var offset: String = str(game.get("started_at_utc_offset", "") if game.get("started_at_utc_offset") != null else "")
+	var local_zone: String = " (UTC" + offset + ")" if not offset.is_empty() else ""
+	var end_offset: String = str(game.get("ended_at_utc_offset", "") if game.get("ended_at_utc_offset") != null else "")
+	var end_zone: String = " (UTC" + end_offset + ")" if not end_offset.is_empty() else ""
+	return _record_description(game) + "\n시작: " + _record_timestamp(game, "started") + local_zone + "\n종료: " + _record_timestamp(game, "ended") + end_zone
+
+
+func _selected_library_game() -> Dictionary:
+	var selected: PackedInt32Array = library_list.get_selected_items()
+	if selected.is_empty():
+		return {}
+	var game_id: String = str(library_list.get_item_metadata(selected[0]))
+	for game in _library_games:
+		if str(game.get("game_id", "")) == game_id:
+			return game
+	return {}
+
+
+func _filter_library(_query: String = "") -> void:
+	var selected_id: String = str(_selected_library_game().get("game_id", ""))
+	library_list.clear()
+	var query: String = library_search.text.strip_edges().to_lower()
+	var chosen: int = -1
+	for game in _library_games:
+		var description: String = _record_description(game)
+		var haystack: String = (description + " " + _record_details(game) + " " + str(game.get("status", "")) + " " + str(game.get("game_id", "")) + " " + str(game.get("engine_name", ""))).to_lower()
+		if not query.is_empty() and not haystack.contains(query):
+			continue
+		var index: int = library_list.add_item(description)
+		var game_id: String = str(game.get("game_id", ""))
+		library_list.set_item_metadata(index, game_id)
+		library_list.set_item_tooltip(index, _record_details(game))
+		if game_id == selected_id:
+			chosen = index
+	if library_list.item_count > 0:
+		library_list.select(chosen if chosen >= 0 else 0)
+	_on_library_selection_changed(chosen)
+
+
 func _on_library_selection_changed(_index: int) -> void:
 	library_open_button.disabled = request_in_flight or library_list.get_selected_items().is_empty()
+	var selected: Dictionary = _selected_library_game()
+	library_detail.text = _library_status_note
+	if not selected.is_empty():
+		library_detail.text += "\n" + _record_details(selected)
+	elif not library_search.text.strip_edges().is_empty():
+		library_detail.text += "\n검색 결과가 없습니다. 날짜나 검색어를 바꿔 주세요."
 
 
 func _on_library_item_activated(index: int) -> void:
@@ -863,10 +1060,7 @@ func _open_selected_record() -> void:
 	var selected := library_list.get_selected_items()
 	if _file_dialog_busy() or request_in_flight or closing or selected.is_empty():
 		return
-	var index: int = selected[0]
-	if index < 0 or index >= _library_games.size():
-		return
-	var game_id: String = str(_library_games[index].get("game_id", ""))
+	var game_id: String = str(_selected_library_game().get("game_id", ""))
 	if game_id.is_empty():
 		return
 	request_in_flight = true
@@ -1037,7 +1231,7 @@ func accept_evaluation(value: Dictionary) -> bool:
 
 
 func _poll_evaluation() -> void:
-	if evaluation_in_flight or offline_mode or review_mode or closing or backend_url.is_empty() or state.is_empty():
+	if _analysis_open() or _coaching_open() or evaluation_in_flight or offline_mode or review_mode or closing or backend_url.is_empty() or state.is_empty():
 		return
 	evaluation_in_flight = true
 	var requested_position: Dictionary = state.duplicate(true)
@@ -1145,7 +1339,7 @@ func _flush_hint_toggle() -> void:
 
 
 func _poll_hint() -> void:
-	if not hint_enabled or hint_in_flight or hint_control_in_flight or offline_mode \
+	if _analysis_open() or _coaching_open() or not hint_enabled or hint_in_flight or hint_control_in_flight or offline_mode \
 		or closing or review_mode or backend_url.is_empty() or state.is_empty():
 		return
 	hint_in_flight = true
@@ -1289,6 +1483,12 @@ func _on_think_time_selected(index: int) -> void:
 
 func _on_flip_pressed() -> void:
 	if _file_dialog_busy():
+		return
+	if _analysis_open():
+		analysis_overlay.flip_view()
+		return
+	if _coaching_open():
+		coaching_overlay.flip_view()
 		return
 	# Always available, even while waiting for HTTP, promotion or game end.
 	board_model.flip_view()
@@ -1528,6 +1728,10 @@ func _open_pgn_file(path: String) -> void:
 func _render() -> void:
 	if board == null:
 		return
+	if analysis_entry_button != null:
+		analysis_entry_button.disabled = _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty()
+	if coaching_entry_button != null:
+		coaching_entry_button.disabled = not _can_open_coaching()
 	var shown: Dictionary = _display_state()
 	board.state = shown
 	board.queue_redraw()
@@ -1605,7 +1809,7 @@ func _render() -> void:
 	else:
 		status_label.text = str(state.get("status", "대국 중"))
 		if not active:
-			status_detail.text = "결과 %s · 새 대국을 시작하거나 기보를 저장하세요." % state.get("result", "*")
+			status_detail.text = "결과 %s · 대국 코칭에서 실수와 최선수를 복기할 수 있습니다." % state.get("result", "*")
 		elif not board_model.pending_promotions.is_empty():
 			status_detail.text = "승격할 기물을 선택하면 수가 적용됩니다."
 		elif not board_model.selected_square.is_empty():

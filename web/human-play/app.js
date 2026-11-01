@@ -27,6 +27,8 @@
   let hintToggleInFlight = false;
   let hintToggleDirty = false;
   let renderedOpeningKey = null;
+  let analysisMode = false;
+  let coachingMode = false;
 
   function clearHint() {
     hintEpoch++;
@@ -295,7 +297,7 @@
   }
 
   async function pollEvaluation() {
-    if (evaluationPollInFlight || closed || !state || state.result !== "*") return;
+    if (analysisMode || coachingMode || evaluationPollInFlight || closed || !state || state.result !== "*") return;
     evaluationPollInFlight = true;
     const position = {game_id:state.game_id, revision:state.revision, fen:state.fen};
     const controller = new AbortController();
@@ -351,7 +353,7 @@
   }
 
   async function pollHint() {
-    if (hintPollInFlight || hintToggleInFlight || closed || !hintEnabled || !state || state.result !== "*" || state.error ||
+    if (analysisMode || coachingMode || hintPollInFlight || hintToggleInFlight || closed || !hintEnabled || !state || state.result !== "*" || state.error ||
       !state.human_to_move || busy) return;
     hintPollInFlight = true;
     const epoch = hintEpoch;
@@ -452,7 +454,12 @@
         fragment.append(button);
       }
     }
-    boardElement.replaceChildren(fragment);
+    if (window.RegicideMotion) window.RegicideMotion.replace(boardElement, fragment, {
+      scope:state?.game_id, ply:state?.moves?.length || 0, pieces:state?.board || {},
+      turn:state?.turn, lastMove:state?.last_move, legalMoves:state?.legal_moves,
+      orientation:blackView ? "black" : "white", enabled:!analysisMode && !coachingMode && !closed
+    });
+    else boardElement.replaceChildren(fragment);
     if (focusedSquare) boardElement.querySelector(`[data-square="${focusedSquare}"]`)?.focus({preventScroll:true});
   }
 
@@ -678,5 +685,7 @@
     clearInterval(evaluationTimer);
     clearInterval(hintTimer);
   });
+  window.addEventListener("regicide-analysis-mode", (event) => { analysisMode = event.detail === true; if (analysisMode) window.RegicideMotion?.cancel(boardElement, true); });
+  window.addEventListener("regicide-coaching-mode", (event) => { coachingMode = event.detail === true; if (coachingMode) window.RegicideMotion?.cancel(boardElement, true); });
   void initialize();
 })();

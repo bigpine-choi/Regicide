@@ -1,0 +1,42 @@
+Executed 2026-11-01 in Regicide-m1-integration.
+Python: .venv-tests/Scripts/python.exe (Python 3.13, chess 1.11.2)
+Engine: build/regicide.exe (Regicide 0.7.0-dev; existing desktop launcher core)
+
+Command: python tests/hint_state_tests.py build/regicide.exe
+Result: 15 tests passed in 16.336 seconds; real-engine hint and cancellation included.
+
+Command: python tests/handicap_play_tests.py build/regicide.exe
+Result: 19 tests passed in 19.748 seconds; real-engine resume after forced f7f6 included.
+
+Command: python tests/think_time_tests.py
+Result: 27 tests passed in 23.846 seconds.
+
+Command: python tests/opening_guide_tests.py
+Result: 20 tests passed in 2.227 seconds.
+
+Command: python tests/human_play_tests.py build/regicide.exe
+Initial parallel run: evaluation-state child suite 16 passed; main suite 24 passed,
+1 existing malformed-body Content-Type:text/plain rejection case aborted with
+Windows socket ConnectionAbortedError 10053. The unchanged HTTP 415 early-return
+path did not consume the request body. A serial rerun is recorded separately in
+baseline-human.txt. No rules/search code was changed for these checks.
+
+Serial human rerun: evaluation-state 16 passed, main suite 25 passed in 22.871s.
+The initial Windows socket abort did not reproduce in the serial full rerun.
+
+Command: python tests/hint_godot_tests.py --godot GODOT_CONSOLE --binary build/regicide.exe
+Godot 4.7.2 console, headless synthetic events plus isolated real backend.
+Result: synthetic 41 checks, live 35 checks, zero failures; authorization routes,
+both colors, cancellation, independent controls and lifecycle passed.
+Full output: baseline-godot-hint.txt and baseline-godot-hint/.
+
+Command: python tests/opening_guide_godot_tests.py --godot GODOT_CONSOLE --binary build/regicide.exe
+Result: synthetic 42 checks, live 17 checks, zero failures; display, read-only
+preview and replay passed with live board/history preserved and no search calls.
+Full output: baseline-godot-opening.txt and baseline-godot-opening/.
+
+Desktop launch inspection: the existing Regicide.lnk on the user's desktop
+already launches this integration checkout's scripts/play_godot.ps1. It uses
+build/regicide.exe and the separate persistent Documents/Regicide/Games folder.
+No installed-checkout files, shortcut targets or personal game files were changed
+by these validation runs. All integration servers used temporary archives.

@@ -90,6 +90,15 @@ jobs:
       - run: node tests/web_hint_tests.js
       - run: node tests/think_time_web_tests.js
       - run: node tests/opening_guide_web_tests.js
+      - run: node tests/web_analysis_tests.js
+      - run: node tests/web_board_motion_tests.js
+      - run: node tests/web_coaching_tests.js
+      - run: python tests/analysis_tests.py
+      - run: python tests/analysis_castling_tests.py
+      - run: python tests/analysis_castling_workflow_tests.py
+      - run: python tests/analysis_evaluation_tests.py
+      - run: python tests/coaching_tests.py
+      - run: python tests/character_coach_tests.py
       - run: python tests/opening_guide_tests.py
       - run: python tests/opening_guide_integration_tests.py
       - run: python tests/pgn_preview_tests.py
@@ -175,6 +184,14 @@ jobs:
           python tests/opening_guide_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/pgn_file_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/analysis_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/coaching_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/board_motion_tests.py --godot "$env:REGICIDE_TEST_GODOT"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/coaching_http_tests.py --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Both neural model families and learning paths

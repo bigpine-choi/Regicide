@@ -1,0 +1,47 @@
+{
+  "recorded_at_utc": "2026-11-01T13:46:07.8846154Z",
+  "coaching_tests": {
+    "passed": 25,
+    "failed": 0,
+    "seconds": 5.069,
+    "output": "coaching-tests.txt"
+  },
+  "character_regression": {
+    "passed": 20,
+    "failed": 0,
+    "seconds": 2.615,
+    "output": "character-regression.txt"
+  },
+  "cache_schema": 2,
+  "annotation_policy": "regicide_sole_nonlosing_candidate_v1",
+  "policy": [
+    "Keep classification best and existing loss unchanged",
+    "Only exact actual-best roots with at least two legal moves and nonlosing mover score get one equal-time excluded-actual search",
+    "Great candidate: actual cp >= 0 or winning mate; best other root cp <= -200 or losing mate; all scores exact",
+    "Missing, bounded, illegal, same-actual, better alternative, or losing actual scores never produce !!",
+    "Alternative complete legal PV stored and rebuilt on cache reuse; fabricated annotation ignored",
+    "Contradictory same-root cached best and played copies are rejected",
+    "Badge tied to actual UCI destination, ply, and full FEN after move; pending has null badge"
+  ],
+  "budget": "At most two searches per row, unchanged upper estimate; qualifying best rows previously used one search and now use two",
+  "cache": "Schema 1 cache remains untouched; schema 2 computes fresh proof and uses a separate hashed key. Original game archives unchanged.",
+  "real_engine": "real-engine-evidence.json",
+  "limits": [
+    "Provisional Regicide candidate within finite search, not objective brilliance or sacrifice proof",
+    "Controlled tests verify classification logic; one constructed real-engine position is not a playing-strength claim"
+  ],
+  "sources": [
+    {
+      "path": "scripts/coaching_session.py",
+      "sha256": "046a1e12811dee4f4bfeebab913738dd7b557999381d6e62eba585388d3c22c9"
+    },
+    {
+      "path": "tests/coaching_tests.py",
+      "sha256": "874156931eec2231724265e051f634b2886af352741efb30a173d0cebc2d03b2"
+    },
+    {
+      "path": "tests/character_coach_tests.py",
+      "sha256": "fc0d62c7692a27ea6b11d13cd13df2b11443396fcfacf236d461b2709d163948"
+    }
+  ]
+}
