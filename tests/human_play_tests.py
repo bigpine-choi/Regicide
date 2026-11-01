@@ -451,13 +451,14 @@ class HumanHTTPTests(unittest.TestCase):
 
     def test_revision_conflict_and_bad_moves_preserve_board(self):
         before = self.game.state()
+        wire_before = json.loads(json.dumps(before))
         code, _, body = self.request("/api/move", {"revision": before["revision"] - 1, "move": "e2e4"})
         self.assertEqual(code, 409)
-        self.assertEqual(json.loads(body)["state"], before)
+        self.assertEqual(json.loads(body)["state"], wire_before)
         self.assertEqual(self.game.state(), before)
         code, _, body = self.request("/api/move", {"revision": before["revision"], "move": "e2e5"})
         self.assertEqual(code, 400)
-        self.assertEqual(json.loads(body)["state"], before)
+        self.assertEqual(json.loads(body)["state"], wire_before)
         self.assertEqual(self.game.state(), before)
 
     def test_malformed_or_oversized_body(self):

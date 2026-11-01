@@ -175,6 +175,18 @@ class NeuralIntegrationTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.folder.cleanup()
 
+    def assert_current_evaluation(self, game, state):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            value = game.evaluation()
+            if value.get("status") == "ready" and all(value.get(key) == state[key]
+                                                        for key in ("game_id", "revision", "fen")):
+                self.assertEqual(value["source_fen"], state["fen"])
+                self.assertTrue(value["cp"] is not None or value["mate"] is not None)
+                return value
+            time.sleep(.01)
+        self.fail(f"Current-position evaluation did not finish: {game.evaluation()}")
+
     def test_python_cpp_static_parity_across_features_and_game_stages(self):
         boards = corpus()
         names = ("zero", "seed", "hand", "v2_zero", "v2_seed", "v2_hand")
@@ -377,26 +389,38 @@ class NeuralIntegrationTests(unittest.TestCase):
             self.assertEqual(int(result["nodes"]) == 0, automatic)
 
     def test_human_backend_main_and_hints_share_model_and_saved_identity(self):
-        created, configured = [], []
+        created, configured, evaluation_configured, evaluation_fens = [], [], [], []
 
         class RecordingEngine:
-            def __init__(self, peer):
-                self.peer = peer
+            def __init__(self, peer, records, evaluation=False):
+                self.peer, self.records, self.evaluation = peer, records, evaluation
 
             def configure(self, options):
-                configured.append(dict(options))
+                self.records.append(dict(options))
                 return self.peer.configure(options)
+
+            def analysis(self, board, limit, **kwargs):
+                if self.evaluation:
+                    evaluation_fens.append(board.fen(en_passant="fen"))
+                return self.peer.analysis(board, limit, **kwargs)
 
             def __getattr__(self, name):
                 return getattr(self.peer, name)
 
-        def factory(binary):
+        def start_peer(binary, records, evaluation=False):
             peer = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10)
             created.append(peer)
-            return RecordingEngine(peer)
+            return RecordingEngine(peer, records, evaluation)
+
+        def factory(binary):
+            return start_peer(binary, configured)
+
+        def evaluation_factory(binary):
+            return start_peer(binary, evaluation_configured, True)
 
         save_dir = self.root / "actual neural human game"
-        game = HumanGame(BINARY, save_dir, factory, factory, neural_model=self.paths["seed"])
+        game = HumanGame(BINARY, save_dir, factory, factory, neural_model=self.paths["seed"],
+                         evaluation_engine_factory=evaluation_factory)
         try:
             state = game.new_game("white", 100, game.state()["revision"])
             identity = state["engine"]
@@ -413,8 +437,11 @@ class NeuralIntegrationTests(unittest.TestCase):
             self.assertIn(chess.Move.from_uci(hint["move"]), chess.Board(original_fen).legal_moves)
             self.assertEqual(game.state()["fen"], original_fen)
             self.assertEqual(len(configured), 2)
-            self.assertEqual(len({options["EvalFile"] for options in configured}), 1)
-            self.assertTrue(all(options["UseNeuralEvaluation"] is True for options in configured))
+            self.assert_current_evaluation(game, state)
+            self.assertIn(original_fen, evaluation_fens)
+            self.assertTrue(evaluation_configured)
+            self.assertEqual(len({options["EvalFile"] for options in configured + evaluation_configured}), 1)
+            self.assertTrue(all(options["UseNeuralEvaluation"] is True for options in configured + evaluation_configured))
             snapshot = Path(configured[0]["EvalFile"])
             self.assertEqual(hashlib.sha256(snapshot.read_bytes()).hexdigest(), identity["model_sha256"])
             game.set_hint_enabled(False)
@@ -422,6 +449,10 @@ class NeuralIntegrationTests(unittest.TestCase):
             state = game.engine_move(state["revision"])
             self.assertIsNone(state["error"])
             self.assertEqual(len(state["moves"]), 2)
+            self.assert_current_evaluation(game, state)
+            self.assertEqual(evaluation_fens[-1], state["fen"])
+            self.assertNotEqual(state["fen"], original_fen)
+            self.assertEqual({options["EvalFile"] for options in evaluation_configured}, {str(snapshot)})
             record = json.loads((save_dir / f"{state['game_id']}.json").read_text(encoding="utf-8"))
             self.assertEqual(record["state"]["engine"]["model_sha256"], identity["model_sha256"])
         finally:
@@ -436,31 +467,45 @@ class NeuralIntegrationTests(unittest.TestCase):
         original.write_bytes(initial_payload)
         initial_sha = hashlib.sha256(initial_payload).hexdigest()
         expected_score = evaluate_cp(chess.Board(), self.models["positive"])
-        loaded, created = [], []
+        loaded, created, evaluation_loaded, evaluation_fens = [], [], [], []
 
         class RecordingEngine:
-            def __init__(self, peer):
-                self.peer = peer
+            def __init__(self, peer, records, evaluation=False):
+                self.peer, self.records, self.evaluation = peer, records, evaluation
 
             def configure(self, options):
                 payload_sha = hashlib.sha256(Path(options["EvalFile"]).read_bytes()).hexdigest()
                 self.peer.configure(options)
                 probe = self.peer.play(chess.Board(), chess.engine.Limit(nodes=1),
                                        info=chess.engine.INFO_ALL)
-                loaded.append((payload_sha, probe.info["score"].pov(chess.WHITE).score()))
+                self.records.append((payload_sha, probe.info["score"].pov(chess.WHITE).score()))
+
+            def analysis(self, board, limit, **kwargs):
+                if self.evaluation:
+                    evaluation_fens.append(board.fen(en_passant="fen"))
+                return self.peer.analysis(board, limit, **kwargs)
 
             def __getattr__(self, name):
                 return getattr(self.peer, name)
 
-        def factory(binary):
+        def start_peer(binary, records, evaluation=False):
             peer = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10)
             created.append(peer)
-            return RecordingEngine(peer)
+            return RecordingEngine(peer, records, evaluation)
 
-        game = HumanGame(BINARY, self.root / "frozen model game", factory, factory, neural_model=original)
+        def factory(binary):
+            return start_peer(binary, loaded)
+
+        def evaluation_factory(binary):
+            return start_peer(binary, evaluation_loaded, True)
+
+        game = HumanGame(BINARY, self.root / "frozen model game", factory, factory, neural_model=original,
+                         evaluation_engine_factory=evaluation_factory)
         try:
-            game.new_game("white", 100, game.state()["revision"])
+            state = game.new_game("white", 100, game.state()["revision"])
             self.assertEqual(loaded, [(initial_sha, expected_score)])
+            self.assert_current_evaluation(game, state)
+            before_evaluations = len(evaluation_loaded)
             # The hint peer is created lazily after this replacement. Reading
             # the original path again would silently load the opposite score.
             original.write_bytes(self.paths["negative"].read_bytes())
@@ -468,6 +513,13 @@ class NeuralIntegrationTests(unittest.TestCase):
             main_probe = game._engine.play(chess.Board(), chess.engine.Limit(nodes=1),
                                            info=chess.engine.INFO_ALL)
             self.assertEqual(main_probe.info["score"].pov(chess.WHITE).score(), expected_score)
+            # A new evaluation generation starts after the original model was
+            # replaced, and must still read the immutable session snapshot.
+            state = game.new_game("white", 100, game.state()["revision"])
+            self.assert_current_evaluation(game, state)
+            self.assertGreater(len(evaluation_loaded), before_evaluations)
+            self.assertEqual(set(evaluation_loaded), {(initial_sha, expected_score)})
+            self.assertEqual(evaluation_fens[-1], state["fen"])
             game.set_hint_enabled(True)
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline and game.hint()["status"] == "searching":

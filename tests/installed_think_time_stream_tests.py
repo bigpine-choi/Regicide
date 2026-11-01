@@ -39,7 +39,10 @@ class InstalledStreamingTimeTests(unittest.TestCase):
             first = search.result(timeout=3)
         self.assertEqual(first["engine"]["movetime_ms"], 5000)
         self.assertIsNone(first["engine"]["active_movetime_ms"])
-        self.assertEqual(self.game.evaluation()["source"], "previous_search")
+        self.assertEqual(self.game.evaluation()["source"], "search")
+        self.assertEqual(self.game.evaluation()["fen"], first["fen"])
+        # The engine-root score is not carried onto the next human position.
+        self.assertIsNone(self.game.evaluation()["cp"])
         self.game.human_move("g1f3", first["revision"])
         self.peer.gate = None
         self.peer.next_move = "b8c6"

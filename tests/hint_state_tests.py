@@ -87,9 +87,13 @@ class HintStateTests(unittest.TestCase):
         self.main_factory = baseline.FakeFactory()
         self.hint_factory = HintFactory()
         self.game = play_human.HumanGame(self.binary, self.root / "games",
-                                         self.main_factory, self.hint_factory)
+                                         self.main_factory, self.hint_factory,
+                                         evaluation_engine_factory=baseline.FakeFactory())
         self.addCleanup(self.folder.cleanup)
         self.addCleanup(self.game.close)
+        # The always-on evaluator is independent of advice. Let its initial
+        # generation settle before comparing snapshots around hint-only work.
+        wait_for(lambda: self.game.evaluation()["status"] in ("ready", "unavailable"))
 
     def revision(self):
         return self.game.state()["revision"]

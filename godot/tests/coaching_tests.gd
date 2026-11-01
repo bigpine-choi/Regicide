@@ -26,6 +26,48 @@ class VoicePanel extends "res://scripts/coaching_mode.gd":
 			speech_timer.stop()
 			speech_timer.timeout.emit()
 
+class MockWindowsSpeech extends "res://scripts/windows_speech.gd":
+	var queries: int = 0
+	var requests: Array[Dictionary] = []
+	var cancellations: int = 0
+
+	func query_voices() -> void:
+		queries += 1
+
+	func synthesize(ticket: int, text: String, voice: String) -> void:
+		requests.append({"ticket": ticket, "text": text, "voice": voice})
+
+	func cancel_synthesis() -> void:
+		cancellations += 1
+
+
+class DesktopVoicePanel extends "res://scripts/coaching_mode.gd":
+	var played: int = 0
+	var playing: bool = false
+
+	func _setup_voice() -> void:
+		_setup_windows_voice()
+		_render_speech_controls()
+
+	func _make_windows_speech() -> WindowsSpeech:
+		return MockWindowsSpeech.new()
+
+	func _play_windows_audio(_stream: AudioStreamWAV) -> void:
+		played += 1
+		playing = true
+
+	func _windows_audio_is_playing() -> bool:
+		return playing
+
+	func _voice_stop() -> void:
+		playing = false
+		super._voice_stop()
+
+	func flush_voice() -> void:
+		if not _speech_pending_key.is_empty():
+			speech_timer.stop()
+			speech_timer.timeout.emit()
+
 var app: Variant
 var panel: Variant
 var checks: int = 0
@@ -137,6 +179,7 @@ func _synthetic() -> void:
 	await _walkthrough_checks(snapshot)
 	await _character_checks(snapshot)
 	await _voice_checks(snapshot)
+	_windows_voice_checks(snapshot)
 	await _badge_checks(snapshot)
 	var before_flip: Dictionary = panel.board.state.duplicate(true)
 	var old_view: bool = panel.model.view_from_white
@@ -641,6 +684,59 @@ func _voice_checks(snapshot: Dictionary) -> void:
 	var stopped: int = voice.stopped
 	root.remove_child(voice)
 	verify(voice.stopped == stopped + 1 and voice._speech_pending_key.is_empty(), "closing the panel stops its owned speech")
+	voice.free()
+
+
+func _windows_voice_checks(snapshot: Dictionary) -> void:
+	var voice := DesktopVoicePanel.new()
+	voice.offline_mode = true
+	root.add_child(voice)
+	voice.report = snapshot.duplicate(true)
+	voice.show()
+	voice._select_ply(1)
+	var backend: MockWindowsSpeech = voice._windows_speech
+	verify(backend.queries == 1 and voice._voice_loading and voice.speak_button.text == "음성 준비 중", "Desktop fallback distinguishes asynchronous voice discovery from no installed voice")
+	backend.voices_ready.emit([{"id": "Desktop English", "language": "en-US"}], "")
+	verify(not voice._voice_loading and voice._english_voice == "Desktop English" and not voice._speech_pending_key.is_empty(), "late Desktop voice discovery automatically schedules the current scene")
+	voice.flush_voice()
+	var old_ticket: int = int(backend.requests[-1].ticket)
+	verify(voice._speech_preparing_audio and voice._speech_owned and voice.played == 0, "WAV generation is asynchronous and cannot claim playback yet")
+	voice._poll_speech()
+	verify(voice._speech_owned and backend.cancellations == 0, "polling does not cancel a WAV still being synthesized")
+	voice._select_ply(3)
+	voice.flush_voice()
+	var current_ticket: int = int(backend.requests[-1].ticket)
+	verify(current_ticket != old_ticket and backend.cancellations > 0, "new scene invalidates and cancels the previous synthesis")
+	var wav := AudioStreamWAV.new()
+	wav.data = PackedByteArray([1, 0, 2, 0, 3, 0, 4, 0])
+	backend.audio_ready.emit(old_ticket, wav)
+	backend.failed.emit(old_ticket, "old failure")
+	verify(voice.played == 0 and voice._speech_error.is_empty(), "stale WAV and failure cannot affect the newer scene")
+	backend.audio_ready.emit(current_ticket, wav)
+	verify(voice.played == 1 and voice.playing and not voice._speech_preparing_audio, "only the current WAV reaches the game audio player")
+	voice._poll_speech()
+	verify(voice._speech_owned, "native polling observes current WAV playback")
+	voice._select_ply(2)
+	voice.flush_voice()
+	current_ticket = int(backend.requests[-1].ticket)
+	backend.failed.emit(current_ticket, "음성 합성에 실패했습니다.")
+	verify(not voice._speech_owned and voice.speak_button.text == "음성 다시 시도" and not voice.speak_button.disabled, "synthesis errors expose retry rather than incorrectly claiming no voice")
+	voice._render()
+	verify(voice._speech_pending_key.is_empty(), "a failed synthesis does not loop on every render")
+	voice._toggle_speech()
+	voice.flush_voice()
+	verify(voice._speech_error.is_empty() and voice._speech_preparing_audio, "explicit retry resynthesizes the current scene")
+	current_ticket = int(backend.requests[-1].ticket)
+	voice._toggle_speech()
+	backend.audio_ready.emit(current_ticket, wav)
+	verify(not voice._speech_enabled and voice.played == 1, "muting drops an in-flight WAV")
+	voice._toggle_speech()
+	voice.flush_voice()
+	current_ticket = int(backend.requests[-1].ticket)
+	voice.hide()
+	backend.audio_ready.emit(current_ticket, wav)
+	verify(voice.played == 1 and not voice._speech_owned, "a hidden panel cannot play a late WAV")
+	root.remove_child(voice)
 	voice.free()
 
 

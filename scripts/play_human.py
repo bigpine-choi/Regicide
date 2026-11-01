@@ -62,7 +62,7 @@ class RevisionError(ValueError):
 
 class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
-                 neural_adopted_generation=None):
+                 neural_adopted_generation=None, *, evaluation_engine_factory=None):
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -70,6 +70,7 @@ class HumanGame:
         self.source = source_version()
         self._factory = engine_factory or (
             lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10))
+        evaluation_engine_factory = evaluation_engine_factory or hint_engine_factory
         self.neural_model = Path(neural_model).resolve(strict=True) if neural_model else None
         if neural_adopted_generation is not None and (
                 type(neural_adopted_generation) is not int or neural_adopted_generation < 1 or not self.neural_model):
@@ -111,22 +112,29 @@ class HumanGame:
             self._factory = configured(self._factory)
             hint_engine_factory = configured(hint_engine_factory or (
                 lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
+            evaluation_engine_factory = configured(evaluation_engine_factory or (
+                lambda binary: chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=3)))
         self._lock = threading.RLock()
         self._opening_guide = OpeningGuideCache()
         # Evaluation polling must not wait for the game lock held by a search.
         self._evaluation_lock = threading.Lock()
         self._evaluation = {}
+        self._evaluation_uses_helper = False
+        self._closing = False
         self._search_lock = threading.Lock()
         self._engine_searching = False
         self._active_movetime_ms = None
         self._engine = None
         self._hints = None
+        self._live_evaluation = None
         self.analysis = None
         self.coaching = None
         self.revision = 0
         try:
             self._ensure_engine()
             self._hints = MoveHints(self.binary, hint_engine_factory)
+            self._live_evaluation = MoveHints(self.binary, evaluation_engine_factory,
+                                              stream_evaluation=True)
             self.analysis = AnalysisSession(self.binary, self.engine_name, hint_engine_factory)
             self.coaching = CoachingSession(self.binary, self.engine_name, self.save_dir,
                                             hint_engine_factory,
@@ -169,7 +177,7 @@ class HumanGame:
         self._save()
 
     def _check_revision(self, revision):
-        if not self._game_open:
+        if self._closing or not self._game_open:
             raise ValueError("종료된 대국입니다. 대국 프로그램을 다시 실행해 주세요.")
         if type(revision) is not int or revision != self.revision:
             raise RevisionError("다른 작업이 먼저 반영됐습니다. 현재 체스판에서 다시 선택해 주세요.")
@@ -191,7 +199,7 @@ class HumanGame:
         from applying its setting to a newly started game.
         """
         with self._lock:
-            if not self._game_open or game_id != self.game_id:
+            if self._closing or not self._game_open or game_id != self.game_id:
                 raise RevisionError("대국이 바뀌었습니다. 현재 대국에서 생각 시간을 다시 선택해 주세요.")
             if type(settings_revision) is not int or settings_revision != self._settings_revision:
                 raise RevisionError("생각 시간 설정이 먼저 바뀌었습니다. 다시 선택해 주세요.")
@@ -216,7 +224,15 @@ class HumanGame:
     def evaluation(self):
         """Read an immutable score snapshot without touching the game/search lock."""
         with self._evaluation_lock:
-            return dict(self._evaluation)
+            snapshot = dict(self._evaluation)
+            if not self._evaluation_uses_helper:
+                return snapshot
+            # Hold only the short snapshot lock, never the live game/search
+            # lock. A late worker cannot attach a score to a newer position.
+            _, current = self._live_evaluation.snapshot_with_evaluation()
+            if all(current.get(key) == snapshot.get(key) for key in ("game_id", "revision", "fen")):
+                return current
+            return snapshot
 
     def hint(self):
         """Advice preference and polling never wait for opponent search."""
@@ -225,14 +241,15 @@ class HumanGame:
     def set_hint_enabled(self, enabled):
         return self._hints.set_enabled(enabled)
 
-    def _sync_evaluation(self, keep_search=False, status="waiting"):
+    def _sync_evaluation(self, status="waiting"):
         """Called under the game lock after a position or revision changes."""
         result, termination = self._outcome()
-        previous = self.evaluation() if keep_search else {}
+        active = result == "*" and not self.error and self._game_open and not self._closing
+        evaluating = active and self._handicap_backup is None and self.board.turn == self.human_color
         snapshot = {"game_id": self.game_id, "revision": self.revision,
                     "fen": self.board.fen(en_passant="fen"),
                     "turn": "white" if self.board.turn else "black",
-                    "status": "unavailable" if self.error else status,
+                    "status": "unavailable" if self.error else "searching" if evaluating else status,
                     "cp": None, "mate": None, "depth": None, "bound": None,
                     "white_share": None, "result": result, "winner": None,
                     "source": "search", "source_fen": None}
@@ -242,24 +259,27 @@ class HumanGame:
                             white_share=1.0 if winner == "white" else 0.0 if winner == "black" else 0.5)
             if termination == "checkmate":
                 snapshot["mate"] = 0
-        elif not self.error and (previous.get("cp") is not None or previous.get("mate") is not None):
-            # A root best-move estimate is useful after that exact chosen move,
-            # but is explicitly labelled as a carried, previous-search estimate.
-            snapshot.update({key: previous[key] for key in
-                             ("cp", "mate", "depth", "bound", "white_share", "winner", "source_fen")})
-            snapshot.update(status="ready", source="previous_search")
         with self._evaluation_lock:
             self._evaluation = snapshot
+            self._evaluation_uses_helper = evaluating
+            # The helper evaluates the current human position independently of
+            # advice. On the engine's turn its move search already evaluates
+            # the same position, so cancel the helper instead of duplicating it.
+            self._live_evaluation.update_position(
+                game_id=self.game_id, revision=self.revision, board=self.board,
+                human_color=self.human_color, movetime_ms=self.movetime_ms,
+                engine_name=self.engine_name, active=evaluating)
+            if not self._closing:
+                self._live_evaluation.set_enabled(evaluating)
         self._hints.update_position(
             game_id=self.game_id, revision=self.revision, board=self.board,
             human_color=self.human_color, movetime_ms=self.movetime_ms,
-            engine_name=self.engine_name, active=result == "*" and not self.error,
+            engine_name=self.engine_name, active=active,
             handicap_mode=self._handicap_backup is not None)
 
     def _publish_evaluation(self, info):
-        """Publish completed-depth UCI scores in White's point of view."""
-        score = info.get("score")
-        depth = info.get("depth")
+        """Publish completed-depth opponent-search scores in White's point of view."""
+        score, depth = info.get("score"), info.get("depth")
         if not isinstance(score, chess.engine.PovScore) or type(depth) is not int or depth < 1:
             return
         white_score = score.pov(chess.WHITE)
@@ -387,8 +407,8 @@ class HumanGame:
             return self.state()
 
     def engine_move(self, revision):
-        # Keep the installed streamed evaluation and watchdog while releasing
-        # the board lock for settings. Each search retains its own budget.
+        # Reuse the opponent search for the engine-turn evaluation. The human-
+        # turn helper is cancelled before this search. Each keeps its own budget.
         with self._search_lock:
             with self._lock:
                 self._check_revision(revision)
@@ -408,7 +428,7 @@ class HumanGame:
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
                 self._sync_evaluation(status="searching")
-            reply, failure, carry_score = None, None, False
+            reply, failure = None, None
             watchdog = None
             timed_out = threading.Event()
             try:
@@ -428,18 +448,14 @@ class HumanGame:
                         for info in analysis:
                             self._publish_evaluation(info)
                         reply = analysis.wait()
-                        final_info = analysis.info
                 else:
                     reply = self._engine.play(board, limit, game=token,
                                               info=chess.engine.INFO_ALL)
-                    final_info = reply.info
-                    self._publish_evaluation(final_info)
+                    self._publish_evaluation(reply.info)
                 if timed_out.is_set():
                     raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
-                pv = final_info.get("pv", [])
-                carry_score = bool(pv and pv[0] == reply.move)
             except BaseException as exc:
                 failure = f"{type(exc).__name__}: {exc}"
             finally:
@@ -459,7 +475,7 @@ class HumanGame:
                         self._engine.close()
                         self._engine = None
                 self.revision += 1
-                self._sync_evaluation(keep_search=not self.error and carry_score)
+                self._sync_evaluation()
                 self._save()
                 return self.state()
 
@@ -659,6 +675,10 @@ class HumanGame:
             temporary.replace(target)
 
     def close(self):
+        with self._evaluation_lock:
+            self._closing = True
+        if self._live_evaluation is not None:
+            self._live_evaluation.close()
         if self.coaching is not None:
             self.coaching.close()
         if self.analysis is not None:

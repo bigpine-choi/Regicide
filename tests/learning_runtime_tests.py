@@ -53,6 +53,18 @@ class RuntimeSelectionTests(unittest.TestCase):
     def save_manifest(self, value):
         (self.state / "champion.json").write_text(json.dumps(value), encoding="utf-8")
 
+    def assert_current_evaluation(self, game, state):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            value = game.evaluation()
+            if value.get("status") == "ready" and all(value.get(key) == state[key]
+                                                        for key in ("game_id", "revision", "fen")):
+                self.assertEqual(value["source_fen"], state["fen"])
+                self.assertTrue(value["cp"] is not None or value["mate"] is not None)
+                return value
+            time.sleep(.01)
+        self.fail(f"Current-position evaluation did not finish: {game.evaluation()}")
+
     def test_missing_registry_uses_classical_without_warning(self):
         selected = runtime_evaluation(BINARY, learning_state=self.state)
         self.assertEqual(selected, {"model": None, "generation": None, "warning": None})
@@ -142,27 +154,39 @@ class RuntimeSelectionTests(unittest.TestCase):
     def test_adopted_main_and_hint_share_immutable_snapshot_and_saved_generation(self):
         model, manifest = self.fixture_champion()
         selected = runtime_evaluation(BINARY, learning_state=self.state)
-        configured, peers = [], []
+        configured, peers, evaluation_configured, evaluation_fens = [], [], [], []
 
         class RecordingEngine:
-            def __init__(self, peer):
-                self.peer = peer
+            def __init__(self, peer, records, evaluation=False):
+                self.peer, self.records, self.evaluation = peer, records, evaluation
 
             def configure(self, options):
-                configured.append(dict(options))
+                self.records.append(dict(options))
                 return self.peer.configure(options)
+
+            def analysis(self, board, limit, **kwargs):
+                if self.evaluation:
+                    evaluation_fens.append(board.fen(en_passant="fen"))
+                return self.peer.analysis(board, limit, **kwargs)
 
             def __getattr__(self, name):
                 return getattr(self.peer, name)
 
-        def factory(binary):
+        def start_peer(binary, records, evaluation=False):
             peer = chess.engine.SimpleEngine.popen_uci([str(binary), "uci"], timeout=10)
             peers.append(peer)
-            return RecordingEngine(peer)
+            return RecordingEngine(peer, records, evaluation)
+
+        def factory(binary):
+            return start_peer(binary, configured)
+
+        def evaluation_factory(binary):
+            return start_peer(binary, evaluation_configured, True)
 
         save_dir = self.root / "adopted-game"
         game = HumanGame(BINARY, save_dir, factory, factory, neural_model=selected["model"],
-                         neural_adopted_generation=selected["generation"])
+                         neural_adopted_generation=selected["generation"],
+                         evaluation_engine_factory=evaluation_factory)
         snapshot = None
         try:
             state = game.new_game("white", 100, game.state()["revision"])
@@ -175,6 +199,11 @@ class RuntimeSelectionTests(unittest.TestCase):
             snapshot = Path(configured[0]["EvalFile"])
             self.assertNotEqual(snapshot.resolve(), model.resolve())
             self.assertEqual(sha256(snapshot), manifest["model_sha256"])
+            self.assert_current_evaluation(game, state)
+            self.assertTrue(evaluation_configured)
+            self.assertEqual(evaluation_fens[-1], state["fen"])
+            self.assertEqual({options["EvalFile"] for options in evaluation_configured}, {str(snapshot)})
+            self.assertTrue(all(options["UseNeuralEvaluation"] is True for options in evaluation_configured))
 
             # Hints are lazy. Replace the registry source *after* opponent load;
             # the subsequently launched advisor must still use the same snapshot.
@@ -197,6 +226,11 @@ class RuntimeSelectionTests(unittest.TestCase):
             self.assertIsNone(moved["error"])
             self.assertEqual(len(moved["moves"]), 2)
             self.assertEqual(moved["engine"]["model_generation"], 7)
+            self.assert_current_evaluation(game, moved)
+            self.assertEqual(evaluation_fens[-1], moved["fen"])
+            self.assertNotEqual(moved["fen"], state["fen"])
+            self.assertEqual({options["EvalFile"] for options in evaluation_configured}, {str(snapshot)})
+            self.assertEqual(sha256(snapshot), manifest["model_sha256"])
             saved = json.loads((save_dir / f"{moved['game_id']}.json").read_text(encoding="utf-8"))
             self.assertEqual(saved["state"]["engine"]["evaluation"], "neural_champion")
             self.assertEqual(saved["state"]["engine"]["model_generation"], 7)

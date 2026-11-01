@@ -9,6 +9,7 @@ const ChessBoard = preload("res://scripts/chess_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const CoachAvatar = preload("res://scripts/coach_avatar.gd")
+const WindowsSpeech = preload("res://scripts/windows_speech.gd")
 
 var backend_url: String = ""
 var backend_token: String = ""
@@ -62,6 +63,14 @@ var _speech_enabled: bool = true
 var _speech_pending_key: String = ""
 var _speech_last_key: String = ""
 var speech_timer: Timer
+var _speech_backend: String = "native"
+var _voice_loading: bool = false
+var _speech_error: String = ""
+var _speech_generation: int = 0
+var _speech_preparing_audio: bool = false
+var _windows_speech: WindowsSpeech
+var _speech_player: AudioStreamPlayer
+var voice_status_label: Label
 
 var model: ViewModel = ViewModel.new()
 var board: ChessBoard
@@ -434,6 +443,9 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	stop_speech_button.disabled = true
 	speech_controls.add_child(speak_button)
 	speech_controls.add_child(stop_speech_button)
+	voice_status_label = _label("", 12, "9bd7ca")
+	voice_status_label.name = "CoachVoiceStatus"
+	column.add_child(voice_status_label)
 	coach_course = _label("분석을 마치면 복습 코스를 준비할게.", 13, "9bd7ca")
 	column.add_child(coach_course)
 	var lessons := HBoxContainer.new()
@@ -1287,24 +1299,100 @@ func _render_coach() -> void:
 
 func _setup_voice() -> void:
 	_english_voice = ""
+	_speech_error = ""
+	_speech_backend = "native"
 	if DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		var voices: PackedStringArray = DisplayServer.tts_get_voices_for_language("en")
 		if not voices.is_empty():
 			_english_voice = voices[0]
+	if _english_voice.is_empty() and OS.get_name() == "Windows" and DisplayServer.get_name() != "headless":
+		_setup_windows_voice()
 	_render_speech_controls()
+
+
+func _make_windows_speech() -> WindowsSpeech:
+	return WindowsSpeech.new()
+
+
+func _setup_windows_voice() -> void:
+	_speech_backend = "windows"
+	_voice_loading = true
+	if not is_instance_valid(_windows_speech):
+		_windows_speech = _make_windows_speech()
+		_windows_speech.voices_ready.connect(_windows_voices_ready)
+		_windows_speech.audio_ready.connect(_windows_audio_ready)
+		_windows_speech.failed.connect(_windows_speech_failed)
+		add_child(_windows_speech)
+	if not is_instance_valid(_speech_player):
+		_speech_player = AudioStreamPlayer.new()
+		_speech_player.name = "CoachLocalVoice"
+		add_child(_speech_player)
+	_windows_speech.query_voices()
+
+
+func _windows_voices_ready(voices: Array, error: String) -> void:
+	_voice_loading = false
+	_speech_error = error
+	_english_voice = str(voices[0].id) if not voices.is_empty() else ""
+	_render_speech_controls()
+	_schedule_speech()
+
+
+func _windows_audio_ready(ticket: int, stream: AudioStreamWAV) -> void:
+	if ticket != _speech_generation or not _speech_owned:
+		return
+	if not _can_speak() or _speech_context_key() != _speech_last_key:
+		_stop_speech()
+		return
+	_speech_preparing_audio = false
+	_play_windows_audio(stream)
+	_render_speech_controls()
+
+
+func _windows_speech_failed(ticket: int, error: String) -> void:
+	if ticket != _speech_generation:
+		return
+	_speech_error = error
+	_stop_speech()
+
+
+func _play_windows_audio(stream: AudioStreamWAV) -> void:
+	_speech_player.stream = stream
+	_speech_player.play()
+
+
+func _windows_audio_is_playing() -> bool:
+	return is_instance_valid(_speech_player) and _speech_player.playing
 
 
 func _render_speech_controls() -> void:
 	if not is_instance_valid(speak_button):
 		return
-	speak_button.disabled = _english_voice.is_empty()
+	speak_button.disabled = _voice_loading or (_english_voice.is_empty() and _speech_error.is_empty())
 	speak_button.set_pressed_no_signal(_speech_enabled and not _english_voice.is_empty())
 	speak_button.text = "영어 음성 없음" if _english_voice.is_empty() else ("음성 켜짐" if _speech_enabled else "음성 꺼짐")
 	speak_button.tooltip_text = "이 컴퓨터에 설치된 영어 음성이 필요합니다. 글로 된 코칭은 그대로 사용할 수 있습니다." if _english_voice.is_empty() else "수를 넘기면 컴퓨터의 영어 음성으로 설명을 읽습니다. 눌러서 켜거나 끌 수 있습니다."
 	stop_speech_button.disabled = not _speech_owned and _speech_pending_key.is_empty()
+	if _voice_loading:
+		speak_button.text = "음성 준비 중"
+	elif not _speech_error.is_empty():
+		speak_button.text = "음성 다시 시도"
+		speak_button.tooltip_text = _speech_error
+	if is_instance_valid(voice_status_label):
+		voice_status_label.text = _speech_error if not _speech_error.is_empty() else ("컴퓨터의 영어 음성을 찾고 있어요." if _voice_loading else ("영어 음성을 준비하고 있어요." if _speech_preparing_audio else ("내 컴퓨터의 영어 음성 · 수를 넘기면 자동 안내" if not _english_voice.is_empty() else "사용 가능한 영어 음성이 없어 글로 안내합니다.")))
 
 
 func _toggle_speech() -> void:
+	if not _speech_error.is_empty():
+		_speech_error = ""
+		_speech_enabled = true
+		_speech_last_key = ""
+		if _english_voice.is_empty():
+			_setup_voice()
+		else:
+			_schedule_speech()
+		_render_speech_controls()
+		return
 	if _english_voice.is_empty():
 		return
 	_speech_enabled = not _speech_enabled
@@ -1328,7 +1416,7 @@ func _speech_context_key() -> String:
 
 
 func _can_speak() -> bool:
-	return is_visible_in_tree() and _speech_enabled and not _english_voice.is_empty() and not busy and not _walkthrough_active and not _retry_in_flight and not _spoken_coach_text().is_empty()
+	return is_visible_in_tree() and _speech_enabled and not _voice_loading and _speech_error.is_empty() and not _english_voice.is_empty() and not busy and not _walkthrough_active and not _retry_in_flight and not _spoken_coach_text().is_empty()
 
 
 func _schedule_speech() -> void:
@@ -1366,12 +1454,14 @@ func _stop_current_speech() -> void:
 
 
 func _stop_speech() -> void:
+	_speech_generation += 1
 	if is_instance_valid(speech_timer):
 		speech_timer.stop()
 	_speech_pending_key = ""
 	if _speech_owned:
 		_voice_stop()
 	_speech_owned = false
+	_speech_preparing_audio = false
 	_speech_text = ""
 	_render_speech_controls()
 
@@ -1382,14 +1472,25 @@ func _poll_speech() -> void:
 
 
 func _voice_speak(text: String, voice: String) -> void:
-	DisplayServer.tts_speak(text, voice)
+	if _speech_backend == "windows":
+		_speech_preparing_audio = true
+		_windows_speech.synthesize(_speech_generation, text, voice)
+	else:
+		DisplayServer.tts_speak(text, voice)
 
 
 func _voice_stop() -> void:
-	DisplayServer.tts_stop()
+	if _speech_backend == "windows":
+		_windows_speech.cancel_synthesis()
+		if is_instance_valid(_speech_player):
+			_speech_player.stop()
+	else:
+		DisplayServer.tts_stop()
 
 
 func _voice_is_speaking() -> bool:
+	if _speech_backend == "windows":
+		return _speech_preparing_audio or _windows_audio_is_playing()
 	return DisplayServer.tts_is_speaking()
 
 
