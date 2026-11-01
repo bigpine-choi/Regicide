@@ -56,6 +56,13 @@ var continuation_moves: Label
 var continuation_pause: Button
 var continuation_previous: Button
 var continuation_next: Button
+var _insight_section: String = ""
+var _insight_ticket: String = ""
+var insight_controls: VBoxContainer
+var insight_title: Label
+var insight_scene: Label
+var insight_buttons: Dictionary = {}
+var insight_return: Button
 var _coach_overview: bool = false
 var _coach_evidence_key: String = ""
 var _coach_focus_fen: String = ""
@@ -161,12 +168,14 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_cancel_insight()
 	_cancel_continuation()
 	_stop_speech()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		_cancel_insight()
 		_cancel_continuation()
 		_stop_speech()
 
@@ -467,6 +476,28 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	voice_status_label = _label("", 12, "9bd7ca")
 	voice_status_label.name = "CoachVoiceStatus"
 	column.add_child(voice_status_label)
+	insight_controls = VBoxContainer.new()
+	insight_controls.name = "CoachInsightControls"
+	column.add_child(insight_controls)
+	insight_title = _label("", 14, "f4e9c9")
+	insight_title.name = "CoachInsightTitle"
+	insight_controls.add_child(insight_title)
+	var concepts := HBoxContainer.new()
+	insight_controls.add_child(concepts)
+	for choice in [["idea", "핵심 구상"], ["plan", "실행 계획"], ["counterplay", "상대 대응"]]:
+		var button := Button.new()
+		button.name = "CoachInsight" + str(choice[0]).capitalize()
+		button.text = str(choice[1])
+		button.toggle_mode = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		concepts.add_child(button)
+		insight_buttons[str(choice[0])] = button
+	insight_scene = _label("", 12, "9bd7ca")
+	insight_scene.name = "CoachInsightScene"
+	insight_controls.add_child(insight_scene)
+	insight_return = _button("기본 해설", _leave_insight, "CoachInsightReturn")
+	insight_controls.add_child(insight_return)
 	continuation_button = _button("왜 더 좋은지 · 6수 보기", _begin_continuation, "CoachContinuation")
 	column.add_child(continuation_button)
 	continuation_controls = VBoxContainer.new()
@@ -616,6 +647,7 @@ func _cancel() -> void:
 
 
 func _mutate(body: Dictionary) -> void:
+	_cancel_insight()
 	_cancel_continuation()
 	busy = true
 	_mutation_epoch += 1
@@ -842,6 +874,7 @@ func _show_line(kind: String) -> void:
 
 
 func _line_step(direction: int) -> void:
+	_cancel_insight(true)
 	if _continuation_active:
 		_continuation_paused = true
 		continuation_timer.stop()
@@ -1033,6 +1066,7 @@ func _clear_coach_focus() -> void:
 func _toggle_coach_overview() -> void:
 	if retry_active:
 		return
+	_cancel_insight()
 	_cancel_continuation()
 	_coach_overview = not _coach_overview
 	_clear_coach_focus()
@@ -1072,6 +1106,7 @@ func _show_evidence(evidence: Dictionary, ply: int, job: String, source_fen: Str
 	var index: int = int(evidence.get("ply_index", -1))
 	if kind not in ["played", "best"] or not line is Dictionary or index < 0 or index >= line.get("pv_frames", []).size():
 		return
+	_cancel_insight()
 	_cancel_continuation()
 	_cancel_walkthrough()
 	_coach_overview = false
@@ -1118,6 +1153,7 @@ func _begin_retry() -> void:
 
 
 func _end_retry(clear_reply: bool = true) -> void:
+	_cancel_insight()
 	_cancel_continuation()
 	_stop_speech()
 	_retry_epoch += 1
@@ -1298,7 +1334,161 @@ func _coach_for_side() -> Dictionary:
 					coach[key] = perspective[key]
 			if perspective.get("continuation") is Dictionary:
 				coach["continuation"] = perspective.continuation
+			if perspective.get("insight") is Dictionary:
+				coach["insight"] = perspective.insight
 	return coach
+
+
+func _insight_packet() -> Dictionary:
+	var row: Dictionary = _move()
+	var classification: String = str(row.get("classification", "pending"))
+	if classification not in ["best", "good", "inaccuracy", "mistake", "blunder", "missed_mate", "allows_mate"]:
+		return {}
+	var packet: Variant = _coach_for_side().get("insight")
+	if not packet is Dictionary or not packet.get("sections") is Array or packet.sections.size() != 3:
+		return {}
+	for key in ["theme", "title", "summary"]:
+		if not packet.get(key) is String or str(packet[key]).strip_edges().is_empty():
+			return {}
+	# The production generator requires reliable actual-move evidence as well.
+	if _insight_branch("played").is_empty():
+		return {}
+	var kind: String = "played" if classification in ["best", "good"] else "best"
+	var branch: Dictionary = _insight_branch(kind)
+	if branch.is_empty() or (kind == "best" and branch.get("uci") == row.get("uci")):
+		return {}
+	var ids: Array[String] = ["idea", "plan", "counterplay"]
+	for index in range(ids.size()):
+		if not _insight_valid_section(packet.sections[index], ids[index], kind, branch):
+			return {}
+	return packet
+
+
+func _insight_branch(kind: String) -> Dictionary:
+	var row: Dictionary = _move()
+	var branch: Variant = _move().get(kind)
+	if not branch is Dictionary or branch.get("bound") != "exact":
+		return {}
+	var frames: Variant = branch.get("pv_frames")
+	var moves: Variant = branch.get("pv_uci")
+	var sans: Variant = branch.get("pv_san")
+	if not moves is Array or moves.is_empty() or not frames is Array or frames.size() != moves.size() + 1 or not sans is Array or sans.size() != moves.size():
+		return {}
+	var actual_frames: Array = _frames()
+	if selected_ply < 1 or selected_ply > actual_frames.size() or not actual_frames[selected_ply - 1] is Dictionary or actual_frames[selected_ply - 1].get("fen") != row.get("fen_before"):
+		return {}
+	if not frames[0] is Dictionary or frames[0].get("fen") != row.get("fen_before") or frames[0].get("turn") != row.get("color") or branch.get("uci") != moves[0] or branch.get("san") != sans[0]:
+		return {}
+	if kind == "played" and branch.get("uci") != row.get("uci"):
+		return {}
+	for index in range(frames.size()):
+		var frame: Variant = frames[index]
+		if not frame is Dictionary or not frame.get("board") is Dictionary or not frame.get("fen") is String:
+			return {}
+		var fen: PackedStringArray = str(frame.fen).split(" ")
+		var side: String = str(row.get("color")) if index % 2 == 0 else ("black" if row.get("color") == "white" else "white")
+		if fen.size() != 6 or fen[1] != ("w" if side == "white" else "b") or frame.get("turn") != side:
+			return {}
+		if index > 0 and frame.get("last_move") != moves[index - 1]:
+			return {}
+	for index in range(moves.size()):
+		if not moves[index] is String or not sans[index] is String or str(sans[index]).strip_edges().is_empty():
+			return {}
+		var uci: String = moves[index]
+		if uci.length() not in [4, 5] or model.square_to_display(uci.substr(0, 2)).x < 0 or model.square_to_display(uci.substr(2, 2)).x < 0 or (uci.length() == 5 and uci[4] not in ["q", "r", "b", "n"]):
+			return {}
+	return branch
+
+
+func _insight_valid_section(value: Variant, section_id: String, kind: String, branch: Dictionary) -> bool:
+	if not value is Dictionary or value.get("id") != section_id or value.get("line") != kind:
+		return false
+	for key in ["title", "text"]:
+		if not value.get(key) is String or str(value[key]).strip_edges().is_empty():
+			return false
+	var index: Variant = value.get("ply_index")
+	if typeof(index) not in [TYPE_INT, TYPE_FLOAT] or float(index) != floorf(float(index)) or index < 1 or index >= branch.pv_frames.size():
+		return false
+	var squares: Variant = value.get("squares")
+	if not squares is Array or squares.is_empty():
+		return false
+	for square in squares:
+		if not square is String or model.square_to_display(square).x < 0:
+			return false
+	return true
+
+
+func _insight_part(section_id: String) -> Dictionary:
+	var index: int = ["idea", "plan", "counterplay"].find(section_id)
+	var packet: Dictionary = _insight_packet()
+	return packet.sections[index] if index >= 0 and not packet.is_empty() else {}
+
+
+func _insight_key() -> String:
+	var packet: Dictionary = _insight_packet()
+	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, human_color, _move().get("fen_before", ""), packet, _move().get("best"), _move().get("played")]) if not packet.is_empty() else ""
+
+
+func _show_insight(section_id: String, ticket: String) -> void:
+	if not visible or busy or retry_active or _retry_in_flight or _walkthrough_active or _continuation_active or _coach_overview or _job_replaced or ticket.is_empty() or ticket != _insight_key():
+		return
+	var section: Dictionary = _insight_part(section_id)
+	if section.is_empty():
+		return
+	_end_retry()
+	_cancel_walkthrough()
+	_clear_coach_focus()
+	_insight_section = section_id
+	_insight_ticket = ticket
+	_local_selection = true
+	line_kind = str(section.line)
+	line_index = int(section.ply_index)
+	show_after = false
+	for square in section.get("squares", []):
+		if model.square_to_display(str(square)).x >= 0:
+			_coach_focus.append(str(square))
+	_coach_focus_fen = str(_line_frames()[line_index].fen)
+	_coach_focus_line = line_kind
+	_coach_focus_index = line_index
+	_render()
+
+
+func _cancel_insight(keep_position: bool = false) -> void:
+	if not _insight_section.is_empty():
+		if not keep_position:
+			line_kind = ""
+			line_index = 0
+			show_after = true
+		_clear_coach_focus()
+		_stop_speech()
+	_insight_section = ""
+	_insight_ticket = ""
+
+
+func _leave_insight() -> void:
+	_cancel_insight()
+	_render()
+
+
+func _render_insight(available: bool) -> void:
+	var packet: Dictionary = _insight_packet()
+	insight_controls.visible = available and not packet.is_empty()
+	insight_title.text = str(packet.get("title", ""))
+	var key: String = _insight_key()
+	for section_id in insight_buttons:
+		var button: Button = insight_buttons[section_id]
+		button.disabled = busy or _retry_in_flight or _job_replaced or _insight_part(section_id).is_empty()
+		button.set_pressed_no_signal(section_id == _insight_section)
+		if button.get_meta("insight_key", "") != key:
+			for connection in button.pressed.get_connections():
+				button.pressed.disconnect(connection.callable)
+			button.pressed.connect(_show_insight.bind(section_id, key))
+			button.set_meta("insight_key", key)
+	insight_return.visible = not _insight_section.is_empty()
+	insight_scene.visible = not _insight_section.is_empty()
+	insight_scene.text = ""
+	if not _insight_section.is_empty():
+		insight_scene.text = "착수 전 위치 · 추천 이유를 살펴보세요." if line_index == 0 else (("추천 수" if line_kind == "best" else "실전 수") + " 이후 예상 전개 · %d수 뒤\n실제 기보와 다른 참고 수순입니다." % line_index)
 
 
 func _continuation_packet() -> Dictionary:
@@ -1452,7 +1642,14 @@ func _render_coach() -> void:
 	var course: Dictionary = report.get("coach", {})
 	var viewing_retry_line: bool = line_kind in ["retry_candidate", "retry_best"] and not _retry_reply.is_empty()
 	var dialogue: String = str(coach.get("dialogue", "I'm checking this move and the opponent's reply."))
+	var insight: Dictionary = _insight_packet()
+	if not insight.is_empty():
+		dialogue = str(insight.summary)
+	if not _insight_section.is_empty():
+		dialogue = str(_insight_part(_insight_section).get("text", dialogue))
 	avatar.mood = str(coach.get("mood", "encourage"))
+	if not _insight_section.is_empty():
+		avatar.mood = "think"
 	if viewing_retry_line:
 		dialogue = str(_retry_reply.get("message", ""))
 		avatar.mood = "think"
@@ -1470,6 +1667,7 @@ func _render_coach() -> void:
 		avatar.mood = "think" if _retry_reply.is_empty() else ("celebrate" if _retry_reply.get("verdict") in ["recommended", "good"] else "encourage")
 	coach_dialogue.text = dialogue
 	_schedule_speech()
+	_render_insight(not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview and not _continuation_active)
 	var continuation: Dictionary = _continuation_packet()
 	continuation_button.visible = not continuation.is_empty() and not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview and not _continuation_active
 	continuation_button.disabled = busy or _retry_in_flight or _job_replaced
@@ -1497,7 +1695,7 @@ func _render_coach() -> void:
 		coach_course.text = "선택된 복습 코스가 아직 없어요. 분석된 수는 직접 살펴볼 수 있어요."
 	lesson_previous.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply < selected_ply)
 	lesson_next.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply > selected_ply)
-	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active and not _continuation_active
+	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active and not _continuation_active and _insight_section.is_empty()
 	var evidence_key: String = str(report.get("job_id", "")) + ":" + str(selected_ply) + JSON.stringify(coach.get("evidence", []))
 	if evidence_key != _coach_evidence_key:
 		_coach_evidence_key = evidence_key
@@ -1652,6 +1850,8 @@ func _spoken_coach_text() -> String:
 
 func _speech_context_key() -> String:
 	var mode: String = "overview" if _coach_overview else ("retry" if retry_active else line_kind)
+	if not _insight_section.is_empty():
+		mode = "insight:" + _insight_section
 	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, mode, show_after, _retry_reply.get("uci", "") if retry_active else "", _spoken_coach_text(), line_index if _continuation_active else -1])
 
 
@@ -1784,6 +1984,8 @@ func _annotation_for_frame(frame: Dictionary) -> Dictionary:
 func _render() -> void:
 	if board == null:
 		return
+	if not _insight_section.is_empty() and (_insight_ticket != _insight_key() or _insight_part(_insight_section).is_empty()):
+		_cancel_insight()
 	if _continuation_active and (_continuation_ticket != _continuation_key() or line_kind != "best"):
 		_cancel_continuation()
 	var moves: Array = _moves()

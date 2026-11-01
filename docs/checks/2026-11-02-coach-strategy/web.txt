@@ -1,0 +1,81 @@
+PASS opening the chooser does not start an engine or alter live game
+PASS saved game is reviewed before explicit analysis with selected side and budget
+PASS live current source must still be finished at load time
+PASS finished current game auto previews but never auto starts coaching
+PASS both sides display by default with actor labels and optional my-side filter
+PASS both alternatives replay server frames including both king and rook
+PASS next mistake replays every actual intervening move including the target and ends after it
+PASS context replay can pause, resume or skip without applying missing moves
+PASS context replay from a variation returns to its actual source before following the game
+PASS manual stepping, changing sources and leaving stop stale context timers
+PASS foreign job replacement stops the previous context traversal
+PASS hiding the browser stops replay instead of advancing in the background
+PASS both-side critical navigation includes opponent mistakes and explicit opponent filtering
+PASS archive entry shows local timestamps and replays saved game without starting analysis
+PASS mainline first/end and flip do not alter logical positions or report
+PASS pending results have no guessed score, label, recommendation or line
+PASS scores retain white perspective, mate winner zero and bounds
+PASS old poll cannot undo cancellation or replace the newer report
+PASS foreign job detaches old report and is not cancelled on return
+PASS changing my side after completion updates filters, both-side summary and actor labels
+PASS failed new-source start never attaches the previous job report
+PASS foreign running job at entry is never silently adopted or rendered
+PASS revision conflict carries forward server revision without displaying foreign data
+PASS return cancels only owned running work and rejects late responses
+PASS failed cancel still returns with visible and truthful warning
+PASS file is size bounded, UTF-8 validated, previewed and requires explicit side choice
+PASS timeout releases controls and pagehide invalidates delayed snapshots
+PASS arrow keys navigate only coaching, never intercept input controls
+PASS analysis mode prevents overlapping coaching ownership
+PASS coaching mode pauses and resumes live hint and evaluation polling
+PASS Rook uses server dialogue and highlights evidence only at its matching position
+PASS positive lesson navigation follows the actual game with neutral transit guidance
+PASS positive retry hides played-equals-best solution, lists, evaluation and arrows
+PASS retry click submits once, preserves report and reveals fresh candidate and best replay explicitly
+PASS pointer-owned retry drag supports rook-to-king castling without native HTML takeover
+PASS mouse-only drag and compatibility mouse events each submit exactly one legal move
+PASS pointer release uses final hit test even without intermediate events or with captured source target
+PASS pointer cancellation, lost window focus and Escape discard an unfinished drag
+PASS pointer drag submits legal move once and rejects offboard, stale and invalid drops
+PASS each promotion choice is explicit and submitted with its exact suffix
+PASS retry en passant display removes captured pawn while leaving archived board untouched
+PASS late retry responses cannot revive exercises after navigation, source, filter, side or exit changes
+PASS retry revision conflict adopts only new revision and releases stale job ownership
+PASS retry mismatched response remains hidden and network failure permits reset
+PASS retry rejects mismatched candidate or best root even when response outer identity matches
+PASS retry is unavailable for running or unanalyzed rows and keyboard input uses legal targets
+PASS automatic speech is absent-safe and selects only local English voices
+PASS automatic speech stops on retry, navigation and hidden document; stale callbacks cannot stop newer speech
+PASS 300ms speech debounce keeps only the latest scene and ignores repeated renders and late timers
+PASS voice toggle defaults on, mutes navigation and resumes only the current scene
+PASS actual-game walkthrough remains quiet until its target, including paused intermediate frames
+PASS overview, variation and retry feedback are read from revealed content only
+PASS teaching dialogue automatically reads the better move, reason and principle from either player's perspective
+PASS unsolved retry hides nested teaching and cancels pending solution speech until explicit reveal
+PASS pending speech is invalidated on return, pagehide, source replacement and hidden documents
+PASS actual move badges use safe class fallbacks and reserve brilliant symbol for explicit validated metadata
+PASS foreign or inconsistent annotation metadata never falls back to a plausible-looking badge
+PASS badge attachment requires exact actual frame ply, FEN, UCI and occupied destination
+PASS selection and before-after controls keep the same evaluated move while first and step show their exact frames
+PASS badges remain absent on every hypothetical line and throughout retry including revealed answer
+PASS castle badge stays on the moved king when flipped and on the correct promotion piece at every edge
+PASS pending analysis and archive-only replay have no grades and a matching update adds the settled badge
+PASS badge CSS is an inert overlay sized from the board, and the legend distinguishes limited candidate evidence
+PASS coach wording and automatic narration follow the selected human side
+PASS six-ply explanation animates every server frame, highlights SAN and keeps the final board for its summary
+PASS guided speech waits for voice completion without interrupting each step and reads the final summary
+PASS guided pause and manual stepping cancel stale work, resume the current explanation and retain the original review
+PASS manual continuation steps read once while paused, never auto advance, and reject stale speech or timers
+PASS manual steps with muted or absent speech remain paused without reading timers
+PASS short confirmed lines and terminal lines never promise six available moves
+PASS continuation gate rejects untrusted mismatches, noncritical rows and actual-equals-best
+PASS guided callbacks cannot revive after navigation, overview, evidence, retry, job replacement or leaving
+PASS retry hides the continuation completely, and revealed retry feedback never starts the original solution
+PASS muting or unavailable speech uses bounded reading time, errors recover, and selected perspective is spoken
+PASS strategic overview and three deeper parts speak the selected perspective and show exact evidence frames
+PASS positive lessons explain the actual move and reject missing, bounded or mismatched evidence
+PASS strategy speech and evidence stop on replay, retry, new selection, overview and page lifecycle
+PASS opening the game overview from a deep explanation reads the overview, not the move summary
+PASS strategy selection cancels six-ply replay and normal variation stepping leaves the deep explanation
+PASS all UI ids exist and output has no HTML interpolation sink
+Browser coaching: 80 checks passed.

@@ -1,8 +1,9 @@
 """Concise local English coaching grounded in legal moves and short PVs."""
 import chess
+from coach_strategy import analyze_strategy
 
 COACH_NAME = "Rook"
-COACH_VERSION = 5
+COACH_VERSION = 6
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -517,11 +518,18 @@ def _continuation_facts(board, row, kind, actual, played, best, lesson):
             "color": board.turn}
 
 
+def _draw_reason(outcome):
+    return {chess.Termination.STALEMATE: "stalemate", chess.Termination.INSUFFICIENT_MATERIAL: "insufficient mating material",
+            chess.Termination.SEVENTYFIVE_MOVES: "the seventy-five-move rule",
+            chess.Termination.FIVEFOLD_REPETITION: "fivefold repetition"}.get(outcome.termination, "a draw rule")
+
+
 def _continuation_step(event, before, after, perspective):
     actor, owner = _subject(event["color"], perspective), _owner(event["color"], perspective)
     opposing = _owner(not event["color"], perspective)
     piece = PIECE_NAMES[event["promotion"] or event["piece"]]
     squares = [event["source"], event["target"]]
+    outcome = after.outcome(claim_draw=False)
 
     def verb(base):
         return base if actor == "You" else base + "s"
@@ -531,6 +539,8 @@ def _continuation_step(event, before, after, perspective):
         squares.append(event["king"])
     elif after.is_stalemate():
         text = f"That ends this line in stalemate. {_side(not event['color'])} has no legal move, but the king isn't in check."
+    elif outcome:
+        text = f"This line ends in a draw by {_draw_reason(outcome)}. There is no next move to play."
     elif event["promotion"]:
         capture = f"{verb('capture')} {opposing} {PIECE_NAMES[event['captured']]} and " if event["captured"] else ""
         text = f"{actor} {capture}{verb('promote')} to a {piece}."
@@ -574,7 +584,7 @@ def _continuation_step(event, before, after, perspective):
         squares.append(defender["square"])
     else:
         text = f"{actor} {verb('move')} the {piece} to {event['target']}."
-    if event["check"] and not event["mate"] and (event["captured"] or event["promotion"] or event["was_check"] or event["castle"]):
+    if event["check"] and not outcome and (event["captured"] or event["promotion"] or event["was_check"] or event["castle"]):
         text = text.rstrip(".") + "; that also gives check."
         squares.append(event["king"])
     return {"ply_index": event["index"], "uci": event["uci"], "san": event["san"],
@@ -582,7 +592,7 @@ def _continuation_step(event, before, after, perspective):
             "squares": list(dict.fromkeys(square for square in squares if square is not None))}
 
 
-def _continuation_text(facts, teaching, perspective):
+def _continuation_text(facts, teaching, perspective, insight=None):
     if facts is None or teaching is None:
         return None
     count, outcome = len(facts["events"]), facts["outcome"]
@@ -592,7 +602,8 @@ def _continuation_text(facts, teaching, perspective):
                     f"Only {count} {'ply is' if count == 1 else 'plies are'} available; the continuation stops there.")
     # Introduce the concrete reason now; save the transferable principle for
     # the endpoint, instead of reading the same advice twice.
-    intro = teaching["alternative"]["reason"] + " " + availability
+    reason = insight["summary"] if insight else teaching["alternative"]["reason"]
+    intro = reason + " " + availability
     own = _owner(facts["color"], perspective)
     opposing = _owner(not facts["color"], perspective)
     horizon = f"{count} {'ply' if count == 1 else 'plies'}"
@@ -601,10 +612,7 @@ def _continuation_text(facts, teaching, perspective):
         if count > 1:
             result += " This single line doesn't establish a forced mate."
     elif outcome:
-        reason = {chess.Termination.STALEMATE: "stalemate", chess.Termination.INSUFFICIENT_MATERIAL: "insufficient mating material",
-                  chess.Termination.SEVENTYFIVE_MOVES: "the seventy-five-move rule",
-                  chess.Termination.FIVEFOLD_REPETITION: "fivefold repetition"}.get(outcome.termination, "a draw rule")
-        result = f"This line ends in a draw by {reason}."
+        result = f"This line ends in a draw by {_draw_reason(outcome)}."
     elif facts["played_outcome"] and facts["played_outcome"].winner is not None:
         mate_ply = facts["played_terminal_ply"]
         result = (f"The played line ends in checkmate for {_side(facts['played_outcome'].winner)} after {mate_ply} "
@@ -626,11 +634,21 @@ def _continuation_text(facts, teaching, perspective):
         result = (f"With these replies, {own} material balance {'improves' if change > 0 else 'falls'} by the shown endpoint."
                   if change else "The material balance is unchanged at this endpoint.")
         result += " No equal-length material comparison is available."
+    steps = [_continuation_step(event, facts["positions"][index], facts["positions"][index + 1], perspective)
+             for index, event in enumerate(facts["events"])]
+    if insight:
+        # Notes are derived from this same legal branch. Keep its actual moves,
+        # timing, endpoint and outcome; only enrich the explanation and focus.
+        for note in insight.get("step_notes", []):
+            index = note.get("ply_index", 0)
+            if (note.get("line") == "best" and type(index) is int and 1 <= index <= count
+                    and not facts["positions"][index].is_game_over(claim_draw=False)):
+                steps[index - 1]["text"] = note["text"]
+                steps[index - 1]["squares"] = list(dict.fromkeys(steps[index - 1]["squares"] + note["squares"]))
+    principle = insight.get("principle", teaching["principle"]) if insight else teaching["principle"]
     return {"line": "best", "target_plies": 6, "available_plies": count,
             "complete": count == 6 or terminal, "terminal": terminal, "intro": intro,
-            "summary": result + " " + teaching["principle"],
-            "steps": [_continuation_step(event, facts["positions"][index], facts["positions"][index + 1], perspective)
-                      for index, event in enumerate(facts["events"])]}
+            "summary": result + " " + principle, "steps": steps}
 
 
 def describe_move(board, row):
@@ -671,9 +689,11 @@ def describe_move(board, row):
 
     def wording(perspective=None):
         teaching = _teaching_text(lesson, actual, best, perspective) if lesson else None
+        insight = analyze_strategy(board, row, perspective)
         return {"dialogue": _with_teaching(_dialogue(board, kind, actual, played, best, perspective), teaching),
                 "teaching": teaching, "hint": _hint(board, kind, actual, played, best, perspective),
-                "continuation": _continuation_text(continuation, teaching, perspective)}
+                "insight": insight,
+                "continuation": _continuation_text(continuation, teaching, perspective, insight)}
 
     return {"mood": mood, **wording(),
             "perspectives": {name: wording(color) for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},

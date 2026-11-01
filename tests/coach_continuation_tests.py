@@ -59,8 +59,9 @@ class CoachContinuationTests(unittest.TestCase):
             self.assertEqual((continuation["line"], continuation["target_plies"]), ("best", 6))
             self.assertEqual(len(continuation["steps"]), count)
             self.assertEqual(continuation["complete"], count == 6 or continuation["terminal"])
-            self.assertIn(view["teaching"]["alternative"]["reason"], continuation["intro"])
-            self.assertIn(view["teaching"]["principle"], continuation["summary"])
+            insight = view.get("insight")
+            self.assertIn(insight["summary"] if insight else view["teaching"]["alternative"]["reason"], continuation["intro"])
+            self.assertIn(insight["principle"] if insight else view["teaching"]["principle"], continuation["summary"])
             replay = board.copy(stack=True)
             for index, step in enumerate(continuation["steps"], 1):
                 move = chess.Move.from_uci(step["uci"])
@@ -218,7 +219,8 @@ class CoachContinuationTests(unittest.TestCase):
     def test_discovered_check_does_not_name_moved_piece_as_checker(self):
         board = chess.Board("k7/8/8/8/8/8/N7/R6K w - - 0 1")
         line = self.explain(board, source_row(board, ["h1g1"], ["a2c3", "a8b7"]))["continuation"]
-        self.assertIn("That move gives check", line["steps"][0]["text"])
+        self.assertIn("rook", line["steps"][0]["text"])
+        self.assertIn("king on a8", line["steps"][0]["text"])
         self.assertNotIn("knight gives check", line["steps"][0]["text"])
 
     def test_countercapture_is_a_capture_not_escaping_attack(self):

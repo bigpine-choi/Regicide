@@ -15,6 +15,7 @@
   let cursor = 0, selectedPly = 1, variation = null, lineCursor = 0, viewBefore=false;
   let contextReplay = null, contextTimer = null, replayEpoch = 0, motionStep = false;
   let continuationReplay = null, continuationTimer = null, continuationEpoch = 0;
+  let strategyView = null;
   let retry = null, retryEpoch = 0, evidenceFocus = null;
   let retryPointer=null, pointerSource=null, pointerTarget=null, suppressRetryClickUntil=0;
   let speaking = false, speechEpoch = 0;
@@ -112,6 +113,41 @@
     const row=selectedRow();
     return visible && !busy && !retry?.submitting && (!contextReplay || contextReplay.done) && ["completed","cancelled"].includes(report?.status) && row?.classification !== "pending" &&
       Array.isArray(row?.retry_legal_moves) && row.retry_legal_moves.length > 0;
+  }
+  function strategyPacket() {
+    const row=selectedRow(), wording=row?.coach?.perspectives?.[mine()] || row?.coach, value=wording?.insight;
+    if(!value || !["best","good",...criticalKinds].includes(row?.classification) ||
+       ![value.title,value.summary,value.theme].every(text=>typeof text==="string" && text.trim()) ||
+       !Array.isArray(value.sections) || value.sections.length!==3) return null;
+    const expected=criticalKinds.has(row.classification) ? "best" : "played";
+    if(expected==="best" && row.best?.uci===row.uci)return null;
+    for(const [index,section] of value.sections.entries()) {
+      const branch=row?.[section.line], frames=branch?.pv_frames;
+      if(section.id!==["idea","plan","counterplay"][index] || section.line!==expected || branch?.bound!=="exact" ||
+         !Number.isInteger(section.ply_index) || section.ply_index<0 || !Array.isArray(frames) ||
+         section.ply_index>=frames.length || frames[0]?.fen!==row.fen_before ||
+         !frames[section.ply_index]?.board || typeof frames[section.ply_index]?.fen!=="string" ||
+         ![section.title,section.text].every(text=>typeof text==="string" && text.trim()) ||
+         !Array.isArray(section.squares) || section.squares.some(square=>!/^[a-h][1-8]$/.test(square)))return null;
+    }
+    return value;
+  }
+  function strategyCurrent() {
+    return Boolean(strategyView && visible && !busy && !retry && !continuationReplay &&
+      strategyView.report===report && strategyView.ply===selectedPly && strategyView.side===mine() &&
+      strategyView.packet===strategyPacket() && variation===strategyView.section.line && lineCursor===strategyView.section.ply_index);
+  }
+  function stopStrategy() {if(strategyView){strategyView=null;stopSpeech();}}
+  function showStrategy(id) {
+    const packet=strategyPacket(),section=packet?.sections.find(item=>item.id===id);
+    if(!section || !visible || busy || retry || (contextReplay && !contextReplay.done))return;
+    stopContext();stopSpeech();speechOverview=false;get("coach-overview-box").open=false;
+    variation=section.line;lineCursor=section.ply_index;viewBefore=false;motionStep=false;
+    strategyView={packet,section,report,ply:selectedPly,side:mine()};
+    evidenceFocus={ply:selectedPly,line:section.line,index:section.ply_index,squares:section.squares};render();
+  }
+  function leaveStrategy() {
+    stopStrategy();stopSpeech();evidenceFocus=null;variation=null;cursor=selectedPly;viewBefore=false;motionStep=false;render();
   }
   function continuationPacket() {
     const row=selectedRow(), coach=row?.coach?.perspectives?.[mine()] || row?.coach;
@@ -255,7 +291,7 @@
   }
   function speechContextKey() {
     return JSON.stringify([epoch,report?.job_id || "",selectedPly,variation || "actual",viewBefore,
-      exerciseHidden(),speechOverview,retry?.feedback?.uci || "",spokenCoachText()]);
+      exerciseHidden(),speechOverview,retry?.feedback?.uci || "",strategyView?.section.id || "",spokenCoachText()]);
   }
   function canSpeak() {
     return visible && !document.hidden && speechEnabled && !busy && !retry?.submitting &&
@@ -300,6 +336,7 @@
     lastSpeechKey=speechContextKey();stopSpeech();
   }
   function cancelExercise() {
+    stopStrategy();
     stopContinuation();
     clearRetryPointer();
     if(retry){cursor=selectedPly;viewBefore=false;}
@@ -309,6 +346,7 @@
   function renderCoach() {
     const row=selectedRow(), hidden=exerciseHidden(), coach=row?.coach;
     const wording=coach?.perspectives?.[mine()] || coach;
+    const insight=strategyPacket();
     const travelling=Boolean(contextReplay && !contextReplay.done);
     const mood=retry?.feedback ? ({recommended:"celebrate",good:"encourage",try_again:"think",uncertain:"think"})[retry.feedback.verdict] || "think" :
       hidden || travelling ? "think" : ["encourage","think","celebrate","warning"].includes(coach?.mood) ? coach.mood : "encourage";
@@ -317,7 +355,16 @@
     get("coach-scene").textContent=row ? positionTitle(row) + (hidden ? " · 다시 두기" : "") : "한 장면씩 함께 살펴봐요.";
     get("coach-dialogue").textContent=continuationReplay ? continuationText() : travelling ? "Following the moves actually played to the next key moment." :
       hidden ? retry.feedback?.message || wording?.hint || "Check for threats against the king and pieces that can be captured." :
-      wording?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
+      strategyView ? strategyView.section.text :
+      (!retry && insight?.summary) || wording?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
+    get("coach-strategy").hidden=!insight || Boolean(retry) || travelling || Boolean(continuationReplay) || speechOverview;
+    get("coach-strategy-title").textContent=insight?.title || "";
+    get("coach-strategy-note").textContent=strategyView ? strategyView.section.title+" · 분석 수순의 근거 장면" : "구상·계획·상대 대응을 나눠 살펴보세요.";
+    for(const id of ["idea","plan","counterplay"]){
+      get("coach-strategy-"+id).disabled=busy;
+      get("coach-strategy-"+id).setAttribute("aria-pressed",String(strategyView?.section.id===id));
+    }
+    get("coach-strategy-return").hidden=!strategyView;
     get("coach-overview").textContent=report?.coach?.summary || "Start the analysis to find the key moments.";
     get("coach-overview-box").hidden=hidden;
     const continuation=continuationPacket();
@@ -606,6 +653,7 @@
   }
 
   function render() {
+    if(strategyView && !strategyCurrent())stopStrategy();
     if(continuationReplay && !continuationCurrent())stopContinuation();
     const locked = busy || running(), row = selectedRow(), allFrames = frames(), pv = line();
     const hidden=exerciseHidden();
@@ -698,6 +746,7 @@
   }
 
   function stopContext() {
+    stopStrategy();
     stopContinuation();
     replayEpoch++;
     if (contextTimer !== null) clearTimeout(contextTimer);
@@ -928,6 +977,8 @@
   get("coaching-line-next").addEventListener("click", () => stepLine(1));
   get("coaching-line-play").addEventListener("click",pauseContinuation);
   get("coach-continuation").addEventListener("click",startContinuation);
+  for(const id of ["idea","plan","counterplay"])get("coach-strategy-"+id).addEventListener("click",()=>showStrategy(id));
+  get("coach-strategy-return").addEventListener("click",leaveStrategy);
   get("coaching-mainline").addEventListener("click", () => { stopSpeech();stopContext(); motionStep=false; variation = null;cursor=selectedPly;viewBefore=false; render(); });
   get("coaching-context-pause").addEventListener("click", () => {
     if (!contextReplay || contextReplay.done) return;
@@ -961,8 +1012,13 @@
   get("coach-speak").addEventListener("click",toggleSpeech);
   get("coach-speech-stop").addEventListener("click",stopCurrentSpeech);
   get("coach-overview-box").addEventListener("toggle",()=>{
-    if(get("coach-overview-box").open){stopContinuation();render();}
-    speechOverview=Boolean(get("coach-overview-box").open);scheduleSpeech();
+    const opened=Boolean(get("coach-overview-box").open);
+    speechOverview=opened;
+    if(speechOverview){stopStrategy();stopContinuation();}
+    render();
+    // Leaving a deep explanation changes the scene key during render. The
+    // explicit overview choice still owns the narration after that reset.
+    speechOverview=opened;scheduleSpeech();
   });
   window.speechSynthesis?.addEventListener?.("voiceschanged",()=>{renderSpeech();scheduleSpeech();});
   get("coaching-board").addEventListener("click",(event)=>{
