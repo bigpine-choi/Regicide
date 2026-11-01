@@ -5,6 +5,7 @@ Bind only to loopback; JSON mutations require a per-process browser token.
 """
 
 import argparse
+import copy
 import datetime
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,6 +31,7 @@ from move_hints import MoveHints
 from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
+import opening_variety
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,7 +64,11 @@ class RevisionError(ValueError):
 
 class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
-                 neural_adopted_generation=None, *, evaluation_engine_factory=None):
+                 neural_adopted_generation=None, *, evaluation_engine_factory=None,
+                 opening_variety_enabled=True):
+        if type(opening_variety_enabled) is not bool:
+            raise ValueError("Opening variety must be enabled or disabled explicitly.")
+        self.opening_variety_enabled = opening_variety_enabled
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -161,6 +167,9 @@ class HumanGame:
         self._settings_revision = 0
         self._time_settings_events = []
         self._engine_movetimes = {}
+        self._opening_seed = secrets.token_hex(16)
+        self._opening_decisions = {}
+        self._opening_memo = {}
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -366,6 +375,7 @@ class HumanGame:
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
+                               "opening_variety_enabled": self.opening_variety_enabled,
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
                                "source_commit": self.source["commit"],
@@ -424,36 +434,110 @@ class HumanGame:
                     return self.state()
                 board = self.board.copy(stack=True)
                 movetime_ms = self.movetime_ms
+                opening_plan = (opening_variety.plan(board, movetime_ms, self._opening_seed,
+                                                    forced=bool(self._forced_plies))
+                                if self.opening_variety_enabled else None)
+                memo_key = (opening_variety.memo_key(board, movetime_ms, self.binary_sha256,
+                                                     self.neural_sha256 or "classical",
+                                                     seed=self._opening_seed,
+                                                     catalog_id=opening_plan["catalog_commit"])
+                            if opening_plan and opening_plan["eligible"] else None)
+                remembered = copy.deepcopy(self._opening_memo.get(memo_key)) if memo_key else None
                 token, game_id = self._game_token, self.game_id
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
+            decision = None
+            discard_engine = False
             watchdog = None
             timed_out = threading.Event()
             try:
-                limit = chess.engine.Limit(time=movetime_ms / 1000)
-                if callable(getattr(self._engine, "analysis", None)):
-                    engine = self._engine
+                engine = self._engine
+                if callable(getattr(engine, "analysis", None)):
                     def expire_search():
                         timed_out.set()
                         engine.close()
-                    # Preserve the installed stream timeout policy.
-                    watchdog = threading.Timer(limit.time + float(getattr(engine, "timeout", 10) or 10),
+                    # One watchdog covers both searches; splitting the budget
+                    # must not multiply the live move's overall time allowance.
+                    watchdog = threading.Timer(movetime_ms / 1000 + float(getattr(engine, "timeout", 10) or 10),
                                                expire_search)
                     watchdog.daemon = True
                     watchdog.start()
-                    with self._engine.analysis(board, limit, game=token,
-                                               info=chess.engine.INFO_ALL) as analysis:
-                        for info in analysis:
-                            self._publish_evaluation(info)
-                        reply = analysis.wait()
+                def search(budget, *, root_move=None, publish=True, fresh=False):
+                    limit = chess.engine.Limit(time=budget / 1000)
+                    options = {"game": object() if fresh else token, "info": chess.engine.INFO_ALL}
+                    if root_move is not None:
+                        options["root_moves"] = [root_move]
+                    packets, latest = {}, {}
+                    if callable(getattr(engine, "analysis", None)):
+                        with engine.analysis(board.copy(stack=True), limit, **options) as analysis:
+                            waited = False
+                            try:
+                                for info in analysis:
+                                    if publish:
+                                        self._publish_evaluation(info)
+                                    # Do not attach a partial depth-only record to
+                                    # a score from a different completed iteration.
+                                    if type(info.get("depth")) is int and "score" in info:
+                                        latest = dict(info)
+                                        packets[info["depth"]] = latest
+                                waited = True
+                                result = analysis.wait()
+                            except BaseException:
+                                if not waited:
+                                    try:
+                                        stop = getattr(analysis, "stop", None)
+                                        if callable(stop):
+                                            stop()
+                                        analysis.wait()
+                                    except Exception:
+                                        pass
+                                raise
+                    else:
+                        result = engine.play(board.copy(stack=True), limit, **options)
+                        latest = result.info
+                        if publish:
+                            self._publish_evaluation(latest)
+                        if type(latest.get("depth")) is int and "score" in latest:
+                            packets[latest["depth"]] = latest
+                    return result, latest, packets
+
+                remembered_move = (chess.Move.from_uci(remembered["selected_uci"])
+                                   if remembered is not None else None)
+                if remembered_move is not None and remembered_move in board.legal_moves:
+                    decision = remembered
+                    decision["reused"] = True
+                    reply = chess.engine.BestMove(remembered_move, None)
                 else:
-                    reply = self._engine.play(board, limit, game=token,
-                                              info=chess.engine.INFO_ALL)
-                    self._publish_evaluation(reply.info)
-                if timed_out.is_set():
-                    raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
+                    first_budget = opening_plan["baseline_budget_ms"] if opening_plan else movetime_ms
+                    compare = bool(opening_plan and opening_plan["eligible"])
+                    reply, baseline_info, _packets = search(first_budget, fresh=compare)
+                    if timed_out.is_set():
+                        raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
+                    if reply.move is None or reply.move not in board.legal_moves:
+                        raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
+                    if opening_plan and len(board.move_stack) < opening_variety.MAX_PLIES:
+                        candidate_move, candidate_final, candidate_packets, candidate_error = None, None, {}, None
+                        baseline = opening_variety.score_line(board, baseline_info, reply.move)
+                        if (compare and baseline is not None and baseline["depth"] >= opening_variety.MIN_DEPTH
+                                and reply.move.uci() != opening_plan["candidate_uci"]):
+                            try:
+                                proposed = chess.Move.from_uci(opening_plan["candidate_uci"])
+                                candidate, candidate_final, candidate_packets = search(
+                                    opening_plan["candidate_budget_ms"], root_move=proposed, publish=False, fresh=True)
+                                if timed_out.is_set():
+                                    raise TimeoutError("Opening candidate search exceeded its time limit")
+                                candidate_move = candidate.move
+                            except Exception as exc:
+                                # Candidate diversity is optional. Keep the
+                                # already legal baseline if its probe fails.
+                                candidate_error = type(exc).__name__
+                                discard_engine = True
+                        decision = opening_variety.receipt(board, opening_plan, reply.move, baseline_info,
+                                                           candidate_packets, candidate_final, candidate_move,
+                                                           candidate_error)
+                        reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
             except BaseException as exc:
@@ -469,6 +553,13 @@ class HumanGame:
                 if failure is None:
                     self.board.push(reply.move)
                     self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
+                    if decision is not None:
+                        self._opening_decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
+                        if memo_key:
+                            self._opening_memo[memo_key] = copy.deepcopy(decision)
+                    if discard_engine and self._engine is not None:
+                        self._engine.close()
+                        self._engine = None
                 else:
                     self.error = failure
                     if self._engine is not None:
@@ -496,6 +587,8 @@ class HumanGame:
             self._forced_plies.intersection_update(range(1, len(self.board.move_stack) + 1))
             self._engine_movetimes = {ply: ms for ply, ms in self._engine_movetimes.items()
                                      if ply <= len(self.board.move_stack)}
+            self._opening_decisions = {ply: row for ply, row in self._opening_decisions.items()
+                                       if ply <= len(self.board.move_stack)}
             self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
@@ -537,6 +630,7 @@ class HumanGame:
             self._handicap_backup = {"board": self.board.copy(stack=True),
                                      "forced_plies": self._forced_plies.copy(),
                                      "engine_movetimes": self._engine_movetimes.copy(),
+                                     "opening_decisions": copy.deepcopy(self._opening_decisions),
                                      "override": self._override, "error": self.error,
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
@@ -544,6 +638,8 @@ class HumanGame:
             self._forced_plies.intersection_update(range(1, ply))
             self._engine_movetimes = {number: ms for number, ms in self._engine_movetimes.items()
                                      if number < ply}
+            self._opening_decisions = {number: row for number, row in self._opening_decisions.items()
+                                       if number < ply}
             self.error = None
             self._override = None
             self.revision += 1
@@ -595,6 +691,7 @@ class HumanGame:
             self.board = backup["board"]
             self._forced_plies = backup["forced_plies"]
             self._engine_movetimes = backup["engine_movetimes"]
+            self._opening_decisions = backup["opening_decisions"]
             self.error = backup["error"]
             self._override = backup["override"]
             self.updated_at = backup["updated_at"]
@@ -625,6 +722,7 @@ class HumanGame:
                                  "Termination": "unterminated" if result == "*" else "normal",
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
+            game.headers.update(opening_variety.pgn_headers(self._opening_metadata()))
             if self.neural_model:
                 game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
@@ -647,6 +745,14 @@ class HumanGame:
             return "completed"
         return "in_progress" if self._game_open else "unfinished"
 
+    def _opening_metadata(self):
+        return {"enabled": self.opening_variety_enabled, "policy": opening_variety.POLICY,
+                "seed": self._opening_seed, "max_plies": opening_variety.MAX_PLIES,
+                "tolerance_cp": opening_variety.TOLERANCE_CP, "min_total_ms": opening_variety.MIN_TOTAL_MS,
+                "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._opening_decisions.items())],
+                "memo": [{"key": key, "decision": copy.deepcopy(row)}
+                         for key, row in sorted(self._opening_memo.items())]}
+
     def _save(self, update_timestamp=True):
         if update_timestamp:
             self.updated_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -666,6 +772,7 @@ class HumanGame:
                   "handicap_events": self._handicap_events,
                   "engine_movetimes_ms": self._engine_movetimes,
                   "time_settings_events": self._time_settings_events,
+                  "opening_variety": self._opening_metadata(),
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):

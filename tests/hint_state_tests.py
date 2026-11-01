@@ -88,7 +88,8 @@ class HintStateTests(unittest.TestCase):
         self.hint_factory = HintFactory()
         self.game = play_human.HumanGame(self.binary, self.root / "games",
                                          self.main_factory, self.hint_factory,
-                                         evaluation_engine_factory=baseline.FakeFactory())
+                                         evaluation_engine_factory=baseline.FakeFactory(),
+                                         opening_variety_enabled=False)
         self.addCleanup(self.folder.cleanup)
         self.addCleanup(self.game.close)
         # The always-on evaluator is independent of advice. Let its initial

@@ -60,6 +60,33 @@ class ArchiveTests(unittest.TestCase):
     def record(self, game_id=None):
         return json.loads((self.folder / ((game_id or self.game.game_id) + ".json")).read_text(encoding="utf-8"))
 
+    def test_opening_variety_seed_survives_archive_pgn_export(self):
+        record = self.record()
+        record["opening_variety"] = {"enabled": True, "seed": "0123456789abcdef" * 2,
+                                     "policy": "regicide-opening-variety-v1", "decisions": []}
+        path = self.folder / (self.game.game_id + ".json")
+        path.write_text(json.dumps(record), encoding="utf-8")
+        before = path.read_bytes()
+        parsed, _ = baseline.read_pgn(self.archive.get_game(self.game.game_id)["pgn"])
+        self.assertEqual(parsed.headers["OpeningVarietySeed"], record["opening_variety"]["seed"])
+        self.assertEqual(parsed.headers["OpeningVarietyPolicy"], "regicide-opening-variety-v1")
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_untrusted_opening_metadata_cannot_inject_pgn_headers(self):
+        record = self.record()
+        path = self.folder / (self.game.game_id + ".json")
+        for metadata in (None, [], {"enabled": False, "seed": "0" * 32,
+                                    "policy": "regicide-opening-variety-v1"},
+                         {"enabled": True, "seed": '"\\n[Result "1-0"]',
+                          "policy": "regicide-opening-variety-v1"}):
+            with self.subTest(metadata=metadata):
+                record["opening_variety"] = metadata
+                path.write_text(json.dumps(record), encoding="utf-8")
+                parsed, _ = baseline.read_pgn(self.archive.get_game(self.game.game_id)["pgn"])
+                self.assertNotIn("OpeningVarietySeed", parsed.headers)
+                self.assertNotIn("OpeningVarietyPolicy", parsed.headers)
+                self.assertEqual(parsed.headers["Result"], "*")
+
     def summary(self, game_id=None):
         return self.archive.get_game(game_id or self.game.game_id)["summary"]
 

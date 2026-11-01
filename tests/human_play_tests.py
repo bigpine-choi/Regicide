@@ -88,7 +88,10 @@ class HumanPlayTests(unittest.TestCase):
         self.binary = self.root / "regicide-test-peer.exe"
         self.binary.write_bytes(b"fake UCI peer; not executed")
         self.factory = FakeFactory()
-        self.game = play_human.HumanGame(self.binary, self.root / "games", self.factory)
+        # These deterministic peers exercise live-game rules and failures;
+        # opening selection has separate tests with scored candidate searches.
+        self.game = play_human.HumanGame(self.binary, self.root / "games", self.factory,
+                                        opening_variety_enabled=False)
         self.addCleanup(self.folder.cleanup)
         self.addCleanup(self.game.close)
 
@@ -387,7 +390,8 @@ class HumanHTTPTests(unittest.TestCase):
         binary = root / "regicide-test-peer.exe"
         binary.write_bytes(b"fake UCI peer; not executed")
         self.factory = FakeFactory()
-        self.game = play_human.HumanGame(binary, root / "games", self.factory)
+        self.game = play_human.HumanGame(binary, root / "games", self.factory,
+                                        opening_variety_enabled=False)
         self.server = play_human.HumanServer(self.game, port=0)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()

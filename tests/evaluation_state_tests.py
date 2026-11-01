@@ -92,7 +92,8 @@ class EvaluationStateTests(unittest.TestCase):
         self.first = StreamingPeer([packet(35)], blocked=True)
         self.evaluators = HintFactory([self.first])
         self.game = play_human.HumanGame(self.binary, self.root / "games", lambda _: self.peer,
-                                        evaluation_engine_factory=self.evaluators)
+                                        evaluation_engine_factory=self.evaluators,
+                                        opening_variety_enabled=False)
         self.addCleanup(self.folder.cleanup)
         self.addCleanup(self.game.close)
         self.assertTrue(self.first.waiting.wait(2))
