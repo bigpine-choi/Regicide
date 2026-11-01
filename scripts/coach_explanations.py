@@ -1,9 +1,10 @@
 """Concise local English coaching grounded in legal moves and short PVs."""
 import chess
 from coach_strategy import analyze_strategy
+from coach_openings import describe_opening
 
 COACH_NAME = "Rook"
-COACH_VERSION = 6
+COACH_VERSION = 7
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -695,7 +696,7 @@ def describe_move(board, row):
                 "insight": insight,
                 "continuation": _continuation_text(continuation, teaching, perspective, insight)}
 
-    return {"mood": mood, **wording(),
+    return {"mood": mood, **wording(), "opening": describe_opening(board, row),
             "perspectives": {name: wording(color) for name, color in (("white", chess.WHITE), ("black", chess.BLACK))},
             "evidence": facts, "focus_squares": list(dict.fromkeys(focus))}
 

@@ -156,7 +156,7 @@ class CoachDialogueTests(unittest.TestCase):
                 {"ply": 3, "color": "white", "classification": "pending"}]
         report = describe_report(rows, [1])
         self.assertEqual(report["version"], COACH_VERSION)
-        self.assertEqual(COACH_VERSION, 6)
+        self.assertEqual(COACH_VERSION, 7)
         self.assertEqual(report["lesson_plies"], [1, 2])
         self.assertIn("White has 1", report["summary"])
         self.assertIn("Black has 0", report["summary"])

@@ -13,6 +13,22 @@ from coach_strategy_tests import FIXTURES, fixture, mirror_move, source_row
 
 
 class StrategyIntegrationTests(unittest.TestCase):
+    def test_quiet_central_development_with_no_attacked_piece_keeps_review_running(self):
+        initial = chess.Board()
+        for san in "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6".split():
+            initial.push_san(san)
+        for mirrored in (False, True):
+            board = initial.mirror() if mirrored else initial
+            pv = ["b1c3", "a7a6"]
+            if mirrored:
+                pv = [mirror_move(move) for move in pv]
+            row = source_row(board, pv, pv, "best")
+            coach = describe_move(board, row)
+            for packet in (coach, *coach["perspectives"].values()):
+                self.assertEqual(packet["insight"]["theme"], "development")
+                self.assertEqual(len(packet["insight"]["sections"]), 3)
+                self.assertIn("influences", packet["insight"]["sections"][0]["text"])
+
     def test_all_motifs_feed_the_matching_continuation_without_mutating_evidence(self):
         for value in FIXTURES:
             for mirrored in (False, True):

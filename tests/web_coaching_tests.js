@@ -112,6 +112,19 @@ function strategySnapshot(positive=false) {
   return report;
 }
 
+// UI-only packet over the existing legal board fixture; these names and grades
+// are synthetic, not opening-theory or engine-strength assertions.
+function openingSnapshot() {
+  const report=strategySnapshot(),row=report.moves[0];
+  row.coach.opening={title:"A shared opening position",summary:"Both sides have plans; assess the moves, not a fixed matchup.",
+    white:{name:"White test setup"},black:{name:"Black test response"},ply_index:1,fen:row.fen_after,focus_squares:["g1"],
+    sections:[{id:"white",title:"White's plan",text:"White develops toward the center and watches for the opponent's reply."},
+      {id:"black",title:"Black's reply",text:"Black can challenge the central squares after completing development."},
+      {id:"balance",title:"Who got the better start?",text:"It is too early to choose a winner from these opening names."}],
+    assessment:{status:"early",side:null,score_cp_white:null}};
+  return report;
+}
+
 function browser(options={}) {
   const elements=new Map(),requests=[],events=[],lifecycle={},timeouts=new Map(),motion=[],motionCancels=[];let nextTimer=0;
   const get=(id)=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
@@ -1178,6 +1191,91 @@ test("strategy selection cancels six-ply replay and normal variation stepping le
   await ui.click("coach-strategy-plan");const position=JSON.stringify(ui.motion.at(-1));stale();assert.equal(JSON.stringify(ui.motion.at(-1)),position);
   assert.equal(await ui.continuationStep(),false);await ui.click("coaching-line-next");assert.equal(ui.get("coach-strategy-return").hidden,true);
   assert.equal(ui.get("coach-dialogue").textContent,strategySnapshot().moves[0].coach.perspectives.white.insight.summary);
+});
+
+test("opening choices explain both plans and the measured balance on the actual board with speech",async()=>{
+  const report=openingSnapshot(),original=JSON.stringify(report),ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(report);
+  const opening=report.moves[0].coach.opening;
+  assert.equal(ui.get("coach-opening").hidden,false);assert.match(ui.get("coach-opening-sides").textContent,/White test setup.*Black test response/);
+  const primary=ui.get("coach-dialogue").textContent;
+  await ui.click("coach-strategy-plan");
+  for(const part of opening.sections){
+    await ui.click("coach-opening-"+part.id);await ui.voiceStep();
+    assert.equal(ui.get("coach-dialogue").textContent,part.text);assert.equal(ui.speech.spoken.at(-1).text,part.text);
+    assert.equal(ui.get("coaching-variation").hidden,true);assert.equal(ui.get("coach-strategy-return").hidden,true);
+    assert.equal(JSON.stringify(ui.motion.at(-1).pieces),JSON.stringify(report.frames[1].board));
+    assert.ok(ui.square("g1").classList.contains("coaching-evidence-square"));
+    assert.equal(ui.get("coach-opening-"+part.id).attributes["aria-pressed"],"true");
+  }
+  await ui.click("coach-opening-return");assert.equal(ui.get("coach-dialogue").textContent,primary);
+  assert.equal(ui.get("coach-opening-return").hidden,true);assert.equal(JSON.stringify(report),original);
+});
+
+test("opening packets reject stale positions, malformed sections and absent knowledge",async()=>{
+  for(const mutate of [row=>row.coach.opening=null,row=>row.classification="pending",row=>row.coach.opening.fen="different position",
+    row=>row.coach.opening.ply_index=25,row=>row.coach.opening.ply_index=2,row=>row.coach.opening.white.name="",
+    row=>row.coach.opening.sections.pop(),row=>row.coach.opening.sections[2].id="white",row=>row.coach.opening.sections[0].text="",
+    row=>row.coach.opening.focus_squares=["z9"],row=>row.uci="e1c1",row=>row.fen_before="wrong root"]){
+    const report=openingSnapshot();mutate(report.moves[0]);const ui=browser();await ui.start(report);
+    const primary=ui.get("coach-dialogue").textContent;
+    assert.equal(ui.get("coach-opening").hidden,true);await ui.click("coach-opening-white");
+    assert.equal(ui.get("coach-dialogue").textContent,primary);assert.equal(ui.get("coach-opening-return").hidden,true);
+  }
+});
+
+test("opening narration cancels on navigation, side, source, strategy, guide, practice and lifecycle",async()=>{
+  const operations=[ui=>ui.click("coach-strategy-idea"),ui=>ui.click("coach-continuation"),ui=>ui.click("coach-retry"),ui=>ui.api.seek(0),
+    ui=>ui.api.showLine("best"),ui=>{ui.get("coaching-side").value="black";ui.get("coaching-side").dispatch("change");},
+    ui=>{ui.get("coach-overview-box").open=true;ui.get("coach-overview-box").dispatch("toggle");},
+    ui=>ui.api.acceptForeign(snapshot({revision:2,job_id:"another"})),ui=>ui.click("coaching-return"),
+    ui=>{ui.document.hidden=true;ui.lifecycle["document-visibilitychange"]();}];
+  for(const operation of operations){
+    const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(openingSnapshot());await ui.click("coach-opening-balance");
+    const stale=[...ui.timeouts.values()].find(timer=>timer.ms===300).callback;
+    await operation(ui);ui.api.render();const count=ui.speech.spoken.length;stale();
+    assert.equal(ui.speech.spoken.length,count);assert.equal(ui.get("coach-opening-return").hidden,true);
+  }
+  const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(openingSnapshot());await ui.click("coach-retry");
+  assert.equal(ui.get("coach-opening").hidden,true);await ui.click("coach-opening-white");await ui.voiceStep();
+  assert.notEqual(ui.speech.spoken.at(-1).text,openingSnapshot().moves[0].coach.opening.sections[0].text);
+});
+
+test("opening to overview reads the overview and returning keeps ordinary move feedback",async()=>{
+  const report=openingSnapshot(),ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(report);
+  await ui.click("coach-opening-black");await ui.voiceStep();
+  ui.get("coach-overview-box").open=true;ui.get("coach-overview-box").dispatch("toggle");await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,report.coach.summary);assert.equal(ui.get("coach-opening").hidden,true);
+  ui.get("coach-overview-box").open=false;ui.get("coach-overview-box").dispatch("toggle");await ui.voiceStep();
+  assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.perspectives.white.insight.summary);
+  assert.equal(ui.get("coach-opening").hidden,false);
+});
+
+test("opening review entry remains discoverable from later lessons and finds the latest valid opening checkpoint",async()=>{
+  const report=taughtSnapshot();report.moves[0].coach.opening=structuredClone(openingSnapshot().moves[0].coach.opening);
+  report.moves[0].coach.opening.fen=report.moves[0].fen_after;
+  const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(report);ui.api.seek(3);
+  assert.equal(ui.get("coach-opening").hidden,true);assert.equal(ui.get("coach-opening-jump").hidden,false);
+  await ui.click("coach-opening-jump");await ui.voiceStep();
+  assert.equal(ui.get("coach-opening").hidden,false);assert.equal(ui.speech.spoken.at(-1).text,report.moves[0].coach.opening.sections[0].text);
+  assert.equal(JSON.stringify(ui.motion.at(-1).pieces),JSON.stringify(report.frames[1].board));
+  await ui.click("coach-retry");assert.equal(ui.get("coach-opening-jump").hidden,true);
+  const none=browser();await none.start(strategySnapshot());assert.equal(none.get("coach-opening-jump").hidden,true);
+  const later=structuredClone(report);later.moves[2].coach.opening=structuredClone(later.moves[0].coach.opening);
+  later.moves[2].coach.opening.ply_index=3;later.moves[2].coach.opening.fen=later.moves[2].fen_after;
+  const latest=browser();await latest.start(later);await latest.click("coach-opening-jump");
+  assert.equal(JSON.stringify(latest.motion.at(-1).pieces),JSON.stringify(later.frames[3].board));
+});
+
+test("unrelated analysis progress keeps the opening lesson speaking while changed evidence cancels it",async()=>{
+  const report=openingSnapshot();report.status="running";report.progress={completed:1,total:3};
+  const ui=browser({voices:[{lang:"en-US",localService:true}]});await ui.start(report);await ui.click("coach-opening-white");await ui.voiceStep();
+  const text=ui.get("coach-dialogue").textContent,cancelled=ui.speech.cancelled;
+  const next=structuredClone(report);next.progress.completed=2;void ui.api.poll();await ui.finish(next);
+  assert.equal(ui.get("coach-dialogue").textContent,text);assert.equal(ui.get("coach-opening-return").hidden,false);
+  assert.equal(ui.speech.cancelled,cancelled);assert.equal(await ui.voiceStep(),false);
+  const changed=structuredClone(next);changed.progress.completed=3;changed.moves[0].coach.opening.sections[0].text="New verified opening explanation.";
+  void ui.api.poll();await ui.finish(changed);
+  assert.equal(ui.get("coach-opening-return").hidden,true);assert.notEqual(ui.get("coach-dialogue").textContent,text);
 });
 
 test("all UI ids exist and output has no HTML interpolation sink",()=>{

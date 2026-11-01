@@ -366,7 +366,7 @@ def _counterplay(theme, facts, events, perspective):
     actor = _side(reply["color"])
     prefix = f"{actor}'s {reply['san']}"
     focus = _squares(reply["source"], reply["target"])
-    victim_square = facts.get("victim", {}).get("square")
+    victim_square = (facts.get("victim") or {}).get("square")
     if theme == "absolute_pin" and reply["source"] == victim_square:
         victim_square = reply["target"]
     pin_remains = (theme == "absolute_pin" and after.color_at(victim_square) == reply["color"]

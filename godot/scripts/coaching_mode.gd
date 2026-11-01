@@ -11,6 +11,7 @@ const ViewModel = preload("res://scripts/board_view_model.gd")
 const CoachAvatar = preload("res://scripts/coach_avatar.gd")
 const WindowsSpeech = preload("res://scripts/windows_speech.gd")
 const LocalSpeech = preload("res://scripts/local_speech.gd")
+const OPENING_START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 var backend_url: String = ""
 var backend_token: String = ""
@@ -63,6 +64,16 @@ var insight_title: Label
 var insight_scene: Label
 var insight_buttons: Dictionary = {}
 var insight_return: Button
+var _opening_section: String = ""
+var _opening_ticket: String = ""
+var opening_card: PanelContainer
+var opening_title: Label
+var opening_names: Label
+var opening_summary: Label
+var opening_scene: Label
+var opening_buttons: Dictionary = {}
+var opening_return: Button
+var opening_review_button: Button
 var _coach_overview: bool = false
 var _coach_evidence_key: String = ""
 var _coach_focus_fen: String = ""
@@ -168,6 +179,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_cancel_opening()
 	_cancel_insight()
 	_cancel_continuation()
 	_stop_speech()
@@ -175,6 +187,7 @@ func _exit_tree() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		_cancel_opening()
 		_cancel_insight()
 		_cancel_continuation()
 		_stop_speech()
@@ -464,7 +477,16 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	coach_dialogue.name = "CoachDialogue"
 	speech.add_child(coach_dialogue)
 	coach_overview_button = _button("한 판 총평", _toggle_coach_overview, "CoachOverview")
-	column.add_child(coach_overview_button)
+	var reviews := HBoxContainer.new()
+	column.add_child(reviews)
+	coach_overview_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reviews.add_child(coach_overview_button)
+	opening_review_button = Button.new()
+	opening_review_button.name = "CoachOpeningReview"
+	opening_review_button.text = "오프닝 복기"
+	opening_review_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	opening_review_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	reviews.add_child(opening_review_button)
 	var speech_controls := HBoxContainer.new()
 	column.add_child(speech_controls)
 	speak_button = _button("음성 켜짐", _toggle_speech, "CoachSpeak")
@@ -476,6 +498,7 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	voice_status_label = _label("", 12, "9bd7ca")
 	voice_status_label.name = "CoachVoiceStatus"
 	column.add_child(voice_status_label)
+	_build_opening_card(column)
 	insight_controls = VBoxContainer.new()
 	insight_controls.name = "CoachInsightControls"
 	column.add_child(insight_controls)
@@ -550,6 +573,50 @@ func _build_coach(sidebar: VBoxContainer) -> void:
 	practice.add_child(retry_reveal_button)
 	retry_line_button = _button("내가 고른 수의 응수 보기", _show_retry_line.bind("retry_candidate"), "CoachRetryLine")
 	column.add_child(retry_line_button)
+
+
+func _build_opening_card(parent: VBoxContainer) -> void:
+	opening_card = PanelContainer.new()
+	opening_card.name = "CoachOpeningCard"
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("142b35")
+	style.border_color = Color("35545e")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	opening_card.add_theme_stylebox_override("panel", style)
+	parent.add_child(opening_card)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	opening_card.add_child(column)
+	opening_title = _label("오프닝 해설", 14, "f4e9c9")
+	opening_title.name = "CoachOpeningTitle"
+	column.add_child(opening_title)
+	opening_names = _label("", 13, "9bd7ca")
+	opening_names.name = "CoachOpeningNames"
+	column.add_child(opening_names)
+	opening_summary = _label("", 12, "c0cddb")
+	opening_summary.name = "CoachOpeningSummary"
+	column.add_child(opening_summary)
+	var topics := HBoxContainer.new()
+	column.add_child(topics)
+	for choice in [["white", "백의 구상"], ["black", "흑의 대응"], ["balance", "초반 판세"]]:
+		var button := Button.new()
+		button.name = "CoachOpening" + str(choice[0]).capitalize()
+		button.text = str(choice[1])
+		button.toggle_mode = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		topics.add_child(button)
+		opening_buttons[str(choice[0])] = button
+	opening_scene = _label("", 12, "9bd7ca")
+	opening_scene.name = "CoachOpeningScene"
+	column.add_child(opening_scene)
+	opening_return = _button("기본 해설", _leave_opening, "CoachOpeningReturn")
+	column.add_child(opening_return)
 
 
 func open_game(pgn: String, color: String, url: String, token: String) -> void:
@@ -647,6 +714,7 @@ func _cancel() -> void:
 
 
 func _mutate(body: Dictionary) -> void:
+	_cancel_opening()
 	_cancel_insight()
 	_cancel_continuation()
 	busy = true
@@ -874,6 +942,7 @@ func _show_line(kind: String) -> void:
 
 
 func _line_step(direction: int) -> void:
+	_cancel_opening()
 	_cancel_insight(true)
 	if _continuation_active:
 		_continuation_paused = true
@@ -1066,6 +1135,7 @@ func _clear_coach_focus() -> void:
 func _toggle_coach_overview() -> void:
 	if retry_active:
 		return
+	_cancel_opening()
 	_cancel_insight()
 	_cancel_continuation()
 	_coach_overview = not _coach_overview
@@ -1106,6 +1176,7 @@ func _show_evidence(evidence: Dictionary, ply: int, job: String, source_fen: Str
 	var index: int = int(evidence.get("ply_index", -1))
 	if kind not in ["played", "best"] or not line is Dictionary or index < 0 or index >= line.get("pv_frames", []).size():
 		return
+	_cancel_opening()
 	_cancel_insight()
 	_cancel_continuation()
 	_cancel_walkthrough()
@@ -1153,6 +1224,7 @@ func _begin_retry() -> void:
 
 
 func _end_retry(clear_reply: bool = true) -> void:
+	_cancel_opening()
 	_cancel_insight()
 	_cancel_continuation()
 	_stop_speech()
@@ -1337,6 +1409,162 @@ func _coach_for_side() -> Dictionary:
 			if perspective.get("insight") is Dictionary:
 				coach["insight"] = perspective.insight
 	return coach
+
+
+func _opening_packet() -> Dictionary:
+	return _opening_packet_at(selected_ply)
+
+
+func _opening_packet_at(ply_index: int) -> Dictionary:
+	var rows: Array = _moves()
+	var frames: Array = _frames()
+	if ply_index < 1 or ply_index > 24 or ply_index > rows.size() or ply_index >= frames.size() or not rows[ply_index - 1] is Dictionary:
+		return {}
+	var row: Dictionary = rows[ply_index - 1]
+	var coach: Variant = row.get("coach")
+	if not coach is Dictionary:
+		return {}
+	var packet: Variant = coach.get("opening")
+	if not packet is Dictionary:
+		return {}
+	var ply: Variant = packet.get("ply_index")
+	if typeof(ply) not in [TYPE_INT, TYPE_FLOAT] or float(ply) != floorf(float(ply)) or ply != ply_index or row.get("ply") != ply_index:
+		return {}
+	for frame in [frames[0], frames[ply_index - 1], frames[ply_index]]:
+		if not frame is Dictionary or not frame.get("fen") is String or not frame.get("board") is Dictionary:
+			return {}
+	if frames[0].fen != OPENING_START_FEN or report.get("game", {}).get("initial_fen", OPENING_START_FEN) != OPENING_START_FEN:
+		return {}
+	if frames[ply_index - 1].fen != row.get("fen_before") or frames[ply_index].fen != row.get("fen_after") or packet.get("fen") != frames[ply_index].fen or frames[ply_index].get("last_move") != row.get("uci"):
+		return {}
+	for key in ["title", "summary"]:
+		if not packet.get(key) is String or str(packet[key]).strip_edges().is_empty():
+			return {}
+	for color in ["white", "black"]:
+		var side: Variant = packet.get(color)
+		if not side is Dictionary or not side.get("name") is String or str(side.name).strip_edges().is_empty():
+			return {}
+	var sections: Variant = packet.get("sections")
+	if not sections is Array or sections.size() != 3:
+		return {}
+	var ids: Array[String] = ["white", "black", "balance"]
+	for index in range(ids.size()):
+		var section: Variant = sections[index]
+		if not section is Dictionary or section.get("id") != ids[index]:
+			return {}
+		for key in ["title", "text"]:
+			if not section.get(key) is String or str(section[key]).strip_edges().is_empty():
+				return {}
+	var squares: Variant = packet.get("focus_squares", [])
+	if not squares is Array:
+		return {}
+	for square in squares:
+		if not square is String or model.square_to_display(square).x < 0:
+			return {}
+	return packet
+
+
+func _opening_review_ply() -> int:
+	var rows: Array = _moves()
+	for ply in range(mini(24, rows.size()), 0, -1):
+		if rows[ply - 1] is Dictionary and rows[ply - 1].get("classification", "pending") != "pending" and not _opening_packet_at(ply).is_empty():
+			return ply
+	return 0
+
+
+func _opening_review_key() -> String:
+	var target: int = _opening_review_ply()
+	return JSON.stringify([_epoch, report.get("job_id", ""), human_color, target, _opening_packet_at(target)]) if target > 0 else ""
+
+
+func _open_opening_review(ticket: String) -> void:
+	if not visible or busy or retry_active or _retry_in_flight or _walkthrough_active or _job_replaced or line_kind in ["retry_candidate", "retry_best"] or ticket.is_empty() or ticket != _opening_review_key():
+		return
+	var target: int = _opening_review_ply()
+	_select_ply(target)
+	var packet: Dictionary = _opening_packet()
+	var assessment: Variant = packet.get("assessment")
+	var topic: String = "white" if assessment is Dictionary and assessment.get("status") == "too_early" else "balance"
+	_show_opening(topic, _opening_key())
+
+
+func _render_opening_review(available: bool) -> void:
+	var key: String = _opening_review_key()
+	opening_review_button.visible = available and not key.is_empty()
+	opening_review_button.disabled = busy or _retry_in_flight or _walkthrough_active or _job_replaced or key.is_empty()
+	if opening_review_button.get_meta("opening_review_key", "") != key:
+		for connection in opening_review_button.pressed.get_connections():
+			opening_review_button.pressed.disconnect(connection.callable)
+		opening_review_button.pressed.connect(_open_opening_review.bind(key))
+		opening_review_button.set_meta("opening_review_key", key)
+
+
+func _opening_part(section_id: String) -> Dictionary:
+	var index: int = ["white", "black", "balance"].find(section_id)
+	var packet: Dictionary = _opening_packet()
+	return packet.sections[index] if index >= 0 and not packet.is_empty() else {}
+
+
+func _opening_key() -> String:
+	var packet: Dictionary = _opening_packet()
+	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, human_color, _move().get("fen_after"), packet]) if not packet.is_empty() else ""
+
+
+func _show_opening(section_id: String, ticket: String) -> void:
+	if not visible or busy or retry_active or _retry_in_flight or _walkthrough_active or _coach_overview or _job_replaced or line_kind in ["retry_candidate", "retry_best"] or ticket.is_empty() or ticket != _opening_key():
+		return
+	var part: Dictionary = _opening_part(section_id)
+	if part.is_empty():
+		return
+	_end_retry()
+	_cancel_walkthrough()
+	_clear_coach_focus()
+	_local_selection = true
+	line_kind = ""
+	line_index = 0
+	show_after = true
+	_opening_section = section_id
+	_opening_ticket = ticket
+	var packet: Dictionary = _opening_packet()
+	_coach_focus = packet.get("focus_squares", []).duplicate()
+	_coach_focus_fen = str(packet.fen)
+	_coach_focus_line = ""
+	_coach_focus_index = 0
+	_render()
+
+
+func _cancel_opening() -> void:
+	if not _opening_section.is_empty():
+		_clear_coach_focus()
+		_stop_speech()
+	_opening_section = ""
+	_opening_ticket = ""
+
+
+func _leave_opening() -> void:
+	_cancel_opening()
+	_render()
+
+
+func _render_opening(available: bool) -> void:
+	var packet: Dictionary = _opening_packet()
+	opening_card.visible = available and not packet.is_empty()
+	opening_title.text = "오프닝 해설 · " + str(packet.get("title", ""))
+	opening_names.text = "백 · %s\n흑 · %s" % [str(packet.get("white", {}).get("name", "")), str(packet.get("black", {}).get("name", ""))]
+	opening_summary.text = str(packet.get("summary", ""))
+	var key: String = _opening_key()
+	for section_id in opening_buttons:
+		var button: Button = opening_buttons[section_id]
+		button.disabled = busy or _retry_in_flight or _job_replaced or packet.is_empty()
+		button.set_pressed_no_signal(section_id == _opening_section)
+		if button.get_meta("opening_key", "") != key:
+			for connection in button.pressed.get_connections():
+				button.pressed.disconnect(connection.callable)
+			button.pressed.connect(_show_opening.bind(section_id, key))
+			button.set_meta("opening_key", key)
+	opening_scene.visible = not _opening_section.is_empty()
+	opening_scene.text = "실제 기보 · %d번째 착수 뒤의 오프닝 해설" % selected_ply
+	opening_return.visible = not _opening_section.is_empty()
 
 
 func _insight_packet() -> Dictionary:
@@ -1647,8 +1875,10 @@ func _render_coach() -> void:
 		dialogue = str(insight.summary)
 	if not _insight_section.is_empty():
 		dialogue = str(_insight_part(_insight_section).get("text", dialogue))
+	if not _opening_section.is_empty():
+		dialogue = str(_opening_part(_opening_section).get("text", dialogue))
 	avatar.mood = str(coach.get("mood", "encourage"))
-	if not _insight_section.is_empty():
+	if not _insight_section.is_empty() or not _opening_section.is_empty():
 		avatar.mood = "think"
 	if viewing_retry_line:
 		dialogue = str(_retry_reply.get("message", ""))
@@ -1667,6 +1897,8 @@ func _render_coach() -> void:
 		avatar.mood = "think" if _retry_reply.is_empty() else ("celebrate" if _retry_reply.get("verdict") in ["recommended", "good"] else "encourage")
 	coach_dialogue.text = dialogue
 	_schedule_speech()
+	_render_opening_review(not retry_active and not viewing_retry_line)
+	_render_opening(not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview)
 	_render_insight(not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview and not _continuation_active)
 	var continuation: Dictionary = _continuation_packet()
 	continuation_button.visible = not continuation.is_empty() and not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview and not _continuation_active
@@ -1695,7 +1927,7 @@ func _render_coach() -> void:
 		coach_course.text = "선택된 복습 코스가 아직 없어요. 분석된 수는 직접 살펴볼 수 있어요."
 	lesson_previous.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply < selected_ply)
 	lesson_next.disabled = _walkthrough_active or retry_active or not lessons.any(func(ply: int): return ply > selected_ply)
-	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active and not _continuation_active and _insight_section.is_empty()
+	coach_evidence.visible = not retry_active and not viewing_retry_line and not _coach_overview and not _walkthrough_active and not _continuation_active and _insight_section.is_empty() and _opening_section.is_empty()
 	var evidence_key: String = str(report.get("job_id", "")) + ":" + str(selected_ply) + JSON.stringify(coach.get("evidence", []))
 	if evidence_key != _coach_evidence_key:
 		_coach_evidence_key = evidence_key
@@ -1852,6 +2084,8 @@ func _speech_context_key() -> String:
 	var mode: String = "overview" if _coach_overview else ("retry" if retry_active else line_kind)
 	if not _insight_section.is_empty():
 		mode = "insight:" + _insight_section
+	if not _opening_section.is_empty():
+		mode = "opening:" + _opening_section
 	return JSON.stringify([_epoch, report.get("job_id", ""), selected_ply, mode, show_after, _retry_reply.get("uci", "") if retry_active else "", _spoken_coach_text(), line_index if _continuation_active else -1])
 
 
@@ -1984,6 +2218,8 @@ func _annotation_for_frame(frame: Dictionary) -> Dictionary:
 func _render() -> void:
 	if board == null:
 		return
+	if not _opening_section.is_empty() and (_opening_ticket != _opening_key() or not line_kind.is_empty() or not show_after):
+		_cancel_opening()
 	if not _insight_section.is_empty() and (_insight_ticket != _insight_key() or _insight_part(_insight_section).is_empty()):
 		_cancel_insight()
 	if _continuation_active and (_continuation_ticket != _continuation_key() or line_kind != "best"):
