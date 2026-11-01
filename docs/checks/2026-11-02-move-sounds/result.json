@@ -1,0 +1,88 @@
+{
+  "verified_at_utc": "2026-11-01T18:04:03.595183+00:00",
+  "base_commit": "69754830742c03920a5311a60f014114ddf6ac67",
+  "feature": "Original wooden move and capture sounds at forward move landing in native and web boards",
+  "behavior": [
+    "Human and Regicide moves",
+    "Capture includes en passant and capture promotion",
+    "Castling is one sound",
+    "Forward analysis and review use shared presentation",
+    "No initial, duplicate, undo, jump, placement or canceled transition sounds",
+    "Fast replies settle the previous committed move sound before starting the next",
+    "Independent from coach speech, enabled by default, no UI size change"
+  ],
+  "tests": {
+    "native_board_motion": {
+      "checks": 183,
+      "failures": 0
+    },
+    "native_move_sound": {
+      "checks": 103,
+      "failures": 0,
+      "legal_fixtures": 14
+    },
+    "web_board_motion": {
+      "checks": 25,
+      "failures": 0,
+      "command": "node tests/web_board_motion_tests.js"
+    },
+    "web_audio": {
+      "checks": 6,
+      "failures": 0,
+      "command": "node tests/web_move_sound_tests.js"
+    },
+    "human_play": {
+      "tests": 26,
+      "failures": 0,
+      "real_engine_smoke": true,
+      "command": ".venv-tests/Scripts/python.exe tests/human_play_tests.py build/regicide.exe"
+    },
+    "evaluation_dependency": {
+      "tests": 21,
+      "failures": 0
+    },
+    "reproducible_audio": {
+      "copies_verified": 4,
+      "command": ".venv-tests/Scripts/python.exe scripts/generate_move_sounds.py --check"
+    },
+    "actual_audio_mixer": {
+      "cases": 6,
+      "failures": 0,
+      "driver": "WASAPI",
+      "sample_rate": 48000,
+      "cold_unimported_project": true,
+      "report": "mixer.json",
+      "command": ".venv-tests/Scripts/python.exe tests/move_sound_integration_tests.py --godot C:/Users/hanso/Tools/Godot/Godot_v4.7.2-stable_win64_console.exe"
+    }
+  },
+  "audio_source": "Original deterministic synthesis using only Python standard library; no third-party sample",
+  "conditions": {
+    "godot": "4.7.2.stable.official.ed1daf0bf",
+    "python": "3.13.16",
+    "engine": "Regicide 0.7.0-dev",
+    "engine_sha256": "edd950fb673cfca4134968b64cc5ef0f3d77eda698e9f40d2965170f143d6e6a",
+    "native_test_project": "Disposable copy without .godot and without editor import"
+  },
+  "limits": "Automated mixer capture and lifecycle tests, not physical speaker listening or browser device listening. Browser requires a user gesture and ready audio buffers. User game/server/cache/system volume untouched. No engine selection or playing-strength changes.",
+  "normalized_source_sha256": {
+    "docs/GODOT_PLAY.md": "0f754d747cf34f0d9064a965bb95c5c6fc52b5f6b82d566877ffb7631f4efd9a",
+    "docs/HUMAN_PLAY.md": "ba52c03ffe8f0195b61bbbdc807015db86aa564da1925e8650d14973fba1044a",
+    "docs/MOVE_SOUNDS.md": "c679109626513e292ea860a0606e59b848388e013df3ddd6e2d11384562c2638",
+    "godot/assets/audio/capture.wav": "92817ebf3427821096b19d6f64185a2ff757afc75a89d882713e37e7ebca4b6f",
+    "godot/assets/audio/move.wav": "a6b5e7b318bdaa480f9026540eb421218e80b1d86d78c114e6a74250c4a4d61f",
+    "godot/scripts/chess_board.gd": "6f36742f002242033d9dd7b658d318ba439a319a915bab067102ed9ba27a6745",
+    "godot/tests/board_motion_tests.gd": "cf7203412eeeb0abc4f5c0cb217819f9ab44b9b69c4441e270d9ada5a95563be",
+    "godot/tests/move_sound_tests.gd": "dd52677fbf17b9e4e3be62e105dd9aaf783d05b713b25c4d9ee54f52d4156eba",
+    "scripts/generate_move_sounds.py": "7ba1edfad9b38839563c60b14e219c524f2502c2efe14615b87317cbedef2b69",
+    "scripts/play_human.py": "7ae24f912b7ce8e4783a11196ecff97baa503fec7bceb26feb792da174f1be8d",
+    "tests/human_play_tests.py": "318c50a141c5e9e550024817acf7d714227fdd78417512f9077ac32c2ba2253b",
+    "tests/move_sound_integration_tests.py": "83a44242fafd87361ad74eefdcb11525248a1c21b73c759f8cfac95d0f0fd1dd",
+    "tests/web_board_motion_tests.js": "1680ca8e54d29a72d587bb7688afa20a2ef9fa81ed5571589f0857eb0fe37faf",
+    "tests/web_move_sound_tests.js": "3274a7094670cb2b74af851ce12f50895650efd27aa8114f52cf693620c8b662",
+    "web/human-play/audio/capture.wav": "92817ebf3427821096b19d6f64185a2ff757afc75a89d882713e37e7ebca4b6f",
+    "web/human-play/audio/move.wav": "a6b5e7b318bdaa480f9026540eb421218e80b1d86d78c114e6a74250c4a4d61f",
+    "web/human-play/board_motion.js": "e0ec29288a992172459899aa3f3015daa84c26710693160a3c7a281c59d2e3bb",
+    "web/human-play/index.html": "ce5f890797a398b6f9ff4fbe6dcdea13678922abbe4e26af7e6874eb28b9acc7",
+    "web/human-play/move_sound.js": "289767ff47f39d938e9e174a5340404ed79130740ab4e55078bb7a9d4c520d3d"
+  }
+}

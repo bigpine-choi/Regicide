@@ -107,10 +107,14 @@
     element.style.top=((orientation==="black" ? rank : 7-rank)*12.5)+"%";
     layer.append(element);return element;
   }
+  function landed(transition) {
+    if(!transition.reverse && !document.hidden)
+      window.RegicideMoveSound?.play(transition.captures.length ? "capture" : "move");
+  }
   function start(board,record,transition,state) {
     const layer=document.createElement("div");
     layer.className="board-motion-layer";layer.setAttribute("aria-hidden","true");board.append(layer);
-    const active={layer,animations:[],hidden:[],destinations:[...transition.moves.map((move)=>move.to),...(transition.restores || []).map((item)=>item.square)]};
+    const active={layer,transition,animations:[],hidden:[],destinations:[...transition.moves.map((move)=>move.to),...(transition.restores || []).map((item)=>item.square)]};
     record.active=active;conceal(board,active);
     for(const captured of transition.captures) {
       const element=ghost(layer,captured.piece,captured.square,state.orientation);
@@ -135,7 +139,9 @@
         active.animations.push(promoted.animate([{opacity:0,transform:"scale(.9)",offset:0},{opacity:0,transform:"scale(.9)",offset:.72},{opacity:1,transform:"scale(1)",offset:1}],{duration:240,easing:"ease-out",fill:"forwards"}));
       }
     }
-    Promise.all(active.animations.map((animation)=>animation.finished.catch(()=>{}))).then(()=>{if(record.active===active)cleanup(record);});
+    Promise.all(active.animations.map((animation)=>animation.finished.catch(()=>{}))).then(()=>{
+      if(record.active===active){cleanup(record);landed(transition);}
+    });
   }
 
   function replace(board,fragment,state) {
@@ -152,13 +158,22 @@
     }
     const next={...state,pieces:{...(state.pieces || {})}}, same=record.previous && key(record.previous)===key(next);
     const canAnimate=enabled() && state.enabled!==false && typeof board.animate==="function";
-    const transition=!same && canAnimate && state.animate!==false ? plan(record.previous,next) : null;
-    if(!same || !canAnimate)cleanup(record);
+    const transition=!same && !document.hidden && state.enabled!==false && state.animate!==false ? plan(record.previous,next) : null;
+    if(!same || !canAnimate) {
+      // A fast engine reply can arrive before the human piece lands. Settle
+      // that confirmed forward move now; navigation still cancels silently.
+      if(transition && !transition.reverse && record.active && !record.active.transition.reverse)
+        landed(record.active.transition);
+      cleanup(record);
+    }
     const layer=record.active?.layer;
     board.replaceChildren(fragment);
     if(layer){board.append(layer);conceal(board,record.active);}
     record.previous=next;
-    if(transition)start(board,record,transition,next);
+    if(transition) {
+      if(canAnimate)start(board,record,transition,next);
+      else landed(transition);
+    }
   }
   reduced?.addEventListener?.("change",()=>{if(reduced.matches)cancelAll();});
   window.addEventListener("resize",cancelAll);

@@ -7,6 +7,8 @@ signal drag_requested(from_square: String, to_square: String)
 
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const BoardMotion = preload("res://scripts/board_motion.gd")
+const MOVE_SOUND_PATH := "res://assets/audio/move.wav"
+const CAPTURE_SOUND_PATH := "res://assets/audio/capture.wav"
 var model: ViewModel = ViewModel.new()
 var state: Dictionary:
 	get:
@@ -41,6 +43,17 @@ var _motion: Dictionary = {}
 var _motion_elapsed: float = 0.0
 var _motion_duration: float = 0.24
 var _motion_view: bool = true
+var _pending_move_sound: String = ""
+var _move_sound: AudioStreamPlayer
+var _move_stream: AudioStreamWAV
+var _capture_stream: AudioStreamWAV
+var move_sounds_enabled: bool = true:
+	set(value):
+		move_sounds_enabled = value
+		if not value:
+			_pending_move_sound = ""
+			if is_instance_valid(_move_sound):
+				_move_sound.stop()
 const LANDING_SECONDS := 0.12
 
 
@@ -55,19 +68,30 @@ func _accept_position(value: Dictionary) -> void:
 	if previous == _position:
 		queue_redraw()
 		return
+	var transition: Dictionary = BoardMotion.between(previous, _position)
+	var can_present: bool = is_node_ready() and is_visible_in_tree() and _motion_allowed()
+	# A very fast reply may settle the previous piece before its animation ends.
+	# Give that committed forward move its tap now, never queue a stale timer.
+	if can_present and not transition.is_empty() and not transition.reverse and model.view_from_white == _motion_view:
+		_play_move_sound()
 	finish_animation()
-	if animation_enabled and is_node_ready() and is_visible_in_tree() and _motion_allowed():
-		_motion = BoardMotion.between(previous, _position)
-		if not _motion.is_empty():
+	if can_present and not transition.is_empty():
+		if not transition.reverse and move_sounds_enabled:
+			_pending_move_sound = "move" if transition.capture.is_empty() else "capture"
+		if animation_enabled:
+			_motion = transition
 			_motion_elapsed = 0.0
 			_motion_duration = 0.28 if _motion.movements.size() > 1 else 0.24
 			_motion_view = model.view_from_white
 			set_process(true)
+		else:
+			_play_move_sound()
 	queue_redraw()
 
 
 func finish_animation() -> void:
 	_motion = {}
+	_pending_move_sound = ""
 	_motion_elapsed = 0.0
 	set_process(false)
 	queue_redraw()
@@ -77,11 +101,24 @@ func is_animating() -> bool:
 	return not _motion.is_empty()
 
 
+func _play_move_sound() -> void:
+	var kind := _pending_move_sound
+	_pending_move_sound = ""
+	if kind.is_empty() or not move_sounds_enabled or not is_instance_valid(_move_sound):
+		return
+	_move_sound.stream = _capture_stream if kind == "capture" else _move_stream
+	if _move_sound.stream == null:
+		return
+	_move_sound.play()
+
+
 func _process(delta: float) -> void:
 	if not is_visible_in_tree() or model.view_from_white != _motion_view or not _motion_allowed():
 		finish_animation()
 		return
 	_motion_elapsed += delta
+	if _motion_elapsed >= _motion_duration:
+		_play_move_sound()
 	if _motion_elapsed >= _motion_duration + LANDING_SECONDS:
 		finish_animation()
 	else:
@@ -98,6 +135,14 @@ func _on_board_resized() -> void:
 
 
 func _ready() -> void:
+	# Load original PCM directly: ordinary game launches do not run the editor importer.
+	_move_stream = AudioStreamWAV.load_from_file(MOVE_SOUND_PATH)
+	_capture_stream = AudioStreamWAV.load_from_file(CAPTURE_SOUND_PATH)
+	_move_sound = AudioStreamPlayer.new()
+	_move_sound.name = "MoveSound"
+	_move_sound.volume_db = -8.0
+	_move_sound.max_polyphony = 2
+	add_child(_move_sound)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	custom_minimum_size = Vector2(400, 400)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL

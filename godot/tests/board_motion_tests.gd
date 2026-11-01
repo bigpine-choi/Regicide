@@ -115,6 +115,9 @@ func _run() -> void:
 	check(not editor.is_animating(), "returning to editor cancels playback")
 	editor.free()
 	board.free()
+	# Forward moves also request audio; allow the mixer to retire references
+	# after this intentionally rapid single-frame lifecycle test.
+	await create_timer(0.25).timeout
 	print("Board animation: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 

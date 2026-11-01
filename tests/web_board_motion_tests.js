@@ -2,7 +2,7 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm"),path=require("node:path");
 const flush=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};
 function environment({reduced=false,stored=null}={}) {
-  const animations=[],events={},media={matches:reduced,addEventListener(_name,fn){this.change=fn;}};
+  const animations=[],sounds=[],events={},media={matches:reduced,addEventListener(_name,fn){this.change=fn;}};
   let storageReads=0,storageWrites=0;
   class Element {
     constructor(tag="div"){this.tag=tag;this.children=[];this.dataset={};this.style={};this.listeners={};this.attributes={};this.className="";this.checked=true;this.disabled=false;}
@@ -18,7 +18,7 @@ function environment({reduced=false,stored=null}={}) {
     }
     getBoundingClientRect(){return {width:400,height:400};}
   }
-  const context={window:{matchMedia:()=>media,addEventListener:(name,fn)=>{events[name]=fn;}},
+  const context={window:{RegicideMoveSound:{play:(kind)=>sounds.push(kind)},matchMedia:()=>media,addEventListener:(name,fn)=>{events[name]=fn;}},
     document:{createElement:(tag)=>new Element(tag),hidden:false,addEventListener:(name,fn)=>{events["document-"+name]=fn;}},
     localStorage:{getItem:()=>{storageReads++;return stored;},setItem(_key,value){storageWrites++;stored=value;}}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../web/human-play/board_motion.js"),"utf8"),context);
@@ -31,7 +31,7 @@ function environment({reduced=false,stored=null}={}) {
     }
     return fragment;
   };
-  return {api:context.window.RegicideMotion,board,frame,animations,events,media,document:context.document,get stored(){return stored;},
+  return {api:context.window.RegicideMotion,board,frame,animations,sounds,events,media,document:context.document,get stored(){return stored;},
     get storageReads(){return storageReads;},get storageWrites(){return storageWrites;},
     glyph(square){return board.children.find((child)=>child.dataset.square===square)?.querySelector(".piece");},
     badge(){return board.children.flatMap((cell)=>cell.children).find((child)=>child.className==="coaching-move-badge");},
@@ -211,6 +211,47 @@ test("animation ignores legacy saved preferences while respecting system reduced
   ui.media.matches=false;ui.media.change();ui.render(simpleBefore());ui.render(simpleAfter());
   assert.ok(ui.animations.length>0);assert.equal(ui.layers().length,1);
   ui.media.matches=true;ui.media.change();assert.equal(ui.layers().length,0);assert.equal(ui.animations.at(-1).cancelled,true);
+});
+test("move sounds land once for human and opponent moves despite repeated polling",async()=>{
+  const ui=environment();ui.render(simpleBefore());assert.deepEqual(ui.sounds,[]);
+  ui.render(simpleAfter());ui.render(simpleAfter());assert.deepEqual(ui.sounds,[]);
+  ui.animations[0].finish();await flush();ui.render(simpleAfter());assert.deepEqual(ui.sounds,["move"]);
+  ui.render(position({e1:"K",d8:"k",e4:"P"},{ply:2,turn:"white",lastMove:"e8d8"}));
+  ui.animations[1].finish();await flush();assert.deepEqual(ui.sounds,["move","move"]);
+});
+test("captures, en passant and promotion captures sound once; castle is one tap",async()=>{
+  for(const [before,after,sound]of [
+    [position({e1:"K",e8:"k",c4:"B",f7:"p"}),position({e1:"K",e8:"k",f7:"B"},{ply:1,turn:"black",lastMove:"c4f7"}),"capture"],
+    [position({e1:"K",e8:"k",e5:"P",d5:"p"}),position({e1:"K",e8:"k",d6:"P"},{ply:1,turn:"black",lastMove:"e5d6"}),"capture"],
+    [position({e1:"K",h8:"k",e7:"P",f8:"r"}),position({e1:"K",h8:"k",f8:"N"},{ply:1,turn:"black",lastMove:"e7f8n"}),"capture"],
+    [position({e1:"K",h1:"R"}),position({g1:"K",f1:"R"},{ply:1,turn:"black",lastMove:"e1g1"}),"move"]
+  ]) {
+    const ui=environment();ui.render(before);ui.render(after);
+    for(const animation of ui.animations)animation.finish();await flush();assert.deepEqual(ui.sounds,[sound]);
+  }
+});
+test("cancel, undo, jumps, editor updates and hidden boards never emit stale sounds",async()=>{
+  for(const action of ["cancel","undo","jump","editor","hidden","flip","resize","leave"]){
+    const ui=environment();ui.render(simpleBefore());ui.render(simpleAfter());
+    if(action==="cancel")ui.api.cancel(ui.board,true);
+    if(action==="undo")ui.render(simpleBefore());
+    if(action==="jump")ui.render({...simpleBefore(),ply:9});
+    if(action==="editor")ui.render({...simpleBefore(),animate:false});
+    if(action==="hidden")ui.render({...simpleBefore(),enabled:false});
+    if(action==="flip")ui.render({...simpleAfter(),orientation:"black"});
+    if(action==="resize")ui.events.resize();
+    if(action==="leave")ui.events.pagehide();
+    for(const animation of ui.animations)animation.finish();await flush();assert.deepEqual(ui.sounds,[],action);
+  }
+});
+test("reduced motion sounds immediately and a fast reply preserves both taps without late duplicates",async()=>{
+  const reduced=environment({reduced:true});reduced.render(simpleBefore());reduced.render(simpleAfter());reduced.render(simpleAfter());
+  assert.equal(reduced.animations.length,0);assert.deepEqual(reduced.sounds,["move"]);
+  const ui=environment();ui.render(simpleBefore());ui.render(simpleAfter());
+  ui.render(position({e1:"K",d8:"k",e4:"P"},{ply:2,turn:"white",lastMove:"e8d8"}));
+  assert.deepEqual(ui.sounds,["move"]);
+  ui.animations[0].finish();await flush();assert.deepEqual(ui.sounds,["move"]);
+  ui.animations[1].finish();await flush();assert.deepEqual(ui.sounds,["move","move"]);
 });
 test("CSS overlays cannot intercept moves and all three boards use the shared motion layer",()=>{
   const css=fs.readFileSync(path.join(__dirname,"../web/human-play/style.css"),"utf8");

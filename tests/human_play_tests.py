@@ -435,6 +435,19 @@ class HumanHTTPTests(unittest.TestCase):
                 self.assertNotIn(b"__REGICIDE_TOKEN__", body)
                 self.assertIn(self.server.token.encode("ascii"), body)
 
+    def test_move_audio_assets_are_binary_same_origin_and_allowlisted(self):
+        for filename in ("move.wav", "capture.wav"):
+            path = "/audio/" + filename
+            code, headers, body = self.request(path, token=False)
+            self.assertEqual(code, 200)
+            self.assertEqual(headers["Content-Type"], "audio/wav")
+            self.assertEqual(body, (ROOT / "godot/assets/audio" / filename).read_bytes())
+            self.assertTrue(body.startswith(b"RIFF") and body[8:12] == b"WAVE")
+            self.assertEqual(self.request(path, headers={"Origin": "https://external.example"})[0], 403)
+        self.assertEqual(self.request("/move_sound.js", token=False)[0], 200)
+        for path in ("/audio/unknown.wav", "/audio/../app.js", "/audio/../../scripts/play_human.py"):
+            self.assertEqual(self.request(path, token=False)[0], 404)
+
     def test_api_requires_valid_token_and_same_origin(self):
         before = self.game.state()
         for path in ("/api/state", "/api/pgn"):
