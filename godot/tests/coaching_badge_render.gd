@@ -53,7 +53,6 @@ func _run() -> void:
 	root.title = "Regicide Move Badges · Private Render Fixture"
 	var app = load("res://main.tscn").instantiate()
 	app.offline_mode = true
-	app.preferences_path = ""
 	root.add_child(app)
 	app.main_contents.hide()
 	panel = app.coaching_overlay

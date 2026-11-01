@@ -9,7 +9,6 @@ var fixture: Dictionary = {}
 var output: String = ""
 var live: bool = false
 var geometries: Array = []
-var preferences_file: String = ""
 var library_geometries: Array = []
 
 
@@ -219,22 +218,9 @@ func _synthetic() -> void:
 	verify(not panel.visible and app.main_contents.visible, "failed cancellation does not trap user in overlay")
 	verify(not panel.return_warning.is_empty() and app.error_message == panel.return_warning, "unconfirmed cancellation reported honestly")
 	verify(panel._unconfirmed_job == snapshot.job_id, "same job can be recognized on a later reconnect")
-	verify(app.animation_enabled and app.animation_toggle.button_pressed, "piece animation is on by default")
-	var preferences := ConfigFile.new()
-	preferences.set_value("unrelated", "keep", "unchanged")
-	preferences.save(preferences_file)
-	app.animation_toggle.set_pressed(false)
+	verify(app.find_child("PieceAnimationToggle", true, false) == null, "animation has no user-facing on/off control")
 	for target in [app.board, app.analysis_overlay.board, panel.board]:
-		verify(target.get("animation_enabled") == false, "animation toggle disables all three boards")
-	preferences.load(preferences_file)
-	verify(preferences.get_value("unrelated", "keep", "") == "unchanged", "animation setting preserves unrelated preferences")
-	verify(preferences.get_value("display", "piece_animation_enabled", true) == false, "animation preference is saved")
-	app.animation_enabled = true
-	app._load_display_preferences()
-	verify(not app.animation_enabled and not app.animation_toggle.button_pressed, "saved animation preference restores on reload")
-	app.animation_toggle.set_pressed(true)
-	for target in [app.board, app.analysis_overlay.board, panel.board]:
-		verify(target.get("animation_enabled") == true, "animation toggle re-enables all three boards")
+		verify(target.get("animation_enabled") == true, "all three boards animate by default")
 	_library_checks()
 	await _library_layout_checks()
 
@@ -692,12 +678,9 @@ func _run() -> void:
 			fixture = JSON.parse_string(FileAccess.get_file_as_string(args[index + 1]))
 		elif args[index] == "--evidence-dir":
 			output = args[index + 1]
-		elif args[index] == "--preferences-file":
-			preferences_file = args[index + 1]
 	live = args.has("--backend-file")
 	app = load("res://main.tscn").instantiate()
 	app.offline_mode = not live
-	app.preferences_path = preferences_file
 	root.add_child(app)
 	panel = app.coaching_overlay
 	await settle()

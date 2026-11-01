@@ -144,8 +144,7 @@ def main():
     fixture_file.write_text(json.dumps(fixture(), ensure_ascii=False, indent=2), encoding="utf-8")
     integration.verify_fresh_checkout(args)
     common = ["--fixture", fixture_file, "--evidence-dir", args.output]
-    with tempfile.TemporaryDirectory(prefix="regicide-coaching-preferences-") as preferences:
-        integration.run_godot(args, "coaching_tests.gd", [*common, "--preferences-file", Path(preferences) / "preferences.cfg"], "coaching-synthetic")
+    integration.run_godot(args, "coaching_tests.gd", common, "coaching-synthetic")
     with tempfile.TemporaryDirectory(prefix="regicide-coaching-godot-") as temporary:
         folder = Path(temporary)
         game = integration.backend.HumanGame(args.binary, folder / "games")
@@ -166,7 +165,7 @@ def main():
         initial = game.state()
         originals = {p.name: p.read_bytes() for p in game.save_dir.iterdir() if p.is_file()}
         try:
-            integration.run_godot(args, "coaching_tests.gd", [*common, "--backend-file", config, "--preferences-file", folder / "preferences.cfg"], "coaching-live")
+            integration.run_godot(args, "coaching_tests.gd", [*common, "--backend-file", config], "coaching-live")
             assert game.state() == initial, "coaching modified live board"
             assert originals == {p.name: p.read_bytes() for p in game.save_dir.iterdir() if p.is_file()}, "coaching modified saved games"
             posts = [e["path"] for e in server.audit if e["method"] == "POST"]

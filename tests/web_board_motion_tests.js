@@ -3,6 +3,7 @@ const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("nod
 const flush=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};
 function environment({reduced=false,stored=null}={}) {
   const animations=[],events={},media={matches:reduced,addEventListener(_name,fn){this.change=fn;}};
+  let storageReads=0,storageWrites=0;
   class Element {
     constructor(tag="div"){this.tag=tag;this.children=[];this.dataset={};this.style={};this.listeners={};this.attributes={};this.className="";this.checked=true;this.disabled=false;}
     append(...items){for(const item of items)for(const child of item.tag==="fragment" ? [...item.children] : [item]){child.remove();child.parentElement=this;this.children.push(child);}}
@@ -17,10 +18,9 @@ function environment({reduced=false,stored=null}={}) {
     }
     getBoundingClientRect(){return {width:400,height:400};}
   }
-  const toggle=new Element("input");
   const context={window:{matchMedia:()=>media,addEventListener:(name,fn)=>{events[name]=fn;}},
-    document:{getElementById:()=>toggle,createElement:(tag)=>new Element(tag),hidden:false,addEventListener:(name,fn)=>{events["document-"+name]=fn;}},
-    localStorage:{getItem:()=>stored,setItem(_key,value){stored=value;}}};
+    document:{createElement:(tag)=>new Element(tag),hidden:false,addEventListener:(name,fn)=>{events["document-"+name]=fn;}},
+    localStorage:{getItem:()=>{storageReads++;return stored;},setItem(_key,value){storageWrites++;stored=value;}}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../web/human-play/board_motion.js"),"utf8"),context);
   const board=new Element(),frame=(pieces,badgeSquare)=>{
     const fragment=new Element("fragment");
@@ -31,7 +31,8 @@ function environment({reduced=false,stored=null}={}) {
     }
     return fragment;
   };
-  return {api:context.window.RegicideMotion,board,frame,animations,events,media,toggle,document:context.document,get stored(){return stored;},
+  return {api:context.window.RegicideMotion,board,frame,animations,events,media,document:context.document,get stored(){return stored;},
+    get storageReads(){return storageReads;},get storageWrites(){return storageWrites;},
     glyph(square){return board.children.find((child)=>child.dataset.square===square)?.querySelector(".piece");},
     badge(){return board.children.flatMap((cell)=>cell.children).find((child)=>child.className==="coaching-move-badge");},
     render(state,badgeSquare){context.window.RegicideMotion.replace(board,frame(state.pieces,badgeSquare),state);},
@@ -134,14 +135,12 @@ test("repaint and rapid reverse movement cannot reveal a badge from the unfinish
   assert.equal(ui.badge().parentElement.dataset.square,"e4");assert.equal(ui.badge().style.visibility,"");
 });
 
-test("badges are immediate with reduced motion, preference off, or cancelled transitions",()=>{
-  for(const options of [{reduced:true},{stored:"off"}]){
-    const ui=environment(options);ui.render(simpleBefore());ui.render(simpleAfter(),"e4");
-    assert.notEqual(ui.badge().style.visibility,"hidden");assert.equal(ui.animations.length,0);
-  }
-  for(const action of ["toggle","resize","flip"]){
+test("badges are immediate with reduced motion or cancelled transitions",()=>{
+  const reduced=environment({reduced:true});reduced.render(simpleBefore());reduced.render(simpleAfter(),"e4");
+  assert.notEqual(reduced.badge().style.visibility,"hidden");assert.equal(reduced.animations.length,0);
+  for(const action of ["reduced","resize","flip"]){
     const ui=environment();ui.render(simpleBefore());ui.render(simpleAfter(),"e4");
-    if(action==="toggle"){ui.toggle.checked=false;ui.toggle.listeners.change();}
+    if(action==="reduced"){ui.media.matches=true;ui.media.change();}
     else if(action==="resize")ui.events.resize();
     else ui.render({...simpleAfter(),orientation:"black"},"e4");
     assert.notEqual(ui.badge().style.visibility,"hidden");assert.equal(ui.layers().length,0);
@@ -201,18 +200,24 @@ test("document hiding removes animation overlays and cancels effects",()=>{
   ui.document.hidden=true;ui.events["document-visibilitychange"]();
   assert.equal(ui.layers().length,0);assert.equal(ui.animations[0].cancelled,true);
 });
-test("system reduced motion and persistent user preference disable animation",()=>{
-  for(const options of [{reduced:true},{stored:"off"}]){
-    const ui=environment(options);ui.render(simpleBefore());ui.render(simpleAfter());assert.equal(ui.animations.length,0);assert.equal(ui.layers().length,0);
+test("animation ignores legacy saved preferences while respecting system reduced motion",()=>{
+  for(const stored of [null,"off","on"]){
+    const ui=environment({stored});ui.render(simpleBefore());ui.render(simpleAfter());
+    assert.equal(ui.animations.length,1);assert.equal(ui.layers().length,1);
+    assert.equal(ui.storageReads,0);assert.equal(ui.storageWrites,0);assert.equal(ui.stored,stored);
   }
-  const ui=environment();ui.render(simpleBefore());ui.render(simpleAfter());
-  ui.toggle.checked=false;ui.toggle.listeners.change();assert.equal(ui.stored,"off");assert.equal(ui.layers().length,0);
-  ui.toggle.checked=true;ui.toggle.listeners.change();ui.media.matches=true;ui.media.change();assert.equal(ui.toggle.disabled,true);
+  const ui=environment({reduced:true,stored:"off"});ui.render(simpleBefore());ui.render(simpleAfter());
+  assert.equal(ui.animations.length,0);assert.equal(ui.layers().length,0);
+  ui.media.matches=false;ui.media.change();ui.render(simpleBefore());ui.render(simpleAfter());
+  assert.ok(ui.animations.length>0);assert.equal(ui.layers().length,1);
+  ui.media.matches=true;ui.media.change();assert.equal(ui.layers().length,0);assert.equal(ui.animations.at(-1).cancelled,true);
 });
 test("CSS overlays cannot intercept moves and all three boards use the shared motion layer",()=>{
   const css=fs.readFileSync(path.join(__dirname,"../web/human-play/style.css"),"utf8");
   assert.match(css,/\.board-motion-layer\s*\{[^}]*pointer-events:none/);
   assert.match(css,/\.board-motion-glyph\s*\{[^}]*pointer-events:none/);
+  assert.doesNotMatch(css,/\.motion-toggle/);
+  assert.doesNotMatch(fs.readFileSync(path.join(__dirname,"../web/human-play/index.html"),"utf8"),/piece-animation|motion-toggle/);
   for(const file of ["app.js","analysis.js","coaching.js"])assert.match(fs.readFileSync(path.join(__dirname,"../web/human-play",file),"utf8"),/RegicideMotion\.replace/);
 });
 (async()=>{for(const {name,run}of cases){await run();console.log("PASS "+name);}console.log("Browser board motion: "+cases.length+" checks passed.");})().catch((error)=>{console.error(error);process.exitCode=1;});

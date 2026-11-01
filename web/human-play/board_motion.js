@@ -6,10 +6,7 @@
   const symbols = {K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   const records = new WeakMap(), boards = new Set();
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-  const toggle = document.getElementById("piece-animation");
-  let preference = true;
-  try { preference = localStorage.getItem("regicide-piece-animation") !== "off"; } catch (_) {}
-  const enabled = () => preference && !reduced?.matches && !document.hidden;
+  const enabled = () => !reduced?.matches && !document.hidden;
   const color = (piece) => piece === piece?.toUpperCase() ? "white" : "black";
   const xy = (square) => [square.charCodeAt(0)-97,Number(square[1])-1];
   const sameBoard = (a,b) => Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((key)=>a[key]===b[key]);
@@ -163,22 +160,9 @@
     record.previous=next;
     if(transition)start(board,record,transition,next);
   }
-  function updateToggle() {
-    if(toggle) {
-      toggle.checked=preference;toggle.disabled=Boolean(reduced?.matches);
-      toggle.title=reduced?.matches ? "시스템의 움직임 줄이기 설정을 따르고 있습니다." : "기물 이동 효과를 켜거나 끕니다.";
-    }
-    if(!enabled())cancelAll();
-  }
-  toggle?.addEventListener("change",()=>{
-    preference=toggle.checked;
-    try {localStorage.setItem("regicide-piece-animation",preference ? "on" : "off");} catch (_) {}
-    updateToggle();
-  });
-  reduced?.addEventListener?.("change",updateToggle);
+  reduced?.addEventListener?.("change",()=>{if(reduced.matches)cancelAll();});
   window.addEventListener("resize",cancelAll);
   window.addEventListener("pagehide",cancelAll);
   document.addEventListener?.("visibilitychange",()=>{if(document.hidden)cancelAll();});
   window.RegicideMotion={replace,cancel,plan};
-  updateToggle();
 })();

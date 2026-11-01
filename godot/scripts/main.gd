@@ -14,9 +14,6 @@ var analysis_entry_button: Button
 var coaching_overlay: CoachingMode
 var coaching_entry_button: Button
 var main_contents: MarginContainer
-var animation_toggle: CheckBox
-var animation_enabled: bool = true
-var preferences_path: String = "user://preferences.cfg"
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -140,7 +137,6 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	_install_theme()
 	_build_ui()
-	_load_display_preferences()
 	_render()
 	if not offline_mode:
 		_load_backend_arguments()
@@ -332,13 +328,6 @@ func _build_ui() -> void:
 	coaching_entry_button.name = "OpenCoaching"
 	coaching_entry_button.tooltip_text = "끝난 대국이나 보관함의 기보에서 실수와 최선수를 살펴봅니다."
 	sidebar.add_child(coaching_entry_button)
-	animation_toggle = CheckBox.new()
-	animation_toggle.name = "PieceAnimationToggle"
-	animation_toggle.text = "기물 애니메이션"
-	animation_toggle.tooltip_text = "대국·분석·코칭에서 기물이 움직이는 모습을 보여줍니다."
-	animation_toggle.button_pressed = true
-	animation_toggle.toggled.connect(_on_animation_toggled)
-	sidebar.add_child(animation_toggle)
 	library_button = _button("대국 보관함", _on_library_pressed)
 	library_button.name = "GameLibrary"
 	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
@@ -483,35 +472,6 @@ func _build_ui() -> void:
 
 func _analysis_open() -> bool:
 	return analysis_overlay != null and analysis_overlay.visible
-
-
-func _load_display_preferences() -> void:
-	var preferences := ConfigFile.new()
-	animation_enabled = true
-	if not preferences_path.is_empty() and preferences.load(preferences_path) == OK:
-		var value: Variant = preferences.get_value("display", "piece_animation_enabled", true)
-		if value is bool:
-			animation_enabled = value
-	_apply_animation_preference()
-
-
-func _apply_animation_preference() -> void:
-	animation_toggle.set_pressed_no_signal(animation_enabled)
-	for target in [board, analysis_overlay.board, coaching_overlay.board]:
-		target.set("animation_enabled", animation_enabled)
-
-
-func _on_animation_toggled(enabled: bool) -> void:
-	animation_enabled = enabled
-	_apply_animation_preference()
-	if preferences_path.is_empty():
-		return
-	var preferences := ConfigFile.new()
-	preferences.load(preferences_path)
-	preferences.set_value("display", "piece_animation_enabled", enabled)
-	if preferences.save(preferences_path) != OK:
-		_notice_message = "기물 애니메이션 설정은 적용했지만 다음 실행을 위한 저장은 하지 못했습니다."
-		_render()
 
 
 func _coaching_open() -> bool:
