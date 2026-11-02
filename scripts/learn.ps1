@@ -13,15 +13,23 @@
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $pythonExecutable = Join-Path $repoRoot '.venv-tests/Scripts/python.exe'
-$engineExecutable = Join-Path $repoRoot 'build/regicide.exe'
 if (!(Test-Path -LiteralPath $pythonExecutable)) { throw '먼저 README의 Python 실행 환경 준비를 진행해 주세요.' }
-if (!(Test-Path -LiteralPath $engineExecutable)) { throw '먼저 scripts/build.ps1로 엔진을 빌드해 주세요.' }
 Push-Location $repoRoot
 try {
     & $pythonExecutable -c 'import chess, numpy'
     if ($LASTEXITCODE -ne 0) {
         & $pythonExecutable -m pip install -r requirements-learning.txt
         if ($LASTEXITCODE -ne 0) { throw '학습 도구 설치에 실패했습니다.' }
+    }
+    # Use the same verified runtime as new games, without replacing an engine
+    # that an existing game or learning run may still be using.
+    $resolvedEngine = & $pythonExecutable (Join-Path $PSScriptRoot 'runtime_engine.py') --resolve
+    if ($LASTEXITCODE -ne 0 -or @($resolvedEngine).Count -ne 1) {
+        throw '설치된 체스 엔진을 확인하지 못했습니다. 엔진 선택 기록과 실행 파일을 확인해 주세요.'
+    }
+    $engineExecutable = [string]$resolvedEngine
+    if (!(Test-Path -LiteralPath $engineExecutable -PathType Leaf)) {
+        throw '먼저 scripts/build.ps1로 엔진을 빌드해 주세요.'
     }
     Write-Host '자가대국 → 패배 분석 → 자료 누적 → 정답 안정성 확인 → 재학습 → 이전 모델 대국 검증을 자동으로 반복합니다.'
     Write-Host '학습 정답은 1만·5만·20만 노드로 재확인합니다. 원본 기록과 기존 검증·시험 자료는 보존하며, 계산 시간은 더 걸립니다.'

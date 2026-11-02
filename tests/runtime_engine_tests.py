@@ -5,9 +5,12 @@ import io
 import json
 import os
 import pathlib
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
+import venv
 from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))
@@ -203,6 +206,68 @@ class RuntimeEngineTests(unittest.TestCase):
                 self.assertEqual(runtime_engine.main(['--install', str(self.candidate)]), 0)
         self.assertEqual(stdout.getvalue(), '')
         self.assertIn('Activated runtime engine', stderr.getvalue())
+
+
+@unittest.skipUnless(os.name == 'nt', 'The learning launcher uses Windows PowerShell')
+class LearningLauncherTests(unittest.TestCase):
+    """Exercise the real launcher/resolver without running training or an engine."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix='regicide learning launcher ')
+        self.addCleanup(self.temporary.cleanup)
+        self.root = pathlib.Path(self.temporary.name).resolve()
+        scripts = self.root / 'scripts'
+        scripts.mkdir()
+        source = pathlib.Path(__file__).resolve().parents[1] / 'scripts'
+        for name in ('learn.ps1', 'runtime_engine.py'):
+            shutil.copyfile(source / name, scripts / name)
+        venv.EnvBuilder(with_pip=False).create(self.root / '.venv-tests')
+        # Only the launcher's dependency import is exercised; no packages or
+        # training stages are installed or run in this isolated fixture.
+        for name in ('chess.py', 'numpy.py'):
+            (self.root / name).write_text('', encoding='utf-8')
+        self.receipt = self.root / 'learning-arguments.json'
+        (scripts / 'learning_cycle.py').write_text(
+            'import json, pathlib, sys\n'
+            'pathlib.Path("learning-arguments.json").write_text(json.dumps(sys.argv[1:]))\n',
+            encoding='utf-8')
+        (self.root / 'build').mkdir()
+        self.default = self.root / 'build/regicide.exe'
+        self.default.write_bytes(b'old default engine')
+        self.candidate = self.root / 'candidate.exe'
+        self.candidate.write_bytes(b'new selected engine')
+
+    def run_launcher(self):
+        return subprocess.run(
+            ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+             '-File', str(self.root / 'scripts/learn.ps1'), '-Rounds', '2', '-Seed', '741'],
+            cwd=self.root, capture_output=True, timeout=30,
+            creationflags=subprocess.CREATE_NO_WINDOW)
+
+    def assert_selected(self, expected):
+        result = self.run_launcher()
+        self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))
+        arguments = json.loads(self.receipt.read_text())
+        self.assertEqual(pathlib.Path(arguments[arguments.index('--binary') + 1]), expected)
+        self.assertEqual(arguments[arguments.index('--rounds') + 1], '2')
+        self.assertEqual(arguments[arguments.index('--seed') + 1], '741')
+        self.assertEqual(arguments[arguments.index('--model-version') + 1], '2')
+
+    def test_without_activation_uses_existing_default(self):
+        self.assert_selected(self.default)
+
+    def test_active_engine_is_used_even_when_default_is_missing(self):
+        selected = install_runtime_engine(self.candidate, self.root)
+        self.default.unlink()
+        self.assert_selected(selected)
+
+    def test_corrupt_activation_blocks_learning_instead_of_using_default(self):
+        selected = install_runtime_engine(self.candidate, self.root)
+        selected.write_bytes(b'tampered selected engine')
+        result = self.run_launcher()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.receipt.exists())
+        self.assertEqual(self.default.read_bytes(), b'old default engine')
 
 
 if __name__ == '__main__':
