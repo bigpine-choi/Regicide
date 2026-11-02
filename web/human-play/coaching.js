@@ -100,6 +100,22 @@
     const bound = value.bound === "lower" ? "≥ " : value.bound === "upper" ? "≤ " : "";
     return bound + (value.score_cp_white > 0 ? "+" : "") + (value.score_cp_white / 100).toFixed(2);
   }
+  function boardEvaluation(position) {
+    if (exerciseHidden() || !position?.fen) return {value:null};
+    const result = {"1-0":[1,"백 승"],"0-1":[0,"흑 승"],"1/2-1/2":[.5,"무승부"]}[position.result];
+    if (result) return {value:null,share:result[0],label:"대국 결과 · "+result[1]};
+    // A PV score belongs to its searched root, not every board along the line.
+    if (variation && lineCursor > 0) return {value:null,unsearchedLine:true};
+    const ply = variation ? selectedPly - 1 : cursor;
+    if (position.ply !== ply) return {value:null};
+    const row = rows().find((item) => item.ply === ply + 1);
+    if (!row || row.fen_before !== position.fen) return {value:null};
+    const freshRetry = retry?.revealed && retry.ply === row.ply && retry.base.fen === position.fen;
+    const value = freshRetry ? retry.feedback?.best : row.classification === "pending" ? null : row.best;
+    if (!value || value.pv_frames?.[0]?.fen !== position.fen || value.pv_frames[0].ply !== ply) return {value:null};
+    if (Number.isInteger(value.mate_white) && value.mate_white === 0 && !["white","black"].includes(value.winner)) return {value:null};
+    return {value};
+  }
   function moveTitle(row) {
     if (!row) return "수를 선택하세요.";
     const number = row.fen_before?.split(/\s+/)[5] || Math.ceil(row.ply / 2);
@@ -687,8 +703,8 @@
     get("coaching-position").textContent = hidden ? "다시 두기 · "+sideName(row?.color)+"의 수를 골라 보세요." : continuationReplay ?
       "추천 수순 설명 · "+lineCursor+"/"+continuationReplay.packet.available_plies+"수" : variation ? lineTitle() + " 수순 · " + lineCursor + "/" + Math.max(0,(line()?.pv_frames?.length || 1)-1) + "반수" :
       position ? cursor + "/" + Math.max(0,frames().length-1) + "반수 · " + sideName(position.turn) + " 차례" + (position.in_check ? " · 체크" : "") : "대국을 선택하세요.";
-    const comparison = hidden ? null : variation ? line() : cursor === selectedPly - 1 ? row?.best : row?.played;
-    let share = null;
+    const evaluation = boardEvaluation(position), comparison = evaluation.value;
+    let share = evaluation.share ?? null;
     if (Number.isFinite(comparison?.score_cp_white)) share = .5 + .5 * comparison.score_cp_white / (Math.abs(comparison.score_cp_white) + 400);
     if (Number.isInteger(comparison?.mate_white)) {
       const winner = comparison.winner || (comparison.mate_white > 0 ? "white" : comparison.mate_white < 0 ? "black" : null);
@@ -699,8 +715,11 @@
     get("coaching-evaluation-white").style.height = ((share ?? .5) * 100) + "%";
     get("coaching-evaluation-top").textContent = blackView ? "백" : "흑";
     get("coaching-evaluation-bottom").textContent = blackView ? "흑" : "백";
-    get("coaching-evaluation-bar").setAttribute("aria-label", "선택한 수의 탐색 평가, 백 기준 " + score(comparison) + ". 승률이 아닙니다.");
-    get("coaching-score").textContent = hidden ? "스스로 생각할 수 있도록 점수와 추천을 가렸습니다." : comparison ? (variation ? "수순 시작점" : "선택한 수의 탐색") + " 평가 · " + score(comparison) + " · 백 기준" : "분석 결과 대기 · 백 기준 점수";
+    get("coaching-evaluation-bar").setAttribute("aria-label", hidden ? "연습 중 평가 숨김" : evaluation.label ||
+      "현재 위치 탐색 평가, 백 기준 " + score(comparison) + ". 승률이 아닙니다.");
+    get("coaching-score").textContent = hidden ? "스스로 생각할 수 있도록 점수와 추천을 가렸습니다." : evaluation.label ||
+      (comparison ? "현재 위치 탐색 평가 · " + score(comparison) + " · 백 기준" : evaluation.unsearchedLine ?
+        "이 수순 위치는 별도로 평가하지 않았습니다." : "현재 위치 평가 대기 · 백 기준 점수");
   }
 
   function render() {

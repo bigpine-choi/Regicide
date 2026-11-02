@@ -243,7 +243,8 @@ test("both alternatives replay server frames including both king and rook",async
   assert.equal(ui.square("f1").children[0].textContent,"♖");
   assert.equal(ui.square("e1").children.some((x)=>x.className.includes("piece")),false);
   assert.equal(ui.get("coaching-board").children.filter((x)=>x.tag==="svg").length,0);
-  assert.match(ui.get("coaching-score").textContent,/수순 시작점/);
+  assert.match(ui.get("coaching-score").textContent,/별도로 평가하지/);
+  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
   await ui.click("coaching-line-next");assert.equal(ui.square("g8").children[0].textContent,"♚");
   await ui.click("coaching-mainline");assert.equal(ui.square("g1").children[0].textContent,"♔");
   await ui.click("coaching-played-line");assert.equal(ui.get("coaching-variation").hidden,false);
@@ -373,6 +374,71 @@ test("scores retain white perspective, mate winner zero and bounds",async()=>{
   void ui.api.poll();await ui.finish(next);
   assert.match(ui.get("coaching-best").textContent,/흑 메이트 0/);
   assert.equal(ui.get("coaching-evaluation-white").style.height,"0%");
+});
+
+test("board evaluation follows the displayed root through replay, not the selected lesson or previous played score",async()=>{
+  const ui=browser();await ui.start(snapshot({status:"completed"}));
+  // After White's move, the displayed board is Black's next search root.
+  assert.match(ui.get("coaching-score").textContent,/-1\.20.*백 기준/);
+  assert.notEqual(ui.get("coaching-evaluation-white").style.height,"60%");
+  const height=ui.get("coaching-evaluation-white").style.height;
+  await ui.click("coaching-flip");
+  assert.equal(ui.get("coaching-evaluation-white").style.height,height);
+  assert.match(ui.get("coaching-evaluation-bar").attributes["aria-label"],/-1\.20/);
+  ui.api.choosePly(3);
+  assert.match(ui.get("coaching-score").textContent,/-1\.20/);
+  await ui.replayStep();
+  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+  assert.equal(ui.get("coaching-evaluation-white").style.height,"60%");
+  await ui.replayStep();
+  // The final nonterminal board has no independent root search in this report.
+  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+  assert.match(ui.get("coaching-score").textContent,/현재 위치 평가 대기/);
+  assert.match(ui.get("coaching-played").textContent,/-2\.50/);
+  await ui.click("coaching-before");
+  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+});
+
+test("board evaluation requires both row and search root FEN identity and an analyzed row",async()=>{
+  for(const change of [
+    row=>row.fen_before="wrong position",
+    row=>row.best={...row.best,pv_frames:[{...row.best.pv_frames[0],fen:"wrong root"},...row.best.pv_frames.slice(1)]},
+    row=>row.classification="pending"
+  ]) {
+    const ui=browser(),data=snapshot({status:"completed"});change(data.moves[1]);await ui.start(data);
+    assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+    assert.equal(ui.get("coaching-evaluation-white").style.height,"50%");
+  }
+});
+
+test("hypothetical positions do not inherit a root score even when their FEN occurs in the mainline",async()=>{
+  const ui=browser(),data=snapshot({status:"completed"});
+  data.moves[0].played={...data.moves[0].played,score_cp_white:-300};
+  await ui.start(data);await ui.click("coaching-played-line");
+  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+  await ui.click("coaching-line-next");
+  assert.equal(ui.square("g1").children[0].textContent,"♔");
+  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+  assert.doesNotMatch(ui.get("coaching-score").textContent,/\+1\.00|-3\.00|-1\.20/);
+  await ui.click("coaching-line-prev");
+  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+});
+
+test("terminal frame results override search values while zero mate without a winner remains unknown",async()=>{
+  for(const [result,height,label] of [["1-0","100%","백 승"],["0-1","0%","흑 승"],["1/2-1/2","50%","무승부"]]) {
+    const ui=browser(),data=snapshot({status:"completed"});data.frames=[data.frames[0],{...data.frames[1],result},...data.frames.slice(2)];
+    await ui.start(data);
+    assert.equal(ui.get("coaching-evaluation-white").style.height,height);
+    assert.equal(ui.get("coaching-score").textContent,"대국 결과 · "+label);
+    assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),false);
+    data.moves[0].best={...data.moves[0].best,pv_frames:[data.frames[0],data.frames[1]]};
+    await ui.click("coaching-best-line");await ui.click("coaching-line-next");
+    assert.equal(ui.get("coaching-evaluation-white").style.height,height);
+    assert.equal(ui.get("coaching-score").textContent,"대국 결과 · "+label);
+  }
+  const ui=browser(),data=snapshot({status:"completed"});
+  data.moves[1].best={...data.moves[1].best,score_cp_white:null,mate_white:0,winner:null};
+  await ui.start(data);assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
 });
 test("old poll cannot undo cancellation or replace the newer report",async()=>{
   const ui=browser();await ui.start();
@@ -567,10 +633,13 @@ test("retry click submits once, preserves report and reveals fresh candidate and
   await ui.click("coach-retry-reveal");
   assert.match(ui.get("coach-retry-revealed").textContent,/O-O-O.*1.75/);
   assert.equal(ui.get("coach-retry-lines").hidden,false);
-  await ui.click("coach-retry-best-line");await ui.click("coaching-line-next");
+  await ui.click("coach-retry-best-line");
+  assert.match(ui.get("coaching-score").textContent,/\+2.75/);
+  await ui.click("coaching-line-next");
   assert.match(ui.get("coaching-position").textContent,/재도전의 새 추천/);
   assert.equal(ui.square("c1").children[0].textContent,"♔");
-  assert.match(ui.get("coaching-score").textContent,/\+2.75/);
+  assert.match(ui.get("coaching-score").textContent,/별도로 평가하지/);
+  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
   await ui.click("coach-retry-candidate-line");await ui.click("coaching-line-next");
   assert.equal(ui.square("g1").children[0].textContent,"♔");
   await ui.click("coach-retry-again");

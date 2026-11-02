@@ -151,7 +151,7 @@ func _synthetic() -> void:
 	panel._change_side(0)
 	panel._show_phase(true)
 	verify(panel.board.state.fen == fixture.report.frames[3].fen, "actual move after-position shown")
-	verify(panel.board.hint_move.is_empty() and not panel.evaluation_bar.has_score, "no root arrow or evaluation leaks to after-position")
+	verify(panel.board.hint_move.is_empty() and panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.fen == panel.board.state.fen, "after-position uses its own next-row root evaluation without a recommendation arrow")
 	for kind in ["best", "played"]:
 		panel._show_line(kind)
 		var frames: Array = fixture.report.moves[2][kind].pv_frames
@@ -176,6 +176,7 @@ func _synthetic() -> void:
 	panel._select_ply(3)
 	panel._critical_step(-1)
 	verify(panel.selected_ply == 2, "previous critical control obeys selected filter")
+	_evaluation_checks(snapshot)
 	await _walkthrough_checks(snapshot)
 	await _character_checks(snapshot)
 	await _voice_checks(snapshot)
@@ -363,6 +364,80 @@ func _library_layout_checks() -> void:
 			dialog.hide()
 
 
+func _evaluation_checks(snapshot: Dictionary) -> void:
+	var value: Dictionary = snapshot.duplicate(true)
+	value.moves[1].best.score_cp_white = 180
+	value.moves[2].best.score_cp_white = 45
+	value.moves[2].played.score_cp_white = -1300
+	value.moves[3].best.score_cp_white = -240
+	value.moves[3].best.bound = "upper"
+	panel._accept_snapshot(value.duplicate(true), true, true)
+	panel._select_ply(3)
+	verify(panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.cp == -240, "after-position uses next-row search, not previous restricted played score")
+	verify(panel.evaluation_bar.snapshot.bound == "upper" and panel.evaluation_label.text.contains("≤"), "white-perspective bound survives the after-position lookup")
+	panel._show_phase(false)
+	verify(panel.evaluation_bar.snapshot.cp == 45, "before-position retains its own root estimate")
+	panel._show_phase(true)
+	var share: float = panel.evaluation_bar.white_share
+	panel.flip_view()
+	verify(panel.evaluation_bar.snapshot.cp == -240 and panel.evaluation_bar.white_share == share, "board flip never changes the white-perspective sign")
+	panel.flip_view()
+	panel._walkthrough_active = true
+	panel._walkthrough_cursor = 1
+	panel._walkthrough_target = 3
+	panel._render()
+	verify(panel.evaluation_bar.snapshot.cp == 180 and panel.evaluation_bar.snapshot.fen == value.frames[1].fen, "walkthrough score follows actual cursor rather than selected lesson")
+	verify(panel.board.hint_move.is_empty() and panel.evaluation_label.text.contains("+1.80"), "black-to-move replay keeps white score and no answer arrow")
+	panel._cancel_walkthrough()
+	panel._show_line("played")
+	verify(panel.evaluation_bar.snapshot.cp == 45, "played-line root gauge uses unrestricted best instead of constrained played score")
+	verify(panel._selected_line().score_cp_white == -1300 and panel.comparison_label.text.contains("-13.00"), "played move's separate evaluation remains in comparison card")
+	panel._line_step(1)
+	verify(not panel.evaluation_bar.has_score, "PV child does not borrow root or mainline score even at matching FEN")
+	panel._leave_line()
+	panel._begin_retry()
+	verify(not panel.evaluation_bar.has_score and panel.evaluation_label.text == "정답과 평가는 잠시 가렸어요", "retry hides matching position score too")
+	panel._retry_reply = {"line": value.moves[2].played.duplicate(true), "best": value.moves[2].best.duplicate(true), "message": "Controlled retry result"}
+	panel._retry_reply.best.score_cp_white = 92
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "fresh retry feedback stays hidden until explicitly revealed")
+	panel._show_retry_line("retry_candidate")
+	verify(panel.evaluation_bar.snapshot.cp == 92 and panel._selected_line().score_cp_white == -1300, "revealed retry candidate gauge uses fresh retry best rather than candidate or archived best")
+	panel._line_step(1)
+	verify(not panel.evaluation_bar.has_score, "revealed retry child never inherits fresh root score")
+	panel._line_step(-1)
+	panel._retry_reply.best.pv_frames[0].fen = value.frames[1].fen
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "mismatched fresh retry best is rejected without falling back to archived score")
+	panel._select_ply(3)
+	panel.report.moves[3].best = null
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "missing next-row analysis never falls back to previous played root")
+	panel.report = value.duplicate(true)
+	panel.report.moves[3].best.pv_frames[0].fen = value.frames[2].fen
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "mismatched search-root FEN is rejected")
+	panel.report = value.duplicate(true)
+	panel.report.moves[3].fen_before = value.frames[2].fen
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "mismatched row FEN is rejected")
+	panel.report = value.duplicate(true)
+	panel.report.frames[4]["result"] = "0-1"
+	panel._last()
+	verify(panel.evaluation_bar.has_score and panel.evaluation_label.text == "흑 승리" and panel.evaluation_bar.white_share == 0.0, "terminal frame displays its result without inventing a search score")
+	panel.report.frames[4]["result"] = "1/2-1/2"
+	panel._render()
+	verify(panel.evaluation_label.text == "무승부" and panel.evaluation_bar.white_share == 0.5, "terminal draw uses the recorded frame result")
+	panel.report.frames[4]["result"] = "*"
+	panel._render()
+	verify(not panel.evaluation_bar.has_score, "unsearched final nonterminal position remains unavailable")
+	panel.report = value.duplicate(true)
+	panel.report.moves[3].best.merge({"score_cp_white": null, "mate_white": -2, "winner": "black"}, true)
+	panel._select_ply(3)
+	verify(panel.evaluation_bar.has_score and panel.evaluation_bar.white_share == 0.0 and panel.evaluation_label.text.contains("흑 메이트"), "matching root mate keeps black-winning perspective")
+	panel._accept_snapshot(snapshot, true, true)
+
+
 func _walkthrough_checks(snapshot: Dictionary) -> void:
 	panel._change_focus(1)
 	panel._first()
@@ -375,7 +450,7 @@ func _walkthrough_checks(snapshot: Dictionary) -> void:
 	for expected in [1, 2]:
 		panel._advance_walkthrough()
 		verify(panel.board.state.fen == snapshot.frames[expected].fen, "every intervening real move shown in order: %d" % expected)
-		verify(panel.board.hint_move.is_empty() and not panel.evaluation_bar.has_score, "root recommendation absent during intervening replay")
+		verify(panel.board.hint_move.is_empty() and panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.fen == panel.board.state.fen, "intervening replay displays matching position analysis without recommendation arrow")
 	verify(visited == [1, 2], "includes prior selected move and opponent reply, without skips")
 	verify(panel.walkthrough_label.text.contains("【1… e5】"), "SAN progression marks current actual move")
 	panel._advance_walkthrough()

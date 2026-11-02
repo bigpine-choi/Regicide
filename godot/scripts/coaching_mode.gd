@@ -2215,6 +2215,43 @@ func _annotation_for_frame(frame: Dictionary) -> Dictionary:
 		"uci": uci, "fen_after": frame.fen, "reason": "저장된 제한 시간 분석의 분류입니다. 더 깊게 분석하면 달라질 수 있습니다."}
 
 
+func _evaluation_for_frame(frame: Dictionary) -> Dictionary:
+	var unavailable := {"status": "unavailable", "message": "이 위치의 별도 평가가 없습니다."}
+	var fen: String = str(frame.get("fen", ""))
+	if retry_active or fen.is_empty():
+		return unavailable
+	var result: String = str(frame.get("result", "*"))
+	if result in ["1-0", "0-1", "1/2-1/2"]:
+		return {"status": "terminal", "result": result, "fen": fen, "turn": frame.get("turn", "")}
+	var score: Variant = null
+	if not line_kind.is_empty() and not _walkthrough_active:
+		# A PV root score must never become a later position's evaluation.
+		if line_index != 0 or _move().get("fen_before", "") != fen:
+			return unavailable
+		# The gauge describes best play from this position; the comparison card
+		# keeps the selected move's separate, constrained evaluation.
+		score = _retry_reply.get("best") if line_kind in ["retry_candidate", "retry_best"] else _move().get("best")
+	else:
+		# The position after ply N is the independently searched root of row N+1.
+		# A played-move score is a constrained search at the previous root.
+		var ply: int = int(frame.get("ply", -1))
+		var moves: Array = _moves()
+		if ply < 0 or ply >= moves.size():
+			return unavailable
+		var row: Dictionary = moves[ply]
+		if int(row.get("ply", -1)) != ply + 1 or row.get("fen_before", "") != fen:
+			return unavailable
+		score = row.get("best")
+	if not score is Dictionary or (score.get("score_cp_white") == null and score.get("mate_white") == null):
+		return unavailable
+	var roots: Variant = score.get("pv_frames", [])
+	if not roots is Array or roots.is_empty() or not roots[0] is Dictionary or roots[0].get("fen", "") != fen:
+		return unavailable
+	return {"status": "ready", "cp": score.get("score_cp_white"), "mate": score.get("mate_white"),
+		"winner": score.get("winner"), "depth": score.get("depth"), "bound": score.get("bound", "exact"),
+		"fen": fen, "turn": frame.get("turn", "")}
+
+
 func _render() -> void:
 	if board == null:
 		return
@@ -2236,28 +2273,17 @@ func _render() -> void:
 	board.coach_squares = _coach_focus.duplicate() if not retry_active and not _coach_overview and not _walkthrough_active and frame.get("fen", "") == _coach_focus_fen and line_kind == _coach_focus_line and line_index == _coach_focus_index else []
 	var best: Variant = move.get("best")
 	var played: Variant = move.get("played")
-	var score: Variant = null
-	if _walkthrough_active or retry_active:
-		pass
-	elif not line_kind.is_empty():
+	if not _walkthrough_active and not retry_active and not line_kind.is_empty():
 		var line: Dictionary = _selected_line()
 		var pv: Array = line.get("pv_uci", [])
 		if line_index < pv.size() and (not _continuation_active or line_index < _continuation_count()):
 			board.hint_move = str(pv[line_index])
-		# A root search score is not an evaluation of later PV positions.
-		if line_index == 0:
-			score = line
-	elif not show_after and best is Dictionary:
+	elif not _walkthrough_active and not retry_active and not show_after and best is Dictionary:
 		board.hint_move = str(best.get("uci", ""))
-		score = best
 	board.queue_redraw()
-	var evaluation: Dictionary = {"status": "unavailable", "message": "수순의 각 위치는 별도로 평가하지 않았습니다."}
-	if score is Dictionary:
-		evaluation = {"status": "ready", "cp": score.get("score_cp_white"), "mate": score.get("mate_white"),
-			"winner": score.get("winner"), "depth": score.get("depth"), "bound": score.get("bound", "exact"),
-			"fen": frame.get("fen", ""), "turn": frame.get("turn", "")}
+	var evaluation: Dictionary = _evaluation_for_frame(frame)
 	evaluation_bar.present(evaluation, model.view_from_white)
-	evaluation_label.text = evaluation_bar.summary_text if score != null else ("선택한 수를 분석하고 있습니다" if move.get("classification", "pending") == "pending" else "이 위치의 별도 평가 없음")
+	evaluation_label.text = evaluation_bar.summary_text if evaluation_bar.has_score else ("선택한 수를 분석하고 있습니다" if move.get("classification", "pending") == "pending" else "이 위치의 별도 평가 없음")
 	var prefix: String = _move_prefix(move) + " " + str(move.get("san", "")) + " · " + _side_label(_row_color(move))
 	position_label.text = prefix + (" · 둔 뒤" if show_after else " · 두기 전") if has_moves else "기보 준비"
 	if not line_kind.is_empty():
@@ -2266,7 +2292,6 @@ func _render() -> void:
 		position_label.text = prefix + " · 예상 전개 %d/%d" % [line_index, _continuation_count()]
 	if _walkthrough_active:
 		position_label.text = "실제 기보 · 시작 위치" if _walkthrough_cursor == 0 else _move_prefix(moves[_walkthrough_cursor - 1]) + " " + str(moves[_walkthrough_cursor - 1].get("san", "")) + " · " + _side_label(_row_color(moves[_walkthrough_cursor - 1]))
-		evaluation_label.text = "실제 기보를 따라가는 중 · 별도 평가 없음"
 	if retry_active:
 		position_label.text = _move_prefix(move) + " " + _side_label(_row_color(move)) + " · 다시 두기"
 		evaluation_label.text = "정답과 평가는 잠시 가렸어요"

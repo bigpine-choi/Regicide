@@ -1,0 +1,37 @@
+{
+  "scope": "Display correctness and isolated workflow; no strength or recommendation-policy comparison",
+  "web": {
+    "command": "node tests/web_coaching_tests.js",
+    "checks": 90,
+    "failures": 0
+  },
+  "godot": {
+    "version": "4.7.2-stable",
+    "output": "build/coaching-evaluation-fix/integration-final",
+    "synthetic_checks": 455,
+    "live_http_checks": 35,
+    "failures": 0
+  },
+  "actual_report": {
+    "path": "build/coaching-evaluation-fix/actual-report.json",
+    "pgn": "1. f3 e5 2. g4 Qh4# 0-1",
+    "movetime_ms": 500,
+    "status": "completed",
+    "completed_plies": 4,
+    "cached": false,
+    "frame_results": [
+      "*",
+      "*",
+      "*",
+      "*",
+      "0-1"
+    ]
+  },
+  "visual_validation": "Six native render screenshots inspected; private Windows window observed for mate threat and terminal outcome.",
+  "user_game_untouched": true,
+  "backend": {
+    "checks": 28,
+    "command": ".venv-tests/Scripts/python.exe tests/coaching_tests.py",
+    "failures": 0
+  }
+}

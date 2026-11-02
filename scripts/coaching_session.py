@@ -45,7 +45,9 @@ class CoachingRevisionError(ValueError):
 
 
 def _frame(board, ply, human_color):
-    outcome = board.outcome(claim_draw=True)
+    # Imported games may continue after an optional draw claim. Only automatic
+    # board outcomes are terminal positions in the review and its PV frames.
+    outcome = board.outcome(claim_draw=False)
     return {"ply": ply, "fen": board.fen(en_passant="fen"),
             "board": {chess.square_name(s): p.symbol() for s, p in board.piece_map().items()},
             "turn": "white" if board.turn else "black", "human_color": human_color,

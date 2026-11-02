@@ -14,7 +14,7 @@ import chess.engine
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from coaching_session import (CoachingSession, CoachingRevisionError, _classify,
-                              _annotation, _line, _score, MAX_PV_PLIES, SCHEMA)
+                              _annotation, _frame, _line, _score, MAX_PV_PLIES, SCHEMA)
 
 
 PGN = '[White "Human"]\n[Black "Regicide"]\n[Result "0-1"]\n\n1. f3 e5 2. g4 Qh4# 0-1\n'
@@ -106,7 +106,61 @@ class CoachingTests(unittest.TestCase):
             board.push_uci(uci)
         self.assertTrue(board.is_checkmate())
         self.assertEqual(state["frames"][4]["fen"], board.fen(en_passant="fen"))
+        self.assertEqual(state["frames"][4]["result"], "0-1")
         self.assertEqual(state["settings"]["estimated_seconds"], 4)
+
+    def test_review_and_cached_pv_continue_after_optional_repetition_claim(self):
+        pgn = '[Result "*"]\n\n1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 Ng8 5. e4 *'
+        board = chess.Board()
+        for uci in ["g1f3", "g8f6", "f3g1", "f6g8"] * 2:
+            board.push_uci(uci)
+        self.assertTrue(board.can_claim_threefold_repetition())
+        self.assertIsNone(board.outcome(claim_draw=False))
+        self.start(FakeEngine(), pgn)
+        first = self.ready()
+        self.assertEqual(first["status"], "completed")
+        self.assertTrue(all(frame["result"] == "*" for frame in first["frames"]))
+
+        # Older caches can contain claim-as-terminal frames. Typed score/PV
+        # evidence stays reusable, but display frames must be legally rebuilt.
+        path = next((self.root / "games/coaching").glob("*.json"))
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        for frame in stored["report"]["frames"]:
+            frame["result"] = "1/2-1/2"
+        for row in stored["report"]["moves"]:
+            for kind in ("best", "played", "alternative"):
+                if row[kind] is not None:
+                    for frame in row[kind]["pv_frames"]:
+                        frame["result"] = "1/2-1/2"
+        path.write_text(json.dumps(stored), encoding="utf-8")
+        reused = self.session.start(pgn, "white", 500, self.session.revision)
+        self.assertTrue(reused["cached"])
+        self.assertEqual(self.factory.calls, 1)
+        self.assertEqual(reused["moves"], first["moves"])
+        self.assertTrue(all(frame["result"] == "*" for frame in reused["frames"]))
+        for row in reused["moves"]:
+            for kind in ("best", "played", "alternative"):
+                if row[kind] is not None:
+                    self.assertTrue(all(frame["result"] == "*" for frame in row[kind]["pv_frames"]))
+
+    def test_frame_distinguishes_fifty_move_claim_from_automatic_draws(self):
+        board = chess.Board("7k/8/8/8/8/8/R7/K7 w - - 100 51")
+        self.assertTrue(board.can_claim_fifty_moves())
+        self.assertEqual(_frame(board, 0, "white")["result"], "*")
+        board.halfmove_clock = 150
+        self.assertTrue(board.is_seventyfive_moves())
+        self.assertEqual(_frame(board, 0, "white")["result"], "1/2-1/2")
+        for fen in ("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1", "7k/8/6K1/8/8/8/8/8 w - - 0 1"):
+            self.assertEqual(_frame(chess.Board(fen), 0, "white")["result"], "1/2-1/2")
+
+    def test_fivefold_repetition_remains_terminal_in_pv_frames(self):
+        board = chess.Board()
+        cycle = ["g1f3", "g8f6", "f3g1", "f6g8"]
+        for uci in cycle * 3:
+            board.push_uci(uci)
+        self.assertEqual(_frame(board, 12, "white")["result"], "*")
+        line = _line(board, packet(0, pv=cycle), "white")
+        self.assertEqual([frame["result"] for frame in line["pv_frames"]], ["*"] * 4 + ["1/2-1/2"])
 
     def test_white_loss_uses_same_root_and_fresh_search_game_token(self):
         peer = FakeEngine([packet(150, pv=["d2d4", "d7d5"]), packet(-75, pv=["e2e4", "e7e5"])])
