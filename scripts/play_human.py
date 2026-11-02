@@ -33,6 +33,7 @@ from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 import opening_variety
 import dynamic_play
+import boss_play
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -187,7 +188,7 @@ class HumanGame:
         if self.neural_model:
             self.engine_name += " · 검증 통과 학습 평가" if self.neural_adopted_generation else " · 학습 평가 실험"
 
-    def _reset(self, color, movetime_ms):
+    def _reset(self, color, movetime_ms, boss_mode=False):
         if getattr(self, "_game_open", False):
             self._game_open = False
             self._save()
@@ -202,6 +203,9 @@ class HumanGame:
         self._opening_memo = {}
         self._dynamic_decisions = {}
         self._dynamic_memo = {}
+        self.boss_mode = boss_mode
+        self._boss_decisions = {}
+        self._boss_memo = {}
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -417,11 +421,17 @@ class HumanGame:
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
-                               "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled,
-                               "dynamic_play_enabled": self.dynamic_play_enabled,
+                               "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode,
+                               "dynamic_play_enabled": self.dynamic_play_enabled and not self.boss_mode,
+                               "boss_mode": self.boss_mode,
+                               "boss_opponent": (boss_play.boss_opponent.derive_profile(self.board, list(self._boss_decisions.values()))
+                                                 if self.boss_mode else None),
+                               "boss_phase": boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms),
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
-                               "extra_budget_ms": (dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                               "extra_budget_ms": ((boss_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                                                    if boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms) in ("opening", "trap_hunt") else 0)
+                                                   if self.boss_mode else dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
                                                    if self.dynamic_play_enabled else
                                                    opening_variety.extra_budget(self.movetime_ms) if self.opening_variety_enabled else 0),
                                "extra_budget_schedule": ([
@@ -429,7 +439,7 @@ class HumanGame:
                                     "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=0)},
                                    {"until_ply": dynamic_play.MAX_PLIES,
                                     "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=opening_variety.MAX_PLIES)}]
-                                   if self.dynamic_play_enabled else None),
+                                   if self.dynamic_play_enabled and not self.boss_mode else None),
                                "active_extra_budget_ms": self._active_extra_budget_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
@@ -439,15 +449,17 @@ class HumanGame:
                                    **({"model_generation": self.neural_adopted_generation}
                                       if self.neural_adopted_generation else {})} if self.neural_model else {})}}
 
-    def new_game(self, color, movetime_ms, revision):
+    def new_game(self, color, movetime_ms, revision, boss_mode=False):
         with self._lock:
             self._check_revision(revision)
             self._require_idle()
             self._require_no_handicap()
             if color not in ("white", "black") or type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
+            if type(boss_mode) is not bool:
+                raise ValueError("보스 모드 여부는 true 또는 false로 지정해 주세요.")
             self._ensure_engine()
-            self._reset(color, movetime_ms)
+            self._reset(color, movetime_ms, boss_mode)
             return self.state()
 
     def human_move(self, uci, revision):
@@ -488,15 +500,21 @@ class HumanGame:
                     return self.state()
                 board = self.board.copy(stack=True)
                 movetime_ms = self.movetime_ms
-                move_policy = (dynamic_play if self.dynamic_play_enabled else
+                forced_game = bool(self._forced_plies)
+                boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
+                move_policy = (boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
                                opening_variety if self.opening_variety_enabled else None)
                 search_plan = (move_policy.plan(board, movetime_ms, self._opening_seed,
-                                               forced=bool(self._forced_plies)) if move_policy else None)
-                policy_memo = self._dynamic_memo if self.dynamic_play_enabled else self._opening_memo
+                                               forced=bool(self._forced_plies),
+                                               **({"decisions": self._boss_decisions} if self.boss_mode else {})) if move_policy else None)
+                policy_memo = (self._boss_memo if self.boss_mode else
+                               self._dynamic_memo if self.dynamic_play_enabled else self._opening_memo)
                 memo_key = (move_policy.memo_key(board, movetime_ms, self.binary_sha256,
                                                      self.neural_sha256 or self.classical_evaluation_mode,
                                                      seed=self._opening_seed,
-                                                     catalog_id=search_plan.get("catalog_commit"))
+                                                     catalog_id=([search_plan.get("catalog_commit"),
+                                                                  boss_play.boss_opponent.derive_profile(board, boss_decisions)]
+                                                                 if self.boss_mode else search_plan.get("catalog_commit")))
                             if search_plan and search_plan["eligible"] else None)
                 remembered = copy.deepcopy(policy_memo.get(memo_key)) if memo_key else None
                 token, game_id = self._game_token, self.game_id
@@ -521,14 +539,17 @@ class HumanGame:
                                                expire_search)
                     watchdog.daemon = True
                     watchdog.start()
-                def search(budget, *, root_move=None, publish=True, fresh=False, depth=None):
+                def search(budget, *, root_move=None, publish=True, fresh=False, depth=None, position=None):
+                    search_board = board if position is None else position
+                    if position is not None:
+                        publish = False
                     limit = chess.engine.Limit(time=budget / 1000, depth=depth)
                     options = {"game": object() if fresh else token, "info": chess.engine.INFO_ALL}
                     if root_move is not None:
                         options["root_moves"] = [root_move]
                     packets, latest = {}, {}
                     if callable(getattr(engine, "analysis", None)):
-                        with engine.analysis(board.copy(stack=True), limit, **options) as analysis:
+                        with engine.analysis(search_board.copy(stack=True), limit, **options) as analysis:
                             waited = False
                             try:
                                 for info in analysis:
@@ -552,7 +573,7 @@ class HumanGame:
                                         pass
                                 raise
                     else:
-                        result = engine.play(board.copy(stack=True), limit, **options)
+                        result = engine.play(search_board.copy(stack=True), limit, **options)
                         latest = result.info
                         if publish:
                             self._publish_evaluation(latest)
@@ -580,7 +601,33 @@ class HumanGame:
                         raise TimeoutError("엔진 탐색 응답 시간이 초과됐습니다.")
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
-                    if search_plan and len(board.move_stack) < move_policy.MAX_PLIES:
+                    boss_extra_started = None
+                    if self.boss_mode:
+                        boss_extra_started = time.monotonic()
+                        total_extra = search_plan["extra_budget_ms"]
+                        quality_budget = min(boss_play.QUALITY_BUDGET_MS, total_extra)
+                        observation, discard_engine = boss_play.observe_human_move(
+                            board, search, engine.close, budget_ms=quality_budget, forced=forced_game)
+                        observed_decisions = [*boss_decisions, {"opponent_observation": observation}]
+                        frequency = boss_play.boss_opponent.gate(board, observed_decisions, self._opening_seed)
+                        frequency["baseline_matches_repertoire"] = reply.move.uci() == search_plan["candidate_uci"]
+                        remaining_extra = max(0, total_extra - (time.monotonic() - boss_extra_started) * 1000)
+                        search_plan = {**search_plan, "extra_budget_ms": remaining_extra,
+                                       "candidate_budget_ms": remaining_extra}
+                        conservative_setup = (not frequency["attempt_trap"] and search_plan["eligible"]
+                                              and search_plan["mode"] == "opening" and not search_plan["line_complete"])
+                        search_plan["conservative_setup"] = conservative_setup
+                        if discard_engine or (search_plan["eligible"] and not frequency["attempt_trap"]
+                                              and not frequency["baseline_matches_repertoire"] and not conservative_setup):
+                            search_plan.update(eligible=False, extra_budget_ms=0, candidate_budget_ms=0,
+                                               reason="quality_probe_failed" if discard_engine else "opponent_frequency_hold")
+                        compare = bool(search_plan["eligible"])
+                    if self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "trap_hunt":
+                        decision, discard_engine = boss_play.explore_traps(
+                            board, search_plan, reply.move, baseline_info, _packets, self._opening_seed,
+                            search, engine.close, baseline_elapsed_ms=baseline_elapsed_ms)
+                        reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                    elif search_plan and (self.boss_mode or len(board.move_stack) < move_policy.MAX_PLIES):
                         probes, extra_elapsed_ms = [], 0
                         baseline = move_policy.score_line(board, baseline_info, reply.move)
                         baseline_guard = getattr(move_policy, "baseline_guard", None)
@@ -600,7 +647,7 @@ class HumanGame:
                             try:
                                 for uci in move_policy.proposals(search_plan, reply.move):
                                     remaining_ms = (deadline - time.monotonic()) * 1000
-                                    budget_ms = min(remaining_ms, extra_ms / 3)
+                                    budget_ms = min(remaining_ms, extra_ms / getattr(move_policy, "PROBE_DIVISOR", 3))
                                     if budget_ms < move_policy.MIN_PROBE_MS or phase_expired.is_set():
                                         break
                                     candidate_move, candidate_final, candidate_packets, candidate_error = None, None, {}, None
@@ -630,6 +677,10 @@ class HumanGame:
                                     probe = move_policy.assess(board, reply.move, baseline_info, uci,
                                                                   candidate_packets, candidate_final, candidate_move,
                                                                   candidate_error, budget_ms=round(budget_ms, 3), elapsed_ms=elapsed_ms)
+                                    if (self.boss_mode and search_plan.get("conservative_setup") and probe["admitted"]
+                                            and (probe["loss_cp"] > boss_play.SETUP_MAX_LOSS_CP
+                                                 or baseline["cp"] - probe["candidate_final"]["cp"] > boss_play.SETUP_MAX_LOSS_CP)):
+                                        probe.update(admitted=False, reason="conservative_setup_cost")
                                     probes.append(probe)
                                     if candidate_error:
                                         discard_engine = True
@@ -649,6 +700,10 @@ class HumanGame:
                                                            self._opening_seed, baseline_elapsed_ms=baseline_elapsed_ms,
                                                            extra_elapsed_ms=extra_elapsed_ms)
                         reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                    if self.boss_mode and decision is not None:
+                        decision.update(opponent_observation=observation, frequency=frequency,
+                                        extra_budget_ms=total_extra, tactical_budget_ms=search_plan["extra_budget_ms"],
+                                        extra_elapsed_ms=round((time.monotonic() - boss_extra_started) * 1000, 3))
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
             except BaseException as exc:
@@ -666,7 +721,8 @@ class HumanGame:
                     self.board.push(reply.move)
                     self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
                     if decision is not None:
-                        decisions = self._dynamic_decisions if self.dynamic_play_enabled else self._opening_decisions
+                        decisions = (self._boss_decisions if self.boss_mode else
+                                     self._dynamic_decisions if self.dynamic_play_enabled else self._opening_decisions)
                         decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
                         if memo_key:
                             policy_memo[memo_key] = copy.deepcopy(decision)
@@ -704,6 +760,8 @@ class HumanGame:
                                        if ply <= len(self.board.move_stack)}
             self._dynamic_decisions = {ply: row for ply, row in self._dynamic_decisions.items()
                                        if ply <= len(self.board.move_stack)}
+            self._boss_decisions = {ply: row for ply, row in self._boss_decisions.items()
+                                    if ply <= len(self.board.move_stack)}
             self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
@@ -747,6 +805,7 @@ class HumanGame:
                                      "engine_movetimes": self._engine_movetimes.copy(),
                                      "opening_decisions": copy.deepcopy(self._opening_decisions),
                                      "dynamic_decisions": copy.deepcopy(self._dynamic_decisions),
+                                     "boss_decisions": copy.deepcopy(self._boss_decisions),
                                      "override": self._override, "error": self.error,
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
@@ -758,6 +817,8 @@ class HumanGame:
                                        if number < ply}
             self._dynamic_decisions = {number: row for number, row in self._dynamic_decisions.items()
                                        if number < ply}
+            self._boss_decisions = {number: row for number, row in self._boss_decisions.items()
+                                    if number < ply}
             self.error = None
             self._override = None
             self.revision += 1
@@ -811,6 +872,7 @@ class HumanGame:
             self._engine_movetimes = backup["engine_movetimes"]
             self._opening_decisions = backup["opening_decisions"]
             self._dynamic_decisions = backup["dynamic_decisions"]
+            self._boss_decisions = backup["boss_decisions"]
             self.error = backup["error"]
             self._override = backup["override"]
             self.updated_at = backup["updated_at"]
@@ -844,6 +906,7 @@ class HumanGame:
                                  "HandicapMoves": str(len(forced_plies))})
             game.headers.update(opening_variety.pgn_headers(self._opening_metadata()))
             game.headers.update(dynamic_play.pgn_headers(self._dynamic_metadata()))
+            game.headers.update(boss_play.pgn_headers(self._boss_metadata()))
             if self.neural_model:
                 game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
@@ -867,7 +930,7 @@ class HumanGame:
         return "in_progress" if self._game_open else "unfinished"
 
     def _opening_metadata(self):
-        return {"enabled": self.opening_variety_enabled and not self.dynamic_play_enabled, "policy": opening_variety.POLICY,
+        return {"enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode, "policy": opening_variety.POLICY,
                 "seed": self._opening_seed, "max_plies": opening_variety.MAX_PLIES,
                 "early_plies": opening_variety.EARLY_PLIES,
                 "max_early_probes": opening_variety.MAX_EARLY_PROBES,
@@ -878,11 +941,19 @@ class HumanGame:
                          for key, row in sorted(self._opening_memo.items())]}
 
     def _dynamic_metadata(self):
-        return {"enabled": self.dynamic_play_enabled, "policy": dynamic_play.POLICY,
+        return {"enabled": self.dynamic_play_enabled and not self.boss_mode, "policy": dynamic_play.POLICY,
                 "seed": self._opening_seed, "max_plies": dynamic_play.MAX_PLIES,
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._dynamic_decisions.items())],
                 "memo": [{"key": key, "decision": copy.deepcopy(row)}
                          for key, row in sorted(self._dynamic_memo.items())]}
+
+    def _boss_metadata(self):
+        return {"enabled": self.boss_mode, "policy": boss_play.POLICY, "seed": self._opening_seed,
+                "risk_profile": boss_play.RISK_PROFILE, "trap_max_plies": boss_play.TRAP_MAX_PLIES,
+                "opponent_profile": boss_play.boss_opponent.derive_profile(self.board, list(self._boss_decisions.values())),
+                "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._boss_decisions.items())],
+                "memo": [{"key": key, "decision": copy.deepcopy(row)}
+                         for key, row in sorted(self._boss_memo.items())]}
 
     def _save(self, update_timestamp=True):
         if update_timestamp:
@@ -905,6 +976,7 @@ class HumanGame:
                   "time_settings_events": self._time_settings_events,
                   "opening_variety": self._opening_metadata(),
                   "dynamic_play": self._dynamic_metadata(),
+                  "boss_play": self._boss_metadata(),
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
@@ -1125,7 +1197,8 @@ class HumanHandler(BaseHTTPRequestHandler):
                 except ValueError as exc:
                     self._send(400, {"error": str(exc), "hint": game.hint()})
                 return
-            actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision),
+            actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision,
+                                                        data.get("boss_mode", False)),
                        "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
                            data.get("game_id"), data.get("settings_revision")),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),

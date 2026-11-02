@@ -41,6 +41,16 @@ class OpeningGuideTests(unittest.TestCase):
                 self.assertEqual(result["matched_opening"]["eco"], eco)
                 self.assertEqual(result["matched_opening"]["match_type"], "exact")
 
+    def test_source_reference_arrays_round_trip_without_mutating_catalogue(self):
+        result = guide.get_opening_guide(chess.Board())
+        self.assertEqual(json.loads(json.dumps(result)), result)
+        for key in ('name_references', 'family_title_references', 'supplemental_name_references'):
+            self.assertIsInstance(result['source'][key], list)
+            original = list(result['source'][key])
+            result['source'][key].append('caller modification')
+            self.assertEqual(guide.get_opening_guide(chess.Board())['source'][key], original)
+        self.assertIsInstance(self.catalog.source['name_references'], tuple)
+
     def test_verified_reti_names_cover_exact_rows_without_changing_catalogue(self):
         manifest = json.loads((guide.DATA_DIRECTORY / 'manifest.json').read_text(encoding='utf-8'))
         protected = [guide.DATA_DIRECTORY / name for name in (*manifest['files'], 'manifest.json')]

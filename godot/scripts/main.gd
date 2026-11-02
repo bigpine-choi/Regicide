@@ -89,12 +89,14 @@ var view_label: Label
 var status_label: Label
 var status_detail: Label
 var engine_label: Label
+var boss_phase_label: Label
 var top_player: Label
 var bottom_player: Label
 var error_label: Label
 var move_history: RichTextLabel
 var move_count: Label
 var color_option: OptionButton
+var boss_mode_option: OptionButton
 var time_option: OptionButton
 var think_time_help: Label
 var sidebar_scroll: ScrollContainer
@@ -230,9 +232,10 @@ func _build_ui() -> void:
 	engine_label = _label("엔진 연결 준비 중", 15, "9bd7ca")
 	engine_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header_right.add_child(engine_label)
-	var local_label := _label("LOCAL PRACTICE  ·  기보 자동 저장", 12, "8197aa")
-	local_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	header_right.add_child(local_label)
+	boss_phase_label = _label("LOCAL PRACTICE  ·  기보 자동 저장", 12, "8197aa")
+	boss_phase_label.name = "BossPhase"
+	boss_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_right.add_child(boss_phase_label)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 20)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -372,6 +375,14 @@ func _build_ui() -> void:
 	color_option.add_item("흑으로 두기", 1)
 	color_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings.add_child(color_option)
+	settings.add_child(_label("대국 모드", 14, "a3b6c8"))
+	boss_mode_option = OptionButton.new()
+	boss_mode_option.name = "BossMode"
+	boss_mode_option.add_item("기본", 0)
+	boss_mode_option.add_item("보스 모드", 1)
+	boss_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	boss_mode_option.tooltip_text = "새 대국부터 적용됩니다.\n처음에는 신중하게 두고, 대국 중 상대의 실수가 누적되면 함정 시도를 늘립니다.\n후속 전술은 Regicide가 직접 검토합니다.\n정확히 간파하면 보스가 손해를 보는 함정도 둡니다."
+	settings.add_child(boss_mode_option)
 	settings.add_child(_label("한 수 생각 시간", 14, "a3b6c8"))
 	time_option = OptionButton.new()
 	for option in [["0.1초", 100], ["1초", 1000], ["3초", 3000], ["5초", 5000]]:
@@ -381,7 +392,7 @@ func _build_ui() -> void:
 	time_option.tooltip_text = "대국 중에도 바꿀 수 있습니다. 이미 생각 중인 수는 기존 시간으로 마치고, 다음 수부터 적용합니다."
 	time_option.item_selected.connect(_on_think_time_selected)
 	settings.add_child(time_option)
-	think_time_help = _label("색 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
+	think_time_help = _label("색·모드 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
 	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(think_time_help)
 	new_button = _button("새 대국 시작", _on_new_game_pressed)
@@ -1667,7 +1678,7 @@ func _cancel_promotion() -> void:
 
 func _on_new_game_pressed() -> void:
 	_mutate("/api/new", {"color": "white" if color_option.selected == 0 else "black",
-		"movetime_ms": time_option.get_selected_id()})
+		"movetime_ms": time_option.get_selected_id(), "boss_mode": boss_mode_option.get_selected_id() == 1})
 
 
 func _on_undo_pressed() -> void:
@@ -1847,6 +1858,10 @@ func _render() -> void:
 	bottom_player.text = _player_text(bottom_color, human_color)
 	var engine: Dictionary = shown.get("engine", {})
 	engine_label.text = str(engine.get("name", "엔진 연결 준비 중"))
+	boss_phase_label.text = "LOCAL PRACTICE  ·  기보 자동 저장"
+	if engine.get("boss_mode", false) == true:
+		var phase: String = str({"opening": "변칙 오프닝", "trap_hunt": "전술 사냥", "full_strength": "전력 대국"}.get(str(engine.get("boss_phase", "")), ""))
+		boss_phase_label.text = "보스 모드" + (" · " + phase if not phase.is_empty() else "")
 	if not engine.is_empty():
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
@@ -1859,6 +1874,7 @@ func _render() -> void:
 	new_button.visible = not review_mode
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
+	boss_mode_option.disabled = not enabled or replacing
 	time_option.disabled = not _can_change_think_time()
 	if not think_time_request_in_flight:
 		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
@@ -1872,7 +1888,7 @@ func _render() -> void:
 			current_ms = int(engine.active_movetime_ms)
 		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	else:
-		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
+		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색·모드 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
 	var extra_ms: int = planned_extra_budget(state)
 	if thinking_now and engine.get("active_extra_budget_ms") != null:
 		extra_ms = int(engine.active_extra_budget_ms)

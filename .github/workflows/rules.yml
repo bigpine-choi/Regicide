@@ -25,6 +25,12 @@ jobs:
       - run: python tests/learning_arena_futility_tests.py
       - run: python tests/learning_registry_tests.py
       - run: python tests/runtime_engine_tests.py
+      - run: python tests/boss_openings_tests.py
+      - run: python tests/boss_opponent_tests.py
+      - run: python tests/poisoned_piece_tests.py
+      - run: python tests/boss_play_tests.py
+      - run: python tests/boss_play_state_tests.py
+      - run: python tests/boss_archive_tests.py
       - run: python tests/learning_cycle_tests.py
       - run: python tests/teacher_quality_tests.py
       - run: python tests/neural_cost_diagnostic_tests.py
@@ -93,6 +99,7 @@ jobs:
       - run: node --check web/human-play/app.js
       - run: node tests/web_hint_tests.js
       - run: node tests/think_time_web_tests.js
+      - run: node tests/boss_mode_web_tests.js
       - run: node tests/opening_guide_web_tests.js
       - run: node tests/web_analysis_tests.js
       - run: node tests/web_board_motion_tests.js
@@ -195,6 +202,8 @@ jobs:
           python tests/coaching_godot_tests.py --godot "$env:REGICIDE_TEST_GODOT" --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/board_motion_tests.py --godot "$env:REGICIDE_TEST_GODOT"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/boss_mode_offline_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/coaching_http_tests.py --binary $binary
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

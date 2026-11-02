@@ -23,6 +23,8 @@ import chess.pgn
 from opening_presentation import OpeningGuideCache
 from opening_variety import pgn_headers as opening_variety_headers
 from dynamic_play import pgn_headers as dynamic_play_headers
+import boss_play
+import boss_opponent
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
@@ -212,12 +214,26 @@ class GameArchive:
         started_at, started_sort = _stamp(record.get("started_at"))
         updated_at, _ = _stamp(record.get("updated_at", started_at))
         ended_at, _ = _stamp(record.get("ended_at"))
+        boss_metadata = record.get("boss_play")
+        boss_mode = bool(boss_play.pgn_headers(boss_metadata))
+        boss_decisions = (boss_metadata.get("decisions", []) if boss_mode else [])
+        if not isinstance(boss_decisions, list):
+            boss_decisions = []
+        # Replay accepts only decisions attached to an actual engine move in
+        # this history. A final saved phase must not leak into earlier frames.
+        boss_decisions = [row for row in boss_decisions
+                          if isinstance(row, dict) and type(row.get("ply")) is int
+                          and 1 <= row["ply"] <= len(moves)
+                          and moves[row["ply"] - 1]["actor"] == "engine"
+                          and moves[row["ply"] - 1]["uci"] == row.get("selected_uci")
+                          and row.get("history_uci") == uci_moves[:row["ply"] - 1]]
         return {"record": record, "board": board, "moves": moves,
                 "game_id": game_id, "human_color": human_color,
                 "result": result, "termination": termination,
                 "engine_name": engine_name, "movetime_ms": movetime_ms,
                 "started_at": started_at, "started_sort": started_sort,
                 "updated_at": updated_at, "ended_at": ended_at or None,
+                "boss_mode": boss_mode, "boss_decisions": boss_decisions,
                 "error": bool(state.get("error"))}
 
     def _load(self, game_id):
@@ -275,6 +291,7 @@ class GameArchive:
                 "termination": prepared["termination"], "status": status,
                 "record_status": record_status, "engine_name": prepared["engine_name"],
                 "movetime_ms": prepared["movetime_ms"], "ply_count": len(prepared["moves"]),
+                "boss_mode": prepared["boss_mode"],
                 "handicap_moves": sum(bool(move.get("forced")) for move in prepared["moves"]),
                 "current": current}
 
@@ -328,6 +345,7 @@ class GameArchive:
             "HandicapMoves": str(sum(bool(move.get("forced")) for move in prepared["moves"]))})
         game.headers.update(opening_variety_headers(record.get("opening_variety")))
         game.headers.update(dynamic_play_headers(record.get("dynamic_play")))
+        game.headers.update(boss_play.pgn_headers(record.get("boss_play")))
         movetimes = record.get("engine_movetimes_ms", {})
         if not isinstance(movetimes, dict):
             movetimes = {}
@@ -350,12 +368,25 @@ class GameArchive:
             frames = []
             for ply in range(len(prepared["moves"]) + 1):
                 final = ply == len(prepared["moves"])
+                past_decisions = [row for row in prepared["boss_decisions"] if row["ply"] <= ply]
+                forced = any(row.get("forced") for row in prepared["moves"][:ply])
+                replay_budget = self._budget_at_ply(prepared, ply)
+                replay_engine = {"name": prepared["engine_name"],
+                                 "movetime_ms": replay_budget,
+                                 "boss_mode": prepared["boss_mode"]}
+                if prepared["boss_mode"]:
+                    replay_engine["boss_phase"] = boss_play.phase(
+                        board, past_decisions, forced=forced,
+                        engine_color=prepared["human_color"] != "white",
+                        budget_ms=replay_budget)
+                    replay_engine["boss_opponent"] = boss_opponent.derive_profile(board, past_decisions)
                 frames.append({
                     "ply": ply, "game_id": prepared["game_id"], "fen": board.fen(en_passant="fen"),
                     "board": {chess.square_name(square): piece.symbol()
                               for square, piece in board.piece_map().items()},
                     "turn": "white" if board.turn else "black",
                     "human_color": prepared["human_color"],
+                    "engine": replay_engine,
                     "in_check": board.is_check(),
                     "last_move": board.peek().uci() if board.move_stack else None,
                     "result": summary["result"] if final else "*",
@@ -369,6 +400,34 @@ class GameArchive:
                     board.push_uci(prepared["moves"][ply]["uci"])
             return {"summary": summary, "moves": [dict(move) for move in prepared["moves"]],
                     "frames": frames, "pgn": self._pgn(prepared)}
+
+    @staticmethod
+    def _budget_at_ply(prepared, ply):
+        """Recover settings events, preferring the next recorded actual search.
+
+        A setting changed during a search belongs to the following search, so
+        its requested value must not relabel an already-running 100ms move.
+        """
+        record = prepared["record"]
+        budget = prepared["movetime_ms"]
+        events = record.get("time_settings_events", [])
+        if not isinstance(events, list):
+            events = []
+        events = [event for event in events if isinstance(event, dict)
+                  and type(event.get("after_ply")) is int and event["after_ply"] >= 0
+                  and all(type(event.get(key)) is int and 100 <= event[key] <= 5000
+                          for key in ("from_ms", "to_ms"))]
+        if events:
+            budget = events[0]["from_ms"]
+            for event in events:
+                if event["after_ply"] <= ply:
+                    budget = event["to_ms"]
+        if ply < len(prepared["moves"]) and prepared["moves"][ply]["actor"] == "engine":
+            movetimes = record.get("engine_movetimes_ms", {})
+            actual = movetimes.get(str(ply + 1)) if isinstance(movetimes, dict) else None
+            if type(actual) is int and 100 <= actual <= 5000:
+                budget = actual
+        return budget
 
     def get_pgn(self, game_id):
         with self._lock:

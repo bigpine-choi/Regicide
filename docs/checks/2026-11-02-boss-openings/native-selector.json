@@ -1,0 +1,356 @@
+{
+  "schema": "regicide.boss.native-selector.v1",
+  "recorded_at": "2026-11-02T20:26:19+09:00",
+  "source_base_commit": "8df2d7c3a1d6ea779c38ec9752c6e532713e25a2",
+  "working_tree_dirty": true,
+  "driver_provenance": {
+    "execution": "Inline Python through .venv-tests/Scripts/python.exe; captured execution output chunk 6a1dea",
+    "target": "HumanGame.engine_move (production selector)",
+    "runtime": "runtime_engine.resolve_runtime_engine(); default real own-engine factory with application piece activity enabled",
+    "isolated_helpers": "human_play_tests.FakeFactory for hint and evaluation helpers only; actual move engine was native",
+    "setup": "Temporary save directory; new_game('black',1000,revision,True); board populated with legal full history; revision incremented; _sync_evaluation(); engine_move(revision)",
+    "selection": "Game seed was random. No selected move or candidate was forced in the driver.",
+    "artifact_method": "Full JSON receipt faithfully transcribed from captured successful tool output; no new native run was performed while recording this file."
+  },
+  "limitations": [
+    "This is one synthetic selector case, not a complete game or playing-strength claim.",
+    "The capture ...Bxd1 is hypothetical. Correct defense begins ...Nc6xe5; selected move cost is 279cp in this own-engine depth-6 comparison.",
+    "This observed mate payoff takes two own moves, within the eight-ply limit; it is not evidence of a three-or-four-move case.",
+    "The first captured comparison elapsed_ms=0 fields were unpopulated defaults, not measured zero time. The measured baseline and overall extra times are preserved; per-probe timing was subsequently fixed.",
+    "Material-gain thresholds were subsequently revised; this captured mate case uses the mate exemption. No newer material-threshold results are claimed here.",
+    "Exact final source hashes and commit are to be linked by the final handoff manifest; source_base_commit alone does not identify the working-tree implementation."
+  ],
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "move": "f3e5",
+  "error": null,
+  "receipt": {
+    "policy": "regicide-boss-play-v2",
+    "repertoire_policy": "regicide-boss-traps-v3",
+    "mode": "trap_hunt",
+    "ply": 9,
+    "before_fen": "r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 2 5",
+    "history_uci": [
+      "e2e4",
+      "e7e5",
+      "g1f3",
+      "b8c6",
+      "f1c4",
+      "d7d6",
+      "b1c3",
+      "c8g4"
+    ],
+    "seed": "9dc6756f61f52cb4f707dd275dc71768",
+    "baseline_uci": "e1g1",
+    "selected_uci": "f3e5",
+    "candidate_uci": "f3e5",
+    "line_id": null,
+    "opening_name": null,
+    "proposed_line_id": null,
+    "proposed_opening_name": null,
+    "line_complete": false,
+    "reason": "verified_poisoned_piece",
+    "loss_cp": 279,
+    "compared_depth": 6,
+    "baseline": {
+      "uci": "e1g1",
+      "pv_uci": [
+        "e1g1",
+        "g8f6",
+        "d2d3",
+        "f8e7",
+        "h2h3",
+        "g4e6"
+      ],
+      "depth": 6,
+      "cp": 51,
+      "cp_white": 51,
+      "pov": "white"
+    },
+    "probes": [],
+    "risk_profile": "speculative",
+    "reference_delta_cp": 279,
+    "best_defense_cp": -228,
+    "final_best_defense_cp": -228,
+    "baseline_budget_ms": 1000,
+    "extra_budget_ms": 1000,
+    "baseline_elapsed_ms": 983.279,
+    "extra_elapsed_ms": 883.331,
+    "reused": false,
+    "trap_evidence": {
+      "offer": {
+        "uci": "f3e5",
+        "capture_uci": "g4d1",
+        "offered_piece": "queen",
+        "offered_cp": 900,
+        "capturing_piece": "bishop",
+        "newly_exposed": true,
+        "moved_piece_is_bait": false,
+        "offer_is_capture": true,
+        "offer_is_check": false,
+        "apparent_capture_gain_cp": 600,
+        "immediate_recaptures": [
+          "c3d1",
+          "e1d1"
+        ],
+        "reason": "legal_capture_of_offered_piece"
+      },
+      "verified": true,
+      "kind": "forced_mate",
+      "reason": "all_legal_defenses_verified",
+      "uci": "f3e5",
+      "capture_uci": "g4d1",
+      "pv_uci": [
+        "c4f7",
+        "e8e7",
+        "c3d5"
+      ],
+      "proof_nodes": 4,
+      "max_plies": 8,
+      "after_capture_fen": "r2qkbnr/ppp2ppp/2np4/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+      "offered_cp": 900,
+      "apparent_capture_gain_cp": 600,
+      "engine_depth": 5,
+      "engine_mate": 2,
+      "engine_cp": null,
+      "required_final_delta_cp": 1000,
+      "required_countergain_cp": 1800,
+      "pv_final_delta_cp": -700,
+      "pv_countergain_cp": 100,
+      "proof_witness_uci": [
+        "c4f7",
+        "e8e7",
+        "c3d5"
+      ],
+      "proof_budget_exhausted": false,
+      "minimum_payoff_moves": 2,
+      "maximum_payoff_moves": 2,
+      "delayed_payoff": true,
+      "deep_combination": false,
+      "payoff_scope": "bounds for the proven strategy, not globally shortest mate"
+    },
+    "trap_attempts": [
+      {
+        "offer": {
+          "uci": "f3e5",
+          "capture_uci": "g4d1",
+          "offered_piece": "queen",
+          "offered_cp": 900,
+          "capturing_piece": "bishop",
+          "newly_exposed": true,
+          "moved_piece_is_bait": false,
+          "offer_is_capture": true,
+          "offer_is_check": false,
+          "apparent_capture_gain_cp": 600,
+          "immediate_recaptures": [
+            "c3d1",
+            "e1d1"
+          ],
+          "reason": "legal_capture_of_offered_piece"
+        },
+        "evaluated": true,
+        "reason": "evaluated_speculative_risk",
+        "loss_cp": 279,
+        "comparison": {
+          "uci": "f3e5",
+          "admitted": true,
+          "reason": "evaluated_speculative_risk",
+          "loss_cp": 279,
+          "compared_depth": 6,
+          "reference_delta_cp": 279,
+          "candidate_compared": {
+            "uci": "f3e5",
+            "pv_uci": [
+              "f3e5",
+              "c6e5",
+              "c4e2",
+              "g4e2",
+              "d1e2",
+              "c7c6"
+            ],
+            "depth": 6,
+            "cp": -228,
+            "cp_white": -228,
+            "pov": "white"
+          },
+          "candidate_final": {
+            "uci": "f3e5",
+            "pv_uci": [
+              "f3e5",
+              "c6e5",
+              "c4e2",
+              "g4e2",
+              "d1e2",
+              "c7c6"
+            ],
+            "depth": 6,
+            "cp": -228,
+            "cp_white": -228,
+            "pov": "white"
+          },
+          "candidate_final_raw": {
+            "depth": 6,
+            "cp": -228,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "budget_ms": 448.3414799440652,
+          "elapsed_ms": 0,
+          "error": null
+        },
+        "compared_depth": 6,
+        "evidence": {
+          "verified": true,
+          "kind": "forced_mate",
+          "reason": "all_legal_defenses_verified",
+          "uci": "f3e5",
+          "capture_uci": "g4d1",
+          "pv_uci": [
+            "c4f7",
+            "e8e7",
+            "c3d5"
+          ],
+          "proof_nodes": 4,
+          "max_plies": 8,
+          "after_capture_fen": "r2qkbnr/ppp2ppp/2np4/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+          "offered_cp": 900,
+          "apparent_capture_gain_cp": 600,
+          "engine_depth": 5,
+          "engine_mate": 2,
+          "engine_cp": null,
+          "required_final_delta_cp": 1000,
+          "required_countergain_cp": 1800,
+          "pv_final_delta_cp": -700,
+          "pv_countergain_cp": 100,
+          "proof_witness_uci": [
+            "c4f7",
+            "e8e7",
+            "c3d5"
+          ],
+          "proof_budget_exhausted": false,
+          "minimum_payoff_moves": 2,
+          "maximum_payoff_moves": 2,
+          "delayed_payoff": true,
+          "deep_combination": false,
+          "payoff_scope": "bounds for the proven strategy, not globally shortest mate"
+        },
+        "attraction": {
+          "score": 4983.15,
+          "bait_cp": 900,
+          "payoff": "forced_mate",
+          "punishment_plies": 3,
+          "countergain_cp": 100,
+          "cost_penalty_points": 41.85,
+          "basis": "bait value, proved payoff and delay; heuristic points, not human capture probability"
+        }
+      },
+      {
+        "offer": {
+          "uci": "f3d4",
+          "capture_uci": "g4d1",
+          "offered_piece": "queen",
+          "offered_cp": 900,
+          "capturing_piece": "bishop",
+          "newly_exposed": true,
+          "moved_piece_is_bait": false,
+          "offer_is_capture": false,
+          "offer_is_check": false,
+          "apparent_capture_gain_cp": 600,
+          "immediate_recaptures": [
+            "c3d1",
+            "e1d1"
+          ],
+          "reason": "legal_capture_of_offered_piece"
+        },
+        "evaluated": true,
+        "reason": "no_short_tactical_gain",
+        "loss_cp": 581,
+        "comparison": {
+          "uci": "f3d4",
+          "admitted": true,
+          "reason": "evaluated_speculative_risk",
+          "loss_cp": 581,
+          "compared_depth": 6,
+          "reference_delta_cp": 581,
+          "candidate_compared": {
+            "uci": "f3d4",
+            "pv_uci": [
+              "f3d4",
+              "g4d1",
+              "d4c6",
+              "b7c6",
+              "e1d1",
+              "g8f6"
+            ],
+            "depth": 6,
+            "cp": -530,
+            "cp_white": -530,
+            "pov": "white"
+          },
+          "candidate_final": {
+            "uci": "f3d4",
+            "pv_uci": [
+              "f3d4",
+              "g4d1",
+              "d4c6",
+              "b7c6",
+              "e1d1",
+              "g8f6"
+            ],
+            "depth": 6,
+            "cp": -530,
+            "cp_white": -530,
+            "pov": "white"
+          },
+          "candidate_final_raw": {
+            "depth": 6,
+            "cp": -530,
+            "mate": null,
+            "lowerbound": false,
+            "upperbound": false
+          },
+          "budget_ms": 245.45015991898254,
+          "elapsed_ms": 0,
+          "error": null
+        },
+        "compared_depth": 6,
+        "evidence": {
+          "verified": false,
+          "kind": null,
+          "reason": "no_short_tactical_gain",
+          "uci": "f3d4",
+          "capture_uci": "g4d1",
+          "pv_uci": [
+            "d4c6",
+            "b7c6",
+            "e1d1",
+            "g8f6",
+            "b2b4"
+          ],
+          "proof_nodes": 0,
+          "max_plies": 8,
+          "after_capture_fen": "r2qkbnr/ppp2ppp/2np4/4p3/2BNP3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+          "offered_cp": 900,
+          "apparent_capture_gain_cp": 600,
+          "engine_depth": 5,
+          "engine_mate": null,
+          "engine_cp": -511,
+          "required_final_delta_cp": 900,
+          "required_countergain_cp": 1800,
+          "pv_final_delta_cp": -600,
+          "pv_countergain_cp": 300
+        }
+      }
+    ],
+    "attraction": {
+      "score": 4983.15,
+      "bait_cp": 900,
+      "payoff": "forced_mate",
+      "punishment_plies": 3,
+      "countergain_cp": 100,
+      "cost_penalty_points": 41.85,
+      "basis": "bait value, proved payoff and delay; heuristic points, not human capture probability"
+    },
+    "selection_rule": "highest_verified_appeal_within_budget"
+  }
+}

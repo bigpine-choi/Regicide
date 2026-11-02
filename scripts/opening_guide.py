@@ -330,7 +330,10 @@ def get_opening_guide(board: chess.Board) -> dict:
         return response
     try:
         catalog = _display_catalog(_catalog())
-        response["source"] = dict(catalog.source)
+        # Keep immutable tuples in the shared catalogue, but expose detached
+        # JSON arrays so in-process state and HTTP state have the same shape.
+        response["source"] = {key: list(value) if isinstance(value, tuple) else value
+                              for key, value in catalog.source.items()}
         history = tuple(move.uci() for move in board.move_stack)
         matches = _matches(catalog, response["position_key"], history, scope)
         response.update(current_matches=matches[:MAX_CURRENT_MATCHES], current_matches_total=len(matches),

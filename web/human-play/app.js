@@ -642,6 +642,11 @@
       const ms = state.engine.movetime_ms;
       const seconds = Number(ms) / 1000;
       byId("opponent-detail").textContent = `한 수에 ${seconds}초 생각 · ${colorName(humanColor === "white" ? "black" : "white")}`;
+      if (state.engine.boss_mode === true) {
+        const phaseLabels = {opening: "변칙 오프닝", trap_hunt: "전술 사냥", full_strength: "전력 대국"};
+        const phase = Object.hasOwn(phaseLabels, state.engine.boss_phase) ? phaseLabels[state.engine.boss_phase] : null;
+        byId("opponent-detail").textContent += phase ? ` · 보스 모드 · ${phase}` : " · 보스 모드";
+      }
       const engineName = state.engine.name || "Regicide";
       byId("engine-version").textContent = engineName;
       byId("header-engine-version").textContent = engineName.startsWith("Regicide ") ? "v" + engineName.slice("Regicide ".length) : "";
@@ -649,6 +654,7 @@
     }
     byId("new-game").disabled = !ready || busy || timeSaving;
     byId("human-side").disabled = !ready || busy || timeSaving;
+    byId("boss-mode").disabled = !ready || busy || timeSaving || state?.handicap_mode;
     byId("think-time").disabled = !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
     if (state && !timeSaving) byId("think-time").value = String(state.engine.movetime_ms);
     const currentMS = state?.engine.active_movetime_ms;
@@ -779,7 +785,8 @@
   dialog.addEventListener("close", () => { pendingPromotion = []; });
   byId("new-game-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value)});
+    void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value),
+      boss_mode: byId("boss-mode").value === "boss"});
   });
   byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
