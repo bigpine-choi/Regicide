@@ -1,0 +1,2089 @@
+{
+  "schema": "regicide.boss-v-normal.decision-audit.v1",
+  "created_utc": "2026-11-02T13:11:30.939235+00:00",
+  "passed": true,
+  "source_freeze": "dcc40800c9e42f652864dcc145e9a59b46272d2c",
+  "auditor": "Independent read-only record audit; no native engine rerun and no production mutation.",
+  "checks": [
+    "All 16 games completed legally, with no cap or error; individual PGN and full trace/record moves agree",
+    "Each actor/color matches the board side to move; both final hosts and active-game production sidecars contain the exact same full game history",
+    "Boss effective policy enabled, normal dynamic policy enabled, inactive policy decision lists empty",
+    "Both hosts use classical_activity_v1, no neural model, Hash16 and UsePieceActivity=true; optional Threads=1",
+    "Global pair number, boss/normal independent deterministic seeds and swapped colors match the preregistered schedule",
+    "Every applicable decision before-FEN/history/selected-UCI/ply matches actual play",
+    "Configured 1000ms baseline and policy-specific advertised/recorded extra budgets checked at each turn",
+    "Every selected nonbaseline authored/normal alternative has an admitted exact-CP same-depth own-engine comparison and matching recorded loss",
+    "All normal seeded weighted choices recomputed from stored candidate weights",
+    "Valid opponent quality observations verified against actual preceding opponent position/move and same-depth own-engine score packets",
+    "Boss opponent frequency/profile reproduced from exact surviving history and observations at every boss turn",
+    "Authored book move legal full prefix and side checked; setup moves counted separately from signature cutoff",
+    "Chosen bait captures, if any, checked for legality and actual reply; proof rerun using the same production validator and stored engine evidence, no fresh native search",
+    "Source, catalog and binary SHA256 verified against disk; each completed shard reports unchanged true",
+    "Sidecar source version, metadata and active policy flags match match records"
+  ],
+  "definitions": {
+    "baseline_preserved": "Actual selected UCI equals the current position full-baseline-search UCI. This is a move identity observation, not a causal strength attribution.",
+    "normal_direct_baseline_without_receipt": "At or after ply80 the production normal path returns the baseline directly and has no policy receipt.",
+    "trap_candidate_branches": "Enumerated bait/capture attempts; some are rejected before any after-capture search. trap_capture_branch_searches counts returned after-capture engine searches.",
+    "normal_opening_enabled": "Both constructor flags true; normal effective dynamic policy wraps opening variety during the first16plies. Separate opening_variety.enabled is false.",
+    "book_setup_vs_signature": "A recorded authored-gambit reason can refer only to e4/d4 setup; signature requires exact full authored line reaching its final move.",
+    "quality": "Same-game heuristic relative move loss; not calibrated human skill/Elo.",
+    "time": "Configured policy budgets are nominal. Wall time and CPU use are not equalized."
+  },
+  "totals": {
+    "plies": 1900,
+    "boss_moves": 952,
+    "normal_moves": 948,
+    "normal_receipts": 637,
+    "boss_baseline_preserved": 942,
+    "normal_baseline_preserved": 899,
+    "normal_direct_baseline_without_receipt": 311,
+    "trap_candidate_turns": 41,
+    "trap_candidate_branches": 82,
+    "trap_capture_branch_searches": 72,
+    "trap_proof_results": 72,
+    "quality_observations": 407,
+    "large_quality_errors_ge150": 2,
+    "games": 16,
+    "boss_book_moves": 10,
+    "boss_signature_moves": 0,
+    "boss_signature_games": 0,
+    "boss_verified_selected_traps": 0,
+    "boss_verified_trap_games": 0,
+    "normal_opening_alternatives": 37,
+    "normal_middlegame_alternatives": 12,
+    "boss_baseline_preserved_reasons": {
+      "opponent_frequency_hold": 627,
+      "no_verified_lure": 41,
+      "in_check": 79,
+      "repetition": 65,
+      "forced_or_late": 130
+    },
+    "boss_nonbaseline_reasons": {
+      "accepted_safe_gambit_setup": 9,
+      "accepted_authored_gambit": 1
+    },
+    "normal_baseline_preserved_reasons": {
+      "no_qualified_alternative": 7,
+      "insufficient_catalog_candidates": 79,
+      "no_qualified_dynamic_alternative": 347,
+      "in_check": 24,
+      "candidate_score_conflict": 15,
+      "simplified_position": 90,
+      "baseline_unreliable": 4,
+      "repetition": 8,
+      "baseline_selected": 14
+    },
+    "boss_reasons": {
+      "accepted_safe_gambit_setup": 9,
+      "opponent_frequency_hold": 627,
+      "no_verified_lure": 41,
+      "in_check": 79,
+      "repetition": 65,
+      "accepted_authored_gambit": 1,
+      "forced_or_late": 130
+    },
+    "normal_reasons": {
+      "no_qualified_alternative": 7,
+      "accepted_alternative": 37,
+      "insufficient_catalog_candidates": 79,
+      "no_qualified_dynamic_alternative": 347,
+      "in_check": 24,
+      "candidate_score_conflict": 15,
+      "simplified_position": 90,
+      "accepted_dynamic_alternative": 12,
+      "baseline_unreliable": 4,
+      "repetition": 8,
+      "baseline_selected": 14
+    },
+    "trap_outcomes": {
+      "taken": 0,
+      "reference_defense": 0,
+      "unknown": 0
+    },
+    "trap_attempt_reasons": {
+      "no_short_tactical_gain": 72,
+      "offer_cost_unreliable": 10
+    },
+    "boss_baseline_preserved_fraction": 0.9894957983193278,
+    "normal_baseline_preserved_fraction": 0.9483122362869199,
+    "boss_nonbaseline_moves": 10,
+    "normal_nonbaseline_moves": 49
+  },
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "run": "pairs-1-2",
+      "boss_color": "white",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 86,
+      "passed": true,
+      "boss_moves": 43,
+      "normal_moves": 43,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 42,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 31,
+        "no_verified_lure": 2,
+        "in_check": 9
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 41,
+      "normal_direct_baseline_without_receipt": 3,
+      "normal_baseline_preserved_reasons": {
+        "no_qualified_alternative": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 25,
+        "in_check": 1,
+        "candidate_score_conflict": 2,
+        "simplified_position": 4
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 31,
+        "no_verified_lure": 2,
+        "in_check": 9
+      },
+      "normal_reasons": {
+        "no_qualified_alternative": 1,
+        "accepted_alternative": 2,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 25,
+        "in_check": 1,
+        "candidate_score_conflict": 2,
+        "simplified_position": 4
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "e4",
+          "uci": "e2e4",
+          "line_id": "scotch",
+          "name": "Scotch Game: Scotch Gambit",
+          "signature": false,
+          "loss_cp": 9,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 2,
+      "trap_candidate_branches": 4,
+      "trap_capture_branch_searches": 3,
+      "trap_proof_results": 3,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 3,
+        "offer_cost_unreliable": 1
+      },
+      "quality_observations": 23,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 4,
+          "san": "g6",
+          "uci": "g7g6",
+          "baseline_uci": "g8f6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 25
+        },
+        {
+          "ply": 6,
+          "san": "d6",
+          "uci": "d7d6",
+          "baseline_uci": "e7e6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 4
+        }
+      ],
+      "input_sha256": {
+        "pairs-1-2\\game-001.json": "63ab631888cfcdc2a3678528076a850e09993993faeea60eab3f79decc85528c",
+        "pairs-1-2\\game-001.pgn": "b0f14b7e3d898a19938bbf0714a47aee55a45a9ee73e91ff974fb72c466479cd",
+        "pairs-1-2\\game-001.moves.jsonl": "e8631e4f79558ef390ec32d9b82ae822852dc8f7ea849c9d7b1a3f2561ff744a"
+      }
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "run": "pairs-1-2",
+      "boss_color": "black",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 120,
+      "passed": true,
+      "boss_moves": 60,
+      "normal_moves": 60,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 60,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 30,
+        "no_verified_lure": 3,
+        "repetition": 21,
+        "in_check": 6
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 56,
+      "normal_direct_baseline_without_receipt": 20,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 22,
+        "baseline_unreliable": 2,
+        "repetition": 7
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 30,
+        "no_verified_lure": 3,
+        "repetition": 21,
+        "in_check": 6
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 22,
+        "accepted_dynamic_alternative": 1,
+        "baseline_unreliable": 2,
+        "repetition": 7
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 3,
+      "trap_candidate_branches": 6,
+      "trap_capture_branch_searches": 6,
+      "trap_proof_results": 6,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 6
+      },
+      "quality_observations": 18,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "Nf3",
+          "uci": "g1f3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 0
+        },
+        {
+          "ply": 3,
+          "san": "c3",
+          "uci": "c2c3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 24
+        },
+        {
+          "ply": 5,
+          "san": "Na3",
+          "uci": "b1a3",
+          "baseline_uci": "b2b4",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 12
+        },
+        {
+          "ply": 25,
+          "san": "Rxf3",
+          "uci": "f1f3",
+          "baseline_uci": "e2f3",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 9
+        }
+      ],
+      "input_sha256": {
+        "pairs-1-2\\game-002.json": "42843ded12c3a6c463d17c53856084bcd42c9b6437a0dd11deef7ae7a459b95a",
+        "pairs-1-2\\game-002.pgn": "7728858bb2d4373db806b2d67b30cfb5d6dc6e6378c5045f59290a9cba1909f1",
+        "pairs-1-2\\game-002.moves.jsonl": "b9f6482a5881c432dc2263d68c9d3ea575e82987f95e90ea5b383000382e007b"
+      }
+    },
+    {
+      "game": 3,
+      "pair": 2,
+      "run": "pairs-1-2",
+      "boss_color": "white",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 137,
+      "passed": true,
+      "boss_moves": 69,
+      "normal_moves": 68,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 68,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 34,
+        "no_verified_lure": 4,
+        "in_check": 13,
+        "forced_or_late": 7,
+        "repetition": 10
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_authored_gambit": 1
+      },
+      "normal_baseline_preserved": 63,
+      "normal_direct_baseline_without_receipt": 28,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 8,
+        "in_check": 5,
+        "candidate_score_conflict": 1,
+        "simplified_position": 16
+      },
+      "boss_reasons": {
+        "accepted_authored_gambit": 1,
+        "opponent_frequency_hold": 34,
+        "no_verified_lure": 4,
+        "in_check": 13,
+        "forced_or_late": 7,
+        "repetition": 10
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 8,
+        "in_check": 5,
+        "candidate_score_conflict": 1,
+        "accepted_dynamic_alternative": 2,
+        "simplified_position": 16
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "d4",
+          "uci": "d2d4",
+          "line_id": "blackmar-diemer",
+          "name": "Blackmar-Diemer Gambit",
+          "signature": false,
+          "loss_cp": 5,
+          "reason": "accepted_authored_gambit"
+        }
+      ],
+      "signature_proposals": [
+        {
+          "ply": 3,
+          "line_id": "blackmar-diemer",
+          "proposed_uci": "e2e4",
+          "selected_uci": "g1f3",
+          "reason": "opponent_frequency_hold"
+        }
+      ],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 4,
+      "trap_candidate_branches": 8,
+      "trap_capture_branch_searches": 7,
+      "trap_proof_results": 7,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 7,
+        "offer_cost_unreliable": 1
+      },
+      "quality_observations": 37,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 2,
+          "san": "d5",
+          "uci": "d7d5",
+          "baseline_uci": "g8f6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 6
+        },
+        {
+          "ply": 4,
+          "san": "g6",
+          "uci": "g7g6",
+          "baseline_uci": "b8c6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 17
+        },
+        {
+          "ply": 6,
+          "san": "Bf5",
+          "uci": "c8f5",
+          "baseline_uci": "g8f6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 17
+        },
+        {
+          "ply": 34,
+          "san": "Kd7",
+          "uci": "c8d7",
+          "baseline_uci": "h8d8",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 15
+        },
+        {
+          "ply": 36,
+          "san": "a6",
+          "uci": "a7a6",
+          "baseline_uci": "f7f5",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 9
+        }
+      ],
+      "input_sha256": {
+        "pairs-1-2\\game-003.json": "e749886fc011056ae05746a5bb44f23133cb01d91e65c17f5ce4ce3848775290",
+        "pairs-1-2\\game-003.pgn": "d22822da9ab62c8090057c4c914b2936ba8e3cfab8ef8eb7c54ce6d7f14aca5d",
+        "pairs-1-2\\game-003.moves.jsonl": "2cb5ea4deb51aecf97c7b40f1a88e118e81a801551521c60fdb52d49689c0a82"
+      }
+    },
+    {
+      "game": 4,
+      "pair": 2,
+      "run": "pairs-1-2",
+      "boss_color": "black",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 121,
+      "passed": true,
+      "boss_moves": 60,
+      "normal_moves": 61,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 60,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 32,
+        "no_verified_lure": 4,
+        "forced_or_late": 22,
+        "in_check": 2
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 57,
+      "normal_direct_baseline_without_receipt": 21,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 14,
+        "baseline_selected": 1,
+        "simplified_position": 16
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 32,
+        "no_verified_lure": 4,
+        "forced_or_late": 22,
+        "in_check": 2
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "accepted_dynamic_alternative": 1,
+        "no_qualified_dynamic_alternative": 14,
+        "baseline_selected": 1,
+        "simplified_position": 16
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 4,
+      "trap_candidate_branches": 8,
+      "trap_capture_branch_searches": 8,
+      "trap_proof_results": 8,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 8
+      },
+      "quality_observations": 21,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "d3",
+          "uci": "d2d3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 0
+        },
+        {
+          "ply": 3,
+          "san": "e3",
+          "uci": "e2e3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 22
+        },
+        {
+          "ply": 5,
+          "san": "Ne2",
+          "uci": "g1e2",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 17
+        },
+        {
+          "ply": 17,
+          "san": "g3",
+          "uci": "g2g3",
+          "baseline_uci": "d1b3",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 1
+        }
+      ],
+      "input_sha256": {
+        "pairs-1-2\\game-004.json": "58caf1c551cb79e3dd255b16a2e682e6010c506b10269b3aca7d2dc977fdf3e4",
+        "pairs-1-2\\game-004.pgn": "bc0d55db30bd7624f6b8907b66f3bf30ea45e28ff5504b66da5f0b2c5571ca0a",
+        "pairs-1-2\\game-004.moves.jsonl": "2f99927112c988316bbb626fe88857a84857d0ebada7825f2f4af2141c4baf7a"
+      }
+    },
+    {
+      "game": 5,
+      "pair": 3,
+      "run": "pairs-3-4",
+      "boss_color": "white",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 97,
+      "passed": true,
+      "boss_moves": 49,
+      "normal_moves": 48,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 48,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 45,
+        "no_verified_lure": 2,
+        "in_check": 1
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 46,
+      "normal_direct_baseline_without_receipt": 8,
+      "normal_baseline_preserved_reasons": {
+        "no_qualified_alternative": 2,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 20,
+        "baseline_selected": 1,
+        "candidate_score_conflict": 10
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 45,
+        "no_verified_lure": 2,
+        "in_check": 1
+      },
+      "normal_reasons": {
+        "no_qualified_alternative": 2,
+        "accepted_alternative": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 20,
+        "baseline_selected": 1,
+        "candidate_score_conflict": 10,
+        "accepted_dynamic_alternative": 1
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "d4",
+          "uci": "d2d4",
+          "line_id": "blackmar-diemer",
+          "name": "Blackmar-Diemer Gambit",
+          "signature": false,
+          "loss_cp": 5,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 2,
+      "trap_candidate_branches": 4,
+      "trap_capture_branch_searches": 4,
+      "trap_proof_results": 4,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 4
+      },
+      "quality_observations": 26,
+      "large_quality_errors_ge150": 1,
+      "final_boss_frequency": 0.05772767857142859,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 4,
+          "san": "h5",
+          "uci": "h7h5",
+          "baseline_uci": "d7d5",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 23
+        },
+        {
+          "ply": 74,
+          "san": "d4+",
+          "uci": "d5d4",
+          "baseline_uci": "b5b4",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 4
+        }
+      ],
+      "input_sha256": {
+        "pairs-3-4\\game-005.json": "ec0a1d966c4b1be701395567ed230e2980161907fa3a04bafc538f2253cd034f",
+        "pairs-3-4\\game-005.pgn": "62f79752b8cf69bdef0198018cfd065c0b83669ed71429dac7dbe6e7de53a3f8",
+        "pairs-3-4\\game-005.moves.jsonl": "6b201ad205ca4f66065bbb51d5a7796a456fd6e72659b816928d233b04f4cd4b"
+      }
+    },
+    {
+      "game": 6,
+      "pair": 3,
+      "run": "pairs-3-4",
+      "boss_color": "black",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 96,
+      "passed": true,
+      "boss_moves": 48,
+      "normal_moves": 48,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 48,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 37,
+        "no_verified_lure": 3,
+        "in_check": 1,
+        "repetition": 7
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 44,
+      "normal_direct_baseline_without_receipt": 8,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "in_check": 4,
+        "no_qualified_dynamic_alternative": 16,
+        "simplified_position": 11
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 37,
+        "no_verified_lure": 3,
+        "in_check": 1,
+        "repetition": 7
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "in_check": 4,
+        "no_qualified_dynamic_alternative": 16,
+        "accepted_dynamic_alternative": 1,
+        "simplified_position": 11
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 3,
+      "trap_candidate_branches": 6,
+      "trap_capture_branch_searches": 5,
+      "trap_proof_results": 5,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 5,
+        "offer_cost_unreliable": 1
+      },
+      "quality_observations": 27,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "c4",
+          "uci": "c2c4",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 18
+        },
+        {
+          "ply": 3,
+          "san": "h4",
+          "uci": "h2h4",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 25
+        },
+        {
+          "ply": 5,
+          "san": "Nc3",
+          "uci": "b1c3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 7
+        },
+        {
+          "ply": 43,
+          "san": "Be2",
+          "uci": "f1e2",
+          "baseline_uci": "h5h6",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 1
+        }
+      ],
+      "input_sha256": {
+        "pairs-3-4\\game-006.json": "efbc969e9769b3fcc1f79abb73c0d86335356cd5ebc8eef7f617188cba91a5b1",
+        "pairs-3-4\\game-006.pgn": "8246b3fb20332bc522e4465d47cb07d8173a29564723251ddd7bbfc1276ccb28",
+        "pairs-3-4\\game-006.moves.jsonl": "b098cdc7e48805319efa99e5045c55bb3a373e775c8502395353316cd58b8b54"
+      }
+    },
+    {
+      "game": 7,
+      "pair": 4,
+      "run": "pairs-3-4",
+      "boss_color": "white",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 116,
+      "passed": true,
+      "boss_moves": 58,
+      "normal_moves": 58,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 57,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 39,
+        "no_verified_lure": 4,
+        "in_check": 4,
+        "forced_or_late": 10
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 55,
+      "normal_direct_baseline_without_receipt": 18,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 28,
+        "baseline_selected": 1,
+        "in_check": 1,
+        "simplified_position": 2
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 39,
+        "no_verified_lure": 4,
+        "in_check": 4,
+        "forced_or_late": 10
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 28,
+        "baseline_selected": 1,
+        "in_check": 1,
+        "simplified_position": 2
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "d4",
+          "uci": "d2d4",
+          "line_id": "blackmar-diemer",
+          "name": "Blackmar-Diemer Gambit",
+          "signature": false,
+          "loss_cp": 5,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 4,
+      "trap_candidate_branches": 8,
+      "trap_capture_branch_searches": 6,
+      "trap_proof_results": 6,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 6,
+        "offer_cost_unreliable": 2
+      },
+      "quality_observations": 30,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 2,
+          "san": "g6",
+          "uci": "g7g6",
+          "baseline_uci": "g8f6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 23
+        },
+        {
+          "ply": 4,
+          "san": "b6",
+          "uci": "b7b6",
+          "baseline_uci": "g8f6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 22
+        },
+        {
+          "ply": 6,
+          "san": "Nc6",
+          "uci": "b8c6",
+          "baseline_uci": "c8b7",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 19
+        }
+      ],
+      "input_sha256": {
+        "pairs-3-4\\game-007.json": "0441b17990a52e17b03fb5bc4ccdc009efc31079eb47a3813f98ff1f9904df2d",
+        "pairs-3-4\\game-007.pgn": "e4ee8463a1663be2a6d4d7696c8719d8a9275aefe17893e27968b9de8a9ec8c9",
+        "pairs-3-4\\game-007.moves.jsonl": "dc36d602afae68882206c6ea2c6bfcb9d650e0e89dca1155df8cfba839f43f36"
+      }
+    },
+    {
+      "game": 8,
+      "pair": 4,
+      "run": "pairs-3-4",
+      "boss_color": "black",
+      "result": "1/2-1/2",
+      "termination": "insufficient_material",
+      "plies": 130,
+      "passed": true,
+      "boss_moves": 65,
+      "normal_moves": 65,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 64,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 3,
+        "in_check": 2,
+        "forced_or_late": 15
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 60,
+      "normal_direct_baseline_without_receipt": 25,
+      "normal_baseline_preserved_reasons": {
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 4,
+        "no_qualified_dynamic_alternative": 21,
+        "candidate_score_conflict": 1,
+        "simplified_position": 6
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 3,
+        "in_check": 2,
+        "forced_or_late": 15
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 4,
+        "no_qualified_dynamic_alternative": 21,
+        "accepted_dynamic_alternative": 2,
+        "candidate_score_conflict": 1,
+        "simplified_position": 6
+      },
+      "boss_book_moves": [
+        {
+          "ply": 2,
+          "san": "e5",
+          "uci": "e7e5",
+          "line_id": "traxler",
+          "name": "Italian Game: Two Knights Defense, Traxler Counterattack",
+          "signature": false,
+          "loss_cp": 10,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 3,
+      "trap_candidate_branches": 6,
+      "trap_capture_branch_searches": 4,
+      "trap_proof_results": 4,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 4,
+        "offer_cost_unreliable": 2
+      },
+      "quality_observations": 28,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "e4",
+          "uci": "e2e4",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 9
+        },
+        {
+          "ply": 3,
+          "san": "Bc4",
+          "uci": "f1c4",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 3
+        },
+        {
+          "ply": 5,
+          "san": "d3",
+          "uci": "d2d3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 24
+        },
+        {
+          "ply": 33,
+          "san": "Kh1",
+          "uci": "g1h1",
+          "baseline_uci": "a2a4",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 1
+        },
+        {
+          "ply": 61,
+          "san": "Re7",
+          "uci": "e4e7",
+          "baseline_uci": "e4e5",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 9
+        }
+      ],
+      "input_sha256": {
+        "pairs-3-4\\game-008.json": "8a599388cc212a800721c3a1cdb1dcd598a66ce624b7454a9502977adbc061e6",
+        "pairs-3-4\\game-008.pgn": "7c1001f1861f6f2aa095c336dbf2e0d9a88ee48c6f2ffd778d77f761af0f6e32",
+        "pairs-3-4\\game-008.moves.jsonl": "72ba86ccdae524d019be2cdd7fb8fdd5404a9329d83208d57b98d673992c69d9"
+      }
+    },
+    {
+      "game": 9,
+      "pair": 5,
+      "run": "pairs-5-6",
+      "boss_color": "white",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 141,
+      "passed": true,
+      "boss_moves": 71,
+      "normal_moves": 70,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 70,
+      "boss_baseline_preserved_reasons": {
+        "no_verified_lure": 4,
+        "opponent_frequency_hold": 52,
+        "forced_or_late": 14
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 66,
+      "normal_direct_baseline_without_receipt": 30,
+      "normal_baseline_preserved_reasons": {
+        "no_qualified_alternative": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 29,
+        "in_check": 1
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "no_verified_lure": 4,
+        "opponent_frequency_hold": 52,
+        "forced_or_late": 14
+      },
+      "normal_reasons": {
+        "no_qualified_alternative": 1,
+        "accepted_alternative": 2,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 29,
+        "accepted_dynamic_alternative": 2,
+        "in_check": 1
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "d4",
+          "uci": "d2d4",
+          "line_id": "blackmar-diemer",
+          "name": "Blackmar-Diemer Gambit",
+          "signature": false,
+          "loss_cp": 5,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 4,
+      "trap_candidate_branches": 8,
+      "trap_capture_branch_searches": 8,
+      "trap_proof_results": 8,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 8
+      },
+      "quality_observations": 41,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 4,
+          "san": "Na6",
+          "uci": "b8a6",
+          "baseline_uci": "d7d5",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 22
+        },
+        {
+          "ply": 6,
+          "san": "e6",
+          "uci": "e7e6",
+          "baseline_uci": "a6b4",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 22
+        },
+        {
+          "ply": 28,
+          "san": "Kh8",
+          "uci": "g8h8",
+          "baseline_uci": "f6d7",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 2
+        },
+        {
+          "ply": 46,
+          "san": "h5",
+          "uci": "h6h5",
+          "baseline_uci": "f6d7",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 1
+        }
+      ],
+      "input_sha256": {
+        "pairs-5-6\\game-009.json": "de814cf5efd8a6b04fafad42ab6e7df9e049afaf9b62f3ed200167b4c13349a7",
+        "pairs-5-6\\game-009.pgn": "2b1ce299bab66b4611b9a6119a23c0764fd2cbde3634b5a5bc7330359783e9c2",
+        "pairs-5-6\\game-009.moves.jsonl": "ffb75fc2053956ba2c0f9591b0f2c609b31b61c526481b966028deba89db1f2d"
+      }
+    },
+    {
+      "game": 10,
+      "pair": 5,
+      "run": "pairs-5-6",
+      "boss_color": "black",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 94,
+      "passed": true,
+      "boss_moves": 47,
+      "normal_moves": 47,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 47,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 1,
+        "repetition": 2
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 44,
+      "normal_direct_baseline_without_receipt": 7,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 31,
+        "baseline_selected": 1
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 1,
+        "repetition": 2
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 31,
+        "baseline_selected": 1
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 1,
+      "trap_candidate_branches": 2,
+      "trap_capture_branch_searches": 2,
+      "trap_proof_results": 2,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 2
+      },
+      "quality_observations": 16,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "b3",
+          "uci": "b2b3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 21
+        },
+        {
+          "ply": 3,
+          "san": "g3",
+          "uci": "g2g3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 14
+        },
+        {
+          "ply": 5,
+          "san": "Nc3",
+          "uci": "b1c3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 0
+        }
+      ],
+      "input_sha256": {
+        "pairs-5-6\\game-010.json": "f4742e93ecfae7b16eb611f093f584831bf555cbaac520ad0587fc3a5072076c",
+        "pairs-5-6\\game-010.pgn": "321de8fab18d927b2205be401fb3ab407d140fc92e59b771c26633b55905a667",
+        "pairs-5-6\\game-010.moves.jsonl": "e6c658924d266879ae97984a6fc6451584796075ea3e382a9fd407af0feb1acb"
+      }
+    },
+    {
+      "game": 11,
+      "pair": 6,
+      "run": "pairs-5-6",
+      "boss_color": "white",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 145,
+      "passed": true,
+      "boss_moves": 73,
+      "normal_moves": 72,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 72,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 39,
+        "no_verified_lure": 1,
+        "in_check": 8,
+        "forced_or_late": 11,
+        "repetition": 13
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 72,
+      "normal_direct_baseline_without_receipt": 32,
+      "normal_baseline_preserved_reasons": {
+        "no_qualified_alternative": 2,
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 19,
+        "in_check": 7,
+        "simplified_position": 4
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 39,
+        "no_verified_lure": 1,
+        "in_check": 8,
+        "forced_or_late": 11,
+        "repetition": 13
+      },
+      "normal_reasons": {
+        "no_qualified_alternative": 2,
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 19,
+        "in_check": 7,
+        "simplified_position": 4
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "e4",
+          "uci": "e2e4",
+          "line_id": "vienna",
+          "name": "Vienna Game: Vienna Gambit",
+          "signature": false,
+          "loss_cp": 9,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 1,
+      "trap_candidate_branches": 2,
+      "trap_capture_branch_searches": 2,
+      "trap_proof_results": 2,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 2
+      },
+      "quality_observations": 27,
+      "large_quality_errors_ge150": 1,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [],
+      "input_sha256": {
+        "pairs-5-6\\game-011.json": "355ef8bae18b95a4e9b9e4b2818a2818da7f1107eb960a3886859ac66de8636d",
+        "pairs-5-6\\game-011.pgn": "f58c282d1801f4bc43bbfc67d5bd11a03bc9b0f8f813a0eacfc35cd6ad4f1ac3",
+        "pairs-5-6\\game-011.moves.jsonl": "beeb03d7c7c29c6ae46e03bc8d8087289badab33c25c03244ffb71c967c0c1a8"
+      }
+    },
+    {
+      "game": 12,
+      "pair": 6,
+      "run": "pairs-5-6",
+      "boss_color": "black",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 136,
+      "passed": true,
+      "boss_moves": 68,
+      "normal_moves": 68,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 68,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 2,
+        "in_check": 11,
+        "forced_or_late": 11
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 65,
+      "normal_direct_baseline_without_receipt": 28,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 29,
+        "baseline_unreliable": 1,
+        "candidate_score_conflict": 1,
+        "in_check": 1
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 44,
+        "no_verified_lure": 2,
+        "in_check": 11,
+        "forced_or_late": 11
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 29,
+        "baseline_unreliable": 1,
+        "candidate_score_conflict": 1,
+        "in_check": 1
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 2,
+      "trap_candidate_branches": 4,
+      "trap_capture_branch_searches": 4,
+      "trap_proof_results": 4,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 4
+      },
+      "quality_observations": 16,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "d3",
+          "uci": "d2d3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 0
+        },
+        {
+          "ply": 3,
+          "san": "a3",
+          "uci": "a2a3",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 20
+        },
+        {
+          "ply": 5,
+          "san": "e4",
+          "uci": "e2e4",
+          "baseline_uci": "g1f3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 17
+        }
+      ],
+      "input_sha256": {
+        "pairs-5-6\\game-012.json": "64bf17cad1dfbc44088837b1ccafe1ab68358bf9100aaf95b74fced5c2891c6f",
+        "pairs-5-6\\game-012.pgn": "bb4762ec46236b081afeb9cd90fafd380f0ff7360f5f1e77ac67d848a2ec1c92",
+        "pairs-5-6\\game-012.moves.jsonl": "d795c4223923b082966764ee8ed99b1a255e1a5e157b5d1d2e6ec3c081586635"
+      }
+    },
+    {
+      "game": 13,
+      "pair": 7,
+      "run": "pairs-7-8",
+      "boss_color": "white",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 151,
+      "passed": true,
+      "boss_moves": 76,
+      "normal_moves": 75,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 75,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 39,
+        "in_check": 7,
+        "no_verified_lure": 2,
+        "forced_or_late": 15,
+        "repetition": 12
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 72,
+      "normal_direct_baseline_without_receipt": 35,
+      "normal_baseline_preserved_reasons": {
+        "no_qualified_alternative": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 26,
+        "simplified_position": 5
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 39,
+        "in_check": 7,
+        "no_verified_lure": 2,
+        "forced_or_late": 15,
+        "repetition": 12
+      },
+      "normal_reasons": {
+        "no_qualified_alternative": 1,
+        "accepted_alternative": 2,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 26,
+        "accepted_dynamic_alternative": 1,
+        "simplified_position": 5
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "d4",
+          "uci": "d2d4",
+          "line_id": "blackmar-diemer",
+          "name": "Blackmar-Diemer Gambit",
+          "signature": false,
+          "loss_cp": 5,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 2,
+      "trap_candidate_branches": 4,
+      "trap_capture_branch_searches": 2,
+      "trap_proof_results": 2,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 2,
+        "offer_cost_unreliable": 2
+      },
+      "quality_observations": 28,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 4,
+          "san": "Nc6",
+          "uci": "b8c6",
+          "baseline_uci": "d7d5",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 3
+        },
+        {
+          "ply": 6,
+          "san": "Na5",
+          "uci": "c6a5",
+          "baseline_uci": "c6e5",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 20
+        },
+        {
+          "ply": 26,
+          "san": "Bb4+",
+          "uci": "f8b4",
+          "baseline_uci": "d8b6",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 0
+        }
+      ],
+      "input_sha256": {
+        "pairs-7-8\\game-013.json": "28d9094d4391dcf914a6f54703f55140acaa8a2c7f4b78b51fef82a1f15402f7",
+        "pairs-7-8\\game-013.pgn": "7d61313f1ca4dcce1bc64e2a0203739b5e3c94d17580b4118f39358b3b481d7f",
+        "pairs-7-8\\game-013.moves.jsonl": "d16f4a7d8310e6cda873eed51735ca735391c78ae81d0e67a241cd491f380b91"
+      }
+    },
+    {
+      "game": 14,
+      "pair": 7,
+      "run": "pairs-7-8",
+      "boss_color": "black",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "plies": 74,
+      "passed": true,
+      "boss_moves": 37,
+      "normal_moves": 37,
+      "normal_receipts": 37,
+      "boss_baseline_preserved": 37,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 32,
+        "in_check": 5
+      },
+      "boss_nonbaseline_reasons": {},
+      "normal_baseline_preserved": 36,
+      "normal_direct_baseline_without_receipt": 0,
+      "normal_baseline_preserved_reasons": {
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 5,
+        "in_check": 1,
+        "no_qualified_dynamic_alternative": 13,
+        "simplified_position": 13,
+        "repetition": 1
+      },
+      "boss_reasons": {
+        "opponent_frequency_hold": 32,
+        "in_check": 5
+      },
+      "normal_reasons": {
+        "accepted_alternative": 1,
+        "baseline_selected": 3,
+        "insufficient_catalog_candidates": 5,
+        "in_check": 1,
+        "no_qualified_dynamic_alternative": 13,
+        "simplified_position": 13,
+        "repetition": 1
+      },
+      "boss_book_moves": [],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 0,
+      "trap_candidate_branches": 0,
+      "trap_capture_branch_searches": 0,
+      "trap_proof_results": 0,
+      "trap_attempt_reasons": {},
+      "quality_observations": 15,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "c4",
+          "uci": "c2c4",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 18
+        }
+      ],
+      "input_sha256": {
+        "pairs-7-8\\game-014.json": "9c473816e23047e431dc4c06a9cc334f4402ff15e68027394bf781386f4c129f",
+        "pairs-7-8\\game-014.pgn": "6759e7a2fb2954842c83549c9651c8e81da1263b257b15b5f2f6604af8f1adf1",
+        "pairs-7-8\\game-014.moves.jsonl": "69943896ddfd974276cd7e627b4eead94f1c06d3a3120edcffd561bf9fc3aa1b"
+      }
+    },
+    {
+      "game": 15,
+      "pair": 8,
+      "run": "pairs-7-8",
+      "boss_color": "white",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 119,
+      "passed": true,
+      "boss_moves": 60,
+      "normal_moves": 59,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 59,
+      "boss_baseline_preserved_reasons": {
+        "opponent_frequency_hold": 47,
+        "no_verified_lure": 1,
+        "in_check": 5,
+        "forced_or_late": 6
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 56,
+      "normal_direct_baseline_without_receipt": 19,
+      "normal_baseline_preserved_reasons": {
+        "baseline_selected": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 20,
+        "baseline_unreliable": 1,
+        "simplified_position": 8,
+        "in_check": 2
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "opponent_frequency_hold": 47,
+        "no_verified_lure": 1,
+        "in_check": 5,
+        "forced_or_late": 6
+      },
+      "normal_reasons": {
+        "accepted_alternative": 2,
+        "baseline_selected": 1,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 20,
+        "accepted_dynamic_alternative": 1,
+        "baseline_unreliable": 1,
+        "simplified_position": 8,
+        "in_check": 2
+      },
+      "boss_book_moves": [
+        {
+          "ply": 1,
+          "san": "e4",
+          "uci": "e2e4",
+          "line_id": "smith-morra",
+          "name": "Sicilian Defense: Smith-Morra Gambit",
+          "signature": false,
+          "loss_cp": 9,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 1,
+      "trap_candidate_branches": 2,
+      "trap_capture_branch_searches": 2,
+      "trap_proof_results": 2,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 2
+      },
+      "quality_observations": 31,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 2,
+          "san": "g6",
+          "uci": "g7g6",
+          "baseline_uci": "b8c6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 18
+        },
+        {
+          "ply": 6,
+          "san": "d6",
+          "uci": "d7d6",
+          "baseline_uci": "e7e6",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 4
+        },
+        {
+          "ply": 26,
+          "san": "Qb6",
+          "uci": "d8b6",
+          "baseline_uci": "c5d3",
+          "mode": "middlegame",
+          "reason": "accepted_dynamic_alternative",
+          "loss_cp": 0
+        }
+      ],
+      "input_sha256": {
+        "pairs-7-8\\game-015.json": "76877eac8b31c305e14c279c6b918556fc0fc69b48e93922dedaa21b8b4f8cfc",
+        "pairs-7-8\\game-015.pgn": "a3499fd1c544eedb3082cfc90eec9fbe03f0f13f404c031b1bbd8ec944498ab2",
+        "pairs-7-8\\game-015.moves.jsonl": "846c3d32665a26bf8e8245ddaad443f9f3ed51a1f4c25ec51153e28015dc094e"
+      }
+    },
+    {
+      "game": 16,
+      "pair": 8,
+      "run": "pairs-7-8",
+      "boss_color": "black",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 137,
+      "passed": true,
+      "boss_moves": 68,
+      "normal_moves": 69,
+      "normal_receipts": 40,
+      "boss_baseline_preserved": 67,
+      "boss_baseline_preserved_reasons": {
+        "no_verified_lure": 5,
+        "opponent_frequency_hold": 38,
+        "in_check": 5,
+        "forced_or_late": 19
+      },
+      "boss_nonbaseline_reasons": {
+        "accepted_safe_gambit_setup": 1
+      },
+      "normal_baseline_preserved": 66,
+      "normal_direct_baseline_without_receipt": 29,
+      "normal_baseline_preserved_reasons": {
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 26,
+        "in_check": 1,
+        "simplified_position": 5
+      },
+      "boss_reasons": {
+        "accepted_safe_gambit_setup": 1,
+        "no_verified_lure": 5,
+        "opponent_frequency_hold": 38,
+        "in_check": 5,
+        "forced_or_late": 19
+      },
+      "normal_reasons": {
+        "accepted_alternative": 3,
+        "insufficient_catalog_candidates": 5,
+        "no_qualified_dynamic_alternative": 26,
+        "in_check": 1,
+        "simplified_position": 5
+      },
+      "boss_book_moves": [
+        {
+          "ply": 2,
+          "san": "e5",
+          "uci": "e7e5",
+          "line_id": "fishing-pole",
+          "name": "Ruy Lopez: Berlin Defense, Fishing Pole Variation",
+          "signature": false,
+          "loss_cp": 10,
+          "reason": "accepted_safe_gambit_setup"
+        }
+      ],
+      "signature_proposals": [],
+      "verified_selected_traps": [],
+      "trap_candidate_turns": 5,
+      "trap_candidate_branches": 10,
+      "trap_capture_branch_searches": 9,
+      "trap_proof_results": 9,
+      "trap_attempt_reasons": {
+        "no_short_tactical_gain": 9,
+        "offer_cost_unreliable": 1
+      },
+      "quality_observations": 23,
+      "large_quality_errors_ge150": 0,
+      "final_boss_frequency": 0.05,
+      "trap_outcomes": {
+        "taken": 0,
+        "reference_defense": 0,
+        "unknown": 0
+      },
+      "normal_alternatives": [
+        {
+          "ply": 1,
+          "san": "e4",
+          "uci": "e2e4",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 9
+        },
+        {
+          "ply": 3,
+          "san": "Bd3",
+          "uci": "f1d3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 6
+        },
+        {
+          "ply": 5,
+          "san": "b3",
+          "uci": "b2b3",
+          "baseline_uci": "b1c3",
+          "mode": "opening",
+          "reason": "accepted_alternative",
+          "loss_cp": 22
+        }
+      ],
+      "input_sha256": {
+        "pairs-7-8\\game-016.json": "60ca8f42b2f59b7d7d93bdb35380784d5e975e687b14d366690fcf2c9f96b799",
+        "pairs-7-8\\game-016.pgn": "1f74d310d0957866c79a1f030069a1d0187dd4daa35425313a81bcc434b45db4",
+        "pairs-7-8\\game-016.moves.jsonl": "8cf11212a978aac4b1ec26f442006f3fc5bbc7ab92d98fb697ed1939d8a9a219"
+      }
+    }
+  ],
+  "signature_proposals": [
+    {
+      "game": 3,
+      "ply": 3,
+      "line_id": "blackmar-diemer",
+      "proposed_uci": "e2e4",
+      "selected_uci": "g1f3",
+      "reason": "opponent_frequency_hold"
+    }
+  ],
+  "runs": [
+    {
+      "run": "pairs-1-2",
+      "source": {
+        "commit": "dcc40800c9e42f652864dcc145e9a59b46272d2c",
+        "dirty": false,
+        "label": "dcc40800c9e42f652864dcc145e9a59b46272d2c"
+      },
+      "source_sha256": {
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "7af7658b1cbe810cc9bc1d66336c2103f9b5328863fc22c88c167bb6058aa7a0",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/boss_mode_match.py": "185f283a4e654aa424f7401ac1abef0d9075b05511d851169924400bdde8b9c6",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+      "sources_unchanged": true,
+      "catalog_unchanged": true,
+      "binary_unchanged": true
+    },
+    {
+      "run": "pairs-3-4",
+      "source": {
+        "commit": "dcc40800c9e42f652864dcc145e9a59b46272d2c",
+        "dirty": false,
+        "label": "dcc40800c9e42f652864dcc145e9a59b46272d2c"
+      },
+      "source_sha256": {
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "7af7658b1cbe810cc9bc1d66336c2103f9b5328863fc22c88c167bb6058aa7a0",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/boss_mode_match.py": "185f283a4e654aa424f7401ac1abef0d9075b05511d851169924400bdde8b9c6",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+      "sources_unchanged": true,
+      "catalog_unchanged": true,
+      "binary_unchanged": true
+    },
+    {
+      "run": "pairs-5-6",
+      "source": {
+        "commit": "dcc40800c9e42f652864dcc145e9a59b46272d2c",
+        "dirty": false,
+        "label": "dcc40800c9e42f652864dcc145e9a59b46272d2c"
+      },
+      "source_sha256": {
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "7af7658b1cbe810cc9bc1d66336c2103f9b5328863fc22c88c167bb6058aa7a0",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/boss_mode_match.py": "185f283a4e654aa424f7401ac1abef0d9075b05511d851169924400bdde8b9c6",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+      "sources_unchanged": true,
+      "catalog_unchanged": true,
+      "binary_unchanged": true
+    },
+    {
+      "run": "pairs-7-8",
+      "source": {
+        "commit": "dcc40800c9e42f652864dcc145e9a59b46272d2c",
+        "dirty": false,
+        "label": "dcc40800c9e42f652864dcc145e9a59b46272d2c"
+      },
+      "source_sha256": {
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "7af7658b1cbe810cc9bc1d66336c2103f9b5328863fc22c88c167bb6058aa7a0",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/boss_mode_match.py": "185f283a4e654aa424f7401ac1abef0d9075b05511d851169924400bdde8b9c6",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+      "sources_unchanged": true,
+      "catalog_unchanged": true,
+      "binary_unchanged": true
+    }
+  ],
+  "input_sha256": {
+    "pairs-1-2/match.json": "4f6e8dadfa117c3c89f95aa82137db1e41de99cced591c5566d4c6d77e08da42",
+    "pairs-3-4/match.json": "6eb538b57e47213cf84a7b93a030bad87b7d6c06b28692e0986d71ce0d100ea8",
+    "pairs-5-6/match.json": "b3950e2104b68a763965dd95cb1db623fd7e4b986c8c32f715174df011a846c0",
+    "pairs-7-8/match.json": "5cc88093a4737ab8e3336dd840d01016505cbc86c2fffcc879e81014cc3e2c89",
+    "pairs-1-2/game-001.json": "63ab631888cfcdc2a3678528076a850e09993993faeea60eab3f79decc85528c",
+    "pairs-1-2/game-001.pgn": "b0f14b7e3d898a19938bbf0714a47aee55a45a9ee73e91ff974fb72c466479cd",
+    "pairs-1-2/game-001.moves.jsonl": "e8631e4f79558ef390ec32d9b82ae822852dc8f7ea849c9d7b1a3f2561ff744a",
+    "pairs-1-2/game-002.json": "42843ded12c3a6c463d17c53856084bcd42c9b6437a0dd11deef7ae7a459b95a",
+    "pairs-1-2/game-002.pgn": "7728858bb2d4373db806b2d67b30cfb5d6dc6e6378c5045f59290a9cba1909f1",
+    "pairs-1-2/game-002.moves.jsonl": "b9f6482a5881c432dc2263d68c9d3ea575e82987f95e90ea5b383000382e007b",
+    "pairs-1-2/game-003.json": "e749886fc011056ae05746a5bb44f23133cb01d91e65c17f5ce4ce3848775290",
+    "pairs-1-2/game-003.pgn": "d22822da9ab62c8090057c4c914b2936ba8e3cfab8ef8eb7c54ce6d7f14aca5d",
+    "pairs-1-2/game-003.moves.jsonl": "2cb5ea4deb51aecf97c7b40f1a88e118e81a801551521c60fdb52d49689c0a82",
+    "pairs-1-2/game-004.json": "58caf1c551cb79e3dd255b16a2e682e6010c506b10269b3aca7d2dc977fdf3e4",
+    "pairs-1-2/game-004.pgn": "bc0d55db30bd7624f6b8907b66f3bf30ea45e28ff5504b66da5f0b2c5571ca0a",
+    "pairs-1-2/game-004.moves.jsonl": "2f99927112c988316bbb626fe88857a84857d0ebada7825f2f4af2141c4baf7a",
+    "pairs-3-4/game-005.json": "ec0a1d966c4b1be701395567ed230e2980161907fa3a04bafc538f2253cd034f",
+    "pairs-3-4/game-005.pgn": "62f79752b8cf69bdef0198018cfd065c0b83669ed71429dac7dbe6e7de53a3f8",
+    "pairs-3-4/game-005.moves.jsonl": "6b201ad205ca4f66065bbb51d5a7796a456fd6e72659b816928d233b04f4cd4b",
+    "pairs-3-4/game-006.json": "efbc969e9769b3fcc1f79abb73c0d86335356cd5ebc8eef7f617188cba91a5b1",
+    "pairs-3-4/game-006.pgn": "8246b3fb20332bc522e4465d47cb07d8173a29564723251ddd7bbfc1276ccb28",
+    "pairs-3-4/game-006.moves.jsonl": "b098cdc7e48805319efa99e5045c55bb3a373e775c8502395353316cd58b8b54",
+    "pairs-3-4/game-007.json": "0441b17990a52e17b03fb5bc4ccdc009efc31079eb47a3813f98ff1f9904df2d",
+    "pairs-3-4/game-007.pgn": "e4ee8463a1663be2a6d4d7696c8719d8a9275aefe17893e27968b9de8a9ec8c9",
+    "pairs-3-4/game-007.moves.jsonl": "dc36d602afae68882206c6ea2c6bfcb9d650e0e89dca1155df8cfba839f43f36",
+    "pairs-3-4/game-008.json": "8a599388cc212a800721c3a1cdb1dcd598a66ce624b7454a9502977adbc061e6",
+    "pairs-3-4/game-008.pgn": "7c1001f1861f6f2aa095c336dbf2e0d9a88ee48c6f2ffd778d77f761af0f6e32",
+    "pairs-3-4/game-008.moves.jsonl": "72ba86ccdae524d019be2cdd7fb8fdd5404a9329d83208d57b98d673992c69d9",
+    "pairs-5-6/game-009.json": "de814cf5efd8a6b04fafad42ab6e7df9e049afaf9b62f3ed200167b4c13349a7",
+    "pairs-5-6/game-009.pgn": "2b1ce299bab66b4611b9a6119a23c0764fd2cbde3634b5a5bc7330359783e9c2",
+    "pairs-5-6/game-009.moves.jsonl": "ffb75fc2053956ba2c0f9591b0f2c609b31b61c526481b966028deba89db1f2d",
+    "pairs-5-6/game-010.json": "f4742e93ecfae7b16eb611f093f584831bf555cbaac520ad0587fc3a5072076c",
+    "pairs-5-6/game-010.pgn": "321de8fab18d927b2205be401fb3ab407d140fc92e59b771c26633b55905a667",
+    "pairs-5-6/game-010.moves.jsonl": "e6c658924d266879ae97984a6fc6451584796075ea3e382a9fd407af0feb1acb",
+    "pairs-5-6/game-011.json": "355ef8bae18b95a4e9b9e4b2818a2818da7f1107eb960a3886859ac66de8636d",
+    "pairs-5-6/game-011.pgn": "f58c282d1801f4bc43bbfc67d5bd11a03bc9b0f8f813a0eacfc35cd6ad4f1ac3",
+    "pairs-5-6/game-011.moves.jsonl": "beeb03d7c7c29c6ae46e03bc8d8087289badab33c25c03244ffb71c967c0c1a8",
+    "pairs-5-6/game-012.json": "64bf17cad1dfbc44088837b1ccafe1ab68358bf9100aaf95b74fced5c2891c6f",
+    "pairs-5-6/game-012.pgn": "bb4762ec46236b081afeb9cd90fafd380f0ff7360f5f1e77ac67d848a2ec1c92",
+    "pairs-5-6/game-012.moves.jsonl": "d795c4223923b082966764ee8ed99b1a255e1a5e157b5d1d2e6ec3c081586635",
+    "pairs-7-8/game-013.json": "28d9094d4391dcf914a6f54703f55140acaa8a2c7f4b78b51fef82a1f15402f7",
+    "pairs-7-8/game-013.pgn": "7d61313f1ca4dcce1bc64e2a0203739b5e3c94d17580b4118f39358b3b481d7f",
+    "pairs-7-8/game-013.moves.jsonl": "d16f4a7d8310e6cda873eed51735ca735391c78ae81d0e67a241cd491f380b91",
+    "pairs-7-8/game-014.json": "9c473816e23047e431dc4c06a9cc334f4402ff15e68027394bf781386f4c129f",
+    "pairs-7-8/game-014.pgn": "6759e7a2fb2954842c83549c9651c8e81da1263b257b15b5f2f6604af8f1adf1",
+    "pairs-7-8/game-014.moves.jsonl": "69943896ddfd974276cd7e627b4eead94f1c06d3a3120edcffd561bf9fc3aa1b",
+    "pairs-7-8/game-015.json": "76877eac8b31c305e14c279c6b918556fc0fc69b48e93922dedaa21b8b4f8cfc",
+    "pairs-7-8/game-015.pgn": "a3499fd1c544eedb3082cfc90eec9fbe03f0f13f404c031b1bbd8ec944498ab2",
+    "pairs-7-8/game-015.moves.jsonl": "846c3d32665a26bf8e8245ddaad443f9f3ed51a1f4c25ec51153e28015dc094e",
+    "pairs-7-8/game-016.json": "60ca8f42b2f59b7d7d93bdb35380784d5e975e687b14d366690fcf2c9f96b799",
+    "pairs-7-8/game-016.pgn": "1f74d310d0957866c79a1f030069a1d0187dd4daa35425313a81bcc434b45db4",
+    "pairs-7-8/game-016.moves.jsonl": "8cf11212a978aac4b1ec26f442006f3fc5bbc7ab92d98fb697ed1939d8a9a219",
+    "pairs-1-2/host/game-001/boss/20261102-215747-5f27e3362c75.json": "eb878aa9a1b50356ae02d53ff58019f92a0587cfb06c676443a3ea92a632265c",
+    "pairs-1-2/host/game-001/boss/20261102-215750-3b72d2600e76.json": "4e077a88b6c56fb34cc9c28c0ba18a70c93dd720b189757966adf3d5d8509f22",
+    "pairs-1-2/host/game-001/normal/20261102-215751-7c946306508b.json": "c29deb3cbc3ae4890a9e3febb088ecef616d91b3dbd6f26a6e00bd658bb77732",
+    "pairs-1-2/host/game-001/normal/20261102-215751-aff08fb6629d.json": "7154bc5a5f17dfbb269cef90a4846afd2776faf6107efce8caad55804a52496d",
+    "pairs-1-2/host/game-002/boss/20261102-215947-4a3dca58ef46.json": "13b8ac0c547313df4e1da1ed7cf12b268f10e328ff09f55909b89796f5e96d14",
+    "pairs-1-2/host/game-002/boss/20261102-215947-c31cc1c35718.json": "2bdd7d33562744be5a3d92e5cd20324bea47c0c945b7420506c129648f9b95aa",
+    "pairs-1-2/host/game-002/normal/20261102-215947-7effbd6a7f00.json": "820842dadfac5e9ecf64a8cf05c2d5fe7a328d79c37212d06382af943e2d0f2b",
+    "pairs-1-2/host/game-002/normal/20261102-215947-b6098e89e685.json": "f9ffa5e85465dfe25d89aec626850e57f7a9a5d0783800f779c091311f1ae590",
+    "pairs-1-2/host/game-003/boss/20261102-220222-3e5983a44b6c.json": "e2213321a5508a4c0ada3d7ca8697ae41d91d78a567301edc0aaffb0a73bb951",
+    "pairs-1-2/host/game-003/boss/20261102-220223-9d620fe91176.json": "ad3b5893d80016f555ebf59924bc0b59f397ce182e1bfc07289d596c9d4865bc",
+    "pairs-1-2/host/game-003/normal/20261102-220223-4cd5697a9e74.json": "6637183a44455515d7fdee01fa981fd58a3acc0dc84190af99224653f964395f",
+    "pairs-1-2/host/game-003/normal/20261102-220223-6deff871e953.json": "e66e371921d16fd0a91954482bf4725c879fbf537ecf470ecec8e1fc04c5d3fa",
+    "pairs-1-2/host/game-004/boss/20261102-220516-13b1ed601690.json": "7da7d444414ca1cd71901f2573bad89db6c73ba652cd2b5f6d25682236bc6cde",
+    "pairs-1-2/host/game-004/boss/20261102-220516-3f73c10c68d3.json": "f59d6d81dff985604c04f42029ce87a089ac969fd242e501f7391382569ce8f4",
+    "pairs-1-2/host/game-004/normal/20261102-220517-62722d7bc125.json": "fe86898fa8d8ad17ef3401c9d9b2d63f4a7acfa457c17343804a48863effb811",
+    "pairs-1-2/host/game-004/normal/20261102-220517-8c77e4206493.json": "399a259af31a55488d5b46e1fdb76c6f0d19bd19c79cb4bfea1d78a38d5598ae",
+    "pairs-3-4/host/game-005/boss/20261102-215747-c11310a08023.json": "8fb7ebd3e8e23e31f426b77a80bc13db5e27b35a2346b61b35070fc38a08719f",
+    "pairs-3-4/host/game-005/boss/20261102-215750-c1abe366d999.json": "0d86028d38529aaa8fe245c3f973467a345e465fa7dce266496d4ad4ffaf8235",
+    "pairs-3-4/host/game-005/normal/20261102-215750-771fa3828af2.json": "89e88b2c03e57e0e823c3e0edc97a14e7bee42b27d7dbb0ff9125ef1ab967a51",
+    "pairs-3-4/host/game-005/normal/20261102-215750-873ba08cfefd.json": "9d3131ae1459002e754bddda0e2a7044ac8b008ac65a47c25043940037a8a92c",
+    "pairs-3-4/host/game-006/boss/20261102-220004-4a069e368147.json": "7579f9eecc1cf77f4451063ef8f0fa20ae8f5433284a8e8029953cf2641d51d2",
+    "pairs-3-4/host/game-006/boss/20261102-220004-53ebc6377f0b.json": "fc11ea4a0cb5ed191d07f07a59c9e66eee95c8ea5ffb6bfe2570e90e7f2a4a14",
+    "pairs-3-4/host/game-006/normal/20261102-220005-2645df92646c.json": "5fd46bb6d7657cfb4449bbab20a7611c2ac24e48bed97a22a0d3173301154acd",
+    "pairs-3-4/host/game-006/normal/20261102-220005-f6aa7d666d26.json": "96c062d4674c8948893618485a6a94abfff68cf79206a9862c866ae70a010d36",
+    "pairs-3-4/host/game-007/boss/20261102-220210-31c3de248de0.json": "9b8a981dd664503b60f37959cad73a48867b25dc4aa671f18c8d845f857323e8",
+    "pairs-3-4/host/game-007/boss/20261102-220210-a2fe3773e590.json": "ebaa8e737be7d61f5fca39ca586f6fda19333ba0ec09ead849828ac1466b29b0",
+    "pairs-3-4/host/game-007/normal/20261102-220210-18fe41d100b9.json": "d714cf77f7540d72654a23bf45eff01d069a808f9c501518a736ac37bb074737",
+    "pairs-3-4/host/game-007/normal/20261102-220210-1fce82cbe703.json": "561a6662f079b42179d60f3d457150db4e850aaedc6b3e21d05dba3a0e8018d7",
+    "pairs-3-4/host/game-008/boss/20261102-220449-562f3002bfe4.json": "447c8a62d1288fbc3c8407f01a166d17ebe115e44f0af4d180842f041b60d907",
+    "pairs-3-4/host/game-008/boss/20261102-220449-c9460f5dff57.json": "fc96b7c5b5ae66d053a11d7d4d993e23a27a8d6f6b09f81f91c7f339a3116203",
+    "pairs-3-4/host/game-008/normal/20261102-220449-26e11f2826f1.json": "8bf7a47cea2df768202b841b6d272f1b621786c4195e4d3c57ca2a13fa0d8aaa",
+    "pairs-3-4/host/game-008/normal/20261102-220449-833518085087.json": "651336a41f7b9be0e2927f7db5d9156ada065b1a611aff13a0d4793a3ba84631",
+    "pairs-5-6/host/game-009/boss/20261102-215747-c97901fa19af.json": "5214f13c6f9ace6f6b15f80a5e8d2fc23b4df2036d27e462ea0a4fbfdaf23f68",
+    "pairs-5-6/host/game-009/boss/20261102-215750-6d8f8de32850.json": "6f69fa2cb2c7ffd203ecf2025b270cfc0c637bbf1544a0cf262af41a42c76fcd",
+    "pairs-5-6/host/game-009/normal/20261102-215751-74d143139e1f.json": "b3b4f089033a4ccfdcab3145917c1280ba62f7d7456f86ec513ecf775d78e372",
+    "pairs-5-6/host/game-009/normal/20261102-215751-a7550ea1537c.json": "769b7c86ecfd4bffaa518f597cecb329f0614530860840bf4d49c2c21a5fd6c8",
+    "pairs-5-6/host/game-010/boss/20261102-220104-2884177997af.json": "10e691a7c5e89a194594c50d357310617ec3df4ff169d412dff72fe636689f15",
+    "pairs-5-6/host/game-010/boss/20261102-220104-e98552eee72a.json": "4940f0625fc81cc00b64ba7e5203896ece30f92b8a63dd0d23db5768da0d964e",
+    "pairs-5-6/host/game-010/normal/20261102-220105-4862ab015ccb.json": "dab1292542834118b2d721d31b61bf085055367c9c20b51767afa15b35390010",
+    "pairs-5-6/host/game-010/normal/20261102-220105-ab8227f5a747.json": "0271e33337469ed161c6db7e498d720f0ebcb8391ec75a2bc1f74f405b87c87d",
+    "pairs-5-6/host/game-011/boss/20261102-220314-3241e0e5c385.json": "3a5234bf81c3b0bf9baa886fed39f1f5c66baa2fe02ba50655c1555be416096a",
+    "pairs-5-6/host/game-011/boss/20261102-220315-e4ef8a47cdbe.json": "c10393fffd150110fb6d046c2770fae0e3d560ffce78a6bad6216d1f10dad710",
+    "pairs-5-6/host/game-011/normal/20261102-220315-b13cecf9966a.json": "b0bcb483bd66ba73d8a3dae169c2453d633ac7b28e6750f3b3e1b82db2af3e59",
+    "pairs-5-6/host/game-011/normal/20261102-220315-b2f5e709dc72.json": "37fc0424e6ff299d648321dac2914685f218df17b341f0cb07fe12ab269941b4",
+    "pairs-5-6/host/game-012/boss/20261102-220623-5b079746fa0a.json": "4acc518494957007c5bd31e22b2e2cc31c65a2d4819ea5ae41eb96382b47e7e1",
+    "pairs-5-6/host/game-012/boss/20261102-220623-7409221fddb6.json": "e747d93f03976130a5d141afcbf353dda1411c6bb93ad81aa1cc94324b29f7dd",
+    "pairs-5-6/host/game-012/normal/20261102-220623-3cf6824cd5d6.json": "5384bf2e873ca2fbac0a105547f209976a33f1d2512541bd6ae8a0d8f6ac6ae3",
+    "pairs-5-6/host/game-012/normal/20261102-220623-602e6267678d.json": "30856d7ada2e67525db0a7298c5157dab363e8d65544b0547be66fb2637f93d8",
+    "pairs-7-8/host/game-013/boss/20261102-215747-ca1ded69ca02.json": "a9a4998caecf994d7702e8c251911fa6808e236a3ae7b89c356998fb46c15ebc",
+    "pairs-7-8/host/game-013/boss/20261102-215750-413cc4517362.json": "17af4da4682bd251086b2936fbd83a42c476a40deb19b9ee25c973221a0d0349",
+    "pairs-7-8/host/game-013/normal/20261102-215750-04f1703bb7ad.json": "3ec2915be62617009ce70a7027bc48e39ba273aba3a510d09e4a400931e14554",
+    "pairs-7-8/host/game-013/normal/20261102-215750-414d37123822.json": "d1011400718e0ba00ee4a5c85cee9d23c264c35bd2e21c31e1d956a6511f4b7b",
+    "pairs-7-8/host/game-014/boss/20261102-220108-707bbcb5a944.json": "1ada49246ee545a4ee3a104a2004d602bb1cf2536c4a72b3813b70cedf839a6c",
+    "pairs-7-8/host/game-014/boss/20261102-220108-8ace40bd815e.json": "7f4d09825199cb460659e940f776c38e74fbeb34926a6218a6a689d450d85e61",
+    "pairs-7-8/host/game-014/normal/20261102-220108-635df119a936.json": "c4cb63ffd04a612e5097793c8f91c43cc92b026dfda74a3b79804eba46c396d4",
+    "pairs-7-8/host/game-014/normal/20261102-220109-4a5a7616cdf2.json": "1e21925d52356b64e9adcb6cdcbf04b4e02cace3ea42a87a793a4fa160f477e2",
+    "pairs-7-8/host/game-015/boss/20261102-220243-82a7b54e3e19.json": "a6d7a91715cc328e4f867b365cf766ebbb125de29dfaa14a871211dd1447c792",
+    "pairs-7-8/host/game-015/boss/20261102-220243-9c473b55bbde.json": "1186473a6869a5b2d8d8feaabf1cc1b0305a95bf2760bf827dd610b6437a32be",
+    "pairs-7-8/host/game-015/normal/20261102-220243-723eaa148708.json": "0504f2917b9df5e29e7195a02694bba4c028cedac7bc7b740610442351ca212f",
+    "pairs-7-8/host/game-015/normal/20261102-220243-da72d9e41e10.json": "f5d1ec64647d2907e76e2d6c5f761edbeb8cd978f3c5b16e890286b5424c71d6",
+    "pairs-7-8/host/game-016/boss/20261102-220518-a3b67bc4fc13.json": "fc9bfe4ca49d047db0638057cc8d249dd4e9bba6add17d8776273a84170dbd2c",
+    "pairs-7-8/host/game-016/boss/20261102-220519-46cd94ce05b1.json": "86dce010dc8e74487651af091b13aef854c8eb5beca8036d8bdc522bd469d9cc",
+    "pairs-7-8/host/game-016/normal/20261102-220519-65789ae78d9e.json": "9d8f87619e12a228eeb4b50b5ca7ff29d9c4e4ef58b725ce0553b7df1c7648ce",
+    "pairs-7-8/host/game-016/normal/20261102-220519-ae13205ffe5f.json": "02067a19b9622808ed6f854b0d9180c6c5aad18fa34fd1eb74875278ff952b29"
+  },
+  "limitations": [
+    "This audit reproduces recorded choices and legal state, not the strength correctness of the search evaluations.",
+    "Proof replays use the same production branch validator on stored native evidence, not a second engine or independent implementation.",
+    "No wins are attributed to openings, traps, or alternative selection without a controlled follow-up comparison."
+  ]
+}
