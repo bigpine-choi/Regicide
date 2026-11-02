@@ -139,6 +139,41 @@ func _run() -> void:
 		verify(app.captured_requests[-1].payload.time_control == ["10+0", "10+5", "15+10"][index], "selected rapid control in new-game payload")
 		verify(app.rapid_time_option.selected == index, "draft rapid control survives render")
 	verify(app.rapid_time_help.text.contains("15분") and app.rapid_time_help.text.contains("10초"), "increment explanation")
+	for color in ["white", "black"]:
+		var revision: int = 20 if color == "white" else 22
+		var overtime: Dictionary = fixture(revision, 30000 + revision)
+		overtime.human_color = color
+		overtime.turn = color
+		overtime.clock[color + "_ms"] = 0
+		overtime.clock.running_color = color
+		overtime.clock.timeout_policy = "engine_only"
+		overtime.clock.soft_timeout_color = color
+		overtime.clock.overtime_color = color
+		overtime.decision_support.recommendation = {"status":"inactive", "total_ms":null, "remaining_ms":null, "reason":"연습 시간이 소진됐지만 계속 둘 수 있습니다."}
+		var from_square: String = "e2" if color == "white" else "e7"
+		var to_square: String = "e4" if color == "white" else "e5"
+		if color == "black":
+			overtime.board = {"e1":"K", "e7":"p", "e8":"k"}
+			overtime.fen = "4k3/4p3/8/8/8/8/8/4K3 b - - 0 1"
+			overtime.legal_moves = ["e7e5"]
+		app.accept_state(overtime)
+		verify(app.recommendation_label.text == "내 시간 소진 · 계속 진행", "server-declared human overtime stays playable: " + color)
+		verify(app.complexity_label.text.contains("높음") and app._can_select_move(), "complexity and legal input stay active at human zero: " + color)
+		var incremented: Dictionary = overtime.duplicate(true)
+		incremented.revision += 1
+		incremented.human_to_move = false
+		incremented.decision_support = null
+		incremented.clock.running_color = "black" if color == "white" else "white"
+		incremented.clock[color + "_ms"] = 5000
+		incremented.clock.overtime_color = null
+		incremented.clock.sampled_monotonic_ms += 1
+		app.next_response = {"ok":true, "data":incremented}
+		app._on_square_pressed(from_square)
+		app._on_square_pressed(to_square)
+		await process_frame
+		await process_frame
+		verify(app.captured_requests[-1].path == "/api/move" and app.captured_requests[-1].payload.move == from_square + to_square, "human can submit an actual move at zero: " + color)
+		verify(app.state.result == "*" and not app.recommendation_label.text.contains("내 시간 소진"), "server increment clears overtime without inventing result: " + color)
 	verify(app._clock_text(-500) == "0:00", "negative clock clamped")
 	verify(app._clock_text(null) == "—", "missing value not fabricated")
 	app.queue_free()

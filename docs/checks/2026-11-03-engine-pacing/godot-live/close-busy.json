@@ -1,0 +1,146 @@
+{
+  "mode": "busy",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/state"
+    },
+    {
+      "method": "POST",
+      "path": "/api/new",
+      "started": 1520905.181377,
+      "elapsed_seconds": 0.020113700069487095
+    },
+    {
+      "method": "GET",
+      "path": "/api/evaluation"
+    },
+    {
+      "method": "POST",
+      "path": "/api/move",
+      "started": 1520905.2366543,
+      "elapsed_seconds": 0.034941199934110045
+    },
+    {
+      "method": "POST",
+      "path": "/api/engine",
+      "started": 1520905.3055273,
+      "elapsed_seconds": 1.0061694998294115
+    },
+    {
+      "method": "POST",
+      "path": "/api/engine/skip-wait",
+      "started": 1520905.3084813,
+      "elapsed_seconds": 0.004140099976211786
+    },
+    {
+      "method": "GET",
+      "path": "/api/state"
+    },
+    {
+      "method": "POST",
+      "path": "/api/shutdown",
+      "started": 1520906.3748777,
+      "elapsed_seconds": 0.000721300020813942
+    }
+  ],
+  "saved_games": [
+    {
+      "plies": 0,
+      "result": "*",
+      "human_color": "white"
+    },
+    {
+      "plies": 2,
+      "result": "*",
+      "human_color": "white"
+    }
+  ],
+  "clock": {
+    "schema": "regicide.game-clock.v1",
+    "enabled": true,
+    "control_id": "10+0",
+    "initial_ms": 600000,
+    "increment_ms": 0,
+    "label": "10\ubd84 \ub798\ud53c\ub4dc",
+    "timeout_policy": "engine_only",
+    "soft_timeout_color": "white",
+    "history": [
+      {
+        "ply": 0,
+        "white_ms": 600000.0,
+        "black_ms": 600000.0,
+        "mover": null,
+        "elapsed_ms": 0
+      },
+      {
+        "ply": 1,
+        "white_ms": 599950.027,
+        "black_ms": 600000.0,
+        "mover": "white",
+        "elapsed_ms": 49.973
+      },
+      {
+        "ply": 2,
+        "white_ms": 599950.027,
+        "black_ms": 598942.044,
+        "mover": "black",
+        "elapsed_ms": 1057.956
+      }
+    ],
+    "snapshot": {
+      "schema": "regicide.game-clock.v1",
+      "enabled": true,
+      "control_id": "10+0",
+      "timeout_policy": "engine_only",
+      "soft_timeout_color": "white",
+      "overtime_color": null,
+      "overtime_ms": 0,
+      "initial_ms": 600000,
+      "increment_ms": 0,
+      "label": "10\ubd84 \ub798\ud53c\ub4dc",
+      "white_ms": 599943.808,
+      "black_ms": 598942.044,
+      "running_color": "white",
+      "status": "running",
+      "turn_elapsed_ms": 6.219,
+      "flagged_color": null,
+      "pause_reason": null,
+      "ply": 2,
+      "sampled_monotonic_ms": 1520906303.727
+    },
+    "timeout_rule": "human clock zero permits play; engine clock zero loses regardless of mating material",
+    "undo_policy": "restore balances after retained ply; no retroactive extra increment"
+  },
+  "engine_pacing": [
+    {
+      "ply": 2,
+      "policy": "regicide-engine-pacing-v2",
+      "recommendation_method": "regicide-human-decision-support-v3",
+      "enabled": true,
+      "color": "black",
+      "root_ply": 1,
+      "before_fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+      "recommended_total_ms": 2000,
+      "target_total_ms": 1308,
+      "reserve_ms": 30000,
+      "spent_at_request_ms": 69.263,
+      "initial_remaining_ms": 599930.737,
+      "pressure_factor": 1.0,
+      "variation_factor": 0.6541261642379839,
+      "rhythm_profile": "quick_familiar_opening",
+      "pressure_start_ms": 180000,
+      "reason": "shared_human_recommendation",
+      "allocation": {
+        "baseline_ms": 1000,
+        "total_search_ms": 1114,
+        "completion_margin_ms": 123.874,
+        "automatic": false
+      },
+      "auxiliary_reason": "clock_budget_baseline_only",
+      "spent_before_wait_ms": 1057.671,
+      "waited_ms": 0.015,
+      "completion_reason": "client_closing"
+    }
+  ]
+}

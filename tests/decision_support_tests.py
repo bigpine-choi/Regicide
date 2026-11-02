@@ -78,7 +78,7 @@ class DecisionSupportTests(unittest.TestCase):
             self.assertEqual(values, sorted(values, reverse=True))
 
     def test_increment_increases_budget_without_spending_unearned_increment(self):
-        board = chess.Board()
+        board = chess.Board(TACTICAL)
         no = support.assess(board, chess.WHITE, clock())["recommendation"]
         inc = support.assess(board, chess.WHITE, clock(increment=10000))["recommendation"]
         self.assertGreater(inc["total_ms"], no["total_ms"])
@@ -87,7 +87,7 @@ class DecisionSupportTests(unittest.TestCase):
         self.assertEqual(tiny["urgency"], "critical")
 
     def test_fifteen_minutes_allows_more_than_ten(self):
-        board = chess.Board()
+        board = chess.Board(TACTICAL)
         ten = support.assess(board, chess.WHITE, clock())["recommendation"]
         fifteen = support.assess(board, chess.WHITE, clock(900000, 900000, increment=10000))["recommendation"]
         self.assertGreater(fifteen["total_ms"], ten["total_ms"])
@@ -146,6 +146,30 @@ class DecisionSupportTests(unittest.TestCase):
         self.assertEqual(support.assess(board, chess.WHITE, clock(), terminal)["status"], "inactive")
         for position in (chess.Board(None), None, chess.Board("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1")):
             self.assertEqual(support.assess(position, chess.WHITE, clock())["status"], "inactive")
+
+    def test_soft_human_timeout_keeps_complexity_without_finite_recommendation(self):
+        for color in (chess.WHITE, chess.BLACK):
+            board = chess.Board(TACTICAL)
+            if not color:
+                board = board.mirror()
+            c = clock(0, spent=650000, color=color)
+            c.update(timeout_policy="engine_only", soft_timeout_color="white" if color else "black")
+            result = support.assess(board, color, c)
+            self.assertEqual(result["status"], "ready")
+            self.assertIsInstance(result["complexity"]["score"], int)
+            self.assertEqual(result["recommendation"]["status"], "inactive")
+            self.assertIsNone(result["recommendation"]["remaining_ms"])
+            self.assertEqual(result["recommendation"]["reason"], "연습 시간이 소진됐지만 계속 둘 수 있습니다.")
+            restored = {**c, "white_ms" if color else "black_ms": 5000, "turn_elapsed_ms": 0}
+            self.assertEqual(support.assess(board, color, restored)["recommendation"]["status"], "ready")
+
+    def test_zero_time_exception_does_not_apply_to_engine_or_legacy_clock(self):
+        board = chess.Board(TACTICAL)
+        for policy, soft_color in (("both", "white"), ("engine_only", "black"), ("engine_only", None)):
+            c = {**clock(0), "timeout_policy": policy, "soft_timeout_color": soft_color}
+            result = support.assess(board, chess.WHITE, c)
+            self.assertEqual(result["recommendation"]["status"], "ready")
+            self.assertEqual(result["recommendation"]["urgency"], "critical")
 
     def test_invalid_clock_values_are_json_safe_and_never_recommend_time(self):
         for key in ("white_ms","black_ms","turn_elapsed_ms","increment_ms"):

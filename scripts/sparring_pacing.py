@@ -11,7 +11,7 @@ import chess
 
 VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 300,
           chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
-CLOSE_PLIES = 80
+CLOSE_PLIES = 60
 FINISH_PLIES = 138
 MAJOR_LOSS_CP = 400
 
@@ -66,7 +66,7 @@ def _resources(board, color):
 
 
 def resource_guard(board):
-    """Only a critical pre-40 ending latches; the caution tier is reversible."""
+    """Only a critical pre-30 ending latches; the caution tier is reversible."""
     current = _resources(board, board.turn)
     positions = _positions(board)
     trigger = next((ply for ply, position in enumerate(positions[:CLOSE_PLIES + 1])
@@ -75,7 +75,7 @@ def resource_guard(board):
         current.update(active=True, reason=_resources(positions[trigger], board.turn)["reason"],
                        material_concessions_blocked=True)
     else:
-        # After 40, the fixed ramp remains the normal policy. No new early
+        # After 30, the fixed ramp remains the normal policy. No new early
         # stop is inferred retroactively; material caution still applies.
         current["active"] = False
         current["reason"] = None

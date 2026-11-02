@@ -185,6 +185,49 @@ class RapidClockArchiveTests(unittest.TestCase):
         self.assertEqual(data["frames"][1]["engine"]["movetime_ms"], 50)
         self.assertIn("Regicide think time: 50 ms", data["pgn"])
 
+    def test_human_overtime_replays_and_increment_recovers(self):
+        self.clock = GameClock("10+5", monotonic=self.now, timeout_policy="engine_only", soft_timeout_color="white")
+        self.move("e2e4", 700)
+        data = self.load(self.record())
+        self.assertEqual(data["frames"][-1]["clock"]["white_ms"], 5000)
+        self.assertEqual(data["summary"]["result"], "*")
+        self.assertIn('[TimeForfeitPolicy "engine_only"]', data["pgn"])
+        self.move("e7e5", 1)
+        self.now.value += 15
+        data = self.load(self.record())
+        self.assertEqual(data["frames"][-1]["clock"]["overtime_color"], "white")
+        self.clock.finish()
+        self.assertEqual(self.load(self.record())["frames"][-1]["clock"]["white_ms"], 0)
+
+    def test_engine_only_clock_rejects_forged_human_timeout_and_policy(self):
+        self.clock = GameClock("10+0", monotonic=self.now, timeout_policy="engine_only", soft_timeout_color="white")
+        self.now.value += 700
+        record = self.record()
+        self.assertEqual(self.load(record)["summary"]["result"], "*")
+        for change in ("flag_human", "wrong_side", "wrong_snapshot", "overtime_lie"):
+            forged = copy.deepcopy(record)
+            if change == "flag_human":
+                forged["clock"]["snapshot"].update(flagged_color="white", status="finished", running_color=None)
+                forged["state"].update(result="0-1", termination="time_forfeit")
+            elif change == "wrong_side":
+                forged["clock"]["soft_timeout_color"] = "black"
+            elif change == "wrong_snapshot":
+                forged["clock"]["snapshot"]["timeout_policy"] = "both"
+            else:
+                forged["clock"]["snapshot"]["overtime_ms"] += 1
+            with self.subTest(change=change), self.assertRaises(ValueError): self.load(forged)
+
+    def test_practice_engine_flag_is_loss_despite_opponent_bare_king(self):
+        self.clock = GameClock("10+0", monotonic=self.now, timeout_policy="engine_only", soft_timeout_color="black")
+        self.board = chess.Board("7k/8/8/8/8/8/1R6/K7 w - - 0 1")
+        self.now.value = 601
+        self.clock.expire()
+        record = self.record("0-1", "time_forfeit")
+        record["state"]["human_color"] = "black"
+        self.assertEqual(self.load(record)["summary"]["result"], "0-1")
+        record["state"].update(result="1/2-1/2", termination="time_forfeit_insufficient_material")
+        with self.assertRaises(ValueError): self.load(record)
+
 
 if __name__ == "__main__":
     unittest.main()

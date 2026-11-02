@@ -101,15 +101,29 @@ def verify_close(args, mode):
             assert not thread.is_alive(), (mode, "Godot did not shut down its backend")
             routes = [entry["path"] for entry in server.audit if entry["method"] == "POST"]
             expected = {"ready": ["/api/shutdown"],
-                        "busy": ["/api/move", "/api/engine", "/api/shutdown"],
-                        "pending": ["/api/move", "/api/shutdown"]}[mode]
-            assert routes == expected, (mode, routes)
+                        "pending": ["/api/new", "/api/move", "/api/shutdown"]}
+            if mode == "busy":
+                assert routes[:2] == ["/api/new", "/api/move"] and routes[-1] == "/api/shutdown", routes
+                # The separate HTTP clients may reach the host in either order.
+                assert sorted(routes[2:-1]) == ["/api/engine", "/api/engine/skip-wait"], routes
+            else:
+                assert routes == expected[mode], (mode, routes)
             assert not game.error, (mode, game.error)
             expected_plies = {"ready": 0, "busy": 2, "pending": 1}[mode]
             assert len(game.board.move_stack) == expected_plies, (mode, game.state())
             records = verify_saved_games(temporary / "games")
+            saved = json.loads((temporary / "games" / f"{game.game_id}.json").read_text(encoding="utf-8"))
+            pacing = saved.get("engine_pacing", {}).get("decisions", [])
+            if mode != "ready":
+                assert saved["clock"]["enabled"] and saved["clock"]["control_id"] == "10+0", saved["clock"]
+            if mode == "busy":
+                assert len(pacing) == 1 and pacing[0]["enabled"], pacing
+                assert pacing[0]["target_total_ms"] > 0 and pacing[0]["completion_reason"] == "client_closing", pacing
+            else:
+                assert not pacing, (mode, pacing)
             (args.output / f"close-{mode}.json").write_text(
-                json.dumps({"mode": mode, "routes": server.audit, "saved_games": records}, indent=2) + "\n",
+                json.dumps({"mode": mode, "routes": server.audit, "saved_games": records,
+                            "clock": saved["clock"], "engine_pacing": pacing}, indent=2) + "\n",
                 encoding="utf-8")
         finally:
             server.shutdown()

@@ -69,13 +69,14 @@
             <label class="field-label" for="rapid-time-control">새 대국 시간</label>
             <div class="select-wrap"><select id="rapid-time-control" name="time_control" aria-describedby="rapid-time-help"><option value="10+0" selected>10분 래피드</option><option value="10+5">10+5 래피드</option><option value="15+10">15+10 래피드</option></select></div>
             <p class="help-note" id="rapid-time-help">각자 10분 · 추가 시간 없음. 새 대국부터 적용됩니다.</p>
-            <label class="field-label" for="think-time">Regicide가 한 수를 생각할 시간</label>
-            <div class="select-wrap"><select id="think-time" name="movetime_ms" aria-describedby="think-time-help"><option value="100">0.1초 · 빠르게</option><option value="1000" selected>1초 · 기본</option><option value="3000">3초 · 더 신중하게</option><option value="5000">5초 · 충분히 생각</option></select></div>
+            <label class="field-label" id="think-time-label" for="think-time">Regicide가 한 수를 생각할 시간</label>
+            <div class="select-wrap" id="think-time-field"><select id="think-time" name="movetime_ms" aria-describedby="think-time-help"><option value="100">0.1초 · 빠르게</option><option value="1000" selected>1초 · 기본</option><option value="3000">3초 · 더 신중하게</option><option value="5000">5초 · 충분히 생각</option></select></div>
+            <p class="help-note" id="auto-think-time" hidden>자동으로 조절</p>
             <p class="help-note" id="think-time-help" aria-live="polite">대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.</p>
             <button class="primary-button" id="new-game" type="submit" disabled>새 대국 시작<span aria-hidden="true">↗</span></button>
           </form>
           <div class="game-actions"><button id="undo" class="secondary-button" type="button" disabled><span aria-hidden="true">↶</span> 한 턴 되돌리기</button><button id="resign" class="secondary-button" type="button" disabled>기권</button></div>
-          <p class="help-note">색·모드·대국 시계는 새 대국부터 적용됩니다. 다른 화면에서도 시계는 흐릅니다. 생각 시간은 새 대국 없이 바꿀 수 있습니다.</p>
+          <p class="help-note">색·모드·대국 시계는 새 대국부터 적용됩니다. 다른 화면에서도 시계는 흐릅니다. 기본·보스 모드의 AI 생각시간은 새 대국 없이 바꿀 수 있습니다.</p>
         </section>
 
         <section id="rating-label-panel" class="card" aria-label="실제 래피드 레이팅" hidden>

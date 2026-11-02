@@ -19,8 +19,10 @@ import chess
 
 MATCH_SCHEMA = "regicide.sparring-strength-match.v1"
 SUMMARY_SCHEMA = "regicide.sparring-match-summary.v2"
-POLICY = "regicide-sparring-play-v2"
-SUPPORTED_POLICIES = frozenset(("regicide-sparring-play-v1", POLICY))
+POLICY = "regicide-sparring-play-v3"
+POLICY_PHASE_ROOTS = {"regicide-sparring-play-v1": (100, 140),
+                      "regicide-sparring-play-v2": (80, 138), POLICY: (60, 138)}
+SUPPORTED_POLICIES = frozenset(POLICY_PHASE_ROOTS)
 CONDITIONS = ("sparring_ms", "stockfish_ms", "threads", "hash_mb", "max_plies", "cap_policy", "classical")
 
 
@@ -135,9 +137,11 @@ def _line(board, line, required):
 
 
 def _absolute_mate_choice(board, decision, base, candidate, selected_uci):
-    """Explicit v2 exception: raw winning mate versus independent finite target."""
+    """Explicit v2/v3 exception, within that recorded policy's close-play phase."""
     depth = decision.get("verification_depth")
-    if (decision.get("policy") != POLICY or len(board.move_stack) >= 80
+    policy = decision.get("policy")
+    if (policy not in ("regicide-sparring-play-v2", POLICY)
+            or len(board.move_stack) >= POLICY_PHASE_ROOTS[policy][0]
             or decision.get("comparison_mode") != "absolute_target_from_winning_mate"
             or decision.get("comparison_basis") != "exact_winning_mate_reference"
             or decision.get("loss_cp") is not None or not base or base["kind"] != "mate" or base["mate"] <= 0
@@ -184,7 +188,7 @@ def _observation(board, observation):
 
 
 def _phase(root_ply, policy=POLICY):
-    ramp, finish = (100, 140) if policy == "regicide-sparring-play-v1" else (80, 138)
+    ramp, finish = POLICY_PHASE_ROOTS[policy]
     return "finish" if root_ply >= finish else "ramp" if root_ply >= ramp else "calibration" if root_ply < 6 else "sparring"
 
 
@@ -413,7 +417,7 @@ def _pacing_game(samples, close_cp):
             "episode_outcomes": dict(Counter(row["outcome"] for row in results)), "trace": trace}
 
 
-def _band_sequence(sequence, reached_target_plies, close_cp, target_fullmoves=40):
+def _band_sequence(sequence, reached_target_plies, close_cp, target_fullmoves=30):
     """Measure consecutive samples within one game; missing scores break runs."""
     trace, recoveries = [], []
     outside_run, longest, outside_start, first_exit = 0, 0, None, None
@@ -513,12 +517,14 @@ def _match_policy(match):
     return policies[0]
 
 
-def summarize_matches(matches, close_cp=100, target_fullmoves=40):
+def summarize_matches(matches, close_cp=100, target_fullmoves=None):
     """Pure aggregation; input games must contain detailed per-move records."""
     if type(close_cp) is not int or close_cp not in (100, 150):
         raise ValueError("close_cp must be 100 or 150")
-    if type(target_fullmoves) is not int or target_fullmoves not in (40, 50):
-        raise ValueError("target_fullmoves must be 40 or 50")
+    if target_fullmoves is not None and (type(target_fullmoves) is not int or target_fullmoves not in (30, 40, 50)):
+        raise ValueError("target_fullmoves must be 30, 40 or 50")
+    automatic_window = target_fullmoves is None
+    target_fullmoves = 30 if automatic_window else target_fullmoves
     target_plies = 2 * target_fullmoves
     band_key = f"continuous_first{target_fullmoves}_band"
     window_key = f"first_{target_fullmoves}_full_moves"
@@ -536,6 +542,13 @@ def summarize_matches(matches, close_cp=100, target_fullmoves=40):
         current_policy = _match_policy(match)
         if policy is not None and policy != current_policy:
             raise ValueError("do not pool different sparring policies")
+        if policy is None and automatic_window:
+            # Historical v1/v2 invocations defaulted to a 40-move reporting
+            # window (v1's full 50-move window remains an explicit option).
+            target_fullmoves = 30 if current_policy == POLICY else 40
+            target_plies = 2 * target_fullmoves
+            band_key = f"continuous_first{target_fullmoves}_band"
+            window_key = f"first_{target_fullmoves}_full_moves"
         policy = current_policy
         input_runs.append({"run": run, "policy": policy, **{key: copy.deepcopy(match.get(key))
                           for key in ("source", "source_sha256", "binary_sha256", "catalog_sha256")}})
@@ -573,8 +586,8 @@ def summarize_matches(matches, close_cp=100, target_fullmoves=40):
                       "plies": game.get("plies"), "result": game.get("result"), "termination": game.get("termination"),
                       "category": checked["category"], "score": checked["score"], "issues": checked["issues"],
                       "reached_target_full_moves": len(checked["samples"]) >= target_plies,
-                      "board_reached_ramp_threshold": len(checked["samples"]) >= (100 if policy.endswith("v1") else 80),
-                      "board_reached_finish_threshold": len(checked["samples"]) >= (140 if policy.endswith("v1") else 138),
+                      "board_reached_ramp_threshold": len(checked["samples"]) >= POLICY_PHASE_ROOTS[policy][0],
+                      "board_reached_finish_threshold": len(checked["samples"]) >= POLICY_PHASE_ROOTS[policy][1],
                       "reached_ramp_phase": bool(phases["ramp"]),
                       "reached_finish_phase": bool(phases["finish"]),
                       "phase_activation": {phase: {"moves": len(plies), "first_ply": plies[0] if plies else None}
@@ -610,8 +623,7 @@ def summarize_matches(matches, close_cp=100, target_fullmoves=40):
     return {"schema": SUMMARY_SCHEMA, "purpose": "Eight-game functional/trend diagnostic; no Elo or causal training-effect estimate",
             "policy": policy, "close_cp": close_cp, "close_points": close_cp / 100,
             "target_fullmoves": target_fullmoves, "target_plies": target_plies,
-            "policy_phase_root_plies": {"ramp": 100 if policy == "regicide-sparring-play-v1" else 80,
-                                        "finish": 140 if policy == "regicide-sparring-play-v1" else 138},
+            "policy_phase_root_plies": dict(zip(("ramp", "finish"), POLICY_PHASE_ROOTS.get(policy, POLICY_PHASE_ROOTS[POLICY]))),
             "threshold_inclusive": True,
             "conditions": conditions, "input_configs": configurations, "input_runs": input_runs, "planned_games": planned,
             "unplayed_games": planned - len(results), "outcomes": outcome(results),
@@ -637,10 +649,10 @@ def summarize_matches(matches, close_cp=100, target_fullmoves=40):
                 "band_ply_axis": f"ply and first_exit_ply identify the associated sparring move. evaluation_record_ply identifies the move record containing the search; its root board has one fewer ply. Stockfish's initial white root is excluded; its root after Black's {target_fullmoves}th move is in record {target_plies + 1} (board ply {target_plies}) and is unknown if absent",
                 "recovery": "Consecutive outside samples followed immediately by a known inside sample; own_turns counts sparring turns from the first outside sample. Unknown breaks both outside runs and recovery evidence",
                 "pacing": "Pacing stages and resource guards are policy receipts, grouped by event_ply separately within each game; not independent proof of a human blunder. Strict selected-root classification and consecutive outside-to-inside restoration use validated scores, ignoring relaxed pacing status. Unknown breaks recovery evidence; temporary outside scores still fail strict continuity",
-                "phase_activation": "Board reach at the policy's ramp/finish thresholds is separate from an actual valid matching decision. v2 roots80/138 activate White81/139 and Black82/140; v1 roots100/140 activate White101/141 and Black102/142. No early material phase guard",
+                "phase_activation": "Board reach at the policy's ramp/finish thresholds is separate from an actual valid matching decision. v3 roots60/138 activate White61/139 and Black62/140; v2 roots80/138 activate White81/139 and Black82/140; v1 roots100/140 activate White101/141 and Black102/142. No early material phase guard",
                 "baseline": "Own-engine unrestricted root score before policy selection; this is the gauge reference, not the played move score",
-                "selected": "Own-engine candidate_compared CP for an alternative, baseline score otherwise; finite-baseline cases require the same depth. The explicit v2 winning-mate exception instead requires independently verified finite compared/final CP at depth>=4. Known outside values remain outside. Same pre-move root, not a later-board evaluation. Recomputed from score evidence, never trusted from band_control status",
-                "mate_avoidance": "A validated positive own-perspective exact mate reference with a complete legal matching mate PV is declined for an independently verified finite candidate before ply80. Separate from CP-loss concessions; in-band mate avoidance has a separate count. Baseline CP, loss CP and CP subtraction remain null; raw mate scores are never converted to CP",
+                "selected": "Own-engine candidate_compared CP for an alternative, baseline score otherwise; finite-baseline cases require the same depth. The explicit v2/v3 winning-mate exception instead requires independently verified finite compared/final CP at depth>=4. Known outside values remain outside. Same pre-move root, not a later-board evaluation. Recomputed from score evidence, never trusted from band_control status",
+                "mate_avoidance": "A validated positive own-perspective exact mate reference with a complete legal matching mate PV is declined for an independently verified finite candidate before root ply60 in v3 or ply80 in v2. Separate from CP-loss concessions; in-band mate avoidance has a separate count. Baseline CP, loss CP and CP subtraction remain null; raw mate scores are never converted to CP",
                 "stability": "Finite exact CP includes provisional iterations; the stable-only baseline subset is separately reported",
                 "stockfish": "Auxiliary next-root score after the sparring move and before Stockfish moves; not its weakened selected-move score. play merged-info depth/score packet coherence is not established",
                 "latency": "Observed host wall time, not CPU time; measured overhead is not automatically a time-control failure",
@@ -672,8 +684,8 @@ def main(argv=None):
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--close-cp", type=int, choices=(100, 150), default=100,
                         help="inclusive absolute CP threshold; 150 reproduces the historical wider band")
-    parser.add_argument("--target-fullmoves", type=int, choices=(40, 50), default=40,
-                        help="reporting window only; 50 reproduces the historical window without changing the recorded policy")
+    parser.add_argument("--target-fullmoves", type=int, choices=(30, 40, 50), default=None,
+                        help="reporting window only; default 30 for v3, historical default 40 for v1/v2; 50 preserves the older full window")
     args = parser.parse_args(argv)
     paths = [path.resolve(strict=True) for path in args.matches]
     if len(set(paths)) != len(paths):

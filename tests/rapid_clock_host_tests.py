@@ -17,6 +17,8 @@ from play_human import HumanGame, RevisionError
 from game_archive import GameArchive
 from human_play_tests import FakeFactory
 from game_clock_tests import Now
+import decision_support
+import engine_pacing
 
 
 class HostClockTests(unittest.TestCase):
@@ -25,7 +27,8 @@ class HostClockTests(unittest.TestCase):
         self.binary = self.root / "fake.exe"; self.binary.write_bytes(b"fake peer")
         self.factory = FakeFactory(); self.now = Now()
         self.game = HumanGame(self.binary, self.root / "games", self.factory,
-                              opening_variety_enabled=False, monotonic=self.now)
+                              opening_variety_enabled=False, monotonic=self.now,
+                              pacing_wait=lambda seconds, event: self.now.advance(seconds))
         self.addCleanup(self.folder.cleanup); self.addCleanup(self.game.close)
 
     def new(self, color="white", control="10+5", **kwargs):
@@ -34,6 +37,13 @@ class HostClockTests(unittest.TestCase):
     def engine(self, uci=None):
         if uci: self.factory.instances[-1].replies.append(uci)
         return self.game.engine_move(self.game.revision)
+    def expected_engine_balance(self):
+        snapshot = self.game._clock.snapshot()
+        recommendation = engine_pacing.plan(self.game.board, snapshot, seed=self.game._opening_seed)
+        color = "white" if self.game.board.turn else "black"
+        extra = max(0, recommendation["target_total_ms"] - snapshot["turn_elapsed_ms"])
+        return snapshot[color + "_ms"] + snapshot["increment_ms"] - extra
+
     def record(self): return json.loads((self.root / "games" / (self.game.game_id + ".json")).read_text(encoding="utf-8"))
 
     def test_new_game_both_colors_white_runs_first(self):
@@ -47,12 +57,12 @@ class HostClockTests(unittest.TestCase):
     def test_legal_move_increment_saved_and_pgn_clock(self):
         self.new(); self.now.advance(12); state = self.human("e2e4")
         self.assertEqual(state["clock"]["white_ms"], 593000)
-        self.now.advance(2); self.engine("e7e5")
+        self.now.advance(2); expected_black = self.expected_engine_balance(); self.engine("e7e5")
         record = self.record(); self.assertEqual(len(record["clock"]["history"]), 3)
         pgn = chess.pgn.read_game(io.StringIO(self.game.pgn()))
         self.assertEqual(pgn.headers["TimeControl"], "600+5")
         self.assertEqual(pgn.variations[0].clock(), 593)
-        self.assertEqual(pgn.end().clock(), 603)
+        self.assertAlmostEqual(pgn.end().clock(), expected_black / 1000, places=3)
 
     def test_illegal_and_stale_do_not_grant_increment(self):
         self.new(); self.now.advance(5)
@@ -61,24 +71,27 @@ class HostClockTests(unittest.TestCase):
         self.assertEqual(self.game.state()["clock"]["white_ms"], 595000)
         self.assertEqual(len(self.game._clock.history), 1)
 
-    def test_human_timeout_poll_is_durable_idempotent(self):
+    def test_human_zero_clock_continues_without_result_or_revision_change(self):
         self.new(); revision = self.game.revision; self.now.advance(600)
         state = self.game.state()
-        self.assertEqual((state["result"], state["termination"]), ("0-1", "time_forfeit"))
-        self.assertFalse(state["human_to_move"]); self.assertEqual(state["revision"], revision + 1)
-        self.now.advance(400); self.game.state(); self.assertEqual(self.game.revision, revision + 1)
-        self.assertEqual(self.record()["state"]["result"], "0-1")
-        with self.assertRaises(ValueError): self.human("e2e4")
-        self.assertEqual(len(self.game.board.move_stack), 0)
+        self.assertEqual(state["result"], "*")
+        self.assertTrue(state["human_to_move"]); self.assertEqual(state["revision"], revision)
+        self.assertEqual(state["clock"]["white_ms"], 0)
+        self.now.advance(400); self.game.state(); self.assertEqual(self.game.revision, revision)
+        state = self.human("e2e4")
+        self.assertEqual(state["result"], "*")
+        self.assertEqual(state["clock"]["white_ms"], 5000)
+        self.assertEqual(len(self.game.board.move_stack), 1)
+        GameArchive(self.root / "games").get_game(self.game.game_id)
 
-    def test_timeout_draw_against_bare_king(self):
-        self.new(); self.game.board = chess.Board("7k/8/8/8/8/8/8/KQ6 w - - 0 1")
+    def test_engine_timeout_is_loss_even_against_bare_king_in_practice(self):
+        self.new("black"); self.game.board = chess.Board("7k/8/8/8/8/8/8/KQ6 w - - 0 1")
         self.now.advance(600)
         state = self.game.state()
-        self.assertEqual((state["result"], state["termination"]), ("1/2-1/2", "time_forfeit_insufficient_material"))
+        self.assertEqual((state["result"], state["termination"]), ("0-1", "time_forfeit"))
 
     def test_timeout_single_knight_can_mate_with_opponent_pawn(self):
-        self.new(); self.game.board = chess.Board("7k/8/8/8/8/8/P5n1/K7 w - - 0 1")
+        self.new("black"); self.game.board = chess.Board("7k/8/8/8/8/8/P5n1/K7 w - - 0 1")
         self.now.advance(600)
         self.assertEqual(self.game.state()["result"], "0-1")
 
@@ -159,14 +172,14 @@ class HostClockTests(unittest.TestCase):
         self.assertEqual(state["clock"]["white_ms"], 900000)
 
     def test_close_adjudicates_unpolled_timeout(self):
-        self.new(); self.now.advance(601); self.game.close()
+        self.new("black"); self.now.advance(601); self.game.close()
         record = self.record()
         self.assertEqual(record["state"]["termination"], "time_forfeit")
         self.assertEqual(record["record_status"], "completed")
         self.assertEqual(record["clock"]["snapshot"]["flagged_color"], "white")
 
     def test_pgn_export_adjudicates_unpolled_timeout(self):
-        self.new(); self.now.advance(601)
+        self.new("black"); self.now.advance(601)
         pgn = chess.pgn.read_game(io.StringIO(self.game.pgn()))
         self.assertEqual(pgn.headers["Result"], "0-1")
         self.assertEqual(pgn.headers["Termination"], "time forfeit")
@@ -189,15 +202,17 @@ class HostClockTests(unittest.TestCase):
 
     def test_production_records_replay_with_clocks_and_terminal_result(self):
         self.new(); self.now.advance(12); self.human("e2e4")
-        self.now.advance(2); self.engine("e7e5")
+        self.now.advance(2); expected_black = self.expected_engine_balance(); self.engine("e7e5")
         archive = GameArchive(self.root / "games")
         replay = archive.get_game(self.game.game_id, self.game.game_id)
         self.assertEqual(replay["frames"][-1]["clock"]["white_ms"], 593000)
-        self.assertEqual(replay["frames"][-1]["clock"]["black_ms"], 603000)
+        self.assertAlmostEqual(replay["frames"][-1]["clock"]["black_ms"], expected_black, delta=1)
         self.now.advance(600); self.game.state()
+        self.human("g1f3")
         replay = archive.get_game(self.game.game_id)
-        self.assertEqual(replay["frames"][-1]["result"], "0-1")
-        self.assertEqual(replay["frames"][-1]["clock"]["flagged_color"], "white")
+        self.assertEqual(replay["frames"][-1]["result"], "*")
+        self.assertIsNone(replay["frames"][-1]["clock"]["flagged_color"])
+        self.assertEqual(replay["frames"][-1]["clock"]["white_ms"], 5000)
         self.assertEqual(replay["frames"][1]["clock"]["white_ms"], 593000)
 
 

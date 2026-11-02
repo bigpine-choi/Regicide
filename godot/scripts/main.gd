@@ -8,6 +8,9 @@ const ChessBoard = preload("res://scripts/chess_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const AnalysisMode = preload("res://scripts/analysis_mode.gd")
 const CoachingMode = preload("res://scripts/coaching_mode.gd")
+# A complete paced turn can take 45 seconds in addition to search/transport.
+const ENGINE_HTTP_TIMEOUT_SECONDS: float = 70.0
+const ORDINARY_HTTP_TIMEOUT_SECONDS: float = 15.0
 
 var analysis_overlay: AnalysisMode
 var analysis_entry_button: Button
@@ -106,6 +109,8 @@ var color_option: OptionButton
 var boss_mode_option: OptionButton
 var game_mode_help: Label
 var time_option: OptionButton
+var time_option_label: Label
+var auto_time_label: Label
 var think_time_help: Label
 var sidebar_scroll: ScrollContainer
 var live_settings: GridContainer
@@ -466,7 +471,8 @@ func _build_ui() -> void:
 	rapid_time_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rapid_time_option.item_selected.connect(_on_rapid_time_selected)
 	settings.add_child(rapid_time_option)
-	settings.add_child(_label("AI 한 수 시간", 14, "a3b6c8"))
+	time_option_label = _label("AI 한 수 시간", 14, "a3b6c8")
+	settings.add_child(time_option_label)
 	time_option = OptionButton.new()
 	for option in [["0.1초", 100], ["1초", 1000], ["3초", 3000], ["5초", 5000]]:
 		time_option.add_item(option[0], option[1])
@@ -475,6 +481,10 @@ func _build_ui() -> void:
 	time_option.tooltip_text = "대국 중에도 바꿀 수 있습니다. 이미 생각 중인 수는 기존 시간으로 마치고, 다음 수부터 적용합니다."
 	time_option.item_selected.connect(_on_think_time_selected)
 	settings.add_child(time_option)
+	auto_time_label = _label("자동으로 조절", 14, "9bd7ca")
+	auto_time_label.name = "AutoThinkTime"
+	auto_time_label.visible = false
+	settings.add_child(auto_time_label)
 	game_mode_help = _label("", 12, "a3b6c8")
 	game_mode_help.name = "GameModeHelp"
 	game_mode_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -523,7 +533,7 @@ func _build_ui() -> void:
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(footer)
 	http = HTTPRequest.new()
-	http.timeout = 15.0
+	http.timeout = ORDINARY_HTTP_TIMEOUT_SECONDS
 	add_child(http)
 	# Search updates must arrive while the move request is still waiting.
 	evaluation_http = HTTPRequest.new()
@@ -1278,8 +1288,15 @@ func _exit_review() -> void:
 	_render()
 
 
+func _set_main_request_timeout(path: String) -> void:
+	# Keep control requests short; only a move waits for the host's turn pacing.
+	http.timeout = ENGINE_HTTP_TIMEOUT_SECONDS if path == "/api/engine" else ORDINARY_HTTP_TIMEOUT_SECONDS
+
+
 func _send_request(path: String, payload: Variant = null, client: HTTPRequest = null) -> Dictionary:
 	var requester: HTTPRequest = http if client == null else client
+	if client == null:
+		_set_main_request_timeout(path)
 	var headers := PackedStringArray(["X-Regicide-Token: " + backend_token])
 	var method := HTTPClient.METHOD_GET
 	var contents := ""
@@ -1683,7 +1700,11 @@ func _play_engine_if_needed() -> void:
 
 
 func _can_change_think_time() -> bool:
-	return not _file_dialog_busy() and not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
+	return not _uses_auto_think_time() and not _file_dialog_busy() and not state.is_empty() and not closing and not review_mode and not state.get("handicap_mode", false) and not think_time_request_in_flight and not backend_url.is_empty() and (not request_in_flight or engine_thinking)
+
+
+func _uses_auto_think_time() -> bool:
+	return state.get("engine", {}).get("sparring_mode", false) == true or boss_mode_option.get_selected_id() == 2
 
 
 func _on_think_time_selected(index: int) -> void:
@@ -1792,10 +1813,13 @@ func _cancel_promotion() -> void:
 
 
 func _on_new_game_pressed() -> void:
-	_mutate("/api/new", {"color": "white" if color_option.selected == 0 else "black",
-		"movetime_ms": time_option.get_selected_id(), "boss_mode": boss_mode_option.get_selected_id() == 1,
+	var payload: Dictionary = {"color": "white" if color_option.selected == 0 else "black",
+		"boss_mode": boss_mode_option.get_selected_id() == 1,
 		"sparring_mode": boss_mode_option.get_selected_id() == 2,
-		"time_control": RAPID_CONTROLS[rapid_time_option.selected]})
+		"time_control": RAPID_CONTROLS[rapid_time_option.selected]}
+	if not payload.sparring_mode:
+		payload["movetime_ms"] = time_option.get_selected_id()
+	_mutate("/api/new", payload)
 
 
 func _on_rapid_time_selected(index: int) -> void:
@@ -1853,6 +1877,7 @@ func _render_clock_and_advice() -> void:
 	var shown: Dictionary = _display_state()
 	var clock: Dictionary = shown.get("clock", {}) if shown.get("clock") is Dictionary else {}
 	var enabled: bool = clock.get("enabled", false) == true
+	var human_overtime: bool = clock.get("timeout_policy") == "engine_only" and clock.get("overtime_color") == shown.get("human_color") and shown.get("result", "*") == "*"
 	var bottom: String = "white" if board_model.view_from_white else "black"
 	var upper: String = "black" if board_model.view_from_white else "white"
 	for item in [[top_clock, upper], [bottom_clock, bottom]]:
@@ -1869,6 +1894,8 @@ func _render_clock_and_advice() -> void:
 		var running: bool = not review_mode and not closing and clock.get("status") == "running" and clock.get("running_color") == color
 		label.text = ("▶ " if running else "") + _clock_text(remaining)
 		label.tooltip_text = ("백" if color == "white" else "흑") + " 남은 시간 · " + str(clock.get("label", "")) + (" · 기록된 시계" if review_mode else "")
+		if human_overtime and color == shown.get("human_color"):
+			label.tooltip_text += " · 내 시간 소진 · 계속 진행"
 		label.add_theme_color_override("font_color", Color("ffb4a1" if remaining <= 30000 else "9bd7ca" if running else "f6f0de"))
 	decision_panel.visible = not review_mode and not closing and not state.is_empty()
 	if not decision_panel.visible:
@@ -1878,8 +1905,8 @@ func _render_clock_and_advice() -> void:
 	var ready: bool = support.get("status") == "ready" and state.get("human_to_move", false) and state.get("result", "*") == "*"
 	complexity_label.text = "사람 기준 복잡도 · 대기"
 	complexity_detail.text = str(support.get("note", "내 차례에 판단할 요소와 생각 시간을 안내합니다."))
-	recommendation_label.text = ""
-	recommendation_detail.text = ""
+	recommendation_label.text = "내 시간 소진 · 계속 진행" if human_overtime else ""
+	recommendation_detail.text = "시간이 없어도 수를 둘 수 있습니다. Regicide의 시간 제한은 유지됩니다." if human_overtime else ""
 	if not ready:
 		if state.get("result", "*") != "*":
 			complexity_label.text = "대국 종료 · 시간 안내 마침"
@@ -1891,6 +1918,8 @@ func _render_clock_and_advice() -> void:
 		complexity_label.text = "사람 기준 복잡도 · %s %d/100 · 실험" % [str(difficulty.get("label", "")), int(score)]
 	var reasons: Array = difficulty.get("reasons", []) if difficulty.get("reasons") is Array else []
 	complexity_detail.text = " · ".join(PackedStringArray(reasons.slice(0, 3)))
+	if human_overtime:
+		return
 	var recommendation: Dictionary = support.get("recommendation", {}) if support.get("recommendation") is Dictionary else {}
 	var remaining: Variant = recommendation.get("remaining_ms")
 	var total: Variant = recommendation.get("total_ms")
@@ -1943,13 +1972,53 @@ func _on_game_mode_selected(_index: int) -> void:
 	var descriptions := {
 		0: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
 		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-		2: "40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."}
+		2: "30수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."}
 	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
 	boss_mode_option.tooltip_text = description
 	if boss_mode_option.get_selected_id() == 2:
-		boss_mode_option.tooltip_text += "\n40수는 백과 흑이 각각 40번 둔 시점입니다. 41~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다."
+		boss_mode_option.tooltip_text += "\n30수는 백과 흑이 각각 30번 둔 시점입니다. 31~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다."
 	if game_mode_help != null:
 		game_mode_help.text = description
+	_render_think_time_controls()
+
+
+func _render_think_time_controls() -> void:
+	var automatic: bool = _uses_auto_think_time()
+	time_option.visible = not automatic
+	time_option_label.text = "AI 시간 관리" if automatic else "AI 한 수 시간"
+	auto_time_label.visible = automatic
+	time_option.disabled = not _can_change_think_time()
+	if think_time_help == null:
+		return
+	think_time_help.visible = not review_mode
+	var engine: Dictionary = state.get("engine", {})
+	if not think_time_request_in_flight:
+		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
+		if time_index >= 0:
+			time_option.select(time_index)
+	if automatic:
+		think_time_help.text = "사람 권장시간에 맞춰 착수합니다.\n내 남은 시간이 3분 미만이면 점차 빠르게 둡니다."
+		if engine.get("sparring_mode", false) != true:
+			think_time_help.text += "\n새 스파링 대국부터 자동 관리합니다."
+		elif boss_mode_option.get_selected_id() != 2:
+			think_time_help.text += "\n현재 스파링 대국은 자동 관리합니다."
+		return
+	var thinking_now: bool = engine_thinking or bool(state.get("engine_thinking", false))
+	if thinking_now:
+		var current_ms: int = active_think_time_ms
+		if engine.get("active_movetime_ms") != null:
+			current_ms = int(engine.active_movetime_ms)
+		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
+	else:
+		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\nAI 생각시간은 현재 대국에, 색·모드·대국 시계는 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
+	var extra_ms: int = planned_extra_budget(state)
+	if thinking_now and engine.get("active_extra_budget_ms") != null:
+		extra_ms = int(engine.active_extra_budget_ms)
+	if extra_ms > 0:
+		var extra_label: String = "구상 검토" if bool(engine.get("dynamic_play_enabled", false)) else "오프닝 후보 검토"
+		think_time_help.text += "\n%s 시 최대 %s초 더 생각할 수 있습니다." % [extra_label, str(float(extra_ms) / 1000.0)]
+	if think_time_request_in_flight:
+		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
 
 
 static func _rating_integer(value: Variant, minimum: int = 100, maximum: int = 4000) -> bool:
@@ -2205,30 +2274,7 @@ func _render() -> void:
 	rapid_time_help.visible = not review_mode
 	_on_game_mode_selected(boss_mode_option.selected)
 	game_mode_help.visible = not review_mode
-	time_option.disabled = not _can_change_think_time()
-	if not think_time_request_in_flight:
-		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
-		if time_index >= 0:
-			time_option.select(time_index)
-	think_time_help.visible = not review_mode
 	var thinking_now: bool = engine_thinking or bool(state.get("engine_thinking", false))
-	if thinking_now:
-		var current_ms: int = active_think_time_ms
-		if engine.get("active_movetime_ms") != null:
-			current_ms = int(engine.active_movetime_ms)
-		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
-	else:
-		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\nAI 생각시간은 현재 대국에, 색·모드·대국 시계는 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
-	var extra_ms: int = planned_extra_budget(state)
-	if thinking_now and engine.get("active_extra_budget_ms") != null:
-		extra_ms = int(engine.active_extra_budget_ms)
-	if extra_ms > 0:
-		var extra_label: String = "스파링 응수 검토" if bool(engine.get("sparring_mode", false)) else ("구상 검토" if bool(engine.get("dynamic_play_enabled", false)) else "오프닝 후보 검토")
-		think_time_help.text += "\n%s 시 최대 %s초 더 생각할 수 있습니다." % [extra_label, str(float(extra_ms) / 1000.0)]
-	if think_time_request_in_flight:
-		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
-	if engine.get("sparring_mode", false) == true and int(engine.get("movetime_ms", 1000)) < 600:
-		think_time_help.text += "\n짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다."
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
 	save_button.disabled = not ready or _file_dialog_busy() or request_in_flight or think_time_request_in_flight or replacing or (review_mode and review_pgn.is_empty())
@@ -2272,7 +2318,7 @@ func _render() -> void:
 			status_detail.text = "Regicide의 기물과 도착 칸을 선택하세요.\n이 수부터 새 기보로 이어집니다."
 		else:
 			var color_name := "백" if human_color == "white" else "흑"
-			status_detail.text = "당신은 %s · Regicide 기준 생각시간 %s초" % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
+			status_detail.text = "당신은 %s · Regicide가 생각시간을 자동으로 조절합니다." % color_name if engine.get("sparring_mode", false) == true else "당신은 %s · Regicide 기준 생각시간 %s초" % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
 	var promotion_was_visible: bool = promotion_panel.visible
@@ -2385,9 +2431,22 @@ func _notification(what: int) -> void:
 		_close_app()
 
 
+func _release_engine_wait_on_close() -> void:
+	if not own_backend or not engine_thinking or backend_url.is_empty() or state.is_empty():
+		return
+	# Release only this turn's paced wait. The original move request still
+	# finishes its search, commits the move and saves before normal shutdown.
+	var release_client := HTTPRequest.new()
+	release_client.timeout = 3.0
+	add_child(release_client)
+	await _send_request("/api/engine/skip-wait", {"revision": int(state.get("revision", -1))}, release_client)
+	release_client.queue_free()
+
+
 func _close_app() -> void:
 	closing = true
 	_render()
+	await _release_engine_wait_on_close()
 	# Both clients may have a response pending; let them finish before closing
 	# or asking an owned backend for its final board revision.
 	var finish_deadline: int = Time.get_ticks_msec() + 20000

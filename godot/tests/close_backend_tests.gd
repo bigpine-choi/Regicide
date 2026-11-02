@@ -34,6 +34,19 @@ func _run() -> void:
 		quit(1)
 		return
 	if mode != "ready":
+		# Exercise closing a real timed game through the same new-game UI.
+		var initial_game: String = str(app.state.game_id)
+		app.color_option.select(0)
+		app.boss_mode_option.select(0)
+		app.rapid_time_option.select(0)
+		app.time_option.select(app.time_option.get_item_index(1000))
+		app._on_new_game_pressed()
+		if not await wait_for(func(): return not app.request_in_flight and str(app.state.game_id) != initial_game, "timed new game"):
+			return
+		if not app.state.clock.enabled or app.state.clock.control_id != "10+0" or app.state.human_color != "white" or int(app.state.engine.movetime_ms) != 1000:
+			printerr("FAIL: close test requires a white 10+0 game with 1000 ms search budget")
+			quit(1)
+			return
 		app._on_square_pressed("e2")
 		app._on_square_pressed("e4")
 		if mode == "busy":

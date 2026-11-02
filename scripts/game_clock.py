@@ -23,14 +23,22 @@ def validate_control(control_id):
 
 
 class GameClock:
-    def __init__(self, control_id=None, *, monotonic=None):
+    def __init__(self, control_id=None, *, monotonic=None, timeout_policy="both", soft_timeout_color=None):
         self.control_id = validate_control(control_id)
+        if timeout_policy not in ("both", "engine_only"):
+            raise ValueError("Unknown clock timeout policy.")
+        if (timeout_policy == "engine_only" and soft_timeout_color not in ("white", "black")
+                or timeout_policy == "both" and soft_timeout_color is not None):
+            raise ValueError("Clock timeout policy and practice color do not match.")
+        self.timeout_policy = timeout_policy
+        self.soft_timeout_color = soft_timeout_color
         self._now = monotonic or time.monotonic
         self.config = dict(CONTROLS[control_id]) if control_id else {
             "initial_ms": 0, "increment_ms": 0, "label": "시간 제한 없음"}
         self.enabled = control_id is not None
         self._balances = {"white": float(self.config["initial_ms"]), "black": float(self.config["initial_ms"])}
         self._running = "white" if self.enabled else None
+        self._turn_color = self._running
         self._anchor = self._now()
         self._elapsed_before_pause = 0.0
         self._status = "running" if self.enabled else "disabled"
@@ -55,16 +63,24 @@ class GameClock:
         balances = dict(self._balances)
         if self._running:
             balances[self._running] = max(0.0, balances[self._running] - elapsed)
+        overtime_color = (self.soft_timeout_color if self.enabled and self.soft_timeout_color
+                          and balances[self.soft_timeout_color] <= 0 else None)
+        turn_elapsed = self._elapsed_before_pause + elapsed
+        overtime_ms = (max(0, turn_elapsed - self.history[-1][self.soft_timeout_color + "_ms"])
+                       if overtime_color and self._turn_color == self.soft_timeout_color else 0)
         return {"schema": SCHEMA, "enabled": self.enabled, "control_id": self.control_id,
+                "timeout_policy": self.timeout_policy, "soft_timeout_color": self.soft_timeout_color,
+                "overtime_color": overtime_color, "overtime_ms": round(overtime_ms, 3),
                 **self.config, "white_ms": round(balances["white"], 3) if self.enabled else None,
                 "black_ms": round(balances["black"], 3) if self.enabled else None,
                 "running_color": self._running, "status": self._status,
-                "turn_elapsed_ms": round(self._elapsed_before_pause + elapsed, 3),
+                "turn_elapsed_ms": round(turn_elapsed, 3),
                 "flagged_color": self.flagged_color, "pause_reason": self.pause_reason, "ply": self.ply,
                 "sampled_monotonic_ms": round(now * 1000, 3) if self.enabled else None}
 
     def _expire_elapsed(self, elapsed):
-        if self._running and elapsed >= self._balances[self._running]:
+        if (self._running and self._running != self.soft_timeout_color
+                and elapsed >= self._balances[self._running]):
             color = self._running
             self._elapsed_before_pause += self._balances[color]
             self._balances[color] = 0.0
@@ -88,13 +104,14 @@ class GameClock:
         now = self._now()
         elapsed = self._elapsed(now)
         # Recheck the exact completion instant, not the earlier UI snapshot.
-        if elapsed >= self._balances[color]:
+        if color != self.soft_timeout_color and elapsed >= self._balances[color]:
             self._expire_elapsed(elapsed)
             return False
-        self._balances[color] += self.config["increment_ms"] - elapsed
+        self._balances[color] = max(0.0, self._balances[color] - elapsed) + self.config["increment_ms"]
         self.ply = ply
         self.history.append(self._entry(color, self._elapsed_before_pause + elapsed))
         self._running = "black" if color == "white" else "white"
+        self._turn_color = self._running
         self._anchor = now
         self._elapsed_before_pause = 0.0
         return True
@@ -117,6 +134,7 @@ class GameClock:
     def resume(self, color):
         if self.enabled and self._status == "paused" and not self.flagged_color:
             self._running = color
+            self._turn_color = color
             self._anchor = self._now()
             self._status = "running"
             self.pause_reason = None
@@ -126,8 +144,10 @@ class GameClock:
             # An already established board result has precedence over a
             # later poll. Stopping must not manufacture a new flag fall.
             if self._running:
-                elapsed = min(self._balances[self._running], self._elapsed())
-                self._balances[self._running] -= elapsed
+                elapsed = self._elapsed()
+                if self._running != self.soft_timeout_color:
+                    elapsed = min(self._balances[self._running], elapsed)
+                self._balances[self._running] = max(0.0, self._balances[self._running] - elapsed)
                 self._elapsed_before_pause += elapsed
             self._running = None
             self._status = "finished"
@@ -147,11 +167,15 @@ class GameClock:
         self.pause_reason = None
         self._elapsed_before_pause = 0.0
         self._running = color
+        self._turn_color = color
         self._anchor = self._now()
         self._status = "running"
 
     def metadata(self):
         return {"schema": SCHEMA, "enabled": self.enabled, "control_id": self.control_id, **self.config,
+                "timeout_policy": self.timeout_policy, "soft_timeout_color": self.soft_timeout_color,
                 "history": copy.deepcopy(self.history), "snapshot": self.snapshot(),
-                "timeout_rule": "opponent has_insufficient_material => draw; conservative material-only detection",
+                "timeout_rule": ("human clock zero permits play; engine clock zero loses regardless of mating material"
+                                 if self.timeout_policy == "engine_only" else
+                                 "opponent has_insufficient_material => draw; conservative material-only detection"),
                 "undo_policy": "restore balances after retained ply; no retroactive extra increment"}

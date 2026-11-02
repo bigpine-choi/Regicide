@@ -178,7 +178,7 @@ func _run() -> void:
 	verify(not app.board_model.view_from_white, "new game retains chosen perspective")
 	await flip_without_mutation("black player waiting for white opening")
 	await flip_without_mutation("black player waiting for same opening")
-	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 1, "black game receives real white engine opening"):
+	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 1, "black game receives real white engine opening", 60.0):
 		await finish()
 		return
 	verify(app.state.human_color == "black" and app.state.human_to_move, "human black receives turn")
@@ -199,7 +199,7 @@ func _run() -> void:
 		return
 	verify(app.state.moves.size() == 2 and app.state.moves[1].uci == black_move, "flipped black input submitted exact legal move")
 	await flip_without_mutation("real reply after black move")
-	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 3, "second real engine reply"):
+	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.size() == 3, "second real engine reply", 60.0):
 		await finish()
 		return
 	verify(app.state.human_to_move, "turn returns to black")

@@ -25,6 +25,42 @@ def recorded(game, ply):
 
 
 class PacingTests(unittest.TestCase):
+    def test_major_losses_stop_entering_recovery_after_each_sides_thirtieth_move(self):
+        self.assertEqual(pacing.CLOSE_PLIES, 60)
+        for color, capture_ply, included in ((chess.WHITE, 59, True), (chess.BLACK, 60, True),
+                                             (chess.WHITE, 61, False), (chess.BLACK, 62, False)):
+            fen = "1n5k/q7/8/8/8/8/8/RN5K w - - 0 1" if color else "rn5k/8/8/8/8/8/Q7/1N5K w - - 0 1"
+            board = chess.Board(fen)
+            cycle = ("b1c3", "b8c6", "c3b1", "c6b8")
+            for ply in range(capture_ply - 1):
+                board.push_uci(cycle[ply % 4])
+            self.assertTrue(board.is_valid())
+            self.assertEqual(board.turn, color)
+            board.push_uci("a1a7" if color else "a8a2")
+            board.push_uci("h8g8" if color else "h1g1")
+            self.assertTrue(board.is_valid())
+            plan = pacing.derive(board, [], 900)
+            self.assertEqual(plan["active"], included, (color, capture_ply, plan))
+            if included:
+                self.assertEqual(plan["event_ply"], capture_ply)
+                self.assertEqual(plan["stage"], 1)
+
+    def test_resource_guard_only_latches_through_completed_move_thirty(self):
+        for capture_ply in (60, 62):
+            original = chess.Board("1n5k/q7/8/8/8/8/R7/1N5K w - - 0 1")
+            for ply in range(capture_ply - 1):
+                original.push_uci(("b1c3", "b8c6", "c3b1", "c6b8")[ply % 4])
+            original.push_uci("a7a2")
+            mirrored = original.root().mirror()
+            for move in original.move_stack:
+                mirrored.push(chess.Move(chess.square_mirror(move.from_square), chess.square_mirror(move.to_square)))
+            for board in (original, mirrored):
+                self.assertTrue(board.is_valid())
+                guard = pacing.resource_guard(board)
+                self.assertEqual(guard["active"], capture_ply == 60, (capture_ply, board.turn, guard))
+                self.assertEqual(guard["trigger_ply"], 60 if capture_ply == 60 else None)
+                self.assertTrue(guard["material_concessions_blocked"])
+
     def test_actual_rook_loss_recovers_over_four_bot_turns(self):
         targets = []
         for stage, ply in enumerate((36, 38, 40, 42), 1):

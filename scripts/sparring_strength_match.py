@@ -355,6 +355,9 @@ def run_match(config, *, sparring_factory=None, stockfish_factory=None):
         raise ValueError('Regicide binary differs from the expected runtime SHA256')
     output = Path(config['output_dir'])
     output.mkdir(parents=True, exist_ok=False)
+    target_fullmoves = {'regicide-sparring-play-v1': 50, 'regicide-sparring-play-v2': 40,
+                       'regicide-sparring-play-v3': 30}[sparring_play.POLICY]
+    target_plies = 2 * target_fullmoves
     metadata = {'schema': 'regicide.sparring-strength-match.v1', 'started_at': utc(), 'config': config,
                 'source': source, 'source_sha256': {path: sha(ROOT / path) for path in SOURCES},
                 'catalog_sha256': {path: sha(ROOT / path) for path in CATALOG},
@@ -372,8 +375,8 @@ def run_match(config, *, sparring_factory=None, stockfish_factory=None):
                              'screen_helpers': 'QuietHints and DisplayOnlyPeer; no background display search',
                              'stockfish_scores': 'Supplementary pre-move root evaluations from merged play info, not chosen weakened move values',
                              'close_cp': 100,
-                             'target_fullmoves': 40,
-                             'measurements': 'Actual concessions, 80-ply reach, pre-80-ply abs CP <=100 on known roots, continuous band coverage, delayed recovery, ramp/finish and legal WDL',
+                             'target_fullmoves': target_fullmoves,
+                             'measurements': f'Actual concessions, {target_plies}-ply reach, pre-{target_plies}-ply abs CP <=100 on known roots, continuous band coverage, delayed recovery, ramp/finish and legal WDL',
                              'claims': 'Small diagnostic only; no Elo or perceived-drama inference', 'ponder': False},
                 'schedule': entries, 'games': [], 'status': 'running', 'errors': []}
     write_json(output / 'match.json', metadata)

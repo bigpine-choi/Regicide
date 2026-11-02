@@ -19,8 +19,8 @@ import evaluation_stability
 import opening_variety as opening
 import sparring_pacing
 
-POLICY = "regicide-sparring-play-v2"
-SUPPORTED_POLICIES = ("regicide-sparring-play-v1", POLICY)
+POLICY = "regicide-sparring-play-v3"
+SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -44,8 +44,9 @@ DISCOVERY_DEPTH = 3
 MAX_DISCOVERY = 16
 RANKED_DISCOVERY = 6
 MAX_PROBES = 4
-RAMP_PLY = 80
+RAMP_PLY = 60
 FINISH_PLY = 138
+V2_RAMP_PLY = 80
 LEGACY_RAMP_PLY = 100
 LEGACY_FINISH_PLY = 140
 VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 300,
@@ -76,12 +77,13 @@ def _replay(board):
 
 
 def phase(board, *, policy=None):
-    """v2: close through move 40, ramp 41..69, full on each side's move 70."""
+    """v3: close through move 30, ramp 31..69, full on each side's move 70."""
     ply = len(board.move_stack)
     legacy = policy == SUPPORTED_POLICIES[0]
     if ply >= (LEGACY_FINISH_PLY if legacy else FINISH_PLY):
         return "finish"
-    if ply >= (LEGACY_RAMP_PLY if legacy else RAMP_PLY):
+    ramp_ply = LEGACY_RAMP_PLY if legacy else V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1] else RAMP_PLY
+    if ply >= ramp_ply:
         return "ramp"
     return "calibration" if ply < 6 else "sparring"
 
@@ -92,10 +94,13 @@ def extra_budget(movetime_ms, *, ply=0, analysis_only=False):
     return QUALITY_BUDGET_MS if analysis_only or ply >= FINISH_PLY else min(MAX_EXTRA_MS, 2 * movetime_ms)
 
 
-def _ramp_fraction(board):
-    if len(board.move_stack) < RAMP_PLY:
+def _ramp_fraction(board, *, policy=None):
+    ramp_ply = V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1] else RAMP_PLY
+    if len(board.move_stack) < ramp_ply:
         return 0.0
-    return min(1., max(0., (board.fullmove_number - 40) / 30))
+    close_fullmoves = ramp_ply // 2
+    full_strength_move = FINISH_PLY // 2 + 1
+    return min(1., max(0., (board.fullmove_number - close_fullmoves) / (full_strength_move - close_fullmoves)))
 
 
 def _phase_factor(board, *, policy=None):
@@ -106,7 +111,7 @@ def _phase_factor(board, *, policy=None):
         return 1.0
     if policy == SUPPORTED_POLICIES[0]:
         return max(0., (LEGACY_FINISH_PLY - len(board.move_stack)) / (LEGACY_FINISH_PLY - LEGACY_RAMP_PLY))
-    return 1 - _ramp_fraction(board)
+    return 1 - _ramp_fraction(board, policy=policy)
 
 
 def derive_profile(board, decisions, *, policy=None):
@@ -292,6 +297,7 @@ def _target(board, profile, baseline_cp):
             "target_cp": round(target, 3), "ramp_fraction": round(ramp, 4),
             "baseline_cp": baseline_cp, "selected_cp": baseline_cp, "selected_final_cp": baseline_cp,
             "status": "pending" if active else "inactive", "deviation_cp": None,
+            "pre30_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre40_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre50_inside": -BAND_CP <= baseline_cp <= BAND_CP, "recovered": False,
             "failure_reason": None,
@@ -442,6 +448,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         "lower_cp": -BAND_CP, "upper_cp": BAND_CP, "target_cp": TARGET_CP,
         "baseline_cp": None, "selected_cp": None, "selected_final_cp": None,
         "status": "unmet" if reference_mate else "unavailable", "deviation_cp": None,
+        "pre30_inside": False if reference_mate else None,
         "pre40_inside": False if reference_mate else None,
         "pre50_inside": False if reference_mate else None,
         "baseline_mate": reference_mate["mate"] if reference_mate else None,
@@ -477,7 +484,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         cp, final_cp = control.get("selected_cp"), control.get("selected_final_cp")
         known = type(cp) in (int, float) and type(final_cp) in (int, float)
         inside = all(-BAND_CP <= value <= BAND_CP for value in (cp, final_cp)) if known else False if reference_mate else None
-        control["pre40_inside"] = control["pre50_inside"] = inside
+        control["pre30_inside"] = control["pre40_inside"] = control["pre50_inside"] = inside
         control["strict_band_status"] = "met" if inside is True else "unmet" if inside is False else "unavailable"
         control["strict_deviation_cp"] = max(max(-BAND_CP - value, value - BAND_CP, 0)
                                               for value in (cp, final_cp)) if known else None

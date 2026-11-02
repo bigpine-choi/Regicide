@@ -17,7 +17,7 @@ import chess
 
 METHOD = "regicide-sparring-rating-v1"
 TARGET = "chess_com_rapid"
-POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2")
+POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2", "regicide-sparring-play-v3")
 PRIOR_LOSS = 80.0
 PRIOR_WEIGHT = 8.0
 CALIBRATION_PRIOR_GAMES = 10.0

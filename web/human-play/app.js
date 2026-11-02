@@ -658,11 +658,46 @@
     const descriptions = {
       normal: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
       boss: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-      sparring: "40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."
+      sparring: "30수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
     };
     const mode = byId("boss-mode").value;
     byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;
-    byId("boss-mode-help").title = mode === "sparring" ? "40수는 백과 흑이 각각 40번 둔 시점입니다. 41~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다." : "";
+    byId("boss-mode-help").title = mode === "sparring" ? "30수는 백과 흑이 각각 30번 둔 시점입니다. 31~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다." : "";
+    renderThinkTimeControls();
+  }
+
+  function usesAutoThinkTime() {
+    return state?.engine.sparring_mode === true || byId("boss-mode").value === "sparring";
+  }
+
+  function renderThinkTimeControls() {
+    const automatic = usesAutoThinkTime();
+    const ready = Boolean(state) && !closed;
+    byId("think-time-field").hidden = automatic;
+    byId("think-time").hidden = automatic;
+    byId("think-time-label").textContent = automatic ? "AI 시간 관리" : "Regicide가 한 수를 생각할 시간";
+    byId("auto-think-time").hidden = !automatic;
+    byId("think-time").disabled = automatic || !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
+    if (state && !timeSaving && [100, 1000, 3000, 5000].includes(state.engine.movetime_ms)) byId("think-time").value = String(state.engine.movetime_ms);
+    if (automatic) {
+      byId("think-time-help").textContent = "사람 권장시간에 맞춰 착수합니다. 내 남은 시간이 3분 미만이면 점차 빠르게 둡니다." +
+        (state?.engine.sparring_mode !== true ? " 새 스파링 대국부터 자동 관리합니다." : byId("boss-mode").value !== "sparring" ? " 현재 스파링 대국은 자동 관리합니다." : "");
+      return;
+    }
+    const currentMS = state?.engine.active_movetime_ms;
+    byId("think-time-help").textContent = timeSaving ? "생각 시간을 저장하고 있습니다…" :
+      currentMS != null && currentMS !== state.engine.movetime_ms ?
+      `현재 수는 ${currentMS / 1000}초로 생각 중 · 다음 Regicide 수부터 ${state.engine.movetime_ms / 1000}초` :
+      timeNotice || "대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.";
+    // Settings and board replies can cross a phase boundary out of order.
+    // Use the latest setting's schedule with the current board's move count.
+    const extraSchedule = state?.engine.extra_budget_schedule;
+    const plannedExtraMS = state?.engine.dynamic_play_enabled && Array.isArray(extraSchedule) ?
+      (extraSchedule.find(stage => (state.moves?.length ?? 0) < stage.until_ply)?.budget_ms ?? 0) :
+      (state?.engine.extra_budget_ms ?? 0);
+    const extraMS = currentMS != null ? (state?.engine.active_extra_budget_ms ?? plannedExtraMS) : plannedExtraMS;
+    const extraLabel = state?.engine.dynamic_play_enabled ? "구상 검토" : "오프닝 후보 검토";
+    if (extraMS > 0) byId("think-time-help").textContent += ` ${extraLabel} 시 최대 ${extraMS / 1000}초 더 생각할 수 있습니다.`;
   }
 
   function renderSparringRating() {
@@ -729,6 +764,7 @@
   function renderClockAndAdvice() {
     const clock = state?.clock;
     const human = state?.human_color || "white";
+    const humanOvertime = clock?.timeout_policy === "engine_only" && clock.overtime_color === human && state?.result === "*";
     for (const [id, color] of [["human-clock", human], ["opponent-clock", human === "white" ? "black" : "white"]]) {
       const element = byId(id);
       element.hidden = clock?.enabled !== true && (id !== "human-clock" || !state);
@@ -746,8 +782,8 @@
       element.textContent = `${running ? "▶ " : ""}${clockText(remaining)}`;
       element.classList.toggle("running", running);
       element.classList.toggle("low-time", remaining <= 30000);
-      element.setAttribute("aria-label", `${colorName(color)} 남은 시간 ${clockText(remaining)}`);
-      element.title = clock?.label || "";
+      element.setAttribute("aria-label", `${colorName(color)} 남은 시간 ${clockText(remaining)}${humanOvertime && color === human ? " · 내 시간 소진 · 계속 진행" : ""}`);
+      element.title = (clock?.label || "") + (humanOvertime && color === human ? " · 내 시간 소진 · 계속 진행" : "");
     }
     byId("rapid-time-help").textContent = `${rapidControls[byId("rapid-time-control").value] || rapidControls["10+0"]}. 새 대국부터 적용됩니다.`;
     const panel = byId("decision-support");
@@ -758,13 +794,15 @@
     byId("human-complexity").textContent = state?.result !== "*" && state ? "대국 종료 · 시간 안내 마침" :
       !state?.human_to_move && state ? "상대 차례 · 다음 판단 준비" : "사람 기준 복잡도 · 대기";
     byId("complexity-reasons").textContent = support?.note || "내 차례에 판단할 요소와 생각 시간을 안내합니다.";
-    byId("recommended-time").textContent = "";
-    byId("time-recommendation-reason").textContent = "";
+    byId("recommended-time").textContent = humanOvertime ? "내 시간 소진 · 계속 진행" : "";
+    byId("time-recommendation-reason").textContent = humanOvertime ? "시간이 없어도 수를 둘 수 있습니다. Regicide의 시간 제한은 유지됩니다." : "";
+    byId("recommended-time").classList.toggle("low-time", humanOvertime);
     if (!ready) return;
     if (Number.isInteger(complexity?.score) && complexity.score >= 0 && complexity.score <= 100) {
       byId("human-complexity").textContent = `사람 기준 복잡도 · ${complexity.label} ${complexity.score}/100 · 실험`;
     }
     byId("complexity-reasons").textContent = Array.isArray(complexity?.reasons) ? complexity.reasons.slice(0, 3).join(" · ") : "";
+    if (humanOvertime) return;
     const advice = support.recommendation;
     if (Number.isFinite(advice?.remaining_ms) && Number.isFinite(advice?.total_ms)) {
       const spent = clock?.status === "running" && clock.running_color === human ? Math.max(0, monotonicNow() - clockReceivedAt) : 0;
@@ -823,7 +861,7 @@
     if (state) {
       const ms = state.engine.movetime_ms;
       const seconds = Number(ms) / 1000;
-      byId("opponent-detail").textContent = `한 수에 ${seconds}초 생각 · ${colorName(humanColor === "white" ? "black" : "white")}`;
+      byId("opponent-detail").textContent = `${state.engine.sparring_mode === true ? "생각시간 자동 조절" : `한 수에 ${seconds}초 생각`} · ${colorName(humanColor === "white" ? "black" : "white")}`;
       byId("opponent-detail").title = "";
       if (state.engine.boss_mode === true) {
         const phaseLabels = {opening: "변칙 오프닝", trap_hunt: "전술 사냥", full_strength: "전력 대국"};
@@ -842,25 +880,6 @@
     byId("human-side").disabled = !ready || busy || timeSaving;
     byId("boss-mode").disabled = !ready || busy || timeSaving || state?.handicap_mode;
     byId("rapid-time-control").disabled = !ready || busy || timeSaving || state?.handicap_mode;
-    byId("think-time").disabled = !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
-    if (state && !timeSaving) byId("think-time").value = String(state.engine.movetime_ms);
-    const currentMS = state?.engine.active_movetime_ms;
-    byId("think-time-help").textContent = timeSaving ? "생각 시간을 저장하고 있습니다…" :
-      currentMS != null && currentMS !== state.engine.movetime_ms ?
-      `현재 수는 ${currentMS / 1000}초로 생각 중 · 다음 Regicide 수부터 ${state.engine.movetime_ms / 1000}초` :
-      timeNotice || "대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.";
-    // Settings and board replies can cross a phase boundary out of order.
-    // Use the latest setting's schedule with the current board's move count.
-    const extraSchedule = state?.engine.extra_budget_schedule;
-    const plannedExtraMS = state?.engine.dynamic_play_enabled && Array.isArray(extraSchedule) ?
-      (extraSchedule.find(stage => (state.moves?.length ?? 0) < stage.until_ply)?.budget_ms ?? 0) :
-      (state?.engine.extra_budget_ms ?? 0);
-    const extraMS = currentMS != null ? (state?.engine.active_extra_budget_ms ?? plannedExtraMS) : plannedExtraMS;
-    const extraLabel = state?.engine.sparring_mode ? "스파링 응수 검토" : state?.engine.dynamic_play_enabled ? "구상 검토" : "오프닝 후보 검토";
-    if (extraMS > 0) byId("think-time-help").textContent += ` ${extraLabel} 시 최대 ${extraMS / 1000}초 더 생각할 수 있습니다.`;
-    if (state?.engine.sparring_mode === true && Number.isFinite(state.engine.movetime_ms) && state.engine.movetime_ms < 600) {
-      byId("think-time-help").textContent += " 짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다.";
-    }
     byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
     byId("resign").disabled = !ready || busy || timeSaving || !active;
     byId("download-pgn").disabled = !ready || busy;
@@ -909,7 +928,7 @@
   }
 
   async function changeThinkTime() {
-    if (!state || closed || timeSaving || state.handicap_mode || (busy && !state.engine_to_move)) return;
+    if (!state || closed || timeSaving || usesAutoThinkTime() || state.handicap_mode || (busy && !state.engine_to_move)) return;
     const movetime = Number(byId("think-time").value);
     timeSaving = true;
     timeNotice = "";
@@ -975,9 +994,14 @@
   dialog.addEventListener("close", () => { pendingPromotion = []; });
   byId("new-game-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value),
+    const payload = {color: byId("human-side").value,
       boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring",
-      time_control: Object.hasOwn(rapidControls, byId("rapid-time-control").value) ? byId("rapid-time-control").value : "10+0"});
+      time_control: Object.hasOwn(rapidControls, byId("rapid-time-control").value) ? byId("rapid-time-control").value : "10+0"};
+    if (!payload.sparring_mode) {
+      const selectedTime = Number(byId("think-time").value);
+      payload.movetime_ms = [100, 1000, 3000, 5000].includes(selectedTime) ? selectedTime : 1000;
+    }
+    void mutate("/api/new", payload);
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
   byId("rapid-time-control").addEventListener("change", renderClockAndAdvice);
@@ -1038,7 +1062,7 @@
     try {
       applyState(await request("/api/state"));
       byId("human-side").value = state.human_color;
-      byId("think-time").value = String(state.engine.movetime_ms);
+      if ([100, 1000, 3000, 5000].includes(state.engine.movetime_ms)) byId("think-time").value = String(state.engine.movetime_ms);
       await engineMove();
     } catch (error) { showError(error.message); }
     finally { busy = false; render(); }

@@ -14,7 +14,7 @@ const sandbox={document:{getElementById:byId,querySelector:()=>({content:"fixtur
   window:{addEventListener:(k,v)=>{events[k]=v;}},fetch:(url,options)=>new Promise(resolve=>{const c={url,body:options.body?JSON.parse(options.body):null,resolve};pending.push(c);calls.push(c);})};
 for(const [id,value] of [["human-side","white"],["boss-mode","normal"],["rapid-time-control","10+0"],["think-time","1000"]])byId(id).value=value;
 const source=fs.readFileSync(path.join(__dirname,"../web/human-play/app.js"),"utf8");
-vm.runInNewContext(source.replace(/\}\)\(\);\s*$/,"globalThis.__probe = {applyState, renderClockAndAdvice, pollClock, clockText, state:()=>state};\n})();"),sandbox);
+vm.runInNewContext(source.replace(/\}\)\(\);\s*$/,"globalThis.__probe = {applyState, renderClockAndAdvice, pollClock, engineMove, clockText, state:()=>state};\n})();"),sandbox);
 const probe=sandbox.__probe;
 function fixture(revision=1,sample=1000){return {game_id:"clock-game",revision,fen:"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",board:{e1:"K",e2:"P",e8:"k"},human_color:"white",human_to_move:true,engine_to_move:false,legal_moves:["e2e4"],moves:[],last_move:null,result:"*",status:"내 차례",can_undo:false,in_check:false,error:null,
  engine:{name:"Regicide fixture",movetime_ms:1000,settings_revision:0,extra_budget_ms:0},clock:{enabled:true,control_id:"10+5",label:"10+5 래피드",white_ms:600000,black_ms:599000,running_color:"white",status:"running",turn_elapsed_ms:0,sampled_monotonic_ms:sample},
@@ -50,6 +50,26 @@ async function reply(url,value){const i=pending.findIndex(c=>c.url===url);assert
  const legacy=fixture(6,16000);delete legacy.clock;delete legacy.decision_support;probe.applyState(legacy);assert.match(byId("human-clock").textContent,/새 대국에서 시간 선택/);assert.equal(byId("opponent-clock").hidden,true);const before=calls.length;await probe.pollClock();assert.equal(calls.length,before,"untimed legacy has no clock polling");
  byId("rapid-time-control").value="15+10";byId("rapid-time-control").listeners.change();assert.match(byId("rapid-time-help").textContent,/15분.*10초/);
  byId("new-game-form").listeners.submit({preventDefault(){}});assert.equal(pending.at(-1).body.time_control,"15+10");const next=fixture(7,17000);next.game_id="new-game";await reply("/api/new",next);assert.equal(byId("rapid-time-control").value,"15+10","draft survives state renders");
+ const paced=fixture(8,20000);paced.game_id="new-game";paced.human_to_move=false;paced.engine_to_move=true;paced.clock.running_color="black";paced.decision_support=null;probe.applyState(paced);
+ const postsBefore=calls.filter(c=>c.url==="/api/engine").length;void probe.engineMove();await flush();
+ assert.equal(calls.filter(c=>c.url==="/api/engine").length,postsBefore+1);
+ now+=46000;void probe.pollClock();const waiting=structuredClone(paced);waiting.clock.sampled_monotonic_ms=66000;waiting.clock.black_ms=553000;waiting.clock.turn_elapsed_ms=46000;await reply("/api/state",waiting);
+ void probe.engineMove();await flush();assert.equal(calls.filter(c=>c.url==="/api/engine").length,postsBefore+1,"a long paced turn and state polls keep one engine POST");
+ assert.ok(pending.some(c=>c.url==="/api/engine"),"engine POST remains pending beyond45s of simulated time");
+ assert.equal(probe.state().revision,8,"state polls cannot invent an engine move");
+ const pacedReply=fixture(9,67000);pacedReply.game_id="new-game";await reply("/api/engine",pacedReply);assert.equal(probe.state().revision,9,"original long request applies one completed turn");
+ for(const [index,color] of ["white","black"].entries()) {
+  const overtime=fixture(10+index*2,70000+index*10);overtime.game_id="new-game";overtime.human_color=color;overtime.turn=color;
+  Object.assign(overtime.clock,{[color+"_ms"]:0,running_color:color,timeout_policy:"engine_only",soft_timeout_color:color,overtime_color:color});
+  overtime.decision_support.recommendation={status:"inactive",total_ms:null,remaining_ms:null,reason:"연습 시간이 소진됐지만 계속 둘 수 있습니다."};
+  const from=color==="white"?"e2":"e7",to=color==="white"?"e4":"e5";
+  if(color==="black") {overtime.board={e1:"K",e7:"p",e8:"k"};overtime.fen="4k3/4p3/8/8/8/8/8/4K3 b - - 0 1";overtime.legal_moves=["e7e5"];}
+  probe.applyState(overtime);assert.equal(byId("recommended-time").textContent,"내 시간 소진 · 계속 진행");assert.match(byId("human-complexity").textContent,/높음/);
+  for(const square of [from,to])byId("board").listeners.click({target:{closest:()=>({dataset:{square}})}});
+  assert.equal(pending.find(c=>c.url==="/api/move").body.move,from+to,"human can submit a move at zero as "+color);
+  const incremented=structuredClone(overtime);incremented.revision++;incremented.human_to_move=false;incremented.decision_support=null;incremented.clock.running_color=color==="white"?"black":"white";incremented.clock[color+"_ms"]=5000;incremented.clock.overtime_color=null;incremented.clock.sampled_monotonic_ms++;
+  await reply("/api/move",incremented);assert.equal(probe.state().result,"*");assert.doesNotMatch(byId("recommended-time").textContent,/내 시간 소진/);
+ }
  assert.equal(probe.clockText(-300),"0:00");assert.equal(probe.clockText(NaN),"—");
  console.log("Rapid clock browser checks: PASS (controls, live clock, stale/duplicate packets, increments, pause, flags, background poll, advice, legacy)");
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,9 +1,10 @@
 """Human-oriented position complexity and bounded per-turn time guidance.
 
 This is an original, transparent heuristic, not a measured human error model.
-It never searches or chooses a chess move. Structural difficulty is independent
-of engine score/depth. An exact, stable, position-matching score may modestly
-adjust time allocation, but cannot change the complexity score.
+It never chooses or recommends a chess move. A bounded local legality check
+recognizes a few clear decisions; it is not an engine search or proof against
+longer tactics. Difficulty is independent of engine score/depth. An exact,
+stable, position-matching score may modestly adjust time allocation.
 
 The recommended total is anchored to remaining time + elapsed current-turn
 time. Repeated polling therefore consumes a fixed allowance instead of moving
@@ -11,12 +12,138 @@ its deadline forward. Neither the expected moves remaining nor the recommended
 seconds guarantee that a game can be completed before flag fall.
 """
 
+import copy
+from functools import lru_cache
 import math
 
 import chess
 
-METHOD = "regicide-human-decision-support-v2"
-NOTE = "사람의 판단 부담을 구조적으로 추정한 실험 지표이며, 실제 난이도나 정답 확률을 측정한 값은 아닙니다."
+METHOD = "regicide-human-decision-support-v3"
+NOTE = ("사람의 판단 부담을 추정한 실험 지표입니다. 실제 암기 여부·난이도·정답 확률을 측정하지 않으며, "
+        "짧은 전술 확인으로 더 긴 함정까지 배제하지는 못합니다.")
+
+# Small, hand-authored representative lines, not an imported opening engine.
+# Exact positions only: an unfamiliar early move does not qualify by move number.
+_OPENING_LINES = (
+    "e4 e5 Nf3 Nc6 Bc4 Bc5 d3 Nf6 O-O d6",
+    "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7",
+    "d4 d5 c4 e6 Nc3 Nf6 Nf3 Be7 Bg5 O-O",
+    "d4 Nf6 c4 e6 Nf3 d5 g3 Be7 Bg2 O-O",
+    "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6",
+    "e4 e6 d4 d5 Nc3 Nf6 e5 Nfd7",
+    "e4 c6 d4 d5 e5 Bf5 Nf3 e6",
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Bd6",
+)
+_MAX_ROOT_MOVES = 96
+_MAX_CHECK_CANDIDATES = 16
+_MAX_QUEEN_CAPTURES = 4
+_MAX_REPLY_MOVES = 96
+
+
+def _position_key(board):
+    return " ".join(board.fen(en_passant="legal").split()[:4])
+
+
+@lru_cache(maxsize=1)
+def _familiar_positions():
+    positions = set()
+    for line in _OPENING_LINES:
+        board = chess.Board()
+        # Mirroring preserves the heuristic for equivalent color-swapped
+        # positions. It does not assert that this was the actual game history.
+        positions.update((_position_key(board), _position_key(board.mirror())))
+        for san in line.split():
+            board.push_san(san)
+            positions.update((_position_key(board), _position_key(board.mirror())))
+    return frozenset(positions)
+
+
+def _queen_capture_has_no_immediate_warning(board, move):
+    after = board.copy(stack=False)
+    after.push(move)
+    # A drawing capture is not an obvious winning opportunity. Legal checking
+    # replies are all treated as warnings, even if some are actually harmless.
+    if after.is_stalemate() or after.is_insufficient_material():
+        return False
+    king = after.king(board.turn)
+    if king is None or sum(after.is_attacked_by(after.turn, square)
+                           for square in chess.SquareSet(chess.BB_KING_ATTACKS[king])) >= 3:
+        return False
+    for count, reply in enumerate(after.legal_moves, 1):
+        if count > _MAX_REPLY_MOVES:
+            return False
+        victim = after.piece_at(reply.to_square)
+        if (reply.promotion or after.gives_check(reply)
+                or reply.to_square == move.to_square
+                or (victim is not None and victim.color == board.turn
+                    and victim.piece_type in (chess.QUEEN, chess.ROOK))):
+            return False
+    return True
+
+
+def _clarity(board, legal, features):
+    """Conservative recognizers, with no selected move in the public result.
+
+    At most 16 checking candidates and four queen captures are inspected.
+    Queen-capture replies stop after 96 moves; an incomplete inspection never
+    earns a discount. There is no recursive continuation or engine call.
+    """
+    if len(legal) == 1:
+        return ("single_reply", 5, 1000,
+                "합법적인 응수가 하나여서 현재 선택 부담이 작습니다.")
+    if len(legal) > _MAX_ROOT_MOVES:
+        return None
+    checks = [move for move in legal if board.gives_check(move)]
+    if len(checks) <= _MAX_CHECK_CANDIDATES:
+        after = board.copy(stack=False)
+        for move in checks:
+            after.push(move)
+            mate = after.is_checkmate()
+            after.pop()
+            if mate:
+                return ("mate_in_one", 8, 2000,
+                        "한 수로 끝낼 수 있는 국면으로 추정합니다. 마지막 확인 후 빠르게 결정하세요.")
+    queen_captures = [move for move in legal
+                      if board.piece_type_at(move.to_square) == chess.QUEEN
+                      and board.color_at(move.to_square) != board.turn]
+    # Multiple capture methods must ALL pass: recognizing the safe method
+    # among poisoned alternatives is itself a decision needing thought.
+    if (0 < len(queen_captures) <= _MAX_QUEEN_CAPTURES
+            and all(_queen_capture_has_no_immediate_warning(board, move) for move in queen_captures)):
+        return ("clear_queen_gain", 15, 2500,
+                "큰 기물 이득의 즉시 반격을 확인한 단순한 선택으로 추정합니다. 짧게 재확인하세요.")
+    f = features
+    opening_warning = (f["in_check"] or f["own_loose_pieces"] or f["enemy_loose_pieces"]
+                       or f["own_pinned_pieces"] or f["overloaded_defenders"]
+                       or f["attacked_king_neighbors"] >= 3 or f["checking_choices"]
+                       or f["capture_choices"] >= 4 or f["promotion_pawns"]
+                       or f["own_advanced_passers"] or f["enemy_advanced_passers"])
+    if (not opening_warning and board.fullmove_number <= 10
+            and _position_key(board) in _familiar_positions()):
+        return ("familiar_opening", 12, 2000,
+                "대표 오프닝의 익숙한 배치라면 빠르게 두어도 됩니다. 실제 암기 여부는 확인되지 않았습니다.")
+    return None
+
+
+@lru_cache(maxsize=512)
+def _position_complexity(fen, chess960):
+    # Only board-position facts are cached. Full FEN retains draw/move counters;
+    # opening recognition uses exact known positions, not unrecorded history.
+    board = chess.Board(fen, chess960=chess960)
+    legal = list(board.legal_moves)
+    features = _features(board, board.turn, legal)
+    result = _complexity(features)
+    clear = _clarity(board, legal, features)
+    result["clarity"] = {"kind": "unclassified", "time_cap_ms": None,
+                         "familiarity_assumed": False}
+    if clear is not None:
+        kind, score_cap, time_cap, reason = clear
+        result["score"] = min(result["score"], score_cap)
+        result["label"] = "낮음"
+        result["reasons"] = [reason]
+        result["clarity"] = {"kind": kind, "time_cap_ms": time_cap,
+                             "familiarity_assumed": kind == "familiar_opening"}
+    return result
 
 
 def _number(value):
@@ -171,6 +298,9 @@ def _recommend(board, human_color, clock, complexity, evaluation):
     increment = _milliseconds(clock.get("increment_ms"))
     if None in (current, other, elapsed, increment):
         return inactive
+    if (current == 0 and clock.get("timeout_policy") == "engine_only"
+            and clock.get("soft_timeout_color") == _color_name(human_color)):
+        return {**inactive, "reason": "연습 시간이 소진됐지만 계속 둘 수 있습니다."}
     # For a fixed position, current + elapsed stays constant. Never use
     # current + a freshly chosen allowance as a rolling future deadline.
     at_start = current + elapsed
@@ -212,6 +342,9 @@ def _recommend(board, human_color, clock, complexity, evaluation):
         total = min(total, max(500, int(at_start * .10)))
     # Halve the final per-turn allowance; elapsed thinking time stays real.
     total //= 2
+    clarity = complexity.get("clarity", {})
+    if clarity.get("time_cap_ms") is not None:
+        total = min(total, clarity["time_cap_ms"])
     remaining = max(0, min(total - elapsed, current - reserve))
     if current <= 10000:
         urgency = "critical"
@@ -225,6 +358,10 @@ def _recommend(board, human_color, clock, complexity, evaluation):
         reason = "이 수의 권장 생각시간을 썼습니다. 추가 숙고보다 착수를 우선하세요."
     elif f["legal_choices"] == 1:
         reason = "응수가 하나라 시간을 아끼고 다음 결정에 남겨 두세요."
+    elif clarity.get("kind") == "familiar_opening":
+        reason = "익숙한 오프닝이면 빠르게 두세요. 기억이 불확실하면 시간을 더 써도 됩니다."
+    elif clarity.get("time_cap_ms") is not None:
+        reason = "선택이 비교적 명백한 국면으로 추정해 권장 시간을 줄였습니다. 짧게 재확인하세요."
     elif complexity["score"] >= 50:
         reason = "판단할 관계가 많아 평소보다 시간을 더 배분했습니다."
     else:
@@ -254,8 +391,7 @@ def assess(board, human_color, clock_snapshot, evaluation=None, rating=None):
         return _inactive(board, human_color, "대국이 끝났습니다.")
     if board.turn != human_color:
         return _inactive(board, human_color, "상대 차례입니다. 내 차례가 되면 갱신합니다.")
-    legal = list(board.legal_moves)
-    complexity = _complexity(_features(board, human_color, legal))
+    complexity = copy.deepcopy(_position_complexity(board.fen(en_passant="fen"), board.chess960))
     return {"method": METHOD, "experimental": True, "status": "ready",
             "fen": board.fen(en_passant="fen"), "human_color": _color_name(human_color),
             "complexity": complexity,

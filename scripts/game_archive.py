@@ -50,6 +50,13 @@ def _recorded_clock(record, board):
     if not isinstance(control, str) or control not in CONTROLS:
         raise ValueError(error)
     config = CONTROLS[control]
+    policy = metadata.get("timeout_policy", "both")
+    soft = metadata.get("soft_timeout_color")
+    if (policy not in ("both", "engine_only")
+            or (policy == "both" and soft is not None)
+            or (policy == "engine_only" and (soft not in ("white", "black")
+                or soft != record.get("state", {}).get("human_color")))):
+        raise ValueError(error)
     if any(type(metadata.get(key)) is not int or metadata[key] != config[key] for key in ("initial_ms", "increment_ms")):
         raise ValueError(error)
     history, snapshot = metadata.get("history"), metadata.get("snapshot")
@@ -60,11 +67,16 @@ def _recorded_clock(record, board):
     def finite(value):
         return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= ceiling
 
+    def elapsed_valid(value, color):
+        return (type(value) in (int, float) and math.isfinite(value) and value >= 0
+                and (color == soft or value <= ceiling))
+
     turn = "white" if board.root().turn else "black"
     clean = []
     for ply, entry in enumerate(history):
         if (not isinstance(entry, dict) or type(entry.get("ply")) is not int or entry["ply"] != ply
-                or not all(finite(entry.get(key)) for key in ("white_ms", "black_ms", "elapsed_ms"))):
+                or not all(finite(entry.get(key)) for key in ("white_ms", "black_ms"))
+                or not elapsed_valid(entry.get("elapsed_ms"), turn)):
             raise ValueError(error)
         if ply == 0:
             if (entry.get("mover") is not None or entry["elapsed_ms"] != 0
@@ -73,8 +85,9 @@ def _recorded_clock(record, board):
         else:
             other = "black" if turn == "white" else "white"
             previous = clean[-1]
-            expected = previous[turn + "_ms"] - entry["elapsed_ms"] + config["increment_ms"]
-            if (entry.get("mover") != turn or entry["elapsed_ms"] > previous[turn + "_ms"] + .001
+            after_elapsed = previous[turn + "_ms"] - entry["elapsed_ms"]
+            expected = (max(0, after_elapsed) if turn == soft else after_elapsed) + config["increment_ms"]
+            if (entry.get("mover") != turn or (turn != soft and entry["elapsed_ms"] > previous[turn + "_ms"] + .001)
                     or abs(entry[turn + "_ms"] - expected) > .01
                     or abs(entry[other + "_ms"] - previous[other + "_ms"]) > .01):
                 raise ValueError(error)
@@ -83,7 +96,10 @@ def _recorded_clock(record, board):
     if (snapshot.get("enabled") is not True or snapshot.get("control_id") != control
             or type(snapshot.get("ply")) is not int or snapshot["ply"] != len(board.move_stack)
             or snapshot.get("status") not in ("running", "paused", "finished")
-            or not all(finite(snapshot.get(key)) for key in ("white_ms", "black_ms", "turn_elapsed_ms"))):
+            or not all(finite(snapshot.get(key)) for key in ("white_ms", "black_ms"))
+            or not elapsed_valid(snapshot.get("turn_elapsed_ms"), turn)
+            or snapshot.get("timeout_policy", "both") != policy
+            or snapshot.get("soft_timeout_color") != soft):
         raise ValueError(error)
     for key in ("initial_ms", "increment_ms"):
         if type(snapshot.get(key)) is not int or snapshot[key] != config[key]:
@@ -95,9 +111,17 @@ def _recorded_clock(record, board):
             or snapshot.get("running_color") != (turn if snapshot["status"] == "running" else None)):
         raise ValueError(error)
     flagged = snapshot.get("flagged_color")
-    if flagged is not None and (flagged != turn or snapshot["status"] != "finished" or snapshot[flagged + "_ms"] != 0):
+    if flagged is not None and (flagged != turn or flagged == soft or snapshot["status"] != "finished" or snapshot[flagged + "_ms"] != 0):
         raise ValueError(error)
+    if policy == "engine_only":
+        overtime = soft if snapshot[soft + "_ms"] == 0 else None
+        overtime_ms = max(0, snapshot["turn_elapsed_ms"] - clean[-1][soft + "_ms"]) if overtime and turn == soft else 0
+        if (snapshot.get("overtime_color") != overtime
+                or not elapsed_valid(snapshot.get("overtime_ms"), soft)
+                or abs(snapshot["overtime_ms"] - overtime_ms) > .01):
+            raise ValueError(error)
     return {"enabled": True, "control_id": control, **config, "history": clean,
+            "timeout_policy": policy, "soft_timeout_color": soft,
             "snapshot": {**snapshot, "sampled_monotonic_ms": None}}
 
 
@@ -106,6 +130,9 @@ def _replay_clock(clock, ply, final):
         return {"enabled": False, "status": "disabled", "running_color": None}
     values = clock["snapshot"] if final else clock["history"][ply]
     return {"enabled": True, **{key: clock[key] for key in ("control_id", "label", "initial_ms", "increment_ms")},
+            "timeout_policy": clock["timeout_policy"], "soft_timeout_color": clock["soft_timeout_color"],
+            "overtime_color": (clock["soft_timeout_color"] if clock["soft_timeout_color"]
+                               and values[clock["soft_timeout_color"] + "_ms"] == 0 else None),
             "white_ms": values["white_ms"], "black_ms": values["black_ms"],
             "running_color": None, "status": "replay", "ply": ply, "turn_elapsed_ms": 0,
             "flagged_color": values.get("flagged_color") if final else None,
@@ -286,7 +313,7 @@ class GameArchive:
             flagged = clock["snapshot"].get("flagged_color") if clock else None
             if flagged not in ("white", "black") or (flagged == "white") != board.turn:
                 raise ValueError("시간 초과 결과를 확인할 시간 기록이 없습니다.")
-            insufficient = board.has_insufficient_material(not board.turn)
+            insufficient = clock["timeout_policy"] != "engine_only" and board.has_insufficient_material(not board.turn)
             expected = "1/2-1/2" if insufficient else ("0-1" if board.turn else "1-0")
             expected_reason = "time_forfeit_insufficient_material" if insufficient else "time_forfeit"
             if result != expected or termination != expected_reason:
@@ -457,6 +484,8 @@ class GameArchive:
         clock = prepared["clock"]
         if clock:
             game.headers["TimeControl"] = f"{clock['initial_ms'] // 1000}+{clock['increment_ms'] // 1000}"
+            if clock["timeout_policy"] == "engine_only":
+                game.headers["TimeForfeitPolicy"] = "engine_only"
             if prepared["termination"] in TIMEOUTS:
                 game.headers["Termination"] = "time forfeit"
         movetimes = record.get("engine_movetimes_ms", {})

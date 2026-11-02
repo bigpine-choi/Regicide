@@ -1,0 +1,86 @@
+{
+  "recorded_at": "2026-11-02T16:18:48.645132+00:00",
+  "head": "061b3bf0e1384e3ec767a042b265c84d3f6d24a7",
+  "working_tree_changes": true,
+  "source_sha256": {
+    "scripts/decision_support.py": "8e951bd2dbe958c2c72b649a4c3b71f6050557d89f28d3ffe1934ee96954da69",
+    "scripts/summarize_sparring_match.py": "fcc6f0fb4b0c26a2ec77f853a2325b4c51f044e6d982fd216de652bea06d2800",
+    "scripts/sparring_strength_match.py": "e651f886743c2ed277c1f123e49795503954b4ba115b03c51e963242e154bc75",
+    "tests/decision_support_tests.py": "669cbad493de78cf44367df101c68727f578ef09cba16730fed82e58f978bc63",
+    "tests/decision_clarity_tests.py": "1684176f5563a0cce9543772f2877009026175c0416bb3c0f1d9407f64d79e94",
+    "tests/summarize_sparring_match_tests.py": "8e3839da2c884555a228cb288eea9f8433cfc8319d4451f878dce6aad08900ad",
+    "tests/sparring_strength_match_tests.py": "ea2fe19c76e009c4a8ec337bd135519305a75ef150c991117fddb0a6c7a581ce"
+  },
+  "executed_checks": [
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/decision_support_tests.py",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/decision_clarity_tests.py",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/summarize_sparring_match_tests.py",
+      "passed": 28,
+      "failed": 0
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/sparring_strength_match_tests.py",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check -- <six owned source/test paths>",
+      "exit_code": 0,
+      "notes": "Only expected working-copy line-ending normalization warnings."
+    }
+  ],
+  "decision_support_contract": {
+    "method": "regicide-human-decision-support-v3",
+    "clarity_caps_ms": {
+      "familiar_opening": 2000,
+      "single_reply": 1000,
+      "mate_in_one": 2000,
+      "clear_queen_gain": 2500
+    },
+    "soft_timeout": "complexity ready; recommendation inactive only when timeout_policy engine_only, matching soft_timeout_color, current time zero on running turn",
+    "prior_profile": "profile.json is an earlier immutable production snapshot; soft-timeout branch was added after its timing and source hash were recorded."
+  },
+  "report_policy_contract": {
+    "phase_roots": {
+      "v1": [
+        100,
+        140
+      ],
+      "v2": [
+        80,
+        138
+      ],
+      "v3": [
+        60,
+        138
+      ]
+    },
+    "default_reporting_fullmoves": {
+      "v1": 40,
+      "v2": 40,
+      "v3": 30
+    },
+    "explicit_reporting_windows": [
+      30,
+      40,
+      50
+    ],
+    "mixed_policies": "rejected",
+    "winning_mate_exception": "v2 before root80; v3 before root60; no CP conversion of mate scores"
+  },
+  "limitations": [
+    "No engine strength or calibrated human-difficulty claim.",
+    "Queen-gain recognition rejects immediate checking replies, recapture, promotion, or attacks on own queen/rook, but is not a proof against quiet longer tactics.",
+    "Opening familiarity is assumed, not measured; only a small exact-position set qualifies.",
+    "These checks are unit/host-fake-peer validation, not native GUI validation."
+  ]
+}

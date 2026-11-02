@@ -129,9 +129,12 @@ func _sparring_checks() -> void:
 	app.accept_state(normal_fast)
 	var requests_before: int = app.captured_requests.size()
 	app.boss_mode_option.select(2)
-	app._render()
-	verify(app.game_mode_help.text.contains("40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다.") and app.boss_mode_option.tooltip_text.contains("각각 40번"), "sparring help describes a one-point target over forty full moves, not a guaranteed result")
-	verify(app.game_mode_help.text.contains("1초 이상을 권장"), "sparring draft recommends an eligible think time")
+	app.boss_mode_option.item_selected.emit(2)
+	verify(app.game_mode_help.text.contains("30수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다.") and app.boss_mode_option.tooltip_text.contains("각각 30번"), "sparring help describes a one-point target over thirty full moves, not a guaranteed result")
+	verify(app.game_mode_help.text.contains("자동으로 조절"), "sparring draft explains automatic time management")
+	verify(not app.time_option.visible and app.auto_time_label.visible and app.time_option.disabled, "sparring draft immediately replaces the manual selector")
+	app._on_think_time_selected(app.time_option.get_item_index(5000))
+	verify(app.captured_requests.size() == requests_before, "hidden manual control cannot update the current normal game")
 	verify(app.time_option.get_selected_id() == 100 and app.captured_requests.size() == requests_before, "draft mode selection never changes time or sends a time mutation")
 	verify(not app.think_time_help.text.contains("맞춤 조절을 쉬고"), "draft sparring does not mislabel an active normal game")
 	var minimum_eligible: int = 5000
@@ -147,7 +150,8 @@ func _sparring_checks() -> void:
 	await process_frame
 	verify(app.captured_requests[-1].payload.sparring_mode == true and app.captured_requests[-1].payload.boss_mode == false, "sparring payload is mutually exclusive with boss")
 	verify(app.boss_phase_label.text == "스파링 모드" and app.state.engine.sparring.observations == 0, "calibration observations remain in state without live diagnostics")
-	verify(app.think_time_help.text.contains("스파링 응수 검토"), "sparring extra search is not mislabelled as opening-only work")
+	verify(app.think_time_help.text.contains("사람 권장시간") and app.think_time_help.text.contains("3분 미만"), "automatic sparring explains recommendation and human time pressure")
+	verify(not app.captured_requests[-1].payload.has("movetime_ms"), "new sparring lets the host choose automatic search budget")
 	var geometry: Rect2 = app.board.get_global_rect()
 	for row in [[12, "sparring", "맞춤 스파링"], [13, "ramp", "압박 높이는 중"], [14, "finish", "전력 마무리"]]:
 		app.accept_state(sparring_fixture(row[0], row[1], 8))
@@ -187,10 +191,13 @@ func _sparring_checks() -> void:
 	fast.engine.settings_revision = 2
 	fast.engine.extra_budget_ms = 0
 	app.accept_state(fast)
-	verify(app.think_time_help.text.contains("짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다."), "active short-time sparring explains its baseline-only behavior")
+	verify(app.think_time_help.text.contains("사람 권장시간") and not app.time_option.visible, "active sparring never exposes a manual short-time option")
 	app.boss_mode_option.select(0)
 	app._render()
-	verify(app.time_option.get_selected_id() == 100 and app.think_time_help.text.contains("맞춤 조절을 쉬고"), "normal draft preserves current sparring time and short-time notice")
+	verify(app.time_option.get_selected_id() == 100 and not app.time_option.visible and app.think_time_help.text.contains("현재 스파링 대국"), "normal draft cannot change automatic management of the active sparring game")
+	requests_before = app.captured_requests.size()
+	app._on_think_time_selected(app.time_option.get_item_index(5000))
+	verify(app.captured_requests.size() == requests_before, "active sparring blocks manual settings even with normal draft selected")
 	var eligible: Dictionary = sparring_fixture(19, "sparring")
 	eligible.engine.settings_revision = 3
 	app.accept_state(eligible)
@@ -202,6 +209,7 @@ func _sparring_checks() -> void:
 	verify(not app.captured_requests[-1].payload.boss_mode and not app.captured_requests[-1].payload.sparring_mode, "return to normal clears both mode flags")
 	app.accept_state(sparring_fixture(19, "finish", 20))
 	verify(not app.boss_phase_label.text.contains("스파링"), "old game response cannot revive sparring state")
+	verify(app.time_option.visible and not app.auto_time_label.visible and not app.time_option.disabled, "new normal game restores manual time control")
 
 
 func rating_fixture(revision: int, estimate: Variant = null, delta: Variant = null, saved: Variant = null) -> Dictionary:

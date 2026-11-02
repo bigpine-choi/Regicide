@@ -37,6 +37,16 @@ def fixture(losses, human_color=chess.WHITE):
 
 
 class RatingTests(unittest.TestCase):
+    def test_v1_v2_and_v3_verified_observations_keep_the_same_rating_scale(self):
+        board, rows = fixture([0, 150, 30])
+        expected = rating.snapshot(board, rows, chess.WHITE, rating.prior())
+        self.assertEqual(rating.POLICIES, ("regicide-sparring-play-v1", "regicide-sparring-play-v2", "regicide-sparring-play-v3"))
+        for policy in rating.POLICIES:
+            versioned = copy.deepcopy(rows)
+            for row in versioned:
+                row["policy"] = policy
+            self.assertEqual(rating.snapshot(board, versioned, chess.WHITE, rating.prior()), expected, policy)
+
     def test_no_observation_means_no_invented_rating(self):
         value = rating.snapshot(chess.Board(), [], chess.WHITE, rating.prior("native"))
         self.assertIsNone(value["estimate"])

@@ -126,15 +126,16 @@ class SparringStateTests(unittest.TestCase):
             self.game.engine_move(self.game.revision)
         path = self.game.save_dir / (self.game.game_id + ".json")
         record = json.loads(path.read_text(encoding="utf-8"))
-        record["sparring_play"]["policy"] = "regicide-sparring-play-v1"
-        for row in record["sparring_play"]["decisions"]:
-            row["policy"] = "regicide-sparring-play-v1"
-        path.write_text(json.dumps(record), encoding="utf-8")
-        replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
-        self.assertTrue(replay["summary"]["sparring_mode"])
-        self.assertIn('[SparringPolicy "regicide-sparring-play-v1"]', replay["pgn"])
-        self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["policy"], "regicide-sparring-play-v1")
-        self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["observations"], 1)
+        for policy in host.sparring_play.SUPPORTED_POLICIES:
+            record["sparring_play"]["policy"] = policy
+            for row in record["sparring_play"]["decisions"]:
+                row["policy"] = policy
+            path.write_text(json.dumps(record), encoding="utf-8")
+            replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+            self.assertTrue(replay["summary"]["sparring_mode"])
+            self.assertIn(f'[SparringPolicy "{policy}"]', replay["pgn"])
+            self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["policy"], policy)
+            self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["observations"], 1)
         record["sparring_play"]["decisions"][0]["policy"] = "unsupported-policy"
         path.write_text(json.dumps(record), encoding="utf-8")
         replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
@@ -147,7 +148,7 @@ class SparringStateTests(unittest.TestCase):
             return self.decision(board), False
         with patch.object(host.sparring_play, "choose", side_effect=choose):
             state = self.game.engine_move(self.game.revision)
-        self.assertIsNotNone(state["error"])
+        self.assertIsNone(state["error"], "obsolete search does not attach an error to the current state")
         self.assertEqual([m.uci() for m in self.game.board.move_stack], ["e2e4"])
         self.assertEqual(self.game._sparring_decisions, {})
 

@@ -129,6 +129,9 @@ jobs:
       - run: python tests/rapid_clock_host_tests.py
       - run: python tests/rapid_clock_archive_tests.py
       - run: python tests/decision_support_tests.py
+      - run: python tests/engine_pacing_tests.py
+      - run: python tests/engine_only_clock_tests.py
+      - run: python tests/decision_clarity_tests.py
       - run: python tests/installed_think_time_stream_tests.py
       - run: python tests/evaluation_state_tests.py
       - run: python tests/audit_pvs_results.py --self-test
@@ -214,6 +217,8 @@ jobs:
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/boss_mode_offline_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/rapid_clock_offline_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/engine_pacing_transport_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/rapid_clock_live_tests.py --binary $binary --output build/rapid-clock-native
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

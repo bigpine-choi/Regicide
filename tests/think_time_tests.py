@@ -150,7 +150,9 @@ class ThinkTimeTests(baseline.HumanPlayTests):
             search.result(timeout=2)
             closing.result(timeout=2)
         self.assertTrue(self.factory.instances[-1].closed)
-        self.assertEqual(self.saved()["uci_moves"], ["e2e4", "e7e5"])
+        # Closing preserves the submitted human move, never a later engine reply.
+        self.assertEqual(self.saved()["uci_moves"], ["e2e4"])
+        self.assertEqual(self.saved()["engine_movetimes_ms"], {})
         with self.assertRaises(host.RevisionError):
             self.setting(3000)
 

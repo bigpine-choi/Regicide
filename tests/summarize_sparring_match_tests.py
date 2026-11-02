@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import summarize_sparring_match as report
 
 
-def game(sans="e4 e5 Nf3 Nc6", color="white", number=1, policy=report.POLICY):
+def game(sans="e4 e5 Nf3 Nc6", color="white", number=1, policy="regicide-sparring-play-v2"):
     board, rows, history = chess.Board(), [], []
     for san in sans.split():
         before = board.copy(stack=True)
@@ -426,6 +426,49 @@ class SummaryTests(unittest.TestCase):
         for invalid in (True, 0, 41, 40.0):
             with self.assertRaises(ValueError):
                 report.summarize_matches([match(old)], target_fullmoves=invalid)
+
+    def test_v3_thirty_move_window_and_both_color_phase_boundaries(self):
+        sans = long_sans()
+        for color in ("white", "black"):
+            ramp_ply, finish_ply = (61, 139) if color == "white" else (62, 140)
+            for length in (59, 60, 61, 62, 138, 139, 140, 142):
+                value = game(" ".join(sans[:length]), color=color, policy=report.POLICY)
+                result = report.summarize_matches([match(value)])
+                row = result["games"][0]
+                self.assertEqual(result["target_fullmoves"], 30)
+                self.assertEqual(result["policy_phase_root_plies"], {"ramp": 60, "finish": 138})
+                self.assertEqual(row["reached_target_full_moves"], length >= 60)
+                self.assertEqual(row["board_reached_ramp_threshold"], length >= 60)
+                self.assertEqual(row["reached_ramp_phase"], length >= ramp_ply)
+                self.assertEqual(row["reached_finish_phase"], length >= finish_ply)
+                self.assertEqual(row["issues"], [])
+                if length >= ramp_ply:
+                    self.assertEqual(row["phase_activation"]["ramp"]["first_ply"], ramp_ply)
+                if length >= finish_ply:
+                    self.assertEqual(row["phase_activation"]["finish"]["first_ply"], finish_ply)
+                if length >= 60:
+                    self.assertEqual(result["first_30_full_moves"]["sparring_moves"], 30)
+                    self.assertTrue(row["continuous_first30_band"]["selected_root_same_depth"]["sustained_through_target_full_moves"])
+            self.assertEqual(result["all_moves"]["phase_counts"]["ramp"], 39)
+
+    def test_v3_reporting_window_override_does_not_rewrite_policy_or_pool_v2(self):
+        current = match(game(" ".join(long_sans()), policy=report.POLICY))
+        historical = match(game(policy="regicide-sparring-play-v2"))
+        self.assertEqual(report.summarize_matches([historical])["target_fullmoves"], 40)
+        result = report.summarize_matches([current], target_fullmoves=40)
+        self.assertEqual(result["first_40_full_moves"]["sparring_moves"], 40)
+        self.assertEqual(result["policy_phase_root_plies"], {"ramp": 60, "finish": 138})
+        with self.assertRaisesRegex(ValueError, "different sparring policies"):
+            report.summarize_matches([historical, current])
+
+    def test_winning_mate_exception_remains_readable_for_v2_and_v3(self):
+        for policy in ("regicide-sparring-play-v2", report.POLICY):
+            value = winning_mate_choice()
+            for row in value["moves"]:
+                if row["sparring_decision"] is not None:
+                    row["sparring_decision"]["policy"] = policy
+            result = report.summarize_matches([match(value)])
+            self.assertEqual(result["all_moves"]["verified_winning_mate_avoidance"], 1)
 
     def test_pacing_receipts_do_not_relax_strict_band_or_bridge_missing_recovery(self):
         value = game("e4 e5 Nf3 Nc6 Bc4 Bc5 d3 d6 Nc3 Nf6", color="black")
