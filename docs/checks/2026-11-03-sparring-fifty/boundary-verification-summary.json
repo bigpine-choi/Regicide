@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "unit_checks": [
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/sparring_state_tests.py",
+      "tests": 10,
+      "seconds": 15.474,
+      "passed": true
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/sparring_rating_state_tests.py",
+      "tests": 13,
+      "seconds": 11.426,
+      "passed": true
+    }
+  ],
+  "unit_tests_total": 23,
+  "native_cases": [
+    {
+      "engine_color": "white",
+      "move_number": 50,
+      "native_baseline": "d5c6",
+      "selected_move": "d5c6",
+      "concession_candidate_searches": 0,
+      "rating_observation_attempted": true,
+      "rating_observation_valid": false,
+      "rating_observation_reason": "reference_unreliable",
+      "reference_depth": 3,
+      "rating_updates": 0
+    },
+    {
+      "engine_color": "black",
+      "move_number": 50,
+      "native_baseline": "e6d5",
+      "selected_move": "e6d5",
+      "concession_candidate_searches": 0,
+      "rating_observation_attempted": true,
+      "rating_observation_valid": false,
+      "rating_observation_reason": "reference_unreliable",
+      "reference_depth": 3,
+      "rating_updates": 0
+    }
+  ],
+  "scope": "The two native turns preserve the actual engine bestmove from 1-second search at white/black move 50. Their extra 500ms allowance still attempts rating observation, but depth-3 reference evidence is rejected as unreliable, so neither native case updates rating. Valid evidence updating rating at both move-50 boundaries is verified by deterministic HumanGame tests with controlled engine packets. No full 50-move match or strength estimate.",
+  "source_sha256": {
+    "scripts/sparring_play.py": "c5ad83c490e46104aa0d3c45e823c2af32d9f22d12011c79c2317df8f9759892",
+    "scripts/sparring_pacing.py": "26812c9e032d9bed436fe75513e5d7326eb9bff0fa81154055155c386850c2f7",
+    "scripts/play_human.py": "2c99cef9ab4327c135cf6dfa90a50a30cc4977afa59227dbb26b97999d5f5720",
+    "scripts/sparring_rating.py": "71e905d28752bbdb6e9b45a1b6d19a66d1b9c7a61743db4046dc21b4152bc8fd",
+    "tests/sparring_state_tests.py": "421e6cc7bed735ef51396d745b4b1322b81a684f659a1923f2f7e24c3e4847ad",
+    "tests/sparring_rating_state_tests.py": "4d917b4ea13d04154f60ed924f4ec3e83d8a01011b1193f07748e0d02595d991",
+    "tests/sparring_fifty_integration.py": "63a9a52dce1efde00ec8e9fbe444414ddb02b8f2b07832d51ee418ba9d751c54"
+  },
+  "source_matches_native_receipt": true,
+  "native_engine_closed": true,
+  "legacy_fixture": "The original 139-ply move-70 fixture is retained through the shared late_game_board helper, and policy-v4 replay stays in ramp at move 50."
+}

@@ -1,0 +1,29 @@
+{
+  "created_utc": "2026-11-02T18:38:32.278723+00:00",
+  "source_base_commit": "8f570e2fdea383f53772a72a5682489e10e85521",
+  "all_passed": true,
+  "source_sha256": {
+    "web/human-play/app.js": "c1f42414aa46c3a17e53fc6de6c05fdf020e5eafa578eb0d020cc3cfd880e556",
+    "godot/scripts/main.gd": "0e04e0ab27b82e912b05a7a0a75e2f34d19d3c597970c6499e17b355791f6995",
+    "tests/boss_mode_web_tests.js": "b46965e8850a64b31b35dba59a99ddcae0dc240d26927a98eabbe1613f02eb97",
+    "godot/tests/boss_mode_offline_tests.gd": "476fea5ff2b0524535f07cfc23b04836b68aa2fe526ec7afc3a529fd8050ee64",
+    "README.md": "9716559cb4b665dfac186f97fd08af7261ae9e8f8b73d29fa63811558466e851"
+  },
+  "results": [
+    {
+      "name": "browser",
+      "command": "node tests/boss_mode_web_tests.js",
+      "returncode": 0,
+      "log": "browser.log"
+    },
+    {
+      "name": "godot",
+      "command": "Godot_v4.7.2-stable_win64.exe --headless --path godot --script res://tests/boss_mode_offline_tests.gd",
+      "returncode": 0,
+      "checks": 78,
+      "failures": 0,
+      "log": "godot.log"
+    }
+  ],
+  "scope": "Browser and headless Godot UI checks. No manual gameplay, full-length match, or playing-strength claim."
+}

@@ -20,9 +20,9 @@ import opening_variety as opening
 import sparring_pacing
 import sparring_evaluation
 
-POLICY = "regicide-sparring-play-v4"
+POLICY = "regicide-sparring-play-v5"
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
-                      "regicide-sparring-play-v3", POLICY)
+                      "regicide-sparring-play-v3", "regicide-sparring-play-v4", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -54,7 +54,8 @@ POSTMOVE_RESERVE_FRACTION = .3
 # explicit disagreement screen, not a statistical error bound.
 POSTMOVE_MAX_DELTA_CP = 80
 RAMP_PLY = 40
-FINISH_PLY = 138
+FINISH_PLY = 98
+PREVIOUS_FINISH_PLY = 138
 V3_RAMP_PLY = 60
 V2_RAMP_PLY = 80
 LEGACY_RAMP_PLY = 100
@@ -86,11 +87,17 @@ def _replay(board):
     return (tuple(history), fens) if position.fen(en_passant="fen") == board.fen(en_passant="fen") else None
 
 
+def _finish_ply(policy):
+    if policy == SUPPORTED_POLICIES[0]:
+        return LEGACY_FINISH_PLY
+    return PREVIOUS_FINISH_PLY if policy in SUPPORTED_POLICIES[1:4] else FINISH_PLY
+
+
 def phase(board, *, policy=None):
-    """v4: close through move 20, ramp 21..69, full on each side's move 70."""
+    """v5: close through move 20, ramp 21..49, full on each side's move 50."""
     ply = len(board.move_stack)
     legacy = policy == SUPPORTED_POLICIES[0]
-    if ply >= (LEGACY_FINISH_PLY if legacy else FINISH_PLY):
+    if ply >= _finish_ply(policy):
         return "finish"
     ramp_ply = (LEGACY_RAMP_PLY if legacy else V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1]
                 else V3_RAMP_PLY if policy == SUPPORTED_POLICIES[2] else RAMP_PLY)
@@ -111,7 +118,7 @@ def _ramp_fraction(board, *, policy=None):
     if len(board.move_stack) < ramp_ply:
         return 0.0
     close_fullmoves = ramp_ply // 2
-    full_strength_move = FINISH_PLY // 2 + 1
+    full_strength_move = _finish_ply(policy) // 2 + 1
     return min(1., max(0., (board.fullmove_number - close_fullmoves) / (full_strength_move - close_fullmoves)))
 
 

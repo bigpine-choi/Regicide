@@ -14,6 +14,29 @@ from game_archive import GameArchive
 
 host = base.play_human
 
+# Fixed legal nonterminal history retained from the move-70 rating fixture.
+# Prefixes 96/97 and 98/99 isolate both colors' 49th/50th decisions without
+# executing a 50-move match or inventing earlier rating observations.
+LATE_GAME_HISTORY_UCI = """b2b3 g7g5 a2a3 f8g7 d2d3 g7a1 e1d2 a1e5 h2h3 g8f6 d2e1 b8c6
+f2f4 d7d5 c1b2 g5f4 b1d2 f6g8 d2c4 e7e6 c4d2 c6b4 d1b1 b4a6 e2e4 d5e4
+b2a1 f7f6 c2c4 e5d4 b3b4 g8e7 b1c2 a6b8 c2c1 c7c6 g2g4 h8g8 a1b2 d4e5
+b2c3 g8f8 g4g5 b8a6 c1b1 f4f3 c3a1 f8g8 b1d1 g8g6 a1b2 a8b8 d1c2 g6g7
+c2a4 d8a5 d2f3 c8d7 f3d4 e8d8 g1f3 a5c7 d4b5 e5f4 f1g2 d7e8 g5g6 b8c8
+b2c3 f4e3 c3a1 c8a8 h1f1 e4f3 f1f2 e3h6 f2a2 c7d6 b5d6 h6g5 c4c5 g7g6
+d6b7 d8c7 g2h1 c7b7 a2h2 h7h6 a1c3 f3f2 e1e2 e8f7 c3a1 b7b8 h1e4 g5e3
+e4d5 e7g8 h2f2 g6g2 a4b3 g2g5 b3c2 f7g6 c2b1 g6f5 f2f5 h6h5 f5g5 e3d4
+g5f5 b8c7 f5f4 g8h6 a3a4 a8g8 d5c6 g8g6 f4f3 h6f7 a1b2 g6g7 e2d2 a6c5
+b4c5 g7g1 c6b7 g1c1 b2d4 c7d8 d4f2 f7d6 f2g3 c1g1 b1b4 a7a5 f3f2 g1a1 b4c3""".split()
+
+
+def late_game_board(ply):
+    if not 0 <= ply <= len(LATE_GAME_HISTORY_UCI):
+        raise ValueError("Prefix is outside the fixed late-game history")
+    board = chess.Board()
+    for uci in LATE_GAME_HISTORY_UCI[:ply]:
+        board.push_uci(uci)
+    return board
+
 
 class SparringStateTests(unittest.TestCase):
     def setUp(self):
@@ -85,6 +108,43 @@ class SparringStateTests(unittest.TestCase):
         self.assertEqual(len(self.game._sparring_decisions), 1)
         self.assertEqual(self.game._boss_decisions, {})
         self.assertEqual(self.game._dynamic_decisions, {})
+
+    def test_live_host_switches_both_colors_only_on_their_fiftieth_move(self):
+        for ply in (96, 97, 98, 99):
+            with self.subTest(ply=ply):
+                board = late_game_board(ply)
+                self.assertFalse(board.is_game_over(claim_draw=True))
+                self.assertFalse(host.sparring_play.sparring_pacing.resource_guard(board)["active"])
+                self.game.new_game("black" if board.turn else "white", 1000,
+                                   self.game.revision, sparring_mode=True)
+                self.game.board = board
+                self.game._sync_evaluation()
+                state = self.game.state()
+                finishing = ply >= 98
+                self.assertTrue(state["engine_to_move"])
+                self.assertEqual(board.fullmove_number, 50 if finishing else 49)
+                self.assertEqual(state["engine"]["sparring"]["phase"], "finish" if finishing else "ramp")
+                self.assertEqual(state["engine"]["sparring_analysis_only"], finishing)
+                self.assertEqual(state["engine"]["extra_budget_ms"], 500 if finishing else 2000)
+                self.assertEqual(state["engine"]["extra_budget_purpose"],
+                                 "rating_observation" if finishing else "sparring_control_and_rating")
+                self.assertAlmostEqual(host.sparring_play._ramp_fraction(board), 1 if finishing else 29 / 30)
+
+    def test_current_and_previous_policy_archives_keep_fiftieth_move_distinct(self):
+        for ply in (98, 99):
+            with self.subTest(ply=ply):
+                self.game.board = late_game_board(ply)
+                self.game._sync_evaluation()
+                self.game._save()
+                path = self.game.save_dir / (self.game.game_id + ".json")
+                record = json.loads(path.read_text(encoding="utf-8"))
+                for policy, expected in ((host.sparring_play.POLICY, "finish"),
+                                         ("regicide-sparring-play-v4", "ramp")):
+                    record["sparring_play"]["policy"] = policy
+                    path.write_text(json.dumps(record), encoding="utf-8")
+                    replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+                    self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["phase"], expected)
+                    self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["policy"], policy)
 
     def test_save_replay_undo_and_handicap_preserve_only_actual_observations(self):
         self.prepare()

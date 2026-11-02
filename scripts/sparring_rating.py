@@ -25,7 +25,7 @@ METHODS = (LEGACY_METHOD, METHOD)
 EVIDENCE_METHOD = "regicide-rating-evidence-v1"
 TARGET = "chess_com_rapid"
 POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2", "regicide-sparring-play-v3",
-            "regicide-sparring-play-v4")
+            "regicide-sparring-play-v4", "regicide-sparring-play-v5")
 PRIOR_LOSS = 80.0
 PRIOR_WEIGHT = 8.0
 CALIBRATION_PRIOR_GAMES = .25

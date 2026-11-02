@@ -163,25 +163,34 @@ class RatingStateTests(unittest.TestCase):
         self.assertEqual(row["candidate_budget_ms"], 0)
         self.assertEqual(row["quality_budget_ms"], 500)
         self.assertEqual(row["probes"], [])
+        self.assertEqual(row["discovery"], [])
+        self.assertEqual(row["baseline_uci"], baseline)
+        self.assertEqual(row["selected_uci"], baseline)
         self.assertEqual(state["engine"]["sparring_rating"]["observations"], 1)
         self.assertEqual(state["engine"]["sparring_rating"]["updated_human_ply"], len(board.move_stack) - 1)
 
-    def test_after_move70_quality_updates_rating_without_changing_full_strength_move(self):
+    def test_each_colors_move50_keeps_baseline_and_continues_rating_observations(self):
+        for ply in (98, 99):
+            with self.subTest(engine_color="white" if ply == 98 else "black"):
+                board = sparring_base.late_game_board(ply)
+                self.assertEqual(board.fullmove_number, 50)
+                self.assertFalse(board.is_game_over(claim_draw=True))
+                self.game.new_game("black" if board.turn else "white", 1000,
+                                   self.game.revision, sparring_mode=True)
+                self.game.board = board
+                self.game._sync_evaluation()
+                self.peer.searches.clear()
+                self._quality_only_turn("finish_full_strength")
+                row = self.game._sparring_decisions[ply + 1]
+                self.assertEqual(row["phase"], "finish")
+                self.assertFalse(row["band_control"]["active"])
+                self.assertEqual(row["profile"]["target_loss_cp"], 0)
+                self.assertEqual(self.game.state()["engine"]["sparring_rating"]["updated_human_ply"], ply)
+
+    def test_move70_fixture_still_updates_rating_without_changing_full_strength_move(self):
         # Fixed legal, nonterminal 139-ply history. No engine or random search
         # creates this fixture; it reaches Black's 70th move from standard start.
-        history = """b2b3 g7g5 a2a3 f8g7 d2d3 g7a1 e1d2 a1e5 h2h3 g8f6 d2e1 b8c6
-        f2f4 d7d5 c1b2 g5f4 b1d2 f6g8 d2c4 e7e6 c4d2 c6b4 d1b1 b4a6 e2e4 d5e4
-        b2a1 f7f6 c2c4 e5d4 b3b4 g8e7 b1c2 a6b8 c2c1 c7c6 g2g4 h8g8 a1b2 d4e5
-        b2c3 g8f8 g4g5 b8a6 c1b1 f4f3 c3a1 f8g8 b1d1 g8g6 a1b2 a8b8 d1c2 g6g7
-        c2a4 d8a5 d2f3 c8d7 f3d4 e8d8 g1f3 a5c7 d4b5 e5f4 f1g2 d7e8 g5g6 b8c8
-        b2c3 f4e3 c3a1 c8a8 h1f1 e4f3 f1f2 e3h6 f2a2 c7d6 b5d6 h6g5 c4c5 g7g6
-        d6b7 d8c7 g2h1 c7b7 a2h2 h7h6 a1c3 f3f2 e1e2 e8f7 c3a1 b7b8 h1e4 g5e3
-        e4d5 e7g8 h2f2 g6g2 a4b3 g2g5 b3c2 f7g6 c2b1 g6f5 f2f5 h6h5 f5g5 e3d4
-        g5f5 b8c7 f5f4 g8h6 a3a4 a8g8 d5c6 g8g6 f4f3 h6f7 a1b2 g6g7 e2d2 a6c5
-        b4c5 g7g1 c6b7 g1c1 b2d4 c7d8 d4f2 f7d6 f2g3 c1g1 b1b4 a7a5 f3f2 g1a1 b4c3"""
-        board = chess.Board()
-        for move in history.split():
-            board.push_uci(move)
+        board = sparring_base.late_game_board(139)
         self.assertEqual(len(board.move_stack), 139)
         self.assertFalse(board.is_game_over(claim_draw=True))
         self.game.board = board

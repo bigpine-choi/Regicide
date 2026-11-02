@@ -2109,11 +2109,11 @@ func _on_game_mode_selected(_index: int) -> void:
 	var descriptions := {
 		0: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
 		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-		2: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~69수에는 매 수 일정한 폭으로 강도를 높여 70번째 수부터 전력으로 둡니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."}
+		2: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."}
 	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
 	boss_mode_option.tooltip_text = description
 	if boss_mode_option.get_selected_id() == 2:
-		boss_mode_option.tooltip_text += "\n20수는 백과 흑이 각각 20번 둔 시점입니다. 21~69수에 매 수 일정한 폭으로 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다."
+		boss_mode_option.tooltip_text += "\n20수는 백과 흑이 각각 20번 둔 시점입니다. 21~49수에 매 수 일정한 폭으로 강도를 높이고, 양쪽 모두 50번째 수부터 전력으로 둡니다."
 	if game_mode_help != null:
 		game_mode_help.text = description
 	_render_think_time_controls()

@@ -12,7 +12,7 @@ import chess
 VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 300,
           chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
 CLOSE_PLIES = 40
-FINISH_PLIES = 138
+FINISH_PLIES = 98
 MAJOR_LOSS_CP = 400
 
 
