@@ -279,10 +279,10 @@ class HumanRhythmTests(unittest.TestCase):
         result = refine_current(board, "g1f3 d7d6 d2d4", seed=seed, plan=plan, history=[row])
         self.assertTrue(result["refinement"]["long_think_cooldown"])
 
-    def test_six_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
+    def test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
         board = board_after("e2e4", "c7c5")
         values = []
-        for left in (360001, 360000, 359999, 240000, 180000, 120000, 60000, 30000, 10000):
+        for left in (360000, 240000, 180001, 180000, 179999, 120000, 60000, 30000, 10000):
             plan = neutral_context(board, left=left)
             result = refine_current(board, "g1f3 d7d6 d2d4", plan=plan, left=left, history=[previous()])
             values.append(result)
@@ -293,6 +293,8 @@ class HumanRhythmTests(unittest.TestCase):
         factors = [row["refinement"]["factor"] for row in values]
         self.assertEqual(targets, sorted(targets, reverse=True))
         self.assertEqual(factors, sorted(factors, reverse=True))
+        self.assertEqual(factors[:4], [factors[0]] * 4)
+        self.assertLess(values[4]["pressure_factor"], 1.)
         self.assertFalse(values[-1]["enabled"])
         self.assertEqual(policy.remaining_wait_ms(values[-1], clock(board, 10000)), 0)
 

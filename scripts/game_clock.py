@@ -9,6 +9,7 @@ import time
 
 
 SCHEMA = "regicide.game-clock.v1"
+MAX_ADJUSTED_MS = 86_400_000
 CONTROLS = {
     "10+0": {"initial_ms": 600_000, "increment_ms": 0, "label": "10분 래피드"},
     "10+5": {"initial_ms": 600_000, "increment_ms": 5_000, "label": "10+5 래피드"},
@@ -41,6 +42,9 @@ class GameClock:
         self._turn_color = self._running
         self._anchor = self._now()
         self._elapsed_before_pause = 0.0
+        self._overtime_before_anchor = 0.0
+        self.edit_revision = 0
+        self.adjustments = []
         self._status = "running" if self.enabled else "disabled"
         self.flagged_color = None
         self.pause_reason = None
@@ -66,7 +70,7 @@ class GameClock:
         overtime_color = (self.soft_timeout_color if self.enabled and self.soft_timeout_color
                           and balances[self.soft_timeout_color] <= 0 else None)
         turn_elapsed = self._elapsed_before_pause + elapsed
-        overtime_ms = (max(0, turn_elapsed - self.history[-1][self.soft_timeout_color + "_ms"])
+        overtime_ms = (self._overtime_before_anchor + max(0, elapsed - self._balances[self.soft_timeout_color])
                        if overtime_color and self._turn_color == self.soft_timeout_color else 0)
         return {"schema": SCHEMA, "enabled": self.enabled, "control_id": self.control_id,
                 "timeout_policy": self.timeout_policy, "soft_timeout_color": self.soft_timeout_color,
@@ -75,6 +79,7 @@ class GameClock:
                 "black_ms": round(balances["black"], 3) if self.enabled else None,
                 "running_color": self._running, "status": self._status,
                 "turn_elapsed_ms": round(turn_elapsed, 3),
+                "edit_revision": self.edit_revision,
                 "flagged_color": self.flagged_color, "pause_reason": self.pause_reason, "ply": self.ply,
                 "sampled_monotonic_ms": round(now * 1000, 3) if self.enabled else None}
 
@@ -92,6 +97,43 @@ class GameClock:
 
     def expire(self):
         return self._expire_elapsed(self._elapsed())
+
+    def _debit_elapsed(self, elapsed):
+        """Commit one running segment without losing this turn's total cost."""
+        if self._running == self.soft_timeout_color:
+            self._overtime_before_anchor += max(0.0, elapsed - self._balances[self._running])
+        self._balances[self._running] = max(0.0, self._balances[self._running] - elapsed)
+        self._elapsed_before_pause += elapsed
+
+    def adjust(self, color, delta_ms):
+        """Apply a deliberate live-clock edit, with no move or increment.
+
+        Events belong to the turn after their recorded board ply. Undo to
+        that ply discards those events, just as it discards that turn's time.
+        A flag that has already fallen cannot be rescued by a late edit.
+        """
+        if (color not in ("white", "black") or type(delta_ms) is not int
+                or delta_ms == 0 or abs(delta_ms) > MAX_ADJUSTED_MS):
+            raise ValueError("남은 시간 조정 값이 올바르지 않습니다.")
+        if not self.enabled or self._status != "running" or self.flagged_color:
+            raise ValueError("진행 중인 시간제 대국에서만 시간을 조정할 수 있습니다.")
+        now = self._now()
+        elapsed = self._elapsed(now)
+        if self._expire_elapsed(elapsed):
+            raise ValueError("이미 종료된 시계는 시간을 추가해 되살릴 수 없습니다.")
+        self._debit_elapsed(elapsed)
+        self._anchor = now
+        before = self._balances[color]
+        self._balances[color] = min(MAX_ADJUSTED_MS, max(0.0, before + delta_ms))
+        if color == self.soft_timeout_color and self._balances[color] > 0:
+            self._overtime_before_anchor = 0.0
+        self.edit_revision += 1
+        event = {"revision": self.edit_revision, "ply": self.ply, "color": color,
+                 "delta_ms": delta_ms, "applied_delta_ms": round(self._balances[color] - before, 3),
+                 "before_ms": round(before, 3), "after_ms": round(self._balances[color], 3),
+                 "turn_elapsed_ms": round(self._elapsed_before_pause, 3)}
+        self.adjustments.append(event)
+        return copy.deepcopy(event)
 
     def complete_move(self, color, ply):
         if not self.enabled:
@@ -114,6 +156,7 @@ class GameClock:
         self._turn_color = self._running
         self._anchor = now
         self._elapsed_before_pause = 0.0
+        self._overtime_before_anchor = 0.0
         return True
 
     def pause(self, reason="paused"):
@@ -125,8 +168,7 @@ class GameClock:
         elapsed = self._elapsed()
         if self._expire_elapsed(elapsed):
             return
-        self._balances[self._running] = max(0.0, self._balances[self._running] - elapsed)
-        self._elapsed_before_pause += elapsed
+        self._debit_elapsed(elapsed)
         self._running = None
         self._status = "paused"
         self.pause_reason = reason
@@ -147,8 +189,7 @@ class GameClock:
                 elapsed = self._elapsed()
                 if self._running != self.soft_timeout_color:
                     elapsed = min(self._balances[self._running], elapsed)
-                self._balances[self._running] = max(0.0, self._balances[self._running] - elapsed)
-                self._elapsed_before_pause += elapsed
+                self._debit_elapsed(elapsed)
             self._running = None
             self._status = "finished"
             self.pause_reason = None
@@ -161,11 +202,14 @@ class GameClock:
         if entry is None:
             raise ValueError("Missing historical clock balance.")
         self.history = [r for r in self.history if r["ply"] <= ply]
+        self.adjustments = [r for r in self.adjustments if r["ply"] < ply]
+        self.edit_revision += 1
         self._balances = {name: float(entry[name + "_ms"]) for name in ("white", "black")}
         self.ply = ply
         self.flagged_color = None
         self.pause_reason = None
         self._elapsed_before_pause = 0.0
+        self._overtime_before_anchor = 0.0
         self._running = color
         self._turn_color = color
         self._anchor = self._now()
@@ -175,7 +219,8 @@ class GameClock:
         return {"schema": SCHEMA, "enabled": self.enabled, "control_id": self.control_id, **self.config,
                 "timeout_policy": self.timeout_policy, "soft_timeout_color": self.soft_timeout_color,
                 "history": copy.deepcopy(self.history), "snapshot": self.snapshot(),
+                "edit_revision": self.edit_revision, "adjustments": copy.deepcopy(self.adjustments),
                 "timeout_rule": ("human clock zero permits play; engine clock zero loses regardless of mating material"
                                  if self.timeout_policy == "engine_only" else
                                  "opponent has_insufficient_material => draw; conservative material-only detection"),
-                "undo_policy": "restore balances after retained ply; no retroactive extra increment"}
+                "undo_policy": "restore balances after retained ply; discard edits during the removed turn; no retroactive extra increment"}

@@ -167,6 +167,7 @@ class HumanGame:
         self._search_lock = threading.Lock()
         self._engine_searching = False
         self._active_pacing = None
+        self._active_timing_evidence = None
         self._pacing_event = threading.Event()
         self._skip_wait_for = None
         self._active_movetime_ms = None
@@ -215,6 +216,7 @@ class HumanGame:
         self._engine_movetimes = {}
         self._engine_pacing_decisions = {}
         self._active_pacing = None
+        self._active_timing_evidence = None
         self._skip_wait_for = None
         self._opening_seed = secrets.token_hex(16)
         self._opening_decisions = {}
@@ -289,6 +291,53 @@ class HumanGame:
                 self._settings_revision += 1
                 self._save()
             return self.state()
+
+    def adjust_clock(self, side, delta_ms, game_id, clock_revision):
+        """Apply a relative clock edit without invalidating an in-flight move."""
+        with self._lock:
+            if self._closing or not self._game_open or game_id != self.game_id:
+                raise RevisionError("대국이 바뀌었습니다. 현재 대국에서 다시 조절해 주세요.")
+            if type(clock_revision) is not int or clock_revision != self._clock.edit_revision:
+                raise RevisionError("남은 시간이 먼저 변경됐습니다. 다시 조절해 주세요.")
+            self._require_no_handicap()
+            self._adjudicate_clock()
+            if not self.sparring_mode or not self._clock.enabled:
+                raise ValueError("시간 제한이 있는 스파링 대국에서 사용할 수 있습니다.")
+            if self._outcome()[0] != "*" or self.error:
+                raise ValueError("종료된 대국의 시간은 변경할 수 없습니다.")
+            if side not in ("human", "engine"):
+                raise ValueError("나 또는 Regicide의 시계를 선택해 주세요.")
+            if type(delta_ms) is not int or delta_ms not in (-60000, -10000, 10000, 60000):
+                raise ValueError("10초 또는 1분 버튼으로 시간을 조절해 주세요.")
+            color = self.human_color if side == "human" else not self.human_color
+            self._clock.adjust("white" if color else "black", delta_ms)
+            self._adjudicate_clock()
+            if side == "engine" and self._engine_searching and self._outcome()[0] == "*":
+                self._refresh_active_pacing()
+            self._save()
+            return self.state()
+
+    def _refresh_active_pacing(self):
+        """Reconsider this turn's target; an issued native search is not restarted."""
+        previous = self._active_pacing
+        if previous is None:
+            return
+        clock = self._clock.snapshot()
+        try:
+            history = copy.deepcopy(self._engine_pacing_decisions)
+            pacing = engine_pacing.plan(self.board, clock, evaluation=self.evaluation(),
+                                        seed=self._opening_seed, history=history)
+            for key in ("allocation", "rating_only_budget_ms", "auxiliary_reason"):
+                if key in previous:
+                    pacing[key] = previous[key]
+            if self._active_timing_evidence is not None:
+                pacing = engine_pacing.refine(self.board, pacing, clock,
+                    **self._active_timing_evidence, history=history, seed=self._opening_seed)
+        except Exception as exc:
+            # A cosmetic timing failure must never undo an accepted clock edit.
+            pacing = {**previous, "refinement_error": type(exc).__name__}
+        self._active_pacing = {**pacing, "status": previous["status"],
+                              "clock_adjusted": True, "clock_edit_revision": self._clock.edit_revision}
 
     def _outcome(self):
         if self._override:
@@ -486,6 +535,8 @@ class HumanGame:
             can_undo = (self._game_open and not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
             clock_snapshot = self._clock.snapshot()
+            clock_snapshot["editable"] = bool(active and self.sparring_mode and self._clock.enabled
+                                               and not handicap_mode and clock_snapshot["status"] == "running")
             support = (decision_support.assess(self.board, self.human_color, clock_snapshot,
                                               evaluation=self.evaluation(),
                                               rating=self._rating_state() if self.sparring_mode else None)
@@ -618,6 +669,10 @@ class HumanGame:
                     reason = "client_closing"
                     break
                 clock = self._clock.snapshot()
+                if (self._active_pacing is not None and self._active_pacing.get("clock_adjusted")
+                        and self._active_pacing.get("clock_edit_revision") != pacing.get("clock_edit_revision")):
+                    pacing = copy.deepcopy(self._active_pacing)
+                    wall_deadline = time.monotonic() + engine_pacing.remaining_wait_ms(pacing, clock) / 1000
                 remaining = engine_pacing.remaining_wait_ms(pacing, clock)
                 if remaining <= 0:
                     reason = ("low_clock" if clock.get(pacing["color"] + "_ms") is not None
@@ -757,7 +812,7 @@ class HumanGame:
                                           max(0, allocation["total_search_ms"] - movetime_ms - 25))
                     if rating_only_cap < 100:
                         rating_only_cap = 0
-                pacing_plan.update(allocation=allocation,
+                pacing_plan.update(allocation=allocation, clock_edit_revision=self._clock.edit_revision,
                                    rating_only_budget_ms=rating_only_cap,
                                    auxiliary_reason=("within_budget_rating_only" if rating_only_cap else
                                                      "clock_budget_baseline_only" if clock_limited else
@@ -786,6 +841,7 @@ class HumanGame:
                     self._pacing_event.set()
                 pacing_event = self._pacing_event
                 self._engine_searching = True
+                self._active_timing_evidence = None
                 self._active_pacing = {**pacing_plan, "status": "searching"}
                 self._active_movetime_ms = movetime_ms
                 self._active_extra_budget_ms = (self._sparring_extra_budget(movetime_ms, board)
@@ -798,6 +854,8 @@ class HumanGame:
             discard_engine = False
             watchdog = None
             clock_watchdog = None
+            clock_monitor_done = threading.Event()
+            active_analysis = [None]
             pacing_receipt = None
             baseline_packets, timing_infos = {}, {}
             timed_out = threading.Event()
@@ -807,7 +865,26 @@ class HumanGame:
                     timed_out.set()
                     engine.close()
                 if clock_remaining_ms is not None:
-                    clock_watchdog = threading.Timer(clock_remaining_ms / 1000, expire_search)
+                    def monitor_clock():
+                        while not clock_monitor_done.wait(.02):
+                            with self._lock:
+                                if (self._closing or self.game_id != game_id or self._game_token is not token):
+                                    return
+                                current = self._clock.snapshot()
+                                expired = (self._clock.flagged_color is not None or
+                                           current["white_ms" if board.turn else "black_ms"] <= 0)
+                                pacing = self._active_pacing
+                                if not expired and pacing and pacing.get("clock_adjusted"):
+                                    left = max(0, pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"])
+                                    available = current["white_ms" if board.turn else "black_ms"]
+                                    if min(left, available) <= 100 and active_analysis[0] is not None:
+                                        stop = getattr(active_analysis[0], "stop", None)
+                                        if callable(stop):
+                                            stop()
+                            if expired:
+                                expire_search()
+                                return
+                    clock_watchdog = threading.Thread(target=monitor_clock, daemon=True)
                     clock_watchdog.daemon = True
                     clock_watchdog.start()
                 if callable(getattr(engine, "analysis", None)):
@@ -818,6 +895,13 @@ class HumanGame:
                     watchdog.daemon = True
                     watchdog.start()
                 def search(budget, *, root_move=None, root_moves=None, publish=True, fresh=False, depth=None, position=None):
+                    with self._lock:
+                        pacing = self._active_pacing
+                        if pacing and pacing.get("clock_adjusted"):
+                            current = self._clock.snapshot()
+                            left = max(1, pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"] - 100)
+                            available = max(1, current["white_ms" if board.turn else "black_ms"] - 100)
+                            budget = min(budget, left, available)
                     search_board = board if position is None else position
                     if position is not None or root_move is not None or root_moves is not None:
                         publish = False
@@ -832,6 +916,8 @@ class HumanGame:
                     packets, latest = {}, {}
                     if callable(getattr(engine, "analysis", None)):
                         with engine.analysis(search_board.copy(stack=True), limit, **options) as analysis:
+                            with self._lock:
+                                active_analysis[0] = analysis
                             waited = False
                             try:
                                 for info in analysis:
@@ -854,6 +940,9 @@ class HumanGame:
                                     except Exception:
                                         pass
                                 raise
+                            finally:
+                                with self._lock:
+                                    active_analysis[0] = None
                     else:
                         result = engine.play(search_board.copy(stack=True), limit, **options)
                         latest = result.info
@@ -1039,34 +1128,33 @@ class HumanGame:
             finally:
                 if watchdog is not None:
                     watchdog.cancel()
+                clock_monitor_done.set()
                 if clock_watchdog is not None:
-                    clock_watchdog.cancel()
+                    clock_watchdog.join(timeout=.2)
             if failure is None:
                 # Search allocation is already spent/frozen. Refine only the
                 # whole-turn timing target using the selected move's evidence.
                 with self._lock:
                     same_turn = (not self._closing and self._game_open and self.game_id == game_id
                                  and self._game_token is token and self.revision == revision)
-                    refinement_clock = self._clock.snapshot()
-                if same_turn:
-                    try:
-                        pacing_plan = engine_pacing.refine(
-                            board, pacing_plan, refinement_clock, selected_move=reply.move,
-                            baseline_packets=baseline_packets,
-                            selected_info=timing_infos.get(reply.move.uci()),
-                            history=pacing_history, seed=self._opening_seed)
-                    except Exception as timing_error:
-                        # Timing imitation is optional; never discard a legal
-                        # engine move or leave a game locked because it failed.
-                        pacing_plan = {**pacing_plan, "refinement_error": type(timing_error).__name__}
-                    with self._lock:
-                        if (not self._closing and self.game_id == game_id
-                                and self._game_token is token and self.revision == revision):
-                            self._active_pacing = {**pacing_plan, "status": "searching"}
+                    if same_turn:
+                        refinement_clock = self._clock.snapshot()
+                        if self._active_pacing is not None:
+                            pacing_plan = copy.deepcopy(self._active_pacing)
+                        self._active_timing_evidence = {
+                            "selected_move": reply.move, "baseline_packets": baseline_packets,
+                            "selected_info": timing_infos.get(reply.move.uci())}
+                        try:
+                            pacing_plan = engine_pacing.refine(board, pacing_plan, refinement_clock,
+                                **self._active_timing_evidence, history=pacing_history, seed=self._opening_seed)
+                        except Exception as timing_error:
+                            pacing_plan = {**pacing_plan, "refinement_error": type(timing_error).__name__}
+                        self._active_pacing = {**pacing_plan, "status": "searching"}
                 pacing_receipt = self._wait_for_engine_turn(pacing_plan, game_id, token, revision, pacing_event)
             with self._lock:
                 self._engine_searching = False
                 self._active_pacing = None
+                self._active_timing_evidence = None
                 self._active_movetime_ms = None
                 self._active_extra_budget_ms = None
                 self._adjudicate_clock()
@@ -1200,6 +1288,8 @@ class HumanGame:
                                                timeout_policy=original_clock.timeout_policy,
                                                soft_timeout_color=original_clock.soft_timeout_color)
             self._clock.history = copy.deepcopy(original_clock.history)
+            self._clock.adjustments = copy.deepcopy(original_clock.adjustments)
+            self._clock.edit_revision = original_clock.edit_revision
             self._clock.restore_ply(len(preview.move_stack), "white" if preview.turn else "black")
             self._clock.pause("handicap_preview")
             self._forced_plies.intersection_update(range(1, ply))
@@ -1314,6 +1404,9 @@ class HumanGame:
                                  "HandicapMoves": str(len(forced_plies))})
             if clock.enabled:
                 game.headers["TimeControl"] = f"{clock.config['initial_ms'] // 1000}+{clock.config['increment_ms'] // 1000}"
+                if clock.adjustments:
+                    game.headers["ClockAdjustments"] = str(len(clock.adjustments))
+                    game.headers["ClockAdjustmentPolicy"] = "User-edited practice clocks; completed-move clocks preserved"
                 game.headers["ClockUndoPolicy"] = "restore retained-ply clock balances"
                 game.headers["TimeForfeitPolicy"] = clock.timeout_policy
                 game.headers["EnginePacingPolicy"] = engine_pacing.POLICY
@@ -1647,6 +1740,8 @@ class HumanHandler(BaseHTTPRequestHandler):
                                                         data.get("time_control")),
                        "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
                            data.get("game_id"), data.get("settings_revision")),
+                       "/api/clock-adjust": lambda: game.adjust_clock(data.get("side"), data.get("delta_ms"),
+                           data.get("game_id"), data.get("clock_revision")),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),
                        "/api/engine": lambda: game.engine_move(revision),
                        "/api/engine/skip-wait": lambda: game.skip_engine_wait(revision),

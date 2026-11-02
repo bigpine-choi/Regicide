@@ -28,7 +28,7 @@ import boss_play
 import boss_opponent
 import sparring_play
 import sparring_rating
-from game_clock import CONTROLS, SCHEMA as CLOCK_SCHEMA
+from game_clock import CONTROLS, MAX_ADJUSTED_MS, SCHEMA as CLOCK_SCHEMA
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
@@ -62,14 +62,85 @@ def _recorded_clock(record, board):
     history, snapshot = metadata.get("history"), metadata.get("snapshot")
     if not isinstance(history, list) or len(history) != len(board.move_stack) + 1 or not isinstance(snapshot, dict):
         raise ValueError(error)
-    ceiling = config["initial_ms"] + len(board.move_stack) * config["increment_ms"]
+    adjustments = metadata.get("adjustments", [])
+    edit_revision = metadata.get("edit_revision", 0)
+    if (not isinstance(adjustments, list) or type(edit_revision) is not int or edit_revision < 0
+            or type(snapshot.get("edit_revision", 0)) is not int
+            or snapshot.get("edit_revision", 0) != edit_revision):
+        raise ValueError(error)
+    ceiling = (MAX_ADJUSTED_MS if adjustments else config["initial_ms"]) + len(board.move_stack) * config["increment_ms"]
 
     def finite(value):
         return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= ceiling
 
     def elapsed_valid(value, color):
         return (type(value) in (int, float) and math.isfinite(value) and value >= 0
-                and (color == soft or value <= ceiling))
+                and (color == soft or bool(adjustments) or value <= ceiling))
+
+    events_by_ply, clean_adjustments = {}, []
+    last_revision, last_ply, last_elapsed = 0, -1, 0
+    for event in adjustments:
+        if not isinstance(event, dict):
+            raise ValueError(error)
+        revision, ply, elapsed = event.get("revision"), event.get("ply"), event.get("turn_elapsed_ms")
+        delta, color = event.get("delta_ms"), event.get("color")
+        applied = event.get("applied_delta_ms")
+        if (type(revision) is not int or not last_revision < revision <= edit_revision
+                or type(ply) is not int or not 0 <= ply <= len(board.move_stack) or ply < last_ply
+                or color not in ("white", "black")
+                or type(delta) is not int or delta == 0 or abs(delta) > MAX_ADJUSTED_MS
+                or not elapsed_valid(elapsed, soft)
+                or (ply == last_ply and elapsed < last_elapsed)
+                or not finite(event.get("before_ms")) or not finite(event.get("after_ms"))
+                or event["after_ms"] > MAX_ADJUSTED_MS
+                or type(applied) not in (int, float) or not math.isfinite(applied)
+                or abs(applied) > ceiling):
+            raise ValueError(error)
+        clean_event = {key: event[key] for key in ("revision", "ply", "color", "delta_ms",
+                       "applied_delta_ms", "before_ms", "after_ms", "turn_elapsed_ms")}
+        clean_adjustments.append(clean_event)
+        events_by_ply.setdefault(ply, []).append(clean_event)
+        last_revision, last_ply, last_elapsed = revision, ply, elapsed
+
+    def turn_balances(previous, root_ply, total_elapsed, mover, *, current=False):
+        # Replay individual debit/edit segments: adding time after a human
+        # reached zero must not charge their earlier overtime a second time.
+        balances = {name: previous[name + "_ms"] for name in ("white", "black")}
+        spent, overtime = 0.0, 0.0
+
+        def debit(segment, allow_expired=False):
+            nonlocal overtime
+            if segment < -.001 or not allow_expired and mover != soft and segment > balances[mover] + .001:
+                raise ValueError(error)
+            segment = max(0, segment)
+            if mover == soft:
+                overtime += max(0, segment - balances[mover])
+            balances[mover] = max(0, balances[mover] - segment)
+
+        for event in events_by_ply.get(root_ply, []):
+            if event["turn_elapsed_ms"] > total_elapsed + .001:
+                raise ValueError(error)
+            debit(event["turn_elapsed_ms"] - spent)
+            if mover != soft and balances[mover] <= 0:
+                # An edit cannot rescue an already expired running clock.
+                raise ValueError(error)
+            name = event["color"]
+            before = balances[name]
+            after = min(MAX_ADJUSTED_MS, max(0, before + event["delta_ms"]))
+            if (abs(event["before_ms"] - before) > .01 or abs(event["after_ms"] - after) > .01
+                    or abs(event["applied_delta_ms"] - (after - before)) > .01):
+                raise ValueError(error)
+            balances[name] = after
+            if not current and name == mover and mover != soft and after == 0:
+                raise ValueError(error)  # A manual flag cannot earn a move/increment.
+            if name == soft and after > 0:
+                overtime = 0.0
+            spent = event["turn_elapsed_ms"]
+        # Legacy v1 live snapshots may have been sampled after zero before
+        # the next timeout poll. Preserve that representation, but never let
+        # a later adjustment or completed move revive the expired clock.
+        debit(total_elapsed - spent, allow_expired=current)
+        return balances, overtime
 
     turn = "white" if board.root().turn else "black"
     clean = []
@@ -84,12 +155,11 @@ def _recorded_clock(record, board):
                 raise ValueError(error)
         else:
             other = "black" if turn == "white" else "white"
-            previous = clean[-1]
-            after_elapsed = previous[turn + "_ms"] - entry["elapsed_ms"]
-            expected = (max(0, after_elapsed) if turn == soft else after_elapsed) + config["increment_ms"]
-            if (entry.get("mover") != turn or (turn != soft and entry["elapsed_ms"] > previous[turn + "_ms"] + .001)
-                    or abs(entry[turn + "_ms"] - expected) > .01
-                    or abs(entry[other + "_ms"] - previous[other + "_ms"]) > .01):
+            expected, _overtime = turn_balances(clean[-1], ply - 1, entry["elapsed_ms"], turn)
+            expected[turn] += config["increment_ms"]
+            if (entry.get("mover") != turn
+                    or abs(entry[turn + "_ms"] - expected[turn]) > .01
+                    or abs(entry[other + "_ms"] - expected[other]) > .01):
                 raise ValueError(error)
             turn = other
         clean.append({key: entry[key] for key in ("ply", "white_ms", "black_ms", "mover", "elapsed_ms")})
@@ -105,9 +175,8 @@ def _recorded_clock(record, board):
         if type(snapshot.get(key)) is not int or snapshot[key] != config[key]:
             raise ValueError(error)
     other = "black" if turn == "white" else "white"
-    if (abs(snapshot[other + "_ms"] - clean[-1][other + "_ms"]) > .01
-            or snapshot[turn + "_ms"] > clean[-1][turn + "_ms"] + .01
-            or abs(snapshot[turn + "_ms"] - max(0, clean[-1][turn + "_ms"] - snapshot["turn_elapsed_ms"])) > .01
+    expected, current_overtime = turn_balances(clean[-1], len(board.move_stack), snapshot["turn_elapsed_ms"], turn, current=True)
+    if (any(abs(snapshot[name + "_ms"] - expected[name]) > .01 for name in ("white", "black"))
             or snapshot.get("running_color") != (turn if snapshot["status"] == "running" else None)):
         raise ValueError(error)
     flagged = snapshot.get("flagged_color")
@@ -115,12 +184,13 @@ def _recorded_clock(record, board):
         raise ValueError(error)
     if policy == "engine_only":
         overtime = soft if snapshot[soft + "_ms"] == 0 else None
-        overtime_ms = max(0, snapshot["turn_elapsed_ms"] - clean[-1][soft + "_ms"]) if overtime and turn == soft else 0
+        overtime_ms = current_overtime if overtime and turn == soft else 0
         if (snapshot.get("overtime_color") != overtime
                 or not elapsed_valid(snapshot.get("overtime_ms"), soft)
                 or abs(snapshot["overtime_ms"] - overtime_ms) > .01):
             raise ValueError(error)
     return {"enabled": True, "control_id": control, **config, "history": clean,
+            "edit_revision": edit_revision, "adjustments": clean_adjustments,
             "timeout_policy": policy, "soft_timeout_color": soft,
             "snapshot": {**snapshot, "sampled_monotonic_ms": None}}
 
@@ -136,7 +206,8 @@ def _replay_clock(clock, ply, final):
             "white_ms": values["white_ms"], "black_ms": values["black_ms"],
             "running_color": None, "status": "replay", "ply": ply, "turn_elapsed_ms": 0,
             "flagged_color": values.get("flagged_color") if final else None,
-            "sampled_monotonic_ms": None}
+            "sampled_monotonic_ms": None, "edit_revision": clock["edit_revision"] if final else 0,
+            "editable": False}
 
 
 def default_game_directory():
@@ -484,12 +555,15 @@ class GameArchive:
         clock = prepared["clock"]
         if clock:
             game.headers["TimeControl"] = f"{clock['initial_ms'] // 1000}+{clock['increment_ms'] // 1000}"
+            if clock["adjustments"]:
+                game.headers["ClockAdjustments"] = str(len(clock["adjustments"]))
+                game.headers["ClockAdjustmentPolicy"] = "User-edited practice clocks; completed-move clocks preserved"
             pacing = record.get("engine_pacing")
             if (isinstance(pacing, dict) and pacing.get("enabled") is True
                     and pacing.get("policy") in ("regicide-engine-pacing-v1", "regicide-engine-pacing-v2",
                                                   "regicide-engine-pacing-v3", "regicide-engine-pacing-v4",
                                                   "regicide-engine-pacing-v5", "regicide-engine-pacing-v6",
-                                                  "regicide-engine-pacing-v7")):
+                                                  "regicide-engine-pacing-v7", "regicide-engine-pacing-v8")):
                 game.headers["EnginePacingPolicy"] = pacing["policy"]
             if clock["timeout_policy"] == "engine_only":
                 game.headers["TimeForfeitPolicy"] = "engine_only"

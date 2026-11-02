@@ -1301,3 +1301,12 @@ select{
 }
 
 .chess-clock.untimed { font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); background:transparent }
+.clock-adjust { margin-top:12px; border-top:1px solid var(--line); padding-top:12px }
+.clock-adjust-toggle { width:100%; text-align:left; font-size:11px }
+.clock-adjust-toggle::after { content:"＋"; float:right }
+.clock-adjust-toggle[aria-expanded="true"]::after { content:"−" }
+.clock-adjust-row { margin-top:13px }
+.clock-adjust-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:7px; font-size:11px }
+.clock-adjust-heading strong { font-size:15px; font-variant-numeric:tabular-nums }
+.clock-adjust-buttons { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px }
+.clock-adjust-buttons .secondary-button { min-height:36px; padding:7px 2px; font-size:11px; white-space:nowrap }

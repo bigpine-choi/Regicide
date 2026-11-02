@@ -141,23 +141,24 @@ class OpeningPacingTests(unittest.TestCase):
         for update in ({"nonpawn_pieces": 9}, {"pawns": 11}):
             self.assertIsNone(pacing._opening_budget(chess.Board(), {**features, **update}, "audit"))
 
-    def test_six_minute_pressure_shrinks_the_cap_continuously(self):
+    def test_three_minute_pressure_shrinks_the_cap_continuously(self):
         board = board_after("Nf3")
         plans = [pacing.plan(board, clock(board, left), seed="audit")
-                 for left in (600000, 360001, 360000, 359999, 240000, 180000, 60000)]
+                 for left in (600000, 360000, 240000, 180001, 180000, 179999, 120000, 90000, 60000)]
         targets = [plan["target_total_ms"] for plan in plans]
         self.assertEqual(targets, sorted(targets, reverse=True))
-        self.assertEqual(targets[:3], [targets[0]] * 3)
-        self.assertLessEqual(targets[2] - targets[3], 1)
+        self.assertEqual(targets[:5], [targets[0]] * 5)
+        self.assertLessEqual(targets[4] - targets[5], 1)
         self.assertLess(targets[-1], targets[0])
-        # At four minutes the opening budget is already under pressure.
-        self.assertAlmostEqual(plans[4]["pressure_factor"], 5 / 6)
-        self.assertLess(plans[4]["opening_budget"]["cap_ms"],
-                        plans[2]["opening_budget"]["cap_ms"])
+        # Exactly three minutes retains the normal opening allowance.
+        self.assertEqual(plans[4]["pressure_factor"], 1.)
+        self.assertAlmostEqual(plans[6]["pressure_factor"], 5 / 6)
+        self.assertLess(plans[6]["opening_budget"]["cap_ms"],
+                        plans[4]["opening_budget"]["cap_ms"])
         for plan in plans:
             self.assertLessEqual(plan["target_total_ms"],
                                  plan["opening_budget"]["unpressured_cap_ms"] * plan["pressure_factor"])
-        fresh = refine(board, plans[0], "g8f6 d2d4", left=180000)
+        fresh = refine(board, plans[0], "g8f6 d2d4", left=90000)
         self.assertEqual(fresh["opening_budget"]["cap_ms"],
                          int(plans[0]["opening_budget"]["unpressured_cap_ms"] * .75))
         self.assertLessEqual(fresh["target_total_ms"], fresh["opening_budget"]["cap_ms"])

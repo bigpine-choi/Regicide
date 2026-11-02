@@ -47,18 +47,18 @@ class PacingPlanTests(unittest.TestCase):
         later = {**self.clock, "turn_elapsed_ms": 60000, "white_ms": 540000}
         self.assertEqual(engine_pacing.remaining_wait_ms(plan, later), 0)
 
-    def test_six_minute_boundary_and_monotonic_pressure(self):
+    def test_three_minute_boundary_and_monotonic_pressure(self):
         plans = [engine_pacing.plan(self.board, self.at(ms))
-                 for ms in (360001, 360000, 359999, 240000, 180000, 120000, 60000)]
-        self.assertEqual([p["pressure_factor"] for p in plans[:2]], [1, 1])
-        self.assertLess(plans[2]["pressure_factor"], 1)
-        self.assertLessEqual(abs(plans[1]["target_total_ms"] - plans[2]["target_total_ms"]), 1)
+                 for ms in (360000, 240000, 180001, 180000, 179999, 120000, 90000, 60000, 30000)]
+        self.assertEqual([p["pressure_factor"] for p in plans[:4]], [1, 1, 1, 1])
+        self.assertLess(plans[4]["pressure_factor"], 1)
+        self.assertLessEqual(abs(plans[3]["target_total_ms"] - plans[4]["target_total_ms"]), 1)
         targets = [p["target_total_ms"] for p in plans]
         self.assertEqual(targets, sorted(targets, reverse=True))
-        self.assertAlmostEqual(plans[3]["pressure_factor"], 5 / 6)
-        self.assertAlmostEqual(plans[4]["pressure_factor"], 3 / 4)
-        self.assertAlmostEqual(plans[5]["pressure_factor"], 2 / 3)
-        self.assertAlmostEqual(plans[6]["pressure_factor"], 7 / 12)
+        self.assertAlmostEqual(plans[5]["pressure_factor"], 5 / 6)
+        self.assertAlmostEqual(plans[6]["pressure_factor"], 3 / 4)
+        self.assertAlmostEqual(plans[7]["pressure_factor"], 2 / 3)
+        self.assertAlmostEqual(plans[8]["pressure_factor"], 7 / 12)
 
     def test_automatic_budget_independent_of_old_manual_setting(self):
         plan = engine_pacing.plan(self.board, self.clock)

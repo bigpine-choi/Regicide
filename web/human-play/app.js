@@ -35,6 +35,11 @@
   let ratingSavedValue = null;
   let clockPollInFlight = false;
   let clockReceivedAt = 0;
+  let clockAdjustSaving = false;
+  let clockAdjustExpanded = false;
+  let clockAdjustGame = null;
+  let clockAdjustNotice = "";
+  const clockSteps = [["minus-minute", -60000], ["minus-ten", -10000], ["plus-ten", 10000], ["plus-minute", 60000]];
   const monotonicNow = () => typeof performance !== "undefined" ? performance.now() : Date.now();
   const rapidControls = {"10+0": "각자 10분 · 추가 시간 없음", "10+5": "각자 10분 · 착수마다 5초 추가", "15+10": "각자 15분 · 착수마다 10초 추가"};
 
@@ -49,7 +54,7 @@
     byId("error-panel").hidden = !errorMessage;
   }
 
-  async function request(path, payload, signal, preserveSelection = false) {
+  async function request(path, payload, signal, preserveSelection = false, expectedGame = null) {
     let response;
     try {
       response = await fetch(path, {
@@ -66,7 +71,10 @@
     try { data = await response.json(); }
     catch (_) { throw new Error("대국 상태를 읽지 못했습니다. 페이지를 새로 열어주세요."); }
     if (!response.ok) {
-      if (data.state) applyState(data.state, preserveSelection);
+      if (data.state && (expectedGame === null || (!closed && state?.game_id === expectedGame && data.state.game_id === expectedGame))) {
+        if (expectedGame === null) applyState(data.state, preserveSelection);
+        else applyClockRefresh(data.state);
+      }
       throw new Error(data.error || "요청을 처리하지 못했습니다. 다시 시도해주세요.");
     }
     return data;
@@ -102,11 +110,10 @@
       hintEnabled = next.hint_enabled === true;
       hintPreferenceLoaded = true;
     }
-    if (unchangedPosition && state.clock && next.clock &&
-        Number(next.clock.sampled_monotonic_ms ?? next.clock.turn_elapsed_ms ?? 0) <=
-        Number(state.clock.sampled_monotonic_ms ?? state.clock.turn_elapsed_ms ?? 0)) {
+    if (unchangedPosition && state.clock && next.clock && !newerClock(next.clock, state.clock)) {
       next.clock = state.clock;
       next.decision_support = state.decision_support;
+      next.engine.pacing = state.engine.pacing;
     } else {
       clockReceivedAt = nextClockAnchor(next.clock, state?.clock, unchangedPosition);
     }
@@ -681,7 +688,7 @@
     byId("think-time").disabled = automatic || !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
     if (state && !timeSaving && [100, 1000, 3000, 5000].includes(state.engine.movetime_ms)) byId("think-time").value = String(state.engine.movetime_ms);
     if (automatic) {
-      byId("think-time-help").textContent = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다. Regicide의 남은 시간이 6분 이하이면 점차 빠르게 둡니다." +
+      byId("think-time-help").textContent = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다. Regicide의 남은 시간이 3분 미만이면 점차 빠르게 둡니다." +
         (state?.engine.sparring_mode !== true ? " 새 스파링 대국부터 자동 관리합니다." : byId("boss-mode").value !== "sparring" ? " 현재 스파링 대국은 자동 관리합니다." : "");
       return;
     }
@@ -753,6 +760,14 @@
     return now;
   }
 
+  function newerClock(incoming, previous) {
+    const incomingEdit = Number(incoming?.edit_revision || 0);
+    const previousEdit = Number(previous?.edit_revision || 0);
+    if (incomingEdit !== previousEdit) return incomingEdit > previousEdit;
+    return Number(incoming?.sampled_monotonic_ms ?? incoming?.turn_elapsed_ms ?? 0) >
+      Number(previous?.sampled_monotonic_ms ?? previous?.turn_elapsed_ms ?? 0);
+  }
+
   function clockText(ms) {
     if (!Number.isFinite(ms)) return "—";
     ms = Math.max(0, ms);
@@ -770,7 +785,63 @@
     return Math.max(0, remaining);
   }
 
+  function canAdjustClock() {
+    return Boolean(state && !closed && !analysisMode && !coachingMode &&
+      !state.handicap_mode && state.engine.sparring_mode === true && state.result === "*" &&
+      state.clock?.enabled === true && state.clock.editable === true);
+  }
+
+  function renderClockAdjustment() {
+    if (clockAdjustGame !== state?.game_id) {
+      clockAdjustGame = state?.game_id;
+      clockAdjustExpanded = false;
+      clockAdjustNotice = "";
+    }
+    byId("clock-adjust").hidden = !state?.engine.sparring_mode || !state?.clock?.enabled ||
+      Boolean(state?.handicap_mode) || analysisMode || coachingMode;
+    byId("clock-adjust-panel").hidden = !clockAdjustExpanded;
+    byId("clock-adjust-toggle").setAttribute("aria-expanded", String(clockAdjustExpanded));
+    byId("clock-adjust-toggle").disabled = !canAdjustClock();
+    const human = state?.human_color || "white";
+    for (const [side, color] of [["human", human], ["engine", human === "white" ? "black" : "white"]]) {
+      const remaining = clockRemaining(color);
+      byId(`clock-adjust-${side}-time`).textContent = clockText(remaining);
+      for (const [name, delta] of clockSteps) {
+        byId(`clock-${side}-${name}`).disabled = !canAdjustClock() || clockAdjustSaving ||
+          (delta < 0 && remaining <= 0) || (delta > 0 && remaining >= 86400000);
+      }
+    }
+    byId("clock-adjust-notice").textContent = clockAdjustSaving ? "시간을 반영하고 있어요…" :
+      state?.result !== "*" && state ? "대국이 끝나 시간 조정을 마쳤습니다." : clockAdjustNotice;
+  }
+
+  async function adjustClock(side, delta) {
+    if (!canAdjustClock() || clockAdjustSaving || !["human", "engine"].includes(side) ||
+        !clockSteps.some(([, step]) => step === delta)) return;
+    const requestedGame = state.game_id;
+    const clockRevision = Number(state.clock.edit_revision || 0);
+    clockAdjustSaving = true;
+    clockAdjustNotice = "";
+    showError("");
+    renderClockAdjustment();
+    try {
+      const next = await request("/api/clock-adjust", {
+        game_id: requestedGame, clock_revision: clockRevision, side, delta_ms: delta
+      }, undefined, true, requestedGame);
+      if (!closed && state?.game_id === requestedGame && next.game_id === requestedGame) {
+        applyClockRefresh(next);
+        clockAdjustNotice = `${side === "human" ? "내" : "Regicide의"} 시간을 조정했습니다.`;
+      }
+    } catch (error) {
+      if (!closed && state?.game_id === requestedGame) showError(error.message);
+    } finally {
+      clockAdjustSaving = false;
+      renderClockAdjustment();
+    }
+  }
+
   function renderClockAndAdvice() {
+    renderClockAdjustment();
     const clock = state?.clock;
     const human = state?.human_color || "white";
     const humanOvertime = clock?.timeout_policy === "engine_only" && clock.overtime_color === human && state?.result === "*";
@@ -830,12 +901,11 @@
       state.status === next.status && state.handicap_mode === next.handicap_mode &&
       Number(state.engine.settings_revision || 0) === Number(next.engine.settings_revision || 0);
     if (!unchanged) { applyState(next, true); return; }
-    const previousSample = Number(state.clock?.sampled_monotonic_ms ?? state.clock?.turn_elapsed_ms ?? 0);
-    const incomingSample = Number(next.clock?.sampled_monotonic_ms ?? next.clock?.turn_elapsed_ms ?? 0);
-    if (incomingSample <= previousSample) return;
+    if (!newerClock(next.clock, state.clock)) return;
     clockReceivedAt = nextClockAnchor(next.clock, state.clock, true);
     state.clock = next.clock;
     state.decision_support = next.decision_support;
+    state.engine.pacing = next.engine.pacing;
     // Never rebuild squares or interrupt drag/promotion for a timer-only update.
     renderClockAndAdvice();
   }
@@ -1014,6 +1084,16 @@
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
   byId("rapid-time-control").addEventListener("change", renderClockAndAdvice);
+  byId("clock-adjust-toggle").addEventListener("click", () => {
+    if (!canAdjustClock()) return;
+    clockAdjustExpanded = !clockAdjustExpanded;
+    renderClockAdjustment();
+  });
+  for (const side of ["human", "engine"]) {
+    for (const [name, delta] of clockSteps) {
+      byId(`clock-${side}-${name}`).addEventListener("click", () => { void adjustClock(side, delta); });
+    }
+  }
   byId("rating-label-form").addEventListener("submit", (event) => {
     event.preventDefault();
     if (byId("rating-label-panel").hidden || busy || timeSaving || closed || !state) return;

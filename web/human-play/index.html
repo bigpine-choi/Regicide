@@ -76,6 +76,25 @@
             <button class="primary-button" id="new-game" type="submit" disabled>새 대국 시작<span aria-hidden="true">↗</span></button>
           </form>
           <div class="game-actions"><button id="undo" class="secondary-button" type="button" disabled><span aria-hidden="true">↶</span> 한 턴 되돌리기</button><button id="resign" class="secondary-button" type="button" disabled>기권</button></div>
+          <section id="clock-adjust" class="clock-adjust" aria-label="스파링 남은 시간 조정" hidden>
+            <button id="clock-adjust-toggle" class="secondary-button clock-adjust-toggle" type="button" aria-expanded="false" aria-controls="clock-adjust-panel">남은 시간 조정</button>
+            <div id="clock-adjust-panel" hidden>
+              <div class="clock-adjust-row" role="group" aria-label="내 남은 시간 조정">
+                <div class="clock-adjust-heading"><span>나</span><strong id="clock-adjust-human-time">—</strong></div>
+                <div class="clock-adjust-buttons">
+                  <button id="clock-human-minus-minute" type="button" class="secondary-button" aria-label="내 시간 1분 줄이기">−1분</button><button id="clock-human-minus-ten" type="button" class="secondary-button" aria-label="내 시간 10초 줄이기">−10초</button><button id="clock-human-plus-ten" type="button" class="secondary-button" aria-label="내 시간 10초 늘리기">+10초</button><button id="clock-human-plus-minute" type="button" class="secondary-button" aria-label="내 시간 1분 늘리기">+1분</button>
+                </div>
+              </div>
+              <div class="clock-adjust-row" role="group" aria-label="Regicide 남은 시간 조정">
+                <div class="clock-adjust-heading"><span>Regicide</span><strong id="clock-adjust-engine-time">—</strong></div>
+                <div class="clock-adjust-buttons">
+                  <button id="clock-engine-minus-minute" type="button" class="secondary-button" aria-label="Regicide 시간 1분 줄이기" title="Regicide 차례에 시간이 0이면 시간패로 끝납니다.">−1분</button><button id="clock-engine-minus-ten" type="button" class="secondary-button" aria-label="Regicide 시간 10초 줄이기" title="Regicide 차례에 시간이 0이면 시간패로 끝납니다.">−10초</button><button id="clock-engine-plus-ten" type="button" class="secondary-button" aria-label="Regicide 시간 10초 늘리기">+10초</button><button id="clock-engine-plus-minute" type="button" class="secondary-button" aria-label="Regicide 시간 1분 늘리기">+1분</button>
+                </div>
+              </div>
+              <p class="help-note">누르면 즉시 반영됩니다. Regicide가 생각하는 중에도 조정할 수 있습니다. 내 시간은 0이어도 계속 두고, Regicide는 자기 차례에 시간이 0이면 패배합니다.</p>
+              <p id="clock-adjust-notice" class="help-note" role="status" aria-live="polite"></p>
+            </div>
+          </section>
           <p class="help-note">색·모드·대국 시계는 새 대국부터 적용됩니다. 다른 화면에서도 시계는 흐릅니다. 기본·보스 모드의 AI 생각시간은 새 대국 없이 바꿀 수 있습니다.</p>
         </section>
 

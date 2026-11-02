@@ -1,0 +1,52 @@
+{
+  "godot_checks": [
+    {
+      "test": "clock_adjust_offline_tests.gd",
+      "checks": 85,
+      "failures": 0,
+      "log": "docs/checks/2026-11-03-clock-adjustment/clock_adjust_offline_tests.gd.log"
+    },
+    {
+      "test": "rapid_clock_offline_tests.gd",
+      "checks": 47,
+      "failures": 0,
+      "log": "docs/checks/2026-11-03-clock-adjustment/rapid_clock_offline_tests.gd.log"
+    },
+    {
+      "test": "boss_mode_offline_tests.gd",
+      "checks": 77,
+      "failures": 0,
+      "log": "docs/checks/2026-11-03-clock-adjustment/boss_mode_offline_tests.gd.log"
+    },
+    {
+      "test": "think_time_offline_tests.gd",
+      "checks": 39,
+      "failures": 0,
+      "log": "docs/checks/2026-11-03-clock-adjustment/think_time_offline_tests.gd.log"
+    }
+  ],
+  "total_godot_checks": 248,
+  "native_http_test_methods": 2,
+  "native_http_scenarios": 4,
+  "native_http_passed": true,
+  "source_sha256": {
+    "godot/scripts/main.gd": "32cc8446c5622edce8327414c7c626d1471e04e33bc19b239b4dcdc99fad48ca",
+    "godot/tests/boss_mode_offline_tests.gd": "cc14fb42c3dd4846cff67e0de3c4bbe466f8d603138ad5172746e3c289ebcd85",
+    "godot/tests/clock_adjust_capture_scene.gd": "4b5eaed62b55daa6179dfb760bef5841f2ad5561f6080157e04309e8f7cb2f7d",
+    "godot/tests/clock_adjust_offline_tests.gd": "249f1eb6bef6e63e34957b0ec62d5c218b2e522cb28cca978e4931e715e118b5",
+    "godot/tests/clock_adjust_render.gd": "b535bf2a3b79419f21ffe67aa2f31263e5883294aacaff978a90f84fb6460039",
+    "tests/clock_adjust_live_tests.py": "d03a7d3cfbc42920cfc4aa3dd4f7ab42a89a00be60a7f72bc92dcbf6081fb9b5"
+  },
+  "visual_evidence": [
+    {
+      "path": "docs/checks/2026-11-03-clock-adjustment/godot-click-clock-synthetic-900.png",
+      "sha256": "0cf2424cfad129fa809d005746d41e1005d817f0568a5f3f82bc16e4a7282a59"
+    },
+    {
+      "path": "docs/checks/2026-11-03-clock-adjustment/godot-click-clock-synthetic-1240.png",
+      "sha256": "307122e408327ebadb5a23a7f7e347e56d10499527942ae43931e45038a30c10"
+    }
+  ],
+  "visual_observation": "Inspected native Godot screenshots at 1240x860 and 900x680; all eight clock adjustment buttons fit; labels are read-only; sidebar scrolls vertically. Synthetic offline state; not a manual live game.",
+  "race_audit": "Dedicated clock channel leaves AI request active. Accepted same-board clock snapshot merges engine.pacing. Older clock edit revisions preserve clock and pacing in both ordinary and lightweight callbacks. Older-board adjustment response cannot roll back the current board, clock or pacing."
+}

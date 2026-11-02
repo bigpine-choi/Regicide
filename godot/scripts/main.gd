@@ -160,11 +160,22 @@ var complexity_detail: Label
 var recommendation_label: Label
 var recommendation_detail: Label
 var clock_http: HTTPRequest
+var clock_adjust_http: HTTPRequest
+var clock_adjust_toggle: Button
+var clock_adjust_panel: VBoxContainer
+var clock_adjust_labels: Dictionary = {}
+var clock_adjust_buttons: Dictionary = {}
+var clock_adjust_note: Label
+var clock_adjust_in_flight: bool = false
+var _clock_adjust_expanded: bool = false
+var _clock_adjust_game: String = ""
+var _clock_adjust_error: String = ""
 var clock_timer: Timer
 var clock_in_flight: bool = false
 var _clock_received_ticks: float = 0.0
 var _clock_draw_ticks: int = 0
 const RAPID_CONTROLS := ["10+0", "10+5", "15+10"]
+const CLOCK_ADJUST_DELTAS := [-60000, -10000, 10000, 60000]
 
 
 func _ready() -> void:
@@ -356,6 +367,7 @@ func _build_ui() -> void:
 	status_detail = _label("잠시만 기다려 주세요.", 13, "a3b6c8")
 	status_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_detail)
+	_build_clock_adjustments(sidebar)
 	decision_panel = VBoxContainer.new()
 	decision_panel.name = "HumanDecisionSupport"
 	decision_panel.add_theme_constant_override("separation", 4)
@@ -559,6 +571,10 @@ func _build_ui() -> void:
 	clock_http = HTTPRequest.new()
 	clock_http.timeout = 3.0
 	add_child(clock_http)
+	# Clock edits stay responsive while the move and clock-poll clients are busy.
+	clock_adjust_http = HTTPRequest.new()
+	clock_adjust_http.timeout = ORDINARY_HTTP_TIMEOUT_SECONDS
+	add_child(clock_adjust_http)
 	clock_timer = Timer.new()
 	clock_timer.wait_time = 0.5
 	clock_timer.timeout.connect(_poll_clock)
@@ -1364,11 +1380,15 @@ func accept_state(next: Dictionary) -> void:
 	var same_revision: bool = state.get("game_id") == next.get("game_id") and state.get("revision") == next.get("revision")
 	var accepted_clock: bool = merged.get("revision") == next.get("revision") and merged.get("game_id") == next.get("game_id")
 	if same_revision and not old_clock.is_empty() and not next_clock.is_empty():
-		var old_sample: float = _clock_sample(old_clock)
-		var next_sample: float = _clock_sample(next_clock)
-		if next_sample <= old_sample:
+		if not _newer_clock_snapshot(next_clock, old_clock):
 			merged["clock"] = old_clock
 			merged["decision_support"] = state.get("decision_support", {})
+			# Pacing is recomputed with a clock edit, so its metadata shares
+			# the clock's freshness barrier even in ordinary state responses.
+			if state.get("engine", {}).has("pacing"):
+				merged["engine"]["pacing"] = state.engine.pacing
+			else:
+				merged["engine"].erase("pacing")
 			accepted_clock = false
 	if accepted_clock:
 		_clock_received_ticks = _next_clock_anchor(next_clock, old_clock, same_revision)
@@ -1839,6 +1859,15 @@ static func _clock_sample(clock: Dictionary) -> float:
 	return float(value) if _clock_number(value) else 0.0
 
 
+static func _newer_clock_snapshot(incoming: Dictionary, previous: Dictionary) -> bool:
+	# Manual edits can add time, and must survive delayed polls/search replies.
+	var incoming_edit: int = int(incoming.get("edit_revision", 0))
+	var previous_edit: int = int(previous.get("edit_revision", 0))
+	if incoming_edit != previous_edit:
+		return incoming_edit > previous_edit
+	return _clock_sample(incoming) > _clock_sample(previous)
+
+
 func _next_clock_anchor(incoming: Dictionary, previous: Dictionary, same_turn: bool) -> float:
 	var now: int = Time.get_ticks_msec()
 	# Compare monotonic deltas only; client and host need no common time origin.
@@ -1897,6 +1926,7 @@ func _render_clock_and_advice() -> void:
 		if human_overtime and color == shown.get("human_color"):
 			label.tooltip_text += " · 내 시간 소진 · 계속 진행"
 		label.add_theme_color_override("font_color", Color("ffb4a1" if remaining <= 30000 else "9bd7ca" if running else "f6f0de"))
+	_render_clock_adjustments()
 	decision_panel.visible = not review_mode and not closing and not state.is_empty()
 	if not decision_panel.visible:
 		return
@@ -1942,16 +1972,123 @@ func accept_clock_refresh(next: Dictionary) -> void:
 		return
 	var previous: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
 	var incoming: Dictionary = next.get("clock", {}) if next.get("clock") is Dictionary else {}
-	var previous_sample: float = _clock_sample(previous)
-	var incoming_sample: float = _clock_sample(incoming)
-	if incoming_sample <= previous_sample:
+	if not _newer_clock_snapshot(incoming, previous):
 		return
 	_clock_received_ticks = _next_clock_anchor(incoming, previous, true)
 	state["clock"] = incoming.duplicate(true)
+	var next_engine: Dictionary = next.get("engine", {}) if next.get("engine") is Dictionary else {}
+	if next_engine.has("pacing"):
+		var pacing: Variant = next_engine.pacing
+		state["engine"]["pacing"] = pacing.duplicate(true) if pacing is Dictionary else pacing
 	var next_support: Variant = next.get("decision_support")
 	state["decision_support"] = next_support.duplicate(true) if next_support is Dictionary else {}
 	# Preserve the board, in-flight drag, selection and promotion controls.
 	_render_clock_and_advice()
+
+
+func _build_clock_adjustments(parent: VBoxContainer) -> void:
+	clock_adjust_toggle = _button("남은 시간 조정  ▾", _on_clock_adjust_toggle)
+	clock_adjust_toggle.name = "ToggleClockAdjustment"
+	clock_adjust_toggle.tooltip_text = "내 시간과 Regicide의 시간을 클릭으로 늘리거나 줄입니다. 생각 중에도 조정할 수 있습니다."
+	parent.add_child(clock_adjust_toggle)
+	clock_adjust_panel = VBoxContainer.new()
+	clock_adjust_panel.name = "ClockAdjustmentPanel"
+	clock_adjust_panel.add_theme_constant_override("separation", 6)
+	parent.add_child(clock_adjust_panel)
+	var captions: Array[String] = ["−1분", "−10초", "+10초", "+1분"]
+	for side in ["human", "engine"]:
+		var label: Label = _label("", 14, "f6f0de")
+		label.name = "HumanClockAdjustment" if side == "human" else "EngineClockAdjustment"
+		clock_adjust_panel.add_child(label)
+		clock_adjust_labels[side] = label
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		clock_adjust_panel.add_child(row)
+		var buttons: Array[Button] = []
+		for index in range(CLOCK_ADJUST_DELTAS.size()):
+			var button: Button = _button(captions[index], _on_clock_adjust_pressed.bind(side, CLOCK_ADJUST_DELTAS[index]))
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.add_theme_font_size_override("font_size", 13)
+			for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+				var style: StyleBox = get_theme_stylebox(style_name, "Button").duplicate()
+				style.content_margin_left = 6
+				style.content_margin_right = 6
+				button.add_theme_stylebox_override(style_name, style)
+			button.tooltip_text = ("내 시간" if side == "human" else "Regicide 시간") + " " + captions[index]
+			row.add_child(button)
+			buttons.append(button)
+		clock_adjust_buttons[side] = buttons
+	clock_adjust_note = _label("", 12, "a3b6c8")
+	clock_adjust_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	clock_adjust_panel.add_child(clock_adjust_note)
+
+
+func _clock_adjust_available() -> bool:
+	var clock: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
+	return not closing and not review_mode and not state.is_empty() and state.get("result", "*") == "*" \
+		and not state.get("handicap_mode", false) and state.get("engine", {}).get("sparring_mode", false) == true \
+		and clock.get("enabled", false) == true and clock.get("editable", false) == true
+
+
+func _can_adjust_clock() -> bool:
+	return _clock_adjust_available() and not clock_adjust_in_flight and not backend_url.is_empty() \
+		and not _file_dialog_busy() and (not request_in_flight or engine_thinking or state.get("engine_thinking", false))
+
+
+func _on_clock_adjust_toggle() -> void:
+	if not _clock_adjust_available():
+		return
+	_clock_adjust_expanded = not _clock_adjust_expanded
+	_render_clock_adjustments()
+
+
+func _render_clock_adjustments() -> void:
+	if clock_adjust_toggle == null:
+		return
+	var current_game: String = str(state.get("game_id", ""))
+	if current_game != _clock_adjust_game:
+		_clock_adjust_game = current_game
+		_clock_adjust_expanded = false
+		_clock_adjust_error = ""
+	var available: bool = _clock_adjust_available()
+	clock_adjust_toggle.visible = available
+	clock_adjust_panel.visible = available and _clock_adjust_expanded
+	clock_adjust_toggle.text = "남은 시간 조정  " + ("▴" if _clock_adjust_expanded else "▾")
+	clock_adjust_toggle.disabled = _file_dialog_busy()
+	var clock: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
+	var human: String = str(state.get("human_color", "white"))
+	var enabled: bool = _can_adjust_clock()
+	for side in ["human", "engine"]:
+		var color: String = human if side == "human" else ("black" if human == "white" else "white")
+		clock_adjust_labels[side].text = "%s · %s" % ["내 시간" if side == "human" else "Regicide", _clock_text(_clock_remaining(clock, color))]
+		for button: Button in clock_adjust_buttons[side]:
+			button.disabled = not enabled
+	clock_adjust_note.text = "시간을 반영하고 있습니다…" if clock_adjust_in_flight else _clock_adjust_error if not _clock_adjust_error.is_empty() else "클릭하면 즉시 반영됩니다. AI 시간 관리는 계속 자동입니다."
+	clock_adjust_note.add_theme_color_override("font_color", Color("ffb4a1" if not _clock_adjust_error.is_empty() else "a3b6c8"))
+
+
+func _on_clock_adjust_pressed(side: String, delta_ms: int) -> void:
+	if not _can_adjust_clock() or side not in ["human", "engine"] or delta_ms not in CLOCK_ADJUST_DELTAS:
+		return
+	var requested_game: String = str(state.get("game_id", ""))
+	clock_adjust_in_flight = true
+	_clock_adjust_error = ""
+	_render_clock_adjustments()
+	var response: Dictionary = await _send_request("/api/clock-adjust", {
+		"game_id": requested_game, "clock_revision": int(state.get("clock", {}).get("edit_revision", 0)),
+		"side": side, "delta_ms": delta_ms}, clock_adjust_http)
+	clock_adjust_in_flight = false
+	if closing or requested_game != str(state.get("game_id", "")):
+		_render_clock_adjustments()
+		return
+	var updated: Variant = response.get("data") if response.get("ok", false) else response.get("state")
+	if updated is Dictionary and updated.get("game_id") == requested_game:
+		accept_clock_refresh(updated)
+	if not response.get("ok", false):
+		_clock_adjust_error = str(response.get("error", "시간을 변경하지 못했습니다. 다시 눌러 주세요."))
+	elif not updated is Dictionary or updated.get("game_id") != requested_game:
+		_clock_adjust_error = "변경된 시간을 확인하지 못했습니다. 잠시 후 다시 눌러 주세요."
+	_render_clock_adjustments()
 
 
 func _poll_clock() -> void:
@@ -1997,7 +2134,7 @@ func _render_think_time_controls() -> void:
 		if time_index >= 0:
 			time_option.select(time_index)
 	if automatic:
-		think_time_help.text = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다.\nRegicide의 남은 시간이 6분 이하이면 점차 빠르게 둡니다."
+		think_time_help.text = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다.\nRegicide의 남은 시간이 3분 미만이면 점차 빠르게 둡니다."
 		if engine.get("sparring_mode", false) != true:
 			think_time_help.text += "\n새 스파링 대국부터 자동 관리합니다."
 		elif boss_mode_option.get_selected_id() != 2:
@@ -2457,7 +2594,7 @@ func _close_app() -> void:
 	# Both clients may have a response pending; let them finish before closing
 	# or asking an owned backend for its final board revision.
 	var finish_deadline: int = Time.get_ticks_msec() + 20000
-	while (request_in_flight or think_time_request_in_flight) and Time.get_ticks_msec() < finish_deadline:
+	while (request_in_flight or think_time_request_in_flight or clock_adjust_in_flight) and Time.get_ticks_msec() < finish_deadline:
 		await get_tree().process_frame
 	if own_backend and not backend_url.is_empty():
 		# A separate request then closes the host using the latest revision.
