@@ -35,7 +35,7 @@ class PacingPlanTests(unittest.TestCase):
         shared = decision_support.assess(self.board, chess.WHITE, self.clock)["recommendation"]
         self.assertTrue(result["enabled"])
         self.assertEqual(result["recommended_total_ms"], shared["total_ms"])
-        self.assertEqual(result["target_total_ms"], shared["total_ms"])
+        self.assertEqual(result["target_total_ms"], shared["total_ms"] - 1000)
 
     def test_already_spent_time_is_subtracted_not_added(self):
         plan = engine_pacing.plan(self.board, self.clock)
@@ -47,16 +47,16 @@ class PacingPlanTests(unittest.TestCase):
         later = {**self.clock, "turn_elapsed_ms": 60000, "white_ms": 540000}
         self.assertEqual(engine_pacing.remaining_wait_ms(plan, later), 0)
 
-    def test_three_minute_boundary_and_monotonic_pressure(self):
-        plans = [engine_pacing.plan(self.board, self.at(ms)) for ms in [180000, 179999, 120000, 60000, 30000]]
+    def test_four_minute_boundary_and_monotonic_pressure(self):
+        plans = [engine_pacing.plan(self.board, self.at(ms)) for ms in [240000, 239999, 180000, 120000, 60000]]
         self.assertEqual(plans[0]["pressure_factor"], 1)
         self.assertLess(plans[1]["pressure_factor"], 1)
         self.assertLessEqual(abs(plans[0]["target_total_ms"] - plans[1]["target_total_ms"]), 1)
         targets = [p["target_total_ms"] for p in plans]
         self.assertEqual(targets, sorted(targets, reverse=True))
-        self.assertAlmostEqual(plans[2]["pressure_factor"], 5 / 6)
-        self.assertAlmostEqual(plans[3]["pressure_factor"], 2 / 3)
-        self.assertAlmostEqual(plans[4]["pressure_factor"], 7 / 12)
+        self.assertAlmostEqual(plans[2]["pressure_factor"], 7 / 8)
+        self.assertAlmostEqual(plans[3]["pressure_factor"], 3 / 4)
+        self.assertAlmostEqual(plans[4]["pressure_factor"], 5 / 8)
 
     def test_automatic_budget_independent_of_old_manual_setting(self):
         plan = engine_pacing.plan(self.board, self.clock)
@@ -100,7 +100,8 @@ class PacingPlanTests(unittest.TestCase):
     def test_seeded_rhythm_reproducible_and_varies_across_games(self):
         plans = [engine_pacing.plan(self.board, self.clock, seed=str(i)) for i in range(30)]
         self.assertEqual(plans[0], engine_pacing.plan(self.board, self.clock, seed="0"))
-        self.assertGreater(len({p["target_total_ms"] for p in plans}), 20)
+        self.assertGreater(len({p["variation_factor"] for p in plans}), 20)
+        self.assertGreater(len({p["target_total_ms"] for p in plans}), 10)
         self.assertTrue(all(.4 <= p["variation_factor"] <= 1 for p in plans))
         self.assertTrue(all(p["target_total_ms"] <= p["recommended_total_ms"] for p in plans))
 

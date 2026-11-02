@@ -48,7 +48,10 @@ def run(binary, output):
             state = request("/api/new", {"revision": state["revision"], "color": "white",
                                         "sparring_mode": True, "time_control": "10+0"})
             with game._lock:
-                game._opening_seed = "rating-native-fast"
+                # Authored timing fixture with room for the 500ms observation
+                # even after v4's one-second reduction. Insufficient allowance
+                # must skip observation and is tested in the host boundary suite.
+                game._opening_seed = "rating-native-budget-91"
             assert state["engine"]["sparring_rating"]["estimate"] is None
             state = request("/api/move", {"revision": state["revision"], "move": "e2e4"})
             assert request("/api/engine/skip-wait", {"revision": state["revision"]})["released"]

@@ -1404,7 +1404,7 @@ class HumanGame:
                   "state": state, "draw_policy": "always claim available threefold/50-move draws",
                   "handicap_events": self._handicap_events,
                   "engine_movetimes_ms": self._engine_movetimes,
-                  "engine_pacing": {"policy": engine_pacing.POLICY,
+                  "engine_pacing": {"policy": engine_pacing.POLICY, "enabled": state["clock"]["enabled"],
                                     "recommendation_method": decision_support.METHOD,
                                     "decisions": [{"ply": ply, **copy.deepcopy(row)}
                                                   for ply, row in sorted(self._engine_pacing_decisions.items())]},

@@ -112,6 +112,7 @@ def run(binary, output):
                 archive = GameArchive(game.save_dir).get_game(game.game_id)
                 parsed = chess.pgn.read_game(io.StringIO(archive["pgn"]))
                 assert not parsed.errors and parsed.headers["TimeControl"] == f"{initial // 1000}+{increment // 1000}"
+                assert parsed.headers["EnginePacingPolicy"] == play_human.engine_pacing.POLICY
                 assert all(n.clock() is not None for n in parsed.mainline())
                 if control == "15+10":
                     (output / "native-live-state.json").write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -137,7 +138,7 @@ def run(binary, output):
                            "reply_elapsed_ms": round((time.monotonic() - urgent_started) * 1000, 3),
                            "legal_move_before_flag": True})
             automatic = []
-            for remaining_seconds in (180, 120, 60):
+            for remaining_seconds in (240, 180, 120, 60):
                 state = request("/api/new", {"revision": state["revision"], "color": "black",
                                             "sparring_mode": True, "time_control": "10+0"})
                 assert state["engine"]["time_management"] == "automatic"
@@ -165,7 +166,7 @@ def run(binary, output):
                                   "reply_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
                                   "remaining_after_ms": state["clock"]["white_ms"]})
             checks.append({"automatic_sparring_pressure": automatic, "adaptive_budget_receipts_verified": True,
-                           "clock_setup": "injected prior-turn elapsed time to leave 180, 120, 60 seconds; measured next turns use real native replies"})
+                           "clock_setup": "injected prior-turn elapsed time to leave 240, 180, 120, 60 seconds; measured next turns use real native replies"})
             state = request("/api/new", {"revision": state["revision"], "color": "white",
                                         "movetime_ms": 100, "time_control": "10+0"})
             shifted[0] += 601

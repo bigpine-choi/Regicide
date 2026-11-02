@@ -18,11 +18,15 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v3"
+POLICY = "regicide-engine-pacing-v4"
+# Keep each game's established variation while changing its time allowance.
+RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
-PRESSURE_START_MS = 180_000
+PRESSURE_START_MS = 240_000
 WAIT_SLICE_SECONDS = .05
 MAX_TURN_MS = 45_000
+TURN_REDUCTION_MS = 1000
+MIN_TURN_TARGET_MS = 250
 QUICK_KINDS = ("single_reply", "mate_in_one", "clear_queen_gain", "familiar_opening")
 
 
@@ -31,7 +35,7 @@ def _number(value):
 
 
 def _unit(seed, *parts):
-    key = "|".join((POLICY, str(seed), *(str(part) for part in parts)))
+    key = "|".join((RHYTHM_NAMESPACE, str(seed), *(str(part) for part in parts)))
     return int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big") / (2 ** 64 - 1)
 
 
@@ -43,6 +47,19 @@ def _identity(board):
     return {"root_ply": len(board.move_stack), "before_fen": board.fen(en_passant="fen"),
             "root_fen": board.root().fen(en_passant="fen"),
             "history_uci": [move.uci() for move in board.move_stack]}
+
+
+def _shorter_target(target, current):
+    """Reduce a fresh whole-turn target once, without extending fast turns.
+
+    Clock safety caps are applied afterwards. Under ten seconds there is no
+    artificial hold; preserve the remaining urgent search allowance instead
+    of subtracting a second from a budget already measured in milliseconds.
+    """
+    target = min(MAX_TURN_MS, max(0, target))
+    if current <= LOW_CLOCK_MS:
+        return target
+    return max(min(target, MIN_TURN_TARGET_MS), target - TURN_REDUCTION_MS)
 
 
 def _rhythm(board, support, seed):
@@ -77,6 +94,7 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
             "pressure_factor": 1.0, "variation_factor": 1.0,
             "game_tempo_factor": 1.0, "local_beat_factor": 1.0,
             "rhythm_profile": "neutral", "pressure_start_ms": PRESSURE_START_MS,
+            "turn_reduction_ms": TURN_REDUCTION_MS, "fast_target_floor_ms": MIN_TURN_TARGET_MS,
             "reason": "untimed", "complexity_score": 0, "clarity_kind": "unclassified",
             "position_features": {}, "rhythm_identity": _rhythm_identity(seed),
             "alternatives_basis_ms": 0, "alternatives_variation_factor": 1.0}
@@ -115,7 +133,8 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
     # Future increments never fund this turn. The stronger wait reserve is
     # applied by remaining_wait_ms; this smaller margin preserves urgent search.
     search_reserve = min(150, max(1, current * .05))
-    target = min(MAX_TURN_MS, total * variation * factor, elapsed + max(0, current - search_reserve))
+    target = min(_shorter_target(total * variation * factor, current),
+                 elapsed + max(0, current - search_reserve))
     if current <= LOW_CLOCK_MS:
         return {**base, "target_total_ms": max(0, int(target)), "reason": "low_clock"}
     return {**base, "enabled": True, "target_total_ms": max(0, int(target)),
@@ -322,9 +341,11 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
     pressure_factor = .5 + .5 * pressure
     time_basis = result["alternatives_basis_ms"] if use_alternative_basis else result["recommended_total_ms"]
     time_variation = result["alternatives_variation_factor"] if use_alternative_basis else result["variation_factor"]
-    target = time_basis * time_variation * pressure_factor * applied_factor
+    # Recompute from the original recommendation, not the already shortened
+    # plan target: post-search refinement must not subtract the second twice.
+    target = _shorter_target(time_basis * time_variation * pressure_factor * applied_factor, current)
     reserve = result["reserve_ms"]
-    target = min(MAX_TURN_MS, target, elapsed + max(0, current - reserve))
+    target = min(target, elapsed + max(0, current - reserve))
     details.update(applied=True, kind=kind, factor=round(applied_factor, 6),
                    unpressured_factor=round(factor, 6), premium_pressure_fraction=round(pressure, 6),
                    time_basis_ms=time_basis, time_variation_factor=time_variation,

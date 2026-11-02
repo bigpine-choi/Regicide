@@ -66,7 +66,7 @@ class HumanRhythmTests(unittest.TestCase):
         plan = policy.plan(board, clock(board))
         result = policy.refine(board, plan, clock(board), selected_move=chess.Move.from_uci("e2e4"),
                                selected_info=raw(board, "e2e4 e7e5"), baseline_packets=stable(board, "e2e4 e7e5"))
-        self.assertEqual(result["target_total_ms"], plan["recommended_total_ms"])
+        self.assertEqual(result["target_total_ms"], plan["recommended_total_ms"] - 1000)
         self.assertEqual(result["refinement"]["kind"], "neutral")
 
     def test_tempo_is_game_consistent_and_local_beats_vary_reproducibly(self):
@@ -85,6 +85,8 @@ class HumanRhythmTests(unittest.TestCase):
     def test_expected_full_continuation_is_faster_without_mutation(self):
         board = board_after("e2e4", "e7e5")
         plan = neutral_context(board)
+        # Exercise a real deliberation allowance, above the fast-turn floor.
+        plan.update(recommended_total_ms=10000, variation_factor=1., target_total_ms=9000)
         history = {1: previous()}
         originals = copy.deepcopy((plan, history)), board.fen(), list(board.move_stack)
         result = refine_current(board, plan=plan, history=history)
@@ -274,10 +276,10 @@ class HumanRhythmTests(unittest.TestCase):
         result = refine_current(board, "g1f3 d7d6 d2d4", seed=seed, plan=plan, history=[row])
         self.assertTrue(result["refinement"]["long_think_cooldown"])
 
-    def test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
+    def test_four_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
         board = board_after("e2e4", "c7c5")
         values = []
-        for left in (180000, 179999, 120000, 60000, 30000, 10000):
+        for left in (240000, 239999, 180000, 120000, 60000, 30000, 10000):
             plan = neutral_context(board, left=left)
             result = refine_current(board, "g1f3 d7d6 d2d4", plan=plan, left=left, history=[previous()])
             values.append(result)

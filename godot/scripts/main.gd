@@ -1997,7 +1997,7 @@ func _render_think_time_controls() -> void:
 		if time_index >= 0:
 			time_option.select(time_index)
 	if automatic:
-		think_time_help.text = "사람 권장시간에 맞춰 착수합니다.\n내 남은 시간이 3분 미만이면 점차 빠르게 둡니다."
+		think_time_help.text = "사람 권장시간을 바탕으로 약 1초 빠르게 착수합니다.\nRegicide의 남은 시간이 4분 이하이면 점차 빠르게 둡니다."
 		if engine.get("sparring_mode", false) != true:
 			think_time_help.text += "\n새 스파링 대국부터 자동 관리합니다."
 		elif boss_mode_option.get_selected_id() != 2:

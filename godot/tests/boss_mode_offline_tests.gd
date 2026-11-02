@@ -150,7 +150,7 @@ func _sparring_checks() -> void:
 	await process_frame
 	verify(app.captured_requests[-1].payload.sparring_mode == true and app.captured_requests[-1].payload.boss_mode == false, "sparring payload is mutually exclusive with boss")
 	verify(app.boss_phase_label.text == "스파링 모드" and app.state.engine.sparring.observations == 0, "calibration observations remain in state without live diagnostics")
-	verify(app.think_time_help.text.contains("사람 권장시간") and app.think_time_help.text.contains("3분 미만"), "automatic sparring explains recommendation and human time pressure")
+	verify(app.think_time_help.text.contains("사람 권장시간") and app.think_time_help.text.contains("4분 이하"), "automatic sparring explains recommendation and human time pressure")
 	verify(not app.captured_requests[-1].payload.has("movetime_ms"), "new sparring lets the host choose automatic search budget")
 	var geometry: Rect2 = app.board.get_global_rect()
 	for row in [[12, "sparring", "맞춤 스파링"], [13, "ramp", "압박 높이는 중"], [14, "finish", "전력 마무리"]]:
