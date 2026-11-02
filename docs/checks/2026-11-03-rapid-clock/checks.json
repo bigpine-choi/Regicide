@@ -1,0 +1,38 @@
+{
+  "created_at": "2026-11-02T15:36:33.074230+00:00",
+  "checks": [
+    {
+      "name": "clock-core",
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "tests/game_clock_tests.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "host-clock",
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "tests/rapid_clock_host_tests.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "archive-clock",
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "tests/rapid_clock_archive_tests.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "decision-support",
+      "command": [
+        ".venv-tests/Scripts/python.exe",
+        "tests/decision_support_tests.py"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "scope": "Deterministic clock and host/archival/decision tests; native HTTP separately recorded; no human calibration"
+}

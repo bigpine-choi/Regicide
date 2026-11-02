@@ -23,7 +23,7 @@
     <nav class="mode-tabs" aria-label="화면 선택"><button id="live-mode-button" type="button" aria-pressed="true">직접 대국</button><button id="analysis-mode-button" type="button" aria-pressed="false">분석 모드 · 자유 배치</button><button id="coaching-mode-button" type="button" aria-pressed="false">대국 코칭</button><button id="archive-mode-button" type="button" aria-pressed="false">대국 보관함</button></nav>
     <main class="game-layout" id="live-view">
       <section class="board-panel" aria-label="체스판과 대국 상태">
-        <div class="player-strip opponent-strip"><div class="avatar" aria-hidden="true">♜</div><div><p class="player-name">Regicide</p><p class="player-detail" id="opponent-detail">엔진에 연결하는 중</p></div><span class="player-color" id="opponent-color">흑</span></div>
+        <div class="player-strip opponent-strip"><div class="avatar" aria-hidden="true">♜</div><div><p class="player-name">Regicide</p><p class="player-detail" id="opponent-detail">엔진에 연결하는 중</p></div><span id="opponent-clock" class="chess-clock" aria-label="상대 남은 시간" hidden></span><span class="player-color" id="opponent-color">흑</span></div>
         <div class="board-evaluation-layout">
           <div id="evaluation-bar" class="evaluation-bar unknown" role="img" aria-label="형세 분석 대기 중">
             <div id="evaluation-white" class="evaluation-white"></div>
@@ -44,12 +44,20 @@
           <p class="hint-legend" aria-label="화살표 색상"><span><i class="hint-rank-1" aria-hidden="true"></i>1순위 빨강</span><span><i class="hint-rank-2" aria-hidden="true"></i>2순위 주황</span><span><i class="hint-rank-3" aria-hidden="true"></i>3순위 노랑</span></p>
           <p id="hint-note" class="hint-note">현재 둘 차례의 후보입니다. 내 수는 직접 두고, 상대 수는 Regicide가 선택합니다.</p>
         </section>
-        <div class="player-strip"><div class="avatar human-avatar" aria-hidden="true">♙</div><div><p class="player-name">나</p><p class="player-detail" id="human-detail">기물을 누르고 이동할 칸을 눌러주세요.</p></div><span class="player-color" id="human-color">백</span></div>
+        <div class="player-strip"><div class="avatar human-avatar" aria-hidden="true">♙</div><div><p class="player-name">나</p><p class="player-detail" id="human-detail">기물을 누르고 이동할 칸을 눌러주세요.</p></div><span id="human-clock" class="chess-clock" aria-label="내 남은 시간" hidden></span><span class="player-color" id="human-color">백</span></div>
         <div class="status-panel" aria-live="polite" aria-atomic="true"><span class="status-dot" id="status-dot" aria-hidden="true"></span><div><p id="status-text">체스판을 준비하고 있어요.</p><p id="status-detail">잠시만 기다려주세요.</p></div></div>
         <div class="error-panel" id="error-panel" role="alert" hidden><p id="error-text"></p></div>
       </section>
 
       <aside class="side-panel" aria-label="대국 설정과 기보">
+        <section id="decision-support" class="card decision-support" aria-label="사람 기준 복잡도와 시간 안내" hidden>
+          <p class="eyebrow">내 차례의 판단 도움</p>
+          <h2 id="human-complexity">사람 기준 복잡도 · 대기</h2>
+          <p id="complexity-reasons" class="help-note"></p>
+          <p id="recommended-time" class="recommended-time"></p>
+          <p id="time-recommendation-reason" class="help-note"></p>
+          <p class="help-note decision-caveat">복잡도·권장 시간은 실험적 참고치입니다. 체감 난이도와 다를 수 있습니다.</p>
+        </section>
         <section class="card setup-card">
           <p class="eyebrow">직접 두어보세요</p><h2>한 수씩, Regicide와</h2><p class="intro">오늘 만든 최신 엔진이 상대합니다.</p>
           <form id="new-game-form">
@@ -58,13 +66,16 @@
             <label class="field-label" for="boss-mode">대국 모드</label>
             <div class="select-wrap"><select id="boss-mode" name="boss_mode" aria-describedby="boss-mode-help"><option value="normal" selected>기본</option><option value="boss">보스 모드</option><option value="sparring">스파링 모드</option></select></div>
             <p class="help-note" id="boss-mode-help">기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.</p>
+            <label class="field-label" for="rapid-time-control">새 대국 시간</label>
+            <div class="select-wrap"><select id="rapid-time-control" name="time_control" aria-describedby="rapid-time-help"><option value="10+0" selected>10분 래피드</option><option value="10+5">10+5 래피드</option><option value="15+10">15+10 래피드</option></select></div>
+            <p class="help-note" id="rapid-time-help">각자 10분 · 추가 시간 없음. 새 대국부터 적용됩니다.</p>
             <label class="field-label" for="think-time">Regicide가 한 수를 생각할 시간</label>
             <div class="select-wrap"><select id="think-time" name="movetime_ms" aria-describedby="think-time-help"><option value="100">0.1초 · 빠르게</option><option value="1000" selected>1초 · 기본</option><option value="3000">3초 · 더 신중하게</option><option value="5000">5초 · 충분히 생각</option></select></div>
             <p class="help-note" id="think-time-help" aria-live="polite">대국 중에도 변경할 수 있습니다. 다음 Regicide 수부터 적용됩니다.</p>
             <button class="primary-button" id="new-game" type="submit" disabled>새 대국 시작<span aria-hidden="true">↗</span></button>
           </form>
           <div class="game-actions"><button id="undo" class="secondary-button" type="button" disabled><span aria-hidden="true">↶</span> 한 턴 되돌리기</button><button id="resign" class="secondary-button" type="button" disabled>기권</button></div>
-          <p class="help-note">기물 색과 대국 모드는 새 대국을 시작할 때 적용됩니다. 생각 시간은 새 대국 없이 바꿀 수 있습니다.</p>
+          <p class="help-note">색·모드·대국 시계는 새 대국부터 적용됩니다. 다른 화면에서도 시계는 흐릅니다. 생각 시간은 새 대국 없이 바꿀 수 있습니다.</p>
         </section>
 
         <section id="rating-label-panel" class="card" aria-label="실제 래피드 레이팅" hidden>

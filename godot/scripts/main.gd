@@ -145,6 +145,21 @@ var hint_http: HTTPRequest
 var hint_control_http: HTTPRequest
 var hint_timer: Timer
 var think_time_http: HTTPRequest
+var rapid_time_option: OptionButton
+var rapid_time_help: Label
+var top_clock: Label
+var bottom_clock: Label
+var decision_panel: VBoxContainer
+var complexity_label: Label
+var complexity_detail: Label
+var recommendation_label: Label
+var recommendation_detail: Label
+var clock_http: HTTPRequest
+var clock_timer: Timer
+var clock_in_flight: bool = false
+var _clock_received_ticks: float = 0.0
+var _clock_draw_ticks: int = 0
+const RAPID_CONTROLS := ["10+0", "10+5", "15+10"]
 
 
 func _ready() -> void:
@@ -276,8 +291,14 @@ func _build_ui() -> void:
 	evaluation_detail = _label("현재 체스판의 분석을 기다립니다.", 12, "8197aa")
 	evaluation_detail.name = "EvaluationDetail"
 	board_column.add_child(evaluation_detail)
+	var upper_strip := HBoxContainer.new()
+	board_column.add_child(upper_strip)
 	top_player = _label("흑  ·  Regicide", 15, "bccbd8")
-	board_column.add_child(top_player)
+	top_player.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upper_strip.add_child(top_player)
+	top_clock = _label("", 23, "f6f0de")
+	top_clock.name = "TopClock"
+	upper_strip.add_child(top_clock)
 	var board_row := HBoxContainer.new()
 	board_row.add_theme_constant_override("separation", 0)
 	board_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -298,8 +319,14 @@ func _build_ui() -> void:
 	board.add_child(evaluation_bar)
 	evaluation_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	board.resized.connect(evaluation_bar.queue_redraw)
+	var lower_strip := HBoxContainer.new()
+	board_column.add_child(lower_strip)
 	bottom_player = _label("백  ·  당신", 15, "bccbd8")
-	board_column.add_child(bottom_player)
+	bottom_player.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lower_strip.add_child(bottom_player)
+	bottom_clock = _label("", 23, "f6f0de")
+	bottom_clock.name = "BottomClock"
+	lower_strip.add_child(bottom_clock)
 	board_column.add_child(_label("기물 → 도착 칸 클릭  /  드래그 이동  /  F 키로 시점 전환", 12, "8197aa"))
 	var side_panel := PanelContainer.new()
 	side_panel.custom_minimum_size.x = 330
@@ -324,6 +351,24 @@ func _build_ui() -> void:
 	status_detail = _label("잠시만 기다려 주세요.", 13, "a3b6c8")
 	status_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_detail)
+	decision_panel = VBoxContainer.new()
+	decision_panel.name = "HumanDecisionSupport"
+	decision_panel.add_theme_constant_override("separation", 4)
+	sidebar.add_child(decision_panel)
+	complexity_label = _label("사람 기준 복잡도 · 대기", 15, "9bd7ca")
+	complexity_label.name = "HumanComplexity"
+	complexity_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	decision_panel.add_child(complexity_label)
+	complexity_detail = _label("", 12, "a3b6c8")
+	complexity_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	decision_panel.add_child(complexity_detail)
+	recommendation_label = _label("", 15, "f6f0de")
+	recommendation_label.name = "RecommendedTime"
+	recommendation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	decision_panel.add_child(recommendation_label)
+	recommendation_detail = _label("", 12, "a3b6c8")
+	recommendation_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	decision_panel.add_child(recommendation_detail)
 	# A required move choice stays above optional learning content.
 	_build_promotion(sidebar)
 	_build_opening_guide(sidebar)
@@ -413,7 +458,15 @@ func _build_ui() -> void:
 	boss_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	boss_mode_option.item_selected.connect(_on_game_mode_selected)
 	settings.add_child(boss_mode_option)
-	settings.add_child(_label("한 수 생각 시간", 14, "a3b6c8"))
+	settings.add_child(_label("새 대국 시간", 14, "a3b6c8"))
+	rapid_time_option = OptionButton.new()
+	rapid_time_option.name = "RapidTimeControl"
+	for label in ["10분 래피드", "10+5 래피드", "15+10 래피드"]:
+		rapid_time_option.add_item(label)
+	rapid_time_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rapid_time_option.item_selected.connect(_on_rapid_time_selected)
+	settings.add_child(rapid_time_option)
+	settings.add_child(_label("AI 한 수 시간", 14, "a3b6c8"))
 	time_option = OptionButton.new()
 	for option in [["0.1초", 100], ["1초", 1000], ["3초", 3000], ["5초", 5000]]:
 		time_option.add_item(option[0], option[1])
@@ -427,7 +480,12 @@ func _build_ui() -> void:
 	game_mode_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(game_mode_help)
 	_on_game_mode_selected(boss_mode_option.selected)
-	think_time_help = _label("색·모드 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
+	rapid_time_help = _label("", 12, "a3b6c8")
+	rapid_time_help.name = "RapidTimeHelp"
+	rapid_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sidebar.add_child(rapid_time_help)
+	_on_rapid_time_selected(0)
+	think_time_help = _label("AI 생각시간은 현재 대국에, 색·모드·대국 시계는 새 대국에 적용합니다.", 12, "9bd7ca")
 	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(think_time_help)
 	new_button = _button("새 대국 시작", _on_new_game_pressed)
@@ -488,6 +546,14 @@ func _build_ui() -> void:
 	hint_timer.timeout.connect(_poll_hint)
 	add_child(hint_timer)
 	hint_timer.start()
+	clock_http = HTTPRequest.new()
+	clock_http.timeout = 3.0
+	add_child(clock_http)
+	clock_timer = Timer.new()
+	clock_timer.wait_time = 0.5
+	clock_timer.timeout.connect(_poll_clock)
+	add_child(clock_timer)
+	clock_timer.start()
 	# A settings request can finish while the ordinary client awaits a search.
 	think_time_http = HTTPRequest.new()
 	think_time_http.timeout = 15.0
@@ -1275,7 +1341,21 @@ static func planned_extra_budget(position: Dictionary) -> int:
 
 
 func accept_state(next: Dictionary) -> void:
-	state = merge_state_versions(state, next)
+	var merged: Dictionary = merge_state_versions(state, next)
+	var next_clock: Dictionary = next.get("clock", {}) if next.get("clock") is Dictionary else {}
+	var old_clock: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
+	var same_revision: bool = state.get("game_id") == next.get("game_id") and state.get("revision") == next.get("revision")
+	var accepted_clock: bool = merged.get("revision") == next.get("revision") and merged.get("game_id") == next.get("game_id")
+	if same_revision and not old_clock.is_empty() and not next_clock.is_empty():
+		var old_sample: float = _clock_sample(old_clock)
+		var next_sample: float = _clock_sample(next_clock)
+		if next_sample <= old_sample:
+			merged["clock"] = old_clock
+			merged["decision_support"] = state.get("decision_support", {})
+			accepted_clock = false
+	if accepted_clock:
+		_clock_received_ticks = _next_clock_anchor(next_clock, old_clock, same_revision)
+	state = merged
 	if _hint_toggle_version == 0 and state.has("hint_enabled"):
 		hint_enabled = bool(state.hint_enabled)
 	if not _evaluation_matches(evaluation, state):
@@ -1714,7 +1794,149 @@ func _cancel_promotion() -> void:
 func _on_new_game_pressed() -> void:
 	_mutate("/api/new", {"color": "white" if color_option.selected == 0 else "black",
 		"movetime_ms": time_option.get_selected_id(), "boss_mode": boss_mode_option.get_selected_id() == 1,
-		"sparring_mode": boss_mode_option.get_selected_id() == 2})
+		"sparring_mode": boss_mode_option.get_selected_id() == 2,
+		"time_control": RAPID_CONTROLS[rapid_time_option.selected]})
+
+
+func _on_rapid_time_selected(index: int) -> void:
+	if rapid_time_help == null:
+		return
+	rapid_time_help.text = ["각자 10분 · 추가 시간 없음", "각자 10분 · 착수마다 5초 추가", "각자 15분 · 착수마다 10초 추가"][clampi(index, 0, 2)] + "\n새 대국부터 적용됩니다. 다른 화면에서도 시계는 흐릅니다."
+
+
+static func _clock_number(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))
+
+
+static func _clock_sample(clock: Dictionary) -> float:
+	var value: Variant = clock.get("sampled_monotonic_ms")
+	if not _clock_number(value):
+		value = clock.get("turn_elapsed_ms")
+	return float(value) if _clock_number(value) else 0.0
+
+
+func _next_clock_anchor(incoming: Dictionary, previous: Dictionary, same_turn: bool) -> float:
+	var now: int = Time.get_ticks_msec()
+	# Compare monotonic deltas only; client and host need no common time origin.
+	if same_turn and previous.get("status") == "running" and incoming.get("status") == "running" and previous.get("running_color") == incoming.get("running_color") and _clock_number(previous.get("sampled_monotonic_ms")) and _clock_number(incoming.get("sampled_monotonic_ms")):
+		return minf(now, _clock_received_ticks + maxf(0, float(incoming.sampled_monotonic_ms) - float(previous.sampled_monotonic_ms)))
+	return now
+
+
+static func _clock_text(value: Variant) -> String:
+	if not (value is int or value is float) or not is_finite(float(value)):
+		return "—"
+	var ms: float = maxf(0.0, float(value))
+	if ms > 0 and ms < 10000:
+		return "0:%04.1f" % (ceil(ms / 100.0) / 10.0)
+	var seconds: int = int(ceil(ms / 1000.0))
+	return "%d:%02d" % [seconds / 60, seconds % 60]
+
+
+func _clock_remaining(clock: Dictionary, color: String, frozen: bool = false) -> float:
+	var raw: Variant = clock.get(color + "_ms")
+	var remaining: float = maxf(0, float(raw)) if _clock_number(raw) else 0.0
+	if not frozen and not closing and clock.get("status") == "running" and clock.get("running_color") == color:
+		remaining = maxf(0, remaining - maxf(0, Time.get_ticks_msec() - _clock_received_ticks))
+	return remaining
+
+
+func _process(_delta: float) -> void:
+	if top_clock != null and Time.get_ticks_msec() - _clock_draw_ticks >= 100:
+		_clock_draw_ticks = Time.get_ticks_msec()
+		_render_clock_and_advice()
+
+
+func _render_clock_and_advice() -> void:
+	if top_clock == null:
+		return
+	var shown: Dictionary = _display_state()
+	var clock: Dictionary = shown.get("clock", {}) if shown.get("clock") is Dictionary else {}
+	var enabled: bool = clock.get("enabled", false) == true
+	var bottom: String = "white" if board_model.view_from_white else "black"
+	var upper: String = "black" if board_model.view_from_white else "white"
+	for item in [[top_clock, upper], [bottom_clock, bottom]]:
+		var label: Label = item[0]
+		var color: String = item[1]
+		label.visible = enabled or (label == bottom_clock and not shown.is_empty() and not review_mode)
+		label.add_theme_font_size_override("font_size", 23 if enabled else 12)
+		if not enabled:
+			label.text = "새 대국에서 시간 선택"
+			label.tooltip_text = "현재 대국은 시간 제한 없이 진행합니다."
+			label.add_theme_color_override("font_color", Color("8197aa"))
+			continue
+		var remaining: float = _clock_remaining(clock, color, review_mode)
+		var running: bool = not review_mode and not closing and clock.get("status") == "running" and clock.get("running_color") == color
+		label.text = ("▶ " if running else "") + _clock_text(remaining)
+		label.tooltip_text = ("백" if color == "white" else "흑") + " 남은 시간 · " + str(clock.get("label", "")) + (" · 기록된 시계" if review_mode else "")
+		label.add_theme_color_override("font_color", Color("ffb4a1" if remaining <= 30000 else "9bd7ca" if running else "f6f0de"))
+	decision_panel.visible = not review_mode and not closing and not state.is_empty()
+	if not decision_panel.visible:
+		return
+	var support: Dictionary = state.get("decision_support", {}) if state.get("decision_support") is Dictionary else {}
+	var difficulty: Dictionary = support.get("complexity", {}) if support.get("complexity") is Dictionary else {}
+	var ready: bool = support.get("status") == "ready" and state.get("human_to_move", false) and state.get("result", "*") == "*"
+	complexity_label.text = "사람 기준 복잡도 · 대기"
+	complexity_detail.text = str(support.get("note", "내 차례에 판단할 요소와 생각 시간을 안내합니다."))
+	recommendation_label.text = ""
+	recommendation_detail.text = ""
+	if not ready:
+		if state.get("result", "*") != "*":
+			complexity_label.text = "대국 종료 · 시간 안내 마침"
+		elif not state.get("human_to_move", false):
+			complexity_label.text = "상대 차례 · 다음 판단 준비"
+		return
+	var score: Variant = difficulty.get("score")
+	if _rating_integer(score, 0, 100):
+		complexity_label.text = "사람 기준 복잡도 · %s %d/100 · 실험" % [str(difficulty.get("label", "")), int(score)]
+	var reasons: Array = difficulty.get("reasons", []) if difficulty.get("reasons") is Array else []
+	complexity_detail.text = " · ".join(PackedStringArray(reasons.slice(0, 3)))
+	var recommendation: Dictionary = support.get("recommendation", {}) if support.get("recommendation") is Dictionary else {}
+	var remaining: Variant = recommendation.get("remaining_ms")
+	var total: Variant = recommendation.get("total_ms")
+	if (remaining is int or remaining is float) and (total is int or total is float):
+		var extra_spent: float = maxf(0, Time.get_ticks_msec() - _clock_received_ticks) if clock.get("status") == "running" and clock.get("running_color") == state.get("human_color") else 0.0
+		var left: int = int(ceil(maxf(0, float(remaining) - extra_spent) / 1000.0))
+		left = mini(left, int(ceil(_clock_remaining(clock, str(state.get("human_color", "white"))) / 1000.0)))
+		recommendation_label.text = "이번 수 총 %d초 권장 · 앞으로 %d초" % [int(ceil(float(total) / 1000.0)), left]
+		if left == 0:
+			recommendation_label.text = "권장 생각 시간 사용 · 이제 결정하세요"
+		recommendation_detail.text = str(recommendation.get("reason", "")) + "\n내 실력과 체감 난이도에 따라 달라지는 참고치입니다."
+	else:
+		recommendation_label.text = str(recommendation.get("reason", "시간제 대국에서 생각 시간을 추천합니다."))
+
+
+func accept_clock_refresh(next: Dictionary) -> void:
+	var unchanged: bool = _evaluation_matches(next, state) and state.get("result") == next.get("result") and state.get("error") == next.get("error") and state.get("status") == next.get("status") and state.get("handicap_mode") == next.get("handicap_mode") and state.get("engine", {}).get("settings_revision", 0) == next.get("engine", {}).get("settings_revision", 0)
+	if not unchanged:
+		accept_state(next)
+		return
+	var previous: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
+	var incoming: Dictionary = next.get("clock", {}) if next.get("clock") is Dictionary else {}
+	var previous_sample: float = _clock_sample(previous)
+	var incoming_sample: float = _clock_sample(incoming)
+	if incoming_sample <= previous_sample:
+		return
+	_clock_received_ticks = _next_clock_anchor(incoming, previous, true)
+	state["clock"] = incoming.duplicate(true)
+	var next_support: Variant = next.get("decision_support")
+	state["decision_support"] = next_support.duplicate(true) if next_support is Dictionary else {}
+	# Preserve the board, in-flight drag, selection and promotion controls.
+	_render_clock_and_advice()
+
+
+func _poll_clock() -> void:
+	# Keep the authoritative clock moving even while analysis/replay is open.
+	if clock_in_flight or offline_mode or closing or backend_url.is_empty() or state.is_empty() or not state.get("clock", {}).get("enabled", false) or state.get("result", "*") != "*":
+		return
+	clock_in_flight = true
+	var requested_game: String = str(state.get("game_id", ""))
+	var response: Dictionary = await _send_request("/api/state", null, clock_http)
+	clock_in_flight = false
+	if closing or requested_game != str(state.get("game_id", "")):
+		return
+	if response.get("ok", false) and response.get("data") is Dictionary and response.data.get("game_id") == requested_game:
+		accept_clock_refresh(response.data)
 
 
 func _on_game_mode_selected(_index: int) -> void:
@@ -1970,6 +2192,7 @@ func _render() -> void:
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
 	var enabled: bool = ready and not _file_dialog_busy() and not request_in_flight and not think_time_request_in_flight and not review_mode
 	_render_sparring_rating(shown, enabled)
+	_render_clock_and_advice()
 	var replacing: bool = state.get("handicap_mode", false)
 	live_settings.visible = not review_mode
 	live_actions.visible = not review_mode
@@ -1978,6 +2201,8 @@ func _render() -> void:
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
 	boss_mode_option.disabled = not enabled or replacing
+	rapid_time_option.disabled = not enabled or replacing
+	rapid_time_help.visible = not review_mode
 	_on_game_mode_selected(boss_mode_option.selected)
 	game_mode_help.visible = not review_mode
 	time_option.disabled = not _can_change_think_time()
@@ -1993,7 +2218,7 @@ func _render() -> void:
 			current_ms = int(engine.active_movetime_ms)
 		think_time_help.text = "이번 수 %s초 · 다음 수부터 %s초\n생각 중에도 변경할 수 있습니다." % [str(float(current_ms) / 1000.0), str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	else:
-		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\n시간은 현재 대국에, 색·모드 선택은 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
+		think_time_help.text = "Regicide는 한 수에 %s초 생각합니다.\nAI 생각시간은 현재 대국에, 색·모드·대국 시계는 새 대국에 적용합니다." % str(float(engine.get("movetime_ms", 1000)) / 1000.0)
 	var extra_ms: int = planned_extra_budget(state)
 	if thinking_now and engine.get("active_extra_budget_ms") != null:
 		extra_ms = int(engine.active_extra_budget_ms)
@@ -2047,7 +2272,7 @@ func _render() -> void:
 			status_detail.text = "Regicide의 기물과 도착 칸을 선택하세요.\n이 수부터 새 기보로 이어집니다."
 		else:
 			var color_name := "백" if human_color == "white" else "흑"
-			status_detail.text = "당신은 %s · 한 수에 %s초 생각합니다." % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
+			status_detail.text = "당신은 %s · Regicide 기준 생각시간 %s초" % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
 	var promotion_was_visible: bool = promotion_panel.visible

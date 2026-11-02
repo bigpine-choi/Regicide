@@ -9,6 +9,7 @@ from collections import OrderedDict
 import datetime
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -27,12 +28,88 @@ import boss_play
 import boss_opponent
 import sparring_play
 import sparring_rating
+from game_clock import CONTROLS, SCHEMA as CLOCK_SCHEMA
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
 MAX_PLIES = 10_000
 GAME_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,100}\Z")
 RESULTS = {"*", "1-0", "0-1", "1/2-1/2"}
+TIMEOUTS = {"time_forfeit", "time_forfeit_insufficient_material"}
+
+
+def _recorded_clock(record, board):
+    """Validate saved clock balances independently of presentation snapshots."""
+    metadata = record.get("clock")
+    if metadata is None or isinstance(metadata, dict) and metadata.get("enabled") is False:
+        return None
+    error = "대국의 시간 기록이 올바르지 않습니다."
+    if not isinstance(metadata, dict) or metadata.get("schema") != CLOCK_SCHEMA or metadata.get("enabled") is not True:
+        raise ValueError(error)
+    control = metadata.get("control_id")
+    if not isinstance(control, str) or control not in CONTROLS:
+        raise ValueError(error)
+    config = CONTROLS[control]
+    if any(type(metadata.get(key)) is not int or metadata[key] != config[key] for key in ("initial_ms", "increment_ms")):
+        raise ValueError(error)
+    history, snapshot = metadata.get("history"), metadata.get("snapshot")
+    if not isinstance(history, list) or len(history) != len(board.move_stack) + 1 or not isinstance(snapshot, dict):
+        raise ValueError(error)
+    ceiling = config["initial_ms"] + len(board.move_stack) * config["increment_ms"]
+
+    def finite(value):
+        return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= ceiling
+
+    turn = "white" if board.root().turn else "black"
+    clean = []
+    for ply, entry in enumerate(history):
+        if (not isinstance(entry, dict) or type(entry.get("ply")) is not int or entry["ply"] != ply
+                or not all(finite(entry.get(key)) for key in ("white_ms", "black_ms", "elapsed_ms"))):
+            raise ValueError(error)
+        if ply == 0:
+            if (entry.get("mover") is not None or entry["elapsed_ms"] != 0
+                    or any(entry[key] != config["initial_ms"] for key in ("white_ms", "black_ms"))):
+                raise ValueError(error)
+        else:
+            other = "black" if turn == "white" else "white"
+            previous = clean[-1]
+            expected = previous[turn + "_ms"] - entry["elapsed_ms"] + config["increment_ms"]
+            if (entry.get("mover") != turn or entry["elapsed_ms"] > previous[turn + "_ms"] + .001
+                    or abs(entry[turn + "_ms"] - expected) > .01
+                    or abs(entry[other + "_ms"] - previous[other + "_ms"]) > .01):
+                raise ValueError(error)
+            turn = other
+        clean.append({key: entry[key] for key in ("ply", "white_ms", "black_ms", "mover", "elapsed_ms")})
+    if (snapshot.get("enabled") is not True or snapshot.get("control_id") != control
+            or type(snapshot.get("ply")) is not int or snapshot["ply"] != len(board.move_stack)
+            or snapshot.get("status") not in ("running", "paused", "finished")
+            or not all(finite(snapshot.get(key)) for key in ("white_ms", "black_ms", "turn_elapsed_ms"))):
+        raise ValueError(error)
+    for key in ("initial_ms", "increment_ms"):
+        if type(snapshot.get(key)) is not int or snapshot[key] != config[key]:
+            raise ValueError(error)
+    other = "black" if turn == "white" else "white"
+    if (abs(snapshot[other + "_ms"] - clean[-1][other + "_ms"]) > .01
+            or snapshot[turn + "_ms"] > clean[-1][turn + "_ms"] + .01
+            or abs(snapshot[turn + "_ms"] - max(0, clean[-1][turn + "_ms"] - snapshot["turn_elapsed_ms"])) > .01
+            or snapshot.get("running_color") != (turn if snapshot["status"] == "running" else None)):
+        raise ValueError(error)
+    flagged = snapshot.get("flagged_color")
+    if flagged is not None and (flagged != turn or snapshot["status"] != "finished" or snapshot[flagged + "_ms"] != 0):
+        raise ValueError(error)
+    return {"enabled": True, "control_id": control, **config, "history": clean,
+            "snapshot": {**snapshot, "sampled_monotonic_ms": None}}
+
+
+def _replay_clock(clock, ply, final):
+    if clock is None:
+        return {"enabled": False, "status": "disabled", "running_color": None}
+    values = clock["snapshot"] if final else clock["history"][ply]
+    return {"enabled": True, **{key: clock[key] for key in ("control_id", "label", "initial_ms", "increment_ms")},
+            "white_ms": values["white_ms"], "black_ms": values["black_ms"],
+            "running_color": None, "status": "replay", "ply": ply, "turn_elapsed_ms": 0,
+            "flagged_color": values.get("flagged_color") if final else None,
+            "sampled_monotonic_ms": None}
 
 
 def default_game_directory():
@@ -199,13 +276,25 @@ class GameArchive:
             raise ValueError("대국 결과가 올바르지 않습니다.")
         outcome = board.outcome(claim_draw=True)
         termination = _text(state.get("termination"), limit=100) or None
+        clock = _recorded_clock(record, board)
         if outcome is not None:
             if result not in ("*", outcome.result()):
                 raise ValueError("체스판과 대국 결과가 일치하지 않습니다.")
             result = outcome.result()
             termination = outcome.termination.name.lower()
+        elif result != "*" and termination in TIMEOUTS:
+            flagged = clock["snapshot"].get("flagged_color") if clock else None
+            if flagged not in ("white", "black") or (flagged == "white") != board.turn:
+                raise ValueError("시간 초과 결과를 확인할 시간 기록이 없습니다.")
+            insufficient = board.has_insufficient_material(not board.turn)
+            expected = "1/2-1/2" if insufficient else ("0-1" if board.turn else "1-0")
+            expected_reason = "time_forfeit_insufficient_material" if insufficient else "time_forfeit"
+            if result != expected or termination != expected_reason:
+                raise ValueError("시간 초과 기록과 대국 결과가 일치하지 않습니다.")
         elif result != "*" and termination != "resignation":
             raise ValueError("종료 근거가 없는 대국 결과입니다.")
+        if clock and clock["snapshot"].get("flagged_color") is not None and termination not in TIMEOUTS:
+            raise ValueError("시간 초과 기록과 종료 사유가 일치하지 않습니다.")
         engine = state.get("engine", {})
         if not isinstance(engine, dict):
             engine = {}
@@ -243,7 +332,7 @@ class GameArchive:
                              and row.get("history_uci") == uci_moves[:row["ply"] - 1]]
         return {"record": record, "board": board, "moves": moves,
                 "game_id": game_id, "human_color": human_color,
-                "result": result, "termination": termination,
+                "result": result, "termination": termination, "clock": clock,
                 "engine_name": engine_name, "movetime_ms": movetime_ms,
                 "started_at": started_at, "started_sort": started_sort,
                 "updated_at": updated_at, "ended_at": ended_at or None,
@@ -308,6 +397,7 @@ class GameArchive:
                 "movetime_ms": prepared["movetime_ms"], "ply_count": len(prepared["moves"]),
                 "boss_mode": prepared["boss_mode"],
                 "sparring_mode": prepared["sparring_mode"],
+                "time_control": prepared["clock"]["control_id"] if prepared["clock"] else None,
                 "handicap_moves": sum(bool(move.get("forced")) for move in prepared["moves"]),
                 "current": current}
 
@@ -364,6 +454,11 @@ class GameArchive:
         game.headers.update(boss_play.pgn_headers(record.get("boss_play")))
         if prepared["sparring_mode"]:
             game.headers.update(sparring_play.pgn_headers(record.get("sparring_play")))
+        clock = prepared["clock"]
+        if clock:
+            game.headers["TimeControl"] = f"{clock['initial_ms'] // 1000}+{clock['increment_ms'] // 1000}"
+            if prepared["termination"] in TIMEOUTS:
+                game.headers["Termination"] = "time forfeit"
         movetimes = record.get("engine_movetimes_ms", {})
         if not isinstance(movetimes, dict):
             movetimes = {}
@@ -374,8 +469,11 @@ class GameArchive:
                 node.comment = "User-forced Regicide move (handicap)"
             else:
                 movetime = movetimes.get(str(entry["ply"]))
-                if entry["actor"] == "engine" and type(movetime) is int and 100 <= movetime <= 5000:
+                if entry["actor"] == "engine" and type(movetime) is int and 1 <= movetime <= 5000:
                     node.comment = f"Regicide think time: {movetime} ms"
+            if clock:
+                clock_entry = clock["history"][entry["ply"]]
+                node.set_clock(clock_entry[clock_entry["mover"] + "_ms"] / 1000)
         return str(game) + "\n\n"
 
     def get_game(self, game_id, current_game_id=None):
@@ -415,6 +513,10 @@ class GameArchive:
                     "turn": "white" if board.turn else "black",
                     "human_color": prepared["human_color"],
                     "engine": replay_engine,
+                    "clock": _replay_clock(prepared["clock"], ply, final),
+                    "decision_support": {"status": "inactive", "experimental": True,
+                                         "recommendation": {"status": "inactive"},
+                                         "note": "기보 재생 중에는 생각시간을 추천하지 않습니다."},
                     "in_check": board.is_check(),
                     "last_move": board.peek().uci() if board.move_stack else None,
                     "result": summary["result"] if final else "*",
@@ -453,7 +555,7 @@ class GameArchive:
         if ply < len(prepared["moves"]) and prepared["moves"][ply]["actor"] == "engine":
             movetimes = record.get("engine_movetimes_ms", {})
             actual = movetimes.get(str(ply + 1)) if isinstance(movetimes, dict) else None
-            if type(actual) is int and 100 <= actual <= 5000:
+            if type(actual) is int and 1 <= actual <= 5000:
                 budget = actual
         return budget
 

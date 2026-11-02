@@ -1284,3 +1284,20 @@ select{
     width:min(100%,660px,max(240px,calc(100dvh - 345px)))
   }
 }
+
+/* Authoritative rapid clocks and human decision guidance. */
+.chess-clock { margin-left:auto; white-space:nowrap; font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.03em; padding:5px 9px; border-radius:7px; background:#edf0ea; color:#41544a }
+.chess-clock.running { background:#d8eddf; color:#164d37 }
+.chess-clock.low-time, .recommended-time.low-time { color:#a73224 }
+.player-strip .chess-clock + .player-color { margin-left:0 }
+.decision-support { border-color:#b8cebf; background:#f4f8f1 }
+.decision-support h2 { font-size:16px; line-height:1.5; overflow-wrap:anywhere }
+.recommended-time { margin-top:13px; font-size:16px; font-weight:700; line-height:1.5; color:#244b38 }
+.decision-caveat { font-size:10px; opacity:.85 }
+@media (max-width:760px) {
+  .setup-card form { display:block }
+  .chess-clock { font-size:20px; padding:5px }
+  .player-detail { max-width:190px }
+}
+
+.chess-clock.untimed { font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); background:transparent }

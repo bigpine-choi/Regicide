@@ -53,16 +53,32 @@ func click_square(square: String) -> void:
 
 
 func flip_without_mutation(message: String) -> void:
-	var before: String = JSON.stringify(app.state)
+	# Timer-only polling may legitimately update elapsed time and advice during
+	# an input frame. Perspective changes must not mutate the chess position.
+	var before_state: Dictionary = app.state.duplicate(true)
+	before_state.erase("clock")
+	before_state.erase("decision_support")
+	var before: String = JSON.stringify(before_state)
 	var view: bool = app.board_model.view_from_white
 	var selected: String = app.board_model.selected_square
 	var busy: bool = app.request_in_flight
 	verify(not app.flip_button.disabled, "flip enabled: " + message)
 	await click_at(app.flip_button.get_global_rect().get_center())
 	verify(app.board_model.view_from_white != view, "flip changes view: " + message)
-	verify(JSON.stringify(app.state) == before, "flip preserves complete backend state: " + message)
+	var after_state: Dictionary = app.state.duplicate(true)
+	after_state.erase("clock")
+	after_state.erase("decision_support")
+	verify(JSON.stringify(after_state) == before, "flip preserves non-clock backend state: " + message)
 	verify(app.board_model.selected_square == selected, "flip preserves logical selection: " + message)
 	verify(app.request_in_flight == busy, "flip preserves in-flight request: " + message)
+
+
+func click_sidebar(control: Control) -> void:
+	# Optional learning panels can make the native sidebar scroll at 860px.
+	app.sidebar_scroll.ensure_control_visible(control)
+	await process_frame
+	await process_frame
+	await click_at(control.get_global_rect().get_center())
 
 
 func capture(name: String) -> void:
@@ -128,22 +144,25 @@ func _run() -> void:
 	verify(app.state.human_to_move, "turn returns to white after real engine callback")
 	verify(not app.board_model.view_from_white, "engine callback preserves chosen black perspective")
 	verify(app.error_message.is_empty(), "white real-engine game has no UI error")
-	if not await wait_for(func(): return app.evaluation.get("status") == "ready" and app.evaluation.get("source") == "previous_search",
-			"completed engine move receives its labelled previous-search estimate"):
+	if not await wait_for(func(): return app.evaluation.get("status") == "ready" and app.evaluation.get("source") == "search" and app.evaluation.get("source_fen") == app.state.fen,
+			"human turn receives completed fresh analysis of the current position"):
 		await finish()
 		return
 	var ready_evaluation: Dictionary = app.evaluation.duplicate(true)
 	verify(ready_evaluation.game_id == app.state.game_id and int(ready_evaluation.revision) == int(app.state.revision) and ready_evaluation.fen == app.state.fen,
 		"ready evaluation matches the new displayed position")
-	verify(ready_evaluation.source_fen == live_evaluation.fen and app.evaluation_detail.text.contains("직전 탐색"),
-		"retained analysis identifies its previous root and does not claim fresh analysis")
+	verify(ready_evaluation.source_fen == app.state.fen and ready_evaluation.source_fen != live_evaluation.fen,
+		"fresh human-turn analysis identifies the new root rather than the pre-move root")
+	verify(int(ready_evaluation.get("depth", 0)) >= 1 and (ready_evaluation.get("cp") != null or ready_evaluation.get("mate") != null) and app.evaluation_bar.has_score,
+		"completed fresh analysis supplies a real depth and score to the gauge")
+	verify(not app.evaluation_detail.text.contains("직전 탐색"), "fresh analysis is not labelled as a previous-root estimate")
 	await capture("evaluation-after-engine")
 	if not evidence_dir.is_empty():
 		var evidence := FileAccess.open(evidence_dir.path_join("evaluation-live.json"), FileAccess.WRITE)
 		verify(evidence != null, "live evaluation evidence file opens")
 		if evidence != null:
 			evidence.store_string(JSON.stringify({"searching": live_evaluation, "ready": ready_evaluation}, "\t") + "\n")
-	await click_at(app.undo_button.get_global_rect().get_center())
+	await click_sidebar(app.undo_button)
 	if not await wait_for(func(): return not app.request_in_flight and app.state.moves.is_empty(), "undo callback restores starting board"):
 		await finish()
 		return
@@ -151,7 +170,8 @@ func _run() -> void:
 	verify(int(app.state.revision) == initial_revision + 3, "undo is the only revision change")
 	app.color_option.select(1)
 	app.time_option.select(1)
-	await click_at(app.new_button.get_global_rect().get_center())
+	app.rapid_time_option.select(1)
+	await click_sidebar(app.new_button)
 	if not await wait_for(func(): return app.engine_thinking and app.state.human_color == "black", "black new-game opening request"):
 		await finish()
 		return
@@ -162,6 +182,10 @@ func _run() -> void:
 		await finish()
 		return
 	verify(app.state.human_color == "black" and app.state.human_to_move, "human black receives turn")
+	verify(app.state.clock.get("enabled", false) and app.state.clock.get("control_id") == "10+5" and app.state.clock.get("increment_ms") == 5000,
+		"selected rapid control reaches the real host")
+	verify(app.state.clock.get("running_color") == "black" and float(app.state.clock.get("white_ms", 0)) > 0 and float(app.state.clock.get("black_ms", 0)) > 0,
+		"real engine opening switches the running clock to the human")
 	verify(app.state.moves[0].actor == "engine", "white opening was selected by Regicide")
 	var black_move: String = str(app.state.legal_moves[0])
 	await click_square(black_move.substr(0, 2))
@@ -180,11 +204,13 @@ func _run() -> void:
 		return
 	verify(app.state.human_to_move, "turn returns to black")
 	verify(not app.board_model.view_from_white, "second callback preserves perspective")
-	await click_at(app.resign_button.get_global_rect().get_center())
+	await click_sidebar(app.resign_button)
 	if not await wait_for(func(): return not app.request_in_flight and app.state.result != "*", "resignation callback ends black game"):
 		await finish()
 		return
 	verify(app.state.result == "1-0" and app.state.termination == "resignation", "black resignation has correct result")
+	verify(app.state.clock.get("status") == "finished" and app.state.clock.get("running_color") == null,
+		"resignation stops the authoritative rapid clock")
 	await flip_without_mutation("finished real game")
 	verify(app.state.moves.size() == 3, "final flip creates no additional moves")
 	verify(app.error_message.is_empty(), "black real-engine game has no UI error")

@@ -433,3 +433,16 @@ docs/matches/2026-11-02-sparring/** -text -whitespace
 
 docs/checks/2026-11-03-sparring-v2/** -text -whitespace
 docs/matches/2026-11-03-sparring-v2/** -text -whitespace
+
+docs/checks/2026-11-03-rapid-clock/** -text -whitespace
+
+# Keep clock/recommendation verification source bytes reproducible.
+scripts/game_clock.py -text whitespace=cr-at-eol
+scripts/decision_support.py -text whitespace=cr-at-eol
+tests/game_clock_tests.py -text whitespace=cr-at-eol
+tests/decision_support_tests.py -text whitespace=cr-at-eol
+tests/rapid_clock*.py -text whitespace=cr-at-eol
+tests/rapid_clock_web_tests.js -text whitespace=cr-at-eol
+godot/tests/rapid_clock_offline_tests.gd -text whitespace=cr-at-eol
+web/human-play/style.css -text whitespace=cr-at-eol
+godot/tests/live_backend_tests.gd -text whitespace=cr-at-eol

@@ -37,6 +37,8 @@ import boss_play
 import sparring_play
 import sparring_rating
 import evaluation_stability
+import game_clock
+import decision_support
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,13 +74,14 @@ class RevisionError(ValueError):
 class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
                  neural_adopted_generation=None, *, evaluation_engine_factory=None,
-                 opening_variety_enabled=True, dynamic_play_enabled=False):
+                 opening_variety_enabled=True, dynamic_play_enabled=False, monotonic=None):
         if type(opening_variety_enabled) is not bool:
             raise ValueError("Opening variety must be enabled or disabled explicitly.")
         self.opening_variety_enabled = opening_variety_enabled
         if type(dynamic_play_enabled) is not bool:
             raise ValueError("Dynamic play must be enabled or disabled explicitly.")
         self.dynamic_play_enabled = dynamic_play_enabled
+        self._clock_now = monotonic or time.monotonic
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
@@ -192,8 +195,9 @@ class HumanGame:
         if self.neural_model:
             self.engine_name += " · 검증 통과 학습 평가" if self.neural_adopted_generation else " · 학습 평가 실험"
 
-    def _reset(self, color, movetime_ms, boss_mode=False, sparring_mode=False):
+    def _reset(self, color, movetime_ms, boss_mode=False, sparring_mode=False, time_control=None):
         if getattr(self, "_game_open", False):
+            self._clock.finish()
             self._game_open = False
             self._save()
         self.board = chess.Board()
@@ -227,6 +231,7 @@ class HumanGame:
         self.updated_at = self.started_at
         self.ended_at = None
         self.game_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:12]
+        self._clock = game_clock.GameClock(time_control, monotonic=self._clock_now)
         self.revision += 1
         self._sync_evaluation()
         self._save()
@@ -234,6 +239,7 @@ class HumanGame:
     def _check_revision(self, revision):
         if self._closing or not self._game_open:
             raise ValueError("종료된 대국입니다. 대국 프로그램을 다시 실행해 주세요.")
+        self._adjudicate_clock()
         if type(revision) is not int or revision != self.revision:
             raise RevisionError("다른 작업이 먼저 반영됐습니다. 현재 체스판에서 다시 선택해 주세요.")
 
@@ -275,6 +281,29 @@ class HumanGame:
             return self._override
         outcome = self.board.outcome(claim_draw=True)
         return (outcome.result(), outcome.termination.name.lower()) if outcome else ("*", None)
+
+    def _adjudicate_clock(self):
+        """Called under the game lock; a timeout is a single durable result."""
+        if not hasattr(self, "_clock") or not self._clock.enabled:
+            return False
+        if self._outcome()[0] != "*":
+            self._clock.finish()
+            return False
+        flagged = self._clock.flagged_color or self._clock.expire()
+        if not flagged:
+            return False
+        loser = chess.WHITE if flagged == "white" else chess.BLACK
+        # python-chess safely recognizes insufficient mating material. It
+        # does not prove every position-dependent dead position/fortress.
+        if self.board.has_insufficient_material(not loser):
+            self._override = ("1/2-1/2", "time_forfeit_insufficient_material")
+        else:
+            self._override = ("0-1" if loser else "1-0", "time_forfeit")
+        self.error = None
+        self.revision += 1
+        self._sync_evaluation()
+        self._save()
+        return True
 
     def evaluation(self):
         """Read an immutable score snapshot without touching the game/search lock."""
@@ -363,6 +392,8 @@ class HumanGame:
         else:
             share = 0.5 + 0.5 * cp / (abs(cp) + 400.0)
         with self._evaluation_lock:
+            if self._evaluation.get("status") == "terminal":
+                return
             self._evaluation_packets[depth] = dict(info)
             self._evaluation_packets = dict(sorted(self._evaluation_packets.items())[-6:])
             self._evaluation.update(cp=cp, mate=mate, depth=depth,
@@ -373,7 +404,10 @@ class HumanGame:
 
     def state(self):
         with self._lock:
+            self._adjudicate_clock()
             result, termination = self._outcome()
+            if result != "*" or not self._game_open:
+                self._clock.finish()
             handicap_mode = self._handicap_backup is not None
             active = self._game_open and result == "*" and not self.error
             human_turn = active and not handicap_mode and self.board.turn == self.human_color
@@ -382,7 +416,8 @@ class HumanGame:
                      "insufficient_material": "메이트 불가능한 기물 구성",
                      "threefold_repetition": "3회 반복 청구", "fivefold_repetition": "5회 반복",
                      "fifty_moves": "50수 청구", "seventyfive_moves": "75수 규칙",
-                     "resignation": "기권"}
+                     "resignation": "기권", "time_forfeit": "시간 초과",
+                     "time_forfeit_insufficient_material": "시간 초과 · 상대 메이트 기물 부족"}
             if handicap_mode:
                 status = "핸디캡 · Regicide 대신 두세요"
             elif not self._game_open and result == "*":
@@ -412,7 +447,13 @@ class HumanGame:
             # engine reply). The initial engine opening is still retained.
             can_undo = (self._game_open and not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
+            clock_snapshot = self._clock.snapshot()
+            support = (decision_support.assess(self.board, self.human_color, clock_snapshot,
+                                              evaluation=self.evaluation(),
+                                              rating=self._rating_state() if self.sparring_mode else None)
+                       if human_turn else None)
             return {"revision": self.revision, "game_id": self.game_id,
+                    "clock": clock_snapshot, "decision_support": support,
                     "fen": self.board.fen(en_passant="fen"),
                     "started_at": self.started_at, "updated_at": self.updated_at,
                     "ended_at": self.ended_at, "record_status": self._record_status(),
@@ -472,7 +513,7 @@ class HumanGame:
                                    **({"model_generation": self.neural_adopted_generation}
                                       if self.neural_adopted_generation else {})} if self.neural_model else {})}}
 
-    def new_game(self, color, movetime_ms, revision, boss_mode=False, sparring_mode=False):
+    def new_game(self, color, movetime_ms, revision, boss_mode=False, sparring_mode=False, time_control=None):
         with self._lock:
             self._check_revision(revision)
             self._require_idle()
@@ -485,8 +526,9 @@ class HumanGame:
                 raise ValueError("스파링 모드 여부는 true 또는 false로 지정해 주세요.")
             if boss_mode and sparring_mode:
                 raise ValueError("보스 모드와 스파링 모드 중 하나를 선택해 주세요.")
+            game_clock.validate_control(time_control)
             self._ensure_engine()
-            self._reset(color, movetime_ms, boss_mode, sparring_mode)
+            self._reset(color, movetime_ms, boss_mode, sparring_mode, time_control)
             return self.state()
 
     def _rating_metadata(self):
@@ -556,6 +598,9 @@ class HumanGame:
                 raise ValueError("올바른 수를 선택해 주세요.") from None
             if move not in self.board.legal_moves:
                 raise ValueError("그 칸으로 이동할 수 없습니다.")
+            if not self._clock.complete_move("white" if self.board.turn else "black", len(self.board.move_stack) + 1):
+                self._adjudicate_clock()
+                return self.state()
             self.board.push(move)
             self.revision += 1
             self._sync_evaluation()
@@ -574,16 +619,28 @@ class HumanGame:
                     self._ensure_engine()
                 except Exception as exc:
                     self.error = f"{type(exc).__name__}: {exc}"
+                    self._clock.pause("engine_error")
                     self.revision += 1
                     self._sync_evaluation()
                     self._save()
                     return self.state()
                 board = self.board.copy(stack=True)
                 movetime_ms = self.movetime_ms
+                clock_state = self._clock.snapshot()
+                clock_remaining_ms = (clock_state["white_ms" if board.turn else "black_ms"]
+                                      if clock_state["enabled"] else None)
+                clock_limited = False
+                if clock_remaining_ms is not None:
+                    usable_ms = max(1, int(clock_remaining_ms - min(150, max(10, clock_remaining_ms * .05))))
+                    # Near flag fall preserve the baseline search, skipping
+                    # optional style/skill analysis instead of spending time
+                    # reserved for actually delivering a legal move.
+                    clock_limited = usable_ms < movetime_ms + 2100
+                    movetime_ms = min(movetime_ms, usable_ms)
                 forced_game = bool(self._forced_plies)
                 boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
                 sparring_decisions = copy.deepcopy(list(self._sparring_decisions.values()))
-                move_policy = (None if self.sparring_mode else boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
+                move_policy = (None if self.sparring_mode or clock_limited else boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
                                opening_variety if self.opening_variety_enabled else None)
                 search_plan = (move_policy.plan(board, movetime_ms, self._opening_seed,
                                                forced=bool(self._forced_plies),
@@ -602,19 +659,24 @@ class HumanGame:
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
                 self._active_extra_budget_ms = (self._sparring_extra_budget(movetime_ms, board)
-                                                if self.sparring_mode else search_plan["extra_budget_ms"] if search_plan else 0)
+                                                if self.sparring_mode and not clock_limited else search_plan["extra_budget_ms"] if search_plan else 0)
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
             decision = None
             discard_engine = False
             watchdog = None
+            clock_watchdog = None
             timed_out = threading.Event()
             try:
                 engine = self._engine
+                def expire_search():
+                    timed_out.set()
+                    engine.close()
+                if clock_remaining_ms is not None:
+                    clock_watchdog = threading.Timer(clock_remaining_ms / 1000, expire_search)
+                    clock_watchdog.daemon = True
+                    clock_watchdog.start()
                 if callable(getattr(engine, "analysis", None)):
-                    def expire_search():
-                        timed_out.set()
-                        engine.close()
                     # Baseline retains the existing full-budget watchdog. The
                     # optional verification phase gets its own much tighter one.
                     watchdog = threading.Timer(movetime_ms / 1000 + float(getattr(engine, "timeout", 10) or 10),
@@ -688,14 +750,14 @@ class HumanGame:
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     boss_extra_started = None
-                    if self.sparring_mode:
+                    if self.sparring_mode and not clock_limited:
                         decision, discard_engine = sparring_play.choose(
                             board, reply.move, baseline_info, _packets, search, engine.close,
                             decisions=sparring_decisions, seed=self._opening_seed,
                             movetime_ms=movetime_ms, forced=forced_game)
                         decision["baseline_elapsed_ms"] = round(baseline_elapsed_ms, 3)
                         reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
-                    if self.boss_mode:
+                    if self.boss_mode and not clock_limited:
                         boss_extra_started = time.monotonic()
                         total_extra = search_plan["extra_budget_ms"]
                         quality_budget = min(boss_play.QUALITY_BUDGET_MS, total_extra)
@@ -804,13 +866,28 @@ class HumanGame:
             finally:
                 if watchdog is not None:
                     watchdog.cancel()
+                if clock_watchdog is not None:
+                    clock_watchdog.cancel()
             with self._lock:
                 self._engine_searching = False
                 self._active_movetime_ms = None
                 self._active_extra_budget_ms = None
+                self._adjudicate_clock()
+                # A polling request may already have adjudicated this turn.
+                # Never replace the timeout result with an engine error, nor
+                # apply the move that arrived after the clock reached zero.
+                if self._clock.flagged_color is not None:
+                    if self._engine is not None:
+                        self._engine.close()
+                        self._engine = None
+                    self._save(update_timestamp=False)
+                    return self.state()
                 if self.game_id != game_id or self._game_token is not token or self.revision != revision:
                     failure = "RuntimeError: 검색 중 대국 상태가 바뀌어 이전 응답을 적용하지 않았습니다."
                 if failure is None:
+                    if not self._clock.complete_move("white" if self.board.turn else "black", len(self.board.move_stack) + 1):
+                        self._adjudicate_clock()
+                        return self.state()
                     self.board.push(reply.move)
                     self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
                     if decision is not None:
@@ -824,6 +901,7 @@ class HumanGame:
                         self._engine = None
                 else:
                     self.error = failure
+                    self._clock.pause("engine_error")
                     if self._engine is not None:
                         self._engine.close()
                         self._engine = None
@@ -858,6 +936,7 @@ class HumanGame:
                                     if ply <= len(self.board.move_stack)}
             self._sparring_decisions = {ply: row for ply, row in self._sparring_decisions.items()
                                         if ply <= len(self.board.move_stack)}
+            self._clock.restore_ply(len(self.board.move_stack), "white" if self.board.turn else "black")
             self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
@@ -896,7 +975,10 @@ class HumanGame:
                 preview.pop()
             if preview.turn == self.human_color:
                 raise ValueError("당신의 수가 아닌 Regicide의 수를 선택해 주세요.")
+            self._clock.pause("handicap_preview")
+            self._adjudicate_clock()
             self._handicap_backup = {"board": self.board.copy(stack=True),
+                                     "clock": self._clock,
                                      "forced_plies": self._forced_plies.copy(),
                                      "engine_movetimes": self._engine_movetimes.copy(),
                                      "opening_decisions": copy.deepcopy(self._opening_decisions),
@@ -907,6 +989,13 @@ class HumanGame:
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
             self.board = preview
+            # The preview has no ticking timer. The original paused object is
+            # retained intact for cancellation and durable PGN export.
+            original_clock = self._clock
+            self._clock = game_clock.GameClock(original_clock.control_id, monotonic=self._clock_now)
+            self._clock.history = copy.deepcopy(original_clock.history)
+            self._clock.restore_ply(len(preview.move_stack), "white" if preview.turn else "black")
+            self._clock.pause("handicap_preview")
             self._forced_plies.intersection_update(range(1, ply))
             self._engine_movetimes = {number: ms for number, ms in self._engine_movetimes.items()
                                      if number < ply}
@@ -950,7 +1039,11 @@ class HumanGame:
                 "original_result": backup["outcome"][0],
                 "original_termination": backup["outcome"][1],
                 "original_error": backup["error"],
+                "original_clock": backup["clock"].metadata(),
                 "at": datetime.datetime.now(datetime.timezone.utc).isoformat()})
+            self._clock = game_clock.GameClock(None, monotonic=self._clock_now)
+            self._clock.ply = len(self.board.move_stack)
+            self._clock.pause_reason = "handicap_practice"
             self._handicap_backup = None
             # python-chess sends ucinewgame and the complete new branch before
             # the next search, including all repetition/castling/EP history.
@@ -968,6 +1061,8 @@ class HumanGame:
                 raise ValueError("현재 바꾸고 있는 Regicide의 수가 없습니다.")
             backup = self._handicap_backup
             self.board = backup["board"]
+            self._clock = backup["clock"]
+            self._clock.resume("white" if self.board.turn else "black")
             self._forced_plies = backup["forced_plies"]
             self._engine_movetimes = backup["engine_movetimes"]
             self._opening_decisions = backup["opening_decisions"]
@@ -984,13 +1079,16 @@ class HumanGame:
             self._save(update_timestamp=False)
             return self.state()
 
-    def pgn(self):
+    def pgn(self, *, adjudicate=True):
         with self._lock:
+            if adjudicate and self._handicap_backup is None:
+                self._adjudicate_clock()
             backup = self._handicap_backup
             board = backup["board"] if backup else self.board
             forced_plies = backup["forced_plies"] if backup else self._forced_plies
             movetimes = backup["engine_movetimes"] if backup else self._engine_movetimes
             error = backup["error"] if backup else self.error
+            clock = backup["clock"] if backup else self._clock
             game = chess.pgn.Game.from_board(board)
             result, termination = backup["outcome"] if backup else self._outcome()
             game.headers.update({"Event": "Regicide local human practice", "Site": "local",
@@ -1005,6 +1103,11 @@ class HumanGame:
                                  "Termination": "unterminated" if result == "*" else "normal",
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})
+            if clock.enabled:
+                game.headers["TimeControl"] = f"{clock.config['initial_ms'] // 1000}+{clock.config['increment_ms'] // 1000}"
+                game.headers["ClockUndoPolicy"] = "restore retained-ply clock balances"
+            if termination in ("time_forfeit", "time_forfeit_insufficient_material"):
+                game.headers["Termination"] = "time forfeit"
             game.headers.update(opening_variety.pgn_headers(self._opening_metadata()))
             game.headers.update(dynamic_play.pgn_headers(self._dynamic_metadata()))
             game.headers.update(boss_play.pgn_headers(self._boss_metadata()))
@@ -1022,6 +1125,9 @@ class HumanGame:
                     node.comment = "User-forced Regicide move (handicap)"
                 elif ply in movetimes:
                     node.comment = f"Regicide think time: {movetimes[ply]} ms"
+                if clock.enabled and ply < len(clock.history):
+                    row = clock.history[ply]
+                    node.set_clock(row[row["mover"] + "_ms"] / 1000)
             return str(game) + "\n\n"
 
     def _record_status(self):
@@ -1085,13 +1191,16 @@ class HumanGame:
                   "handicap_events": self._handicap_events,
                   "engine_movetimes_ms": self._engine_movetimes,
                   "time_settings_events": self._time_settings_events,
+                  "clock": self._clock.metadata(),
                   "opening_variety": self._opening_metadata(),
                   "dynamic_play": self._dynamic_metadata(),
                   "boss_play": self._boss_metadata(),
                   "sparring_play": self._sparring_metadata(),
                   "sparring_rating": self._rating_metadata() if self.sparring_mode else None,
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
-        for extension, contents in (("pgn", self.pgn()),
+        # state() above already adjudicated. Keep the PGN and JSON on that
+        # same result if a clock reaches zero while serializing the files.
+        for extension, contents in (("pgn", self.pgn(adjudicate=False)),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
             target = self.save_dir / f"{self.game_id}.{extension}"
             temporary = target.with_suffix(target.suffix + ".tmp")
@@ -1112,6 +1221,9 @@ class HumanGame:
         with self._search_lock, self._lock:
             try:
                 if getattr(self, "_game_open", False):
+                    if self._handicap_backup is None:
+                        self._adjudicate_clock()
+                    self._clock.finish()
                     self._game_open = False
                     # A handicap preview must leave the original durable files
                     # byte-for-byte intact. A later session labels its still-
@@ -1311,7 +1423,8 @@ class HumanHandler(BaseHTTPRequestHandler):
                     self._send(400, {"error": str(exc), "hint": game.hint()})
                 return
             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision,
-                                                        data.get("boss_mode", False), data.get("sparring_mode", False)),
+                                                        data.get("boss_mode", False), data.get("sparring_mode", False),
+                                                        data.get("time_control")),
                        "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
                            data.get("game_id"), data.get("settings_revision")),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),

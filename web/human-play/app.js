@@ -33,6 +33,10 @@
   let coachingMode = false;
   let ratingInputGame = null;
   let ratingSavedValue = null;
+  let clockPollInFlight = false;
+  let clockReceivedAt = 0;
+  const monotonicNow = () => typeof performance !== "undefined" ? performance.now() : Date.now();
+  const rapidControls = {"10+0": "각자 10분 · 추가 시간 없음", "10+5": "각자 10분 · 착수마다 5초 추가", "15+10": "각자 15분 · 착수마다 10초 추가"};
 
   function clearHint() {
     hintEpoch++;
@@ -97,6 +101,14 @@
     if (!hintPreferenceLoaded) {
       hintEnabled = next.hint_enabled === true;
       hintPreferenceLoaded = true;
+    }
+    if (unchangedPosition && state.clock && next.clock &&
+        Number(next.clock.sampled_monotonic_ms ?? next.clock.turn_elapsed_ms ?? 0) <=
+        Number(state.clock.sampled_monotonic_ms ?? state.clock.turn_elapsed_ms ?? 0)) {
+      next.clock = state.clock;
+      next.decision_support = state.decision_support;
+    } else {
+      clockReceivedAt = nextClockAnchor(next.clock, state?.clock, unchangedPosition);
     }
     state = next;
     if (!hintPositionAvailable()) clearHint();
@@ -685,7 +697,117 @@
       `${saved} 저장됨 · 수정할 수 있습니다. 다음 대국의 추정 보정에 반영합니다.`;
   }
 
+  function nextClockAnchor(incoming, previous, sameTurn) {
+    const now = monotonicNow();
+    // Server and client monotonic origins differ. Only compare their deltas.
+    // A delayed fresher packet must not put already elapsed seconds back.
+    if (sameTurn && previous?.status === "running" && incoming?.status === "running" &&
+        previous.running_color === incoming.running_color &&
+        Number.isFinite(previous.sampled_monotonic_ms) && Number.isFinite(incoming.sampled_monotonic_ms)) {
+      return Math.min(now, clockReceivedAt + Math.max(0, incoming.sampled_monotonic_ms - previous.sampled_monotonic_ms));
+    }
+    return now;
+  }
+
+  function clockText(ms) {
+    if (!Number.isFinite(ms)) return "—";
+    ms = Math.max(0, ms);
+    if (ms > 0 && ms < 10000) return `0:${(Math.ceil(ms / 100) / 10).toFixed(1).padStart(4, "0")}`;
+    const seconds = Math.ceil(ms / 1000);
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  }
+
+  function clockRemaining(color) {
+    const clock = state?.clock;
+    let remaining = Number(clock?.[`${color}_ms`] ?? 0);
+    if (!closed && clock?.status === "running" && clock.running_color === color) {
+      remaining -= Math.max(0, monotonicNow() - clockReceivedAt);
+    }
+    return Math.max(0, remaining);
+  }
+
+  function renderClockAndAdvice() {
+    const clock = state?.clock;
+    const human = state?.human_color || "white";
+    for (const [id, color] of [["human-clock", human], ["opponent-clock", human === "white" ? "black" : "white"]]) {
+      const element = byId(id);
+      element.hidden = clock?.enabled !== true && (id !== "human-clock" || !state);
+      element.classList.toggle("untimed", clock?.enabled !== true);
+      if (clock?.enabled !== true) {
+        element.textContent = "새 대국에서 시간 선택";
+        element.title = "현재 대국은 시간 제한 없이 진행합니다.";
+        element.setAttribute("aria-label", "현재 대국은 시간 제한 없음 · 새 대국에서 시간 선택");
+        element.classList.toggle("running", false);
+        element.classList.toggle("low-time", false);
+        continue;
+      }
+      const running = !closed && clock?.status === "running" && clock.running_color === color;
+      const remaining = clockRemaining(color);
+      element.textContent = `${running ? "▶ " : ""}${clockText(remaining)}`;
+      element.classList.toggle("running", running);
+      element.classList.toggle("low-time", remaining <= 30000);
+      element.setAttribute("aria-label", `${colorName(color)} 남은 시간 ${clockText(remaining)}`);
+      element.title = clock?.label || "";
+    }
+    byId("rapid-time-help").textContent = `${rapidControls[byId("rapid-time-control").value] || rapidControls["10+0"]}. 새 대국부터 적용됩니다.`;
+    const panel = byId("decision-support");
+    panel.hidden = !state || closed || analysisMode || coachingMode;
+    const support = state?.decision_support;
+    const complexity = support?.complexity;
+    const ready = support?.status === "ready" && state?.human_to_move && state?.result === "*";
+    byId("human-complexity").textContent = state?.result !== "*" && state ? "대국 종료 · 시간 안내 마침" :
+      !state?.human_to_move && state ? "상대 차례 · 다음 판단 준비" : "사람 기준 복잡도 · 대기";
+    byId("complexity-reasons").textContent = support?.note || "내 차례에 판단할 요소와 생각 시간을 안내합니다.";
+    byId("recommended-time").textContent = "";
+    byId("time-recommendation-reason").textContent = "";
+    if (!ready) return;
+    if (Number.isInteger(complexity?.score) && complexity.score >= 0 && complexity.score <= 100) {
+      byId("human-complexity").textContent = `사람 기준 복잡도 · ${complexity.label} ${complexity.score}/100 · 실험`;
+    }
+    byId("complexity-reasons").textContent = Array.isArray(complexity?.reasons) ? complexity.reasons.slice(0, 3).join(" · ") : "";
+    const advice = support.recommendation;
+    if (Number.isFinite(advice?.remaining_ms) && Number.isFinite(advice?.total_ms)) {
+      const spent = clock?.status === "running" && clock.running_color === human ? Math.max(0, monotonicNow() - clockReceivedAt) : 0;
+      const remaining = Math.ceil(Math.min(clockRemaining(human), Math.max(0, advice.remaining_ms - spent)) / 1000);
+      byId("recommended-time").textContent = remaining > 0 ?
+        `이번 수 총 ${Math.ceil(advice.total_ms / 1000)}초 권장 · 앞으로 ${remaining}초` : "권장 생각 시간 사용 · 이제 결정하세요";
+      byId("time-recommendation-reason").textContent = advice.reason || "";
+      byId("recommended-time").classList.toggle("low-time", ["critical", "time_pressure", "budget_used"].includes(advice.urgency) || remaining === 0);
+    } else {
+      byId("recommended-time").textContent = advice?.reason || "시간제 대국에서 생각 시간을 추천합니다.";
+    }
+  }
+
+  function applyClockRefresh(next) {
+    const unchanged = samePosition(state, next) && state.result === next.result && state.error === next.error &&
+      state.status === next.status && state.handicap_mode === next.handicap_mode &&
+      Number(state.engine.settings_revision || 0) === Number(next.engine.settings_revision || 0);
+    if (!unchanged) { applyState(next, true); return; }
+    const previousSample = Number(state.clock?.sampled_monotonic_ms ?? state.clock?.turn_elapsed_ms ?? 0);
+    const incomingSample = Number(next.clock?.sampled_monotonic_ms ?? next.clock?.turn_elapsed_ms ?? 0);
+    if (incomingSample <= previousSample) return;
+    clockReceivedAt = nextClockAnchor(next.clock, state.clock, true);
+    state.clock = next.clock;
+    state.decision_support = next.decision_support;
+    // Never rebuild squares or interrupt drag/promotion for a timer-only update.
+    renderClockAndAdvice();
+  }
+
+  async function pollClock() {
+    // The host adjudicates timeout; analysis views must not pause a live clock.
+    if (clockPollInFlight || closed || !state?.clock?.enabled || state.result !== "*") return;
+    const requestedGame = state.game_id;
+    clockPollInFlight = true;
+    try {
+      const next = await request("/api/state", undefined, undefined, true);
+      if (!closed && state?.game_id === requestedGame && next.game_id === requestedGame) applyClockRefresh(next);
+    } catch (_) {
+      // Keep counting from the last authoritative snapshot; do not invent a result.
+    } finally { clockPollInFlight = false; }
+  }
+
   function render() {
+    renderClockAndAdvice();
     renderModeHelp();
     renderSparringRating();
     renderBoard();
@@ -719,6 +841,7 @@
     byId("new-game").disabled = !ready || busy || timeSaving;
     byId("human-side").disabled = !ready || busy || timeSaving;
     byId("boss-mode").disabled = !ready || busy || timeSaving || state?.handicap_mode;
+    byId("rapid-time-control").disabled = !ready || busy || timeSaving || state?.handicap_mode;
     byId("think-time").disabled = !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
     if (state && !timeSaving) byId("think-time").value = String(state.engine.movetime_ms);
     const currentMS = state?.engine.active_movetime_ms;
@@ -853,9 +976,11 @@
   byId("new-game-form").addEventListener("submit", (event) => {
     event.preventDefault();
     void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value),
-      boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring"});
+      boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring",
+      time_control: Object.hasOwn(rapidControls, byId("rapid-time-control").value) ? byId("rapid-time-control").value : "10+0"});
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
+  byId("rapid-time-control").addEventListener("change", renderClockAndAdvice);
   byId("rating-label-form").addEventListener("submit", (event) => {
     event.preventDefault();
     if (byId("rating-label-panel").hidden || busy || timeSaving || closed || !state) return;
@@ -921,6 +1046,8 @@
   // Analysis polling has its own request and keeps running while /api/engine waits.
   const evaluationTimer = setInterval(() => { void pollEvaluation(); }, 200);
   const hintTimer = setInterval(() => { void pollHint(); }, 300);
+  const clockTimer = setInterval(() => { void pollClock(); }, 500);
+  const clockDrawTimer = setInterval(renderClockAndAdvice, 100);
   window.addEventListener("pagehide", () => {
     closed = true;
     clearHint();
@@ -928,12 +1055,15 @@
     renderBoard();
     clearInterval(evaluationTimer);
     clearInterval(hintTimer);
+    clearInterval(clockTimer);
+    clearInterval(clockDrawTimer);
   });
   function changeHintMode() {
     clearHint();
     if (analysisMode || coachingMode) window.RegicideMotion?.cancel(boardElement, true);
     renderHint();
     renderBoard();
+    renderClockAndAdvice();
     if (!analysisMode && !coachingMode) void pollHint();
   }
   window.addEventListener("regicide-analysis-mode", (event) => { analysisMode = event.detail === true; changeHintMode(); });

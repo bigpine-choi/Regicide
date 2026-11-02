@@ -1,0 +1,117 @@
+{
+  "schema": "regicide.rapid-clock-review.v1",
+  "reviewed_at": "2026-11-02T15:38:24.469061+00:00",
+  "passed": true,
+  "source_sha256": {
+    "scripts/game_clock.py": "3f72176b67df4359d5fcb4d2f845976569906dee003ed02c21e47df3b80d3740",
+    "scripts/play_human.py": "af3d04e34b4771d96ab88c29ecc41fc911a187c9d7a52ba56506c030d36f3d40",
+    "scripts/decision_support.py": "9cd7e03993cc63d175b33638ea370e34199ac327974269bbc7fae9e216a927f0",
+    "godot/scripts/main.gd": "cd3561453298bd71ae716502b335eca3b2583facff3f6efe5eb2f846b21f7522",
+    "web/human-play/app.js": "d0be6c17ae02ff62c4c95e4dad41a30e7b23c45677d97044284f299c656bea31",
+    "tests/game_clock_tests.py": "6ff41f00967888abaedc9d875a954b2fd8b1c2bfa00e32831d4b74c4ff3a04fb",
+    "tests/rapid_clock_host_tests.py": "79e53f64600e5aeb70d2f1dfe193cfad6124d23b237e242f15c494f222ea6a10",
+    "tests/decision_support_tests.py": "7551fcfc227122c78c3bd0c28962c5603e9ededf79a7ec1005270fe4b7a87398",
+    "godot/tests/rapid_clock_offline_tests.gd": "489c1007a5ec3441407f9d9d693f8751cdd4bcbb872ccab21a1ab577946008d9",
+    "tests/rapid_clock_web_tests.js": "502b19c978969f9e54dcf5c290e1f56a34da0512df64f4305e469d7a6a61bc1d"
+  },
+  "scope": "Independent narrow review of clock boundary, UI stale/late snapshots, nullable host contract, and same-position timer-only refresh. No strength, human difficulty calibration or latency accuracy claim.",
+  "issues": [
+    {
+      "id": "pause_boundary",
+      "status": "resolved",
+      "finding": "Two monotonic reads could create paused zero clock without flag",
+      "resolution": "Single captured elapsed shared by expiry check and debit",
+      "verification": "Independent deterministic before-deadline pause gives1ms paused/no flag; after-deadline pause gives0ms finished/white flag"
+    },
+    {
+      "id": "delayed_fresh_sample",
+      "status": "resolved",
+      "finding": "Late same-position newer sample reset receipt anchor and added2seconds to displayed clock/advice",
+      "resolution": "Advance client anchor by server monotonic delta instead of resetting to arrival",
+      "verification": {
+        "before": "▶ 9:57",
+        "after": "▶ 9:57",
+        "advice": "이번 수 총 30초 권장 · 앞으로 27초",
+        "server_sample": 2000,
+        "receipt_time": 4000
+      }
+    },
+    {
+      "id": "godot_null_clock",
+      "status": "resolved",
+      "finding": "Disabled host clock explicitly supplies null sampled_monotonic_ms; float(null) throws",
+      "resolution": "Numeric type/finite guards then elapsed/zero fallback, plus remaining-balance guards",
+      "verification": "Current dedicated Godot offline suite passed repeated disabled null-snapshot tests"
+    },
+    {
+      "id": "godot_null_advice",
+      "status": "resolved",
+      "finding": "Opponent-turn host decision_support is explicitly null; lightweight refresh duplicated Nil",
+      "resolution": "Dictionary guard before deep duplicate; null becomes empty advice",
+      "verification": "Current dedicated Godot suite passed actual nullable opponent advice refresh fixture"
+    }
+  ],
+  "additional_review": {
+    "same_position_poll": "Both clients update only clock/support for matching game+revision+FEN/result/error/status/settings; board selection/drag is retained. State transitions use version-aware full merge.",
+    "host_initialization_error": "Already fixed by host owner; separate independent fake-engine repro confirmed pause persists without later time-forfeit override."
+  },
+  "executed_now": [
+    {
+      "command": [
+        "C:\\Users\\hanso\\Tools\\Godot\\Godot_v4.7.2-stable_win64_console.exe",
+        "--headless",
+        "--path",
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\godot",
+        "--script",
+        "res://tests/rapid_clock_offline_tests.gd"
+      ],
+      "exit_code": 0,
+      "log": "final-godot-offline.log"
+    },
+    {
+      "command": [
+        "node",
+        "build/rapid-clock-review/delayed-snapshot.js"
+      ],
+      "exit_code": 0,
+      "result": {
+        "before": "▶ 9:57",
+        "after": "▶ 9:57",
+        "advice": "이번 수 총 30초 권장 · 앞으로 27초",
+        "server_sample": 2000,
+        "receipt_time": 4000
+      }
+    }
+  ],
+  "not_rerun": "Host core11/host19 suite is owner-reported; only explicit pause boundary repro was independently rerun in this review.",
+  "independent_execution_source_sha256": {
+    "scripts/game_clock.py": "3f72176b67df4359d5fcb4d2f845976569906dee003ed02c21e47df3b80d3740",
+    "scripts/play_human.py": "af3d04e34b4771d96ab88c29ecc41fc911a187c9d7a52ba56506c030d36f3d40",
+    "scripts/decision_support.py": "9cd7e03993cc63d175b33638ea370e34199ac327974269bbc7fae9e216a927f0",
+    "godot/scripts/main.gd": "fbfccd3fc62506c275788a5b2803f27394f632a4bbd3d68baba8eb97b73e8eef",
+    "web/human-play/app.js": "d0be6c17ae02ff62c4c95e4dad41a30e7b23c45677d97044284f299c656bea31",
+    "tests/game_clock_tests.py": "6ff41f00967888abaedc9d875a954b2fd8b1c2bfa00e32831d4b74c4ff3a04fb",
+    "tests/rapid_clock_host_tests.py": "79e53f64600e5aeb70d2f1dfe193cfad6124d23b237e242f15c494f222ea6a10",
+    "tests/decision_support_tests.py": "7551fcfc227122c78c3bd0c28962c5603e9ededf79a7ec1005270fe4b7a87398",
+    "godot/tests/rapid_clock_offline_tests.gd": "489c1007a5ec3441407f9d9d693f8751cdd4bcbb872ccab21a1ab577946008d9",
+    "tests/rapid_clock_web_tests.js": "502b19c978969f9e54dcf5c290e1f56a34da0512df64f4305e469d7a6a61bc1d"
+  },
+  "followup_reviews": [
+    {
+      "reviewed_at": "2026-11-02T15:41:37.049651+00:00",
+      "file": "godot/scripts/main.gd",
+      "previous_sha256": "fbfccd3fc62506c275788a5b2803f27394f632a4bbd3d68baba8eb97b73e8eef",
+      "current_sha256": "cd3561453298bd71ae716502b335eca3b2583facff3f6efe5eb2f846b21f7522",
+      "scope": "Read-only cosmetic clarification review: status line explicitly identifies Regicide baseline think time; help distinguishes per-move AI budget from game clock, color and mode. Original independent execution timestamp/source hash retained.",
+      "verified_lines": [
+        2221,
+        2275
+      ],
+      "verification": "Read the two presentation strings and verified the current UI owner validation receipt hashes this exact source. All other9reviewed source hashes unchanged.",
+      "owner_validation": "build\\rapid-clock-2026-11-03\\ui\\validation.json",
+      "owner_validation_sha256": "fb11423c0449783481a76d6ab523cb525353ef6519cdf1187c986aca2022fa7f",
+      "owner_reported_tests": "Godot rapid-clock39/think-time39/boss-mode70, all failures0; no new independent suite rerun for cosmetic copy change.",
+      "independent_tests_rerun": false
+    }
+  ]
+}
