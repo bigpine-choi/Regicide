@@ -18,7 +18,7 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v4"
+POLICY = "regicide-engine-pacing-v5"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
@@ -26,7 +26,9 @@ PRESSURE_START_MS = 240_000
 WAIT_SLICE_SECONDS = .05
 MAX_TURN_MS = 45_000
 TURN_REDUCTION_MS = 1000
-MIN_TURN_TARGET_MS = 250
+# Include search in this floor: shortening only the post-search hold could
+# never produce a genuinely near-instant response to an obvious move.
+MIN_TURN_TARGET_MS = 100
 QUICK_KINDS = ("single_reply", "mate_in_one", "clear_queen_gain", "familiar_opening")
 
 
@@ -246,7 +248,10 @@ def _completed_long_think(row):
         return False
     # Three seconds is a floor for this cadence heuristic, not a human-data
     # threshold. A rushed/aborted/shortened pause cannot suppress the next one.
-    return spent + waited >= max(3000, target - 100, original * 1.4)
+    # A completed pause at the global cap also counts. Without this limit a
+    # 32s initial target stretched to 44s could never activate the cooldown.
+    return spent + waited >= max(3000, target - 100,
+                                 min(original * 1.4, MAX_TURN_MS - TURN_REDUCTION_MS - 100))
 
 
 def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
@@ -325,8 +330,11 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
             factor, kind = max(factor, 1.30 + .40 * innovation), "reconsidering_choices"
         eligible_long = complexity >= 45 and (details["surprise"] or evidence["unsettled"] or complexity >= 70)
         if (eligible_long and not details["long_think_cooldown"]
-                and _unit(seed, "long-think", board.fen(en_passant="fen")) < .18):
-            factor, kind = 1.85 + .40 * innovation, "long_deliberation"
+                and _unit(seed, "long-think", board.fen(en_passant="fen")) < .10):
+            # Less frequent, more distinct pauses: a long tail rather than
+            # making every ordinary decision slower. Clock pressure below
+            # four minutes still fades this premium and caps the whole turn.
+            factor, kind = 2.80 + .60 * innovation, "long_deliberation"
     color = result["color"]
     if not isinstance(clock, dict):
         return result

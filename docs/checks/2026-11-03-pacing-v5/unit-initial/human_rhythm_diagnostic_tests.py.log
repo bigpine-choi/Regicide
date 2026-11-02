@@ -1,0 +1,17 @@
+.F...
+======================================================================
+FAIL: test_grid_enforces_safety_and_returns_honest_model_targets (__main__.RhythmDiagnosticTests.test_grid_enforces_safety_and_returns_honest_model_targets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\human_rhythm_diagnostic_tests.py", line 61, in test_grid_enforces_safety_and_returns_honest_model_targets
+    rows = diagnostic.grid(board, packets, packets[6], chess.Move.from_uci("e2e4"), 900,
+                           engine_pacing, seeds=("repeat", "another"), clocks=(600000, 180000, 60000, 10000))
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\scripts\check_human_rhythm.py", line 151, in grid
+    assert targets == sorted(targets, reverse=True), "Less time produced a longer target"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Less time produced a longer target
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.014s
+
+FAILED (failures=1)

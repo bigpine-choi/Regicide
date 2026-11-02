@@ -104,7 +104,7 @@ class RapidClockArchiveTests(unittest.TestCase):
         record = self.record()
         self.assertNotIn('EnginePacingPolicy', self.load(record)["pgn"])
         for policy in ("regicide-engine-pacing-v1", "regicide-engine-pacing-v2", "regicide-engine-pacing-v3",
-                       "regicide-engine-pacing-v4"):
+                       "regicide-engine-pacing-v4", "regicide-engine-pacing-v5"):
             record["engine_pacing"] = {"enabled": True, "policy": policy}
             self.assertIn(f'[EnginePacingPolicy "{policy}"]', self.load(record)["pgn"])
         for invalid in ({"enabled": False, "policy": "regicide-engine-pacing-v3"},

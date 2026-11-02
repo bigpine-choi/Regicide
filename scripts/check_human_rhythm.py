@@ -108,7 +108,7 @@ def grid(board, packets, selected_info, move, elapsed_ms, old_module, *, seeds=S
     original_packets, original_info = copy.deepcopy(packets), copy.deepcopy(selected_info)
     rows = []
     for seed in seeds:
-        targets = []
+        targets, holds = [], []
         for left in clocks:
             initial_clock = clock(board, left)
             # Replay the measured diagnostic search cost against fictional
@@ -146,9 +146,15 @@ def grid(board, packets, selected_info, move, elapsed_ms, old_module, *, seeds=S
                 "selected_evidence_available": selected_info is not None,
                 "checks": {"deterministic": True, "allocation_unchanged": True,
                            "clock_reserve": True, "target_cap": True, "inputs_unchanged": True}})
-            targets.append(refined["target_total_ms"])
+            # Urgent search retains its budget but has no cosmetic hold.
+            # Compare pacing targets only while pacing is enabled; compare
+            # actual remaining holds across the urgent boundary as well.
+            if refined.get("enabled"):
+                targets.append(refined["target_total_ms"])
+            holds.append(wait_ms)
         if tuple(clocks) == tuple(sorted(clocks, reverse=True)):
             assert targets == sorted(targets, reverse=True), "Less time produced a longer target"
+            assert holds == sorted(holds, reverse=True), "Less time produced a longer hold"
     assert (board.fen(en_passant="fen"), list(board.move_stack)) == original_board
     assert packets == original_packets and selected_info == original_info
     return rows

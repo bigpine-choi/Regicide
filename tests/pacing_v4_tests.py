@@ -1,4 +1,4 @@
-"""One-second pacing adjustment and four-minute pressure boundaries.
+"""Retained v4 reduction/pressure contract with the v5 instant-move floor.
 
 Authored positions and deterministic packets, not a measured human cadence.
 Golden rhythm values were read from pinned v3 commit 79d0587; these unit tests
@@ -40,14 +40,15 @@ def refine(board, plan, current_clock, moves="e2e4 e7e5 g1f3", packets=None):
 
 class PacingV4Tests(unittest.TestCase):
     def test_version_and_pressure_contract(self):
-        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v4")
+        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v5")
         self.assertEqual(pacing.PRESSURE_START_MS, 240000)
         self.assertEqual(pacing.TURN_REDUCTION_MS, 1000)
-        self.assertEqual(pacing.MIN_TURN_TARGET_MS, 250)
+        self.assertEqual(pacing.MIN_TURN_TARGET_MS, 100)
 
     def test_one_second_adjustment_has_a_quick_move_floor_without_lengthening(self):
-        cases = ((0, 0), (100, 100), (249, 249), (250, 250), (600, 250),
-                 (1249, 250), (1250, 250), (2000, 1000), (9000, 8000))
+        cases = ((0, 0), (99, 99), (100, 100), (249, 100), (250, 100), (600, 100),
+                 (1099, 100), (1100, 100), (1249, 249), (1250, 250),
+                 (2000, 1000), (9000, 8000))
         for original, expected in cases:
             with self.subTest(original=original):
                 self.assertEqual(pacing._shorter_target(original, 600000), expected)
