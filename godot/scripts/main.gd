@@ -2039,6 +2039,13 @@ func _render_sparring_rating(shown: Dictionary, enabled: bool) -> void:
 			var suffix: String = " (%s%d)" % ["+" if delta > 0 else "", int(delta)] if _rating_integer(delta, -3900, 3900) else ""
 			sparring_rating_label.text = "추정 래피드 ~%d%s · 실험" % [int(rating.estimate), suffix]
 			sparring_rating_label.tooltip_text += " 괄호는 마지막으로 분석한 내 수의 변화입니다."
+			if rating.get("method") == "regicide-sparring-rating-v2":
+				if rating.get("evidence_level") == "low":
+					sparring_rating_label.text = "추정 래피드 ~%d%s · 표본 적음" % [int(rating.estimate), suffix]
+				if _rating_integer(rating.get("observations"), 0, 1000000) and _rating_integer(rating.get("calibration_games"), 0, 1000000):
+					sparring_rating_label.tooltip_text += " 분석한 수 %d개 · 실제 점수 보정 %d판. 쉬운 정답과 얕은 분석은 적게 반영합니다." % [int(rating.observations), int(rating.calibration_games)]
+				if rating.get("calibration_games") == 0:
+					sparring_rating_label.tooltip_text += " 실제 점수로 보정하기 전에는 Chess.com 레이팅과 크게 다를 수 있습니다."
 		else:
 			sparring_rating_label.text = "추정 래피드 · " + ("분석 중" if engine_thinking or shown.get("engine_thinking", false) else "표본 부족")
 	var terminal: bool = supported and not review_mode and not closing and state.get("result") in ["1-0", "0-1", "1/2-1/2"] and not state.get("handicap_mode", false)

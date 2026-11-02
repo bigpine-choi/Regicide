@@ -120,13 +120,14 @@ class StoreTests(unittest.TestCase):
                        "features": rating.metadata(board, rows, chess.WHITE, rating.prior("native-a")),
                        "runtime": {"policy": rating.POLICIES[-1], "binary_sha256": "test"}}
 
-    def test_atomic_upsert_correction_is_one_game_and_strongly_regularized(self):
+    def test_atomic_upsert_correction_is_one_game_and_short_sample_is_regularized(self):
         self.assertEqual(self.store.calibration("native-a")["calibration_games"], 0)
         self.store.upsert("game-a", 2500, self.sample)
         first = self.store.calibration("native-a")
         self.assertEqual(first["calibration_games"], 1)
         residual = 2500 - self.sample["features"]["curve"][-1]["prior_estimate"]
-        self.assertAlmostEqual(first["offset"], residual / 11, delta=.001)
+        # Three observations contribute 3/8 of one game; the new prior is 1/4.
+        self.assertAlmostEqual(first["offset"], residual * .375 / .625, delta=.001)
         self.store.upsert("game-a", 900, self.sample)
         second = self.store.calibration("native-a")
         self.assertEqual(second["calibration_games"], 1)
@@ -161,7 +162,7 @@ class StoreTests(unittest.TestCase):
         raw = self.sample["features"]["curve"][-1]["prior_estimate"]
         model = self.store.calibration("native-a")
         self.assertEqual(model["calibration_games"], 20)
-        self.assertAlmostEqual(model["offset"], (400 - raw) * 20 / 30, delta=.001)
+        self.assertAlmostEqual(model["offset"], (400 - raw) * 7.5 / 7.75, delta=.001)
         self.assertLess(model["offset"], -600)
 
     def test_corrupt_sample_shapes_are_ignored_without_breaking_new_game(self):

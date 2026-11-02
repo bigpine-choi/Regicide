@@ -141,6 +141,11 @@ jobs:
       - run: python tests/sparring_evaluation_state_tests.py
       - run: python tests/sparring_evaluation_live_tests.py
       - run: python tests/sparring_play_tests.py
+      - run: python tests/rating_evidence_tests.py
+      - run: python tests/rating_observation_host_tests.py
+      - run: python tests/sparring_rating_tests.py
+      - run: python tests/sparring_rating_v2_tests.py
+      - run: python tests/sparring_rating_state_tests.py
       - if: runner.os == 'Linux'
         run: python tests/sparring_evaluation_integration.py --binary build/regicide --output build/sparring-evaluation-integration
       - if: runner.os == 'Windows'

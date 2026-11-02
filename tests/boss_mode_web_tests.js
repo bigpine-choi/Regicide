@@ -255,6 +255,13 @@ const saveRating = value => { byId("rating-label-input").value = String(value); 
   await reply("/api/engine", ratingFixture(19, 1250, 20));
   assert.equal(byId("sparring-rating").textContent, "추정 래피드 ~1250 (+20) · 실험");
   assert.match(byId("sparring-rating").title, /공식 레이팅이 아닙니다/);
+  const calibratedV2 = ratingFixture(19, 1450, -8);
+  Object.assign(calibratedV2.engine.sparring_rating, {method: "regicide-sparring-rating-v2",
+    observations: 9, calibration_games: 2, evidence_level: "low"});
+  sandbox.__applyState(calibratedV2);
+  assert.equal(byId("sparring-rating").textContent, "추정 래피드 ~1450 (-8) · 표본 적음");
+  assert.match(byId("sparring-rating").title, /분석한 수 9개 · 실제 점수 보정 2판/);
+  sandbox.__applyState(ratingFixture(19, 1250, 20));
   const staleRating = ratingFixture(18);
   staleRating.engine.settings_revision = 1; staleRating.engine.movetime_ms = 3000;
   sandbox.__applyState(staleRating);

@@ -714,6 +714,14 @@
       const delta = Number.isInteger(rating.delta) ? ` (${rating.delta > 0 ? "+" : ""}${rating.delta})` : "";
       label.textContent = `추정 래피드 ~${rating.estimate}${delta} · 실험`;
       label.title += " 괄호는 마지막으로 분석한 내 수의 변화입니다.";
+      if (rating.method === "regicide-sparring-rating-v2") {
+        if (rating.evidence_level === "low") label.textContent = `추정 래피드 ~${rating.estimate}${delta} · 표본 적음`;
+        if (Number.isInteger(rating.observations) && rating.observations >= 0 &&
+            Number.isInteger(rating.calibration_games) && rating.calibration_games >= 0) {
+          label.title += ` 분석한 수 ${rating.observations}개 · 실제 점수 보정 ${rating.calibration_games}판. 쉬운 정답과 얕은 분석은 적게 반영합니다.`;
+        }
+        if (rating.calibration_games === 0) label.title += " 실제 점수로 보정하기 전에는 Chess.com 레이팅과 크게 다를 수 있습니다.";
+      }
     } else if (supported) {
       label.textContent = `추정 래피드 · ${engineThinking || state.engine_thinking ? "분석 중" : "표본 부족"}`;
     }

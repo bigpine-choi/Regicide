@@ -743,11 +743,26 @@ class HumanGame:
                                    opening_variety.extra_budget(movetime_ms) if self.opening_variety_enabled else 0)
                     clock_limited = (clock_remaining_ms <= engine_pacing.LOW_CLOCK_MS or
                                      movetime_ms + optional_ms > allocation["total_search_ms"])
+                forced_game = bool(self._forced_plies)
+                # A short baseline need not discard a human observation when
+                # the original whole-turn allocation still has room. This
+                # path only describes the last human move; it cannot concede
+                # or replace the engine's selected move.
+                rating_only_cap = 0
+                if (self.sparring_mode and clock_remaining_ms is not None
+                        and clock_remaining_ms > engine_pacing.LOW_CLOCK_MS
+                        and board.move_stack and not forced_game
+                        and (clock_limited or movetime_ms < sparring_play.MIN_TOTAL_MS)):
+                    rating_only_cap = min(sparring_play.QUALITY_BUDGET_MS,
+                                          max(0, allocation["total_search_ms"] - movetime_ms - 25))
+                    if rating_only_cap < 100:
+                        rating_only_cap = 0
                 pacing_plan.update(allocation=allocation,
-                                   auxiliary_reason=("clock_budget_baseline_only" if clock_limited else
+                                   rating_only_budget_ms=rating_only_cap,
+                                   auxiliary_reason=("within_budget_rating_only" if rating_only_cap else
+                                                     "clock_budget_baseline_only" if clock_limited else
                                                      "below_sparring_observation_minimum" if self.sparring_mode and movetime_ms < sparring_play.MIN_TOTAL_MS
                                                      else "within_budget"))
-                forced_game = bool(self._forced_plies)
                 boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
                 sparring_decisions = copy.deepcopy(list(self._sparring_decisions.values()))
                 move_policy = (None if self.sparring_mode or clock_limited else boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
@@ -775,6 +790,8 @@ class HumanGame:
                 self._active_movetime_ms = movetime_ms
                 self._active_extra_budget_ms = (self._sparring_extra_budget(movetime_ms, board)
                                                 if self.sparring_mode and not clock_limited else search_plan["extra_budget_ms"] if search_plan else 0)
+                if rating_only_cap:
+                    self._active_extra_budget_ms = rating_only_cap
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
             decision = None
@@ -880,7 +897,33 @@ class HumanGame:
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     boss_extra_started = None
-                    if self.sparring_mode and not clock_limited:
+                    if self.sparring_mode and rating_only_cap:
+                        with self._lock:
+                            observation_clock = self._clock.snapshot()
+                            current_remaining = observation_clock["white_ms" if board.turn else "black_ms"]
+                            observation_allowed = (not self._closing and self._game_open and self.game_id == game_id
+                                                   and self._game_token is token and self.revision == revision)
+                        used = max(baseline_elapsed_ms,
+                                   observation_clock["turn_elapsed_ms"] - clock_state["turn_elapsed_ms"])
+                        observation_budget = min(rating_only_cap,
+                                                 allocation["total_search_ms"] - used - 25,
+                                                 current_remaining - engine_pacing.LOW_CLOCK_MS)
+                        if observation_allowed and observation_budget >= 100:
+                            decision, _ = sparring_play.choose(
+                                board, reply.move, baseline_info, _packets, search, engine.close,
+                                decisions=sparring_decisions, seed=self._opening_seed, movetime_ms=0,
+                                forced=forced_game)
+                            observation, discard_engine = boss_play.observe_human_move(
+                                board, search, engine.close, budget_ms=observation_budget, forced=forced_game)
+                            decision.update(opponent_observation=observation, rating_only=True,
+                                            reason="rating_observation_only", baseline_budget_ms=movetime_ms,
+                                            baseline_elapsed_ms=round(baseline_elapsed_ms, 3),
+                                            quality_budget_ms=round(observation_budget, 3),
+                                            extra_budget_ms=rating_only_cap,
+                                            extra_elapsed_ms=observation.get("elapsed_ms", 0))
+                            decision["profile"] = sparring_play.derive_profile(
+                                board, [*sparring_decisions, {"opponent_observation": observation}])
+                    elif self.sparring_mode and not clock_limited:
                         decision, discard_engine = sparring_play.choose(
                             board, reply.move, baseline_info, _packets, search, engine.close,
                             decisions=sparring_decisions, seed=self._opening_seed,

@@ -232,6 +232,12 @@ func _rating_checks() -> void:
 	app.accept_state(rating_fixture(22, 1250.0, 20.0))
 	verify(app.sparring_rating_label.text == "추정 래피드 ~1250 (+20) · 실험", "verified numeric JSON estimate and positive delta display exactly")
 	verify(app.sparring_rating_label.tooltip_text.contains("공식 레이팅이 아닙니다"), "rating remains explicitly experimental")
+	var calibrated_v2: Dictionary = rating_fixture(22, 1450, -8)
+	calibrated_v2.engine.sparring_rating.merge({"method": "regicide-sparring-rating-v2", "observations": 9, "calibration_games": 2, "evidence_level": "low"}, true)
+	app.accept_state(calibrated_v2)
+	verify(app.sparring_rating_label.text == "추정 래피드 ~1450 (-8) · 표본 적음", "v2 sparse evidence remains visible beside the live number")
+	verify(app.sparring_rating_label.tooltip_text.contains("분석한 수 9개 · 실제 점수 보정 2판"), "v2 shows observed moves and local calibration games")
+	app.accept_state(rating_fixture(22, 1250.0, 20.0))
 	var late: Dictionary = rating_fixture(21)
 	late.engine.settings_revision = 1
 	late.engine.movetime_ms = 3000

@@ -16,6 +16,7 @@ import chess.engine
 import boss_openings
 import boss_opponent
 import opening_variety as opening
+import rating_evidence
 
 POLICY = "regicide-boss-play-v3"
 MAX_PLIES = 16
@@ -180,9 +181,11 @@ def observe_human_move(board, search, close_engine, *, budget_ms=QUALITY_BUDGET_
     result = {"valid": False, "ply": len(history), "history_before": history[:-1],
               "played_uci": history[-1] if history else None, "loss_cp": None,
               "depth": None, "forced": bool(forced), "reason": "no_previous_human_move",
-              "budget_ms": round(budget_ms, 3), "elapsed_ms": 0}
+              "budget_ms": round(budget_ms, 3), "elapsed_ms": 0,
+              "rating_evidence": rating_evidence.empty("no_previous_human_move")}
     if not history or forced or budget_ms < 100:
         result["reason"] = "forced_game" if forced else "short_budget" if history else result["reason"]
+        result["rating_evidence"] = rating_evidence.empty(result["reason"])
         return result, False
     before = board.copy(stack=True)
     played = before.pop()
@@ -190,6 +193,7 @@ def observe_human_move(board, search, close_engine, *, budget_ms=QUALITY_BUDGET_
     if (not before.is_valid() or before.root().fen(en_passant="fen") != chess.STARTING_FEN
             or before.legal_moves.count() <= 1 or played not in before.legal_moves):
         result["reason"] = "forced_or_invalid_position"
+        result["rating_evidence"] = rating_evidence.empty(result["reason"])
         return result, False
     started = time.monotonic()
     done, expired = threading.Event(), threading.Event()
@@ -205,30 +209,45 @@ def observe_human_move(board, search, close_engine, *, budget_ms=QUALITY_BUDGET_
     timer.start()
     discard = False
     try:
-        best, info, _ = search(budget_ms * .45, position=before, publish=False, fresh=True)
+        best, info, best_packets = search(budget_ms * .45, position=before, publish=False, fresh=True)
         line = score_line(before, info, best.move) if best.move else None
         result["baseline"] = line
-        if line is None or line["depth"] < MIN_DEPTH:
+        comparable = line is not None and line["depth"] >= MIN_DEPTH
+        rating_reference = rating_evidence.reference(before, best.move, info, best_packets)
+        result["rating_evidence"] = rating_evidence.empty("reference_unreliable")
+        if not comparable:
             result["reason"] = "reference_unreliable"
-        elif best.move == played:
-            result.update(valid=True, loss_cp=0, depth=line["depth"], candidate_compared=line,
-                          reason="actual_move_is_reference")
-        else:
+        if best.move == played:
+            if comparable:
+                result.update(valid=True, loss_cp=0, depth=line["depth"], candidate_compared=line,
+                              reason="actual_move_is_reference")
+            result["rating_evidence"] = rating_evidence.assess(before, best.move, info, best_packets, played)
+        elif comparable or rating_reference is not None:
             remaining = budget_ms - (time.monotonic() - started) * 1000
             if remaining < MIN_PROBE_MS:
-                result["reason"] = "quality_budget_exhausted"
+                if comparable:
+                    result["reason"] = "quality_budget_exhausted"
+                result["rating_evidence"] = rating_evidence.empty("quality_budget_exhausted")
             else:
+                # A strict mate reference can inform the descriptive rating,
+                # while the legacy CP-based controller remains unchanged.
+                depth = line["depth"] if comparable else rating_reference["depth"]
                 actual, final, packets = search(remaining, root_move=played, position=before,
-                                                publish=False, fresh=True, depth=line["depth"])
-                checked = assess(before, best.move, info, played.uci(), packets, final, actual.move)
-                result.update(candidate_compared=checked["candidate_compared"],
-                              depth=checked["compared_depth"], reason=checked["reason"])
-                if checked["admitted"] and checked["reference_delta_cp"] < -25:
-                    result["reason"] = "quality_reference_conflict"
-                elif checked["admitted"]:
-                    result.update(valid=True, loss_cp=checked["loss_cp"], reason="same_position_completed_depth")
+                                                publish=False, fresh=True, depth=depth)
+                if comparable:
+                    checked = assess(before, best.move, info, played.uci(), packets, final, actual.move)
+                    result.update(candidate_compared=checked["candidate_compared"],
+                                  depth=checked["compared_depth"], reason=checked["reason"])
+                    if checked["admitted"] and checked["reference_delta_cp"] < -25:
+                        result["reason"] = "quality_reference_conflict"
+                    elif checked["admitted"]:
+                        result.update(valid=True, loss_cp=checked["loss_cp"], reason="same_position_completed_depth")
+                result["rating_evidence"] = rating_evidence.assess(
+                    before, best.move, info, best_packets, played, played_info=final,
+                    played_packets=packets, returned_move=actual.move)
     except Exception as error:
         result.update(reason="quality_probe_failed", error=type(error).__name__)
+        result["rating_evidence"] = rating_evidence.empty("quality_probe_failed")
         discard = True
     finally:
         done.set()
@@ -237,6 +256,7 @@ def observe_human_move(board, search, close_engine, *, budget_ms=QUALITY_BUDGET_
     result["elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
     if expired.is_set() or result["elapsed_ms"] > budget_ms + 20:
         result.update(valid=False, loss_cp=None, reason="quality_probe_timeout")
+        result["rating_evidence"] = rating_evidence.empty("quality_probe_timeout")
         discard = expired.is_set() or discard
     return result, discard
 
