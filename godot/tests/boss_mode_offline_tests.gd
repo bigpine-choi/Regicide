@@ -130,7 +130,7 @@ func _sparring_checks() -> void:
 	var requests_before: int = app.captured_requests.size()
 	app.boss_mode_option.select(2)
 	app.boss_mode_option.item_selected.emit(2)
-	verify(app.game_mode_help.text.contains("30수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다.") and app.boss_mode_option.tooltip_text.contains("각각 30번"), "sparring help describes a one-point target over thirty full moves, not a guaranteed result")
+	verify(app.game_mode_help.text.contains("20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~69수에는 매 수 일정한 폭으로 강도를 높여 70번째 수부터 전력으로 둡니다.") and app.boss_mode_option.tooltip_text.contains("각각 20번"), "sparring help describes a one-point target over twenty full moves, not a guaranteed result")
 	verify(app.game_mode_help.text.contains("자동으로 조절"), "sparring draft explains automatic time management")
 	verify(not app.time_option.visible and app.auto_time_label.visible and app.time_option.disabled, "sparring draft immediately replaces the manual selector")
 	app._on_think_time_selected(app.time_option.get_item_index(5000))

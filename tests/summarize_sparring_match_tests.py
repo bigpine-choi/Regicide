@@ -432,7 +432,7 @@ class SummaryTests(unittest.TestCase):
         for color in ("white", "black"):
             ramp_ply, finish_ply = (61, 139) if color == "white" else (62, 140)
             for length in (59, 60, 61, 62, 138, 139, 140, 142):
-                value = game(" ".join(sans[:length]), color=color, policy=report.POLICY)
+                value = game(" ".join(sans[:length]), color=color, policy="regicide-sparring-play-v3")
                 result = report.summarize_matches([match(value)])
                 row = result["games"][0]
                 self.assertEqual(result["target_fullmoves"], 30)
@@ -452,7 +452,7 @@ class SummaryTests(unittest.TestCase):
             self.assertEqual(result["all_moves"]["phase_counts"]["ramp"], 39)
 
     def test_v3_reporting_window_override_does_not_rewrite_policy_or_pool_v2(self):
-        current = match(game(" ".join(long_sans()), policy=report.POLICY))
+        current = match(game(" ".join(long_sans()), policy="regicide-sparring-play-v3"))
         historical = match(game(policy="regicide-sparring-play-v2"))
         self.assertEqual(report.summarize_matches([historical])["target_fullmoves"], 40)
         result = report.summarize_matches([current], target_fullmoves=40)
@@ -461,8 +461,47 @@ class SummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different sparring policies"):
             report.summarize_matches([historical, current])
 
-    def test_winning_mate_exception_remains_readable_for_v2_and_v3(self):
-        for policy in ("regicide-sparring-play-v2", report.POLICY):
+    def test_v4_twenty_move_window_and_both_color_phase_boundaries(self):
+        sans = long_sans()
+        for color in ("white", "black"):
+            ramp_ply, finish_ply = (41, 139) if color == "white" else (42, 140)
+            for length in (39, 40, 41, 42, 138, 139, 140, 142):
+                value = game(" ".join(sans[:length]), color=color, policy="regicide-sparring-play-v4")
+                result = report.summarize_matches([match(value)])
+                row = result["games"][0]
+                self.assertEqual(result["target_fullmoves"], 20)
+                self.assertEqual(result["policy_phase_root_plies"], {"ramp": 40, "finish": 138})
+                self.assertEqual(row["reached_target_full_moves"], length >= 40)
+                self.assertEqual(row["board_reached_ramp_threshold"], length >= 40)
+                self.assertEqual(row["reached_ramp_phase"], length >= ramp_ply)
+                self.assertEqual(row["reached_finish_phase"], length >= finish_ply)
+                self.assertEqual(row["issues"], [])
+                if length >= ramp_ply:
+                    self.assertEqual(row["phase_activation"]["ramp"]["first_ply"], ramp_ply)
+                if length >= finish_ply:
+                    self.assertEqual(row["phase_activation"]["finish"]["first_ply"], finish_ply)
+                if length >= 40:
+                    self.assertEqual(result["first_20_full_moves"]["sparring_moves"], 20)
+                    self.assertTrue(row["continuous_first20_band"]["selected_root_same_depth"]["sustained_through_target_full_moves"])
+            self.assertEqual(result["all_moves"]["phase_counts"]["ramp"], 49)
+
+    def test_v4_reporting_window_override_preserves_policy_and_refuses_mixed_history(self):
+        current = match(game(" ".join(long_sans()), policy="regicide-sparring-play-v4"))
+        for window in (20, 30, 40, 50):
+            result = report.summarize_matches([current], target_fullmoves=window)
+            self.assertEqual(result[f"first_{window}_full_moves"]["sparring_moves"], window)
+            self.assertEqual(result["policy"], "regicide-sparring-play-v4")
+            self.assertEqual(result["policy_phase_root_plies"], {"ramp": 40, "finish": 138})
+        for historical_policy, old_window in (("regicide-sparring-play-v1", 40),
+                                              ("regicide-sparring-play-v2", 40),
+                                              ("regicide-sparring-play-v3", 30)):
+            historical = match(game(policy=historical_policy))
+            self.assertEqual(report.summarize_matches([historical])["target_fullmoves"], old_window)
+            with self.assertRaisesRegex(ValueError, "different sparring policies"):
+                report.summarize_matches([historical, current])
+
+    def test_winning_mate_exception_remains_readable_for_v2_v3_and_v4(self):
+        for policy in ("regicide-sparring-play-v2", "regicide-sparring-play-v3", "regicide-sparring-play-v4"):
             value = winning_mate_choice()
             for row in value["moves"]:
                 if row["sparring_decision"] is not None:
@@ -568,5 +607,26 @@ class SummaryTests(unittest.TestCase):
                 self.assertEqual(result["close_cp"], threshold)
                 self.assertEqual(result["policy"], "regicide-sparring-play-v1")
                 self.assertEqual(result["all_moves"]["selected_root_same_depth"]["close_positions"], int(threshold == 150))
+
+    def test_cli_accepts_explicit_twenty_move_window_and_defaults_v4_to_twenty(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            record = game(policy="regicide-sparring-play-v4")
+            record["record_file"] = "game-001.json"
+            document = match(record)
+            document["games"] = [{key: value for key, value in record.items() if key not in ("moves", "uci_moves")}]
+            (root / "game-001.json").write_text(json.dumps(record), encoding="utf-8")
+            source = root / "match.json"
+            source.write_text(json.dumps(document), encoding="utf-8")
+            for explicit in (False, True):
+                output = root / f"summary-{explicit}.json"
+                options = [str(source), "--output", str(output)]
+                if explicit:
+                    options.extend(["--target-fullmoves", "20"])
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(report.main(options), 0)
+                result = json.loads(output.read_text(encoding="utf-8"))
+                self.assertEqual(result["target_fullmoves"], 20)
+                self.assertEqual(result["policy_phase_root_plies"], {"ramp": 40, "finish": 138})
 if __name__ == "__main__":
     unittest.main()

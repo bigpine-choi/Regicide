@@ -20,8 +20,9 @@ import opening_variety as opening
 import sparring_pacing
 import sparring_evaluation
 
-POLICY = "regicide-sparring-play-v3"
-SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2", POLICY)
+POLICY = "regicide-sparring-play-v4"
+SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
+                      "regicide-sparring-play-v3", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -52,8 +53,9 @@ POSTMOVE_RESERVE_FRACTION = .3
 # Match the existing completed-iteration stability window. This is an
 # explicit disagreement screen, not a statistical error bound.
 POSTMOVE_MAX_DELTA_CP = 80
-RAMP_PLY = 60
+RAMP_PLY = 40
 FINISH_PLY = 138
+V3_RAMP_PLY = 60
 V2_RAMP_PLY = 80
 LEGACY_RAMP_PLY = 100
 LEGACY_FINISH_PLY = 140
@@ -85,12 +87,13 @@ def _replay(board):
 
 
 def phase(board, *, policy=None):
-    """v3: close through move 30, ramp 31..69, full on each side's move 70."""
+    """v4: close through move 20, ramp 21..69, full on each side's move 70."""
     ply = len(board.move_stack)
     legacy = policy == SUPPORTED_POLICIES[0]
     if ply >= (LEGACY_FINISH_PLY if legacy else FINISH_PLY):
         return "finish"
-    ramp_ply = LEGACY_RAMP_PLY if legacy else V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1] else RAMP_PLY
+    ramp_ply = (LEGACY_RAMP_PLY if legacy else V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1]
+                else V3_RAMP_PLY if policy == SUPPORTED_POLICIES[2] else RAMP_PLY)
     if ply >= ramp_ply:
         return "ramp"
     return "calibration" if ply < 6 else "sparring"
@@ -103,7 +106,8 @@ def extra_budget(movetime_ms, *, ply=0, analysis_only=False):
 
 
 def _ramp_fraction(board, *, policy=None):
-    ramp_ply = V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1] else RAMP_PLY
+    ramp_ply = (V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1]
+                else V3_RAMP_PLY if policy == SUPPORTED_POLICIES[2] else RAMP_PLY)
     if len(board.move_stack) < ramp_ply:
         return 0.0
     close_fullmoves = ramp_ply // 2
@@ -306,6 +310,7 @@ def _target(board, profile, baseline_cp):
             "baseline_cp": baseline_cp, "selected_cp": baseline_cp, "selected_final_cp": baseline_cp,
             "selected_postmove_cp": None,
             "status": "pending" if active else "inactive", "deviation_cp": None,
+            "pre20_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre30_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre40_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre50_inside": -BAND_CP <= baseline_cp <= BAND_CP, "recovered": False,
@@ -516,6 +521,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         "lower_cp": -BAND_CP, "upper_cp": BAND_CP, "target_cp": TARGET_CP,
         "baseline_cp": None, "selected_cp": None, "selected_final_cp": None, "selected_postmove_cp": None,
         "status": "unmet" if reference_mate else "unavailable", "deviation_cp": None,
+        "pre20_inside": False if reference_mate else None,
         "pre30_inside": False if reference_mate else None,
         "pre40_inside": False if reference_mate else None,
         "pre50_inside": False if reference_mate else None,
@@ -558,7 +564,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         if type(postmove_cp) in (int, float):
             values.append(postmove_cp)
         inside = all(-BAND_CP <= value <= BAND_CP for value in values) if known else False if reference_mate else None
-        control["pre30_inside"] = control["pre40_inside"] = control["pre50_inside"] = inside
+        control["pre20_inside"] = control["pre30_inside"] = control["pre40_inside"] = control["pre50_inside"] = inside
         control["strict_band_status"] = "met" if inside is True else "unmet" if inside is False else "unavailable"
         control["strict_deviation_cp"] = max(max(-BAND_CP - value, value - BAND_CP, 0)
                                               for value in values) if known else None

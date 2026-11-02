@@ -1,0 +1,284 @@
+{
+  "scope": "Actual sparring HTTP evaluation, cancellation and legal move integration.\n\nUses the selected local Regicide binary and temporary games only. This is a\nfunctional check, not a full game, manual GUI session, or playing-strength test.\n",
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "source_sha256": {
+    "scripts/play_human.py": "0e47eb39402f5a2b6792ceae5b7d013eba3f563dd55c281eeda0daa970c6f050",
+    "scripts/move_hints.py": "11702793d2eb4442d2be7ea14820af73cc4fe50b0690c25d6e9c72a08266d3b6",
+    "scripts/sparring_evaluation.py": "c18b131697ec3a65fe6504bbd135dbefc68f777be47c61d17c0a923cbb3b7d48",
+    "scripts/sparring_play.py": "53e38ac81892a097e28018ba55d37224c8fcb1cecaae9718e0c3c811e4a863f6",
+    "tests/sparring_evaluation_integration.py": "ab2a6e14859994a8a7cfea065670078e62ac23918da46263d1e7feecc7d98afd"
+  },
+  "source_unchanged": true,
+  "checks": [
+    {
+      "human_color": "white",
+      "initial": {
+        "first_score_ms_from_poll": 45.303,
+        "samples": [
+          {
+            "elapsed_ms": 45.303,
+            "depth": 4,
+            "cp": 0,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261103-031407-e41e9c554c0e",
+          "revision": 2,
+          "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "turn": "white",
+          "status": "searching",
+          "cp": 0,
+          "mate": null,
+          "depth": 4,
+          "bound": "exact",
+          "white_share": 0.5,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "reliability": "provisional",
+          "recent_cp_range_white": [
+            0,
+            0
+          ],
+          "score_swing_cp": 0,
+          "stable_depths": 1,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "initial",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 9.721,
+            "stop_reason": null,
+            "converged": false,
+            "accepted_packets": 4,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000
+        }
+      },
+      "refined": {
+        "first_score_ms_from_poll": 23.975,
+        "samples": [
+          {
+            "elapsed_ms": 23.975,
+            "depth": 3,
+            "cp": 24,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 46.42,
+            "depth": 4,
+            "cp": 3,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 113.177,
+            "depth": 5,
+            "cp": 33,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 336.59,
+            "depth": 6,
+            "cp": 10,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 1286.252,
+            "depth": 7,
+            "cp": 42,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 5719.193,
+            "depth": 8,
+            "cp": 16,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261103-031407-e41e9c554c0e",
+          "revision": 4,
+          "fen": "rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+          "turn": "white",
+          "status": "ready",
+          "cp": 16,
+          "mate": null,
+          "depth": 8,
+          "bound": "exact",
+          "white_share": 0.5192307692307693,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            10,
+            42
+          ],
+          "score_swing_cp": 32,
+          "stable_depths": 3,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "complete",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 5706.19,
+            "stop_reason": "stable",
+            "converged": true,
+            "accepted_packets": 9,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000
+        }
+      },
+      "evaluation_poll_ms_during_engine": [
+        19.67,
+        25.168,
+        1.324,
+        1.335,
+        1.979,
+        24.526,
+        10.771,
+        10.974,
+        1.87,
+        19.614,
+        25.475,
+        1.638,
+        19.296,
+        1.661,
+        1.724,
+        2.1,
+        2.12,
+        1.839,
+        1.961,
+        15.037,
+        2.118,
+        19.374,
+        11.374,
+        25.174,
+        1.807,
+        1.93,
+        1.798,
+        1.808,
+        2.193,
+        2.049,
+        31.314
+      ],
+      "legal_plies": 2,
+      "board_unchanged_by_analysis": true,
+      "archive_policy_preserved": true
+    },
+    {
+      "human_color": "black",
+      "initial": null,
+      "refined": {
+        "first_score_ms_from_poll": 24.552,
+        "samples": [
+          {
+            "elapsed_ms": 24.552,
+            "depth": 4,
+            "cp": 28,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 46.973,
+            "depth": 5,
+            "cp": 0,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 115.869,
+            "depth": 6,
+            "cp": 32,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 625.121,
+            "depth": 7,
+            "cp": 0,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 2108.022,
+            "depth": 8,
+            "cp": 26,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261103-031414-8117fd04e0f1",
+          "revision": 6,
+          "fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+          "turn": "black",
+          "status": "ready",
+          "cp": 26,
+          "mate": null,
+          "depth": 8,
+          "bound": "exact",
+          "white_share": 0.5305164319248826,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+          "reliability": "volatile",
+          "recent_cp_range_white": [
+            0,
+            32
+          ],
+          "score_swing_cp": 32,
+          "stable_depths": 3,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "complete",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 9994.644,
+            "stop_reason": "engine_completed",
+            "converged": false,
+            "accepted_packets": 9,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000
+        }
+      },
+      "evaluation_poll_ms_during_engine": [
+        25.97,
+        22.359,
+        27.527,
+        1.743,
+        1.531,
+        1.905,
+        2.047,
+        1.729,
+        1.642,
+        2.067,
+        1.891,
+        1.619,
+        1.867,
+        1.909,
+        1.721,
+        1.97,
+        1.755,
+        1.928,
+        1.978,
+        15.939,
+        1.579,
+        1.78,
+        1.908,
+        1.725,
+        26.53
+      ],
+      "legal_plies": 1,
+      "board_unchanged_by_analysis": true,
+      "archive_policy_preserved": true
+    }
+  ],
+  "passed": true
+}
