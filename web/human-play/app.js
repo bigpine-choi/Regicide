@@ -312,6 +312,7 @@
     if (prefix) label = evaluation.bound === "lower" ? "백 평가 하한" : "백 평가 상한";
     const details = [];
     if (evaluation.status === "searching") details.push("분석 중");
+    if (evaluation.status === "searching" && evaluation.refinement?.phase === "refining") details.push("정밀 분석 중");
     if (evaluation.source === "previous_search") details.push("직전 탐색 평가");
     if (Number.isInteger(evaluation.depth)) details.push(`탐색 깊이 ${evaluation.depth}`);
     if (prefix) details.push("확정 평가가 아닌 탐색 경계값");

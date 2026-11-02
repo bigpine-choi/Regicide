@@ -12,6 +12,7 @@ import chess
 import chess.engine
 
 from evaluation_stability import assess as assess_evaluation_stability
+import sparring_evaluation
 
 
 class MoveHints:
@@ -30,6 +31,7 @@ class MoveHints:
         self._snapshot = {"candidates": []}
         self._evaluation = {}
         self._evaluation_packets = {}
+        self._precision_packets = {}
         self._pending = None
         self._cancel = None
         self._worker = None
@@ -55,7 +57,7 @@ class MoveHints:
             return copy.deepcopy(self._snapshot)
 
     def update_position(self, *, game_id, revision, board, human_color,
-                        movetime_ms, engine_name, active, handicap_mode=False):
+                        movetime_ms, engine_name, active, handicap_mode=False, precision=False):
         """Called under the game lock; its copy retains repetition/EP history."""
         fen = board.fen(en_passant="fen")
         eligible = active and not handicap_mode and (
@@ -63,6 +65,7 @@ class MoveHints:
         context = {"game_id": game_id, "revision": revision, "fen": fen,
                    "movetime_ms": movetime_ms, "engine_name": engine_name,
                    "active": active, "handicap_mode": handicap_mode,
+                   "precision": bool(precision and self._stream_evaluation),
                    "eligible": eligible, "turn": "white" if board.turn else "black"}
         with self._condition:
             if self._closed:
@@ -116,10 +119,19 @@ class MoveHints:
     def _clear_evaluation_locked(self, status):
         context = self._context
         self._evaluation_packets = {}
+        self._precision_packets = {}
         self._evaluation = {key: context[key] for key in ("game_id", "revision", "fen", "turn")}
         self._evaluation.update(status=status, cp=None, mate=None, depth=None, bound=None,
                                 white_share=None, winner=None, result="*", source="search", source_fen=None)
         self._evaluation.update(assess_evaluation_stability(context.get("board"), {}))
+        if context.get("precision"):
+            self._evaluation["refinement"] = {
+                "policy": sparring_evaluation.POLICY, "phase": "initial",
+                "base_budget_ms": sparring_evaluation.BASE_BUDGET_MS,
+                "max_budget_ms": min(context["movetime_ms"], sparring_evaluation.MAX_BUDGET_MS),
+                "elapsed_ms": 0, "stop_reason": None, "converged": False,
+                "accepted_packets": 0, "rejected_packets": 0,
+                "retained_previous_score": False}
 
     def _publish_evaluation(self, generation, context, cancel, timed_out, info):
         """Only a score packet with its own completed depth may replace a score.
@@ -129,6 +141,37 @@ class MoveHints:
         """
         if not self._stream_evaluation:
             return
+        if context.get("precision"):
+            sample = sparring_evaluation.validate_packet(context["board"], info)
+            with self._condition:
+                if (self._closed or not self._enabled or generation != self._generation
+                        or context is not self._context or cancel.is_set() or timed_out.is_set()):
+                    return
+                depth = info.get("depth") if isinstance(info, dict) else None
+                # Ignore informational progress packets. A score iteration
+                # must nevertheless remain in convergence evidence when bad.
+                if type(depth) is not int or depth < 1 or "score" not in info:
+                    return
+                highest = max(self._precision_packets, default=0)
+                if depth >= highest:
+                    self._precision_packets[depth] = copy.deepcopy(info)
+                    self._precision_packets = {key: self._precision_packets[key]
+                                               for key in sorted(self._precision_packets)[-3:]}
+                refinement = self._evaluation["refinement"]
+                refinement["converged"] = sparring_evaluation.converged(context["board"], self._precision_packets)
+                if refinement["stop_reason"] == "stable" and not refinement["converged"]:
+                    # UCI stop can still deliver a newer completed iteration.
+                    # Preserve its exact score without calling it settled.
+                    refinement["stop_reason"] = "stability_changed"
+                if sample is None or depth < highest:
+                    refinement["rejected_packets"] += 1
+                    refinement["retained_previous_score"] = self._evaluation["depth"] is not None
+                    if depth >= highest:
+                        self._evaluation.update(reliability="provisional", recent_cp_range_white=None,
+                                                score_swing_cp=None, stable_depths=0)
+                    return
+                refinement["accepted_packets"] += 1
+                refinement["retained_previous_score"] = False
         score, depth = info.get("score"), info.get("depth")
         if not isinstance(score, chess.engine.PovScore) or type(depth) is not int or depth < 1:
             return
@@ -163,8 +206,29 @@ class MoveHints:
             self._evaluation_packets[depth] = copy.deepcopy(info)
             self._evaluation_packets = {key: self._evaluation_packets[key]
                                         for key in sorted(self._evaluation_packets)[-3:]}
+            evidence = self._precision_packets if context.get("precision") else self._evaluation_packets
             self._evaluation.update(assess_evaluation_stability(context["board"],
-                {key: packet for key, packet in self._evaluation_packets.items() if key <= depth}))
+                {key: packet for key, packet in evidence.items() if key <= depth}))
+
+    def _refinement_progress(self, generation, context, elapsed_ms, *, complete=False, reason=None):
+        """Update this generation only; a timer can stop between UCI packets."""
+        with self._condition:
+            if (self._closed or not self._enabled or generation != self._generation
+                    or context is not self._context or not context.get("precision")):
+                return None
+            refinement = self._evaluation["refinement"]
+            refinement["elapsed_ms"] = round(max(0, elapsed_ms), 3)
+            refinement["phase"] = ("complete" if complete else "refining"
+                                     if elapsed_ms >= sparring_evaluation.BASE_BUDGET_MS else "initial")
+            if reason is not None:
+                refinement["stop_reason"] = reason
+            if refinement["stop_reason"] is not None:
+                return refinement["stop_reason"]
+            if elapsed_ms >= refinement["max_budget_ms"]:
+                refinement["stop_reason"] = "budget"
+            elif elapsed_ms >= sparring_evaluation.BASE_BUDGET_MS and refinement["converged"]:
+                refinement["stop_reason"] = "stable"
+            return refinement["stop_reason"]
 
     @staticmethod
     def _close_engine(engine):
@@ -312,6 +376,7 @@ class MoveHints:
             analysis_handle = [None]
             result = None
             failure = None
+            search_started = None
             try:
                 # The default UCI factory has a bounded initialization timeout.
                 # An OFF during startup is checked before issuing any search.
@@ -321,19 +386,49 @@ class MoveHints:
                 if cancel.is_set():
                     continue
                 seconds = context["movetime_ms"] / 1000
+                if context.get("precision"):
+                    seconds = min(seconds, sparring_evaluation.MAX_BUDGET_MS / 1000)
+                search_started = time.monotonic()
 
-                def guard_search(peer, cancellation, completion, expired, duration):
-                    cancelled = cancellation.wait(duration + self._timeout_grace)
+                def guard_search(peer, cancellation, completion, expired, duration,
+                                 search_context=context, generation_id=generation,
+                                 started_at=search_started, ready=analysis_ready, handle=analysis_handle):
+                    if search_context.get("precision"):
+                        # The stream may be silent while a deeper iteration
+                        # runs. Check the base boundary independently so a
+                        # stable earlier iteration can stop at 3s, not only
+                        # when the next packet eventually arrives.
+                        while not completion.is_set():
+                            if cancellation.wait(.025):
+                                break
+                            elapsed = (time.monotonic() - started_at) * 1000
+                            reason = self._refinement_progress(generation_id, search_context, elapsed)
+                            if reason is None:
+                                continue
+                            ready.wait(.25)
+                            stop = getattr(handle[0], "stop", None)
+                            if callable(stop):
+                                try:
+                                    stop()
+                                except Exception:
+                                    pass
+                            if not completion.wait(self._timeout_grace):
+                                expired.set()
+                                self._close_engine(peer)
+                            return
+                        cancelled = cancellation.is_set()
+                    else:
+                        cancelled = cancellation.wait(duration + self._timeout_grace)
                     if not completion.is_set():
                         if not cancelled:
                             expired.set()
-                        if self._stream_evaluation or analysis_handle[0] is not None:
+                        if self._stream_evaluation or handle[0] is not None:
                             # Prefer a normal UCI stop so both the iterator and
                             # the analysis completion future can be consumed
                             # before closing the transport. Startup and wedged
                             # peers retain a bounded force-close fallback.
-                            analysis_ready.wait(.25)
-                            stream = analysis_handle[0]
+                            ready.wait(.25)
+                            stream = handle[0]
                             stop = getattr(stream, "stop", None)
                             if callable(stop):
                                 try:
@@ -369,6 +464,13 @@ class MoveHints:
                         try:
                             for info in analysis:
                                 self._publish_evaluation(generation, context, cancel, timed_out, info)
+                                if context.get("precision"):
+                                    reason = self._refinement_progress(
+                                        generation, context, (time.monotonic() - search_started) * 1000)
+                                    if reason is not None:
+                                        stop = getattr(analysis, "stop", None)
+                                        if callable(stop):
+                                            stop()
                             waited = True
                             reply = analysis.wait()
                             final_info = analysis.info
@@ -387,6 +489,11 @@ class MoveHints:
                                     pass
                             raise
                 else:
+                    if context.get("precision"):
+                        # A play() aggregate may merge depth/score/PV from
+                        # different events. Precision needs the raw stream;
+                        # the configured real UCI engine always provides it.
+                        raise ValueError("정밀 형세 판단에는 개별 탐색 기록이 필요합니다.")
                     reply = engine.play(board.copy(stack=True), limit,
                                         game=object(), info=chess.engine.INFO_ALL)
                     final_info = reply.info
@@ -429,6 +536,13 @@ class MoveHints:
                     # Invalidation wins even if a cancelled helper returns a
                     # seemingly valid move at the exact cancellation boundary.
                     if not self._closed and generation == self._generation and self._enabled:
+                        if context.get("precision"):
+                            refinement = self._evaluation["refinement"]
+                            elapsed = 0 if search_started is None else (time.monotonic() - search_started) * 1000
+                            reason = refinement["stop_reason"] or ("error" if failure else
+                                "budget" if elapsed >= refinement["max_budget_ms"] else "engine_completed")
+                            self._refinement_progress(generation, context,
+                                elapsed, complete=True, reason=reason)
                         self._snapshot["calculating"] = False
                         if result is not None:
                             self._snapshot.update(result)
@@ -444,6 +558,10 @@ class MoveHints:
                                                   candidates=[], **{"from": None, "to": None})
                             if self._stream_evaluation:
                                 self._clear_evaluation_locked("unavailable")
+                                if context.get("precision"):
+                                    self._refinement_progress(generation, context,
+                                        0 if search_started is None else (time.monotonic() - search_started) * 1000,
+                                        complete=True, reason="error")
 
     def close(self):
         with self._condition:

@@ -18,6 +18,7 @@ import boss_play
 import evaluation_stability
 import opening_variety as opening
 import sparring_pacing
+import sparring_evaluation
 
 POLICY = "regicide-sparring-play-v3"
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2", POLICY)
@@ -44,6 +45,13 @@ DISCOVERY_DEPTH = 3
 MAX_DISCOVERY = 16
 RANKED_DISCOVERY = 6
 MAX_PROBES = 4
+POSTMOVE_POLICY = "regicide-sparring-postmove-v1"
+POSTMOVE_MIN_MS = 100
+POSTMOVE_MAX_MS = 600
+POSTMOVE_RESERVE_FRACTION = .3
+# Match the existing completed-iteration stability window. This is an
+# explicit disagreement screen, not a statistical error bound.
+POSTMOVE_MAX_DELTA_CP = 80
 RAMP_PLY = 60
 FINISH_PLY = 138
 V2_RAMP_PLY = 80
@@ -296,13 +304,14 @@ def _target(board, profile, baseline_cp):
             "lower_cp": -BAND_CP if active else None, "upper_cp": round(upper, 3) if active else None,
             "target_cp": round(target, 3), "ramp_fraction": round(ramp, 4),
             "baseline_cp": baseline_cp, "selected_cp": baseline_cp, "selected_final_cp": baseline_cp,
+            "selected_postmove_cp": None,
             "status": "pending" if active else "inactive", "deviation_cp": None,
             "pre30_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre40_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre50_inside": -BAND_CP <= baseline_cp <= BAND_CP, "recovered": False,
             "failure_reason": None,
             "selection_objective": "inside band first, then nearest target; small-distance ties prefer less concession and natural style",
-            "scope": "own-engine root estimate for the selected move; not an independently searched post-move position or a guarantee"}
+            "scope": "own-engine root estimates; selected alternatives also require a recorded post-move counter-search; not a guarantee"}
 
 
 def _paced_control(control, pacing):
@@ -343,7 +352,7 @@ def _candidate_pressure(board, baseline_move, natural):
 def _mate_reference(board, info, required_move):
     """Keep mate as mate; require an exact legal PV ending in that side's mate."""
     if (not isinstance(info, dict) or type(info.get("depth")) is not int or info["depth"] < 1
-            or info.get("lowerbound") or info.get("upperbound")):
+            or info.get("lowerbound") or info.get("upperbound") or info.get("multipv", 1) != 1):
         return None
     score, pv = info.get("score"), info.get("pv")
     if (not isinstance(score, chess.engine.PovScore) or score.turn != board.turn
@@ -365,6 +374,14 @@ def _mate_reference(board, info, required_move):
             "source_fen": board.fen(en_passant="fen"), "score_bound": "exact"}
 
 
+
+def _score_line(board, info, required_move=None):
+    # A secondary MultiPV line cannot certify an unrestricted position score.
+    if not isinstance(info, dict) or info.get("multipv", 1) != 1:
+        return None
+    return boss_play.score_line(board, info, required_move)
+
+
 def _cp_pv_ends_in_mate(board, line):
     if line is None:
         return False
@@ -375,8 +392,8 @@ def _cp_pv_ends_in_mate(board, line):
 
 
 def _absolute_probe(board, move, packets, final_info, returned_move, depth, budget, elapsed):
-    common = boss_play.score_line(board, packets.get(depth), move)
-    final = boss_play.score_line(board, final_info, move)
+    common = _score_line(board, packets.get(depth), move)
+    final = _score_line(board, final_info, move)
     valid = (returned_move == move and common is not None and final is not None and depth >= MIN_DEPTH
              and final["depth"] >= depth and (final["depth"] != depth or common["cp"] == final["cp"])
              and not _cp_pv_ends_in_mate(board, common) and not _cp_pv_ends_in_mate(board, final))
@@ -385,6 +402,57 @@ def _absolute_probe(board, move, packets, final_info, returned_move, depth, budg
             "candidate_compared": common, "candidate_final": final,
             "candidate_final_raw": opening.packet_summary(board, final_info),
             "budget_ms": round(budget, 3), "elapsed_ms": round(elapsed, 3), "error": None}
+
+
+
+def _postmove_verification(board, move, candidate, search, *, depth, budget_ms, floor_cp):
+    """Search all opponent replies after a concession, without publishing it.
+
+    The child starts one ply after the original root. A completed child depth
+    of root_depth - 1 therefore preserves the compared horizon, with a floor
+    of four. Keep the original restricted-root evidence and this independent
+    unrestricted search separate; neither is a proof of tactical safety.
+    """
+    after = board.copy(stack=True)
+    after.push(move)
+    receipt = {"policy": POSTMOVE_POLICY, "valid": False, "reason": "postmove_unreliable",
+               "after_fen": after.fen(en_passant="fen"), "candidate_uci": move.uci(),
+               "required_depth": depth, "budget_ms": round(budget_ms, 3), "elapsed_ms": 0,
+               "reply_uci": None, "line": None, "cp_own": None, "cp_white": None,
+               "disagreement_cp": None, "max_disagreement_cp": POSTMOVE_MAX_DELTA_CP,
+               "floor_cp": floor_cp, "search_scope": "unrestricted opponent replies; separate from current-position gauge"}
+    if after.is_game_over(claim_draw=True):
+        receipt["reason"] = "postmove_terminal"
+        return receipt
+    started = time.monotonic()
+    reply, final, packets = search(budget_ms, position=after, publish=False, fresh=True, depth=depth)
+    receipt["elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
+    receipt["reply_uci"] = reply.move.uci() if isinstance(reply.move, chess.Move) else None
+    if receipt["elapsed_ms"] > budget_ms + 20:
+        receipt["reason"] = "postmove_verification_timeout"
+        return receipt
+    if not isinstance(final, dict) or final.get("multipv", 1) != 1:
+        return receipt
+    line = _score_line(after, final, reply.move) if isinstance(reply.move, chess.Move) else None
+    packet = packets.get(final.get("depth")) if isinstance(packets, dict) else None
+    completed = (_score_line(after, packet, reply.move)
+                 if isinstance(packet, dict) and packet.get("multipv", 1) == 1 and line else None)
+    receipt["line"] = line
+    if (line is None or line["depth"] < depth or completed != line
+            or _cp_pv_ends_in_mate(after, line)):
+        return receipt
+    # score_line is from the opponent-to-move's view. White CP is invariant.
+    own_cp = -line["cp"]
+    disagreement = max(abs(own_cp - candidate[key]["cp"])
+                       for key in ("candidate_compared", "candidate_final"))
+    receipt.update(cp_own=own_cp, cp_white=line["cp_white"], disagreement_cp=disagreement)
+    if own_cp < floor_cp:
+        receipt["reason"] = "postmove_below_band_floor"
+    elif disagreement > POSTMOVE_MAX_DELTA_CP:
+        receipt["reason"] = "postmove_score_disagreement"
+    else:
+        receipt.update(valid=True, reason="postmove_verified")
+    return receipt
 
 
 def _choose_verified(board, baseline_move, baseline, probes, control, seed):
@@ -431,7 +499,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     """
     started = time.monotonic()
     rows = _rows(decisions)
-    finite_baseline = boss_play.score_line(board, baseline_info, baseline_move)
+    finite_baseline = _score_line(board, baseline_info, baseline_move)
     reference_mate = _mate_reference(board, baseline_info, baseline_move) if finite_baseline is None else None
     baseline = finite_baseline or reference_mate
     absolute = reference_mate is not None and reference_mate["mate"] > 0 and len(board.move_stack) < RAMP_PLY
@@ -446,7 +514,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     control = _target(board, profile, baseline["cp"]) if finite_baseline else {
         "active": phase(board) != "finish", "basis": "own_engine_selected_root",
         "lower_cp": -BAND_CP, "upper_cp": BAND_CP, "target_cp": TARGET_CP,
-        "baseline_cp": None, "selected_cp": None, "selected_final_cp": None,
+        "baseline_cp": None, "selected_cp": None, "selected_final_cp": None, "selected_postmove_cp": None,
         "status": "unmet" if reference_mate else "unavailable", "deviation_cp": None,
         "pre30_inside": False if reference_mate else None,
         "pre40_inside": False if reference_mate else None,
@@ -471,6 +539,8 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
               "max_loss_cp": max(0, baseline["cp"] + BAND_CP) if finite_baseline else None,
               "position_floor_cp": -BAND_CP, "reliability": reliability,
               "comparison_basis": None, "reference_revalidation": None,
+              "verification_policy": POSTMOVE_POLICY, "postmove_verification": None,
+              "postmove_reserved_ms": 0,
               "discovery": [], "probes": [], "naturalness": None,
               "baseline_budget_ms": movetime_ms, "extra_budget_ms": extra, "extra_elapsed_ms": 0,
               "analysis_only": analysis_only, "candidate_budget_ms": 0,
@@ -483,12 +553,16 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         result["extra_elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
         cp, final_cp = control.get("selected_cp"), control.get("selected_final_cp")
         known = type(cp) in (int, float) and type(final_cp) in (int, float)
-        inside = all(-BAND_CP <= value <= BAND_CP for value in (cp, final_cp)) if known else False if reference_mate else None
+        values = [cp, final_cp]
+        postmove_cp = control.get("selected_postmove_cp")
+        if type(postmove_cp) in (int, float):
+            values.append(postmove_cp)
+        inside = all(-BAND_CP <= value <= BAND_CP for value in values) if known else False if reference_mate else None
         control["pre30_inside"] = control["pre40_inside"] = control["pre50_inside"] = inside
         control["strict_band_status"] = "met" if inside is True else "unmet" if inside is False else "unavailable"
         control["strict_deviation_cp"] = max(max(-BAND_CP - value, value - BAND_CP, 0)
-                                              for value in (cp, final_cp)) if known else None
-        control["pacing_status"] = ("met" if known and max(_deviation(control, value) for value in (cp, final_cp)) == 0
+                                              for value in values) if known else None
+        control["pacing_status"] = ("met" if known and max(_deviation(control, value) for value in values) == 0
                                     else "unmet") if control["pacing_applied"] else "inactive"
         result["selected_cp_own"] = cp
         result["selected_cp_white"] = cp * (1 if board.turn else -1) if known else None
@@ -499,10 +573,10 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         elif not known or unavailable:
             control.update(status="unavailable", failure_reason=reason,
                            deviation_cp=max(max(control["lower_cp"] - value, value - control["nominal_upper_cp"], 0)
-                                            for value in (cp, final_cp)) if known else None)
+                                            for value in values) if known else None)
         else:
             deviation = max(max(control["lower_cp"] - value, value - control["nominal_upper_cp"], 0)
-                            for value in (cp, final_cp))
+                            for value in values)
             control.update(status="met" if deviation == 0 else "unmet", deviation_cp=round(deviation, 3),
                            failure_reason=None if deviation == 0 else reason)
         control["recovered"] = bool(control["status"] == "met" and baseline
@@ -561,6 +635,11 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
 
     deadline = started + extra / 1000
     result["candidate_budget_ms"] = round(max(0, (deadline - time.monotonic()) * 1000), 3)
+    if result["candidate_budget_ms"] < POSTMOVE_MIN_MS:
+        return finish("postmove_verification_budget", unavailable=True)
+    reserved = min(POSTMOVE_MAX_MS, max(POSTMOVE_MIN_MS,
+                   result["candidate_budget_ms"] * POSTMOVE_RESERVE_FRACTION))
+    result["postmove_reserved_ms"] = round(reserved, 3)
     done, expired = threading.Event(), threading.Event()
     def expire():
         if not done.is_set():
@@ -573,21 +652,22 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     timer.daemon = True
     timer.start()
     failure = None
+    chosen = None
     try:
         if absolute:
             result["comparison_basis"] = "exact_winning_mate_reference"
         elif reliability["reliability"] == "stable":
             result["comparison_basis"] = "stable_completed_depth"
         else:
-            remaining = (deadline - time.monotonic()) * 1000
+            remaining = (deadline - time.monotonic()) * 1000 - reserved
             budget = min(350, remaining * .25)
             if budget < 25:
                 failure = "reference_revalidation_budget"
             else:
                 rechecked, final, packets = search(budget, root_move=baseline_move, publish=False,
                                                     fresh=True, depth=baseline["depth"])
-                line = boss_play.score_line(board, packets.get(baseline["depth"]), baseline_move)
-                latest = boss_play.score_line(board, final, baseline_move)
+                line = _score_line(board, packets.get(baseline["depth"]), baseline_move)
+                latest = _score_line(board, final, baseline_move)
                 valid = (rechecked.move == baseline_move and line is not None and latest is not None
                          and latest["depth"] >= baseline["depth"]
                          and abs(line["cp"] - baseline["cp"]) <= REFERENCE_TOLERANCE_CP
@@ -604,7 +684,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
 
         if failure is None:
             discovery_started = time.monotonic()
-            discovery_budget = min(650, max(0, (deadline - discovery_started) * 1000) * .42)
+            discovery_budget = min(650, max(0, (deadline - discovery_started) * 1000 - reserved) * .42)
             result["discovery_budget_ms"] = round(discovery_budget, 3)
             discovery_deadline = discovery_started + discovery_budget / 1000
             excluded = {baseline_move}
@@ -640,7 +720,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                     failure = "discovery_invalid_move"
                     break
                 excluded.add(move)
-                line = boss_play.score_line(board, packets.get(DISCOVERY_DEPTH), move)
+                line = _score_line(board, packets.get(DISCOVERY_DEPTH), move)
                 natural = naturalness(board, move, pacing=pacing, resource_guard=resource_guard)
                 result["discovery"].append({"uci": move.uci(), "line": line, "naturalness": natural,
                     "source": source, "rough_cp": line["cp"] if line else None,
@@ -652,7 +732,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                 abs(row["line"]["cp"] - control["target_cp"]) if row["line"] else 100000,
                 -row["naturalness"]["style_points"], row["uci"]))
             for index, candidate in enumerate(candidates[:MAX_PROBES]):
-                remaining = (deadline - time.monotonic()) * 1000
+                remaining = (deadline - time.monotonic()) * 1000 - reserved
                 if failure or remaining < 25 or expired.is_set():
                     break
                 budget = remaining / max(1, min(MAX_PROBES, len(candidates)) - index)
@@ -667,7 +747,10 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                 probe["naturalness"] = candidate["naturalness"]
                 if probe["admitted"]:
                     compared, latest = probe["candidate_compared"], probe["candidate_final"]
-                    if _cp_pv_ends_in_mate(board, compared) or _cp_pv_ends_in_mate(board, latest):
+                    if (_score_line(board, packets.get(verification_depth), move) is None
+                            or _score_line(board, final, move) is None):
+                        probe.update(admitted=False, reason="candidate_nonprimary_or_invalid_score")
+                    elif _cp_pv_ends_in_mate(board, compared) or _cp_pv_ends_in_mate(board, latest):
                         probe.update(admitted=False, reason="candidate_score_pv_conflict")
                     elif not absolute and probe["reference_delta_cp"] < -25:
                         probe.update(admitted=False, reason="candidate_reference_conflict")
@@ -679,6 +762,22 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                                                    for cp in (compared["cp"], latest["cp"]))
                 result["probes"].append(probe)
                 result["probe_budget_sum_ms"] += round(budget, 3)
+        if failure is None:
+            chosen = _choose_verified(board, baseline_move, baseline, result["probes"], control, seed)
+            if chosen["probe"] is not None:
+                budget = min(POSTMOVE_MAX_MS, (deadline - time.monotonic()) * 1000)
+                if budget < POSTMOVE_MIN_MS or expired.is_set():
+                    failure = "postmove_verification_budget"
+                else:
+                    verified = _postmove_verification(board, chess.Move.from_uci(chosen["uci"]),
+                        chosen["probe"], search, depth=max(MIN_DEPTH, verification_depth - 1),
+                        budget_ms=budget, floor_cp=control["lower_cp"])
+                    result["postmove_verification"] = verified
+                    if not verified["valid"]:
+                        failure = verified["reason"]
+                    else:
+                        chosen["inside"] = (chosen["inside"] and
+                            control["lower_cp"] <= verified["cp_own"] <= control["upper_cp"])
     except Exception as error:
         failure = "candidate_search_failed"
         result["error"] = type(error).__name__
@@ -691,13 +790,14 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         return finish("extra_budget_timeout", True, unavailable=True)
     if failure:
         return finish(failure, discarded, unavailable=True)
-    chosen = _choose_verified(board, baseline_move, baseline, result["probes"], control, seed)
     probe = chosen["probe"]
     if probe is not None:
         result.update(selected_uci=probe["uci"], loss_cp=probe["loss_cp"],
                       candidate_compared=probe["candidate_compared"], candidate_final=probe["candidate_final"],
                       naturalness=probe["naturalness"], pressure=probe["pressure"])
-        control.update(selected_cp=chosen["cp"], selected_final_cp=chosen["final_cp"])
+        control.update(selected_cp=chosen["cp"], selected_final_cp=chosen["final_cp"],
+                       selected_postmove_cp=result["postmove_verification"]["cp_own"],
+                       basis="own_engine_selected_root_with_postmove_check")
         if control["pacing_applied"] and chosen["inside"] and not all(
                 control["lower_cp"] <= value <= control["nominal_upper_cp"] for value in (chosen["cp"], chosen["final_cp"])):
             return finish("accepted_paced_recovery")
@@ -717,6 +817,10 @@ def pgn_headers(metadata):
     headers = {"SparringMode": "1", "SparringPolicy": metadata["policy"],
                "SparringScope": "Adaptive practice concessions; full-strength finish; no guaranteed win"}
     seed = metadata.get("seed")
+    if metadata.get("evaluation_policy") == sparring_evaluation.POLICY:
+        headers["SparringEvaluationPolicy"] = sparring_evaluation.POLICY
+    if metadata.get("verification_policy") == POSTMOVE_POLICY:
+        headers["SparringVerificationPolicy"] = POSTMOVE_POLICY
     if isinstance(seed, str) and re.fullmatch(r"[0-9a-f]{32}", seed):
         headers["SparringSeed"] = seed
     return headers

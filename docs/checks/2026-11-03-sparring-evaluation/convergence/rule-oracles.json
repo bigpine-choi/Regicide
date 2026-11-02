@@ -1,0 +1,4805 @@
+[
+  {
+    "id": "englund-mate-one",
+    "criterion": "mate_in_one",
+    "source_url": "https://www.chess.com/openings/englund-gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "d2d4",
+      "e7e5",
+      "d4e5",
+      "b8c6",
+      "g1f3",
+      "d8e7",
+      "c1f4",
+      "e7b4",
+      "f4d2",
+      "b4b2",
+      "d2c3",
+      "f8b4",
+      "d1d2",
+      "b4c3",
+      "d2c3"
+    ],
+    "fen": "r1b1k1nr/pppp1ppp/2n5/4P3/8/2Q2N2/PqP1PPPP/RN2KB1R b KQkq - 0 8",
+    "expected_uci": [
+      "b2c1"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2983.801200054586,
+      "returned_uci": "b2c1",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 5.058499984443188,
+          "info": {
+            "depth": 1,
+            "seldepth": 4,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 47,
+            "time": 0.002,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 5.984399933367968,
+          "info": {
+            "string": "pvs probes 36 researches 1"
+          }
+        },
+        {
+          "received_ms": 6.202399963513017,
+          "info": {
+            "string": "see calls 8"
+          }
+        },
+        {
+          "received_ms": 6.348799914121628,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.441700039431453,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 6.521499948576093,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 6.610600044950843,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 6.711599882692099,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 6.938799982890487,
+          "info": {
+            "depth": 2,
+            "seldepth": 6,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 182,
+            "time": 0.002,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.675200002267957,
+          "info": {
+            "string": "pvs probes 72 researches 1"
+          }
+        },
+        {
+          "received_ms": 7.864200044423342,
+          "info": {
+            "string": "see calls 134"
+          }
+        },
+        {
+          "received_ms": 8.010399993509054,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 8.090999908745289,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.157699834555387,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.218499831855297,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.278500055894256,
+          "info": {
+            "string": "tt probes 38 hits 1 cutoffs 0 stores 38 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 8.337999926880002,
+          "info": {
+            "depth": 3,
+            "seldepth": 6,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 1233,
+            "time": 0.004,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 8.398799924179912,
+          "info": {
+            "string": "pvs probes 1033 researches 1"
+          }
+        },
+        {
+          "received_ms": 8.518500020727515,
+          "info": {
+            "string": "see calls 250"
+          }
+        },
+        {
+          "received_ms": 8.691899944096804,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 8.783499943092465,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.85219988413155,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.91330000013113,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.97249998524785,
+          "info": {
+            "string": "tt probes 111 hits 38 cutoffs 0 stores 111 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 16.5716998744756,
+          "info": {
+            "depth": 4,
+            "seldepth": 13,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 4411,
+            "time": 0.013,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 16.856499947607517,
+          "info": {
+            "string": "pvs probes 1994 researches 1"
+          }
+        },
+        {
+          "received_ms": 17.016399884596467,
+          "info": {
+            "string": "see calls 2443"
+          }
+        },
+        {
+          "received_ms": 17.163599841296673,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 17.265599919483066,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 17.353300005197525,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 17.444900004193187,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 17.53169996663928,
+          "info": {
+            "string": "tt probes 1145 hits 165 cutoffs 54 stores 1090 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 57.48609988950193,
+          "info": {
+            "depth": 5,
+            "seldepth": 13,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 25419,
+            "time": 0.054,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 57.740099960938096,
+          "info": {
+            "string": "pvs probes 21007 researches 1"
+          }
+        },
+        {
+          "received_ms": 57.85169987939298,
+          "info": {
+            "string": "see calls 4475"
+          }
+        },
+        {
+          "received_ms": 57.92779987677932,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 57.993599912151694,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 58.05699992924929,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 58.11879993416369,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 58.18010005168617,
+          "info": {
+            "string": "tt probes 3086 hits 1353 cutoffs 274 stores 2806 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 205.65689983777702,
+          "info": {
+            "depth": 6,
+            "seldepth": 16,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 82577,
+            "time": 0.202,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 205.94029990024865,
+          "info": {
+            "string": "pvs probes 40020 researches 1"
+          }
+        },
+        {
+          "received_ms": 206.05619996786118,
+          "info": {
+            "string": "see calls 50662"
+          }
+        },
+        {
+          "received_ms": 206.13199984654784,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 206.19759988039732,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 206.28629997372627,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 206.34949998930097,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 206.41149999573827,
+          "info": {
+            "string": "tt probes 23820 hits 5497 cutoffs 2743 stores 20988 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 848.9741999655962,
+          "info": {
+            "depth": 7,
+            "seldepth": 16,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 424462,
+            "time": 0.845,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 849.1835000459105,
+          "info": {
+            "string": "pvs probes 348000 researches 1"
+          }
+        },
+        {
+          "received_ms": 849.2825999855995,
+          "info": {
+            "string": "see calls 91710"
+          }
+        },
+        {
+          "received_ms": 849.3530999403447,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 849.4165998417884,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 849.4774999562651,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 849.5379998348653,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 849.5962999295443,
+          "info": {
+            "string": "tt probes 61092 hits 28486 cutoffs 8869 stores 51523 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2982.939299894497,
+          "info": {
+            "depth": 7,
+            "seldepth": 21,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 1269954,
+            "time": 2.98,
+            "pv": [
+              "b2c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.1840000115335,
+          "info": {
+            "string": "pvs probes 613897 researches 1"
+          }
+        },
+        {
+          "received_ms": 2983.2949000410736,
+          "info": {
+            "string": "see calls 915310"
+          }
+        },
+        {
+          "received_ms": 2983.371299924329,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.4393998607993,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.5073999129236,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2983.5723000578582,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2983.635699842125,
+          "info": {
+            "string": "tt probes 353976 hits 92598 cutoffs 51367 stores 281772 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2983.801200054586,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": -1,
+        "root": "b2c1",
+        "winner": "black",
+        "pv_uci": [
+          "b2c1"
+        ],
+        "received_ms": 2982.939299894497,
+        "nodes": 1269954,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "stafford-mate-two",
+    "criterion": "mate_in_two",
+    "source_url": "https://www.chess.com/openings/Petrovs-Defense-Classical-Stafford-Gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "e2e4",
+      "e7e5",
+      "g1f3",
+      "g8f6",
+      "f3e5",
+      "b8c6",
+      "e5c6",
+      "d7c6",
+      "d2d3",
+      "f8c5",
+      "c1g5",
+      "f6e4",
+      "g5d8"
+    ],
+    "fen": "r1bBk2r/ppp2ppp/2p5/2b5/4n3/3P4/PPP2PPP/RN1QKB1R b KQkq - 0 7",
+    "expected_uci": [
+      "c5f2"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2983.762500109151,
+      "returned_uci": "c5f2",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 5.695299943909049,
+          "info": {
+            "depth": 1,
+            "seldepth": 10,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 161,
+            "time": 0.002,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 5.86259993724525,
+          "info": {
+            "string": "pvs probes 37 researches 2"
+          }
+        },
+        {
+          "received_ms": 6.155699957162142,
+          "info": {
+            "string": "see calls 78"
+          }
+        },
+        {
+          "received_ms": 6.423000013455749,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.507100071758032,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 6.576900137588382,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 6.645299959927797,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 6.7096001002937555,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 6.773500004783273,
+          "info": {
+            "depth": 2,
+            "seldepth": 12,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 680,
+            "time": 0.004,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 6.837100023403764,
+          "info": {
+            "string": "pvs probes 74 researches 2"
+          }
+        },
+        {
+          "received_ms": 6.931799929589033,
+          "info": {
+            "string": "see calls 495"
+          }
+        },
+        {
+          "received_ms": 7.013699971139431,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 7.081100018694997,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 7.144800154492259,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.206999929621816,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.2697000578045845,
+          "info": {
+            "string": "tt probes 40 hits 1 cutoffs 0 stores 40 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 11.147100012749434,
+          "info": {
+            "depth": 3,
+            "seldepth": 14,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 2699,
+            "time": 0.008,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 11.468400014564395,
+          "info": {
+            "string": "pvs probes 1183 researches 7"
+          }
+        },
+        {
+          "received_ms": 11.829399969428778,
+          "info": {
+            "string": "see calls 1306"
+          }
+        },
+        {
+          "received_ms": 12.09160010330379,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 12.267899932339787,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 12.436199933290482,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 12.551899999380112,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 12.618300039321184,
+          "info": {
+            "string": "tt probes 117 hits 40 cutoffs 0 stores 117 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 34.817400155588984,
+          "info": {
+            "depth": 4,
+            "seldepth": 14,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 12290,
+            "time": 0.031,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 35.01960006542504,
+          "info": {
+            "string": "pvs probes 2292 researches 7"
+          }
+        },
+        {
+          "received_ms": 35.29960010200739,
+          "info": {
+            "string": "see calls 8809"
+          }
+        },
+        {
+          "received_ms": 35.52020015195012,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 35.68119998089969,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 35.76290002092719,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 35.831900080665946,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 35.896999994292855,
+          "info": {
+            "string": "tt probes 1303 hits 160 cutoffs 43 stores 1259 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 100.04590009339154,
+          "info": {
+            "depth": 5,
+            "seldepth": 17,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 41807,
+            "time": 0.096,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 100.39740009233356,
+          "info": {
+            "string": "pvs probes 24400 researches 7"
+          }
+        },
+        {
+          "received_ms": 100.71710008196533,
+          "info": {
+            "string": "see calls 15454"
+          }
+        },
+        {
+          "received_ms": 100.91800009831786,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 101.0847999714315,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 101.2242001015693,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 101.38630005531013,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 101.55260004103184,
+          "info": {
+            "string": "tt probes 3555 hits 1632 cutoffs 381 stores 3169 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 444.11080004647374,
+          "info": {
+            "depth": 6,
+            "seldepth": 17,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 179166,
+            "time": 0.441,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 444.36409999616444,
+          "info": {
+            "string": "pvs probes 46508 researches 7"
+          }
+        },
+        {
+          "received_ms": 444.4774000439793,
+          "info": {
+            "string": "see calls 103653"
+          }
+        },
+        {
+          "received_ms": 444.5528001524508,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 444.6235001087189,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 444.7047000285238,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 444.7719999589026,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 444.8494000826031,
+          "info": {
+            "string": "tt probes 27577 hits 5505 cutoffs 2383 stores 25093 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 1522.760400082916,
+          "info": {
+            "depth": 7,
+            "seldepth": 23,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 685762,
+            "time": 1.519,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 1523.0885001365095,
+          "info": {
+            "string": "pvs probes 436381 researches 7"
+          }
+        },
+        {
+          "received_ms": 1523.2061999849975,
+          "info": {
+            "string": "see calls 197303"
+          }
+        },
+        {
+          "received_ms": 1523.2866001315415,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 1523.3579000923783,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 1523.4264000318944,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 1523.4948999714106,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 1523.56220013462,
+          "info": {
+            "string": "tt probes 71681 hits 32599 cutoffs 9355 stores 61300 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2982.8405999578536,
+          "info": {
+            "depth": 7,
+            "seldepth": 23,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -2,
+              "score_white_with_mate": -99998
+            },
+            "nodes": 1276361,
+            "time": 2.98,
+            "pv": [
+              "c5f2",
+              "e1e2",
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.1191999837756,
+          "info": {
+            "string": "pvs probes 535521 researches 7"
+          }
+        },
+        {
+          "received_ms": 2983.2266999874264,
+          "info": {
+            "string": "see calls 561515"
+          }
+        },
+        {
+          "received_ms": 2983.310699928552,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.3895000629127,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.459500130266,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2983.53200010024,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2983.5980001371354,
+          "info": {
+            "string": "tt probes 179353 hits 50756 cutoffs 19487 stores 150582 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2983.762500109151,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": -2,
+        "root": "c5f2",
+        "winner": "black",
+        "pv_uci": [
+          "c5f2",
+          "e1e2",
+          "c8g4"
+        ],
+        "received_ms": 2982.8405999578536,
+        "nodes": 1276361,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "stafford-mate-one",
+    "criterion": "mate_in_one",
+    "source_url": "https://www.chess.com/openings/Petrovs-Defense-Classical-Stafford-Gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "e2e4",
+      "e7e5",
+      "g1f3",
+      "g8f6",
+      "f3e5",
+      "b8c6",
+      "e5c6",
+      "d7c6",
+      "d2d3",
+      "f8c5",
+      "c1g5",
+      "f6e4",
+      "g5d8",
+      "c5f2",
+      "e1e2"
+    ],
+    "fen": "r1bBk2r/ppp2ppp/2p5/8/4n3/3P4/PPP1KbPP/RN1Q1B1R b kq - 1 8",
+    "expected_uci": [
+      "c8g4"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2983.5426001809537,
+      "returned_uci": "c8g4",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 6.7998000886291265,
+          "info": {
+            "depth": 1,
+            "seldepth": 10,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 545,
+            "time": 0.004,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.300400175154209,
+          "info": {
+            "string": "pvs probes 37 researches 5"
+          }
+        },
+        {
+          "received_ms": 7.426700089126825,
+          "info": {
+            "string": "see calls 422"
+          }
+        },
+        {
+          "received_ms": 7.504699984565377,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 7.5749000534415245,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 7.650400046259165,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.715299958363175,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.780400104820728,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 7.845000131055713,
+          "info": {
+            "depth": 2,
+            "seldepth": 10,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 835,
+            "time": 0.004,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.909500040113926,
+          "info": {
+            "string": "pvs probes 74 researches 5"
+          }
+        },
+        {
+          "received_ms": 7.972500054165721,
+          "info": {
+            "string": "see calls 667"
+          }
+        },
+        {
+          "received_ms": 8.037199964746833,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 8.1001000944525,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.173499954864383,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.23469995521009,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.296200074255466,
+          "info": {
+            "string": "tt probes 39 hits 1 cutoffs 0 stores 39 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 9.808000177145004,
+          "info": {
+            "depth": 3,
+            "seldepth": 13,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 2171,
+            "time": 0.007,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 10.060700122267008,
+          "info": {
+            "string": "pvs probes 1110 researches 5"
+          }
+        },
+        {
+          "received_ms": 10.350900003686547,
+          "info": {
+            "string": "see calls 944"
+          }
+        },
+        {
+          "received_ms": 10.480200173333287,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 10.566400131210685,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 10.636199964210391,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 10.70460001938045,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 10.766700142994523,
+          "info": {
+            "string": "tt probes 114 hits 39 cutoffs 0 stores 114 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 22.685700096189976,
+          "info": {
+            "depth": 4,
+            "seldepth": 13,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 6905,
+            "time": 0.019,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 22.938600042834878,
+          "info": {
+            "string": "pvs probes 2146 researches 5"
+          }
+        },
+        {
+          "received_ms": 23.033800069242716,
+          "info": {
+            "string": "see calls 4756"
+          }
+        },
+        {
+          "received_ms": 23.106700042262673,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 23.17499998025596,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 23.241300135850906,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 23.306800052523613,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 23.371600080281496,
+          "info": {
+            "string": "tt probes 1225 hits 168 cutoffs 54 stores 1170 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 66.05709996074438,
+          "info": {
+            "depth": 5,
+            "seldepth": 14,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 27103,
+            "time": 0.063,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 66.26800005324185,
+          "info": {
+            "string": "pvs probes 19075 researches 5"
+          }
+        },
+        {
+          "received_ms": 66.38350011780858,
+          "info": {
+            "string": "see calls 7717"
+          }
+        },
+        {
+          "received_ms": 66.45980011671782,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 66.53059995733202,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 66.59760000184178,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 66.66370015591383,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 66.72909995540977,
+          "info": {
+            "string": "tt probes 3317 hits 1550 cutoffs 382 stores 2931 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 231.83590010739863,
+          "info": {
+            "depth": 6,
+            "seldepth": 17,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 90218,
+            "time": 0.229,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 232.23279998637736,
+          "info": {
+            "string": "pvs probes 36004 researches 5"
+          }
+        },
+        {
+          "received_ms": 232.467400142923,
+          "info": {
+            "string": "see calls 48310"
+          }
+        },
+        {
+          "received_ms": 232.65699995681643,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 232.73589997552335,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 232.80600016005337,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 232.87130007520318,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 232.93450009077787,
+          "info": {
+            "string": "tt probes 22009 hits 5713 cutoffs 2803 stores 19114 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 836.5657001268119,
+          "info": {
+            "depth": 7,
+            "seldepth": 22,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 362477,
+            "time": 0.833,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 836.9548001792282,
+          "info": {
+            "string": "pvs probes 266165 researches 5"
+          }
+        },
+        {
+          "received_ms": 837.0757000520825,
+          "info": {
+            "string": "see calls 80709"
+          }
+        },
+        {
+          "received_ms": 837.1566000860184,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 837.2278001625091,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 837.2965999878943,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 837.3645001556724,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 837.4292999505997,
+          "info": {
+            "string": "tt probes 55179 hits 27940 cutoffs 9718 stores 44814 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2982.6339001301676,
+          "info": {
+            "depth": 7,
+            "seldepth": 22,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 1188290,
+            "time": 2.98,
+            "pv": [
+              "c8g4"
+            ]
+          }
+        },
+        {
+          "received_ms": 2982.9114000312984,
+          "info": {
+            "string": "pvs probes 492592 researches 5"
+          }
+        },
+        {
+          "received_ms": 2983.0325001385063,
+          "info": {
+            "string": "see calls 536811"
+          }
+        },
+        {
+          "received_ms": 2983.108500018716,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.177399961278,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.24179998599,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2983.3049001172185,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2983.3677001297474,
+          "info": {
+            "string": "tt probes 306955 hits 89116 cutoffs 49258 stores 241419 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2983.5426001809537,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": -1,
+        "root": "c8g4",
+        "winner": "black",
+        "pv_uci": [
+          "c8g4"
+        ],
+        "received_ms": 2982.6339001301676,
+        "nodes": 1188290,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "budapest-smothered-mate",
+    "criterion": "mate_in_one",
+    "source_url": "https://www.chess.com/openings/Budapest-Gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "d2d4",
+      "g8f6",
+      "c2c4",
+      "e7e5",
+      "d4e5",
+      "f6g4",
+      "g1f3",
+      "b8c6",
+      "c1f4",
+      "f8b4",
+      "b1d2",
+      "d8e7",
+      "a2a3",
+      "g4e5",
+      "a3b4"
+    ],
+    "fen": "r1b1k2r/ppppqppp/2n5/4n3/1PP2B2/5N2/1P1NPPPP/R2QKB1R b KQkq - 0 8",
+    "expected_uci": [
+      "e5d3"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2984.017499955371,
+      "returned_uci": "e5d3",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 6.538900081068277,
+          "info": {
+            "depth": 1,
+            "seldepth": 15,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 338,
+            "time": 0.003,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.312499918043613,
+          "info": {
+            "string": "pvs probes 36 researches 3"
+          }
+        },
+        {
+          "received_ms": 7.4390999507158995,
+          "info": {
+            "string": "see calls 323"
+          }
+        },
+        {
+          "received_ms": 7.5194998644292355,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 7.590600056573749,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 7.660500006750226,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.75299989618361,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.83149991184473,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 7.900699973106384,
+          "info": {
+            "depth": 2,
+            "seldepth": 15,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 634,
+            "time": 0.004,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.967900019139051,
+          "info": {
+            "string": "pvs probes 72 researches 3"
+          }
+        },
+        {
+          "received_ms": 8.036100072786212,
+          "info": {
+            "string": "see calls 671"
+          }
+        },
+        {
+          "received_ms": 8.10409989207983,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 8.171800058335066,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.236499968916178,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.300299989059567,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.364300010725856,
+          "info": {
+            "string": "tt probes 38 hits 1 cutoffs 0 stores 38 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 9.482000023126602,
+          "info": {
+            "depth": 3,
+            "seldepth": 15,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 2027,
+            "time": 0.006,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 9.669400053098798,
+          "info": {
+            "string": "pvs probes 1302 researches 3"
+          }
+        },
+        {
+          "received_ms": 9.873299859464169,
+          "info": {
+            "string": "see calls 987"
+          }
+        },
+        {
+          "received_ms": 10.09549992159009,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 10.190200060606003,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 10.264199925586581,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 10.385999921709299,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 10.555499931797385,
+          "info": {
+            "string": "tt probes 111 hits 38 cutoffs 0 stores 111 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 35.23300006054342,
+          "info": {
+            "depth": 4,
+            "seldepth": 15,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 12153,
+            "time": 0.031,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 35.45599989593029,
+          "info": {
+            "string": "pvs probes 2532 researches 3"
+          }
+        },
+        {
+          "received_ms": 35.55979998782277,
+          "info": {
+            "string": "see calls 13127"
+          }
+        },
+        {
+          "received_ms": 35.654000006616116,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 35.98179994150996,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 36.19110002182424,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 36.29159997217357,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 36.40029998496175,
+          "info": {
+            "string": "tt probes 1409 hits 166 cutoffs 55 stores 1354 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 110.49479991197586,
+          "info": {
+            "depth": 5,
+            "seldepth": 15,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 46819,
+            "time": 0.106,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 110.76819989830256,
+          "info": {
+            "string": "pvs probes 31340 researches 3"
+          }
+        },
+        {
+          "received_ms": 110.88449996896088,
+          "info": {
+            "string": "see calls 23407"
+          }
+        },
+        {
+          "received_ms": 110.97289994359016,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 111.04559991508722,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 111.11449985764921,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 111.18029989302158,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 111.24669993296266,
+          "info": {
+            "string": "tt probes 3877 hits 1714 cutoffs 363 stores 3513 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 576.1027000844479,
+          "info": {
+            "depth": 6,
+            "seldepth": 19,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 237958,
+            "time": 0.572,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 576.4589000027627,
+          "info": {
+            "string": "pvs probes 60148 researches 3"
+          }
+        },
+        {
+          "received_ms": 576.6326999291778,
+          "info": {
+            "string": "see calls 233999"
+          }
+        },
+        {
+          "received_ms": 576.8711999990046,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 577.1750998683274,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 577.3922000080347,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 577.4970999918878,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 577.5762000121176,
+          "info": {
+            "string": "tt probes 34738 hits 6448 cutoffs 2983 stores 31592 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2039.2489999067038,
+          "info": {
+            "depth": 7,
+            "seldepth": 19,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 960092,
+            "time": 2.035,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 2039.4991000648588,
+          "info": {
+            "string": "pvs probes 658931 researches 3"
+          }
+        },
+        {
+          "received_ms": 2039.6090000867844,
+          "info": {
+            "string": "see calls 425539"
+          }
+        },
+        {
+          "received_ms": 2039.695299929008,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2039.7651998791844,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2039.8333999328315,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2039.898700080812,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2039.9630998726934,
+          "info": {
+            "string": "tt probes 91680 hits 39936 cutoffs 11510 stores 78543 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2983.1214000005275,
+          "info": {
+            "depth": 7,
+            "seldepth": 21,
+            "score": {
+              "pov": "black",
+              "cp_white": null,
+              "mate_white": -1,
+              "score_white_with_mate": -99999
+            },
+            "nodes": 1356041,
+            "time": 2.98,
+            "pv": [
+              "e5d3"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.349399873987,
+          "info": {
+            "string": "pvs probes 721076 researches 3"
+          }
+        },
+        {
+          "received_ms": 2983.4710999857634,
+          "info": {
+            "string": "see calls 797571"
+          }
+        },
+        {
+          "received_ms": 2983.5580999497324,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.631599927321,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.708499930799,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2983.7779998779297,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2983.844199916348,
+          "info": {
+            "string": "tt probes 158393 hits 53441 cutoffs 21036 stores 130035 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2984.017499955371,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": -1,
+        "root": "e5d3",
+        "winner": "black",
+        "pv_uci": [
+          "e5d3"
+        ],
+        "received_ms": 2983.1214000005275,
+        "nodes": 1356041,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "legal-mate-two",
+    "criterion": "mate_in_two",
+    "source_url": "https://www.chess.com/terms/legals-mate-chess",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "e2e4",
+      "e7e5",
+      "g1f3",
+      "d7d6",
+      "f1c4",
+      "c8g4",
+      "b1c3",
+      "g7g6",
+      "f3e5",
+      "g4d1"
+    ],
+    "fen": "rn1qkbnr/ppp2p1p/3p2p1/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+    "expected_uci": [
+      "c4f7"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2983.970900066197,
+      "returned_uci": "c4f7",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 5.406300071626902,
+          "info": {
+            "depth": 1,
+            "seldepth": 10,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 126,
+            "time": 0.002,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 5.6102999951690435,
+          "info": {
+            "string": "pvs probes 39 researches 2"
+          }
+        },
+        {
+          "received_ms": 5.7258999440819025,
+          "info": {
+            "string": "see calls 76"
+          }
+        },
+        {
+          "received_ms": 5.8067000936716795,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 5.878000054508448,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 5.9455998707562685,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 6.266699871048331,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 6.557599874213338,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 6.643400061875582,
+          "info": {
+            "depth": 2,
+            "seldepth": 10,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 746,
+            "time": 0.004,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 6.713999900966883,
+          "info": {
+            "string": "pvs probes 78 researches 2"
+          }
+        },
+        {
+          "received_ms": 6.782100070267916,
+          "info": {
+            "string": "see calls 642"
+          }
+        },
+        {
+          "received_ms": 6.848199991509318,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.912400014698505,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 6.9754000287503,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.039800053462386,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.103899959474802,
+          "info": {
+            "string": "tt probes 42 hits 1 cutoffs 0 stores 42 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 11.653099907562137,
+          "info": {
+            "depth": 3,
+            "seldepth": 11,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 2822,
+            "time": 0.009,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 11.859799968078732,
+          "info": {
+            "string": "pvs probes 1382 researches 3"
+          }
+        },
+        {
+          "received_ms": 12.016499880701303,
+          "info": {
+            "string": "see calls 1524"
+          }
+        },
+        {
+          "received_ms": 12.160199927166104,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 12.330699944868684,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 12.473199982196093,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 12.560300063341856,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 12.636099942028522,
+          "info": {
+            "string": "tt probes 123 hits 42 cutoffs 0 stores 123 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 38.36479992605746,
+          "info": {
+            "depth": 4,
+            "seldepth": 13,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 13398,
+            "time": 0.035,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 38.61639997921884,
+          "info": {
+            "string": "pvs probes 2686 researches 3"
+          }
+        },
+        {
+          "received_ms": 38.73079991899431,
+          "info": {
+            "string": "see calls 10745"
+          }
+        },
+        {
+          "received_ms": 38.8132999651134,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 38.88339991681278,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 38.95050007849932,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 39.018499897792935,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 39.08340004272759,
+          "info": {
+            "string": "tt probes 1508 hits 211 cutoffs 88 stores 1419 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 112.93180007487535,
+          "info": {
+            "depth": 5,
+            "seldepth": 13,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 46277,
+            "time": 0.11,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 113.13469987362623,
+          "info": {
+            "string": "pvs probes 29165 researches 3"
+          }
+        },
+        {
+          "received_ms": 113.22699999436736,
+          "info": {
+            "string": "see calls 17811"
+          }
+        },
+        {
+          "received_ms": 113.30200009979308,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 113.37379994802177,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 113.44360001385212,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 113.51049994118512,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 113.57779987156391,
+          "info": {
+            "string": "tt probes 4109 hits 1953 cutoffs 543 stores 3561 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 588.6983999516815,
+          "info": {
+            "depth": 6,
+            "seldepth": 19,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 224745,
+            "time": 0.586,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 588.9671999029815,
+          "info": {
+            "string": "pvs probes 55644 researches 3"
+          }
+        },
+        {
+          "received_ms": 589.0633999370039,
+          "info": {
+            "string": "see calls 174647"
+          }
+        },
+        {
+          "received_ms": 589.1394000500441,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 589.2056999728084,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 589.2707000020891,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 589.3341000191867,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 589.398399926722,
+          "info": {
+            "string": "tt probes 32734 hits 6572 cutoffs 3071 stores 29509 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2071.9294999726117,
+          "info": {
+            "depth": 7,
+            "seldepth": 22,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 846892,
+            "time": 2.069,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 2072.280399966985,
+          "info": {
+            "string": "pvs probes 551699 researches 3"
+          }
+        },
+        {
+          "received_ms": 2072.4374998826534,
+          "info": {
+            "string": "see calls 313961"
+          }
+        },
+        {
+          "received_ms": 2072.5436999928206,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2072.652200004086,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2072.7440000046045,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2072.878200095147,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2072.970800101757,
+          "info": {
+            "string": "tt probes 85310 hits 39556 cutoffs 12693 stores 71154 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2983.091800007969,
+          "info": {
+            "depth": 7,
+            "seldepth": 22,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 2,
+              "score_white_with_mate": 99998
+            },
+            "nodes": 1200478,
+            "time": 2.98,
+            "pv": [
+              "c4f7",
+              "e8e7",
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.354700030759,
+          "info": {
+            "string": "pvs probes 611877 researches 3"
+          }
+        },
+        {
+          "received_ms": 2983.4493999369442,
+          "info": {
+            "string": "see calls 560631"
+          }
+        },
+        {
+          "received_ms": 2983.5343998856843,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.6035000626,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.6685000918806,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2983.7340000085533,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2983.797899913043,
+          "info": {
+            "string": "tt probes 150821 hits 51411 cutoffs 19235 stores 124297 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2983.970900066197,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": 2,
+        "root": "c4f7",
+        "winner": "white",
+        "pv_uci": [
+          "c4f7",
+          "e8e7",
+          "c3d5"
+        ],
+        "received_ms": 2983.091800007969,
+        "nodes": 1200478,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "legal-mate-one",
+    "criterion": "mate_in_one",
+    "source_url": "https://www.chess.com/terms/legals-mate-chess",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "e2e4",
+      "e7e5",
+      "g1f3",
+      "d7d6",
+      "f1c4",
+      "c8g4",
+      "b1c3",
+      "g7g6",
+      "f3e5",
+      "g4d1",
+      "c4f7",
+      "e8e7"
+    ],
+    "fen": "rn1q1bnr/ppp1kB1p/3p2p1/4N3/4P3/2N5/PPPP1PPP/R1BbK2R w KQ - 1 7",
+    "expected_uci": [
+      "c3d5"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2985.325099900365,
+      "returned_uci": "c3d5",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 6.479100091382861,
+          "info": {
+            "depth": 1,
+            "seldepth": 9,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 345,
+            "time": 0.003,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 6.652100011706352,
+          "info": {
+            "string": "pvs probes 37 researches 1"
+          }
+        },
+        {
+          "received_ms": 6.7652000579983,
+          "info": {
+            "string": "see calls 367"
+          }
+        },
+        {
+          "received_ms": 6.846900098025799,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.917000049725175,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 6.984499981626868,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.050500018522143,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.114799926057458,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 8.333199890330434,
+          "info": {
+            "depth": 2,
+            "seldepth": 9,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 733,
+            "time": 0.005,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 8.495199959725142,
+          "info": {
+            "string": "pvs probes 74 researches 1"
+          }
+        },
+        {
+          "received_ms": 8.591300109401345,
+          "info": {
+            "string": "see calls 749"
+          }
+        },
+        {
+          "received_ms": 8.666400099173188,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 8.734900038689375,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.803100092336535,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.86770011857152,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.932899916544557,
+          "info": {
+            "string": "tt probes 39 hits 1 cutoffs 0 stores 39 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 11.964499950408936,
+          "info": {
+            "depth": 3,
+            "seldepth": 9,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 2115,
+            "time": 0.009,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 12.146600056439638,
+          "info": {
+            "string": "pvs probes 1216 researches 1"
+          }
+        },
+        {
+          "received_ms": 12.232699897140265,
+          "info": {
+            "string": "see calls 1111"
+          }
+        },
+        {
+          "received_ms": 12.307200115174055,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 12.37610005773604,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 12.442799983546138,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 12.506900122389197,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 12.569899903610349,
+          "info": {
+            "string": "tt probes 114 hits 39 cutoffs 0 stores 114 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 27.665500063449144,
+          "info": {
+            "depth": 4,
+            "seldepth": 11,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 7766,
+            "time": 0.024,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 28.031500056385994,
+          "info": {
+            "string": "pvs probes 2358 researches 1"
+          }
+        },
+        {
+          "received_ms": 28.196899918839335,
+          "info": {
+            "string": "see calls 6898"
+          }
+        },
+        {
+          "received_ms": 28.275999939069152,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 28.3460000064224,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 28.41300005093217,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 28.482900001108646,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 28.551500057801604,
+          "info": {
+            "string": "tt probes 1331 hits 217 cutoffs 103 stores 1228 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 93.90589990653098,
+          "info": {
+            "depth": 5,
+            "seldepth": 13,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 31864,
+            "time": 0.09,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 94.19510001316667,
+          "info": {
+            "string": "pvs probes 22146 researches 1"
+          }
+        },
+        {
+          "received_ms": 94.30349990725517,
+          "info": {
+            "string": "see calls 12195"
+          }
+        },
+        {
+          "received_ms": 94.3819999229163,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 94.45090009830892,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 94.51749990694225,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 94.5838000625372,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 94.65250000357628,
+          "info": {
+            "string": "tt probes 3587 hits 1714 cutoffs 493 stores 3089 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 338.313200045377,
+          "info": {
+            "depth": 6,
+            "seldepth": 14,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 115096,
+            "time": 0.335,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 338.5520000010729,
+          "info": {
+            "string": "pvs probes 41934 researches 1"
+          }
+        },
+        {
+          "received_ms": 338.6544999666512,
+          "info": {
+            "string": "see calls 82883"
+          }
+        },
+        {
+          "received_ms": 338.7297000735998,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 338.7976000085473,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 338.8640999328345,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 338.92860007472336,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 338.99280009791255,
+          "info": {
+            "string": "tt probes 25241 hits 6766 cutoffs 3721 stores 21405 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 1326.6245999839157,
+          "info": {
+            "depth": 7,
+            "seldepth": 17,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 494533,
+            "time": 1.323,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 1326.8740000203252,
+          "info": {
+            "string": "pvs probes 338321 researches 1"
+          }
+        },
+        {
+          "received_ms": 1326.98559993878,
+          "info": {
+            "string": "see calls 162054"
+          }
+        },
+        {
+          "received_ms": 1327.066000085324,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 1327.136900043115,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 1327.2104999050498,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 1327.2774000652134,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 1327.34280009754,
+          "info": {
+            "string": "tt probes 63455 hits 32329 cutoffs 12221 stores 50459 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2983.07320009917,
+          "info": {
+            "depth": 7,
+            "seldepth": 19,
+            "score": {
+              "pov": "white",
+              "cp_white": null,
+              "mate_white": 1,
+              "score_white_with_mate": 99999
+            },
+            "nodes": 1016811,
+            "time": 2.98,
+            "pv": [
+              "c3d5"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.3583999425173,
+          "info": {
+            "string": "pvs probes 455121 researches 1"
+          }
+        },
+        {
+          "received_ms": 2983.7336000055075,
+          "info": {
+            "string": "see calls 638976"
+          }
+        },
+        {
+          "received_ms": 2984.0520001016557,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 2984.3756000045687,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2984.645399963483,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2984.8871000576764,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2985.0631000008434,
+          "info": {
+            "string": "tt probes 192103 hits 59733 cutoffs 29290 stores 154477 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2985.325099900365,
+      "result": {
+        "depth": 7,
+        "cp": null,
+        "mate": 1,
+        "root": "c3d5",
+        "winner": "white",
+        "pv_uci": [
+          "c3d5"
+        ],
+        "received_ms": 2983.07320009917,
+        "nodes": 1016811,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "englund-avoid-greedy-recapture",
+    "criterion": "avoid_mate_in_one",
+    "source_url": "https://www.chess.com/openings/englund-gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "d2d4",
+      "e7e5",
+      "d4e5",
+      "b8c6",
+      "g1f3",
+      "d8e7",
+      "c1f4",
+      "e7b4",
+      "f4d2",
+      "b4b2",
+      "d2c3",
+      "f8b4",
+      "d1d2",
+      "b4c3"
+    ],
+    "fen": "r1b1k1nr/pppp1ppp/2n5/4P3/8/2b2N2/PqPQPPPP/RN2KB1R w KQkq - 0 8",
+    "expected_uci": [
+      "b1a3",
+      "b1c3",
+      "e1d1",
+      "e2e3",
+      "e2e4"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2984.53600006178,
+      "returned_uci": "b1c3",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 5.649100057780743,
+          "info": {
+            "depth": 1,
+            "seldepth": 11,
+            "score": {
+              "pov": "white",
+              "cp_white": -596,
+              "mate_white": null,
+              "score_white_with_mate": -596
+            },
+            "nodes": 227,
+            "time": 0.002,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5"
+            ]
+          }
+        },
+        {
+          "received_ms": 6.219899980351329,
+          "info": {
+            "string": "pvs probes 17 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.333400029689074,
+          "info": {
+            "string": "see calls 284"
+          }
+        },
+        {
+          "received_ms": 6.409799912944436,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.4808998722583055,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 6.553000072017312,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 6.621700013056397,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 6.686799926683307,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 6.751100067049265,
+          "info": {
+            "depth": 2,
+            "seldepth": 11,
+            "score": {
+              "pov": "white",
+              "cp_white": -596,
+              "mate_white": null,
+              "score_white_with_mate": -596
+            },
+            "nodes": 484,
+            "time": 0.003,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5"
+            ]
+          }
+        },
+        {
+          "received_ms": 6.8147999700158834,
+          "info": {
+            "string": "pvs probes 71 researches 0"
+          }
+        },
+        {
+          "received_ms": 6.878299871459603,
+          "info": {
+            "string": "see calls 567"
+          }
+        },
+        {
+          "received_ms": 6.9420000072568655,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 7.004200015217066,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 7.067299913614988,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 7.130200043320656,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 7.192299934104085,
+          "info": {
+            "string": "tt probes 20 hits 1 cutoffs 0 stores 20 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 7.685499964281917,
+          "info": {
+            "depth": 3,
+            "seldepth": 14,
+            "score": {
+              "pov": "white",
+              "cp_white": -596,
+              "mate_white": null,
+              "score_white_with_mate": -596
+            },
+            "nodes": 1358,
+            "time": 0.005,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5"
+            ]
+          }
+        },
+        {
+          "received_ms": 7.784700021147728,
+          "info": {
+            "string": "pvs probes 191 researches 2"
+          }
+        },
+        {
+          "received_ms": 7.85840000025928,
+          "info": {
+            "string": "see calls 1425"
+          }
+        },
+        {
+          "received_ms": 7.926400052383542,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 7.9910000786185265,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 8.059199899435043,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 8.137499913573265,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 8.200000040233135,
+          "info": {
+            "string": "tt probes 92 hits 20 cutoffs 0 stores 92 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 12.075599981471896,
+          "info": {
+            "depth": 4,
+            "seldepth": 14,
+            "score": {
+              "pov": "white",
+              "cp_white": -596,
+              "mate_white": null,
+              "score_white_with_mate": -596
+            },
+            "nodes": 3271,
+            "time": 0.009,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5"
+            ]
+          }
+        },
+        {
+          "received_ms": 12.291499879211187,
+          "info": {
+            "string": "pvs probes 1473 researches 2"
+          }
+        },
+        {
+          "received_ms": 12.59489986114204,
+          "info": {
+            "string": "see calls 2628"
+          }
+        },
+        {
+          "received_ms": 12.948499992489815,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 13.178899884223938,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 13.336800038814545,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 13.498799875378609,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 13.69170006364584,
+          "info": {
+            "string": "tt probes 283 hits 94 cutoffs 2 stores 281 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 38.82519993931055,
+          "info": {
+            "depth": 5,
+            "seldepth": 18,
+            "score": {
+              "pov": "white",
+              "cp_white": -587,
+              "mate_white": null,
+              "score_white_with_mate": -587
+            },
+            "nodes": 14385,
+            "time": 0.035,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5",
+              "d2f4"
+            ]
+          }
+        },
+        {
+          "received_ms": 39.02649995870888,
+          "info": {
+            "string": "pvs probes 3749 researches 5"
+          }
+        },
+        {
+          "received_ms": 39.14369991980493,
+          "info": {
+            "string": "see calls 13594"
+          }
+        },
+        {
+          "received_ms": 39.22290005721152,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 39.291299879550934,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 39.36009993776679,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 39.42669997923076,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 39.49159989133477,
+          "info": {
+            "string": "tt probes 1754 hits 327 cutoffs 46 stores 1708 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 117.18349996954203,
+          "info": {
+            "depth": 6,
+            "seldepth": 18,
+            "score": {
+              "pov": "white",
+              "cp_white": -587,
+              "mate_white": null,
+              "score_white_with_mate": -587
+            },
+            "nodes": 52503,
+            "time": 0.114,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5",
+              "d2a5",
+              "e5f3",
+              "e2f3"
+            ]
+          }
+        },
+        {
+          "received_ms": 117.46019986458123,
+          "info": {
+            "string": "pvs probes 31043 researches 17"
+          }
+        },
+        {
+          "received_ms": 117.77879996225238,
+          "info": {
+            "string": "see calls 29421"
+          }
+        },
+        {
+          "received_ms": 117.86050000227988,
+          "info": {
+            "string": "lmr reductions 8 researches 0"
+          }
+        },
+        {
+          "received_ms": 117.95839993283153,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 118.03449993021786,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 118.10429999604821,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 118.17130004055798,
+          "info": {
+            "string": "tt probes 5423 hits 2160 cutoffs 467 stores 4948 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 357.21329995431006,
+          "info": {
+            "depth": 7,
+            "seldepth": 23,
+            "score": {
+              "pov": "white",
+              "cp_white": -587,
+              "mate_white": null,
+              "score_white_with_mate": -587
+            },
+            "nodes": 149420,
+            "time": 0.354,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5",
+              "d2a5",
+              "e5f3",
+              "e2f3"
+            ]
+          }
+        },
+        {
+          "received_ms": 357.46819991618395,
+          "info": {
+            "string": "pvs probes 60042 researches 17"
+          }
+        },
+        {
+          "received_ms": 357.5597999151796,
+          "info": {
+            "string": "see calls 119333"
+          }
+        },
+        {
+          "received_ms": 357.6404000632465,
+          "info": {
+            "string": "lmr reductions 516 researches 0"
+          }
+        },
+        {
+          "received_ms": 357.7459999360144,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 357.82149992883205,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 357.8898999840021,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 357.9569000285119,
+          "info": {
+            "string": "tt probes 27292 hits 7147 cutoffs 2984 stores 24108 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 1354.799299966544,
+          "info": {
+            "depth": 8,
+            "seldepth": 23,
+            "score": {
+              "pov": "white",
+              "cp_white": -599,
+              "mate_white": null,
+              "score_white_with_mate": -599
+            },
+            "nodes": 628609,
+            "time": 1.351,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5",
+              "f3e5",
+              "a1e5",
+              "f2f4",
+              "e5e4"
+            ]
+          }
+        },
+        {
+          "received_ms": 1355.235500028357,
+          "info": {
+            "string": "pvs probes 422302 researches 28"
+          }
+        },
+        {
+          "received_ms": 1355.4746999870986,
+          "info": {
+            "string": "see calls 287611"
+          }
+        },
+        {
+          "received_ms": 1355.6873998604715,
+          "info": {
+            "string": "lmr reductions 1369 researches 0"
+          }
+        },
+        {
+          "received_ms": 1355.8668000623584,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 1355.9419999364763,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 1356.0106998775154,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 1356.0800999403,
+          "info": {
+            "string": "tt probes 83609 hits 33905 cutoffs 10088 stores 69780 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2982.67970001325,
+          "info": {
+            "depth": 8,
+            "seldepth": 28,
+            "score": {
+              "pov": "white",
+              "cp_white": -599,
+              "mate_white": null,
+              "score_white_with_mate": -599
+            },
+            "nodes": 1277296,
+            "time": 2.98,
+            "pv": [
+              "b1c3",
+              "b2a1",
+              "c3d1",
+              "c6e5",
+              "f3e5",
+              "a1e5",
+              "f2f4",
+              "e5e4"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.039499958977,
+          "info": {
+            "string": "pvs probes 644103 researches 34"
+          }
+        },
+        {
+          "received_ms": 2983.3686999045312,
+          "info": {
+            "string": "see calls 872352"
+          }
+        },
+        {
+          "received_ms": 2983.5884999483824,
+          "info": {
+            "string": "lmr reductions 5453 researches 0"
+          }
+        },
+        {
+          "received_ms": 2983.7618998717517,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.930499991402,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2984.072299906984,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2984.1924000065774,
+          "info": {
+            "string": "tt probes 220982 hits 65032 cutoffs 28173 stores 178546 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2984.53600006178,
+      "result": {
+        "depth": 8,
+        "cp": -599,
+        "mate": null,
+        "root": "b1c3",
+        "winner": null,
+        "pv_uci": [
+          "b1c3",
+          "b2a1",
+          "c3d1",
+          "c6e5",
+          "f3e5",
+          "a1e5",
+          "f2f4",
+          "e5e4"
+        ],
+        "received_ms": 2982.67970001325,
+        "nodes": 1277296,
+        "engine_time_ms": 2980.0
+      },
+      "converged": true,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  },
+  {
+    "id": "budapest-avoid-bishop-bait",
+    "criterion": "avoid_mate_in_one",
+    "source_url": "https://www.chess.com/openings/Budapest-Gambit",
+    "source_scope": "opening or mating pattern definition",
+    "authorship": "project-authored legal continuation and fixture selection",
+    "history_uci": [
+      "d2d4",
+      "g8f6",
+      "c2c4",
+      "e7e5",
+      "d4e5",
+      "f6g4",
+      "g1f3",
+      "b8c6",
+      "c1f4",
+      "f8b4",
+      "b1d2",
+      "d8e7",
+      "a2a3",
+      "g4e5"
+    ],
+    "fen": "r1b1k2r/ppppqppp/2n5/4n3/1bP2B2/P4N2/1P1NPPPP/R2QKB1R w KQkq - 0 8",
+    "expected_uci": [
+      "d1a4",
+      "d1b1",
+      "d1b3",
+      "d1c1",
+      "d1c2",
+      "e2e3",
+      "e2e4",
+      "f3e5",
+      "f4e3",
+      "f4e5"
+    ],
+    "oracle": "all legal moves; mate-in-two checks every legal defense",
+    "trace": {
+      "requested_ms": 3000,
+      "completed_ms": 2984.3138998840004,
+      "returned_uci": "f3e5",
+      "engine": {
+        "engine_id": {
+          "name": "Regicide 0.7.0-dev",
+          "author": "Regicide project"
+        },
+        "configured_options": {
+          "Hash": 16,
+          "UsePieceActivity": true,
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "Move Overhead": 20
+        },
+        "search_threads": 1,
+        "threads_uci_option": false,
+        "default_options": {
+          "Move Overhead": 20,
+          "UsePositionalEvaluation": true,
+          "UseQuiescence": true,
+          "UseTranspositionTable": true,
+          "Hash": 16,
+          "Clear Hash": null,
+          "UseFastMoves": true,
+          "UseQuietMoveOrdering": true,
+          "UseQuiescenceChecks": true,
+          "UseQuiescenceThreats": false,
+          "UseQuiescenceThreatCache": false,
+          "UseTacticalThreatOrdering": false,
+          "UseQuiescenceReplyBudget": false,
+          "PVS": true,
+          "UseSEE": true,
+          "UsePawnShield": true,
+          "UsePawnStructure": true,
+          "UsePieceActivity": false,
+          "UseLMR": true,
+          "EvalFile": "<empty>",
+          "UseNeuralEvaluation": false,
+          "UseNNUEEvaluation": false,
+          "NeuralModelFile": "<builtin>",
+          "UseIncrementalNeuralEvaluation": true
+        }
+      },
+      "events": [
+        {
+          "received_ms": 7.967199897393584,
+          "info": {
+            "depth": 1,
+            "seldepth": 16,
+            "score": {
+              "pov": "white",
+              "cp_white": 27,
+              "mate_white": null,
+              "score_white_with_mate": 27
+            },
+            "nodes": 972,
+            "time": 0.005,
+            "pv": [
+              "e2e3"
+            ]
+          }
+        },
+        {
+          "received_ms": 8.417699951678514,
+          "info": {
+            "string": "pvs probes 28 researches 2"
+          }
+        },
+        {
+          "received_ms": 8.754899958148599,
+          "info": {
+            "string": "see calls 971"
+          }
+        },
+        {
+          "received_ms": 9.086299920454621,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 9.298899909481406,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 9.478899883106351,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 9.59019991569221,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 9.666699916124344,
+          "info": {
+            "string": "tt probes 1 hits 0 cutoffs 0 stores 1 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 14.330299803987145,
+          "info": {
+            "depth": 2,
+            "seldepth": 16,
+            "score": {
+              "pov": "white",
+              "cp_white": 30,
+              "mate_white": null,
+              "score_white_with_mate": 30
+            },
+            "nodes": 3322,
+            "time": 0.012,
+            "pv": [
+              "e2e3",
+              "b4c5"
+            ]
+          }
+        },
+        {
+          "received_ms": 14.488699845969677,
+          "info": {
+            "string": "pvs probes 118 researches 3"
+          }
+        },
+        {
+          "received_ms": 14.597499975934625,
+          "info": {
+            "string": "see calls 3606"
+          }
+        },
+        {
+          "received_ms": 14.678800012916327,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 14.75089997984469,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 14.819399919360876,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 14.88999999128282,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 14.976999955251813,
+          "info": {
+            "string": "tt probes 31 hits 1 cutoffs 0 stores 31 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 25.73349978774786,
+          "info": {
+            "depth": 3,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "cp_white": 37,
+              "mate_white": null,
+              "score_white_with_mate": 37
+            },
+            "nodes": 7287,
+            "time": 0.022,
+            "pv": [
+              "e2e3",
+              "e5f3",
+              "d1f3"
+            ]
+          }
+        },
+        {
+          "received_ms": 26.024999795481563,
+          "info": {
+            "string": "pvs probes 500 researches 7"
+          }
+        },
+        {
+          "received_ms": 26.115099899470806,
+          "info": {
+            "string": "see calls 7668"
+          }
+        },
+        {
+          "received_ms": 26.18869999423623,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 26.256099808961153,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 26.322499848902225,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 26.387899881228805,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 26.45219978876412,
+          "info": {
+            "string": "tt probes 130 hits 32 cutoffs 0 stores 130 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 78.18729989230633,
+          "info": {
+            "depth": 4,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "cp_white": 28,
+              "mate_white": null,
+              "score_white_with_mate": 28
+            },
+            "nodes": 27996,
+            "time": 0.075,
+            "pv": [
+              "f3e5",
+              "c6e5",
+              "e2e3",
+              "b4c5"
+            ]
+          }
+        },
+        {
+          "received_ms": 78.59489996917546,
+          "info": {
+            "string": "pvs probes 5965 researches 25"
+          }
+        },
+        {
+          "received_ms": 78.88909988105297,
+          "info": {
+            "string": "see calls 26579"
+          }
+        },
+        {
+          "received_ms": 79.1907999664545,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 79.44219978526235,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 79.60879988968372,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 79.76609980687499,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 79.86149983480573,
+          "info": {
+            "string": "tt probes 862 hits 243 cutoffs 91 stores 771 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 129.25120000727475,
+          "info": {
+            "depth": 5,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "cp_white": 43,
+              "mate_white": null,
+              "score_white_with_mate": 43
+            },
+            "nodes": 48300,
+            "time": 0.126,
+            "pv": [
+              "f3e5",
+              "c6e5",
+              "e2e3",
+              "b4d2",
+              "d1d2"
+            ]
+          }
+        },
+        {
+          "received_ms": 129.5635998249054,
+          "info": {
+            "string": "pvs probes 13374 researches 27"
+          }
+        },
+        {
+          "received_ms": 129.70089982263744,
+          "info": {
+            "string": "see calls 44906"
+          }
+        },
+        {
+          "received_ms": 129.81999991461635,
+          "info": {
+            "string": "lmr reductions 0 researches 0"
+          }
+        },
+        {
+          "received_ms": 129.90289996378124,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 130.0589998718351,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 130.16109983436763,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 130.24869980290532,
+          "info": {
+            "string": "tt probes 2835 hits 723 cutoffs 173 stores 2662 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 457.38109992817044,
+          "info": {
+            "depth": 6,
+            "seldepth": 24,
+            "score": {
+              "pov": "white",
+              "cp_white": 17,
+              "mate_white": null,
+              "score_white_with_mate": 17
+            },
+            "nodes": 172760,
+            "time": 0.454,
+            "pv": [
+              "f3e5",
+              "c6e5",
+              "f4e5",
+              "b4d2",
+              "d1d2",
+              "e7e5"
+            ]
+          }
+        },
+        {
+          "received_ms": 457.7043999452144,
+          "info": {
+            "string": "pvs probes 52241 researches 39"
+          }
+        },
+        {
+          "received_ms": 457.8387998044491,
+          "info": {
+            "string": "see calls 158976"
+          }
+        },
+        {
+          "received_ms": 457.93829998001456,
+          "info": {
+            "string": "lmr reductions 120 researches 0"
+          }
+        },
+        {
+          "received_ms": 458.087399834767,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 458.184199873358,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 458.3042999729514,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 458.50809989497066,
+          "info": {
+            "string": "tt probes 10323 hits 3282 cutoffs 1044 stores 9251 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 1256.639199797064,
+          "info": {
+            "depth": 7,
+            "seldepth": 24,
+            "score": {
+              "pov": "white",
+              "cp_white": 42,
+              "mate_white": null,
+              "score_white_with_mate": 42
+            },
+            "nodes": 475224,
+            "time": 1.253,
+            "pv": [
+              "f3e5",
+              "c6e5",
+              "f4e5",
+              "b4d2",
+              "d1d2",
+              "e7e5",
+              "e1c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 1256.8924999795854,
+          "info": {
+            "string": "pvs probes 167066 researches 40"
+          }
+        },
+        {
+          "received_ms": 1257.035099901259,
+          "info": {
+            "string": "see calls 423851"
+          }
+        },
+        {
+          "received_ms": 1257.170599885285,
+          "info": {
+            "string": "lmr reductions 886 researches 0"
+          }
+        },
+        {
+          "received_ms": 1257.309200009331,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 1257.4548998381943,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 1257.8079998493195,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 1257.9655998852104,
+          "info": {
+            "string": "tt probes 43166 hits 11077 cutoffs 4071 stores 38661 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        },
+        {
+          "received_ms": 2982.734599849209,
+          "info": {
+            "depth": 7,
+            "seldepth": 31,
+            "score": {
+              "pov": "white",
+              "cp_white": 42,
+              "mate_white": null,
+              "score_white_with_mate": 42
+            },
+            "nodes": 1201303,
+            "time": 2.98,
+            "pv": [
+              "f3e5",
+              "c6e5",
+              "f4e5",
+              "b4d2",
+              "d1d2",
+              "e7e5",
+              "e1c1"
+            ]
+          }
+        },
+        {
+          "received_ms": 2983.1601998303086,
+          "info": {
+            "string": "pvs probes 598786 researches 43"
+          }
+        },
+        {
+          "received_ms": 2983.4420999977738,
+          "info": {
+            "string": "see calls 852903"
+          }
+        },
+        {
+          "received_ms": 2983.644399791956,
+          "info": {
+            "string": "lmr reductions 2412 researches 7"
+          }
+        },
+        {
+          "received_ms": 2983.8167999405414,
+          "info": {
+            "string": "qthreat candidates 0 extensions 0 defenses 0 pruned 0"
+          }
+        },
+        {
+          "received_ms": 2983.9642997831106,
+          "info": {
+            "string": "qcache probes 0 hits 0 cutoffs 0 stores 0 bytes 0"
+          }
+        },
+        {
+          "received_ms": 2984.0755998156965,
+          "info": {
+            "string": "rootthreat candidates 0 searches 0"
+          }
+        },
+        {
+          "received_ms": 2984.1414999682456,
+          "info": {
+            "string": "tt probes 115626 hits 40273 cutoffs 12048 stores 97142 allocations 1 reuses 0 clears 0 bytes 16777208"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "cutoff_ms": 2984.3138998840004,
+      "result": {
+        "depth": 7,
+        "cp": 42,
+        "mate": null,
+        "root": "f3e5",
+        "winner": null,
+        "pv_uci": [
+          "f3e5",
+          "c6e5",
+          "f4e5",
+          "b4d2",
+          "d1d2",
+          "e7e5",
+          "e1c1"
+        ],
+        "received_ms": 2982.734599849209,
+        "nodes": 1201303,
+        "engine_time_ms": 2980.0
+      },
+      "converged": false,
+      "rejected_score_packets": 0
+    },
+    "selected_pass": true,
+    "score_pass": true,
+    "passed": true
+  }
+]

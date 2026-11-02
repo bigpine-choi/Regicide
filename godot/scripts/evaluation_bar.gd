@@ -84,6 +84,9 @@ func present(value: Dictionary, from_white: bool) -> void:
 	if show_reliability:
 		summary_text += " · " + labels[reliability]
 		detail_text += " · " + labels[reliability]
+	var refinement: Variant = value.get("refinement", {})
+	if status == "searching" and refinement is Dictionary and refinement.get("phase") == "refining":
+		detail_text += " · 정밀 분석 중"
 	tooltip_text = summary_text + "\n" + detail_text + "\n+는 백, −는 흑 우세입니다. 1.00은 폰 한 개에 해당하는 평가 단위입니다.\n막대는 엔진의 추정 형세이며 승률이 아닙니다."
 	if show_reliability:
 		tooltip_text += "\n" + explanations[reliability]

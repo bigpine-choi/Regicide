@@ -1,0 +1,552 @@
+{
+  "schema": "regicide.sparring-native-policy-smoke.v1",
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "fixture_source": null,
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "source_sha256": {
+    "scripts/sparring_play.py": "90ab2c59b5f4705a26f14e117fdbe2dfb7fb71d6d4c4f9dd9352c8b55d7a5346",
+    "scripts/sparring_pacing.py": "cc9cbd73255b214d3f2db16a49a4166a541f82b613607783160890a351305e3c",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+    "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+    "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561"
+  },
+  "baseline_budget_ms": 1000,
+  "maximum_extra_budget_ms": 2000,
+  "scope": "native functional cases with controlled previous observations; not strength or human-feel evidence",
+  "cases": [
+    {
+      "name": "accurate_control",
+      "fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+      "controlled_past_loss_cp": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "configured_options": {
+        "UsePieceActivity": true,
+        "Hash": 16
+      },
+      "past_observation_scope": "test-controlled receipts, not measured skill or a played game",
+      "current_observation_scope": "the latest human move is measured by the real engine",
+      "baseline_elapsed_ms": 982.909,
+      "discard_engine": false,
+      "decision": {
+        "policy": "regicide-sparring-play-v3",
+        "ply": 14,
+        "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "f8c5",
+          "d2d3",
+          "g8f6",
+          "b1c3",
+          "d7d6",
+          "e1g1",
+          "e8g8",
+          "h2h3"
+        ],
+        "color": "black",
+        "selected_uci": "c8e6",
+        "baseline_uci": "c8e6",
+        "baseline": {
+          "uci": "c8e6",
+          "pv_uci": [
+            "c8e6",
+            "c4e6",
+            "f7e6",
+            "c1e3",
+            "f6d7"
+          ],
+          "depth": 5,
+          "cp": 10,
+          "cp_white": -10,
+          "pov": "black"
+        },
+        "reference_mate": null,
+        "loss_cp": 0,
+        "actual_reference_depth": 5,
+        "verification_depth": 5,
+        "compared_depth": 5,
+        "comparison_mode": "relative_cp",
+        "reused": false,
+        "opponent_observation": {
+          "valid": true,
+          "ply": 13,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "f8c5",
+            "d2d3",
+            "g8f6",
+            "b1c3",
+            "d7d6",
+            "e1g1",
+            "e8g8"
+          ],
+          "played_uci": "h2h3",
+          "loss_cp": 21,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 500,
+          "elapsed_ms": 224.781,
+          "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 2 7",
+          "baseline": {
+            "uci": "c1e3",
+            "pv_uci": [
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "c8e6"
+            ],
+            "depth": 4,
+            "cp": 11,
+            "cp_white": 11,
+            "pov": "white"
+          },
+          "candidate_compared": {
+            "uci": "h2h3",
+            "pv_uci": [
+              "h2h3",
+              "c8e6",
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "e6c4",
+              "d3c4"
+            ],
+            "depth": 4,
+            "cp": -10,
+            "cp_white": -10,
+            "pov": "white"
+          }
+        },
+        "profile": {
+          "policy": "regicide-sparring-play-v3",
+          "status": "adapting",
+          "level": 1.0,
+          "confidence": "medium",
+          "confidence_scope": "heuristic evidence coverage, not a probability or rating",
+          "observations": 7,
+          "recent_observations": [
+            {
+              "ply": 1,
+              "played_uci": "e2e4",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 3,
+              "played_uci": "g1f3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 5,
+              "played_uci": "f1c4",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 7,
+              "played_uci": "d2d3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 9,
+              "played_uci": "b1c3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 11,
+              "played_uci": "e1g1",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 13,
+              "played_uci": "h2h3",
+              "loss_cp": 21,
+              "depth": 4
+            }
+          ],
+          "ignored_observations": 0,
+          "conflicting_observations": 0,
+          "observation_weight": 4.5295,
+          "smoothed_loss_cp": 16.734,
+          "skill_target_loss_cp": 0,
+          "target_loss_cp": 0.0,
+          "phase_factor": 1.0,
+          "error_band": "accurate",
+          "phase": "sparring",
+          "history_valid": true,
+          "scope": "current-game own-engine loss estimate; no Elo or win-probability claim"
+        },
+        "phase": "sparring",
+        "band_control": {
+          "active": true,
+          "basis": "own_engine_selected_root",
+          "lower_cp": -100,
+          "upper_cp": 100.0,
+          "target_cp": 30.0,
+          "ramp_fraction": 0.0,
+          "baseline_cp": 10,
+          "selected_cp": 10,
+          "selected_final_cp": 10,
+          "selected_postmove_cp": null,
+          "status": "met",
+          "deviation_cp": 0,
+          "pre30_inside": true,
+          "pre40_inside": true,
+          "pre50_inside": true,
+          "recovered": false,
+          "failure_reason": null,
+          "selection_objective": "inside band first, then nearest target; small-distance ties prefer less concession and natural style",
+          "scope": "own-engine root estimates; selected alternatives also require a recorded post-move counter-search; not a guarantee",
+          "nominal_target_cp": 30.0,
+          "nominal_upper_cp": 100.0,
+          "pacing_applied": false,
+          "strict_band_status": "met",
+          "strict_deviation_cp": 0,
+          "pacing_status": "inactive"
+        },
+        "pacing": {
+          "active": false,
+          "reason": "no_recent_major_loss",
+          "event_ply": null,
+          "stage": null,
+          "debt_cp": 0,
+          "anchor_cp": null,
+          "target_cp": null,
+          "upper_cp": null,
+          "allow_material_return": false,
+          "return_cap_cp": 0,
+          "scope": "delayed practice recovery; no promise of invisibility or band restoration"
+        },
+        "resource_guard": {
+          "active": false,
+          "reason": null,
+          "material_concessions_blocked": false,
+          "nonpawn_cp_total": 6200,
+          "nonpawn_pieces_total": 14,
+          "own_nonpawn_pieces": 7,
+          "pawns_total": 16,
+          "queens": 2,
+          "trigger_ply": null,
+          "scope": "practice resource heuristic; not a proof of mate, draw or forced victory"
+        },
+        "target_loss_cp": 0,
+        "max_loss_cp": 110,
+        "position_floor_cp": -100,
+        "reliability": {
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            -10,
+            -4
+          ],
+          "score_swing_cp": 6,
+          "stable_depths": 2
+        },
+        "comparison_basis": null,
+        "reference_revalidation": null,
+        "verification_policy": "regicide-sparring-postmove-v1",
+        "postmove_verification": null,
+        "postmove_reserved_ms": 0,
+        "discovery": [],
+        "probes": [],
+        "naturalness": null,
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 2000,
+        "extra_elapsed_ms": 227.794,
+        "analysis_only": false,
+        "candidate_budget_ms": 0,
+        "quality_budget_ms": 500,
+        "discovery_budget_ms": 0,
+        "probe_budget_sum_ms": 0,
+        "reason": "baseline_inside_band",
+        "scope": "position feedback from own-engine scores; no continuous-band or victory guarantee",
+        "selected_cp_own": 10,
+        "selected_cp_white": -10
+      }
+    },
+    {
+      "name": "frequent_error_control",
+      "fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+      "controlled_past_loss_cp": [
+        250,
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "configured_options": {
+        "UsePieceActivity": true,
+        "Hash": 16
+      },
+      "past_observation_scope": "test-controlled receipts, not measured skill or a played game",
+      "current_observation_scope": "the latest human move is measured by the real engine",
+      "baseline_elapsed_ms": 982.132,
+      "discard_engine": false,
+      "decision": {
+        "policy": "regicide-sparring-play-v3",
+        "ply": 14,
+        "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "f8c5",
+          "d2d3",
+          "g8f6",
+          "b1c3",
+          "d7d6",
+          "e1g1",
+          "e8g8",
+          "h2h3"
+        ],
+        "color": "black",
+        "selected_uci": "c8e6",
+        "baseline_uci": "c8e6",
+        "baseline": {
+          "uci": "c8e6",
+          "pv_uci": [
+            "c8e6",
+            "c4e6",
+            "f7e6",
+            "c1e3",
+            "f6d7"
+          ],
+          "depth": 5,
+          "cp": 10,
+          "cp_white": -10,
+          "pov": "black"
+        },
+        "reference_mate": null,
+        "loss_cp": 0,
+        "actual_reference_depth": 5,
+        "verification_depth": 5,
+        "compared_depth": 5,
+        "comparison_mode": "relative_cp",
+        "reused": false,
+        "opponent_observation": {
+          "valid": true,
+          "ply": 13,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "f8c5",
+            "d2d3",
+            "g8f6",
+            "b1c3",
+            "d7d6",
+            "e1g1",
+            "e8g8"
+          ],
+          "played_uci": "h2h3",
+          "loss_cp": 21,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 500,
+          "elapsed_ms": 223.337,
+          "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 2 7",
+          "baseline": {
+            "uci": "c1e3",
+            "pv_uci": [
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "c8e6"
+            ],
+            "depth": 4,
+            "cp": 11,
+            "cp_white": 11,
+            "pov": "white"
+          },
+          "candidate_compared": {
+            "uci": "h2h3",
+            "pv_uci": [
+              "h2h3",
+              "c8e6",
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "e6c4",
+              "d3c4"
+            ],
+            "depth": 4,
+            "cp": -10,
+            "cp_white": -10,
+            "pov": "white"
+          }
+        },
+        "profile": {
+          "policy": "regicide-sparring-play-v3",
+          "status": "adapting",
+          "level": 0.2575,
+          "confidence": "medium",
+          "confidence_scope": "heuristic evidence coverage, not a probability or rating",
+          "observations": 7,
+          "recent_observations": [
+            {
+              "ply": 1,
+              "played_uci": "e2e4",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 3,
+              "played_uci": "g1f3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 5,
+              "played_uci": "f1c4",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 7,
+              "played_uci": "d2d3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 9,
+              "played_uci": "b1c3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 11,
+              "played_uci": "e1g1",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 13,
+              "played_uci": "h2h3",
+              "loss_cp": 21,
+              "depth": 4
+            }
+          ],
+          "ignored_observations": 0,
+          "conflicting_observations": 0,
+          "observation_weight": 4.5295,
+          "smoothed_loss_cp": 119.0,
+          "skill_target_loss_cp": 89.1,
+          "target_loss_cp": 89.1,
+          "phase_factor": 1.0,
+          "error_band": "frequent_errors",
+          "phase": "sparring",
+          "history_valid": true,
+          "scope": "current-game own-engine loss estimate; no Elo or win-probability claim"
+        },
+        "phase": "sparring",
+        "band_control": {
+          "active": true,
+          "basis": "own_engine_selected_root",
+          "lower_cp": -100,
+          "upper_cp": 100.0,
+          "target_cp": 30.0,
+          "ramp_fraction": 0.0,
+          "baseline_cp": 10,
+          "selected_cp": 10,
+          "selected_final_cp": 10,
+          "selected_postmove_cp": null,
+          "status": "met",
+          "deviation_cp": 0,
+          "pre30_inside": true,
+          "pre40_inside": true,
+          "pre50_inside": true,
+          "recovered": false,
+          "failure_reason": null,
+          "selection_objective": "inside band first, then nearest target; small-distance ties prefer less concession and natural style",
+          "scope": "own-engine root estimates; selected alternatives also require a recorded post-move counter-search; not a guarantee",
+          "nominal_target_cp": 30.0,
+          "nominal_upper_cp": 100.0,
+          "pacing_applied": false,
+          "strict_band_status": "met",
+          "strict_deviation_cp": 0,
+          "pacing_status": "inactive"
+        },
+        "pacing": {
+          "active": false,
+          "reason": "no_recent_major_loss",
+          "event_ply": null,
+          "stage": null,
+          "debt_cp": 0,
+          "anchor_cp": null,
+          "target_cp": null,
+          "upper_cp": null,
+          "allow_material_return": false,
+          "return_cap_cp": 0,
+          "scope": "delayed practice recovery; no promise of invisibility or band restoration"
+        },
+        "resource_guard": {
+          "active": false,
+          "reason": null,
+          "material_concessions_blocked": false,
+          "nonpawn_cp_total": 6200,
+          "nonpawn_pieces_total": 14,
+          "own_nonpawn_pieces": 7,
+          "pawns_total": 16,
+          "queens": 2,
+          "trigger_ply": null,
+          "scope": "practice resource heuristic; not a proof of mate, draw or forced victory"
+        },
+        "target_loss_cp": 0,
+        "max_loss_cp": 110,
+        "position_floor_cp": -100,
+        "reliability": {
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            -10,
+            -4
+          ],
+          "score_swing_cp": 6,
+          "stable_depths": 2
+        },
+        "comparison_basis": null,
+        "reference_revalidation": null,
+        "verification_policy": "regicide-sparring-postmove-v1",
+        "postmove_verification": null,
+        "postmove_reserved_ms": 0,
+        "discovery": [],
+        "probes": [],
+        "naturalness": null,
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 2000,
+        "extra_elapsed_ms": 226.659,
+        "analysis_only": false,
+        "candidate_budget_ms": 0,
+        "quality_budget_ms": 500,
+        "discovery_budget_ms": 0,
+        "probe_budget_sum_ms": 0,
+        "reason": "baseline_inside_band",
+        "scope": "position feedback from own-engine scores; no continuous-band or victory guarantee",
+        "selected_cp_own": 10,
+        "selected_cp_white": -10
+      }
+    }
+  ]
+}

@@ -37,6 +37,7 @@ import boss_play
 import sparring_play
 import sparring_rating
 import evaluation_stability
+import sparring_evaluation
 import game_clock
 import decision_support
 import engine_pacing
@@ -346,7 +347,8 @@ class HumanGame:
         result, termination = self._outcome()
         active = result == "*" and not self.error and self._game_open and not self._closing
         evaluating = active and self._handicap_backup is None and self.board.turn == self.human_color
-        evaluation_budget_ms = (max(LIVE_EVALUATION_MIN_MS, self.movetime_ms) if evaluating else
+        evaluation_budget_ms = ((sparring_evaluation.MAX_BUDGET_MS if self.sparring_mode else
+                                 max(LIVE_EVALUATION_MIN_MS, self.movetime_ms)) if evaluating else
                                 self._active_movetime_ms or self.movetime_ms)
         snapshot = {"game_id": self.game_id, "revision": self.revision,
                     "fen": self.board.fen(en_passant="fen"),
@@ -370,12 +372,14 @@ class HumanGame:
             # The helper evaluates the current human position independently of
             # advice. On the engine's turn its move search already evaluates
             # the same position, so cancel the helper instead of duplicating it.
-            # Stream shallow results immediately, then refine with a budget of
-            # at least 3s; this never extends the opponent's move limit.
+            # Sparring refines an unsettled position for up to 10s, stopping
+            # after 3s when deeper iterations agree. This independent helper
+            # is cancelled on a move and never extends the opponent's limit.
             self._live_evaluation.update_position(
                 game_id=self.game_id, revision=self.revision, board=self.board,
                 human_color=self.human_color, movetime_ms=evaluation_budget_ms,
-                engine_name=self.engine_name, active=evaluating)
+                engine_name=self.engine_name, active=evaluating,
+                precision=self.sparring_mode)
             if not self._closing:
                 self._live_evaluation.set_enabled(evaluating)
         self._hints.update_position(
@@ -386,6 +390,23 @@ class HumanGame:
 
     def _publish_evaluation(self, info):
         """Publish completed-depth opponent-search scores in White's point of view."""
+        # A weak/short sparring move search must not lend an incomplete or
+        # malformed score to the gauge. Child/candidate searches never enter
+        # this path, and no mate is converted to an arbitrary centipawn score.
+        if self.sparring_mode and sparring_evaluation.validate_packet(self.board, info) is None:
+            with self._evaluation_lock:
+                depth = info.get("depth") if isinstance(info, dict) else None
+                if (not self._closing and self._evaluation.get("status") != "terminal"
+                        and type(depth) is int and depth >= 1 and "score" in info
+                        and depth >= max(self._evaluation_packets, default=0)):
+                    # Keep the last exact score but invalidate its old stable
+                    # label when a newer completed iteration is unreliable.
+                    self._evaluation_packets[depth] = dict(info)
+                    self._evaluation_packets = dict(sorted(self._evaluation_packets.items())[-6:])
+                    self._evaluation.update(reliability="provisional", recent_cp_range_white=None,
+                        score_swing_cp=None, stable_depths=0,
+                        retained_previous_score=self._evaluation.get("depth") is not None)
+            return
         score, depth = info.get("score"), info.get("depth")
         if not isinstance(score, chess.engine.PovScore) or type(depth) is not int or depth < 1:
             return
@@ -405,8 +426,12 @@ class HumanGame:
         else:
             share = 0.5 + 0.5 * cp / (abs(cp) + 400.0)
         with self._evaluation_lock:
-            if self._evaluation.get("status") == "terminal":
+            if self._closing or self._evaluation.get("status") == "terminal":
                 return
+            if self.sparring_mode and depth < max(self._evaluation_packets, default=0):
+                return
+            if self.sparring_mode:
+                self._evaluation["retained_previous_score"] = False
             self._evaluation_packets[depth] = dict(info)
             self._evaluation_packets = dict(sorted(self._evaluation_packets.items())[-6:])
             self._evaluation.update(cp=cp, mate=mate, depth=depth,
@@ -1272,6 +1297,8 @@ class HumanGame:
 
     def _sparring_metadata(self):
         return {"enabled": self.sparring_mode, "policy": sparring_play.POLICY, "seed": self._opening_seed,
+                "evaluation_policy": sparring_evaluation.POLICY if self.sparring_mode else None,
+                "verification_policy": sparring_play.POSTMOVE_POLICY if self.sparring_mode else None,
                 "profile": sparring_play.derive_profile(self.board, list(self._sparring_decisions.values())),
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._sparring_decisions.items())]}
 
@@ -1337,6 +1364,7 @@ class HumanGame:
                         self._adjudicate_clock()
                     self._clock.finish()
                     self._game_open = False
+                    self._sync_evaluation(status="unavailable")
                     # A handicap preview must leave the original durable files
                     # byte-for-byte intact. A later session labels its still-
                     # open record unfinished when it is no longer the live ID.

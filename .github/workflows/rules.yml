@@ -134,6 +134,14 @@ jobs:
       - run: python tests/decision_clarity_tests.py
       - run: python tests/installed_think_time_stream_tests.py
       - run: python tests/evaluation_state_tests.py
+      - run: python tests/sparring_evaluation_tests.py
+      - run: python tests/sparring_evaluation_state_tests.py
+      - run: python tests/sparring_evaluation_live_tests.py
+      - run: python tests/sparring_play_tests.py
+      - if: runner.os == 'Linux'
+        run: python tests/sparring_evaluation_integration.py --binary build/regicide --output build/sparring-evaluation-integration
+      - if: runner.os == 'Windows'
+        run: python tests/sparring_evaluation_integration.py --binary build/Release/regicide.exe --output build/sparring-evaluation-integration
       - run: python tests/audit_pvs_results.py --self-test
       - run: python tests/audit_see_results.py --self-test
       - run: python tests/see_clean_guard_tests.py

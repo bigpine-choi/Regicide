@@ -475,6 +475,17 @@ test("candidate SAN is plain text and cannot create markup", async () => {
   assert.equal(label.children.length,0);
 });
 
+test("sparring refinement keeps the exact score while explaining continued analysis", async () => {
+  const state = position();
+  state.evaluation = {game_id:state.game_id, revision:state.revision, fen:state.fen,
+    status:"searching", cp:-275, mate:null, depth:8, bound:"exact", white_share:.3,
+    refinement:{phase:"refining"}};
+  const ui = await browser(state);
+  assert.match(ui.element("evaluation-detail").textContent, /정밀 분석 중/);
+  assert.equal(ui.element("evaluation-score").textContent, "−2.75");
+  assert.equal(ui.element("evaluation-white").style.height, "30%");
+});
+
 test("ranked hints preserve the current gameplay evaluation and board state", async () => {
   const state = position();
   state.evaluation = {game_id:state.game_id,revision:state.revision,fen:state.fen,

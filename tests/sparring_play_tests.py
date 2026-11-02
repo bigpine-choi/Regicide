@@ -289,6 +289,15 @@ class SelectionTests(unittest.TestCase):
             self.assertTrue(options["fresh"])
             if failing:
                 raise TimeoutError("controlled")
+            if options.get("position") is not None:
+                after = options["position"]
+                self.assertIsNone(root_move)
+                self.assertIsNone(root_moves)
+                selected = after.peek()
+                move = sorted(after.legal_moves, key=lambda m: m.uci())[0]
+                value = cp if selected == self.alternative or cp < 0 else 149
+                info = packet(after, move.uci(), -value, options["depth"])
+                return chess.engine.BestMove(move, None), info, {options["depth"]: info}
             move = root_move or (self.alternative if self.alternative in root_moves else root_moves[0])
             depth = 3 if wrong_depth and root_move else options["depth"]
             value = cp if move == self.alternative or cp < 0 else 149
@@ -438,7 +447,8 @@ class PositionFeedbackTests(unittest.TestCase):
         return board
 
     def run_case(self, board, base_uci, cp, candidates, *, depth=5, mate=None, deeper=None,
-                 reference_cp=None, stable=True, rows=(), pacing=None):
+                 reference_cp=None, stable=True, rows=(), pacing=None, child_cp=None, child_change=None,
+                 clock=None, exhaust_before_child=False):
         base_move = chess.Move.from_uci(base_uci)
         info = packet(board, base_uci, cp, depth)
         if mate is not None:
@@ -449,6 +459,21 @@ class PositionFeedbackTests(unittest.TestCase):
         calls = []
         def search(budget, *, root_move=None, root_moves=None, **options):
             calls.append((root_move, options["depth"]))
+            if options.get("position") is not None:
+                after = options["position"]
+                if clock is not None:
+                    clock[0] += budget / 1000
+                selected = after.peek().uci()
+                value = candidates.get(selected, cp if cp is not None else 300) if child_cp is None else child_cp
+                reply = sorted(after.legal_moves, key=lambda move: move.uci())[0]
+                final = packet(after, reply.uci(), -value, options["depth"])
+                if child_change:
+                    final.update(child_change(after, reply, options["depth"]))
+                return chess.engine.BestMove(reply, None), final, {final["depth"]: final}
+            if clock is not None:
+                # A deterministic clock charges exactly the granted search
+                # budget; unlike a sleep this tests reserve accounting itself.
+                clock[0] += budget / 1000
             move = root_move or next((chess.Move.from_uci(uci) for uci in candidates
                                       if chess.Move.from_uci(uci) in root_moves), root_moves[0])
             value = candidates.get(move.uci(), cp if cp is not None else 300)
@@ -457,6 +482,8 @@ class PositionFeedbackTests(unittest.TestCase):
             searched = options["depth"]
             common = packet(board, move.uci(), value, searched)
             final = packet(board, move.uci(), deeper[move.uci()], searched + 1) if deeper and move.uci() in deeper and searched >= 4 else common
+            if exhaust_before_child and clock is not None and root_move and searched >= policy.MIN_DEPTH:
+                clock[0] = 1.95  # Only 50ms of the 2s deadline survives a simulated stall.
             return chess.engine.BestMove(move, None), final, {searched: common, final["depth"]: final}
         unknown = {"valid": False, "forced": False, "reason": "test_unknown", "loss_cp": None}
         with patch.object(policy.sparring_pacing, "derive", return_value=pacing or {"active": False}), patch.object(
@@ -575,6 +602,84 @@ class PositionFeedbackTests(unittest.TestCase):
         self.assertEqual(result["band_control"]["status"], "unmet")
         self.assertFalse(result["band_control"]["recovered"])
 
+    def test_postmove_check_records_both_color_scores_without_replacing_root_evidence(self):
+        for black in (False, True):
+            board = self.archived_position() if not black else chess.Board()
+            if black:
+                board.push_san("e4")
+            baseline, alternative = ("g8f6", "e7e5") if black else ("d4e5", "c1e3")
+            saved = board.copy(stack=True)
+            result, calls = self.run_case(board, baseline, 203, {alternative: 40}, child_cp=65)
+            receipt = result["postmove_verification"]
+            self.assertEqual(result["verification_policy"], policy.POSTMOVE_POLICY)
+            self.assertTrue(receipt["valid"])
+            self.assertEqual(receipt["required_depth"], 4)
+            self.assertEqual(receipt["cp_own"], 65)
+            self.assertEqual(receipt["cp_white"], -65 if black else 65)
+            self.assertEqual(result["selected_cp_own"], 40)  # Keep original-root evidence.
+            self.assertEqual(result["band_control"]["selected_postmove_cp"], 65)
+            after = saved.copy(stack=True)
+            after.push_uci(alternative)
+            self.assertEqual(receipt["after_fen"], after.fen(en_passant="fen"))
+            self.assertEqual(board.fen(), saved.fen())
+            self.assertEqual(board.move_stack, saved.move_stack)
+
+    def test_postmove_floor_or_large_disagreement_rejects_concession(self):
+        for child_cp, reason in ((-101, "postmove_below_band_floor"),
+                                 (113, "postmove_score_disagreement")):
+            with self.subTest(child_cp=child_cp):
+                result, _ = self.run_case(self.archived_position(), "d4e5", 203, {"c1e3": 32}, child_cp=child_cp)
+                self.assertEqual(result["selected_uci"], "d4e5")
+                self.assertEqual(result["reason"], reason)
+                self.assertFalse(result["postmove_verification"]["valid"])
+                self.assertIsNone(result["band_control"]["selected_postmove_cp"])
+                self.assertEqual(result["band_control"]["status"], "unavailable")
+
+    def test_postmove_outside_band_cannot_claim_recovery_even_with_small_disagreement(self):
+        result, _ = self.run_case(self.archived_position(), "d4e5", 203, {"c1e3": 92}, child_cp=120)
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertTrue(result["postmove_verification"]["valid"])
+        self.assertEqual(result["reason"], "closest_verified_outside_band")
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertEqual(result["band_control"]["strict_deviation_cp"], 20)
+        self.assertFalse(result["band_control"]["recovered"])
+
+    def test_postmove_mate_bound_illegal_or_shallow_score_preserves_baseline(self):
+        changes = [lambda after, reply, depth: {"score": chess.engine.PovScore(chess.engine.Mate(2), after.turn)},
+                   lambda after, reply, depth: {"upperbound": True},
+                   lambda after, reply, depth: {"lowerbound": True},
+                   lambda after, reply, depth: {"multipv": 2},
+                   lambda after, reply, depth: {"pv": [chess.Move.null()]},
+                   lambda after, reply, depth: {"pv": []},
+                   lambda after, reply, depth: {"depth": 3},
+                   lambda after, reply, depth: {"score": chess.engine.PovScore(chess.engine.Cp(32), not after.turn)}]
+        for change in changes:
+            with self.subTest(change=change):
+                result, _ = self.run_case(self.archived_position(), "d4e5", 203, {"c1e3": 32}, child_change=change)
+                self.assertEqual(result["selected_uci"], "d4e5")
+                self.assertEqual(result["reason"], "postmove_unreliable")
+
+    def test_reserved_postmove_search_fits_total_budget_when_searches_consume_their_limits(self):
+        clock = [0.0]
+        with patch.object(policy.time, "monotonic", side_effect=lambda: clock[0]):
+            result, _ = self.run_case(self.archived_position(), "d4e5", 203, {"c1e3": 32}, clock=clock)
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertEqual(result["postmove_reserved_ms"], 600)
+        self.assertGreaterEqual(result["postmove_verification"]["budget_ms"], policy.POSTMOVE_MIN_MS)
+        self.assertLessEqual(result["postmove_verification"]["budget_ms"], policy.POSTMOVE_MAX_MS)
+        self.assertLessEqual(result["extra_elapsed_ms"], result["extra_budget_ms"] + .001)
+        self.assertGreaterEqual(result["extra_elapsed_ms"], result["postmove_verification"]["elapsed_ms"])
+
+    def test_final_verification_budget_exhaustion_returns_baseline_without_retry(self):
+        clock = [0.0]
+        with patch.object(policy.time, "monotonic", side_effect=lambda: clock[0]):
+            result, calls = self.run_case(self.archived_position(), "d4e5", 203, {"c1e3": 32},
+                                          clock=clock, exhaust_before_child=True)
+        self.assertEqual(result["selected_uci"], "d4e5")
+        self.assertEqual(result["reason"], "postmove_verification_budget")
+        self.assertIsNone(result["postmove_verification"])
+        self.assertEqual(len([call for call in calls if call[0] is not None and call[1] >= 4]), 1)
+
     def test_mate_distance_and_finite_cp_with_mating_pv_are_rejected(self):
         board = chess.Board()
         for san in "f3 e5 g4".split():
@@ -585,6 +690,73 @@ class PositionFeedbackTests(unittest.TestCase):
         self.assertFalse(probe["admitted"])
         info["score"] = chess.engine.PovScore(chess.engine.Mate(3), board.turn)
         self.assertIsNone(policy._mate_reference(board, info, move))
+
+
+class PostmoveEvidenceTests(unittest.TestCase):
+    def verify(self, *, white=True, value=40, mutation=None, packet_mutation=None, elapsed=0):
+        board = chess.Board()
+        if not white:
+            board.push_san("e4")
+        move = board.parse_san("d4" if white else "e5")
+        candidate = {"candidate_compared": {"cp": 40}, "candidate_final": {"cp": 40}}
+        calls, clock = [], [0.0]
+        def search(budget, **options):
+            calls.append(options)
+            self.assertFalse(options["publish"])
+            self.assertTrue(options["fresh"])
+            self.assertNotIn("root_move", options)
+            self.assertNotIn("root_moves", options)
+            after = options["position"]
+            reply = next(iter(after.legal_moves))
+            final = packet(after, reply.uci(), -value, options["depth"])
+            if mutation:
+                final.update(mutation(after, reply))
+            same_depth = copy.deepcopy(final)
+            if packet_mutation:
+                same_depth.update(packet_mutation)
+            clock[0] += elapsed / 1000
+            return chess.engine.BestMove(reply, None), final, {final["depth"]: same_depth}
+        with patch.object(policy.time, "monotonic", side_effect=lambda: clock[0]):
+            result = policy._postmove_verification(board, move, candidate, search,
+                        depth=6, budget_ms=200, floor_cp=-100)
+        return result, calls
+
+    def test_exact_unrestricted_reply_evidence_in_both_colors(self):
+        for white in (True, False):
+            result, calls = self.verify(white=white)
+            self.assertTrue(result["valid"])
+            self.assertEqual(result["cp_own"], 40)
+            self.assertEqual(result["cp_white"], 40 if white else -40)
+            self.assertEqual(result["line"]["depth"], 6)
+            self.assertEqual(len(calls), 1)
+
+    def test_mismatched_final_packet_cannot_borrow_another_score(self):
+        result, _ = self.verify(packet_mutation={"pv": []})
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["reason"], "postmove_unreliable")
+
+    def test_disagreement_limit_is_explicit_and_inclusive(self):
+        result, _ = self.verify(value=120)
+        self.assertTrue(result["valid"])
+        self.assertEqual(result["disagreement_cp"], 80)
+        result, _ = self.verify(value=121)
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["reason"], "postmove_score_disagreement")
+
+    def test_search_overrun_is_not_a_verified_result(self):
+        result, _ = self.verify(elapsed=221)
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["reason"], "postmove_verification_timeout")
+
+    def test_secondary_rank_cannot_be_a_policy_score_or_mate_reference(self):
+        board = chess.Board()
+        move = board.parse_san("e4")
+        self.assertIsNone(policy._score_line(board, packet(board, move.uci(), multipv=2), move))
+        for san in "f3 e5 g4".split():
+            board.push_san(san)
+        mate = board.parse_san("Qh4#")
+        info = packet(board, mate.uci(), score=chess.engine.PovScore(chess.engine.Mate(1), board.turn), multipv=2)
+        self.assertIsNone(policy._mate_reference(board, info, mate))
 
 
 if __name__ == "__main__":

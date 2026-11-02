@@ -97,6 +97,14 @@ func _run() -> void:
 	verify(bar.summary_text == "백 우세 · +1.25", "unknown reliability is ignored for compatibility")
 	bar.present({"status": "terminal", "result": "0-1", "reliability": "stable"}, true)
 	verify(bar.summary_text == "흑 승리", "terminal outcome is not relabelled as uncertain search")
+	score = score_for(position, 125)
+	score["status"] = "searching"
+	score["refinement"] = {"phase": "refining"}
+	bar.present(score, true)
+	verify(bar.detail_text.contains("정밀 분석 중") and bar.summary_text.contains("+1.25"), "refining preserves raw score and explains continued search")
+	score["status"] = "ready"
+	bar.present(score, true)
+	verify(not bar.detail_text.contains("정밀 분석 중"), "completed evaluation never claims an ongoing refinement")
 	bar.queue_free()
 	await process_frame
 	var app: Variant = load("res://main.tscn").instantiate()

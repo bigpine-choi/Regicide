@@ -1,0 +1,1129 @@
+{
+  "schema": "regicide.sparring-native-policy-smoke.v1",
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "fixture_source": null,
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "source_sha256": {
+    "scripts/sparring_play.py": "90ab2c59b5f4705a26f14e117fdbe2dfb7fb71d6d4c4f9dd9352c8b55d7a5346",
+    "scripts/sparring_pacing.py": "cc9cbd73255b214d3f2db16a49a4166a541f82b613607783160890a351305e3c",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+    "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+    "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561"
+  },
+  "baseline_budget_ms": 1000,
+  "maximum_extra_budget_ms": 2000,
+  "scope": "native functional cases with controlled previous observations; not strength or human-feel evidence",
+  "cases": [
+    {
+      "name": "shallow_fools_mate_finite_alternative",
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",
+      "controlled_past_loss_cp": [],
+      "configured_options": {
+        "UsePieceActivity": true,
+        "Hash": 16
+      },
+      "past_observation_scope": "test-controlled receipts, not measured skill or a played game",
+      "current_observation_scope": "the latest human move is measured by the real engine",
+      "baseline_elapsed_ms": 982.122,
+      "discard_engine": false,
+      "decision": {
+        "policy": "regicide-sparring-play-v3",
+        "ply": 4,
+        "before_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+        "history_uci": [
+          "f2f3",
+          "e7e5",
+          "g2g4"
+        ],
+        "color": "black",
+        "selected_uci": "d7d6",
+        "baseline_uci": "d8h4",
+        "baseline": {
+          "uci": "d8h4",
+          "pv_uci": [
+            "d8h4"
+          ],
+          "depth": 6,
+          "cp": null,
+          "cp_white": null,
+          "mate": 1,
+          "mate_white": -1,
+          "winner": "black",
+          "pov": "black",
+          "source_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "score_bound": "exact"
+        },
+        "reference_mate": {
+          "uci": "d8h4",
+          "pv_uci": [
+            "d8h4"
+          ],
+          "depth": 6,
+          "cp": null,
+          "cp_white": null,
+          "mate": 1,
+          "mate_white": -1,
+          "winner": "black",
+          "pov": "black",
+          "source_fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+          "score_bound": "exact"
+        },
+        "loss_cp": null,
+        "actual_reference_depth": 6,
+        "verification_depth": 6,
+        "compared_depth": 6,
+        "comparison_mode": "absolute_target_from_winning_mate",
+        "reused": false,
+        "opponent_observation": {
+          "valid": false,
+          "ply": 3,
+          "history_before": [
+            "f2f3",
+            "e7e5"
+          ],
+          "played_uci": "g2g4",
+          "loss_cp": null,
+          "depth": 5,
+          "forced": false,
+          "reason": "mate_candidate_not_comparable",
+          "budget_ms": 200,
+          "elapsed_ms": 84.288,
+          "before_fen": "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 2",
+          "baseline": {
+            "uci": "b1c3",
+            "pv_uci": [
+              "b1c3",
+              "b8c6",
+              "e2e3",
+              "g8f6",
+              "f1d3"
+            ],
+            "depth": 5,
+            "cp": 8,
+            "cp_white": 8,
+            "pov": "white"
+          },
+          "candidate_compared": null
+        },
+        "profile": {
+          "policy": "regicide-sparring-play-v3",
+          "status": "calibrating",
+          "level": 1.0,
+          "confidence": "low",
+          "confidence_scope": "heuristic evidence coverage, not a probability or rating",
+          "observations": 0,
+          "recent_observations": [],
+          "ignored_observations": 1,
+          "conflicting_observations": 0,
+          "observation_weight": 0,
+          "smoothed_loss_cp": 35.0,
+          "skill_target_loss_cp": 0,
+          "target_loss_cp": 0.0,
+          "phase_factor": 0.0,
+          "error_band": "unknown",
+          "phase": "calibration",
+          "history_valid": true,
+          "scope": "current-game own-engine loss estimate; no Elo or win-probability claim"
+        },
+        "phase": "calibration",
+        "band_control": {
+          "active": true,
+          "basis": "own_engine_selected_root_with_postmove_check",
+          "lower_cp": -100,
+          "upper_cp": 100,
+          "target_cp": 30,
+          "baseline_cp": null,
+          "selected_cp": 27,
+          "selected_final_cp": 27,
+          "selected_postmove_cp": 27,
+          "status": "met",
+          "deviation_cp": 0,
+          "pre30_inside": true,
+          "pre40_inside": true,
+          "pre50_inside": true,
+          "baseline_mate": 1,
+          "recovered": true,
+          "failure_reason": null,
+          "selection_objective": "finite in-band candidate nearest target; no mate-to-CP conversion",
+          "nominal_target_cp": 30,
+          "nominal_upper_cp": 100,
+          "pacing_applied": false,
+          "strict_band_status": "met",
+          "strict_deviation_cp": 0,
+          "pacing_status": "inactive"
+        },
+        "pacing": {
+          "active": false,
+          "reason": "no_finite_reference"
+        },
+        "resource_guard": {
+          "active": false,
+          "reason": null,
+          "material_concessions_blocked": false,
+          "nonpawn_cp_total": 6200,
+          "nonpawn_pieces_total": 14,
+          "own_nonpawn_pieces": 7,
+          "pawns_total": 16,
+          "queens": 2,
+          "trigger_ply": null,
+          "scope": "practice resource heuristic; not a proof of mate, draw or forced victory"
+        },
+        "target_loss_cp": null,
+        "max_loss_cp": null,
+        "position_floor_cp": -100,
+        "reliability": {
+          "reliability": "stable",
+          "recent_cp_range_white": null,
+          "score_swing_cp": null,
+          "stable_depths": 3
+        },
+        "comparison_basis": "exact_winning_mate_reference",
+        "reference_revalidation": null,
+        "verification_policy": "regicide-sparring-postmove-v1",
+        "postmove_verification": {
+          "policy": "regicide-sparring-postmove-v1",
+          "valid": true,
+          "reason": "postmove_verified",
+          "after_fen": "rnbqkbnr/ppp2ppp/3p4/4p3/6P1/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 3",
+          "candidate_uci": "d7d6",
+          "required_depth": 5,
+          "budget_ms": 600,
+          "elapsed_ms": 147.148,
+          "reply_uci": "f1h3",
+          "line": {
+            "uci": "f1h3",
+            "pv_uci": [
+              "f1h3",
+              "d8h4",
+              "e1f1",
+              "h7h5",
+              "e2e3",
+              "h5g4",
+              "f3g4"
+            ],
+            "depth": 5,
+            "cp": -27,
+            "cp_white": -27,
+            "pov": "white"
+          },
+          "cp_own": 27,
+          "cp_white": -27,
+          "disagreement_cp": 0,
+          "max_disagreement_cp": 80,
+          "floor_cp": -100,
+          "search_scope": "unrestricted opponent replies; separate from current-position gauge"
+        },
+        "postmove_reserved_ms": 574.254,
+        "discovery": [
+          {
+            "uci": "h7h5",
+            "line": {
+              "uci": "h7h5",
+              "pv_uci": [
+                "h7h5",
+                "f1h3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 54,
+              "cp_white": -54,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 21,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 54,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "b8c6",
+            "line": {
+              "uci": "b8c6",
+              "pv_uci": [
+                "b8c6",
+                "e2e3",
+                "d8h4",
+                "e1e2"
+              ],
+              "depth": 3,
+              "cp": 48,
+              "cp_white": -48,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 48,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "g8f6",
+            "line": {
+              "uci": "g8f6",
+              "pv_uci": [
+                "g8f6",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 47,
+              "cp_white": -47,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 47,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f8c5",
+            "line": {
+              "uci": "f8c5",
+              "pv_uci": [
+                "f8c5",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 46,
+              "cp_white": -46,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 4,
+              "development": 1,
+              "direct_piece_threats": 1,
+              "opponent_legal_moves": 19,
+              "opponent_king_moves": 0,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 46,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f8d6",
+            "line": {
+              "uci": "f8d6",
+              "pv_uci": [
+                "f8d6",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 43,
+              "cp_white": -43,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 43,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f8b4",
+            "line": {
+              "uci": "f8b4",
+              "pv_uci": [
+                "f8b4",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 42,
+              "cp_white": -42,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 17,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "rank_exclusion",
+            "rough_cp": 42,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "c7c6",
+            "line": {
+              "uci": "c7c6",
+              "pv_uci": [
+                "c7c6",
+                "e2e3",
+                "g8f6"
+              ],
+              "depth": 3,
+              "cp": 22,
+              "cp_white": -22,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 22,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "b7b6",
+            "line": {
+              "uci": "b7b6",
+              "pv_uci": [
+                "b7b6",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 31,
+              "cp_white": -31,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 31,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f8e7",
+            "line": {
+              "uci": "f8e7",
+              "pv_uci": [
+                "f8e7",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 38,
+              "cp_white": -38,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 38,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "e8e7",
+            "line": {
+              "uci": "e8e7",
+              "pv_uci": [
+                "e8e7",
+                "b1c3",
+                "e7e8"
+              ],
+              "depth": 3,
+              "cp": -33,
+              "cp_white": 33,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": -33,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "g7g5",
+            "line": {
+              "uci": "g7g5",
+              "pv_uci": [
+                "g7g5",
+                "b1c3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 23,
+              "cp_white": -23,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 19,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 23,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "d8g5",
+            "line": {
+              "uci": "d8g5",
+              "pv_uci": [
+                "d8g5",
+                "g1h3",
+                "g5d8"
+              ],
+              "depth": 3,
+              "cp": -15,
+              "cp_white": 15,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 19,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": -15,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "d7d6",
+            "line": {
+              "uci": "d7d6",
+              "pv_uci": [
+                "d7d6",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 28,
+              "cp_white": -28,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 28,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f7f5",
+            "line": {
+              "uci": "f7f5",
+              "pv_uci": [
+                "f7f5",
+                "g1h3",
+                "f8c5"
+              ],
+              "depth": 3,
+              "cp": 25,
+              "cp_white": -25,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 21,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 25,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "g8h6",
+            "line": {
+              "uci": "g8h6",
+              "pv_uci": [
+                "g8h6",
+                "e2e3",
+                "b8c6"
+              ],
+              "depth": 3,
+              "cp": 35,
+              "cp_white": -35,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 35,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          },
+          {
+            "uci": "f8a3",
+            "line": {
+              "uci": "f8a3",
+              "pv_uci": [
+                "f8a3",
+                "g1h3",
+                "a3c5"
+              ],
+              "depth": 3,
+              "cp": 19,
+              "cp_white": -19,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": false,
+              "reason": "obvious_material_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 19,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [
+                {
+                  "reply_uci": "b1a3",
+                  "victim_cp": 300,
+                  "recapture_cp": 0,
+                  "candidate_capture_cp": 0,
+                  "net_material_cp": -300,
+                  "resources_after_reply": {
+                    "active": false,
+                    "reason": null,
+                    "material_concessions_blocked": false,
+                    "nonpawn_cp_total": 5900,
+                    "nonpawn_pieces_total": 13,
+                    "own_nonpawn_pieces": 6,
+                    "pawns_total": 16,
+                    "queens": 2
+                  }
+                },
+                {
+                  "reply_uci": "b2a3",
+                  "victim_cp": 300,
+                  "recapture_cp": 0,
+                  "candidate_capture_cp": 0,
+                  "net_material_cp": -300,
+                  "resources_after_reply": {
+                    "active": false,
+                    "reason": null,
+                    "material_concessions_blocked": false,
+                    "nonpawn_cp_total": 5900,
+                    "nonpawn_pieces_total": 13,
+                    "own_nonpawn_pieces": 6,
+                    "pawns_total": 16,
+                    "queens": 2
+                  }
+                }
+              ],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "source": "spread_legal",
+            "rough_cp": 19,
+            "rough_loss_cp": null,
+            "scope": "discovery only; exact final same-depth verification is mandatory"
+          }
+        ],
+        "probes": [
+          {
+            "uci": "b7b6",
+            "admitted": true,
+            "reason": "verified_position_candidate",
+            "loss_cp": null,
+            "reference_delta_cp": null,
+            "compared_depth": 6,
+            "candidate_compared": {
+              "uci": "b7b6",
+              "pv_uci": [
+                "b7b6",
+                "g1h3",
+                "d7d5",
+                "d2d3",
+                "f8c5",
+                "c1g5"
+              ],
+              "depth": 6,
+              "cp": 4,
+              "cp_white": -4,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "b7b6",
+              "pv_uci": [
+                "b7b6",
+                "g1h3",
+                "d7d5",
+                "d2d3",
+                "f8c5",
+                "c1g5"
+              ],
+              "depth": 6,
+              "cp": 4,
+              "cp_white": -4,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 6,
+              "cp": 4,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 315.189,
+            "elapsed_ms": 91.799,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "inside_band": true,
+            "pressure": {
+              "points": 0,
+              "weight": 0.0,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          },
+          {
+            "uci": "d7d6",
+            "admitted": true,
+            "reason": "verified_position_candidate",
+            "loss_cp": null,
+            "reference_delta_cp": null,
+            "compared_depth": 6,
+            "candidate_compared": {
+              "uci": "d7d6",
+              "pv_uci": [
+                "d7d6",
+                "f1h3",
+                "d8h4",
+                "e1f1",
+                "h7h5",
+                "e2e3",
+                "h5g4",
+                "f3g4"
+              ],
+              "depth": 6,
+              "cp": 27,
+              "cp_white": -27,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "d7d6",
+              "pv_uci": [
+                "d7d6",
+                "f1h3",
+                "d8h4",
+                "e1f1",
+                "h7h5",
+                "e2e3",
+                "h5g4",
+                "f3g4"
+              ],
+              "depth": 6,
+              "cp": 27,
+              "cp_white": -27,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 6,
+              "cp": 27,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 389.488,
+            "elapsed_ms": 149.739,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "inside_band": true,
+            "pressure": {
+              "points": 0,
+              "weight": 0.0,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          },
+          {
+            "uci": "g8h6",
+            "admitted": true,
+            "reason": "verified_position_candidate",
+            "loss_cp": null,
+            "reference_delta_cp": null,
+            "compared_depth": 6,
+            "candidate_compared": {
+              "uci": "g8h6",
+              "pv_uci": [
+                "g8h6",
+                "g1h3",
+                "f8c5",
+                "e2e3",
+                "e8g8",
+                "b1c3"
+              ],
+              "depth": 6,
+              "cp": 4,
+              "cp_white": -4,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "g8h6",
+              "pv_uci": [
+                "g8h6",
+                "g1h3",
+                "f8c5",
+                "e2e3",
+                "e8g8",
+                "b1c3"
+              ],
+              "depth": 6,
+              "cp": 4,
+              "cp_white": -4,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 6,
+              "cp": 4,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 509.026,
+            "elapsed_ms": 76.967,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 20,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "inside_band": true,
+            "pressure": {
+              "points": 0,
+              "weight": 0.0,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          },
+          {
+            "uci": "f7f5",
+            "admitted": true,
+            "reason": "verified_position_candidate",
+            "loss_cp": null,
+            "reference_delta_cp": null,
+            "compared_depth": 6,
+            "candidate_compared": {
+              "uci": "f7f5",
+              "pv_uci": [
+                "f7f5",
+                "g1h3",
+                "d7d5",
+                "g4g5",
+                "f5f4",
+                "h1g1"
+              ],
+              "depth": 6,
+              "cp": 5,
+              "cp_white": -5,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "f7f5",
+              "pv_uci": [
+                "f7f5",
+                "g1h3",
+                "d7d5",
+                "g4g5",
+                "f5f4",
+                "h1g1"
+              ],
+              "depth": 6,
+              "cp": 5,
+              "cp_white": -5,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 6,
+              "cp": 5,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 940.568,
+            "elapsed_ms": 79.271,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "material_return_exception": false,
+              "material_return_cap_cp": null,
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 21,
+              "opponent_king_moves": 1,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "inside_band": true,
+            "pressure": {
+              "points": 0,
+              "weight": 0.0,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          }
+        ],
+        "naturalness": {
+          "admitted": true,
+          "reason": "no_obvious_one_reply_donation",
+          "material_return_exception": false,
+          "material_return_cap_cp": null,
+          "style_points": 0,
+          "development": 0,
+          "direct_piece_threats": 0,
+          "opponent_legal_moves": 20,
+          "opponent_king_moves": 1,
+          "forcing_check": false,
+          "vulnerable_captures": [],
+          "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+        },
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 2000,
+        "extra_elapsed_ms": 712.894,
+        "analysis_only": false,
+        "candidate_budget_ms": 1914.179,
+        "quality_budget_ms": 200,
+        "discovery_budget_ms": 562.67,
+        "probe_budget_sum_ms": 2154.2709999999997,
+        "reason": "accepted_sparring_alternative",
+        "scope": "position feedback from own-engine scores; no continuous-band or victory guarantee",
+        "candidate_compared": {
+          "uci": "d7d6",
+          "pv_uci": [
+            "d7d6",
+            "f1h3",
+            "d8h4",
+            "e1f1",
+            "h7h5",
+            "e2e3",
+            "h5g4",
+            "f3g4"
+          ],
+          "depth": 6,
+          "cp": 27,
+          "cp_white": -27,
+          "pov": "black"
+        },
+        "candidate_final": {
+          "uci": "d7d6",
+          "pv_uci": [
+            "d7d6",
+            "f1h3",
+            "d8h4",
+            "e1f1",
+            "h7h5",
+            "e2e3",
+            "h5g4",
+            "f3g4"
+          ],
+          "depth": 6,
+          "cp": 27,
+          "cp_white": -27,
+          "pov": "black"
+        },
+        "pressure": {
+          "points": 0,
+          "weight": 0.0,
+          "scope": "geometric tie-break among verified candidates, not a proven playing style"
+        },
+        "selected_cp_own": 27,
+        "selected_cp_white": -27
+      }
+    }
+  ]
+}

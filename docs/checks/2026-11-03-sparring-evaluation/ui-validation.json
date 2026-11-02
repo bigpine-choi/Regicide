@@ -1,0 +1,23 @@
+{
+  "scope": "Automated UI logic / headless scene checks; not manual GUI play",
+  "checks": [
+    {
+      "command": "node tests/web_hint_tests.js",
+      "passed": 23,
+      "returncode": 0
+    },
+    {
+      "command": "Godot_v4.7.2-stable_win64_console.exe --headless --path godot --script res://tests/evaluation_bar_tests.gd",
+      "passed": 58,
+      "failures": 0,
+      "returncode": 0
+    }
+  ],
+  "evidence_note": "Counts and exit codes recorded from completed command outputs in this development session; these UI source files have not changed since those runs.",
+  "source_sha256": {
+    "godot/scripts/evaluation_bar.gd": "c2d87f22fec531835558e72496fd98754a241aab6ae5c3dc04413f647fe0f2a3",
+    "godot/tests/evaluation_bar_tests.gd": "d68b93f41c97b983b914c8d56143091090d74fc61f6d820c4f6c4528ec3f9a50",
+    "web/human-play/app.js": "c56916d2c7d6eec1e90a23c65ede72296028571e4e7155b979180b0793f36e3e",
+    "tests/web_hint_tests.js": "7179c78be8da1d4457d60c391b44f2b1882d0206af431396b0a60e9cc9e4452a"
+  }
+}
