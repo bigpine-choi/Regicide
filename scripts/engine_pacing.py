@@ -18,11 +18,11 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v6"
+POLICY = "regicide-engine-pacing-v7"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
-PRESSURE_START_MS = 240_000
+PRESSURE_START_MS = 360_000
 WAIT_SLICE_SECONDS = .05
 MAX_TURN_MS = 45_000
 TURN_REDUCTION_MS = 1000
@@ -367,7 +367,7 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
                 and _unit(seed, "long-think", board.fen(en_passant="fen")) < .10):
             # Less frequent, more distinct pauses: a long tail rather than
             # making every ordinary decision slower. Clock pressure below
-            # four minutes still fades this premium and caps the whole turn.
+            # six minutes still fades this premium and caps the whole turn.
             factor, kind = 2.80 + .60 * innovation, "long_deliberation"
     color = result["color"]
     if not isinstance(clock, dict):

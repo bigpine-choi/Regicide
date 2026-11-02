@@ -488,7 +488,8 @@ class GameArchive:
             if (isinstance(pacing, dict) and pacing.get("enabled") is True
                     and pacing.get("policy") in ("regicide-engine-pacing-v1", "regicide-engine-pacing-v2",
                                                   "regicide-engine-pacing-v3", "regicide-engine-pacing-v4",
-                                                  "regicide-engine-pacing-v5", "regicide-engine-pacing-v6")):
+                                                  "regicide-engine-pacing-v5", "regicide-engine-pacing-v6",
+                                                  "regicide-engine-pacing-v7")):
                 game.headers["EnginePacingPolicy"] = pacing["policy"]
             if clock["timeout_policy"] == "engine_only":
                 game.headers["TimeForfeitPolicy"] = "engine_only"

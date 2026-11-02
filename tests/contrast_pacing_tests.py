@@ -109,11 +109,11 @@ class ContrastPacingTests(unittest.TestCase):
         self.assertTrue(ordinary)
         self.assertTrue(all(result["target_total_ms"] == 9000 for result in ordinary))
 
-    def test_long_thought_reacts_continuously_at_four_minutes_and_shrinks_under_pressure(self):
+    def test_long_thought_reacts_continuously_at_six_minutes_and_shrinks_under_pressure(self):
         seed = next(str(seed) for seed in range(128)
                     if deliberation(str(seed))[2]["refinement"]["kind"] == "long_deliberation")
         results = [deliberation(seed, remaining)[2]
-                   for remaining in (600000, 240001, 240000, 239999, 180000, 120000, 60000, 10000)]
+                   for remaining in (600000, 360001, 360000, 359999, 240000, 180000, 120000, 60000, 10000)]
         targets = [result["target_total_ms"] for result in results]
         self.assertEqual(targets, sorted(targets, reverse=True))
         self.assertEqual(targets[0], targets[1])

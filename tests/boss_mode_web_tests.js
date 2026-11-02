@@ -173,7 +173,7 @@ const saveRating = value => { byId("rating-label-input").value = String(value); 
   await reply("/api/new", fastSparring);
   assert.match(byId("opponent-detail").textContent, /스파링 모드$/);
   assert.equal(clientState().engine.sparring.observations, 0);
-  assert.match(byId("think-time-help").textContent, /사람 권장시간.*4분 이하/);
+  assert.match(byId("think-time-help").textContent, /사람 권장시간.*6분 이하/);
   const beforeBlocked = calls.length; changeTime(5000);
   assert.equal(calls.length, beforeBlocked, "active sparring rejects forged manual control events");
   for (const [revision, phase, label] of [[9, "sparring", "맞춤 스파링"], [10, "ramp", "압박 높이는 중"], [11, "finish", "전력 마무리"]]) {
