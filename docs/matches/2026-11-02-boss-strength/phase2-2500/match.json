@@ -1,0 +1,1562 @@
+{
+  "schema": "regicide.boss-strength-match.v1",
+  "started_at": "2026-11-02T12:22:41.860407+00:00",
+  "config": {
+    "boss_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+    "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+    "stockfish_elo": 2500,
+    "games": 4,
+    "boss_ms": 1000,
+    "stockfish_ms": 2000,
+    "threads": 1,
+    "hash_mb": 16,
+    "max_plies": 300,
+    "cap_policy": "incomplete",
+    "seed": "20261102boss-phase2-2500",
+    "output_dir": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\boss-strength-20261102\\phase2-2500",
+    "classical": true,
+    "neural_model": null,
+    "learning_state": null
+  },
+  "purpose": "External opponent diagnostic, not calibrated FIDE or online-platform Elo",
+  "source": {
+    "commit": "245231e33e250f7486133c169ae160894ff056f1",
+    "dirty": true,
+    "label": "245231e33e250f7486133c169ae160894ff056f1-dirty"
+  },
+  "source_sha256": {
+    "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+    "scripts/play_human.py": "7af7658b1cbe810cc9bc1d66336c2103f9b5328863fc22c88c167bb6058aa7a0",
+    "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+    "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+    "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+    "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+    "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+    "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884"
+  },
+  "binary_sha256": {
+    "boss": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+    "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+  },
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "logical_cpus": 16,
+  "policy": "regicide-boss-play-v3",
+  "opponent_policy": "regicide-boss-opponent-v1",
+  "repertoire_policy": "regicide-boss-traps-v3",
+  "evaluation_selection": {
+    "model": null,
+    "generation": null,
+    "warning": null
+  },
+  "protocol": {
+    "start": "standard starting position; no forced opening moves",
+    "draws": "Always claim available threefold/50-move draws",
+    "adjudication": "Legal chess outcomes only; no score adjudication",
+    "cap": "incomplete",
+    "pairing": "Alternating colors, same boss seed per pair",
+    "ponder": false,
+    "display_helpers": "Non-playing no-search peers; no UI engine compute",
+    "stockfish_randomness": "No externally controllable seed; exact moves are preserved",
+    "budget": "Boss full configured baseline plus optional at most 1000ms extra; opponent fixed movetime"
+  },
+  "schedule": [
+    {
+      "game": 1,
+      "pair": 1,
+      "boss_color": "white",
+      "stockfish_elo": 2500,
+      "boss_seed": "83919387671ec8106db8d14ef0dce93d"
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "boss_color": "black",
+      "stockfish_elo": 2500,
+      "boss_seed": "83919387671ec8106db8d14ef0dce93d"
+    },
+    {
+      "game": 3,
+      "pair": 2,
+      "boss_color": "white",
+      "stockfish_elo": 2500,
+      "boss_seed": "cb6b218fa15a91db0f27293d7161e382"
+    },
+    {
+      "game": 4,
+      "pair": 2,
+      "boss_color": "black",
+      "stockfish_elo": 2500,
+      "boss_seed": "cb6b218fa15a91db0f27293d7161e382"
+    }
+  ],
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "boss_color": "white",
+      "stockfish_elo": 2500,
+      "boss_seed": "83919387671ec8106db8d14ef0dce93d",
+      "started_at": "2026-11-02T12:22:42.203040+00:00",
+      "result": "0-1",
+      "termination": "checkmate",
+      "completed": true,
+      "legal_result": true,
+      "capped": false,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "3k4/8/p7/5p2/PP6/5pP1/6q1/7K w - - 6 61",
+      "plies": 120,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 2500,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-001.json",
+      "pgn_file": "game-001.pgn",
+      "host_game_id": "20261102-212244-a3f1e18019d6",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-02T12:25:35.379885+00:00",
+      "elapsed_seconds": 173.177
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "boss_color": "black",
+      "stockfish_elo": 2500,
+      "boss_seed": "83919387671ec8106db8d14ef0dce93d",
+      "started_at": "2026-11-02T12:25:35.404276+00:00",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "completed": true,
+      "legal_result": true,
+      "capped": false,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "8/2Q1Pk2/8/8/8/8/4K1Pn/8 w - - 9 66",
+      "plies": 130,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 2500,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-002.json",
+      "pgn_file": "game-002.pgn",
+      "host_game_id": "20261102-212535-cdde34c09ddb",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-02T12:29:10.464248+00:00",
+      "elapsed_seconds": 215.06
+    },
+    {
+      "game": 3,
+      "pair": 2,
+      "boss_color": "white",
+      "stockfish_elo": 2500,
+      "boss_seed": "cb6b218fa15a91db0f27293d7161e382",
+      "started_at": "2026-11-02T12:29:10.496039+00:00",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "completed": true,
+      "legal_result": true,
+      "capped": false,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "8/4k1p1/4P3/4K2p/7P/8/2b5/8 b - - 10 68",
+      "plies": 135,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 2500,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-003.json",
+      "pgn_file": "game-003.pgn",
+      "host_game_id": "20261102-212911-11fc4a50ee7b",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-02T12:32:47.491426+00:00",
+      "elapsed_seconds": 216.995
+    },
+    {
+      "game": 4,
+      "pair": 2,
+      "boss_color": "black",
+      "stockfish_elo": 2500,
+      "boss_seed": "cb6b218fa15a91db0f27293d7161e382",
+      "started_at": "2026-11-02T12:32:47.509213+00:00",
+      "result": "1/2-1/2",
+      "termination": "threefold_repetition",
+      "completed": true,
+      "legal_result": true,
+      "capped": false,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "8/3b4/1p2k1p1/2p2p1p/p1P1p2P/P1P1P1P1/3K4/3B4 b - - 30 57",
+      "plies": 113,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 2500,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-004.json",
+      "pgn_file": "game-004.pgn",
+      "host_game_id": "20261102-213248-04582d4064f9",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-02T12:35:54.377183+00:00",
+      "elapsed_seconds": 186.868
+    }
+  ],
+  "status": "completed",
+  "errors": [],
+  "active_game": null,
+  "summary": {
+    "wins": 0,
+    "draws": 3,
+    "losses": 1,
+    "capped": 0,
+    "failed": 0,
+    "unfinished": 0,
+    "scored_games": 4,
+    "score": 0.375
+  },
+  "legal_results_only": {
+    "wins": 0,
+    "draws": 3,
+    "losses": 1,
+    "capped": 0,
+    "failed": 0,
+    "unfinished": 0,
+    "scored_games": 4,
+    "score": 0.375
+  },
+  "finished_at": "2026-11-02T12:35:54.469517+00:00",
+  "sources_unchanged": true,
+  "binaries_unchanged": true
+}
