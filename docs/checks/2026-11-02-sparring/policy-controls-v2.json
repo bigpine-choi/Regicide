@@ -1,0 +1,763 @@
+{
+  "schema": "regicide.sparring-native-policy-smoke.v1",
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "source_sha256": {
+    "scripts/sparring_play.py": "77e43ce81d7477989d968f0e924e0784a9120813c8041a721992c64dacaebed4",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f"
+  },
+  "baseline_budget_ms": 1000,
+  "maximum_extra_budget_ms": 2000,
+  "scope": "native functional cases with controlled previous observations; not strength or human-feel evidence",
+  "cases": [
+    {
+      "name": "accurate_control",
+      "fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+      "controlled_past_loss_cp": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "configured_options": {
+        "UsePieceActivity": true,
+        "Hash": 16
+      },
+      "past_observation_scope": "test-controlled receipts, not measured skill or a played game",
+      "current_observation_scope": "the latest human move is measured by the real engine",
+      "baseline_elapsed_ms": 983.065,
+      "discard_engine": false,
+      "decision": {
+        "policy": "regicide-sparring-play-v1",
+        "ply": 14,
+        "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "f8c5",
+          "d2d3",
+          "g8f6",
+          "b1c3",
+          "d7d6",
+          "e1g1",
+          "e8g8",
+          "h2h3"
+        ],
+        "color": "black",
+        "selected_uci": "c8e6",
+        "baseline_uci": "c8e6",
+        "baseline": {
+          "uci": "c8e6",
+          "pv_uci": [
+            "c8e6",
+            "c4e6",
+            "f7e6",
+            "c1e3",
+            "f6d7"
+          ],
+          "depth": 5,
+          "cp": 10,
+          "cp_white": -10,
+          "pov": "black"
+        },
+        "loss_cp": 0,
+        "compared_depth": 5,
+        "reused": false,
+        "opponent_observation": {
+          "valid": true,
+          "ply": 13,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "f8c5",
+            "d2d3",
+            "g8f6",
+            "b1c3",
+            "d7d6",
+            "e1g1",
+            "e8g8"
+          ],
+          "played_uci": "h2h3",
+          "loss_cp": 21,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 500,
+          "elapsed_ms": 224.883,
+          "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 2 7",
+          "baseline": {
+            "uci": "c1e3",
+            "pv_uci": [
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "c8e6"
+            ],
+            "depth": 4,
+            "cp": 11,
+            "cp_white": 11,
+            "pov": "white"
+          },
+          "candidate_compared": {
+            "uci": "h2h3",
+            "pv_uci": [
+              "h2h3",
+              "c8e6",
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "e6c4",
+              "d3c4"
+            ],
+            "depth": 4,
+            "cp": -10,
+            "cp_white": -10,
+            "pov": "white"
+          }
+        },
+        "profile": {
+          "policy": "regicide-sparring-play-v1",
+          "status": "holding",
+          "level": 1.0,
+          "confidence": "medium",
+          "confidence_scope": "heuristic evidence coverage, not a probability or rating",
+          "observations": 7,
+          "recent_observations": [
+            {
+              "ply": 1,
+              "played_uci": "e2e4",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 3,
+              "played_uci": "g1f3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 5,
+              "played_uci": "f1c4",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 7,
+              "played_uci": "d2d3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 9,
+              "played_uci": "b1c3",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 11,
+              "played_uci": "e1g1",
+              "loss_cp": 0,
+              "depth": 6
+            },
+            {
+              "ply": 13,
+              "played_uci": "h2h3",
+              "loss_cp": 21,
+              "depth": 4
+            }
+          ],
+          "ignored_observations": 0,
+          "conflicting_observations": 0,
+          "observation_weight": 4.5295,
+          "smoothed_loss_cp": 16.734,
+          "skill_target_loss_cp": 0,
+          "target_loss_cp": 0,
+          "phase_factor": 1.0,
+          "error_band": "accurate",
+          "phase": "sparring",
+          "history_valid": true,
+          "scope": "current-game own-engine loss estimate; no Elo or win-probability claim",
+          "constraint": "position_or_phase_full_strength"
+        },
+        "phase": "sparring",
+        "target_loss_cp": 0,
+        "max_loss_cp": 0,
+        "reliability": {
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            -10,
+            -4
+          ],
+          "score_swing_cp": 6,
+          "stable_depths": 2
+        },
+        "discovery": [],
+        "probes": [],
+        "naturalness": null,
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 2000,
+        "extra_elapsed_ms": 227.384,
+        "quality_budget_ms": 500,
+        "discovery_budget_ms": 0,
+        "probe_budget_sum_ms": 0,
+        "reason": "position_or_phase_full_strength",
+        "scope": "heuristic sparring; finish seeks victory without guaranteeing it",
+        "position_floor_cp": -60,
+        "phase_factor": 1.0,
+        "behind_factor": 1
+      }
+    },
+    {
+      "name": "frequent_error_control",
+      "fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+      "controlled_past_loss_cp": [
+        250,
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "configured_options": {
+        "UsePieceActivity": true,
+        "Hash": 16
+      },
+      "past_observation_scope": "test-controlled receipts, not measured skill or a played game",
+      "current_observation_scope": "the latest human move is measured by the real engine",
+      "baseline_elapsed_ms": 982.819,
+      "discard_engine": false,
+      "decision": {
+        "policy": "regicide-sparring-play-v1",
+        "ply": 14,
+        "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N1P/PPP2PP1/R1BQ1RK1 b - - 0 7",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "f8c5",
+          "d2d3",
+          "g8f6",
+          "b1c3",
+          "d7d6",
+          "e1g1",
+          "e8g8",
+          "h2h3"
+        ],
+        "color": "black",
+        "selected_uci": "c6a5",
+        "baseline_uci": "c8e6",
+        "baseline": {
+          "uci": "c8e6",
+          "pv_uci": [
+            "c8e6",
+            "c4e6",
+            "f7e6",
+            "c1e3",
+            "f6d7"
+          ],
+          "depth": 5,
+          "cp": 10,
+          "cp_white": -10,
+          "pov": "black"
+        },
+        "loss_cp": 32,
+        "compared_depth": 5,
+        "reused": false,
+        "opponent_observation": {
+          "valid": true,
+          "ply": 13,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "f8c5",
+            "d2d3",
+            "g8f6",
+            "b1c3",
+            "d7d6",
+            "e1g1",
+            "e8g8"
+          ],
+          "played_uci": "h2h3",
+          "loss_cp": 21,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 500,
+          "elapsed_ms": 224.847,
+          "before_fen": "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 2 7",
+          "baseline": {
+            "uci": "c1e3",
+            "pv_uci": [
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "c8e6"
+            ],
+            "depth": 4,
+            "cp": 11,
+            "cp_white": 11,
+            "pov": "white"
+          },
+          "candidate_compared": {
+            "uci": "h2h3",
+            "pv_uci": [
+              "h2h3",
+              "c8e6",
+              "c1e3",
+              "c5e3",
+              "f2e3",
+              "e6c4",
+              "d3c4"
+            ],
+            "depth": 4,
+            "cp": -10,
+            "cp_white": -10,
+            "pov": "white"
+          }
+        },
+        "profile": {
+          "policy": "regicide-sparring-play-v1",
+          "status": "adapting",
+          "level": 0.4167,
+          "confidence": "medium",
+          "confidence_scope": "heuristic evidence coverage, not a probability or rating",
+          "observations": 7,
+          "recent_observations": [
+            {
+              "ply": 1,
+              "played_uci": "e2e4",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 3,
+              "played_uci": "g1f3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 5,
+              "played_uci": "f1c4",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 7,
+              "played_uci": "d2d3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 9,
+              "played_uci": "b1c3",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 11,
+              "played_uci": "e1g1",
+              "loss_cp": 250,
+              "depth": 6
+            },
+            {
+              "ply": 13,
+              "played_uci": "h2h3",
+              "loss_cp": 21,
+              "depth": 4
+            }
+          ],
+          "ignored_observations": 0,
+          "conflicting_observations": 0,
+          "observation_weight": 4.5295,
+          "smoothed_loss_cp": 119.0,
+          "skill_target_loss_cp": 89.1,
+          "target_loss_cp": 70,
+          "phase_factor": 1.0,
+          "error_band": "frequent_errors",
+          "phase": "sparring",
+          "history_valid": true,
+          "scope": "current-game own-engine loss estimate; no Elo or win-probability claim"
+        },
+        "phase": "sparring",
+        "target_loss_cp": 70,
+        "max_loss_cp": 70,
+        "reliability": {
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            -10,
+            -4
+          ],
+          "score_swing_cp": 6,
+          "stable_depths": 2
+        },
+        "discovery": [
+          {
+            "uci": "c8d7",
+            "line": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 3,
+              "development": 1,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": null,
+            "scope": "discovery only; not admissible selection evidence"
+          },
+          {
+            "uci": "a7a6",
+            "line": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": null,
+            "scope": "discovery only; not admissible selection evidence"
+          },
+          {
+            "uci": "g8h8",
+            "line": {
+              "uci": "g8h8",
+              "pv_uci": [
+                "g8h8",
+                "c1e3",
+                "c8e6",
+                "e3c5",
+                "d6c5"
+              ],
+              "depth": 3,
+              "cp": -10,
+              "cp_white": 10,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": 20,
+            "scope": "discovery only; not admissible selection evidence"
+          },
+          {
+            "uci": "d8e7",
+            "line": {
+              "uci": "d8e7",
+              "pv_uci": [
+                "d8e7",
+                "c1e3",
+                "c8e6",
+                "e3c5",
+                "d6c5"
+              ],
+              "depth": 3,
+              "cp": -11,
+              "cp_white": 11,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": 21,
+            "scope": "discovery only; not admissible selection evidence"
+          },
+          {
+            "uci": "a7a5",
+            "line": {
+              "uci": "a7a5",
+              "pv_uci": [
+                "a7a5",
+                "c1e3",
+                "c8e6",
+                "e3c5",
+                "d6c5",
+                "c4e6",
+                "f7e6"
+              ],
+              "depth": 3,
+              "cp": -12,
+              "cp_white": 12,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": 22,
+            "scope": "discovery only; not admissible selection evidence"
+          },
+          {
+            "uci": "c6a5",
+            "line": {
+              "uci": "c6a5",
+              "pv_uci": [
+                "c6a5",
+                "c1e3",
+                "a5c4",
+                "d3c4"
+              ],
+              "depth": 3,
+              "cp": -14,
+              "cp_white": 14,
+              "pov": "black"
+            },
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 1,
+              "development": 0,
+              "direct_piece_threats": 1,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "rough_loss_cp": 24,
+            "scope": "discovery only; not admissible selection evidence"
+          }
+        ],
+        "probes": [
+          {
+            "uci": "c6a5",
+            "admitted": true,
+            "reason": "verified_sparring_candidate",
+            "loss_cp": 32,
+            "compared_depth": 5,
+            "reference_delta_cp": 32,
+            "candidate_compared": {
+              "uci": "c6a5",
+              "pv_uci": [
+                "c6a5",
+                "c1e3",
+                "a5c4",
+                "d3c4",
+                "c5b6"
+              ],
+              "depth": 5,
+              "cp": -22,
+              "cp_white": 22,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "c6a5",
+              "pv_uci": [
+                "c6a5",
+                "c1e3",
+                "a5c4",
+                "d3c4",
+                "c5b6"
+              ],
+              "depth": 5,
+              "cp": -22,
+              "cp_white": 22,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 5,
+              "cp": -22,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 770.152,
+            "elapsed_ms": 64.09,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 1,
+              "development": 0,
+              "direct_piece_threats": 1,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "pressure": {
+              "points": 0,
+              "weight": 0,
+              "baseline_opponent_legal_moves": 37,
+              "baseline_opponent_king_moves": 2,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          },
+          {
+            "uci": "a7a5",
+            "admitted": true,
+            "reason": "verified_sparring_candidate",
+            "loss_cp": 19,
+            "compared_depth": 5,
+            "reference_delta_cp": 19,
+            "candidate_compared": {
+              "uci": "a7a5",
+              "pv_uci": [
+                "a7a5",
+                "c1e3",
+                "c5e3",
+                "f2e3",
+                "c8e6"
+              ],
+              "depth": 5,
+              "cp": -9,
+              "cp_white": 9,
+              "pov": "black"
+            },
+            "candidate_final": {
+              "uci": "a7a5",
+              "pv_uci": [
+                "a7a5",
+                "c1e3",
+                "c5e3",
+                "f2e3",
+                "c8e6"
+              ],
+              "depth": 5,
+              "cp": -9,
+              "cp_white": 9,
+              "pov": "black"
+            },
+            "candidate_final_raw": {
+              "depth": 5,
+              "cp": -9,
+              "mate": null,
+              "lowerbound": false,
+              "upperbound": false
+            },
+            "budget_ms": 1475.856,
+            "elapsed_ms": 85.347,
+            "error": null,
+            "naturalness": {
+              "admitted": true,
+              "reason": "no_obvious_one_reply_donation",
+              "style_points": 0,
+              "development": 0,
+              "direct_piece_threats": 0,
+              "opponent_legal_moves": 38,
+              "opponent_king_moves": 2,
+              "forcing_check": false,
+              "vulnerable_captures": [],
+              "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+            },
+            "pressure": {
+              "points": 0,
+              "weight": 0,
+              "baseline_opponent_legal_moves": 37,
+              "baseline_opponent_king_moves": 2,
+              "scope": "geometric tie-break among verified candidates, not a proven playing style"
+            }
+          }
+        ],
+        "naturalness": {
+          "admitted": true,
+          "reason": "no_obvious_one_reply_donation",
+          "style_points": 1,
+          "development": 0,
+          "direct_piece_threats": 1,
+          "opponent_legal_moves": 38,
+          "opponent_king_moves": 2,
+          "forcing_check": false,
+          "vulnerable_captures": [],
+          "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"
+        },
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 2000,
+        "extra_elapsed_ms": 610.192,
+        "quality_budget_ms": 500,
+        "discovery_budget_ms": 350,
+        "probe_budget_sum_ms": 2246.008,
+        "reason": "accepted_sparring_alternative",
+        "scope": "heuristic sparring; finish seeks victory without guaranteeing it",
+        "position_floor_cp": -60,
+        "phase_factor": 1.0,
+        "behind_factor": 1,
+        "pressure_weight": 0,
+        "candidate_compared": {
+          "uci": "c6a5",
+          "pv_uci": [
+            "c6a5",
+            "c1e3",
+            "a5c4",
+            "d3c4",
+            "c5b6"
+          ],
+          "depth": 5,
+          "cp": -22,
+          "cp_white": 22,
+          "pov": "black"
+        },
+        "candidate_final": {
+          "uci": "c6a5",
+          "pv_uci": [
+            "c6a5",
+            "c1e3",
+            "a5c4",
+            "d3c4",
+            "c5b6"
+          ],
+          "depth": 5,
+          "cp": -22,
+          "cp_white": 22,
+          "pov": "black"
+        },
+        "pressure": {
+          "points": 0,
+          "weight": 0,
+          "baseline_opponent_legal_moves": 37,
+          "baseline_opponent_king_moves": 2,
+          "scope": "geometric tie-break among verified candidates, not a proven playing style"
+        }
+      }
+    }
+  ]
+}

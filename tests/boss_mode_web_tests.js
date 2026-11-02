@@ -26,7 +26,7 @@ const byId = id => {
   if (!elements.has(id)) elements.set(id, new Element());
   return elements.get(id);
 };
-const pending = [], calls = [];
+const pending = [], calls = [], intervals = [];
 const document = {
   getElementById: byId, querySelector: () => ({content: "test-session-token"}),
   createElement: () => new Element(), createDocumentFragment: () => Object.assign(new Element(), {fragment: true}),
@@ -34,17 +34,26 @@ const document = {
 };
 const html = fs.readFileSync(path.join(__dirname, "../web/human-play/index.html"), "utf8");
 assert.match(html, /<option value="normal" selected>기본<\/option>/);
+assert.match(html, /<option value="sparring">스파링 모드<\/option>/);
 assert.match(html, /id="boss-mode"[^>]*aria-describedby="boss-mode-help"/);
+const timeSelect = html.match(/<select id="think-time"[\s\S]*?<\/select>/)[0];
+assert.equal(Math.min(...Array.from(timeSelect.matchAll(/option value="(\d+)"/g), match => Number(match[1])).filter(ms => ms >= 600)), 1000,
+  "one second is the shortest selectable time eligible for sparring adjustment");
 byId("human-side").value = "white";
 byId("boss-mode").value = "normal";
-vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../web/human-play/app.js"), "utf8"), {
+const sandbox = {
   document, console, setTimeout: () => {}, clearTimeout: () => {}, URL: {},
-  setInterval: () => 1, clearInterval: () => {}, window: {addEventListener: () => {}}, AbortController,
+  setInterval: (callback, ms) => { intervals.push({callback, ms}); return intervals.length; }, clearInterval: () => {}, window: {addEventListener: () => {}}, AbortController,
   fetch: (url, options) => new Promise(resolve => {
     const call = {url, body: options.body ? JSON.parse(options.body) : null, resolve};
     calls.push(call); pending.push(call);
   })
-});
+};
+const clientSource = fs.readFileSync(path.join(__dirname, "../web/human-play/app.js"), "utf8");
+assert.match(clientSource, /\}\)\(\);\s*$/);
+// Read-only probe added only to the in-memory test copy, never the shipped client.
+vm.runInNewContext(clientSource.replace(/\}\)\(\);\s*$/, "globalThis.__clientState = () => JSON.parse(JSON.stringify(state));\n})();"), sandbox);
+const clientState = () => sandbox.__clientState();
 const flush = async () => { for (let i = 0; i < 12; ++i) await Promise.resolve(); };
 async function reply(url, state) {
   const index = pending.findIndex(call => call.url === url);
@@ -58,6 +67,7 @@ function fixture(revision, phase, settings = 0, ms = 1000) {
   return {revision, game_id: phase ? "boss-game" : "legacy-game", board: {e2: "P", e1: "K", e8: "k"},
     human_color: "white", human_to_move: true, engine_to_move: false,
     legal_moves: ["e2e4"], moves: [], last_move: null, result: "*", error: null,
+    fen: "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
     status: "당신 차례입니다", can_undo: false, in_check: false,
     engine: {name: "Regicide test", movetime_ms: ms, settings_revision: settings,
       active_movetime_ms: null, extra_budget_ms: 0, active_extra_budget_ms: null,
@@ -66,12 +76,22 @@ function fixture(revision, phase, settings = 0, ms = 1000) {
 const submit = () => byId("new-game-form").listeners.submit({preventDefault() {}});
 const changeTime = ms => { byId("think-time").value = String(ms); byId("think-time").listeners.change(); };
 const clickSquare = square => byId("board").listeners.click({target: {closest: () => ({dataset: {square}})}});
+function sparringFixture(revision, phase, observations = 3, status = "adapting") {
+  const value = fixture(revision);
+  value.game_id = "sparring-game"; value.can_undo = true;
+  value.engine.sparring_mode = true;
+  value.engine.extra_budget_ms = 250;
+  value.engine.sparring = {phase, status, observations, level: .65, confidence: "high", target_loss_cp: 72};
+  return value;
+}
+const selectMode = mode => { byId("boss-mode").value = mode; byId("boss-mode").listeners.change(); };
 
 (async () => {
   await reply("/api/state", fixture(1));
   assert.doesNotMatch(byId("opponent-detail").textContent, /보스 모드/);
   submit();
   assert.equal(pending[0].body.boss_mode, false, "default request explicitly selects normal mode");
+  assert.equal(pending[0].body.sparring_mode, false);
   await reply("/api/new", fixture(2));
   byId("boss-mode").value = "boss";
   changeTime(3000);
@@ -82,6 +102,7 @@ const clickSquare = square => byId("board").listeners.click({target: {closest: (
   assert.doesNotMatch(byId("opponent-detail").textContent, /보스 모드/, "draft does not change the live game");
   submit();
   assert.equal(pending[0].body.boss_mode, true);
+  assert.equal(pending[0].body.sparring_mode, false, "boss excludes sparring");
   await reply("/api/new", fixture(3, "opening", 0, 3000));
   assert.match(byId("opponent-detail").textContent, /보스 모드 · 변칙 오프닝/);
   clickSquare("e2"); clickSquare("e4");
@@ -118,5 +139,92 @@ const clickSquare = square => byId("board").listeners.click({target: {closest: (
   await reply("/api/new", normal);
   assert.doesNotMatch(byId("opponent-detail").textContent, /보스 모드/);
   assert.equal(pending.length, 0);
-  console.log("Browser boss-mode checks: PASS (default, draft, payload, opening/trap-hunt/full-strength, stale settings, compatibility)");
+  changeTime(100);
+  const fastNormal = structuredClone(normal);
+  fastNormal.engine.movetime_ms = 100; fastNormal.engine.settings_revision = 1;
+  await reply("/api/think-time", fastNormal);
+  const requestsBeforeDraft = calls.length;
+  selectMode("sparring");
+  assert.match(byId("boss-mode-help").textContent, /50수까지 수준에 맞춰 상대하고/);
+  assert.match(byId("boss-mode-help").textContent, /1초 이상을 권장/);
+  assert.match(byId("boss-mode-help").title, /각각 50번/);
+  assert.equal(calls.length, requestsBeforeDraft, "draft mode does not send time mutation");
+  assert.equal(byId("think-time").value, "100", "draft mode does not replace selected time");
+  assert.doesNotMatch(byId("think-time-help").textContent, /맞춤 조절을 쉬고/, "draft mode does not change current normal-game behavior");
+  assert.doesNotMatch(byId("opponent-detail").textContent, /스파링/, "draft leaves current normal game intact");
+  submit();
+  assert.equal(pending[0].body.boss_mode, false);
+  assert.equal(pending[0].body.sparring_mode, true);
+  assert.equal(pending[0].body.movetime_ms, 100, "new sparring game preserves explicitly selected short time");
+  const fastSparring = sparringFixture(8, "calibration", 0, "calibrating");
+  fastSparring.engine.movetime_ms = 100; fastSparring.engine.extra_budget_ms = 0;
+  await reply("/api/new", fastSparring);
+  assert.match(byId("opponent-detail").textContent, /스파링 모드$/);
+  assert.equal(clientState().engine.sparring.observations, 0);
+  assert.match(byId("think-time-help").textContent, /짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다\./);
+  for (const [revision, phase, label] of [[9, "sparring", "맞춤 스파링"], [10, "ramp", "압박 높이는 중"], [11, "finish", "전력 마무리"]]) {
+    changeTime(1000);
+    await reply("/api/think-time", sparringFixture(revision, phase, 8));
+    assert.match(byId("opponent-detail").textContent, /스파링 모드$/);
+    assert.equal(clientState().engine.sparring.phase, phase);
+    assert.doesNotMatch(byId("opponent-detail").textContent, /관측|파악|압박|마무리/);
+  }
+  assert.doesNotMatch(byId("think-time-help").textContent, /맞춤 조절을 쉬고/, "eligible current time clears short-time notice");
+  assert.match(byId("think-time-help").textContent, /스파링 응수 검토/);
+  assert.doesNotMatch(byId("opponent-detail").textContent, /0\.65|72|%|Elo/);
+  changeTime(3000);
+  const late = sparringFixture(9, "calibration", 1);
+  late.engine.settings_revision = 1; late.engine.movetime_ms = 3000;
+  await reply("/api/think-time", late);
+  assert.equal(clientState().engine.sparring.phase, "finish", "stale settings cannot replace profile");
+  assert.equal(clientState().engine.sparring.observations, 8);
+  assert.equal(byId("think-time").value, "3000");
+  byId("undo").listeners.click();
+  await reply("/api/undo", sparringFixture(12, "calibration", 1, "holding"));
+  assert.equal(clientState().engine.sparring.observations, 1, "undo may legitimately decrease observations");
+  assert.equal(clientState().engine.sparring.phase, "calibration");
+  assert.equal(byId("opponent-detail").title, "", "holding and observation diagnostics stay out of live tooltips");
+  changeTime(1000);
+  await reply("/api/think-time", sparringFixture(13, "", null, "holding"));
+  assert.match(byId("opponent-detail").textContent, /스파링 모드$/);
+  changeTime(1000);
+  const missing = sparringFixture(14, ""); missing.engine.sparring = null;
+  await reply("/api/think-time", missing);
+  assert.match(byId("opponent-detail").textContent, /스파링 모드$/);
+  selectMode("boss");
+  assert.match(byId("boss-mode-help").textContent, /함정/);
+  assert.match(byId("opponent-detail").textContent, /스파링 모드$/, "prospective boss explanation leaves current sparring intact");
+  changeTime(1000);
+  const current = sparringFixture(15, "finish", 6);
+  await reply("/api/think-time", current);
+  const poll = intervals.find(row => row.ms === 200).callback;
+  const score = {game_id: current.game_id, revision: current.revision, fen: current.fen,
+    status: "ready", cp: 125, mate: null, depth: 8, bound: "exact", white_share: .6};
+  poll(); await reply("/api/evaluation", score);
+  assert.equal(byId("evaluation-label").textContent, "백 우세", "legacy evaluation is unchanged despite high opponent-profile confidence");
+  for (const [reliability, label] of [["provisional", "잠정 평가"], ["stable", "탐색 안정"], ["volatile", "평가 변동 큼"], ["bounded", "범위 평가"]]) {
+    poll();
+    await reply("/api/evaluation", {...score, reliability, recent_cp_range_white: [-900, -300], score_swing_cp: 600, stable_depths: 3});
+    assert.ok(byId("evaluation-label").textContent.includes(label));
+    assert.ok(byId("evaluation-detail").textContent.includes(label));
+    assert.ok(byId("evaluation-bar").title.includes(label));
+    assert.equal(byId("evaluation-score").textContent, "+1.25", "reliability range never replaces latest score");
+    assert.equal(byId("evaluation-white").style.height, "60%", "reliability never changes bar fill");
+    if (reliability === "stable") assert.match(byId("evaluation-detail").textContent, /정답을 보장하지는 않습니다/);
+  }
+  poll(); await reply("/api/evaluation", {...score, fen: "wrong position", reliability: "stable"});
+  assert.match(byId("evaluation-label").textContent, /범위 평가/, "wrong-position reliability is rejected");
+  poll(); await reply("/api/evaluation", {...score, reliability: "constructor"});
+  assert.equal(byId("evaluation-label").textContent, "백 우세", "unknown reliability is ignored");
+  poll();
+  selectMode("normal"); submit();
+  assert.equal(pending.find(call => call.url === "/api/new").body.sparring_mode, false);
+  assert.equal(pending.find(call => call.url === "/api/new").body.boss_mode, false);
+  const finalNormal = fixture(16); finalNormal.game_id = "final-normal";
+  await reply("/api/new", finalNormal);
+  await reply("/api/evaluation", {...score, reliability: "stable"});
+  assert.doesNotMatch(byId("opponent-detail").textContent, /스파링|보스/);
+  assert.doesNotMatch(byId("evaluation-label").textContent, /탐색 안정/, "late previous-game analysis cannot revive score or reliability");
+  assert.equal(pending.length, 0);
+  console.log("Browser mode/reliability checks: PASS (three exclusive modes, phases, draft, stale settings, undo, separate reliability, identity guards)");
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -11,6 +11,8 @@ import time
 import chess
 import chess.engine
 
+from evaluation_stability import assess as assess_evaluation_stability
+
 
 class MoveHints:
     def __init__(self, binary, engine_factory=None, timeout_grace=2.0, *, stream_evaluation=False):
@@ -27,6 +29,7 @@ class MoveHints:
         self._context = None
         self._snapshot = {"candidates": []}
         self._evaluation = {}
+        self._evaluation_packets = {}
         self._pending = None
         self._cancel = None
         self._worker = None
@@ -112,9 +115,11 @@ class MoveHints:
 
     def _clear_evaluation_locked(self, status):
         context = self._context
+        self._evaluation_packets = {}
         self._evaluation = {key: context[key] for key in ("game_id", "revision", "fen", "turn")}
         self._evaluation.update(status=status, cp=None, mate=None, depth=None, bound=None,
                                 white_share=None, winner=None, result="*", source="search", source_fen=None)
+        self._evaluation.update(assess_evaluation_stability(context.get("board"), {}))
 
     def _publish_evaluation(self, generation, context, cancel, timed_out, info):
         """Only a score packet with its own completed depth may replace a score.
@@ -152,6 +157,14 @@ class MoveHints:
             self._evaluation.update(status="searching", cp=cp, mate=mate, depth=depth,
                                     bound="lower" if lower else "upper" if upper else "exact",
                                     white_share=share, winner=winner, source_fen=self._context["fen"])
+            # Keep only this generation's raw iterations. A partial packet may
+            # not borrow a PV/depth from analysis.info, and a cancelled worker
+            # may not add evidence to the replacement position's assessment.
+            self._evaluation_packets[depth] = copy.deepcopy(info)
+            self._evaluation_packets = {key: self._evaluation_packets[key]
+                                        for key in sorted(self._evaluation_packets)[-3:]}
+            self._evaluation.update(assess_evaluation_stability(context["board"],
+                {key: packet for key, packet in self._evaluation_packets.items() if key <= depth}))
 
     @staticmethod
     def _close_engine(engine):

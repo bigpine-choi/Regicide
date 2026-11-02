@@ -25,6 +25,7 @@ from opening_variety import pgn_headers as opening_variety_headers
 from dynamic_play import pgn_headers as dynamic_play_headers
 import boss_play
 import boss_opponent
+import sparring_play
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
@@ -227,6 +228,17 @@ class GameArchive:
                           and moves[row["ply"] - 1]["actor"] == "engine"
                           and moves[row["ply"] - 1]["uci"] == row.get("selected_uci")
                           and row.get("history_uci") == uci_moves[:row["ply"] - 1]]
+        sparring_metadata = record.get("sparring_play")
+        sparring_mode = not boss_mode and bool(sparring_play.pgn_headers(sparring_metadata))
+        sparring_decisions = sparring_metadata.get("decisions", []) if sparring_mode else []
+        if not isinstance(sparring_decisions, list):
+            sparring_decisions = []
+        sparring_decisions = [row for row in sparring_decisions
+                             if isinstance(row, dict) and type(row.get("ply")) is int
+                             and 1 <= row["ply"] <= len(moves)
+                             and moves[row["ply"] - 1]["actor"] == "engine"
+                             and moves[row["ply"] - 1]["uci"] == row.get("selected_uci")
+                             and row.get("history_uci") == uci_moves[:row["ply"] - 1]]
         return {"record": record, "board": board, "moves": moves,
                 "game_id": game_id, "human_color": human_color,
                 "result": result, "termination": termination,
@@ -234,6 +246,7 @@ class GameArchive:
                 "started_at": started_at, "started_sort": started_sort,
                 "updated_at": updated_at, "ended_at": ended_at or None,
                 "boss_mode": boss_mode, "boss_decisions": boss_decisions,
+                "sparring_mode": sparring_mode, "sparring_decisions": sparring_decisions,
                 "error": bool(state.get("error"))}
 
     def _load(self, game_id):
@@ -292,6 +305,7 @@ class GameArchive:
                 "record_status": record_status, "engine_name": prepared["engine_name"],
                 "movetime_ms": prepared["movetime_ms"], "ply_count": len(prepared["moves"]),
                 "boss_mode": prepared["boss_mode"],
+                "sparring_mode": prepared["sparring_mode"],
                 "handicap_moves": sum(bool(move.get("forced")) for move in prepared["moves"]),
                 "current": current}
 
@@ -346,6 +360,8 @@ class GameArchive:
         game.headers.update(opening_variety_headers(record.get("opening_variety")))
         game.headers.update(dynamic_play_headers(record.get("dynamic_play")))
         game.headers.update(boss_play.pgn_headers(record.get("boss_play")))
+        if prepared["sparring_mode"]:
+            game.headers.update(sparring_play.pgn_headers(record.get("sparring_play")))
         movetimes = record.get("engine_movetimes_ms", {})
         if not isinstance(movetimes, dict):
             movetimes = {}
@@ -373,7 +389,11 @@ class GameArchive:
                 replay_budget = self._budget_at_ply(prepared, ply)
                 replay_engine = {"name": prepared["engine_name"],
                                  "movetime_ms": replay_budget,
-                                 "boss_mode": prepared["boss_mode"]}
+                                 "boss_mode": prepared["boss_mode"],
+                                 "sparring_mode": prepared["sparring_mode"]}
+                if prepared["sparring_mode"]:
+                    replay_engine["sparring"] = sparring_play.derive_profile(
+                        board, [row for row in prepared["sparring_decisions"] if row["ply"] <= ply])
                 if prepared["boss_mode"]:
                     replay_engine["boss_phase"] = boss_play.phase(
                         board, past_decisions, forced=forced,

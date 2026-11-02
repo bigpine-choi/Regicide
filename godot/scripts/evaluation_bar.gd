@@ -73,7 +73,20 @@ func present(value: Dictionary, from_white: bool) -> void:
 			_:
 				summary_text = "형세 분석 대기"
 				detail_text = "현재 체스판의 분석을 기다립니다."
+	var reliability: String = str(value.get("reliability", ""))
+	var labels := {"provisional": "잠정 평가", "stable": "탐색 안정", "volatile": "평가 변동 큼", "bounded": "범위 평가"}
+	var explanations := {
+		"provisional": "탐색이 더 진행되면 평가가 달라질 수 있습니다.",
+		"stable": "최근 탐색값이 비슷합니다. 정답을 보장하지는 않습니다.",
+		"volatile": "최근 탐색에서 평가가 크게 달라졌습니다.",
+		"bounded": "상한·하한 형태로 얻은 탐색 평가입니다."}
+	var show_reliability: bool = has_score and status in ["ready", "searching"] and labels.has(reliability)
+	if show_reliability:
+		summary_text += " · " + labels[reliability]
+		detail_text += " · " + labels[reliability]
 	tooltip_text = summary_text + "\n" + detail_text + "\n+는 백, −는 흑 우세입니다. 1.00은 폰 한 개에 해당하는 평가 단위입니다.\n막대는 엔진의 추정 형세이며 승률이 아닙니다."
+	if show_reliability:
+		tooltip_text += "\n" + explanations[reliability]
 	queue_redraw()
 
 

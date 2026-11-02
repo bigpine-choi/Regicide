@@ -97,6 +97,7 @@ var move_history: RichTextLabel
 var move_count: Label
 var color_option: OptionButton
 var boss_mode_option: OptionButton
+var game_mode_help: Label
 var time_option: OptionButton
 var think_time_help: Label
 var sidebar_scroll: ScrollContainer
@@ -380,8 +381,9 @@ func _build_ui() -> void:
 	boss_mode_option.name = "BossMode"
 	boss_mode_option.add_item("기본", 0)
 	boss_mode_option.add_item("보스 모드", 1)
+	boss_mode_option.add_item("스파링 모드", 2)
 	boss_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	boss_mode_option.tooltip_text = "새 대국부터 적용됩니다.\n처음에는 신중하게 두고, 대국 중 상대의 실수가 누적되면 함정 시도를 늘립니다.\n후속 전술은 Regicide가 직접 검토합니다.\n정확히 간파하면 보스가 손해를 보는 함정도 둡니다."
+	boss_mode_option.item_selected.connect(_on_game_mode_selected)
 	settings.add_child(boss_mode_option)
 	settings.add_child(_label("한 수 생각 시간", 14, "a3b6c8"))
 	time_option = OptionButton.new()
@@ -392,6 +394,11 @@ func _build_ui() -> void:
 	time_option.tooltip_text = "대국 중에도 바꿀 수 있습니다. 이미 생각 중인 수는 기존 시간으로 마치고, 다음 수부터 적용합니다."
 	time_option.item_selected.connect(_on_think_time_selected)
 	settings.add_child(time_option)
+	game_mode_help = _label("", 12, "a3b6c8")
+	game_mode_help.name = "GameModeHelp"
+	game_mode_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sidebar.add_child(game_mode_help)
+	_on_game_mode_selected(boss_mode_option.selected)
 	think_time_help = _label("색·모드 선택은 새 대국에, 생각 시간 변경은 현재 대국에 적용합니다.", 12, "9bd7ca")
 	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(think_time_help)
@@ -1678,7 +1685,21 @@ func _cancel_promotion() -> void:
 
 func _on_new_game_pressed() -> void:
 	_mutate("/api/new", {"color": "white" if color_option.selected == 0 else "black",
-		"movetime_ms": time_option.get_selected_id(), "boss_mode": boss_mode_option.get_selected_id() == 1})
+		"movetime_ms": time_option.get_selected_id(), "boss_mode": boss_mode_option.get_selected_id() == 1,
+		"sparring_mode": boss_mode_option.get_selected_id() == 2})
+
+
+func _on_game_mode_selected(_index: int) -> void:
+	var descriptions := {
+		0: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
+		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
+		2: "50수까지 수준에 맞춰 상대하고, 이후 서서히 압박을 높입니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."}
+	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
+	boss_mode_option.tooltip_text = description
+	if boss_mode_option.get_selected_id() == 2:
+		boss_mode_option.tooltip_text += "\n50수는 백과 흑이 각각 50번 둔 시점입니다. 이후 약 20수에 걸쳐 강도를 높입니다."
+	if game_mode_help != null:
+		game_mode_help.text = description
 
 
 func _on_undo_pressed() -> void:
@@ -1859,9 +1880,13 @@ func _render() -> void:
 	var engine: Dictionary = shown.get("engine", {})
 	engine_label.text = str(engine.get("name", "엔진 연결 준비 중"))
 	boss_phase_label.text = "LOCAL PRACTICE  ·  기보 자동 저장"
+	boss_phase_label.tooltip_text = ""
 	if engine.get("boss_mode", false) == true:
 		var phase: String = str({"opening": "변칙 오프닝", "trap_hunt": "전술 사냥", "full_strength": "전력 대국"}.get(str(engine.get("boss_phase", "")), ""))
 		boss_phase_label.text = "보스 모드" + (" · " + phase if not phase.is_empty() else "")
+	elif engine.get("sparring_mode", false) == true:
+		# Adjustment details remain in state/records, outside the live presentation.
+		boss_phase_label.text = "스파링 모드"
 	if not engine.is_empty():
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
@@ -1875,6 +1900,8 @@ func _render() -> void:
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
 	boss_mode_option.disabled = not enabled or replacing
+	_on_game_mode_selected(boss_mode_option.selected)
+	game_mode_help.visible = not review_mode
 	time_option.disabled = not _can_change_think_time()
 	if not think_time_request_in_flight:
 		var time_index: int = time_option.get_item_index(int(engine.get("movetime_ms", 1000)))
@@ -1893,10 +1920,12 @@ func _render() -> void:
 	if thinking_now and engine.get("active_extra_budget_ms") != null:
 		extra_ms = int(engine.active_extra_budget_ms)
 	if extra_ms > 0:
-		var extra_label: String = "구상 검토" if bool(engine.get("dynamic_play_enabled", false)) else "오프닝 후보 검토"
+		var extra_label: String = "스파링 응수 검토" if bool(engine.get("sparring_mode", false)) else ("구상 검토" if bool(engine.get("dynamic_play_enabled", false)) else "오프닝 후보 검토")
 		think_time_help.text += "\n%s 시 최대 %s초 더 생각할 수 있습니다." % [extra_label, str(float(extra_ms) / 1000.0)]
 	if think_time_request_in_flight:
 		think_time_help.text += "\n변경한 시간을 저장하고 있습니다."
+	if engine.get("sparring_mode", false) == true and int(engine.get("movetime_ms", 1000)) < 600:
+		think_time_help.text += "\n짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다."
 	undo_button.disabled = not enabled or replacing or not state.get("can_undo", false)
 	resign_button.disabled = not enabled or not active or replacing
 	save_button.disabled = not ready or _file_dialog_busy() or request_in_flight or think_time_request_in_flight or replacing or (review_mode and review_pgn.is_empty())

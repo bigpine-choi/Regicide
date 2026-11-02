@@ -301,6 +301,17 @@
     if (evaluation.source === "previous_search") details.push("직전 탐색 평가");
     if (Number.isInteger(evaluation.depth)) details.push(`탐색 깊이 ${evaluation.depth}`);
     if (prefix) details.push("확정 평가가 아닌 탐색 경계값");
+    const reliabilityLabels = {provisional: "잠정 평가", stable: "탐색 안정", volatile: "평가 변동 큼", bounded: "범위 평가"};
+    const reliabilityDetails = {
+      provisional: "탐색이 더 진행되면 평가가 달라질 수 있습니다.",
+      stable: "최근 탐색값이 비슷합니다. 정답을 보장하지는 않습니다.",
+      volatile: "최근 탐색에서 평가가 크게 달라졌습니다.",
+      bounded: "상한·하한 형태로 얻은 탐색 평가입니다."
+    };
+    if (Object.hasOwn(reliabilityLabels, evaluation.reliability)) {
+      label += ` · ${reliabilityLabels[evaluation.reliability]}`;
+      details.push(reliabilityLabels[evaluation.reliability], reliabilityDetails[evaluation.reliability]);
+    }
     details.push(note);
     const share = Number.isFinite(evaluation.white_share) ? Math.max(0, Math.min(1, evaluation.white_share)) : null;
     return {label, score:prefix + score, detail:details.join(" · "), share};
@@ -313,12 +324,14 @@
     bar.classList.toggle("black-view", blackView);
     bar.classList.toggle("unknown", view.share === null);
     bar.setAttribute("aria-label", `${view.label}, ${view.score}. ${view.detail}`);
+    bar.title = `${view.label}, ${view.score}. ${view.detail}`;
     byId("evaluation-white").style.height = `${(view.share ?? 0) * 100}%`;
     byId("evaluation-top").textContent = blackView ? "백" : "흑";
     byId("evaluation-bottom").textContent = blackView ? "흑" : "백";
     byId("evaluation-label").textContent = view.label;
     byId("evaluation-score").textContent = view.score;
     byId("evaluation-detail").textContent = view.detail;
+    byId("evaluation-detail").title = view.detail;
   }
 
   async function pollEvaluation() {
@@ -627,7 +640,19 @@
     }
   }
 
+  function renderModeHelp() {
+    const descriptions = {
+      normal: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
+      boss: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
+      sparring: "50수까지 수준에 맞춰 상대하고, 이후 서서히 압박을 높입니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."
+    };
+    const mode = byId("boss-mode").value;
+    byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;
+    byId("boss-mode-help").title = mode === "sparring" ? "50수는 백과 흑이 각각 50번 둔 시점입니다. 이후 약 20수에 걸쳐 강도를 높입니다." : "";
+  }
+
   function render() {
+    renderModeHelp();
     renderBoard();
     renderMoves();
     renderEvaluation();
@@ -642,10 +667,14 @@
       const ms = state.engine.movetime_ms;
       const seconds = Number(ms) / 1000;
       byId("opponent-detail").textContent = `한 수에 ${seconds}초 생각 · ${colorName(humanColor === "white" ? "black" : "white")}`;
+      byId("opponent-detail").title = "";
       if (state.engine.boss_mode === true) {
         const phaseLabels = {opening: "변칙 오프닝", trap_hunt: "전술 사냥", full_strength: "전력 대국"};
         const phase = Object.hasOwn(phaseLabels, state.engine.boss_phase) ? phaseLabels[state.engine.boss_phase] : null;
         byId("opponent-detail").textContent += phase ? ` · 보스 모드 · ${phase}` : " · 보스 모드";
+      } else if (state.engine.sparring_mode === true) {
+        // Keep adjustment diagnostics in state/records, outside the live presentation.
+        byId("opponent-detail").textContent += " · 스파링 모드";
       }
       const engineName = state.engine.name || "Regicide";
       byId("engine-version").textContent = engineName;
@@ -669,8 +698,11 @@
       (extraSchedule.find(stage => (state.moves?.length ?? 0) < stage.until_ply)?.budget_ms ?? 0) :
       (state?.engine.extra_budget_ms ?? 0);
     const extraMS = currentMS != null ? (state?.engine.active_extra_budget_ms ?? plannedExtraMS) : plannedExtraMS;
-    const extraLabel = state?.engine.dynamic_play_enabled ? "구상 검토" : "오프닝 후보 검토";
+    const extraLabel = state?.engine.sparring_mode ? "스파링 응수 검토" : state?.engine.dynamic_play_enabled ? "구상 검토" : "오프닝 후보 검토";
     if (extraMS > 0) byId("think-time-help").textContent += ` ${extraLabel} 시 최대 ${extraMS / 1000}초 더 생각할 수 있습니다.`;
+    if (state?.engine.sparring_mode === true && Number.isFinite(state.engine.movetime_ms) && state.engine.movetime_ms < 600) {
+      byId("think-time-help").textContent += " 짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다.";
+    }
     byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
     byId("resign").disabled = !ready || busy || timeSaving || !active;
     byId("download-pgn").disabled = !ready || busy;
@@ -786,8 +818,9 @@
   byId("new-game-form").addEventListener("submit", (event) => {
     event.preventDefault();
     void mutate("/api/new", {color: byId("human-side").value, movetime_ms: Number(byId("think-time").value),
-      boss_mode: byId("boss-mode").value === "boss"});
+      boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring"});
   });
+  byId("boss-mode").addEventListener("change", renderModeHelp);
   byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
   byId("resign").addEventListener("click", () => { void mutate("/api/resign"); });

@@ -52,6 +52,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	verify(app.captured_requests[-1].payload.boss_mode == false, "default new game sends false")
+	verify(app.captured_requests[-1].payload.sparring_mode == false, "default new game also disables sparring")
 	app.boss_mode_option.select(1)
 	app.accept_state(fixture(3))
 	verify(app.boss_mode_option.get_selected_id() == 1, "draft mode survives rendering")
@@ -61,6 +62,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	verify(app.captured_requests[-1].path == "/api/new" and app.captured_requests[-1].payload.boss_mode == true, "boss selection goes only to new-game request")
+	verify(app.captured_requests[-1].payload.sparring_mode == false, "boss selection excludes sparring")
 	verify(app.boss_phase_label.text == "보스 모드 · 변칙 오프닝", "opening label is displayed")
 	await process_frame
 	var normal_board: Rect2 = app.board.get_global_rect()
@@ -102,7 +104,100 @@ func _run() -> void:
 	verify(not app.boss_phase_label.text.contains("보스 모드"), "normal new game clears phase display")
 	app.accept_state(fixture(9, "full_strength"))
 	verify(not app.boss_phase_label.text.contains("보스 모드"), "stale board cannot resurrect previous boss display")
+	await _sparring_checks()
 	app.queue_free()
 	await process_frame
 	print("Godot boss-mode offline checks: %d, failures: %d" % [checks, failures])
 	quit(0 if failures == 0 else 1)
+
+
+func sparring_fixture(revision: int, phase: String, observations: Variant = 3, status: String = "adapting") -> Dictionary:
+	var value: Dictionary = fixture(revision)
+	value.game_id = "sparring-ui-game"
+	value.engine.sparring_mode = true
+	value.engine.extra_budget_ms = 250
+	value.engine.sparring = {"phase": phase, "status": status, "observations": observations,
+		"level": 0.65, "confidence": "high", "target_loss_cp": 72}
+	return value
+
+
+func _sparring_checks() -> void:
+	var normal_fast: Dictionary = fixture(10)
+	normal_fast.engine.movetime_ms = 100
+	normal_fast.engine.settings_revision = 2
+	app.accept_state(normal_fast)
+	var requests_before: int = app.captured_requests.size()
+	app.boss_mode_option.select(2)
+	app._render()
+	verify(app.game_mode_help.text.contains("50수까지 수준에 맞춰 상대하고") and app.boss_mode_option.tooltip_text.contains("각각 50번"), "sparring help describes fifty full moves and gradual pressure without guaranteeing victory")
+	verify(app.game_mode_help.text.contains("1초 이상을 권장"), "sparring draft recommends an eligible think time")
+	verify(app.time_option.get_selected_id() == 100 and app.captured_requests.size() == requests_before, "draft mode selection never changes time or sends a time mutation")
+	verify(not app.think_time_help.text.contains("맞춤 조절을 쉬고"), "draft sparring does not mislabel an active normal game")
+	var minimum_eligible: int = 5000
+	for index in range(app.time_option.item_count):
+		var ms: int = app.time_option.get_item_id(index)
+		if ms >= 600:
+			minimum_eligible = mini(minimum_eligible, ms)
+	verify(minimum_eligible == 1000, "one second is the shortest selectable eligible time")
+	verify(not app.boss_phase_label.text.contains("스파링"), "sparring draft does not alter current normal game")
+	app.next_response = {"ok": true, "data": sparring_fixture(11, "calibration", 0, "calibrating")}
+	app._on_new_game_pressed()
+	await process_frame
+	await process_frame
+	verify(app.captured_requests[-1].payload.sparring_mode == true and app.captured_requests[-1].payload.boss_mode == false, "sparring payload is mutually exclusive with boss")
+	verify(app.boss_phase_label.text == "스파링 모드" and app.state.engine.sparring.observations == 0, "calibration observations remain in state without live diagnostics")
+	verify(app.think_time_help.text.contains("스파링 응수 검토"), "sparring extra search is not mislabelled as opening-only work")
+	var geometry: Rect2 = app.board.get_global_rect()
+	for row in [[12, "sparring", "맞춤 스파링"], [13, "ramp", "압박 높이는 중"], [14, "finish", "전력 마무리"]]:
+		app.accept_state(sparring_fixture(row[0], row[1], 8))
+		await process_frame
+		verify(app.boss_phase_label.text == "스파링 모드" and app.state.engine.sparring.phase == row[1] and app.state.engine.sparring.observations == 8, "sparring phase is preserved without announcing adjustment: " + row[1])
+	verify(app.board.get_global_rect().is_equal_approx(geometry), "phase updates do not resize the board")
+	verify(not app.boss_phase_label.text.contains("0.65") and not app.boss_phase_label.text.contains("72") and not app.boss_phase_label.text.contains("%"), "internal strength and confidence never become a displayed rating or probability")
+	var late: Dictionary = sparring_fixture(12, "calibration", 1)
+	late.engine.settings_revision = 1
+	late.engine.movetime_ms = 3000
+	app.accept_state(late)
+	verify(app.state.engine.sparring.phase == "finish" and app.state.engine.sparring.observations == 8, "late settings cannot replace a newer sparring profile")
+	verify(app.time_option.get_selected_id() == 3000, "independent newer time setting still applies")
+	app.accept_state(sparring_fixture(15, "calibration", 1, "holding"))
+	verify(app.state.engine.sparring.phase == "calibration" and app.state.engine.sparring.observations == 1, "undo may decrease observations and reset phase at a newer board revision")
+	verify(app.boss_phase_label.text == "스파링 모드" and app.boss_phase_label.tooltip_text.is_empty(), "holding and observations remain absent from live labels and tooltips")
+	app.accept_state(sparring_fixture(16, "", null, "holding"))
+	verify(app.boss_phase_label.text == "스파링 모드", "missing phase and observations keep the compatible mode label")
+	var legacy: Dictionary = sparring_fixture(17, "")
+	legacy.engine.sparring = null
+	app.accept_state(legacy)
+	verify(app.boss_phase_label.text == "스파링 모드", "missing profile is null-safe")
+	app.boss_mode_option.select(1)
+	app._render()
+	verify(app.game_mode_help.text.contains("함정") and app.boss_phase_label.text == "스파링 모드", "prospective boss help does not change active sparring state")
+	app.review_mode = true
+	app.review_frames = [sparring_fixture(1, "ramp", 4)]
+	app.review_moves = []
+	app.review_summary = {"human_color": "white"}
+	app.review_ply = 0
+	app._render()
+	verify(app.boss_phase_label.text == "스파링 모드" and app._display_state().engine.sparring.phase == "ramp" and app._display_state().engine.sparring.observations == 4, "archive retains its own profile without announcing adjustment")
+	verify(not app.game_mode_help.visible and app.boss_mode_option.disabled, "replay hides prospective mode help and disables selection")
+	app.review_mode = false
+	var fast: Dictionary = sparring_fixture(18, "sparring")
+	fast.engine.movetime_ms = 100
+	fast.engine.settings_revision = 2
+	fast.engine.extra_budget_ms = 0
+	app.accept_state(fast)
+	verify(app.think_time_help.text.contains("짧은 시간 설정에서는 맞춤 조절을 쉬고 기본 수읽기를 사용합니다."), "active short-time sparring explains its baseline-only behavior")
+	app.boss_mode_option.select(0)
+	app._render()
+	verify(app.time_option.get_selected_id() == 100 and app.think_time_help.text.contains("맞춤 조절을 쉬고"), "normal draft preserves current sparring time and short-time notice")
+	var eligible: Dictionary = sparring_fixture(19, "sparring")
+	eligible.engine.settings_revision = 3
+	app.accept_state(eligible)
+	verify(not app.think_time_help.text.contains("맞춤 조절을 쉬고"), "eligible current time removes short-time notice")
+	app.next_response = {"ok": true, "data": fixture(20)}
+	app._on_new_game_pressed()
+	await process_frame
+	await process_frame
+	verify(not app.captured_requests[-1].payload.boss_mode and not app.captured_requests[-1].payload.sparring_mode, "return to normal clears both mode flags")
+	app.accept_state(sparring_fixture(19, "finish", 20))
+	verify(not app.boss_phase_label.text.contains("스파링"), "old game response cannot revive sparring state")

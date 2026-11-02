@@ -34,6 +34,8 @@ from opening_presentation import OpeningGuideCache
 import opening_variety
 import dynamic_play
 import boss_play
+import sparring_play
+import evaluation_stability
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -188,7 +190,7 @@ class HumanGame:
         if self.neural_model:
             self.engine_name += " · 검증 통과 학습 평가" if self.neural_adopted_generation else " · 학습 평가 실험"
 
-    def _reset(self, color, movetime_ms, boss_mode=False):
+    def _reset(self, color, movetime_ms, boss_mode=False, sparring_mode=False):
         if getattr(self, "_game_open", False):
             self._game_open = False
             self._save()
@@ -206,6 +208,8 @@ class HumanGame:
         self.boss_mode = boss_mode
         self._boss_decisions = {}
         self._boss_memo = {}
+        self.sparring_mode = sparring_mode
+        self._sparring_decisions = {}
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -304,6 +308,7 @@ class HumanGame:
                     "white_share": None, "result": result, "winner": None,
                     "source": "search", "source_fen": None,
                     "budget_ms": evaluation_budget_ms if active and self._handicap_backup is None else None}
+        snapshot.update(evaluation_stability.assess(self.board, {}))
         if result != "*":
             winner = "white" if result == "1-0" else "black" if result == "0-1" else None
             snapshot.update(status="terminal", source="result", winner=winner,
@@ -312,6 +317,7 @@ class HumanGame:
                 snapshot["mate"] = 0
         with self._evaluation_lock:
             self._evaluation = snapshot
+            self._evaluation_packets = {}
             self._evaluation_uses_helper = evaluating
             # The helper evaluates the current human position independently of
             # advice. On the engine's turn its move search already evaluates
@@ -351,10 +357,13 @@ class HumanGame:
         else:
             share = 0.5 + 0.5 * cp / (abs(cp) + 400.0)
         with self._evaluation_lock:
+            self._evaluation_packets[depth] = dict(info)
+            self._evaluation_packets = dict(sorted(self._evaluation_packets.items())[-6:])
             self._evaluation.update(cp=cp, mate=mate, depth=depth,
                                     bound="lower" if lower else "upper" if upper else "exact",
                                     white_share=share, winner=winner, status="searching",
                                     source="search", source_fen=self.board.fen(en_passant="fen"))
+            self._evaluation.update(evaluation_stability.assess(self.board, self._evaluation_packets))
 
     def state(self):
         with self._lock:
@@ -421,15 +430,19 @@ class HumanGame:
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
-                               "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode,
-                               "dynamic_play_enabled": self.dynamic_play_enabled and not self.boss_mode,
+                               "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode,
+                               "dynamic_play_enabled": self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode,
                                "boss_mode": self.boss_mode,
+                               "sparring_mode": self.sparring_mode,
+                               "sparring": (sparring_play.derive_profile(self.board, list(self._sparring_decisions.values()))
+                                            if self.sparring_mode else None),
                                "boss_opponent": (boss_play.boss_opponent.derive_profile(self.board, list(self._boss_decisions.values()))
                                                  if self.boss_mode else None),
                                "boss_phase": boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms),
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
-                               "extra_budget_ms": ((boss_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                               "extra_budget_ms": (sparring_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                                                   if self.sparring_mode else (boss_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
                                                     if boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms) in ("opening", "trap_hunt") else 0)
                                                    if self.boss_mode else dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
                                                    if self.dynamic_play_enabled else
@@ -439,7 +452,7 @@ class HumanGame:
                                     "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=0)},
                                    {"until_ply": dynamic_play.MAX_PLIES,
                                     "budget_ms": dynamic_play.extra_budget(self.movetime_ms, ply=opening_variety.MAX_PLIES)}]
-                                   if self.dynamic_play_enabled and not self.boss_mode else None),
+                                   if self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode else None),
                                "active_extra_budget_ms": self._active_extra_budget_ms,
                                "source_commit": self.source["commit"],
                                "binary_sha256": self.binary_sha256,
@@ -449,7 +462,7 @@ class HumanGame:
                                    **({"model_generation": self.neural_adopted_generation}
                                       if self.neural_adopted_generation else {})} if self.neural_model else {})}}
 
-    def new_game(self, color, movetime_ms, revision, boss_mode=False):
+    def new_game(self, color, movetime_ms, revision, boss_mode=False, sparring_mode=False):
         with self._lock:
             self._check_revision(revision)
             self._require_idle()
@@ -458,8 +471,12 @@ class HumanGame:
                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
             if type(boss_mode) is not bool:
                 raise ValueError("보스 모드 여부는 true 또는 false로 지정해 주세요.")
+            if type(sparring_mode) is not bool:
+                raise ValueError("스파링 모드 여부는 true 또는 false로 지정해 주세요.")
+            if boss_mode and sparring_mode:
+                raise ValueError("보스 모드와 스파링 모드 중 하나를 선택해 주세요.")
             self._ensure_engine()
-            self._reset(color, movetime_ms, boss_mode)
+            self._reset(color, movetime_ms, boss_mode, sparring_mode)
             return self.state()
 
     def human_move(self, uci, revision):
@@ -502,7 +519,8 @@ class HumanGame:
                 movetime_ms = self.movetime_ms
                 forced_game = bool(self._forced_plies)
                 boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
-                move_policy = (boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
+                sparring_decisions = copy.deepcopy(list(self._sparring_decisions.values()))
+                move_policy = (None if self.sparring_mode else boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
                                opening_variety if self.opening_variety_enabled else None)
                 search_plan = (move_policy.plan(board, movetime_ms, self._opening_seed,
                                                forced=bool(self._forced_plies),
@@ -520,7 +538,8 @@ class HumanGame:
                 token, game_id = self._game_token, self.game_id
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
-                self._active_extra_budget_ms = search_plan["extra_budget_ms"] if search_plan else 0
+                self._active_extra_budget_ms = (sparring_play.extra_budget(movetime_ms, ply=len(board.move_stack))
+                                                if self.sparring_mode else search_plan["extra_budget_ms"] if search_plan else 0)
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
             decision = None
@@ -539,14 +558,18 @@ class HumanGame:
                                                expire_search)
                     watchdog.daemon = True
                     watchdog.start()
-                def search(budget, *, root_move=None, publish=True, fresh=False, depth=None, position=None):
+                def search(budget, *, root_move=None, root_moves=None, publish=True, fresh=False, depth=None, position=None):
                     search_board = board if position is None else position
-                    if position is not None:
+                    if position is not None or root_move is not None or root_moves is not None:
                         publish = False
                     limit = chess.engine.Limit(time=budget / 1000, depth=depth)
                     options = {"game": object() if fresh else token, "info": chess.engine.INFO_ALL}
                     if root_move is not None:
                         options["root_moves"] = [root_move]
+                    if root_moves is not None:
+                        if root_move is not None:
+                            raise ValueError("Provide either one root move or an allowed root set.")
+                        options["root_moves"] = list(root_moves)
                     packets, latest = {}, {}
                     if callable(getattr(engine, "analysis", None)):
                         with engine.analysis(search_board.copy(stack=True), limit, **options) as analysis:
@@ -602,6 +625,13 @@ class HumanGame:
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     boss_extra_started = None
+                    if self.sparring_mode:
+                        decision, discard_engine = sparring_play.choose(
+                            board, reply.move, baseline_info, _packets, search, engine.close,
+                            decisions=sparring_decisions, seed=self._opening_seed,
+                            movetime_ms=movetime_ms, forced=forced_game)
+                        decision["baseline_elapsed_ms"] = round(baseline_elapsed_ms, 3)
+                        reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                     if self.boss_mode:
                         boss_extra_started = time.monotonic()
                         total_extra = search_plan["extra_budget_ms"]
@@ -721,7 +751,7 @@ class HumanGame:
                     self.board.push(reply.move)
                     self._engine_movetimes[len(self.board.move_stack)] = movetime_ms
                     if decision is not None:
-                        decisions = (self._boss_decisions if self.boss_mode else
+                        decisions = (self._sparring_decisions if self.sparring_mode else self._boss_decisions if self.boss_mode else
                                      self._dynamic_decisions if self.dynamic_play_enabled else self._opening_decisions)
                         decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
                         if memo_key:
@@ -762,6 +792,8 @@ class HumanGame:
                                        if ply <= len(self.board.move_stack)}
             self._boss_decisions = {ply: row for ply, row in self._boss_decisions.items()
                                     if ply <= len(self.board.move_stack)}
+            self._sparring_decisions = {ply: row for ply, row in self._sparring_decisions.items()
+                                        if ply <= len(self.board.move_stack)}
             self._game_token = object()
             if self._engine is None:
                 self._ensure_engine()
@@ -806,6 +838,7 @@ class HumanGame:
                                      "opening_decisions": copy.deepcopy(self._opening_decisions),
                                      "dynamic_decisions": copy.deepcopy(self._dynamic_decisions),
                                      "boss_decisions": copy.deepcopy(self._boss_decisions),
+                                     "sparring_decisions": copy.deepcopy(self._sparring_decisions),
                                      "override": self._override, "error": self.error,
                                      "outcome": self._outcome(), "ply": ply,
                                      "updated_at": self.updated_at, "ended_at": self.ended_at}
@@ -819,6 +852,8 @@ class HumanGame:
                                        if number < ply}
             self._boss_decisions = {number: row for number, row in self._boss_decisions.items()
                                     if number < ply}
+            self._sparring_decisions = {number: row for number, row in self._sparring_decisions.items()
+                                        if number < ply}
             self.error = None
             self._override = None
             self.revision += 1
@@ -873,6 +908,7 @@ class HumanGame:
             self._opening_decisions = backup["opening_decisions"]
             self._dynamic_decisions = backup["dynamic_decisions"]
             self._boss_decisions = backup["boss_decisions"]
+            self._sparring_decisions = backup["sparring_decisions"]
             self.error = backup["error"]
             self._override = backup["override"]
             self.updated_at = backup["updated_at"]
@@ -907,6 +943,7 @@ class HumanGame:
             game.headers.update(opening_variety.pgn_headers(self._opening_metadata()))
             game.headers.update(dynamic_play.pgn_headers(self._dynamic_metadata()))
             game.headers.update(boss_play.pgn_headers(self._boss_metadata()))
+            game.headers.update(sparring_play.pgn_headers(self._sparring_metadata()))
             if self.neural_model:
                 game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
@@ -930,7 +967,7 @@ class HumanGame:
         return "in_progress" if self._game_open else "unfinished"
 
     def _opening_metadata(self):
-        return {"enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode, "policy": opening_variety.POLICY,
+        return {"enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode, "policy": opening_variety.POLICY,
                 "seed": self._opening_seed, "max_plies": opening_variety.MAX_PLIES,
                 "early_plies": opening_variety.EARLY_PLIES,
                 "max_early_probes": opening_variety.MAX_EARLY_PROBES,
@@ -941,7 +978,7 @@ class HumanGame:
                          for key, row in sorted(self._opening_memo.items())]}
 
     def _dynamic_metadata(self):
-        return {"enabled": self.dynamic_play_enabled and not self.boss_mode, "policy": dynamic_play.POLICY,
+        return {"enabled": self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode, "policy": dynamic_play.POLICY,
                 "seed": self._opening_seed, "max_plies": dynamic_play.MAX_PLIES,
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._dynamic_decisions.items())],
                 "memo": [{"key": key, "decision": copy.deepcopy(row)}
@@ -954,6 +991,11 @@ class HumanGame:
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._boss_decisions.items())],
                 "memo": [{"key": key, "decision": copy.deepcopy(row)}
                          for key, row in sorted(self._boss_memo.items())]}
+
+    def _sparring_metadata(self):
+        return {"enabled": self.sparring_mode, "policy": sparring_play.POLICY, "seed": self._opening_seed,
+                "profile": sparring_play.derive_profile(self.board, list(self._sparring_decisions.values())),
+                "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._sparring_decisions.items())]}
 
     def _save(self, update_timestamp=True):
         if update_timestamp:
@@ -977,6 +1019,7 @@ class HumanGame:
                   "opening_variety": self._opening_metadata(),
                   "dynamic_play": self._dynamic_metadata(),
                   "boss_play": self._boss_metadata(),
+                  "sparring_play": self._sparring_metadata(),
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
@@ -1198,7 +1241,7 @@ class HumanHandler(BaseHTTPRequestHandler):
                     self._send(400, {"error": str(exc), "hint": game.hint()})
                 return
             actions = {"/api/new": lambda: game.new_game(data.get("color"), data.get("movetime_ms"), revision,
-                                                        data.get("boss_mode", False)),
+                                                        data.get("boss_mode", False), data.get("sparring_mode", False)),
                        "/api/think-time": lambda: game.set_think_time(data.get("movetime_ms"),
                            data.get("game_id"), data.get("settings_revision")),
                        "/api/move": lambda: game.human_move(data.get("move"), revision),

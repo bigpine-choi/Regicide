@@ -81,6 +81,22 @@ func _run() -> void:
 	for result in ["1-0", "0-1", "1/2-1/2"]:
 		bar.present({"status": "terminal", "result": result, "cp": null}, true)
 		verify(bar.has_score and bar.white_share == (1.0 if result == "1-0" else (0.0 if result == "0-1" else 0.5)), "terminal result determines exact bar fill")
+	score = score_for(position, 125)
+	bar.present(score, true)
+	var original_share: float = bar.white_share
+	score.merge({"recent_cp_range_white": [-900, -300], "score_swing_cp": 600, "stable_depths": 3}, true)
+	for row in [["provisional", "잠정 평가"], ["stable", "탐색 안정"], ["volatile", "평가 변동 큼"], ["bounded", "범위 평가"]]:
+		score.reliability = row[0]
+		bar.present(score, false)
+		verify(bar.summary_text.contains(row[1]) and bar.detail_text.contains(row[1]) and bar.tooltip_text.contains(row[1]), "reliability label appears in summary, detail and tooltip: " + row[0])
+		verify(bar.summary_text.contains("+1.25") and bar.white_share == original_share, "reliability metadata never replaces the current score or fill")
+		if row[0] == "stable":
+			verify(bar.tooltip_text.contains("정답을 보장하지는 않습니다"), "stable search is not a correctness guarantee")
+	score.reliability = "constructor"
+	bar.present(score, true)
+	verify(bar.summary_text == "백 우세 · +1.25", "unknown reliability is ignored for compatibility")
+	bar.present({"status": "terminal", "result": "0-1", "reliability": "stable"}, true)
+	verify(bar.summary_text == "흑 승리", "terminal outcome is not relabelled as uncertain search")
 	bar.queue_free()
 	await process_frame
 	var app: Variant = load("res://main.tscn").instantiate()
@@ -97,8 +113,10 @@ func _run() -> void:
 	verify(app.evaluation_bar.mouse_filter == Control.MOUSE_FILTER_IGNORE, "evaluation overlay preserves board click and drag input")
 	app.accept_state(position)
 	score = score_for(position, 240)
+	score.reliability = "provisional"
 	verify(app.accept_evaluation(score), "current-position analysis is accepted")
 	verify(app.evaluation_summary.text.contains("+2.40"), "live scene renders the accepted score")
+	verify(app.evaluation_detail.text.contains("잠정 평가"), "live scene exposes separate evaluation reliability")
 	var before: String = app.evaluation_summary.text
 	var original_view: bool = app.evaluation_bar.view_from_white
 	app._on_flip_pressed()
@@ -106,6 +124,7 @@ func _run() -> void:
 	var wrong_fen: Dictionary = score.duplicate(true)
 	wrong_fen["fen"] = "8/8/8/8/8/4P3/8/4K2k b - - 0 1"
 	verify(not app.accept_evaluation(wrong_fen), "wrong-position callback is rejected even at same revision")
+	verify(app.evaluation_detail.text.contains("잠정 평가"), "rejected position cannot replace reliability text")
 	var changed: Dictionary = fixture("evaluation-game", 2)
 	app.accept_state(changed)
 	verify(not app.evaluation_bar.has_score, "a changed revision clears the old score immediately")
