@@ -114,19 +114,31 @@ class ProfileTests(unittest.TestCase):
         while len(board.move_stack) < 120:
             board.push_uci(sequence[index % 4])
             index += 1
+        legacy = policy.derive_profile(board, rows, policy="regicide-sparring-play-v1")
+        self.assertEqual(legacy["phase"], "ramp")
+        self.assertAlmostEqual(legacy["target_loss_cp"], legacy["skill_target_loss_cp"] / 2, places=2)
+        self.assertEqual(legacy["policy"], "regicide-sparring-play-v1")
         profile = policy.derive_profile(board, rows)
-        self.assertEqual(profile["phase"], "ramp")
-        self.assertAlmostEqual(profile["target_loss_cp"], profile["skill_target_loss_cp"] / 2, places=2)
-        self.assertAlmostEqual(policy._target(board, profile, 300)["target_loss_cp"], profile["target_loss_cp"], places=2)
+        self.assertAlmostEqual(profile["target_loss_cp"], profile["skill_target_loss_cp"] * .3, places=2)
+        self.assertEqual(policy._target(board, profile, 300)["target_cp"], 219)
+        self.assertNotEqual(policy._target(board, profile, 300)["target_cp"], profile["target_loss_cp"])
 
 
 class ScheduleAndNaturalnessTests(unittest.TestCase):
-    def test_fifty_full_moves_then_twenty_move_ramp_without_material_shortcut(self):
+    def test_forty_moves_then_ramp_and_full_at_each_colors_seventieth_move(self):
         board = chess.Board()
         sequence = ["g1f3", "g8f6", "f3g1", "f6g8"]
         for ply in range(141):
-            expected = "finish" if ply >= 140 else "ramp" if ply >= 100 else "calibration" if ply < 6 else "sparring"
+            expected = "finish" if ply >= 138 else "ramp" if ply >= 80 else "calibration" if ply < 6 else "sparring"
             self.assertEqual(policy.phase(board), expected, ply)
+            legacy = "finish" if ply >= 140 else "ramp" if ply >= 100 else "calibration" if ply < 6 else "sparring"
+            self.assertEqual(policy.phase(board, policy="regicide-sparring-play-v1"), legacy, ply)
+            if ply in (80, 81):
+                self.assertAlmostEqual(policy._ramp_fraction(board), 1 / 30)
+            if ply in (136, 137):
+                self.assertAlmostEqual(policy._ramp_fraction(board), 29 / 30)
+            if ply in (138, 139):
+                self.assertEqual(policy._ramp_fraction(board), 1)
             if ply < 140:
                 board.push_uci(sequence[ply % 4])
         sparse = chess.Board("7k/8/8/8/8/8/8/KQ6 w - - 0 1")
@@ -137,18 +149,21 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         self.assertEqual(policy.extra_budget(600), 1200)
         self.assertEqual(policy.extra_budget(1000), 2000)
         self.assertEqual(policy.extra_budget(5000), 2000)
-        self.assertEqual(policy.extra_budget(1000, ply=140), 0)
+        self.assertEqual(policy.extra_budget(1000, ply=138), 500)
+        self.assertEqual(policy.extra_budget(1000, analysis_only=True), 500)
+        self.assertEqual(policy.extra_budget(599, ply=138), 0)
         board = chess.Board()
         profile = {"observations": 12, "target_loss_cp": 90}
         targets = []
         for ply in range(141):
-            if ply in (99, 100, 110, 120, 130, 139, 140):
-                targets.append(policy._target(board, profile, 300)["target_loss_cp"])
+            if ply in (79, 80, 100, 120, 136, 137, 138):
+                targets.append(policy._target(board, profile, 300)["target_cp"])
             if ply < 140:
                 board.push_uci(["g1f3", "g8f6", "f3g1", "f6g8"][ply % 4])
-        self.assertEqual(targets[:2], [90, 90])
-        self.assertEqual(targets[-1], 0)
-        self.assertTrue(all(a >= b for a, b in zip(targets, targets[1:])))
+        self.assertEqual(targets[:2], [30, 39])
+        self.assertEqual(targets[-1], 300)
+        self.assertTrue(all(a <= b for a, b in zip(targets, targets[1:])))
+        self.assertFalse(policy._target(board, profile, 300)["active"])
 
     def test_obvious_piece_donation_is_screened_but_normal_development_is_allowed(self):
         board = chess.Board("6k1/8/8/2p5/8/2P5/8/R2Q2K1 w - - 0 1")
@@ -162,13 +177,14 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         self.assertGreater(developed["style_points"], 0)
         self.assertEqual(start.fen(), chess.STARTING_FEN)
 
-    def test_losing_positions_reduce_concessions_and_a_clear_advantage_keeps_a_floor(self):
+    def test_position_band_is_independent_of_profile_and_does_not_keep_half_the_advantage(self):
         board, _ = quality_game([200] * 3)
         profile = {"observations": 12, "target_loss_cp": 90}
-        self.assertEqual(policy._target(board, profile, -100)["target_loss_cp"], 0)
-        self.assertLess(policy._target(board, profile, -30)["target_loss_cp"], 90)
-        self.assertEqual(policy._target(board, profile, 50)["position_floor_cp"], 0)
-        self.assertEqual(policy._target(board, profile, 300)["position_floor_cp"], 150)
+        for cp in (-180, -30, 50, 300):
+            target = policy._target(board, profile, cp)
+            self.assertEqual((target["lower_cp"], target["upper_cp"]), (-100, 100))
+            self.assertEqual(target["target_cp"], 30)
+            self.assertEqual(target, policy._target(board, {"observations": 0}, cp))
 
     def test_immediate_opponent_mate_is_not_a_sparring_concession(self):
         board = chess.Board()
@@ -177,6 +193,46 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         result = policy.naturalness(board, chess.Move.from_uci("g2g4"))
         self.assertFalse(result["admitted"])
         self.assertEqual(result["reason"], "immediate_mate_reply")
+
+    def test_delayed_exchange_exception_does_not_allow_an_immediate_giveaway(self):
+        board = chess.Board("q5k1/8/8/8/r7/5B2/8/Q1B3K1 w - - 0 1")
+        move = chess.Move.from_uci("a1a4")
+        plan = {"active": True, "stage": 3, "allow_material_return": True, "return_cap_cp": 400}
+        self.assertFalse(policy.naturalness(board, move)["admitted"])
+        allowed = policy.naturalness(board, move, pacing=plan)
+        self.assertTrue(allowed["admitted"])
+        self.assertTrue(allowed["material_return_exception"])
+        self.assertEqual(allowed["vulnerable_captures"][0]["net_material_cp"], -400)
+        self.assertFalse(policy.naturalness(board, move, pacing=plan,
+            resource_guard={"active": False, "material_concessions_blocked": True})["admitted"])
+        for change in ({"stage": 1}, {"stage": 2}, {"active": False}, {"return_cap_cp": 399}):
+            self.assertFalse(policy.naturalness(board, move, pacing={**plan, **change})["admitted"])
+        pawn = chess.Board("6k1/8/8/1b6/p7/8/8/Q5K1 w - - 0 1")
+        self.assertFalse(policy.naturalness(pawn, move, pacing={**plan, "return_cap_cp": 900})["admitted"])
+        hanging = chess.Board("6k1/8/8/2p5/8/2P5/8/R2Q2K1 w - - 0 1")
+        self.assertFalse(policy.naturalness(hanging, chess.Move.from_uci("d1d4"), pacing={**plan, "return_cap_cp": 900})["admitted"])
+
+    def test_delayed_exchange_cannot_leave_only_fragile_mating_resources(self):
+        board = chess.Board("q5k1/8/8/8/r7/4B3/8/Q1B3K1 w - - 0 1")
+        guard = policy.sparring_pacing.resource_guard(board)
+        self.assertTrue(board.is_valid())
+        self.assertFalse(guard["active"])
+        self.assertFalse(guard["material_concessions_blocked"])
+        plan = {"active": True, "stage": 3, "allow_material_return": True, "return_cap_cp": 400}
+        result = policy.naturalness(board, chess.Move.from_uci("a1a4"), pacing=plan, resource_guard=guard)
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["reason"], "material_return_consumes_critical_resources")
+        after = result["vulnerable_captures"][0]["resources_after_reply"]
+        self.assertEqual(after["reason"], "fragile_pawnless_mating_resources")
+        # Opposite-colored bishops retain the resource heuristic. Entering
+        # caution alone does not prohibit this compensated exchange.
+        board = chess.Board("q5k1/8/8/8/r7/5B2/8/Q1B3K1 w - - 0 1")
+        result = policy.naturalness(board, chess.Move.from_uci("a1a4"), pacing=plan,
+                                    resource_guard=policy.sparring_pacing.resource_guard(board))
+        self.assertTrue(result["admitted"])
+        after = result["vulnerable_captures"][0]["resources_after_reply"]
+        self.assertFalse(after["active"])
+        self.assertTrue(after["material_concessions_blocked"])
 
 
 class SelectionTests(unittest.TestCase):
@@ -247,9 +303,16 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(result["selected_uci"], self.base.uci())
         self.assertEqual(self.calls, [])
 
-    def test_unreliable_mate_bounded_shallow_and_excessive_loss_candidates_keep_baseline(self):
-        for options in ({"reliability": "volatile"}, {"reliability": "provisional"},
-                        {"wrong_depth": True}, {"malformed": True}, {"mate": True}, {"cp": -200}):
+    def test_unstable_reference_is_rechecked_without_relabeling_it_stable(self):
+        for status in ("volatile", "provisional"):
+            result, _ = self.choose(reliability=status)
+            self.assertEqual(result["selected_uci"], self.alternative.uci())
+            self.assertEqual(result["reliability"]["reliability"], status)
+            self.assertEqual(result["comparison_basis"], "rechecked_exact_depth")
+            self.assertTrue(result["reference_revalidation"]["valid"])
+
+    def test_mate_bounded_shallow_and_below_band_candidates_keep_baseline(self):
+        for options in ({"wrong_depth": True}, {"malformed": True}, {"mate": True}, {"cp": -200}):
             result, _ = self.choose(**options)
             self.assertEqual(result["selected_uci"], self.base.uci(), options)
         self.base_info["score"] = chess.engine.PovScore(chess.engine.Mate(3), self.board.turn)
@@ -264,7 +327,7 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(result["reason"], reason)
             self.assertEqual(discarded, options.get("failing", False))
             self.assertEqual(result["profile"]["status"], "holding")
-            self.assertEqual(result["profile"]["target_loss_cp"], 0)
+            self.assertEqual(result["band_control"]["status"], "unavailable")
         with patch.object(policy, "phase", return_value="finish"):
             result, _ = self.choose()
             self.assertEqual(result["reason"], "finish_full_strength")
@@ -277,7 +340,217 @@ class SelectionTests(unittest.TestCase):
         headers = policy.pgn_headers({"enabled": True, "policy": policy.POLICY, "seed": "ab" * 16})
         self.assertEqual(headers["SparringMode"], "1")
         self.assertEqual(headers["SparringSeed"], "ab" * 16)
+        old = policy.pgn_headers({"enabled": True, "policy": "regicide-sparring-play-v1"})
+        self.assertEqual(old["SparringPolicy"], "regicide-sparring-play-v1")
         self.assertEqual(policy.pgn_headers({"enabled": 1, "policy": policy.POLICY}), {})
+
+    def test_winning_resources_guard_keeps_full_baseline_without_changing_phase(self):
+        guard = {"active": True, "reason": "test_latched_material_guard", "nonpawn_cp_total": 2400}
+        with patch.object(policy.sparring_pacing, "resource_guard", return_value=guard):
+            result, discarded = self.choose()
+        self.assertFalse(discarded)
+        self.assertEqual(result["selected_uci"], self.base.uci())
+        self.assertEqual(result["reason"], "winning_resources_guard")
+        self.assertEqual(result["phase"], "sparring")
+        self.assertEqual(result["profile"]["status"], "holding")
+        self.assertEqual(result["resource_guard"], guard)
+        self.assertEqual(self.calls, [])
+
+    def test_resource_caution_still_allows_natural_positional_adjustment(self):
+        guard = {"active": False, "material_concessions_blocked": True, "reason": "material_caution"}
+        with patch.object(policy.sparring_pacing, "resource_guard", return_value=guard):
+            result, discarded = self.choose()
+        self.assertFalse(discarded)
+        self.assertEqual(result["selected_uci"], self.alternative.uci())
+        self.assertEqual(result["reason"], "accepted_sparring_alternative")
+        self.assertFalse(result["naturalness"]["material_return_exception"])
+
+    def test_finish_and_resource_guard_observe_quality_once_without_candidates(self):
+        previous = self.board.copy(stack=True)
+        played = previous.pop()
+        observation = {"valid": True, "forced": False, "ply": len(self.board.move_stack),
+                       "history_before": [m.uci() for m in previous.move_stack],
+                       "played_uci": played.uci(), "before_fen": previous.fen(en_passant="fen"),
+                       "loss_cp": 25, "depth": 6, "elapsed_ms": 20}
+        for stage, guard, reason in (("finish", False, "finish_full_strength"),
+                                     ("sparring", True, "winning_resources_guard")):
+            def no_candidate_search(*args, **kwargs):
+                self.fail("rating-only mode must not search alternatives")
+            with patch.object(policy, "phase", return_value=stage), patch.object(
+                    policy.sparring_pacing, "resource_guard", return_value={"active": guard}), patch.object(
+                    policy.boss_play, "observe_human_move", return_value=(observation, False)) as observe:
+                result, discarded = policy.choose(self.board, self.base, self.base_info, self.packets,
+                    no_candidate_search, lambda: None, decisions=self.rows, seed="rating-only", movetime_ms=1000)
+            self.assertFalse(discarded)
+            self.assertEqual(result["selected_uci"], self.base.uci())
+            self.assertEqual(result["reason"], reason)
+            self.assertTrue(result["analysis_only"])
+            self.assertEqual(result["quality_budget_ms"], 500)
+            self.assertEqual(result["extra_budget_ms"], 500)
+            self.assertEqual(result["candidate_budget_ms"], 0)
+            self.assertEqual(result["discovery"], [])
+            self.assertEqual(result["probes"], [])
+            self.assertEqual(result["profile"]["observations"], 7)
+            self.assertEqual(result["profile"]["status"], "holding")
+            observe.assert_called_once()
+            self.assertEqual(observe.call_args.kwargs["budget_ms"], 500)
+
+
+class PositionFeedbackTests(unittest.TestCase):
+    def archived_position(self):
+        board = chess.Board()
+        for san in "Nc3 e5 Nf3 Nc6 e4 Nf6 Bb5 Nd4 O-O Nxb5 Nxb5 c6 Nc3 Qe7 d4 h6".split():
+            board.push_san(san)
+        return board
+
+    def run_case(self, board, base_uci, cp, candidates, *, depth=5, mate=None, deeper=None,
+                 reference_cp=None, stable=True, rows=(), pacing=None):
+        base_move = chess.Move.from_uci(base_uci)
+        info = packet(board, base_uci, cp, depth)
+        if mate is not None:
+            value, pv = mate
+            info.update(score=chess.engine.PovScore(chess.engine.Mate(value), board.turn),
+                        pv=[chess.Move.from_uci(uci) for uci in pv])
+        packets = {d: {**info, "depth": d} for d in range(max(1, depth - 2), depth + 1)}
+        calls = []
+        def search(budget, *, root_move=None, root_moves=None, **options):
+            calls.append((root_move, options["depth"]))
+            move = root_move or next((chess.Move.from_uci(uci) for uci in candidates
+                                      if chess.Move.from_uci(uci) in root_moves), root_moves[0])
+            value = candidates.get(move.uci(), cp if cp is not None else 300)
+            if move == base_move and reference_cp is not None:
+                value = reference_cp
+            searched = options["depth"]
+            common = packet(board, move.uci(), value, searched)
+            final = packet(board, move.uci(), deeper[move.uci()], searched + 1) if deeper and move.uci() in deeper and searched >= 4 else common
+            return chess.engine.BestMove(move, None), final, {searched: common, final["depth"]: final}
+        unknown = {"valid": False, "forced": False, "reason": "test_unknown", "loss_cp": None}
+        with patch.object(policy.sparring_pacing, "derive", return_value=pacing or {"active": False}), patch.object(
+                policy.boss_play, "observe_human_move", return_value=(unknown, False)), patch.object(
+                policy.evaluation_stability, "assess", return_value={"reliability": "stable" if stable else "volatile"}):
+            result, discarded = policy.choose(board, base_move, info, packets, search, lambda: None,
+                                               decisions=rows, seed="position-feedback", movetime_ms=1000)
+        self.assertFalse(discarded)
+        return result, calls
+
+    def test_paced_pressure_relief_is_not_reported_as_strict_band_recovery(self):
+        board = self.archived_position()
+        plan = {"active": True, "stage": 1, "target_cp": 460, "upper_cp": 500,
+                "allow_material_return": False, "return_cap_cp": 0}
+        result, _ = self.run_case(board, "d4e5", 500, {"c1e3": 460, "d1d3": 32}, pacing=plan)
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertEqual(result["reason"], "accepted_paced_recovery")
+        control = result["band_control"]
+        self.assertEqual(control["nominal_target_cp"], 30)
+        self.assertEqual(control["nominal_upper_cp"], 100)
+        self.assertEqual(control["target_cp"], 460)
+        self.assertEqual(control["pacing_status"], "met")
+        self.assertEqual(control["status"], "unmet")
+        self.assertEqual(control["deviation_cp"], 360)
+        self.assertEqual(control["strict_band_status"], "unmet")
+        self.assertFalse(control["recovered"])
+        self.assertFalse(control["pre40_inside"])
+        result, calls = self.run_case(board, "d4e5", 200, {}, pacing=plan)
+        self.assertEqual(result["reason"], "paced_baseline_preserved")
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertEqual(calls, [])
+
+    def test_last_paced_stage_returns_to_real_band_and_keeps_final_safety_floor(self):
+        board = self.archived_position()
+        plan = {"active": True, "stage": 4, "target_cp": 30, "upper_cp": 100,
+                "allow_material_return": True, "return_cap_cp": 400}
+        result, _ = self.run_case(board, "d4e5", 500, {"c1e3": 32, "d1d3": -120}, pacing=plan)
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertEqual(result["band_control"]["status"], "met")
+        self.assertTrue(result["band_control"]["recovered"])
+        self.assertTrue(result["band_control"]["pre40_inside"])
+
+    def test_archived_203_to_92_correction_does_not_wait_for_skill_calibration(self):
+        board = self.archived_position()
+        result, _ = self.run_case(board, "d4e5", 203, {"c1e3": 92})
+        self.assertEqual(result["profile"]["observations"], 0)
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertEqual(result["loss_cp"], 111)
+        self.assertEqual(result["band_control"]["status"], "met")
+        self.assertTrue(result["band_control"]["recovered"])
+        self.assertEqual(result["selected_cp_own"], 92)
+
+    def test_actual_center_target_beats_edge_and_negative_in_band_candidates(self):
+        board = self.archived_position()
+        result, _ = self.run_case(board, "d4e5", 203, {"c1e3": 99, "d1d3": 32, "a2a4": -86})
+        self.assertEqual(result["selected_uci"], "d1d3")
+        self.assertEqual(result["band_control"]["target_cp"], 30)
+        self.assertEqual(result["selected_cp_own"], 32)
+
+    def test_outside_progress_is_not_mislabeled_recovery(self):
+        board = self.archived_position()
+        result, _ = self.run_case(board, "d4e5", 410, {"c1e3": 221})
+        self.assertEqual(result["selected_uci"], "c1e3")
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertEqual(result["band_control"]["deviation_cp"], 121)
+        self.assertFalse(result["band_control"]["recovered"])
+
+    def test_black_uses_own_pov_and_losing_side_remains_strongest(self):
+        board = chess.Board()
+        board.push_san("e4")
+        result, _ = self.run_case(board, "g8f6", 203, {"e7e5": 40})
+        self.assertEqual(result["selected_cp_own"], 40)
+        self.assertEqual(result["selected_cp_white"], -40)
+        result, calls = self.run_case(board, "g8f6", -180, {"e7e5": -50})
+        self.assertEqual(result["selected_uci"], "g8f6")
+        self.assertEqual(result["reason"], "position_below_band_strongest")
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertEqual(calls, [])
+
+    def test_deeper_outside_evaluation_and_reference_conflict_prevent_false_recovery(self):
+        board = self.archived_position()
+        result, _ = self.run_case(board, "d4e5", 203, {"c1e3": 92}, deeper={"c1e3": 221})
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertFalse(result["band_control"]["recovered"])
+        result, _ = self.run_case(board, "d4e5", 203, {"c1e3": 92}, stable=False, reference_cp=350)
+        self.assertEqual(result["selected_uci"], "d4e5")
+        self.assertEqual(result["reason"], "reference_revalidation_failed")
+        self.assertEqual(result["band_control"]["status"], "unavailable")
+
+    def test_shallow_winning_mate_can_choose_finite_cp_at_separate_depth(self):
+        board = chess.Board()
+        for san in "f3 e5 g4".split():
+            board.push_san(san)
+        result, calls = self.run_case(board, "d8h4", None, {"d7d5": 35}, depth=1, mate=(1, ["d8h4"]))
+        self.assertEqual(result["selected_uci"], "d7d5")
+        self.assertEqual(result["comparison_mode"], "absolute_target_from_winning_mate")
+        self.assertIsNone(result["loss_cp"])
+        self.assertEqual(result["actual_reference_depth"], 1)
+        self.assertEqual(result["verification_depth"], 4)
+        self.assertEqual(result["candidate_compared"]["depth"], 4)
+        self.assertEqual(result["baseline"]["mate"], 1)
+        self.assertTrue(result["band_control"]["recovered"])
+
+    def test_negative_mate_stays_full_and_uncorrected_positive_mate_is_unmet(self):
+        board = chess.Board()
+        board.push_san("f3")
+        board.push_san("e5")
+        result, calls = self.run_case(board, "g2g4", None, {"e2e4": 0}, depth=1,
+                                      mate=(-1, ["g2g4", "d8h4"]))
+        self.assertEqual(result["selected_uci"], "g2g4")
+        self.assertEqual(result["reason"], "mate_reference_full_strength")
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertEqual(calls, [])
+        board.push_san("g4")
+        result, _ = self.run_case(board, "d8h4", None, {}, depth=1, mate=(1, ["d8h4"]))
+        self.assertEqual(result["band_control"]["status"], "unmet")
+        self.assertFalse(result["band_control"]["recovered"])
+
+    def test_mate_distance_and_finite_cp_with_mating_pv_are_rejected(self):
+        board = chess.Board()
+        for san in "f3 e5 g4".split():
+            board.push_san(san)
+        move = chess.Move.from_uci("d8h4")
+        info = packet(board, move.uci(), 30, 4)
+        probe = policy._absolute_probe(board, move, {4: info}, info, move, 4, 100, 1)
+        self.assertFalse(probe["admitted"])
+        info["score"] = chess.engine.PovScore(chess.engine.Mate(3), board.turn)
+        self.assertIsNone(policy._mate_reference(board, info, move))
 
 
 if __name__ == "__main__":

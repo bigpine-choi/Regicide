@@ -90,6 +90,13 @@ var status_label: Label
 var status_detail: Label
 var engine_label: Label
 var boss_phase_label: Label
+var sparring_rating_label: Label
+var rating_label_panel: VBoxContainer
+var rating_label_input: LineEdit
+var rating_label_save: Button
+var rating_label_note: Label
+var _rating_input_game: String = ""
+var _rating_saved_value: Variant = null
 var top_player: Label
 var bottom_player: Label
 var error_label: Label
@@ -237,6 +244,11 @@ func _build_ui() -> void:
 	boss_phase_label.name = "BossPhase"
 	boss_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header_right.add_child(boss_phase_label)
+	sparring_rating_label = _label("", 13, "9bd7ca")
+	sparring_rating_label.name = "SparringRating"
+	sparring_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	sparring_rating_label.visible = false
+	header_right.add_child(sparring_rating_label)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 20)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -343,6 +355,22 @@ func _build_ui() -> void:
 	error_label = _label("", 13, "ffb4a1")
 	error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(error_label)
+	rating_label_panel = VBoxContainer.new()
+	rating_label_panel.name = "RatingLabelPanel"
+	rating_label_panel.visible = false
+	sidebar.add_child(rating_label_panel)
+	rating_label_panel.add_child(_label("실제 Chess.com 래피드 레이팅", 14, "f6f0de"))
+	rating_label_input = LineEdit.new()
+	rating_label_input.name = "RatingLabelInput"
+	rating_label_input.placeholder_text = "예: 1200"
+	rating_label_input.max_length = 4
+	rating_label_input.text_submitted.connect(func(_text: String) -> void: _on_rating_label_save())
+	rating_label_panel.add_child(rating_label_input)
+	rating_label_save = _button("레이팅 저장", _on_rating_label_save)
+	rating_label_panel.add_child(rating_label_save)
+	rating_label_note = _label("입력한 값은 다음 대국의 추정 보정에 반영합니다.", 12, "a3b6c8")
+	rating_label_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rating_label_panel.add_child(rating_label_note)
 	refresh_button = _button("연결 다시 확인", _connect_backend)
 	sidebar.add_child(refresh_button)
 	coaching_entry_button = _button("대국 코칭 · 실수와 최선수 복기", _on_coaching_pressed)
@@ -1693,13 +1721,62 @@ func _on_game_mode_selected(_index: int) -> void:
 	var descriptions := {
 		0: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
 		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-		2: "50수까지 수준에 맞춰 상대하고, 이후 서서히 압박을 높입니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."}
+		2: "40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."}
 	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
 	boss_mode_option.tooltip_text = description
 	if boss_mode_option.get_selected_id() == 2:
-		boss_mode_option.tooltip_text += "\n50수는 백과 흑이 각각 50번 둔 시점입니다. 이후 약 20수에 걸쳐 강도를 높입니다."
+		boss_mode_option.tooltip_text += "\n40수는 백과 흑이 각각 40번 둔 시점입니다. 41~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다."
 	if game_mode_help != null:
 		game_mode_help.text = description
+
+
+static func _rating_integer(value: Variant, minimum: int = 100, maximum: int = 4000) -> bool:
+	return (value is int or value is float) and is_finite(float(value)) and float(value) == floor(float(value)) and value >= minimum and value <= maximum
+
+
+func _render_sparring_rating(shown: Dictionary, enabled: bool) -> void:
+	var engine: Dictionary = shown.get("engine", {})
+	var rating: Variant = engine.get("sparring_rating")
+	var supported: bool = engine.get("sparring_mode", false) == true and rating is Dictionary and rating.get("target") == "chess_com_rapid"
+	sparring_rating_label.visible = supported and not closing
+	sparring_rating_label.text = ""
+	sparring_rating_label.tooltip_text = "내 수를 바탕으로 한 실험용 추정이며 공식 레이팅이 아닙니다. 검증된 수 분석이 있을 때만 갱신합니다."
+	if supported:
+		var valid: bool = rating.get("status") in ["provisional_uncalibrated", "provisional_calibrated"] and _rating_integer(rating.get("estimate"))
+		if valid:
+			var delta: Variant = rating.get("delta")
+			var suffix: String = " (%s%d)" % ["+" if delta > 0 else "", int(delta)] if _rating_integer(delta, -3900, 3900) else ""
+			sparring_rating_label.text = "추정 래피드 ~%d%s · 실험" % [int(rating.estimate), suffix]
+			sparring_rating_label.tooltip_text += " 괄호는 마지막으로 분석한 내 수의 변화입니다."
+		else:
+			sparring_rating_label.text = "추정 래피드 · " + ("분석 중" if engine_thinking or shown.get("engine_thinking", false) else "표본 부족")
+	var terminal: bool = supported and not review_mode and not closing and state.get("result") in ["1-0", "0-1", "1/2-1/2"] and not state.get("handicap_mode", false)
+	rating_label_panel.visible = terminal
+	var saved: Variant = null
+	if supported and rating.get("label") is Dictionary and _rating_integer(rating.label.get("rating")):
+		saved = int(rating.label.rating)
+	var current_game: String = str(shown.get("game_id", ""))
+	if _rating_input_game != current_game or _rating_saved_value != saved:
+		rating_label_input.text = "" if saved == null else str(saved)
+		_rating_input_game = current_game
+		_rating_saved_value = saved
+	rating_label_input.editable = terminal and enabled
+	rating_label_save.disabled = not terminal or not enabled
+	rating_label_save.text = "레이팅 저장" if saved == null else "레이팅 수정"
+	rating_label_note.text = "입력한 값은 다음 대국의 추정 보정에 반영합니다." if saved == null else "%d 저장됨 · 수정할 수 있습니다. 다음 대국의 추정 보정에 반영합니다." % int(saved)
+	if saved != null and rating.label.get("eligible_for_calibration") == false:
+		rating_label_note.text = "%d 저장됨 · 이번 대국은 추정 보정에 쓰지 않습니다. 수정할 수 있습니다." % int(saved)
+
+
+func _on_rating_label_save() -> void:
+	if not rating_label_panel.visible or rating_label_save.disabled:
+		return
+	var value: String = rating_label_input.text.strip_edges()
+	if not value.is_valid_int() or not _rating_integer(int(value)):
+		error_message = "100~4000 사이의 정수 레이팅을 입력해 주세요."
+		_render()
+		return
+	_mutate("/api/sparring/rating-label", {"game_id": str(state.get("game_id", "")), "rating": int(value)})
 
 
 func _on_undo_pressed() -> void:
@@ -1892,6 +1969,7 @@ func _render() -> void:
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
 	var enabled: bool = ready and not _file_dialog_busy() and not request_in_flight and not think_time_request_in_flight and not review_mode
+	_render_sparring_rating(shown, enabled)
 	var replacing: bool = state.get("handicap_mode", false)
 	live_settings.visible = not review_mode
 	live_actions.visible = not review_mode

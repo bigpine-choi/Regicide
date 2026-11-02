@@ -26,6 +26,7 @@ from dynamic_play import pgn_headers as dynamic_play_headers
 import boss_play
 import boss_opponent
 import sparring_play
+import sparring_rating
 
 
 MAX_RECORD_BYTES = 4 * 1024 * 1024
@@ -235,6 +236,7 @@ class GameArchive:
             sparring_decisions = []
         sparring_decisions = [row for row in sparring_decisions
                              if isinstance(row, dict) and type(row.get("ply")) is int
+                             and row.get("policy") == sparring_metadata.get("policy")
                              and 1 <= row["ply"] <= len(moves)
                              and moves[row["ply"] - 1]["actor"] == "engine"
                              and moves[row["ply"] - 1]["uci"] == row.get("selected_uci")
@@ -393,7 +395,13 @@ class GameArchive:
                                  "sparring_mode": prepared["sparring_mode"]}
                 if prepared["sparring_mode"]:
                     replay_engine["sparring"] = sparring_play.derive_profile(
-                        board, [row for row in prepared["sparring_decisions"] if row["ply"] <= ply])
+                        board, [row for row in prepared["sparring_decisions"] if row["ply"] <= ply],
+                        policy=prepared["record"]["sparring_play"]["policy"])
+                    # Historical observation reconstruction must not relabel an
+                    # old game as a newer move-selection policy.
+                    replay_engine["sparring"]["policy"] = prepared["record"]["sparring_play"]["policy"]
+                    replay_engine["sparring_rating"] = sparring_rating.archive_snapshot(
+                        board, prepared["record"].get("sparring_rating"))
                 if prepared["boss_mode"]:
                     replay_engine["boss_phase"] = boss_play.phase(
                         board, past_decisions, forced=forced,

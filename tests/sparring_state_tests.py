@@ -99,6 +99,9 @@ class SparringStateTests(unittest.TestCase):
         replay = archive.get_game(self.game.game_id)
         self.assertTrue(replay["summary"]["sparring_mode"])
         self.assertEqual([frame["engine"]["sparring"]["observations"] for frame in replay["frames"]], [0, 0, 1])
+        ratings = [frame["engine"]["sparring_rating"]["estimate"] for frame in replay["frames"]]
+        self.assertEqual(ratings[:2], [None, None])
+        self.assertIsInstance(ratings[2], int)
         saved = copy.deepcopy(self.game._sparring_decisions)
         self.game.begin_handicap(2, self.game.revision)
         self.assertEqual(self.game._sparring_decisions, {})
@@ -116,6 +119,26 @@ class SparringStateTests(unittest.TestCase):
         replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
         self.assertFalse(replay["summary"]["sparring_mode"])
         self.assertNotIn("SparringMode", replay["pgn"])
+
+    def test_previous_policy_archive_preserves_identity_and_observations(self):
+        self.prepare()
+        with patch.object(host.sparring_play, "choose", return_value=(self.decision(self.game.board), False)):
+            self.game.engine_move(self.game.revision)
+        path = self.game.save_dir / (self.game.game_id + ".json")
+        record = json.loads(path.read_text(encoding="utf-8"))
+        record["sparring_play"]["policy"] = "regicide-sparring-play-v1"
+        for row in record["sparring_play"]["decisions"]:
+            row["policy"] = "regicide-sparring-play-v1"
+        path.write_text(json.dumps(record), encoding="utf-8")
+        replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+        self.assertTrue(replay["summary"]["sparring_mode"])
+        self.assertIn('[SparringPolicy "regicide-sparring-play-v1"]', replay["pgn"])
+        self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["policy"], "regicide-sparring-play-v1")
+        self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["observations"], 1)
+        record["sparring_play"]["decisions"][0]["policy"] = "unsupported-policy"
+        path.write_text(json.dumps(record), encoding="utf-8")
+        replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+        self.assertEqual(replay["frames"][-1]["engine"]["sparring"]["observations"], 0)
 
     def test_stale_search_cannot_append_move_or_observation(self):
         self.prepare()

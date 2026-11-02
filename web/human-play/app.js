@@ -31,6 +31,8 @@
   let renderedOpeningKey = null;
   let analysisMode = false;
   let coachingMode = false;
+  let ratingInputGame = null;
+  let ratingSavedValue = null;
 
   function clearHint() {
     hintEpoch++;
@@ -644,15 +646,48 @@
     const descriptions = {
       normal: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
       boss: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-      sparring: "50수까지 수준에 맞춰 상대하고, 이후 서서히 압박을 높입니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."
+      sparring: "40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다. 맞춤 조절은 생각 시간 1초 이상을 권장합니다. 새 대국부터 적용됩니다."
     };
     const mode = byId("boss-mode").value;
     byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;
-    byId("boss-mode-help").title = mode === "sparring" ? "50수는 백과 흑이 각각 50번 둔 시점입니다. 이후 약 20수에 걸쳐 강도를 높입니다." : "";
+    byId("boss-mode-help").title = mode === "sparring" ? "40수는 백과 흑이 각각 40번 둔 시점입니다. 41~69수에 강도를 높이고, 양쪽 모두 70번째 수부터 전력으로 둡니다." : "";
+  }
+
+  function renderSparringRating() {
+    const rating = state?.engine.sparring_rating;
+    const supported = state?.engine.sparring_mode === true && rating && rating.target === "chess_com_rapid";
+    const label = byId("sparring-rating");
+    label.hidden = !supported || closed || analysisMode || coachingMode;
+    label.textContent = "";
+    label.title = "내 수를 바탕으로 한 실험용 추정이며 공식 레이팅이 아닙니다. 검증된 수 분석이 있을 때만 갱신합니다.";
+    const validEstimate = supported && ["provisional_uncalibrated", "provisional_calibrated"].includes(rating.status) &&
+      Number.isInteger(rating.estimate) && rating.estimate >= 100 && rating.estimate <= 4000;
+    if (validEstimate) {
+      const delta = Number.isInteger(rating.delta) ? ` (${rating.delta > 0 ? "+" : ""}${rating.delta})` : "";
+      label.textContent = `추정 래피드 ~${rating.estimate}${delta} · 실험`;
+      label.title += " 괄호는 마지막으로 분석한 내 수의 변화입니다.";
+    } else if (supported) {
+      label.textContent = `추정 래피드 · ${engineThinking || state.engine_thinking ? "분석 중" : "표본 부족"}`;
+    }
+    const terminal = supported && ["1-0", "0-1", "1/2-1/2"].includes(state.result) && !state.handicap_mode && !closed;
+    byId("rating-label-panel").hidden = !terminal;
+    const saved = supported && Number.isInteger(rating.label?.rating) && rating.label.rating >= 100 && rating.label.rating <= 4000 ? rating.label.rating : null;
+    if (ratingInputGame !== state?.game_id || ratingSavedValue !== saved) {
+      byId("rating-label-input").value = saved == null ? "" : String(saved);
+      ratingInputGame = state?.game_id;
+      ratingSavedValue = saved;
+    }
+    byId("rating-label-input").disabled = !terminal || busy || timeSaving;
+    byId("rating-label-save").disabled = !terminal || busy || timeSaving;
+    byId("rating-label-save").textContent = saved == null ? "레이팅 저장" : "레이팅 수정";
+    byId("rating-label-note").textContent = saved == null ? "입력한 값은 다음 대국의 추정 보정에 반영합니다." :
+      rating.label.eligible_for_calibration === false ? `${saved} 저장됨 · 이번 대국은 추정 보정에 쓰지 않습니다. 수정할 수 있습니다.` :
+      `${saved} 저장됨 · 수정할 수 있습니다. 다음 대국의 추정 보정에 반영합니다.`;
   }
 
   function render() {
     renderModeHelp();
+    renderSparringRating();
     renderBoard();
     renderMoves();
     renderEvaluation();
@@ -821,6 +856,16 @@
       boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring"});
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
+  byId("rating-label-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (byId("rating-label-panel").hidden || busy || timeSaving || closed || !state) return;
+    const rating = Number(byId("rating-label-input").value);
+    if (!Number.isInteger(rating) || rating < 100 || rating > 4000) {
+      showError("100~4000 사이의 정수 레이팅을 입력해 주세요.");
+      return;
+    }
+    void mutate("/api/sparring/rating-label", {game_id: state.game_id, rating});
+  });
   byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });
   byId("resign").addEventListener("click", () => { void mutate("/api/resign"); });

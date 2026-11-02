@@ -105,6 +105,7 @@ func _run() -> void:
 	app.accept_state(fixture(9, "full_strength"))
 	verify(not app.boss_phase_label.text.contains("보스 모드"), "stale board cannot resurrect previous boss display")
 	await _sparring_checks()
+	await _rating_checks()
 	app.queue_free()
 	await process_frame
 	print("Godot boss-mode offline checks: %d, failures: %d" % [checks, failures])
@@ -129,7 +130,7 @@ func _sparring_checks() -> void:
 	var requests_before: int = app.captured_requests.size()
 	app.boss_mode_option.select(2)
 	app._render()
-	verify(app.game_mode_help.text.contains("50수까지 수준에 맞춰 상대하고") and app.boss_mode_option.tooltip_text.contains("각각 50번"), "sparring help describes fifty full moves and gradual pressure without guaranteeing victory")
+	verify(app.game_mode_help.text.contains("40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다.") and app.boss_mode_option.tooltip_text.contains("각각 40번"), "sparring help describes a one-point target over forty full moves, not a guaranteed result")
 	verify(app.game_mode_help.text.contains("1초 이상을 권장"), "sparring draft recommends an eligible think time")
 	verify(app.time_option.get_selected_id() == 100 and app.captured_requests.size() == requests_before, "draft mode selection never changes time or sends a time mutation")
 	verify(not app.think_time_help.text.contains("맞춤 조절을 쉬고"), "draft sparring does not mislabel an active normal game")
@@ -201,3 +202,84 @@ func _sparring_checks() -> void:
 	verify(not app.captured_requests[-1].payload.boss_mode and not app.captured_requests[-1].payload.sparring_mode, "return to normal clears both mode flags")
 	app.accept_state(sparring_fixture(19, "finish", 20))
 	verify(not app.boss_phase_label.text.contains("스파링"), "old game response cannot revive sparring state")
+
+
+func rating_fixture(revision: int, estimate: Variant = null, delta: Variant = null, saved: Variant = null) -> Dictionary:
+	var value: Dictionary = sparring_fixture(revision, "sparring")
+	value.engine.sparring_rating = {"estimate": estimate, "delta": delta, "label": saved,
+		"status": "awaiting_observations" if estimate == null else "provisional_uncalibrated",
+		"target": "chess_com_rapid", "observations": 0 if estimate == null else 2,
+		"calibration_games": 0, "source": "heuristic_prior", "updated_human_ply": null if estimate == null else 1}
+	return value
+
+
+func _rating_checks() -> void:
+	app.accept_state(rating_fixture(21))
+	verify(app.sparring_rating_label.text.contains("표본 부족") and app.sparring_rating_label.visible, "no observation shows no invented estimate")
+	verify(not app.rating_label_panel.visible, "live game cannot submit a real rating")
+	app.engine_thinking = true
+	app._render()
+	verify(app.sparring_rating_label.text.contains("분석 중"), "first observation displays analysis pending")
+	app.engine_thinking = false
+	app.accept_state(rating_fixture(22, 1250.0, 20.0))
+	verify(app.sparring_rating_label.text == "추정 래피드 ~1250 (+20) · 실험", "verified numeric JSON estimate and positive delta display exactly")
+	verify(app.sparring_rating_label.tooltip_text.contains("공식 레이팅이 아닙니다"), "rating remains explicitly experimental")
+	var late: Dictionary = rating_fixture(21)
+	late.engine.settings_revision = 1
+	late.engine.movetime_ms = 3000
+	app.accept_state(late)
+	verify(app.sparring_rating_label.text.contains("~1250 (+20)"), "late settings cannot erase verified estimate")
+	app.accept_state(rating_fixture(23))
+	verify(app.sparring_rating_label.text.contains("표본 부족"), "undo at a newer revision can remove the observation")
+	app.accept_state(rating_fixture(24, 1210, -40))
+	verify(app.sparring_rating_label.text.contains("~1210 (-40)"), "negative verified delta is preserved")
+	app.review_mode = true
+	app.review_frames = [rating_fixture(1, 1180, -10)]
+	app.review_moves = []
+	app.review_ply = 0
+	app._render()
+	verify(app.sparring_rating_label.text.contains("~1180 (-10)") and not app.rating_label_panel.visible, "archive displays its saved estimate but cannot label the live game")
+	app.review_mode = false
+	var terminal: Dictionary = rating_fixture(25, 1210, -40)
+	terminal.result = "0-1"
+	terminal.human_to_move = false
+	app.accept_state(terminal)
+	verify(app.rating_label_panel.visible and not app.rating_label_save.disabled, "completed current sparring game exposes rating input")
+	var requests_before: int = app.captured_requests.size()
+	app.rating_label_input.text = "99"
+	app._on_rating_label_save()
+	verify(app.captured_requests.size() == requests_before and app.error_label.text.contains("100~4000"), "invalid label never sends a request")
+	app.next_response = {"ok": false, "error": "저장에 실패했습니다.", "state": terminal}
+	app.rating_label_input.text = "1200"
+	app._on_rating_label_save()
+	await process_frame
+	await process_frame
+	verify(not app.rating_label_note.text.contains("저장됨") and app.error_label.text.contains("저장에 실패"), "failed label request does not fake saved status")
+	var saved: Dictionary = terminal.duplicate(true)
+	saved.revision = 26
+	saved.engine.sparring_rating.label = {"rating": 1420, "source": "user_reported", "recorded_at": "synthetic"}
+	app.next_response = {"ok": true, "data": saved}
+	app.rating_label_input.text = "1420"
+	app._on_rating_label_save()
+	verify(app.rating_label_save.disabled, "saving prevents duplicate clicks")
+	await process_frame
+	await process_frame
+	verify(app.captured_requests[-1].path == "/api/sparring/rating-label" and app.captured_requests[-1].payload == {"game_id": "sparring-ui-game", "rating": 1420, "revision": 25}, "label request carries exact game revision and integer rating")
+	verify(app.rating_label_note.text.contains("1420 저장됨") and app.rating_label_note.text.contains("다음 대국"), "confirmed server label explains future calibration")
+	verify(app.sparring_rating_label.text.contains("~1210 (-40)") and app.rating_label_save.text == "레이팅 수정", "label does not rewrite current estimates and remains editable")
+	var correction: Dictionary = saved.duplicate(true)
+	correction.revision = 27
+	correction.engine.sparring_rating.label.rating = 1500
+	correction.engine.sparring_rating.label.eligible_for_calibration = false
+	app.next_response = {"ok": true, "data": correction}
+	app.rating_label_input.text = "1500"
+	app._on_rating_label_save()
+	await process_frame
+	await process_frame
+	verify(app.rating_label_input.text == "1500" and app.rating_label_note.text.contains("1500 저장됨"), "same-game correction displays the new saved label")
+	verify(app.rating_label_note.text.contains("이번 대국은 추정 보정에 쓰지 않습니다"), "ineligible labels do not promise future calibration")
+	terminal.engine.settings_revision = 2
+	app.accept_state(terminal)
+	verify(app.rating_label_note.text.contains("1500 저장됨"), "late older terminal reply cannot erase saved correction")
+	app.accept_state(fixture(28))
+	verify(not app.sparring_rating_label.visible and not app.rating_label_panel.visible and app.rating_label_input.text.is_empty(), "normal new game clears rating and label draft")

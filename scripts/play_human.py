@@ -35,6 +35,7 @@ import opening_variety
 import dynamic_play
 import boss_play
 import sparring_play
+import sparring_rating
 import evaluation_stability
 from pgn_preview import MAX_PGN_REQUEST_BYTES, preview_pgn
 
@@ -81,6 +82,7 @@ class HumanGame:
         self.binary = Path(binary).resolve(strict=True)
         self.save_dir = Path(save_dir).resolve()
         self.save_dir.mkdir(parents=True, exist_ok=True)
+        self._rating_store = sparring_rating.RatingStore(self.save_dir)
         self.binary_sha256 = hashlib.sha256(self.binary.read_bytes()).hexdigest()
         self.source = source_version()
         self._factory = engine_factory or (
@@ -210,6 +212,10 @@ class HumanGame:
         self._boss_memo = {}
         self.sparring_mode = sparring_mode
         self._sparring_decisions = {}
+        evaluation_key = "|".join((self.binary_sha256, self.neural_sha256 or self.classical_evaluation_mode))
+        self._rating_calibration = (self._rating_store.calibration(evaluation_key) if sparring_mode
+                                    else sparring_rating.prior(evaluation_key))
+        self._rating_label = None
         self.error = None
         self._override = None
         self._forced_plies = set()
@@ -436,12 +442,16 @@ class HumanGame:
                                "sparring_mode": self.sparring_mode,
                                "sparring": (sparring_play.derive_profile(self.board, list(self._sparring_decisions.values()))
                                             if self.sparring_mode else None),
+                               "sparring_rating": self._rating_state() if self.sparring_mode else None,
+                               "sparring_analysis_only": self.sparring_mode and self._sparring_analysis_only(),
+                               "extra_budget_purpose": ("rating_observation" if self._sparring_analysis_only()
+                                                         else "sparring_control_and_rating") if self.sparring_mode else None,
                                "boss_opponent": (boss_play.boss_opponent.derive_profile(self.board, list(self._boss_decisions.values()))
                                                  if self.boss_mode else None),
                                "boss_phase": boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms),
                                "settings_revision": self._settings_revision,
                                "active_movetime_ms": self._active_movetime_ms,
-                               "extra_budget_ms": (sparring_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
+                               "extra_budget_ms": (self._sparring_extra_budget(self.movetime_ms)
                                                    if self.sparring_mode else (boss_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
                                                     if boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms) in ("opening", "trap_hunt") else 0)
                                                    if self.boss_mode else dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
@@ -477,6 +487,59 @@ class HumanGame:
                 raise ValueError("보스 모드와 스파링 모드 중 하나를 선택해 주세요.")
             self._ensure_engine()
             self._reset(color, movetime_ms, boss_mode, sparring_mode)
+            return self.state()
+
+    def _rating_metadata(self):
+        return sparring_rating.metadata(self.board, self._sparring_decisions,
+                                        self.human_color, self._rating_calibration)
+
+    def _sparring_analysis_only(self, board=None):
+        position = self.board if board is None else board
+        return (sparring_play.phase(position) == "finish"
+                or sparring_play.sparring_pacing.resource_guard(position).get("active") is True)
+
+    def _sparring_extra_budget(self, movetime_ms, board=None):
+        position = self.board if board is None else board
+        return sparring_play.extra_budget(movetime_ms, ply=len(position.move_stack),
+                                          analysis_only=self._sparring_analysis_only(position))
+
+    def _rating_state(self):
+        value = sparring_rating.snapshot(self.board, self._sparring_decisions,
+                                         self.human_color, self._rating_calibration)
+        if self._handicap_backup is None and self._rating_label is not None:
+            value["label"] = copy.deepcopy(self._rating_label)
+        return value
+
+    def _invalidate_rating_label(self):
+        if self._rating_label is not None:
+            self._rating_store.invalidate(self.game_id)
+            self._rating_label = None
+
+    def label_sparring_rating(self, rating, game_id, revision):
+        """Save private supervision only after the current game has ended."""
+        with self._lock:
+            self._check_revision(revision)
+            self._require_idle()
+            self._require_no_handicap()
+            if not isinstance(game_id, str) or game_id != self.game_id:
+                raise RevisionError("다른 대국의 레이팅 요청입니다. 현재 대국에서 다시 입력해 주세요.")
+            if not self.sparring_mode or self._record_status() != "completed":
+                raise ValueError("완료된 스파링 대국에서 실제 래피드 레이팅을 입력해 주세요.")
+            result, termination = self._outcome()
+            sample = {"completed": True, "fingerprint": sparring_rating.fingerprint(self.board, result, termination),
+                      "features": self._rating_metadata(), "result": result, "termination": termination,
+                      "handicap": bool(self._handicap_events or self._forced_plies),
+                      "runtime": {"source": self.source, "binary_sha256": self.binary_sha256,
+                          "evaluation": self.neural_evaluation_mode if self.neural_model else self.classical_evaluation_mode,
+                          "model_sha256": self.neural_sha256, "policy": sparring_play.POLICY,
+                          "engine_movetimes_ms": self._engine_movetimes,
+                          "time_settings_events": self._time_settings_events}}
+            # The game's calibration remains frozen: its own label cannot
+            # retrospectively improve its estimate. Subsequent games reload it.
+            self._rating_label = self._rating_store.upsert(self.game_id, rating, sample)
+            self.revision += 1
+            self._sync_evaluation()
+            self._save()
             return self.state()
 
     def human_move(self, uci, revision):
@@ -538,7 +601,7 @@ class HumanGame:
                 token, game_id = self._game_token, self.game_id
                 self._engine_searching = True
                 self._active_movetime_ms = movetime_ms
-                self._active_extra_budget_ms = (sparring_play.extra_budget(movetime_ms, ply=len(board.move_stack))
+                self._active_extra_budget_ms = (self._sparring_extra_budget(movetime_ms, board)
                                                 if self.sparring_mode else search_plan["extra_budget_ms"] if search_plan else 0)
                 self._sync_evaluation(status="searching")
             reply, failure = None, None
@@ -776,6 +839,7 @@ class HumanGame:
             self._require_no_handicap()
             if not self.state()["can_undo"]:
                 raise ValueError("되돌릴 당신의 수가 없습니다.")
+            self._invalidate_rating_label()
             if self.board.turn != self.human_color:
                 self.board.pop()  # Human move submitted before the engine reply.
             else:
@@ -876,6 +940,7 @@ class HumanGame:
                 raise ValueError("그 칸으로 이동할 수 없습니다. 합법 수 중에서 선택해 주세요.")
             backup = self._handicap_backup
             ply = backup["ply"]
+            self._invalidate_rating_label()
             self.board.push(move)
             self._forced_plies.add(ply)
             self._handicap_events.append({
@@ -1005,6 +1070,10 @@ class HumanGame:
         elif self.ended_at is None:
             self.ended_at = self.updated_at
         state = self.state()
+        # Actual reported ratings live only in the ignored private database.
+        # Public/exportable game receipts retain the experimental estimate.
+        if state["engine"].get("sparring_rating") is not None:
+            state["engine"]["sparring_rating"]["label"] = None
         record = {"game_id": self.game_id, "started_at": self.started_at,
                   "updated_at": self.updated_at, "ended_at": self.ended_at,
                   "record_status": self._record_status(), "schema_version": 2,
@@ -1020,6 +1089,7 @@ class HumanGame:
                   "dynamic_play": self._dynamic_metadata(),
                   "boss_play": self._boss_metadata(),
                   "sparring_play": self._sparring_metadata(),
+                  "sparring_rating": self._rating_metadata() if self.sparring_mode else None,
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         for extension, contents in (("pgn", self.pgn()),
                                     ("json", json.dumps(record, ensure_ascii=False, indent=2) + "\n")):
@@ -1251,6 +1321,8 @@ class HumanHandler(BaseHTTPRequestHandler):
                        "/api/handicap-cancel": lambda: game.cancel_handicap(revision),
                        "/api/undo": lambda: game.undo(revision),
                        "/api/resign": lambda: game.resign(revision)}
+            actions["/api/sparring/rating-label"] = lambda: game.label_sparring_rating(
+                data.get("rating"), data.get("game_id"), revision)
             if self.path == "/api/shutdown":
                 with game._lock:
                     game._check_revision(revision)

@@ -85,6 +85,15 @@ function sparringFixture(revision, phase, observations = 3, status = "adapting")
   return value;
 }
 const selectMode = mode => { byId("boss-mode").value = mode; byId("boss-mode").listeners.change(); };
+function ratingFixture(revision, estimate = null, delta = null, label = null) {
+  const value = sparringFixture(revision, "sparring");
+  value.engine.sparring_rating = {estimate, delta, label, target: "chess_com_rapid",
+    status: estimate == null ? "awaiting_observations" : "provisional_uncalibrated",
+    observations: estimate == null ? 0 : 2, calibration_games: 0, source: "heuristic_prior",
+    updated_human_ply: estimate == null ? null : 1};
+  return value;
+}
+const saveRating = value => { byId("rating-label-input").value = String(value); byId("rating-label-form").listeners.submit({preventDefault() {}}); };
 
 (async () => {
   await reply("/api/state", fixture(1));
@@ -145,9 +154,9 @@ const selectMode = mode => { byId("boss-mode").value = mode; byId("boss-mode").l
   await reply("/api/think-time", fastNormal);
   const requestsBeforeDraft = calls.length;
   selectMode("sparring");
-  assert.match(byId("boss-mode-help").textContent, /50수까지 수준에 맞춰 상대하고/);
+  assert.match(byId("boss-mode-help").textContent, /40수까지 ±1점 범위를 목표로 형세를 조절하고, 이후 서서히 강도를 높여 70번째 수부터 전력으로 둡니다\./);
   assert.match(byId("boss-mode-help").textContent, /1초 이상을 권장/);
-  assert.match(byId("boss-mode-help").title, /각각 50번/);
+  assert.match(byId("boss-mode-help").title, /각각 40번/);
   assert.equal(calls.length, requestsBeforeDraft, "draft mode does not send time mutation");
   assert.equal(byId("think-time").value, "100", "draft mode does not replace selected time");
   assert.doesNotMatch(byId("think-time-help").textContent, /맞춤 조절을 쉬고/, "draft mode does not change current normal-game behavior");
@@ -225,6 +234,74 @@ const selectMode = mode => { byId("boss-mode").value = mode; byId("boss-mode").l
   await reply("/api/evaluation", {...score, reliability: "stable"});
   assert.doesNotMatch(byId("opponent-detail").textContent, /스파링|보스/);
   assert.doesNotMatch(byId("evaluation-label").textContent, /탐색 안정/, "late previous-game analysis cannot revive score or reliability");
+  selectMode("sparring"); submit();
+  await reply("/api/new", ratingFixture(17));
+  assert.match(byId("sparring-rating").textContent, /표본 부족/);
+  assert.equal(byId("rating-label-panel").hidden, true, "live game cannot submit a calibration label");
+  clickSquare("e2"); clickSquare("e4");
+  const humanRating = ratingFixture(18);
+  humanRating.human_to_move = false; humanRating.engine_to_move = true;
+  await reply("/api/move", humanRating);
+  assert.match(byId("sparring-rating").textContent, /분석 중/);
+  await reply("/api/engine", ratingFixture(19, 1250, 20));
+  assert.equal(byId("sparring-rating").textContent, "추정 래피드 ~1250 (+20) · 실험");
+  assert.match(byId("sparring-rating").title, /공식 레이팅이 아닙니다/);
+  changeTime(3000);
+  const staleRating = ratingFixture(18);
+  staleRating.engine.settings_revision = 1; staleRating.engine.movetime_ms = 3000;
+  await reply("/api/think-time", staleRating);
+  assert.match(byId("sparring-rating").textContent, /~1250 \(\+20\)/, "stale settings do not erase a verified estimate");
+  byId("undo").listeners.click();
+  await reply("/api/undo", ratingFixture(20));
+  assert.match(byId("sparring-rating").textContent, /표본 부족/, "undo can remove the last verified observation");
+  changeTime(1000);
+  await reply("/api/think-time", ratingFixture(21, 1210, -40));
+  assert.match(byId("sparring-rating").textContent, /~1210 \(-40\)/);
+  byId("resign").listeners.click();
+  const terminalRating = ratingFixture(22, 1210, -40);
+  terminalRating.result = "0-1"; terminalRating.human_to_move = false;
+  await reply("/api/resign", terminalRating);
+  assert.equal(byId("rating-label-panel").hidden, false);
+  const beforeInvalid = calls.length;
+  saveRating(99);
+  assert.equal(calls.length, beforeInvalid);
+  assert.match(byId("error-text").textContent, /100~4000/);
+  saveRating(1200);
+  const failedLabelIndex = pending.findIndex(call => call.url === "/api/sparring/rating-label");
+  const [failedLabel] = pending.splice(failedLabelIndex, 1);
+  failedLabel.resolve({ok: false, json: async () => ({error: "저장에 실패했습니다.", state: structuredClone(terminalRating)})});
+  await flush();
+  assert.doesNotMatch(byId("rating-label-note").textContent, /저장됨/, "failed request is not displayed as saved");
+  assert.match(byId("error-text").textContent, /저장에 실패/);
+  saveRating(1420);
+  assert.deepEqual(pending.find(call => call.url === "/api/sparring/rating-label").body,
+    {game_id: "sparring-game", rating: 1420, revision: 22});
+  assert.equal(byId("rating-label-save").disabled, true);
+  const savedRating = structuredClone(terminalRating); savedRating.revision = 23;
+  savedRating.engine.sparring_rating.label = {rating: 1420, source: "user_reported", recorded_at: "synthetic"};
+  await reply("/api/sparring/rating-label", savedRating);
+  assert.match(byId("rating-label-note").textContent, /1420 저장됨/);
+  assert.match(byId("rating-label-note").textContent, /다음 대국/);
+  assert.equal(byId("rating-label-save").textContent, "레이팅 수정");
+  assert.match(byId("sparring-rating").textContent, /~1210 \(-40\)/, "label does not rewrite the current estimated curve");
+  saveRating(1500);
+  const corrected = structuredClone(savedRating); corrected.revision = 24;
+  corrected.engine.sparring_rating.label.rating = 1500;
+  corrected.engine.sparring_rating.label.eligible_for_calibration = false;
+  await reply("/api/sparring/rating-label", corrected);
+  assert.equal(byId("rating-label-input").value, "1500");
+  assert.match(byId("rating-label-note").textContent, /1500 저장됨/);
+  assert.match(byId("rating-label-note").textContent, /이번 대국은 추정 보정에 쓰지 않습니다/);
+  changeTime(1000);
+  const staleLabel = structuredClone(terminalRating); staleLabel.engine.settings_revision = 2;
+  await reply("/api/think-time", staleLabel);
+  assert.match(byId("rating-label-note").textContent, /1500 저장됨/, "late terminal settings cannot erase a saved correction");
+  selectMode("normal"); submit();
+  const afterRating = fixture(25); afterRating.game_id = "after-rating-normal";
+  await reply("/api/new", afterRating);
+  assert.equal(byId("sparring-rating").hidden, true);
+  assert.equal(byId("rating-label-panel").hidden, true);
+  assert.equal(byId("rating-label-input").value, "", "new game resets the previous label draft");
   assert.equal(pending.length, 0);
   console.log("Browser mode/reliability checks: PASS (three exclusive modes, phases, draft, stale settings, undo, separate reliability, identity guards)");
 })().catch(error => { console.error(error); process.exitCode = 1; });

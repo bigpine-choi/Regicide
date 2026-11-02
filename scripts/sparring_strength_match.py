@@ -34,7 +34,8 @@ SOURCES = tuple('scripts/' + name for name in (
     'evaluation_stability.py', 'boss_play.py', 'boss_opponent.py', 'boss_openings.py',
     'poisoned_piece.py', 'opening_variety.py', 'dynamic_play.py', 'runtime_engine.py',
     'play_game.py', 'move_hints.py', 'opening_guide.py', 'opening_names.py', 'opening_sides.py',
-    'analysis_session.py', 'coaching_session.py'))
+    'analysis_session.py', 'coaching_session.py', 'game_archive.py', 'summarize_sparring_match.py',
+    'sparring_pacing.py', 'sparring_rating.py'))
 CATALOG = tuple('data/openings/' + name for name in
                 ('manifest.json', 'a.tsv', 'b.tsv', 'c.tsv', 'd.tsv', 'e.tsv', 'LICENSE'))
 
@@ -370,7 +371,9 @@ def run_match(config, *, sparring_factory=None, stockfish_factory=None):
                              'timing': 'Wall time, not CPU; host timing includes its own persistence; SF relay recorded separately',
                              'screen_helpers': 'QuietHints and DisplayOnlyPeer; no background display search',
                              'stockfish_scores': 'Supplementary pre-move root evaluations from merged play info, not chosen weakened move values',
-                             'measurements': 'Actual concessions, 100-ply reach, pre-100-ply abs CP <=150 on known roots, ramp/finish and legal WDL',
+                             'close_cp': 100,
+                             'target_fullmoves': 40,
+                             'measurements': 'Actual concessions, 80-ply reach, pre-80-ply abs CP <=100 on known roots, continuous band coverage, delayed recovery, ramp/finish and legal WDL',
                              'claims': 'Small diagnostic only; no Elo or perceived-drama inference', 'ponder': False},
                 'schedule': entries, 'games': [], 'status': 'running', 'errors': []}
     write_json(output / 'match.json', metadata)

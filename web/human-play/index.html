@@ -17,7 +17,7 @@
   <div class="page-shell">
     <header class="page-header">
       <div class="brand"><span class="brand-mark" aria-hidden="true">♜</span><div><p class="eyebrow">우리의 체스 엔진</p><h1>Regicide <span class="version" id="header-engine-version"></span></h1></div></div>
-      <span class="local-badge"><span aria-hidden="true"></span><small id="connection-label">내 컴퓨터에서 대국 중</small></span>
+      <div class="rating-header"><span class="local-badge"><span aria-hidden="true"></span><small id="connection-label">내 컴퓨터에서 대국 중</small></span><p id="sparring-rating" class="sparring-rating" aria-live="polite" hidden></p></div>
     </header>
 
     <nav class="mode-tabs" aria-label="화면 선택"><button id="live-mode-button" type="button" aria-pressed="true">직접 대국</button><button id="analysis-mode-button" type="button" aria-pressed="false">분석 모드 · 자유 배치</button><button id="coaching-mode-button" type="button" aria-pressed="false">대국 코칭</button><button id="archive-mode-button" type="button" aria-pressed="false">대국 보관함</button></nav>
@@ -65,6 +65,15 @@
           </form>
           <div class="game-actions"><button id="undo" class="secondary-button" type="button" disabled><span aria-hidden="true">↶</span> 한 턴 되돌리기</button><button id="resign" class="secondary-button" type="button" disabled>기권</button></div>
           <p class="help-note">기물 색과 대국 모드는 새 대국을 시작할 때 적용됩니다. 생각 시간은 새 대국 없이 바꿀 수 있습니다.</p>
+        </section>
+
+        <section id="rating-label-panel" class="card" aria-label="실제 래피드 레이팅" hidden>
+          <form id="rating-label-form">
+            <label class="field-label" for="rating-label-input">실제 Chess.com 래피드 레이팅</label>
+            <input id="rating-label-input" class="rating-input" type="number" min="100" max="4000" step="1" inputmode="numeric" placeholder="예: 1200" aria-describedby="rating-label-note" required>
+            <button id="rating-label-save" class="secondary-button" type="submit">레이팅 저장</button>
+            <p id="rating-label-note" class="help-note" aria-live="polite">입력한 값은 다음 대국의 추정 보정에 반영합니다.</p>
+          </form>
         </section>
 
         <section id="opening-guide" class="card opening-guide" aria-label="오프닝 안내">
