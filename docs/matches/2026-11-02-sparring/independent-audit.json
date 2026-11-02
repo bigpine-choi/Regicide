@@ -1,0 +1,1570 @@
+{
+  "schema": "regicide.sparring-match-independent-audit.v1",
+  "audited_at": "2026-11-02T14:15:30.050298+00:00",
+  "passed": true,
+  "source_commit": "fa25aa56895c78d3a42ec7ccc5ac02f325146ef6",
+  "method": "Independent legal PGN replay and detail/summary/jsonl/production-sidecar parity; no additional engine search; scoring and legal-history checks also use frozen summarize_sparring_match.py",
+  "checks": {
+    "individual_and_combined_pgn": true,
+    "every_actual_move_legal": true,
+    "no_move_after_claimable_ending": true,
+    "json_jsonl_sidecar_parity": true,
+    "actual_mode_and_time_options": true,
+    "white_score_perspective": true,
+    "selected_candidate_same_depth_and_cost": true,
+    "quality_observation_same_pre_move_board": true,
+    "phase_schedule_and_full_strength_finish": true,
+    "paired_colors_and_seeds": true,
+    "live_source_catalog_and_binary_hashes": true,
+    "root_summary_recomputed": true
+  },
+  "outcomes": {
+    "games_recorded": 8,
+    "categories": {
+      "legal_completed": 7,
+      "capped": 1
+    },
+    "legal_completed": 7,
+    "wins": 6,
+    "draws": 0,
+    "losses": 1,
+    "score_fraction_completed_only": 0.8571428571428571,
+    "reached_50_full_moves": 1,
+    "reached_finish_phase": 1
+  },
+  "games": [
+    {
+      "game": 1,
+      "level": 1320,
+      "color": "white",
+      "result": "1-0",
+      "plies": 59,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 0,
+      "loss_cp": {
+        "n": 0,
+        "mean": null,
+        "min": null,
+        "max": null,
+        "median": null,
+        "p95": null
+      },
+      "moves": 30,
+      "observations": 19,
+      "phases": {
+        "calibration": 3,
+        "sparring": 27
+      },
+      "baseline_close": {
+        "eligible_positions": 30,
+        "known_exact_cp": 26,
+        "unknown_or_inexact": 4,
+        "close_positions": 8,
+        "close_fraction_of_known": 0.3076923076923077,
+        "mean_absolute_cp": 710.0,
+        "white_cp": {
+          "n": 26,
+          "mean": 710.0,
+          "min": 7,
+          "max": 2334,
+          "median": 469.5,
+          "p95": 2183.0
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 29,
+        "known_exact_cp": 21,
+        "unknown_or_inexact": 8,
+        "close_positions": 6,
+        "close_fraction_of_known": 0.2857142857142857,
+        "mean_absolute_cp": 389.57142857142856,
+        "white_cp": {
+          "n": 21,
+          "mean": 388.04761904761904,
+          "min": -16,
+          "max": 1325,
+          "median": 345.0,
+          "p95": 856.0
+        }
+      },
+      "reason_counts": {
+        "calibrating": 2,
+        "evaluation_not_stable": 13,
+        "baseline_closest_to_target": 2,
+        "position_or_phase_full_strength": 2,
+        "no_verified_natural_candidate": 7,
+        "baseline_unreliable_or_mate": 4
+      }
+    },
+    {
+      "game": 2,
+      "level": 1320,
+      "color": "black",
+      "result": "0-1",
+      "plies": 52,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 0,
+      "loss_cp": {
+        "n": 0,
+        "mean": null,
+        "min": null,
+        "max": null,
+        "median": null,
+        "p95": null
+      },
+      "moves": 26,
+      "observations": 16,
+      "phases": {
+        "calibration": 3,
+        "sparring": 23
+      },
+      "baseline_close": {
+        "eligible_positions": 26,
+        "known_exact_cp": 23,
+        "unknown_or_inexact": 3,
+        "close_positions": 17,
+        "close_fraction_of_known": 0.7391304347826086,
+        "mean_absolute_cp": 161.8695652173913,
+        "white_cp": {
+          "n": 23,
+          "mean": -139.7826086956522,
+          "min": -930,
+          "max": 87,
+          "median": -31.0,
+          "p95": 67.0
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 26,
+        "known_exact_cp": 19,
+        "unknown_or_inexact": 7,
+        "close_positions": 12,
+        "close_fraction_of_known": 0.631578947368421,
+        "mean_absolute_cp": 218.57894736842104,
+        "white_cp": {
+          "n": 19,
+          "mean": -160.68421052631578,
+          "min": -1004,
+          "max": 195,
+          "median": 6.0,
+          "p95": 120.29999999999983
+        }
+      },
+      "reason_counts": {
+        "calibrating": 1,
+        "evaluation_not_stable": 12,
+        "baseline_closest_to_target": 1,
+        "position_or_phase_full_strength": 5,
+        "baseline_unreliable_or_mate": 4,
+        "no_verified_natural_candidate": 2,
+        "forcing_or_repeated_position": 1
+      }
+    },
+    {
+      "game": 3,
+      "level": 1700,
+      "color": "white",
+      "result": "1-0",
+      "plies": 59,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 2,
+      "loss_cp": {
+        "n": 2,
+        "mean": 5.5,
+        "min": 2,
+        "max": 9,
+        "median": 5.5,
+        "p95": 8.649999999999999
+      },
+      "moves": 30,
+      "observations": 25,
+      "phases": {
+        "calibration": 3,
+        "sparring": 27
+      },
+      "baseline_close": {
+        "eligible_positions": 30,
+        "known_exact_cp": 27,
+        "unknown_or_inexact": 3,
+        "close_positions": 20,
+        "close_fraction_of_known": 0.7407407407407407,
+        "mean_absolute_cp": 247.92592592592592,
+        "white_cp": {
+          "n": 27,
+          "mean": 247.92592592592592,
+          "min": 11,
+          "max": 1528,
+          "median": 41.0,
+          "p95": 1175.8
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 29,
+        "known_exact_cp": 22,
+        "unknown_or_inexact": 7,
+        "close_positions": 15,
+        "close_fraction_of_known": 0.6818181818181818,
+        "mean_absolute_cp": 219.5,
+        "white_cp": {
+          "n": 22,
+          "mean": 202.5,
+          "min": -40,
+          "max": 1083,
+          "median": 19.0,
+          "p95": 779.3
+        }
+      },
+      "reason_counts": {
+        "calibrating": 2,
+        "evaluation_not_stable": 9,
+        "accepted_sparring_alternative": 2,
+        "position_or_phase_full_strength": 6,
+        "baseline_closest_to_target": 3,
+        "no_verified_natural_candidate": 5,
+        "baseline_unreliable_or_mate": 3
+      }
+    },
+    {
+      "game": 4,
+      "level": 1700,
+      "color": "black",
+      "result": "0-1",
+      "plies": 58,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 3,
+      "loss_cp": {
+        "n": 3,
+        "mean": 2.3333333333333335,
+        "min": 1,
+        "max": 5,
+        "median": 1.0,
+        "p95": 4.6
+      },
+      "moves": 29,
+      "observations": 26,
+      "phases": {
+        "calibration": 3,
+        "sparring": 26
+      },
+      "baseline_close": {
+        "eligible_positions": 29,
+        "known_exact_cp": 26,
+        "unknown_or_inexact": 3,
+        "close_positions": 18,
+        "close_fraction_of_known": 0.6923076923076923,
+        "mean_absolute_cp": 563.3461538461538,
+        "white_cp": {
+          "n": 26,
+          "mean": -563.3461538461538,
+          "min": -2656,
+          "max": -8,
+          "median": -51.0,
+          "p95": -17.5
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 29,
+        "known_exact_cp": 19,
+        "unknown_or_inexact": 10,
+        "close_positions": 14,
+        "close_fraction_of_known": 0.7368421052631579,
+        "mean_absolute_cp": 271.4736842105263,
+        "white_cp": {
+          "n": 19,
+          "mean": -249.78947368421052,
+          "min": -1190,
+          "max": 59,
+          "median": -28.0,
+          "p95": 55.39999999999999
+        }
+      },
+      "reason_counts": {
+        "calibrating": 2,
+        "evaluation_not_stable": 12,
+        "baseline_closest_to_target": 4,
+        "accepted_sparring_alternative": 3,
+        "no_verified_natural_candidate": 4,
+        "baseline_unreliable_or_mate": 4
+      }
+    },
+    {
+      "game": 5,
+      "level": 2100,
+      "color": "white",
+      "result": "1-0",
+      "plies": 81,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 3,
+      "loss_cp": {
+        "n": 3,
+        "mean": 4.666666666666667,
+        "min": 2,
+        "max": 7,
+        "median": 5.0,
+        "p95": 6.8
+      },
+      "moves": 41,
+      "observations": 31,
+      "phases": {
+        "calibration": 3,
+        "sparring": 38
+      },
+      "baseline_close": {
+        "eligible_positions": 41,
+        "known_exact_cp": 37,
+        "unknown_or_inexact": 4,
+        "close_positions": 22,
+        "close_fraction_of_known": 0.5945945945945946,
+        "mean_absolute_cp": 299.8378378378378,
+        "white_cp": {
+          "n": 37,
+          "mean": 299.8378378378378,
+          "min": 22,
+          "max": 1620,
+          "median": 86.0,
+          "p95": 1059.199999999997
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 40,
+        "known_exact_cp": 24,
+        "unknown_or_inexact": 16,
+        "close_positions": 14,
+        "close_fraction_of_known": 0.5833333333333334,
+        "mean_absolute_cp": 233.375,
+        "white_cp": {
+          "n": 24,
+          "mean": 223.625,
+          "min": -55,
+          "max": 769,
+          "median": 117.5,
+          "p95": 645.8
+        }
+      },
+      "reason_counts": {
+        "calibrating": 2,
+        "evaluation_not_stable": 13,
+        "baseline_closest_to_target": 6,
+        "accepted_sparring_alternative": 3,
+        "no_verified_natural_candidate": 10,
+        "position_or_phase_full_strength": 2,
+        "forcing_or_repeated_position": 1,
+        "baseline_unreliable_or_mate": 4
+      }
+    },
+    {
+      "game": 6,
+      "level": 2100,
+      "color": "black",
+      "result": "0-1",
+      "plies": 66,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 1,
+      "loss_cp": {
+        "n": 1,
+        "mean": 18.0,
+        "min": 18,
+        "max": 18,
+        "median": 18.0,
+        "p95": 18.0
+      },
+      "moves": 33,
+      "observations": 29,
+      "phases": {
+        "calibration": 3,
+        "sparring": 30
+      },
+      "baseline_close": {
+        "eligible_positions": 33,
+        "known_exact_cp": 31,
+        "unknown_or_inexact": 2,
+        "close_positions": 13,
+        "close_fraction_of_known": 0.41935483870967744,
+        "mean_absolute_cp": 677.9354838709677,
+        "white_cp": {
+          "n": 31,
+          "mean": -677.2258064516129,
+          "min": -2006,
+          "max": 11,
+          "median": -432.0,
+          "p95": -2.5
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 33,
+        "known_exact_cp": 24,
+        "unknown_or_inexact": 9,
+        "close_positions": 7,
+        "close_fraction_of_known": 0.2916666666666667,
+        "mean_absolute_cp": 474.7916666666667,
+        "white_cp": {
+          "n": 24,
+          "mean": -408.375,
+          "min": -1068,
+          "max": 162,
+          "median": -462.0,
+          "p95": 153.2
+        }
+      },
+      "reason_counts": {
+        "calibrating": 1,
+        "evaluation_not_stable": 14,
+        "position_or_phase_full_strength": 6,
+        "forcing_or_repeated_position": 1,
+        "accepted_sparring_alternative": 1,
+        "no_verified_natural_candidate": 8,
+        "baseline_unreliable_or_mate": 2
+      }
+    },
+    {
+      "game": 7,
+      "level": 2500,
+      "color": "white",
+      "result": "0-1",
+      "plies": 88,
+      "termination": "checkmate",
+      "category": "legal_completed",
+      "issues": [],
+      "concessions": 1,
+      "loss_cp": {
+        "n": 1,
+        "mean": 6.0,
+        "min": 6,
+        "max": 6,
+        "median": 6.0,
+        "p95": 6.0
+      },
+      "moves": 44,
+      "observations": 33,
+      "phases": {
+        "calibration": 3,
+        "sparring": 41
+      },
+      "baseline_close": {
+        "eligible_positions": 44,
+        "known_exact_cp": 36,
+        "unknown_or_inexact": 8,
+        "close_positions": 31,
+        "close_fraction_of_known": 0.8611111111111112,
+        "mean_absolute_cp": 150.47222222222223,
+        "white_cp": {
+          "n": 36,
+          "mean": -105.69444444444444,
+          "min": -1320,
+          "max": 101,
+          "median": 12.0,
+          "p95": 74.75
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 44,
+        "known_exact_cp": 29,
+        "unknown_or_inexact": 15,
+        "close_positions": 16,
+        "close_fraction_of_known": 0.5517241379310345,
+        "mean_absolute_cp": 228.58620689655172,
+        "white_cp": {
+          "n": 29,
+          "mean": -225.55172413793105,
+          "min": -917,
+          "max": 24,
+          "median": -116.0,
+          "p95": 11.199999999999974
+        }
+      },
+      "reason_counts": {
+        "calibrating": 2,
+        "evaluation_not_stable": 14,
+        "baseline_closest_to_target": 3,
+        "position_or_phase_full_strength": 6,
+        "no_verified_natural_candidate": 8,
+        "forcing_or_repeated_position": 2,
+        "accepted_sparring_alternative": 1,
+        "baseline_unreliable_or_mate": 7,
+        "forced_reply": 1
+      }
+    },
+    {
+      "game": 8,
+      "level": 2500,
+      "color": "black",
+      "result": "*",
+      "plies": 220,
+      "termination": "ply_cap",
+      "category": "capped",
+      "issues": [],
+      "concessions": 3,
+      "loss_cp": {
+        "n": 3,
+        "mean": 7.333333333333333,
+        "min": 4,
+        "max": 9,
+        "median": 9.0,
+        "p95": 9.0
+      },
+      "moves": 110,
+      "observations": 68,
+      "phases": {
+        "calibration": 3,
+        "sparring": 47,
+        "ramp": 20,
+        "finish": 40
+      },
+      "baseline_close": {
+        "eligible_positions": 110,
+        "known_exact_cp": 88,
+        "unknown_or_inexact": 22,
+        "close_positions": 46,
+        "close_fraction_of_known": 0.5227272727272727,
+        "mean_absolute_cp": 192.875,
+        "white_cp": {
+          "n": 88,
+          "mean": 180.4431818181818,
+          "min": -83,
+          "max": 1434,
+          "median": 81.0,
+          "p95": 569.4499999999999
+        }
+      },
+      "sf_close": {
+        "eligible_positions": 110,
+        "known_exact_cp": 76,
+        "unknown_or_inexact": 34,
+        "close_positions": 8,
+        "close_fraction_of_known": 0.10526315789473684,
+        "mean_absolute_cp": 434.75,
+        "white_cp": {
+          "n": 76,
+          "mean": 434.75,
+          "min": 0,
+          "max": 1441,
+          "median": 420.0,
+          "p95": 652.25
+        }
+      },
+      "reason_counts": {
+        "calibrating": 1,
+        "evaluation_not_stable": 24,
+        "position_or_phase_full_strength": 13,
+        "baseline_closest_to_target": 6,
+        "accepted_sparring_alternative": 3,
+        "no_verified_natural_candidate": 9,
+        "forced_reply": 1,
+        "forcing_or_repeated_position": 13,
+        "finish_full_strength": 40
+      }
+    }
+  ],
+  "total_plies": 683,
+  "actual_concessions": [
+    {
+      "game": 3,
+      "setting": 1700,
+      "color": "white",
+      "ply": 9,
+      "san": "d4",
+      "selected": "d2d4",
+      "baseline": "e1g1",
+      "loss_cp": 2,
+      "depth": 6,
+      "target_loss_cp": 1.642,
+      "baseline_cp_white": 18,
+      "candidate_cp_white": 16
+    },
+    {
+      "game": 3,
+      "setting": 1700,
+      "color": "white",
+      "ply": 31,
+      "san": "Qb1",
+      "selected": "d1b1",
+      "baseline": "d1c2",
+      "loss_cp": 9,
+      "depth": 6,
+      "target_loss_cp": 5.418,
+      "baseline_cp_white": 38,
+      "candidate_cp_white": 29
+    },
+    {
+      "game": 4,
+      "setting": 1700,
+      "color": "black",
+      "ply": 12,
+      "san": "Bg4",
+      "selected": "c8g4",
+      "baseline": "e8g8",
+      "loss_cp": 5,
+      "depth": 5,
+      "target_loss_cp": 4.554,
+      "baseline_cp_white": -43,
+      "candidate_cp_white": -38
+    },
+    {
+      "game": 4,
+      "setting": 1700,
+      "color": "black",
+      "ply": 16,
+      "san": "Qd7",
+      "selected": "d8d7",
+      "baseline": "e8g8",
+      "loss_cp": 1,
+      "depth": 6,
+      "target_loss_cp": 2.418,
+      "baseline_cp_white": -26,
+      "candidate_cp_white": -25
+    },
+    {
+      "game": 4,
+      "setting": 1700,
+      "color": "black",
+      "ply": 30,
+      "san": "exd3",
+      "selected": "e4d3",
+      "baseline": "c5f5",
+      "loss_cp": 1,
+      "depth": 5,
+      "target_loss_cp": 2.034,
+      "baseline_cp_white": -64,
+      "candidate_cp_white": -63
+    },
+    {
+      "game": 5,
+      "setting": 2100,
+      "color": "white",
+      "ply": 13,
+      "san": "Ng5",
+      "selected": "f3g5",
+      "baseline": "c1e3",
+      "loss_cp": 2,
+      "depth": 5,
+      "target_loss_cp": 2.953,
+      "baseline_cp_white": 64,
+      "candidate_cp_white": 62
+    },
+    {
+      "game": 5,
+      "setting": 2100,
+      "color": "white",
+      "ply": 27,
+      "san": "Kh1",
+      "selected": "g1h1",
+      "baseline": "f2f4",
+      "loss_cp": 7,
+      "depth": 5,
+      "target_loss_cp": 5.976,
+      "baseline_cp_white": 81,
+      "candidate_cp_white": 74
+    },
+    {
+      "game": 5,
+      "setting": 2100,
+      "color": "white",
+      "ply": 61,
+      "san": "Rd8+",
+      "selected": "d1d8",
+      "baseline": "f5g6",
+      "loss_cp": 5,
+      "depth": 5,
+      "target_loss_cp": 24.014,
+      "baseline_cp_white": 637,
+      "candidate_cp_white": 632
+    },
+    {
+      "game": 6,
+      "setting": 2100,
+      "color": "black",
+      "ply": 36,
+      "san": "b6",
+      "selected": "b7b6",
+      "baseline": "f8g7",
+      "loss_cp": 18,
+      "depth": 5,
+      "target_loss_cp": 15.98,
+      "baseline_cp_white": -483,
+      "candidate_cp_white": -465
+    },
+    {
+      "game": 7,
+      "setting": 2500,
+      "color": "white",
+      "ply": 43,
+      "san": "Re1",
+      "selected": "a1e1",
+      "baseline": "a1d1",
+      "loss_cp": 6,
+      "depth": 6,
+      "target_loss_cp": 7.715,
+      "baseline_cp_white": -3,
+      "candidate_cp_white": -9
+    },
+    {
+      "game": 8,
+      "setting": 2500,
+      "color": "black",
+      "ply": 20,
+      "san": "a5",
+      "selected": "a7a5",
+      "baseline": "d7e5",
+      "loss_cp": 4,
+      "depth": 5,
+      "target_loss_cp": 4.119,
+      "baseline_cp_white": -49,
+      "candidate_cp_white": -45
+    },
+    {
+      "game": 8,
+      "setting": 2500,
+      "color": "black",
+      "ply": 22,
+      "san": "h6",
+      "selected": "h7h6",
+      "baseline": "d7e5",
+      "loss_cp": 9,
+      "depth": 5,
+      "target_loss_cp": 4.973,
+      "baseline_cp_white": -49,
+      "candidate_cp_white": -40
+    },
+    {
+      "game": 8,
+      "setting": 2500,
+      "color": "black",
+      "ply": 32,
+      "san": "Ng6",
+      "selected": "e5g6",
+      "baseline": "e5d7",
+      "loss_cp": 9,
+      "depth": 5,
+      "target_loss_cp": 5.737,
+      "baseline_cp_white": -15,
+      "candidate_cp_white": -6
+    }
+  ],
+  "all_sparring_moves": 343,
+  "valid_quality_observations": 247,
+  "phase_boundaries": {
+    "reached_board_ply100_games": [
+      8
+    ],
+    "reached_board_ply140_games": [
+      8
+    ],
+    "actual_decision_phase_counts": {
+      "calibration": 24,
+      "sparring": 259,
+      "ramp": 20,
+      "finish": 40
+    },
+    "definition": "Reaching a board state at ply100/140 differs from executing a ramp/finish decision: the latter starts at actual move ply101/141."
+  },
+  "pairing": {
+    "1320": [
+      {
+        "game": 1,
+        "color": "white",
+        "seed": "acffc291215f6f3ac8129b238d7d1bab",
+        "pair": 1
+      },
+      {
+        "game": 2,
+        "color": "black",
+        "seed": "acffc291215f6f3ac8129b238d7d1bab",
+        "pair": 1
+      }
+    ],
+    "1700": [
+      {
+        "game": 3,
+        "color": "white",
+        "seed": "476db6e95a57ab701316bf8da769a4e7",
+        "pair": 2
+      },
+      {
+        "game": 4,
+        "color": "black",
+        "seed": "476db6e95a57ab701316bf8da769a4e7",
+        "pair": 2
+      }
+    ],
+    "2100": [
+      {
+        "game": 5,
+        "color": "white",
+        "seed": "ed1a3f8138fefe3ef45193be730cb92b",
+        "pair": 3
+      },
+      {
+        "game": 6,
+        "color": "black",
+        "seed": "ed1a3f8138fefe3ef45193be730cb92b",
+        "pair": 3
+      }
+    ],
+    "2500": [
+      {
+        "game": 7,
+        "color": "white",
+        "seed": "0278f491c9b893b247458b5bdf0b7bf2",
+        "pair": 4
+      },
+      {
+        "game": 8,
+        "color": "black",
+        "seed": "0278f491c9b893b247458b5bdf0b7bf2",
+        "pair": 4
+      }
+    ]
+  },
+  "first_50_full_moves": {
+    "sparring_moves": 283,
+    "valid_decisions": 283,
+    "baseline_before_selection": {
+      "eligible_positions": 283,
+      "known_exact_cp": 256,
+      "unknown_or_inexact": 27,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.68359375,
+      "mean_absolute_cp": 326.70703125,
+      "white_cp": {
+        "n": 256,
+        "mean": -19.22265625,
+        "min": -2656,
+        "max": 2334,
+        "median": 20.0,
+        "p95": 1023.0
+      }
+    },
+    "baseline_stable_subset": {
+      "eligible_positions": 166,
+      "known_exact_cp": 146,
+      "unknown_or_inexact": 20,
+      "close_positions": 107,
+      "close_fraction_of_known": 0.7328767123287672,
+      "mean_absolute_cp": 211.8013698630137,
+      "white_cp": {
+        "n": 146,
+        "mean": -19.04794520547945,
+        "min": -2006,
+        "max": 1210,
+        "median": 21.5,
+        "p95": 572.25
+      }
+    },
+    "selected_root_same_depth": {
+      "eligible_positions": 283,
+      "known_exact_cp": 256,
+      "unknown_or_inexact": 27,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.68359375,
+      "mean_absolute_cp": 326.44921875,
+      "white_cp": {
+        "n": 256,
+        "mean": -19.16015625,
+        "min": -2656,
+        "max": 2334,
+        "median": 20.0,
+        "p95": 1023.0
+      }
+    },
+    "baseline_minus_clamped_loss": {
+      "eligible_positions": 283,
+      "known_exact_cp": 256,
+      "unknown_or_inexact": 27,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.68359375,
+      "mean_absolute_cp": 326.44921875,
+      "white_cp": {
+        "n": 256,
+        "mean": -19.16015625,
+        "min": -2656,
+        "max": 2334,
+        "median": 20.0,
+        "p95": 1023.0
+      }
+    },
+    "selected_vs_clamped_loss_disagreements": 0,
+    "stockfish_next_root_auxiliary": {
+      "eligible_positions": 280,
+      "known_exact_cp": 205,
+      "unknown_or_inexact": 75,
+      "close_positions": 92,
+      "close_fraction_of_known": 0.44878048780487806,
+      "mean_absolute_cp": 294.5219512195122,
+      "white_cp": {
+        "n": 205,
+        "mean": 40.297560975609755,
+        "min": -1190,
+        "max": 1325,
+        "median": 33.0,
+        "p95": 639.3999999999997
+      }
+    },
+    "stockfish_exact_root_differs_from_weakened_selected_move": 129,
+    "reliability_counts": {
+      "stable": 166,
+      "volatile": 82,
+      "provisional": 35
+    },
+    "decision_reason_counts": {
+      "calibrating": 13,
+      "evaluation_not_stable": 107,
+      "baseline_closest_to_target": 25,
+      "position_or_phase_full_strength": 34,
+      "no_verified_natural_candidate": 53,
+      "baseline_unreliable_or_mate": 28,
+      "forcing_or_repeated_position": 8,
+      "accepted_sparring_alternative": 13,
+      "forced_reply": 2
+    },
+    "different_from_baseline": 13,
+    "verified_positive_loss_concessions": 13,
+    "concession_fraction_of_all_sparring_moves": 0.045936395759717315,
+    "concession_fraction_of_valid_decisions": 0.045936395759717315,
+    "concession_loss_cp": {
+      "n": 13,
+      "mean": 6.0,
+      "min": 1,
+      "max": 18,
+      "median": 5.0,
+      "p95": 12.599999999999987
+    },
+    "valid_quality_observations": 227,
+    "quality_loss_cp": {
+      "n": 227,
+      "mean": 41.651982378854626,
+      "min": 0,
+      "max": 586,
+      "median": 13.0,
+      "p95": 175.69999999999965
+    },
+    "observation_reason_counts": {
+      "no_previous_human_move": 4,
+      "same_position_completed_depth": 161,
+      "actual_move_is_reference": 66,
+      "reference_unreliable": 35,
+      "no_common_depth": 4,
+      "forced_or_invalid_position": 7,
+      "mate_candidate_not_comparable": 4,
+      "not_observed": 2
+    },
+    "phase_counts": {
+      "calibration": 24,
+      "sparring": 259
+    },
+    "latency_ms": {
+      "sparring": {
+        "elapsed_ms": {
+          "n": 283,
+          "mean": 1414.6668268551236,
+          "min": 995.303,
+          "max": 2727.047,
+          "median": 1294.016,
+          "p95": 1972.8561999999995
+        },
+        "search_elapsed_ms": {
+          "n": 283,
+          "mean": 1414.4974628975265,
+          "min": 995.193,
+          "max": 2726.936,
+          "median": 1293.859,
+          "p95": 1972.6665999999996
+        },
+        "relay_elapsed_ms": {
+          "n": 283,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "median": 0.0,
+          "p95": 0.0
+        },
+        "baseline_elapsed_ms": {
+          "n": 283,
+          "mean": 983.5959469964664,
+          "min": 982.092,
+          "max": 985.568,
+          "median": 983.566,
+          "p95": 984.7186
+        },
+        "extra_elapsed_ms": {
+          "n": 283,
+          "mean": 384.59677738515904,
+          "min": 0.735,
+          "max": 1697.688,
+          "median": 248.149,
+          "p95": 925.6747999999995
+        }
+      },
+      "stockfish": {
+        "elapsed_ms": {
+          "n": 280,
+          "mean": 972.620157142857,
+          "min": 50.641,
+          "max": 1116.527,
+          "median": 1039.7305000000001,
+          "p95": 1076.1217
+        },
+        "search_elapsed_ms": {
+          "n": 280,
+          "mean": 929.4049285714286,
+          "min": 6.454,
+          "max": 1004.569,
+          "median": 1001.5264999999999,
+          "p95": 1002.96775
+        },
+        "relay_elapsed_ms": {
+          "n": 280,
+          "mean": 42.60751428571428,
+          "min": 12.711,
+          "max": 113.914,
+          "median": 41.590500000000006,
+          "p95": 75.82740000000001
+        },
+        "baseline_elapsed_ms": {
+          "n": 0,
+          "mean": null,
+          "min": null,
+          "max": null,
+          "median": null,
+          "p95": null
+        },
+        "extra_elapsed_ms": {
+          "n": 0,
+          "mean": null,
+          "min": null,
+          "max": null,
+          "median": null,
+          "p95": null
+        }
+      }
+    }
+  },
+  "all_move_metrics": {
+    "sparring_moves": 343,
+    "valid_decisions": 343,
+    "baseline_before_selection": {
+      "eligible_positions": 343,
+      "known_exact_cp": 294,
+      "unknown_or_inexact": 49,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.5952380952380952,
+      "mean_absolute_cp": 333.4149659863946,
+      "white_cp": {
+        "n": 294,
+        "mean": 32.197278911564624,
+        "min": -2656,
+        "max": 2334,
+        "median": 33.0,
+        "p95": 1089.4999999999995
+      }
+    },
+    "baseline_stable_subset": {
+      "eligible_positions": 208,
+      "known_exact_cp": 172,
+      "unknown_or_inexact": 36,
+      "close_positions": 107,
+      "close_fraction_of_known": 0.622093023255814,
+      "mean_absolute_cp": 221.27325581395348,
+      "white_cp": {
+        "n": 172,
+        "mean": 25.319767441860463,
+        "min": -2006,
+        "max": 1210,
+        "median": 33.0,
+        "p95": 561.0
+      }
+    },
+    "selected_root_same_depth": {
+      "eligible_positions": 343,
+      "known_exact_cp": 294,
+      "unknown_or_inexact": 49,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.5952380952380952,
+      "mean_absolute_cp": 333.1904761904762,
+      "white_cp": {
+        "n": 294,
+        "mean": 32.25170068027211,
+        "min": -2656,
+        "max": 2334,
+        "median": 32.5,
+        "p95": 1089.4999999999995
+      }
+    },
+    "baseline_minus_clamped_loss": {
+      "eligible_positions": 343,
+      "known_exact_cp": 294,
+      "unknown_or_inexact": 49,
+      "close_positions": 175,
+      "close_fraction_of_known": 0.5952380952380952,
+      "mean_absolute_cp": 333.1904761904762,
+      "white_cp": {
+        "n": 294,
+        "mean": 32.25170068027211,
+        "min": -2656,
+        "max": 2334,
+        "median": 32.5,
+        "p95": 1089.4999999999995
+      }
+    },
+    "selected_vs_clamped_loss_disagreements": 0,
+    "stockfish_next_root_auxiliary": {
+      "eligible_positions": 340,
+      "known_exact_cp": 234,
+      "unknown_or_inexact": 106,
+      "close_positions": 92,
+      "close_fraction_of_known": 0.39316239316239315,
+      "mean_absolute_cp": 337.55128205128204,
+      "white_cp": {
+        "n": 234,
+        "mean": 114.83333333333333,
+        "min": -1190,
+        "max": 1441,
+        "median": 61.5,
+        "p95": 662.6499999999999
+      }
+    },
+    "stockfish_exact_root_differs_from_weakened_selected_move": 149,
+    "reliability_counts": {
+      "stable": 208,
+      "volatile": 100,
+      "provisional": 35
+    },
+    "decision_reason_counts": {
+      "calibrating": 13,
+      "evaluation_not_stable": 111,
+      "baseline_closest_to_target": 25,
+      "position_or_phase_full_strength": 40,
+      "no_verified_natural_candidate": 53,
+      "baseline_unreliable_or_mate": 28,
+      "forcing_or_repeated_position": 18,
+      "accepted_sparring_alternative": 13,
+      "forced_reply": 2,
+      "finish_full_strength": 40
+    },
+    "different_from_baseline": 13,
+    "verified_positive_loss_concessions": 13,
+    "concession_fraction_of_all_sparring_moves": 0.037900874635568516,
+    "concession_fraction_of_valid_decisions": 0.037900874635568516,
+    "concession_loss_cp": {
+      "n": 13,
+      "mean": 6.0,
+      "min": 1,
+      "max": 18,
+      "median": 5.0,
+      "p95": 12.599999999999987
+    },
+    "valid_quality_observations": 247,
+    "quality_loss_cp": {
+      "n": 247,
+      "mean": 39.1336032388664,
+      "min": 0,
+      "max": 586,
+      "median": 12.0,
+      "p95": 152.49999999999994
+    },
+    "observation_reason_counts": {
+      "no_previous_human_move": 4,
+      "same_position_completed_depth": 176,
+      "actual_move_is_reference": 71,
+      "reference_unreliable": 35,
+      "no_common_depth": 4,
+      "forced_or_invalid_position": 7,
+      "mate_candidate_not_comparable": 4,
+      "not_observed": 42
+    },
+    "phase_counts": {
+      "calibration": 24,
+      "sparring": 259,
+      "ramp": 20,
+      "finish": 40
+    },
+    "latency_ms": {
+      "sparring": {
+        "elapsed_ms": {
+          "n": 343,
+          "mean": 1379.695472303207,
+          "min": 995.303,
+          "max": 2727.047,
+          "median": 1284.392,
+          "p95": 1893.3455
+        },
+        "search_elapsed_ms": {
+          "n": 343,
+          "mean": 1379.5236851311954,
+          "min": 995.193,
+          "max": 2726.936,
+          "median": 1284.234,
+          "p95": 1893.2007999999998
+        },
+        "relay_elapsed_ms": {
+          "n": 343,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "median": 0.0,
+          "p95": 0.0
+        },
+        "baseline_elapsed_ms": {
+          "n": 343,
+          "mean": 983.8020524781341,
+          "min": 982.092,
+          "max": 987.14,
+          "median": 983.72,
+          "p95": 985.4232
+        },
+        "extra_elapsed_ms": {
+          "n": 343,
+          "mean": 333.39397959183674,
+          "min": 0.735,
+          "max": 1697.688,
+          "median": 240.833,
+          "p95": 859.7029999999996
+        }
+      },
+      "stockfish": {
+        "elapsed_ms": {
+          "n": 340,
+          "mean": 973.67945,
+          "min": 50.641,
+          "max": 1162.43,
+          "median": 1044.067,
+          "p95": 1125.2276
+        },
+        "search_elapsed_ms": {
+          "n": 340,
+          "mean": 916.8339794117647,
+          "min": 6.454,
+          "max": 1004.569,
+          "median": 1001.5374999999999,
+          "p95": 1002.8261
+        },
+        "relay_elapsed_ms": {
+          "n": 340,
+          "mean": 56.206102941176475,
+          "min": 12.711,
+          "max": 186.221,
+          "median": 46.656,
+          "p95": 132.4842
+        },
+        "baseline_elapsed_ms": {
+          "n": 0,
+          "mean": null,
+          "min": null,
+          "max": null,
+          "median": null,
+          "p95": null
+        },
+        "extra_elapsed_ms": {
+          "n": 0,
+          "mean": null,
+          "min": null,
+          "max": null,
+          "median": null,
+          "p95": null
+        }
+      }
+    }
+  },
+  "stockfish_score_provenance": {
+    "packets": 340,
+    "source": "play_merged_info",
+    "iteration_identity": "not_guaranteed_merged_play_info",
+    "timing": "after preceding sparring move, before Stockfish move",
+    "is_weakened_selected_move_score": false,
+    "used_to_select_regicide_moves": false,
+    "scope": "Supplementary opponent root estimate only; no completed-depth packet coherence or independent position-truth claim"
+  },
+  "load_sampling": {
+    "samples": 18,
+    "first_time": "2026-11-02T14:04:56.2142248Z",
+    "last_time": "2026-11-02T14:13:34.5064786Z",
+    "cpu_percent": {
+      "n": 18,
+      "mean": 15.444444444444445,
+      "min": 0,
+      "max": 37,
+      "median": 12.5,
+      "p95": 31.04999999999999
+    },
+    "free_memory_kb": {
+      "n": 18,
+      "mean": 11589142.0,
+      "min": 11217852,
+      "max": 12130852,
+      "median": 11590782.0,
+      "p95": 11853707.799999999
+    },
+    "scope": "Whole-machine snapshots; not process CPU accounting, thermal isolation, or a strength-control covariate",
+    "hardware": {
+      "os": {
+        "Caption": "Microsoft Windows 11 Home",
+        "Version": "10.0.26200",
+        "TotalVisibleMemorySize": 32811500
+      },
+      "processor": [
+        {
+          "Name": "AMD Ryzen AI 7 350 w/ Radeon 860M              ",
+          "NumberOfCores": 8,
+          "NumberOfLogicalProcessors": 16
+        }
+      ],
+      "sampling": "30-second snapshots of whole-machine CPU and free memory, not continuous or process-attributed"
+    }
+  },
+  "provenance": {
+    "ratings-1320-1700": {
+      "source": {
+        "commit": "fa25aa56895c78d3a42ec7ccc5ac02f325146ef6",
+        "dirty": false,
+        "label": "fa25aa56895c78d3a42ec7ccc5ac02f325146ef6"
+      },
+      "source_sha256": {
+        "scripts/sparring_strength_match.py": "7ae291c7a28aed2556c91472e2806b762305da65ec3f9c69b76e91aedffa5e2b",
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "0d6938aac728500f2fd68903e84fff3d36769895c451fd67076362fb5b31df6e",
+        "scripts/sparring_play.py": "77e43ce81d7477989d968f0e924e0784a9120813c8041a721992c64dacaebed4",
+        "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+        "scripts/move_hints.py": "0899638f32f56f5d6ea4d62b459ff6d7b9eedcd45b3d5949b1284a5ea5ff8e97",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/analysis_session.py": "3ee4bf171aba96e3ef39a7c67d34d356c739d748c00700ce3cf9a6162b11dd21",
+        "scripts/coaching_session.py": "9d5f3b60347bf12a152c6af25a37877117bc26b57ec95a789f9c0c8c4626cbc7"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": {
+        "regicide": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+        "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+      }
+    },
+    "ratings-2100-2500": {
+      "source": {
+        "commit": "fa25aa56895c78d3a42ec7ccc5ac02f325146ef6",
+        "dirty": false,
+        "label": "fa25aa56895c78d3a42ec7ccc5ac02f325146ef6"
+      },
+      "source_sha256": {
+        "scripts/sparring_strength_match.py": "7ae291c7a28aed2556c91472e2806b762305da65ec3f9c69b76e91aedffa5e2b",
+        "scripts/boss_strength_match.py": "167274ee8d290b82655b3476c6b969a72b128df53eadedc0117125ec00a253c3",
+        "scripts/play_human.py": "0d6938aac728500f2fd68903e84fff3d36769895c451fd67076362fb5b31df6e",
+        "scripts/sparring_play.py": "77e43ce81d7477989d968f0e924e0784a9120813c8041a721992c64dacaebed4",
+        "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+        "scripts/boss_play.py": "2446f44859f538424d3b8e20a4d26cc3431f1e99a76f0e83bd22ef2a1447ba28",
+        "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+        "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+        "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+        "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+        "scripts/dynamic_play.py": "d49c8390efd4d5b9b71206eaf87e422de9ad4658dcca13e7c14848cf15d0ae8f",
+        "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+        "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+        "scripts/move_hints.py": "0899638f32f56f5d6ea4d62b459ff6d7b9eedcd45b3d5949b1284a5ea5ff8e97",
+        "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+        "scripts/opening_names.py": "ec9ffdf32fcd257c40d7db972d077f9e53afa09d7c1ccc2db9f44c035c57b4d4",
+        "scripts/opening_sides.py": "2a9156529b23910b964da2fe86a6e8567d8ebe46c7fbe127bfa477ffdb302e2d",
+        "scripts/analysis_session.py": "3ee4bf171aba96e3ef39a7c67d34d356c739d748c00700ce3cf9a6162b11dd21",
+        "scripts/coaching_session.py": "9d5f3b60347bf12a152c6af25a37877117bc26b57ec95a789f9c0c8c4626cbc7"
+      },
+      "catalog_sha256": {
+        "data/openings/manifest.json": "1b78d8adea768954e23f611da321af026280f1700956ab6684d86e8fa08463ab",
+        "data/openings/a.tsv": "3282e4c9155289a29224f9a85fba0decb46efa35c2fa5e39662d2ac48fb0f793",
+        "data/openings/b.tsv": "1d5ed134ebbd87915ead5683416e37583bb3e5ae3582b4d8cb5cb4aa7ef4f623",
+        "data/openings/c.tsv": "45e843c7b7e79a0d04d5bda879c9bd23f5a10974488bd8615e4f4c5d0749986f",
+        "data/openings/d.tsv": "1cf4057a8aece94f27bb3f278ad410ee2844831a642364eeceaafa091dbcceda",
+        "data/openings/e.tsv": "48c6f6645b031a5937c8386839debab0e2e48837251687ba1afb6369677f8546",
+        "data/openings/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      "binary_sha256": {
+        "regicide": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+        "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+      }
+    }
+  },
+  "artifact_sha256": [
+    {
+      "path": "ratings-1320-1700\\game-001.json",
+      "sha256": "9f2ea4c1fa7e0f868c614e571720a4a6f3332d2716718b44bbf04bad130e1d1a"
+    },
+    {
+      "path": "ratings-1320-1700\\game-001.pgn",
+      "sha256": "9dd3c16c74bf0d4faddbf0d2eb3e9a1ad2896aa7c9f65af1a00fec425ec64519"
+    },
+    {
+      "path": "ratings-1320-1700\\game-001.moves.jsonl",
+      "sha256": "c4dc2186ad63bec8183473b7bb310ed188468ded4b6acd346e8e2ae1522acb75"
+    },
+    {
+      "path": "ratings-1320-1700\\host\\game-001\\20261102-230424-4b709d5b4535.json",
+      "sha256": "ab4ee7bd8df41fcd635f0c9705baa2f983b1f30db82ef48fd5dba50c01a9b96d"
+    },
+    {
+      "path": "ratings-1320-1700\\game-002.json",
+      "sha256": "c9c489bf75d553b027b9ee2690e788467e62f8da25391fe9ae100667b755b35f"
+    },
+    {
+      "path": "ratings-1320-1700\\game-002.pgn",
+      "sha256": "56421ec4eb2e81adf3a495ae391dec125f2be018947f97f0a16ebf6f3a7890e2"
+    },
+    {
+      "path": "ratings-1320-1700\\game-002.moves.jsonl",
+      "sha256": "63caa137de18d83e70b54de5d0788223d932ad5001e7ccf7b4d91e9c70a36700"
+    },
+    {
+      "path": "ratings-1320-1700\\host\\game-002\\20261102-230535-9bb9fc02b552.json",
+      "sha256": "e93a67ffcdf1f2056d610474e6ab04ef39c8935b2d156ed863f3c4d0321b9bd1"
+    },
+    {
+      "path": "ratings-1320-1700\\game-003.json",
+      "sha256": "ba53e9cd6672fb7e545d30d7dacbd5dc157728b62fa5f2348d4ba608c2c22885"
+    },
+    {
+      "path": "ratings-1320-1700\\game-003.pgn",
+      "sha256": "ce904607c78ab2ae6bed637145be815a500636677dd1e3e002aab1160ad18ee6"
+    },
+    {
+      "path": "ratings-1320-1700\\game-003.moves.jsonl",
+      "sha256": "63cd78079847534978a2fa8e9d21f179840b223f50e3b8f25104c171ce06f139"
+    },
+    {
+      "path": "ratings-1320-1700\\host\\game-003\\20261102-230634-6e8365622df5.json",
+      "sha256": "841632f863dcab1f7d6defefa04fea849b6e54cc66f5e205a8061714247719e3"
+    },
+    {
+      "path": "ratings-1320-1700\\game-004.json",
+      "sha256": "834084da1d6c48078695c50f17e718e2ae3a9f4db484395f3818896290fd81b8"
+    },
+    {
+      "path": "ratings-1320-1700\\game-004.pgn",
+      "sha256": "df6c1091b20d3d3826c19b8f937c3903a35cf77daab9bdca13b10d6d96e6c9c7"
+    },
+    {
+      "path": "ratings-1320-1700\\game-004.moves.jsonl",
+      "sha256": "b3819be556e69a503b08827bbfe21ae89b5d7ece4547858e7acba116d680d7a8"
+    },
+    {
+      "path": "ratings-1320-1700\\host\\game-004\\20261102-230745-4a57ce16e42e.json",
+      "sha256": "3f5afd0defb75686edc5a1e8ccd8c30949fd169786229914bcdac259050cc699"
+    },
+    {
+      "path": "ratings-1320-1700\\match.json",
+      "sha256": "be0f7da8555f7af259e49bc8a012c1699a14ff262379b1e92a30f7469d8c2d89"
+    },
+    {
+      "path": "ratings-1320-1700\\match.pgn",
+      "sha256": "abef9d8b28fa8c73236d2664446df0d7f04762556f8eb7a069f9f05e05de461a"
+    },
+    {
+      "path": "ratings-2100-2500\\game-005.json",
+      "sha256": "af4bec5c7ab338631273e8e92fd72e2e4505247320802a9d0dc6697e88234aa3"
+    },
+    {
+      "path": "ratings-2100-2500\\game-005.pgn",
+      "sha256": "711ed4e16496175f8baaaf945411fb47f5c1760059e0fa86295c13b4c395052b"
+    },
+    {
+      "path": "ratings-2100-2500\\game-005.moves.jsonl",
+      "sha256": "7ce1bed6ab4fd5b2a44d1f630296f7d46c2f27593f3f7409d99a2318745a8b9b"
+    },
+    {
+      "path": "ratings-2100-2500\\host\\game-005\\20261102-230424-d3788cc4d2ae.json",
+      "sha256": "5e679a5a90a1c941128396091b295ad6bb03dec6dc694c729c00552e12f9a4df"
+    },
+    {
+      "path": "ratings-2100-2500\\game-006.json",
+      "sha256": "526b037b68f262838e6b353cc90f3d73292466a7153efd79b3ef16ff67fca212"
+    },
+    {
+      "path": "ratings-2100-2500\\game-006.pgn",
+      "sha256": "0937cbb0151ca0a74d900c12966b2ff059608f0aed51e28963808f033f624de3"
+    },
+    {
+      "path": "ratings-2100-2500\\game-006.moves.jsonl",
+      "sha256": "20392e04aaf8475d328853d3fae1a2118d3edab47f0da27f66c6ab93f619b397"
+    },
+    {
+      "path": "ratings-2100-2500\\host\\game-006\\20261102-230604-362af12d5459.json",
+      "sha256": "ff39c5de6cebf8d336091c86652a8be7eeb7d8fa0af348d898154d11a825d441"
+    },
+    {
+      "path": "ratings-2100-2500\\game-007.json",
+      "sha256": "4c6ff14ab8beb76d1eb40598777b240cf6e408240c62904c0b2254c685c909e6"
+    },
+    {
+      "path": "ratings-2100-2500\\game-007.pgn",
+      "sha256": "b44c202bc2a30e37a79d793675d6f20a41e704d850df26d6c441b6e487287cc3"
+    },
+    {
+      "path": "ratings-2100-2500\\game-007.moves.jsonl",
+      "sha256": "de01981dfe651db8c9bc0e0d2490d8017362afd4589ece67d009cbe61fe53783"
+    },
+    {
+      "path": "ratings-2100-2500\\host\\game-007\\20261102-230724-4362f9903131.json",
+      "sha256": "11c0f264acf0f8f12c12af1439af9cbf50183813739aed337674c30acd1eb0a4"
+    },
+    {
+      "path": "ratings-2100-2500\\game-008.json",
+      "sha256": "77877af28db94e1b2f5fdf09b3c36e5db67abe115469b22b0c8c30f086c2f1c3"
+    },
+    {
+      "path": "ratings-2100-2500\\game-008.pgn",
+      "sha256": "eea13a630d81a60e45b7a9c930742a5d6efd9c7427b8591a6b230c115182eba1"
+    },
+    {
+      "path": "ratings-2100-2500\\game-008.moves.jsonl",
+      "sha256": "89b983804c2d84daae52c9fa4a4d30411403c60dd3c07177eeb473efd77f5a3c"
+    },
+    {
+      "path": "ratings-2100-2500\\host\\game-008\\20261102-230904-2d0ba8d805a4.json",
+      "sha256": "a090db7ae24e5124291458badbb5c998818e667d84a119622a57354b9edbeb4a"
+    },
+    {
+      "path": "ratings-2100-2500\\match.json",
+      "sha256": "6a1f8613574346c51c140f7a76ed20bc830c52fd298ebf9cdeee2673d49b9d7e"
+    },
+    {
+      "path": "ratings-2100-2500\\match.pgn",
+      "sha256": "fdc0384e0c4c2d4489819fec22bbc3788f20c4278217f1dafaa2855fb9af812f"
+    },
+    {
+      "path": "hardware.json",
+      "sha256": "21753f70c715b6bf89aba8ee367eb27f58c22b0b7a9f1035d4bf05077c737e37"
+    },
+    {
+      "path": "load-samples.json",
+      "sha256": "7d8289d6d6026f2e82d332a94c1414d4322a7b312cadbbbc95e68b8e9fc8c80c"
+    }
+  ],
+  "issues": [],
+  "limitations": [
+    "8 games and 2 per setting; no human Elo or causal training benefit estimate",
+    "Baseline1000ms plus optional2000ms versus Stockfish1000ms is intentionally unequal diagnostic timing",
+    "Selected CP and baseline CP share one own-engine finite-search model; Stockfish scores occur at different roots",
+    "All recorded legal prefixes contribute move metrics; capped game remains unfinished and contributes no W/D/L"
+  ]
+}
