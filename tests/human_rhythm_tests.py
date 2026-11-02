@@ -37,7 +37,7 @@ def neutral_context(board, seed="repeat", *, complexity=35, left=600000, elapsed
     # Control classification separately from chess legality so timing branches
     # can be compared without a familiar-opening discount masking the effect.
     result = policy.plan(board, clock(board, left, elapsed), seed=seed)
-    result.update(clarity_kind="unclassified", complexity_score=complexity,
+    result.update(clarity_kind="unclassified", complexity_score=complexity, opening_budget=None,
                   position_features={"capture_choices": 1, "checking_choices": 0,
                                      "attacked_king_neighbors": 0, "own_loose_pieces": 0})
     result["allocation"] = {"baseline_ms": 600, "total_search_ms": 1800, "automatic": True}
@@ -157,6 +157,9 @@ class HumanRhythmTests(unittest.TestCase):
     def test_selected_off_book_move_restores_structural_time_without_reallocating_search(self):
         board = chess.Board()
         plan = policy.plan(board, clock(board), seed="repeat")
+        # Isolate the structural-time fallback. Real opening caps are covered
+        # separately in opening_pacing_tests.py, including off-book choices.
+        plan["opening_budget"] = None
         plan["allocation"] = {"baseline_ms": 400, "total_search_ms": 1200}
         book = refine_current(board, "e2e4 e7e5 g1f3", plan=plan)
         off_book = refine_current(board, "h2h4 h7h6 a2a3", plan=plan)

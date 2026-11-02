@@ -681,7 +681,7 @@
     byId("think-time").disabled = automatic || !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
     if (state && !timeSaving && [100, 1000, 3000, 5000].includes(state.engine.movetime_ms)) byId("think-time").value = String(state.engine.movetime_ms);
     if (automatic) {
-      byId("think-time-help").textContent = "사람 권장시간을 바탕으로 쉬운 수는 바로, 어려운 수는 충분히 고민해 둡니다. Regicide의 남은 시간이 4분 이하이면 점차 빠르게 둡니다." +
+      byId("think-time-help").textContent = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다. Regicide의 남은 시간이 4분 이하이면 점차 빠르게 둡니다." +
         (state?.engine.sparring_mode !== true ? " 새 스파링 대국부터 자동 관리합니다." : byId("boss-mode").value !== "sparring" ? " 현재 스파링 대국은 자동 관리합니다." : "");
       return;
     }

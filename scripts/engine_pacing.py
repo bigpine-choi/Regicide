@@ -18,7 +18,7 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v5"
+POLICY = "regicide-engine-pacing-v6"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
@@ -30,6 +30,7 @@ TURN_REDUCTION_MS = 1000
 # never produce a genuinely near-instant response to an obvious move.
 MIN_TURN_TARGET_MS = 100
 QUICK_KINDS = ("single_reply", "mate_in_one", "clear_queen_gain", "familiar_opening")
+OPENING_MAX_FULLMOVE = 12
 
 
 def _number(value):
@@ -87,6 +88,32 @@ def _rhythm(board, support, seed):
     return factor, profile, tempo, beat
 
 
+def _opening_budget(board, features, seed):
+    """A modest early-development budget, not a claim of memorized theory.
+
+    Recognize ordinary openings outside the tiny exact-position list. Material
+    and tactical guards keep a low move counter alone from granting a discount.
+    This changes engine timing only, not the human's displayed recommendation.
+    """
+    if (seed is None or board.fullmove_number > OPENING_MAX_FULLMOVE
+            or features.get("nonpawn_pieces", 0) < 10 or features.get("pawns", 0) < 12):
+        return None
+    if (any(features.get(key, 0) for key in (
+            "in_check", "own_loose_pieces", "enemy_loose_pieces", "overloaded_defenders",
+            "promotion_pawns", "own_advanced_passers", "enemy_advanced_passers"))
+            or features.get("attacked_king_neighbors", 0) >= 3
+            or features.get("capture_choices", 0) >= 4
+            or features.get("checking_choices", 0) >= 2
+            or features.get("own_pinned_pieces", 0) >= 2):
+        return None
+    contact = (features.get("own_pinned_pieces", 0) or features.get("checking_choices", 0)
+               or features.get("capture_choices", 0) >= 2 or features.get("tactical_contacts", 0) >= 3)
+    variation = _unit(seed, "opening-budget", board.fen(en_passant="fen"))
+    cap = 900 + 1100 * variation if contact else 350 + 850 * variation
+    return {"kind": "contact_development" if contact else "quiet_development",
+            "unpressured_cap_ms": int(cap), "max_fullmove": OPENING_MAX_FULLMOVE}
+
+
 def plan(board, clock, evaluation=None, *, seed=None, history=None):
     color = "white" if board.turn else "black"
     base = {"policy": POLICY, "recommendation_method": decision_support.METHOD,
@@ -99,7 +126,8 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
             "turn_reduction_ms": TURN_REDUCTION_MS, "fast_target_floor_ms": MIN_TURN_TARGET_MS,
             "reason": "untimed", "complexity_score": 0, "clarity_kind": "unclassified",
             "position_features": {}, "rhythm_identity": _rhythm_identity(seed),
-            "alternatives_basis_ms": 0, "alternatives_variation_factor": 1.0}
+            "alternatives_basis_ms": 0, "alternatives_variation_factor": 1.0,
+            "opening_budget": None}
     if not isinstance(clock, dict) or clock.get("enabled") is not True:
         return base
     current, elapsed = clock.get(color + "_ms"), clock.get("turn_elapsed_ms")
@@ -139,6 +167,11 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
                  elapsed + max(0, current - search_reserve))
     if current <= LOW_CLOCK_MS:
         return {**base, "target_total_ms": max(0, int(target)), "reason": "low_clock"}
+    opening_budget = _opening_budget(board, base["position_features"], seed)
+    if opening_budget is not None:
+        opening_budget["cap_ms"] = int(opening_budget["unpressured_cap_ms"] * factor)
+        target = min(target, opening_budget["cap_ms"])
+    base["opening_budget"] = opening_budget
     return {**base, "enabled": True, "target_total_ms": max(0, int(target)),
             "reason": "shared_human_recommendation"}
 
@@ -328,7 +361,8 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
             factor, kind = 1.18 + .30 * innovation, "unexpected_reply"
         if evidence["unsettled"]:
             factor, kind = max(factor, 1.30 + .40 * innovation), "reconsidering_choices"
-        eligible_long = complexity >= 45 and (details["surprise"] or evidence["unsettled"] or complexity >= 70)
+        eligible_long = (not result.get("opening_budget") and complexity >= 45
+                         and (details["surprise"] or evidence["unsettled"] or complexity >= 70))
         if (eligible_long and not details["long_think_cooldown"]
                 and _unit(seed, "long-think", board.fen(en_passant="fen")) < .10):
             # Less frequent, more distinct pauses: a long tail rather than
@@ -352,6 +386,13 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
     # Recompute from the original recommendation, not the already shortened
     # plan target: post-search refinement must not subtract the second twice.
     target = _shorter_target(time_basis * time_variation * pressure_factor * applied_factor, current)
+    opening_budget = result.get("opening_budget")
+    if opening_budget is not None and current > LOW_CLOCK_MS:
+        # Off-book choices and ordinary opening root changes must not restore
+        # a multi-second middle-game hold after the short initial search.
+        opening_budget["cap_ms"] = int(opening_budget["unpressured_cap_ms"] * pressure_factor)
+        details["target_before_opening_cap_ms"] = int(target)
+        target = min(target, opening_budget["cap_ms"])
     reserve = result["reserve_ms"]
     target = min(target, elapsed + max(0, current - reserve))
     details.update(applied=True, kind=kind, factor=round(applied_factor, 6),

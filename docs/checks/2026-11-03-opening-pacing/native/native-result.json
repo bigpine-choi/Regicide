@@ -1,0 +1,1737 @@
+{
+  "schema": "regicide.opening-pacing-native.v1",
+  "passed": true,
+  "created_utc": "2026-11-02T18:00:27.792075+00:00",
+  "policy": "regicide-engine-pacing-v6",
+  "source_sha256": {
+    "scripts/engine_pacing.py": "055bc66c0d24b5a16b2373a9be338eeda716244bc92c046d20a1ca89aca6ebda",
+    "scripts/play_human.py": "0e47eb39402f5a2b6792ceae5b7d013eba3f563dd55c281eeda0daa970c6f050",
+    "scripts/game_clock.py": "bb3f251841a328d92cccdf043079c9caf97fcbb59f5acc2f8fa1a0c03eb9ef6b",
+    "scripts/game_archive.py": "93dfa525089e6fde7a2c4781576d37a569d3a2bd7d6d2c5c60145b5165080bed",
+    "scripts/decision_support.py": "687e204cd21c10c8a24c48c6bca46edd7c5b6c20ccf61f6ee97e1081e6ec8868",
+    "scripts/sparring_play.py": "90ab2c59b5f4705a26f14e117fdbe2dfb7fb71d6d4c4f9dd9352c8b55d7a5346",
+    "scripts/sparring_pacing.py": "cc9cbd73255b214d3f2db16a49a4166a541f82b613607783160890a351305e3c",
+    "scripts/sparring_evaluation.py": "c18b131697ec3a65fe6504bbd135dbefc68f777be47c61d17c0a923cbb3b7d48",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+    "tests/opening_pacing_integration.py": "ab2c13b35737e82b4750701d4cf6c54c7b0bf6f64af0a481a2f55b81fa391e55"
+  },
+  "source_sha256_after": {
+    "scripts/engine_pacing.py": "055bc66c0d24b5a16b2373a9be338eeda716244bc92c046d20a1ca89aca6ebda",
+    "scripts/play_human.py": "0e47eb39402f5a2b6792ceae5b7d013eba3f563dd55c281eeda0daa970c6f050",
+    "scripts/game_clock.py": "bb3f251841a328d92cccdf043079c9caf97fcbb59f5acc2f8fa1a0c03eb9ef6b",
+    "scripts/game_archive.py": "93dfa525089e6fde7a2c4781576d37a569d3a2bd7d6d2c5c60145b5165080bed",
+    "scripts/decision_support.py": "687e204cd21c10c8a24c48c6bca46edd7c5b6c20ccf61f6ee97e1081e6ec8868",
+    "scripts/sparring_play.py": "90ab2c59b5f4705a26f14e117fdbe2dfb7fb71d6d4c4f9dd9352c8b55d7a5346",
+    "scripts/sparring_pacing.py": "cc9cbd73255b214d3f2db16a49a4166a541f82b613607783160890a351305e3c",
+    "scripts/sparring_evaluation.py": "c18b131697ec3a65fe6504bbd135dbefc68f777be47c61d17c0a923cbb3b7d48",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+    "tests/opening_pacing_integration.py": "ab2c13b35737e82b4750701d4cf6c54c7b0bf6f64af0a481a2f55b81fa391e55"
+  },
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "baseline_commit": "895cf07894574665f5f536d4633660cacb374643",
+  "baseline_pacing_sha256": "026ace0bb1b0227246f89b685f115caf3d0fe679061d855e67d8daa887b74d99",
+  "python": "3.13.16",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "records": [
+    {
+      "id": "offbook_start",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "",
+      "moves_uci": [],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "seed": "opening-native-offbook_start",
+      "selected_uci": "b1c3",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 1,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "white",
+        "root_ply": 0,
+        "before_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [],
+        "recommended_total_ms": 2000,
+        "target_total_ms": 773,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 3.976,
+        "initial_remaining_ms": 599996.024,
+        "pressure_factor": 1.0,
+        "variation_factor": 0.5938877621288536,
+        "game_tempo_factor": 0.989205300713953,
+        "local_beat_factor": 0.9820912896306268,
+        "rhythm_profile": "unfamiliar_continuation",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 12,
+        "clarity_kind": "familiar_opening",
+        "position_features": {
+          "legal_choices": 20,
+          "capture_choices": 0,
+          "checking_choices": 0,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 0,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "a3fd2e7a5661da2f7bd90c9b45d89bbbf02866118911ac01e992fc4c9adf164a",
+        "alternatives_basis_ms": 7094,
+        "alternatives_variation_factor": 0.9414253662571396,
+        "opening_budget": {
+          "kind": "quiet_development",
+          "unpressured_cap_ms": 773,
+          "max_fullmove": 12,
+          "cap_ms": 773
+        },
+        "allocation": {
+          "baseline_ms": 100,
+          "total_search_ms": 164,
+          "completion_margin_ms": 18.302,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 0,
+        "auxiliary_reason": "below_sparring_observation_minimum",
+        "selected_uci": "b1c3",
+        "forecast": {
+          "depth": 5,
+          "pv_uci": [
+            "b1c3",
+            "b8c6",
+            "g1f3",
+            "g8f6",
+            "d2d3"
+          ],
+          "cp_white": 28,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "unfamiliar_continuation",
+          "factor": 1.0,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4,
+              5
+            ],
+            "cp_span": 28,
+            "root_changes": 0,
+            "invalid_latest": false,
+            "unsettled": false,
+            "stable_selected_root": true
+          },
+          "target_before_opening_cap_ms": 5678,
+          "unpressured_factor": 1.0,
+          "time_basis_ms": 7094,
+          "time_variation_factor": 0.9414253662571396,
+          "original_target_total_ms": 187
+        },
+        "spent_before_wait_ms": 89.99,
+        "waited_ms": 695.439,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 785.643,
+      "http_request_ms": 807.436,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 187,
+        "v6_initial_ms": 187,
+        "v5_refined_ms": 5678,
+        "v6_refined_ms": 773,
+        "v5_kind": "unfamiliar_continuation"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 773,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 676,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "b1c3",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 1,
+            "score": {
+              "pov": "white",
+              "cp_white": 41,
+              "mate_white": null,
+              "score_white_with_mate": 41
+            },
+            "nodes": 22,
+            "time": 0.002,
+            "pv": [
+              "b1c3"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 4,
+            "score": {
+              "pov": "white",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 115,
+            "time": 0.002,
+            "pv": [
+              "b1c3",
+              "b8c6"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 4,
+            "score": {
+              "pov": "white",
+              "cp_white": 41,
+              "mate_white": null,
+              "score_white_with_mate": 41
+            },
+            "nodes": 641,
+            "time": 0.003,
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "g1f3"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 12,
+            "score": {
+              "pov": "white",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 2185,
+            "time": 0.006,
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "g1f3",
+              "g8f6"
+            ]
+          },
+          "5": {
+            "depth": 5,
+            "seldepth": 19,
+            "score": {
+              "pov": "white",
+              "cp_white": 28,
+              "mate_white": null,
+              "score_white_with_mate": 28
+            },
+            "nodes": 39247,
+            "time": 0.08,
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "g1f3",
+              "g8f6",
+              "d2d3"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 5,
+          "seldepth": 19,
+          "score": {
+            "pov": "white",
+            "cp_white": 28,
+            "mate_white": null,
+            "score_white_with_mate": 28
+          },
+          "nodes": 39247,
+          "time": 0.08,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3",
+            "g8f6",
+            "d2d3"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-offbook_start"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "black",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 599910.729,
+        "black_ms": 600000.0,
+        "running_color": "white",
+        "status": "running",
+        "turn_elapsed_ms": 89.271,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 0,
+        "sampled_monotonic_ms": 1526763871.64
+      }
+    },
+    {
+      "id": "after_nc3",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "Nc3",
+      "moves_uci": [
+        "b1c3"
+      ],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+      "seed": "opening-native-after_nc3",
+      "selected_uci": "b8c6",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 2,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "black",
+        "root_ply": 1,
+        "before_fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [
+          "b1c3"
+        ],
+        "recommended_total_ms": 7094,
+        "target_total_ms": 635,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 6.987,
+        "initial_remaining_ms": 599993.013,
+        "pressure_factor": 1.0,
+        "variation_factor": 0.8439320633974908,
+        "game_tempo_factor": 0.9146119664903396,
+        "local_beat_factor": 1.0590710783527084,
+        "rhythm_profile": "ordinary_decision",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 16,
+        "clarity_kind": "unclassified",
+        "position_features": {
+          "legal_choices": 20,
+          "capture_choices": 0,
+          "checking_choices": 0,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 0,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "663ca97c3be2d0afbabe483506d6370939b8e5377720c5ac0b733ccfae2b72f0",
+        "alternatives_basis_ms": 7094,
+        "alternatives_variation_factor": 0.8439320633974908,
+        "opening_budget": {
+          "kind": "quiet_development",
+          "unpressured_cap_ms": 635,
+          "max_fullmove": 12,
+          "cap_ms": 635
+        },
+        "allocation": {
+          "baseline_ms": 188,
+          "total_search_ms": 565,
+          "completion_margin_ms": 62.801,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 352,
+        "auxiliary_reason": "within_budget_rating_only",
+        "selected_uci": "b8c6",
+        "forecast": {
+          "depth": 6,
+          "pv_uci": [
+            "b8c6",
+            "g1f3",
+            "g8f6",
+            "d2d3",
+            "d7d6",
+            "c1e3"
+          ],
+          "cp_white": 32,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "ordinary_decision",
+          "factor": 1.0,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4,
+              5,
+              6
+            ],
+            "cp_span": 32,
+            "root_changes": 0,
+            "invalid_latest": false,
+            "unsettled": false,
+            "stable_selected_root": true
+          },
+          "target_before_opening_cap_ms": 4986,
+          "unpressured_factor": 1.0,
+          "time_basis_ms": 7094,
+          "time_variation_factor": 0.8439320633974908,
+          "original_target_total_ms": 635
+        },
+        "spent_before_wait_ms": 326.9,
+        "waited_ms": 315.273,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 642.531,
+      "http_request_ms": 663.532,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 4986,
+        "v6_initial_ms": 635,
+        "v5_refined_ms": 4986,
+        "v6_refined_ms": 635,
+        "v5_kind": "ordinary_decision"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 635,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 521,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "b8c6",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 3,
+            "score": {
+              "pov": "black",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 31,
+            "time": 0.0,
+            "pv": [
+              "b8c6"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 3,
+            "score": {
+              "pov": "black",
+              "cp_white": 41,
+              "mate_white": null,
+              "score_white_with_mate": 41
+            },
+            "nodes": 95,
+            "time": 0.0,
+            "pv": [
+              "b8c6",
+              "g1f3"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 5,
+            "score": {
+              "pov": "black",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 686,
+            "time": 0.001,
+            "pv": [
+              "b8c6",
+              "g1f3",
+              "g8f6"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 10,
+            "score": {
+              "pov": "black",
+              "cp_white": 28,
+              "mate_white": null,
+              "score_white_with_mate": 28
+            },
+            "nodes": 2492,
+            "time": 0.005,
+            "pv": [
+              "b8c6",
+              "g1f3",
+              "g8f6",
+              "d2d3"
+            ]
+          },
+          "5": {
+            "depth": 5,
+            "seldepth": 14,
+            "score": {
+              "pov": "black",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 12511,
+            "time": 0.023,
+            "pv": [
+              "b8c6",
+              "g1f3",
+              "g8f6",
+              "d2d3",
+              "e7e6"
+            ]
+          },
+          "6": {
+            "depth": 6,
+            "seldepth": 20,
+            "score": {
+              "pov": "black",
+              "cp_white": 32,
+              "mate_white": null,
+              "score_white_with_mate": 32
+            },
+            "nodes": 71366,
+            "time": 0.168,
+            "pv": [
+              "b8c6",
+              "g1f3",
+              "g8f6",
+              "d2d3",
+              "d7d6",
+              "c1e3"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 6,
+          "seldepth": 20,
+          "score": {
+            "pov": "black",
+            "cp_white": 32,
+            "mate_white": null,
+            "score_white_with_mate": 32
+          },
+          "nodes": 71366,
+          "time": 0.168,
+          "pv": [
+            "b8c6",
+            "g1f3",
+            "g8f6",
+            "d2d3",
+            "d7d6",
+            "c1e3"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-after_nc3"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "white",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 600000.0,
+        "black_ms": 599674.221,
+        "running_color": "black",
+        "status": "running",
+        "turn_elapsed_ms": 325.779,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 1,
+        "sampled_monotonic_ms": 1526765015.846
+      }
+    },
+    {
+      "id": "reti",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "Nf3 d5 g3 Nf6",
+      "moves_uci": [
+        "g1f3",
+        "d7d5",
+        "g2g3",
+        "g8f6"
+      ],
+      "fen": "rnbqkb1r/ppp1pppp/5n2/3p4/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 1 3",
+      "seed": "opening-native-reti",
+      "selected_uci": "b1c3",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 5,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "white",
+        "root_ply": 4,
+        "before_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 1 3",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [
+          "g1f3",
+          "d7d5",
+          "g2g3",
+          "g8f6"
+        ],
+        "recommended_total_ms": 7216,
+        "target_total_ms": 919,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 10.629,
+        "initial_remaining_ms": 599989.371,
+        "pressure_factor": 1.0,
+        "variation_factor": 1.0814900586893854,
+        "game_tempo_factor": 1.0873656115791108,
+        "local_beat_factor": 1.023600974228144,
+        "rhythm_profile": "ordinary_decision",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 17,
+        "clarity_kind": "unclassified",
+        "position_features": {
+          "legal_choices": 23,
+          "capture_choices": 0,
+          "checking_choices": 0,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 0,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "a2e50c5eea7a5ffeced1459b8aa735919fb29f8518470c513de465f3141392d6",
+        "alternatives_basis_ms": 7216,
+        "alternatives_variation_factor": 1.0814900586893854,
+        "opening_budget": {
+          "kind": "quiet_development",
+          "unpressured_cap_ms": 919,
+          "max_fullmove": 12,
+          "cap_ms": 919
+        },
+        "allocation": {
+          "baseline_ms": 272,
+          "total_search_ms": 817,
+          "completion_margin_ms": 90.837,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 500,
+        "auxiliary_reason": "within_budget_rating_only",
+        "selected_uci": "b1c3",
+        "forecast": {
+          "depth": 4,
+          "pv_uci": [
+            "b1c3",
+            "b8c6",
+            "d2d3",
+            "c8f5"
+          ],
+          "cp_white": -17,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "ordinary_decision",
+          "factor": 1.0,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4
+            ],
+            "cp_span": null,
+            "root_changes": 0,
+            "invalid_latest": false,
+            "unsettled": false,
+            "stable_selected_root": false
+          },
+          "target_before_opening_cap_ms": 6804,
+          "unpressured_factor": 1.0,
+          "time_basis_ms": 7216,
+          "time_variation_factor": 1.0814900586893854,
+          "original_target_total_ms": 919
+        },
+        "spent_before_wait_ms": 512.138,
+        "waited_ms": 420.532,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 933.272,
+      "http_request_ms": 960.228,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 6804,
+        "v6_initial_ms": 919,
+        "v5_refined_ms": 6804,
+        "v6_refined_ms": 919,
+        "v5_kind": "ordinary_decision"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 919,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 804,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "b1c3",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 1,
+            "score": {
+              "pov": "white",
+              "cp_white": 22,
+              "mate_white": null,
+              "score_white_with_mate": 22
+            },
+            "nodes": 25,
+            "time": 0.0,
+            "pv": [
+              "b1c3"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 8,
+            "score": {
+              "pov": "white",
+              "cp_white": -16,
+              "mate_white": null,
+              "score_white_with_mate": -16
+            },
+            "nodes": 204,
+            "time": 0.002,
+            "pv": [
+              "b1c3",
+              "b8c6"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 12,
+            "score": {
+              "pov": "white",
+              "cp_white": 12,
+              "mate_white": null,
+              "score_white_with_mate": 12
+            },
+            "nodes": 1049,
+            "time": 0.026,
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "d2d3"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 16,
+            "score": {
+              "pov": "white",
+              "cp_white": -17,
+              "mate_white": null,
+              "score_white_with_mate": -17
+            },
+            "nodes": 20171,
+            "time": 0.252,
+            "pv": [
+              "b1c3",
+              "b8c6",
+              "d2d3",
+              "c8f5"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 4,
+          "seldepth": 16,
+          "score": {
+            "pov": "white",
+            "cp_white": -17,
+            "mate_white": null,
+            "score_white_with_mate": -17
+          },
+          "nodes": 20171,
+          "time": 0.252,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "d2d3",
+            "c8f5"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-reti"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "black",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 599488.993,
+        "black_ms": 600000.0,
+        "running_color": "white",
+        "status": "running",
+        "turn_elapsed_ms": 511.007,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 4,
+        "sampled_monotonic_ms": 1526765980.242
+      }
+    },
+    {
+      "id": "italian_contact",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "e4 e5 Nf3 Nc6 Bc4 Nf6",
+      "moves_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "g8f6"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "seed": "opening-native-italian_contact",
+      "selected_uci": "d2d3",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 7,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "white",
+        "root_ply": 6,
+        "before_fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "g8f6"
+        ],
+        "recommended_total_ms": 8921,
+        "target_total_ms": 1637,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 10.449,
+        "initial_remaining_ms": 599989.551,
+        "pressure_factor": 1.0,
+        "variation_factor": 1.0556968283579664,
+        "game_tempo_factor": 1.0933757461043987,
+        "local_beat_factor": 0.94637579124467,
+        "rhythm_profile": "reconsidering_choices",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 31,
+        "clarity_kind": "unclassified",
+        "position_features": {
+          "legal_choices": 33,
+          "capture_choices": 2,
+          "checking_choices": 1,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 2,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "d76cab5d0dd80e7201f41422c450054e28d4c73980dad771858c8486a0eaa943",
+        "alternatives_basis_ms": 8921,
+        "alternatives_variation_factor": 1.0556968283579664,
+        "opening_budget": {
+          "kind": "contact_development",
+          "unpressured_cap_ms": 1637,
+          "max_fullmove": 12,
+          "cap_ms": 1637
+        },
+        "allocation": {
+          "baseline_ms": 492,
+          "total_search_ms": 1476,
+          "completion_margin_ms": 150,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 500,
+        "auxiliary_reason": "within_budget_rating_only",
+        "selected_uci": "d2d3",
+        "forecast": {
+          "depth": 5,
+          "pv_uci": [
+            "d2d3",
+            "a7a6",
+            "b1c3",
+            "b7b5",
+            "c4d5",
+            "f6d5",
+            "c3d5"
+          ],
+          "cp_white": 13,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "reconsidering_choices",
+          "factor": 1.322045,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4,
+              5
+            ],
+            "cp_span": 13,
+            "root_changes": 1,
+            "invalid_latest": false,
+            "unsettled": true,
+            "stable_selected_root": false
+          },
+          "target_before_opening_cap_ms": 11450,
+          "unpressured_factor": 1.322045,
+          "time_basis_ms": 8921,
+          "time_variation_factor": 1.0556968283579664,
+          "original_target_total_ms": 1637
+        },
+        "spent_before_wait_ms": 704.299,
+        "waited_ms": 938.443,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 1643.418,
+      "http_request_ms": 1668.071,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 8417,
+        "v6_initial_ms": 1637,
+        "v5_refined_ms": 11450,
+        "v6_refined_ms": 1637,
+        "v5_kind": "reconsidering_choices"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 1637,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 1432,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "d2d3",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 12,
+            "score": {
+              "pov": "white",
+              "cp_white": 33,
+              "mate_white": null,
+              "score_white_with_mate": 33
+            },
+            "nodes": 162,
+            "time": 0.0,
+            "pv": [
+              "b1c3"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 14,
+            "score": {
+              "pov": "white",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 1833,
+            "time": 0.011,
+            "pv": [
+              "b1c3",
+              "f8c5"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 20,
+            "score": {
+              "pov": "white",
+              "cp_white": 40,
+              "mate_white": null,
+              "score_white_with_mate": 40
+            },
+            "nodes": 4417,
+            "time": 0.022,
+            "pv": [
+              "b1c3",
+              "f8b4",
+              "e1g1",
+              "b4c3",
+              "d2c3",
+              "f6e4",
+              "c4f7",
+              "e8f8"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 22,
+            "score": {
+              "pov": "white",
+              "cp_white": 0,
+              "mate_white": null,
+              "score_white_with_mate": 0
+            },
+            "nodes": 28652,
+            "time": 0.147,
+            "pv": [
+              "b1c3",
+              "f8c5",
+              "e1g1",
+              "e8g8"
+            ]
+          },
+          "5": {
+            "depth": 5,
+            "seldepth": 22,
+            "score": {
+              "pov": "white",
+              "cp_white": 13,
+              "mate_white": null,
+              "score_white_with_mate": 13
+            },
+            "nodes": 106291,
+            "time": 0.472,
+            "pv": [
+              "d2d3",
+              "a7a6",
+              "b1c3",
+              "b7b5",
+              "c4d5",
+              "f6d5",
+              "c3d5"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 5,
+          "seldepth": 22,
+          "score": {
+            "pov": "white",
+            "cp_white": 13,
+            "mate_white": null,
+            "score_white_with_mate": 13
+          },
+          "nodes": 106291,
+          "time": 0.472,
+          "pv": [
+            "d2d3",
+            "a7a6",
+            "b1c3",
+            "b7b5",
+            "c4d5",
+            "f6d5",
+            "c3d5"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-italian_contact"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "black",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 599296.956,
+        "black_ms": 600000.0,
+        "running_color": "white",
+        "status": "running",
+        "turn_elapsed_ms": 703.044,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 6,
+        "sampled_monotonic_ms": 1526767262.214
+      }
+    },
+    {
+      "id": "closed_sicilian",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "e4 c5 Nc3 Nc6 g3 g6 Bg2 Bg7",
+      "moves_uci": [
+        "e2e4",
+        "c7c5",
+        "b1c3",
+        "b8c6",
+        "g2g3",
+        "g7g6",
+        "f1g2",
+        "f8g7"
+      ],
+      "fen": "r1bqk1nr/pp1pppbp/2n3p1/2p5/4P3/2N3P1/PPPP1PBP/R1BQK1NR w KQkq - 2 5",
+      "seed": "opening-native-closed_sicilian",
+      "selected_uci": "g1f3",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 9,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "white",
+        "root_ply": 8,
+        "before_fen": "r1bqk1nr/pp1pppbp/2n3p1/2p5/4P3/2N3P1/PPPP1PBP/R1BQK1NR w KQkq - 2 5",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [
+          "e2e4",
+          "c7c5",
+          "b1c3",
+          "b8c6",
+          "g2g3",
+          "g7g6",
+          "f1g2",
+          "f8g7"
+        ],
+        "recommended_total_ms": 7703,
+        "target_total_ms": 737,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 11.347,
+        "initial_remaining_ms": 599988.653,
+        "pressure_factor": 1.0,
+        "variation_factor": 1.160427257939365,
+        "game_tempo_factor": 1.0309195881438904,
+        "local_beat_factor": 0.9552631214630221,
+        "rhythm_profile": "ordinary_decision",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 21,
+        "clarity_kind": "unclassified",
+        "position_features": {
+          "legal_choices": 30,
+          "capture_choices": 0,
+          "checking_choices": 0,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 1,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "d260db61434c7231aa3eb895d8fb75776156495a7e98a23e41a799b9a9f26e01",
+        "alternatives_basis_ms": 7703,
+        "alternatives_variation_factor": 1.160427257939365,
+        "opening_budget": {
+          "kind": "quiet_development",
+          "unpressured_cap_ms": 737,
+          "max_fullmove": 12,
+          "cap_ms": 737
+        },
+        "allocation": {
+          "baseline_ms": 217,
+          "total_search_ms": 653,
+          "completion_margin_ms": 72.565,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 411,
+        "auxiliary_reason": "within_budget_rating_only",
+        "selected_uci": "g1f3",
+        "forecast": {
+          "depth": 4,
+          "pv_uci": [
+            "g1f3",
+            "g8f6",
+            "e1g1",
+            "e8g8"
+          ],
+          "cp_white": 1,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "ordinary_decision",
+          "factor": 1.0,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4
+            ],
+            "cp_span": null,
+            "root_changes": 0,
+            "invalid_latest": false,
+            "unsettled": false,
+            "stable_selected_root": false
+          },
+          "target_before_opening_cap_ms": 7938,
+          "unpressured_factor": 1.0,
+          "time_basis_ms": 7703,
+          "time_variation_factor": 1.160427257939365,
+          "original_target_total_ms": 737
+        },
+        "spent_before_wait_ms": 429.808,
+        "waited_ms": 321.458,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 751.552,
+      "http_request_ms": 777.02,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 7938,
+        "v6_initial_ms": 737,
+        "v5_refined_ms": 7938,
+        "v6_refined_ms": 737,
+        "v5_kind": "ordinary_decision"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 737,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 644,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "g1f3",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 3,
+            "score": {
+              "pov": "white",
+              "cp_white": 24,
+              "mate_white": null,
+              "score_white_with_mate": 24
+            },
+            "nodes": 49,
+            "time": 0.0,
+            "pv": [
+              "g1f3"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 7,
+            "score": {
+              "pov": "white",
+              "cp_white": -7,
+              "mate_white": null,
+              "score_white_with_mate": -7
+            },
+            "nodes": 236,
+            "time": 0.001,
+            "pv": [
+              "g1f3",
+              "g8f6"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 13,
+            "score": {
+              "pov": "white",
+              "cp_white": 33,
+              "mate_white": null,
+              "score_white_with_mate": 33
+            },
+            "nodes": 1782,
+            "time": 0.006,
+            "pv": [
+              "g1f3",
+              "f7f5",
+              "d2d3",
+              "g7c3",
+              "b2c3",
+              "f5e4",
+              "d3e4"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 21,
+            "score": {
+              "pov": "white",
+              "cp_white": 1,
+              "mate_white": null,
+              "score_white_with_mate": 1
+            },
+            "nodes": 54523,
+            "time": 0.197,
+            "pv": [
+              "g1f3",
+              "g8f6",
+              "e1g1",
+              "e8g8"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 4,
+          "seldepth": 21,
+          "score": {
+            "pov": "white",
+            "cp_white": 1,
+            "mate_white": null,
+            "score_white_with_mate": 1
+          },
+          "nodes": 54523,
+          "time": 0.197,
+          "pv": [
+            "g1f3",
+            "g8f6",
+            "e1g1",
+            "e8g8"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-closed_sicilian"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "black",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 599571.168,
+        "black_ms": 600000.0,
+        "running_color": "white",
+        "status": "running",
+        "turn_elapsed_ms": 428.832,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 8,
+        "sampled_monotonic_ms": 1526768811.235
+      }
+    },
+    {
+      "id": "london_contact",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves_san": "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5",
+      "moves_uci": [
+        "d2d4",
+        "d7d5",
+        "c1f4",
+        "g8f6",
+        "e2e3",
+        "e7e6",
+        "g1f3",
+        "c7c5"
+      ],
+      "fen": "rnbqkb1r/pp3ppp/4pn2/2pp4/3P1B2/4PN2/PPP2PPP/RN1QKB1R w KQkq c6 0 5",
+      "seed": "opening-native-london_contact",
+      "selected_uci": "f1b5",
+      "legal": true,
+      "pgn_policy_verified": true,
+      "receipt": {
+        "ply": 9,
+        "policy": "regicide-engine-pacing-v6",
+        "recommendation_method": "regicide-human-decision-support-v3",
+        "enabled": true,
+        "color": "white",
+        "root_ply": 8,
+        "before_fen": "rnbqkb1r/pp3ppp/4pn2/2pp4/3P1B2/4PN2/PPP2PPP/RN1QKB1R w KQkq c6 0 5",
+        "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "history_uci": [
+          "d2d4",
+          "d7d5",
+          "c1f4",
+          "g8f6",
+          "e2e3",
+          "e7e6",
+          "g1f3",
+          "c7c5"
+        ],
+        "recommended_total_ms": 9408,
+        "target_total_ms": 1148,
+        "reserve_ms": 30000,
+        "spent_at_request_ms": 9.84,
+        "initial_remaining_ms": 599990.16,
+        "pressure_factor": 1.0,
+        "variation_factor": 0.7736891783920021,
+        "game_tempo_factor": 0.9438492591578369,
+        "local_beat_factor": 0.9612329763460309,
+        "rhythm_profile": "ordinary_decision",
+        "pressure_start_ms": 240000,
+        "turn_reduction_ms": 1000,
+        "fast_target_floor_ms": 100,
+        "reason": "shared_human_recommendation",
+        "complexity_score": 35,
+        "clarity_kind": "unclassified",
+        "position_features": {
+          "legal_choices": 39,
+          "capture_choices": 2,
+          "checking_choices": 1,
+          "promotion_pawns": 0,
+          "own_loose_pieces": 0,
+          "enemy_loose_pieces": 0,
+          "own_pinned_pieces": 0,
+          "overloaded_defenders": 0,
+          "tactical_contacts": 3,
+          "attacked_king_neighbors": 0,
+          "in_check": false,
+          "own_advanced_passers": 0,
+          "enemy_advanced_passers": 0,
+          "nonpawn_pieces": 14,
+          "pawns": 16,
+          "pawn_ending": false
+        },
+        "rhythm_identity": "2ac2c8ba20f126c6545745950d72b6f507b6d8dcae4bfef1f53625ec3c1e4bb2",
+        "alternatives_basis_ms": 9408,
+        "alternatives_variation_factor": 0.7736891783920021,
+        "opening_budget": {
+          "kind": "contact_development",
+          "unpressured_cap_ms": 1148,
+          "max_fullmove": 12,
+          "cap_ms": 1148
+        },
+        "allocation": {
+          "baseline_ms": 341,
+          "total_search_ms": 1024,
+          "completion_margin_ms": 113.816,
+          "automatic": true
+        },
+        "rating_only_budget_ms": 500,
+        "auxiliary_reason": "within_budget_rating_only",
+        "selected_uci": "f1b5",
+        "forecast": {
+          "depth": 4,
+          "pv_uci": [
+            "f1b5",
+            "b8c6",
+            "e1g1",
+            "f8d6"
+          ],
+          "cp_white": 28,
+          "mate_white": null
+        },
+        "refinement": {
+          "applied": true,
+          "kind": "ordinary_decision",
+          "factor": 1.0,
+          "premium_pressure_fraction": 1.0,
+          "expected_reply": false,
+          "expected_continuation": false,
+          "surprise": false,
+          "long_think_cooldown": false,
+          "search_evidence": {
+            "completed_depths": [
+              4
+            ],
+            "cp_span": null,
+            "root_changes": 0,
+            "invalid_latest": false,
+            "unsettled": false,
+            "stable_selected_root": false
+          },
+          "target_before_opening_cap_ms": 6278,
+          "unpressured_factor": 1.0,
+          "time_basis_ms": 9408,
+          "time_variation_factor": 0.7736891783920021,
+          "original_target_total_ms": 1148
+        },
+        "spent_before_wait_ms": 634.747,
+        "waited_ms": 522.779,
+        "completion_reason": "target_reached"
+      },
+      "actual_clock_charge_ms": 1157.819,
+      "http_request_ms": 1179.365,
+      "same_observed_search_comparison": {
+        "v5_initial_ms": 6278,
+        "v6_initial_ms": 1148,
+        "v5_refined_ms": 6278,
+        "v6_refined_ms": 1148,
+        "v5_kind": "ordinary_decision"
+      },
+      "pressure_grid_reusing_search": [
+        {
+          "remaining_ms": 240000,
+          "target_total_ms": 1148,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 180000,
+          "target_total_ms": 850,
+          "simulated": true
+        },
+        {
+          "remaining_ms": 60000,
+          "target_total_ms": 100,
+          "simulated": true
+        }
+      ],
+      "observed_search_evidence": {
+        "selected_move": "f1b5",
+        "baseline_packets": {
+          "1": {
+            "depth": 1,
+            "seldepth": 10,
+            "score": {
+              "pov": "white",
+              "cp_white": 58,
+              "mate_white": null,
+              "score_white_with_mate": 58
+            },
+            "nodes": 213,
+            "time": 0.0,
+            "pv": [
+              "b1c3",
+              "c5d4",
+              "e3d4"
+            ]
+          },
+          "2": {
+            "depth": 2,
+            "seldepth": 18,
+            "score": {
+              "pov": "white",
+              "cp_white": 27,
+              "mate_white": null,
+              "score_white_with_mate": 27
+            },
+            "nodes": 3285,
+            "time": 0.011,
+            "pv": [
+              "b1c3",
+              "b8c6"
+            ]
+          },
+          "3": {
+            "depth": 3,
+            "seldepth": 23,
+            "score": {
+              "pov": "white",
+              "cp_white": 55,
+              "mate_white": null,
+              "score_white_with_mate": 55
+            },
+            "nodes": 19386,
+            "time": 0.071,
+            "pv": [
+              "f1b5",
+              "c8d7",
+              "b1c3",
+              "c5d4",
+              "d1d4",
+              "d7b5",
+              "c3b5"
+            ]
+          },
+          "4": {
+            "depth": 4,
+            "seldepth": 26,
+            "score": {
+              "pov": "white",
+              "cp_white": 28,
+              "mate_white": null,
+              "score_white_with_mate": 28
+            },
+            "nodes": 88194,
+            "time": 0.321,
+            "pv": [
+              "f1b5",
+              "b8c6",
+              "e1g1",
+              "f8d6"
+            ]
+          }
+        },
+        "selected_info": {
+          "depth": 4,
+          "seldepth": 26,
+          "score": {
+            "pov": "white",
+            "cp_white": 28,
+            "mate_white": null,
+            "score_white_with_mate": 28
+          },
+          "nodes": 88194,
+          "time": 0.321,
+          "pv": [
+            "f1b5",
+            "b8c6",
+            "e1g1",
+            "f8d6"
+          ]
+        },
+        "history": {},
+        "seed": "opening-native-london_contact"
+      },
+      "observed_search_end_clock": {
+        "schema": "regicide.game-clock.v1",
+        "enabled": true,
+        "control_id": "10+0",
+        "timeout_policy": "engine_only",
+        "soft_timeout_color": "black",
+        "overtime_color": null,
+        "overtime_ms": 0,
+        "initial_ms": 600000,
+        "increment_ms": 0,
+        "label": "10분 래피드",
+        "white_ms": 599366.159,
+        "black_ms": 600000.0,
+        "running_color": "white",
+        "status": "running",
+        "turn_elapsed_ms": 633.841,
+        "flagged_color": null,
+        "pause_reason": null,
+        "ply": 8,
+        "sampled_monotonic_ms": 1526769937.311
+      }
+    }
+  ],
+  "model_only_guards": [
+    {
+      "id": "poisoned_queen_tactic",
+      "fen": "r2qkbnr/ppp2ppp/2np4/4N3/2B1P1b1/2N5/PPPP1PPP/R1BQK2R b KQkq - 0 5",
+      "seed": "opening-guard-poisoned_queen_tactic",
+      "model_only": true,
+      "opening_budget": null,
+      "target_ms": 13374
+    },
+    {
+      "id": "later_phase_counter",
+      "fen": "rnbqk2r/ppp2ppp/3bpn2/3p4/3P1B2/4PN2/PPP2PPP/RN1QKB1R w KQkq - 1 20",
+      "seed": "opening-guard-later_phase_counter",
+      "model_only": true,
+      "opening_budget": null,
+      "target_ms": 8209
+    }
+  ],
+  "closed_test_processes": true,
+  "scope": "Real HTTP opening turns on authored positions, with a pinned v5 comparison.\n\nFixture positions and zero-cost prefix clock histories are injected into an\nisolated temporary game. The next move, search, wait and clock debit are real.\nThe v5 comparison reuses v6's observed search; it does not measure v5 latency,\nprove equal playing strength, or use personal games or human timing data.\n"
+}

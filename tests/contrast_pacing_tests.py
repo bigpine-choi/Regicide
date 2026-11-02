@@ -40,7 +40,7 @@ def deliberation(seed, remaining=600000, basis=10000, elapsed=0):
     plan = pacing.plan(board, current, seed=seed)
     # A controlled complexity/budget isolates the cadence decision from the
     # recommendation model. Legal current-position packets remain mandatory.
-    plan.update(clarity_kind="unclassified", complexity_score=75,
+    plan.update(clarity_kind="unclassified", complexity_score=75, opening_budget=None,
                 recommended_total_ms=basis, variation_factor=1.,
                 target_total_ms=basis - 1000,
                 allocation={"baseline_ms": 600, "total_search_ms": 1800})
