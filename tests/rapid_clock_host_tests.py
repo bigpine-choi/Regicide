@@ -156,13 +156,19 @@ class HostClockTests(unittest.TestCase):
         self.assertEqual(state["clock"]["white_ms"], before["white_ms"])
         self.assertEqual(state["clock"]["turn_elapsed_ms"], before["turn_elapsed_ms"])
 
-    def test_forced_branch_becomes_untimed_practice(self):
+    def test_forced_branch_preserves_original_completed_move_clock(self):
         self.new(); self.human("e2e4"); self.engine("e7e5")
+        completed = dict(self.game._clock.history[2])
         self.game.begin_handicap(2, self.game.revision)
+        self.now.advance(100)
         state = self.game.forced_move("c7c5", self.game.revision)
-        self.assertFalse(state["clock"]["enabled"])
-        self.assertEqual(state["clock"]["pause_reason"], "handicap_practice")
-        self.assertNotIn("TimeControl", chess.pgn.read_game(io.StringIO(self.game.pgn())).headers)
+        self.assertTrue(state["clock"]["enabled"])
+        self.assertEqual(state["clock"]["control_id"], "10+5")
+        self.assertEqual(state["clock"]["running_color"], "white")
+        self.assertIsNone(state["clock"]["pause_reason"])
+        self.assertEqual(self.game._clock.history[2], completed)
+        self.assertEqual(chess.pgn.read_game(io.StringIO(self.game.pgn())).headers["TimeControl"], "600+5")
+        GameArchive(self.root / "games").get_game(self.game.game_id)
 
     def test_resignation_freezes_clock_and_new_game_resets(self):
         self.new(); self.now.advance(8); state = self.game.resign(self.game.revision)

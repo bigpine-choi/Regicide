@@ -272,7 +272,8 @@ class HumanRhythmHostTests(unittest.TestCase):
         self.assertEqual(self.game._engine_pacing_decisions, before)
         self.game.begin_handicap(1, self.game.revision)
         state = self.game.forced_move("d2d4", self.game.revision)
-        self.assertFalse(state["clock"]["enabled"])
+        self.assertTrue(state["clock"]["enabled"])
+        self.assertEqual(state["clock"]["running_color"], "black")
         self.assertEqual(self.game._engine_pacing_decisions, {})
 
     def test_new_game_resets_history_and_game_seed(self):

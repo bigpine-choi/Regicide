@@ -70,6 +70,67 @@ async function reply(url,value){const i=pending.findIndex(c=>c.url===url);assert
   const incremented=structuredClone(overtime);incremented.revision++;incremented.human_to_move=false;incremented.decision_support=null;incremented.clock.running_color=color==="white"?"black":"white";incremented.clock[color+"_ms"]=5000;incremented.clock.overtime_color=null;incremented.clock.sampled_monotonic_ms++;
   await reply("/api/move",incremented);assert.equal(probe.state().result,"*");assert.doesNotMatch(byId("recommended-time").textContent,/내 시간 소진/);
  }
+ // The desktop editor shares this host state with the web view. These are
+ // presentation fixtures, not claims that the browser implements the editor.
+ for (const [index, [control, color]] of ["10+0", "10+5", "15+10"].flatMap(control =>
+   ["white", "black"].map(color => [control, color])).entries()) {
+  now = 100000 + index * 100000;
+  const opponent = color === "white" ? "black" : "white";
+  const original = fixture(20 + index * 6, now);
+  original.game_id = "handicap-clock-" + index;
+  original.human_color = color; original.turn = color;
+  original.engine.sparring_mode = true; original.handicap_mode = false;
+  Object.assign(original.clock, {control_id: control, label: control + " 래피드", increment_ms: control === "10+0" ? 0 : control === "10+5" ? 5000 : 10000,
+    [color + "_ms"]: 123000, [opponent + "_ms"]: 234000, running_color: color, editable: true});
+  probe.applyState(original);
+  const initialHuman = byId("human-clock").textContent, initialEngine = byId("opponent-clock").textContent;
+  assert.equal(initialHuman, "▶ 2:03"); assert.equal(initialEngine, "3:54");
+  const preview = structuredClone(original); preview.revision++; preview.handicap_mode = true;
+  preview.human_to_move = false; preview.status = "상대 수 편집 중"; preview.decision_support = null;
+  Object.assign(preview.clock, {status: "paused", running_color: null, editable: false, sampled_monotonic_ms: now + 1});
+  probe.applyState(preview);
+  now += 30000; probe.renderClockAndAdvice();
+  assert.equal(byId("human-clock").textContent, "2:03", "preview keeps human time paused: " + control + "/" + color);
+  assert.equal(byId("opponent-clock").textContent, initialEngine, "preview keeps engine time paused");
+  assert.equal(byId("clock-adjust").hidden, true, "preview blocks independent time editing");
+  const engineCalls = calls.filter(call => call.url === "/api/engine").length;
+  await probe.engineMove();
+  assert.equal(calls.filter(call => call.url === "/api/engine").length, engineCalls, "preview never restarts the engine");
+  void probe.pollClock(); const previewPoll = structuredClone(preview); previewPoll.clock.sampled_monotonic_ms = now;
+  await reply("/api/state", previewPoll);
+  const cancelled = structuredClone(original); cancelled.revision += 2; cancelled.clock.sampled_monotonic_ms = ++now;
+  probe.applyState(cancelled);
+  assert.equal(byId("human-clock").textContent, initialHuman, "cancel restores the live side and balances");
+  now += 2500; probe.renderClockAndAdvice();
+  assert.equal(byId("human-clock").textContent, "▶ 2:01", "cancel resumes only the human clock");
+  assert.equal(byId("opponent-clock").textContent, initialEngine);
+  const secondPreview = structuredClone(preview); secondPreview.revision += 2;
+  secondPreview.clock[color + "_ms"] = 120500; secondPreview.clock.sampled_monotonic_ms = ++now;
+  probe.applyState(secondPreview); now += 30000;
+  const replaced = structuredClone(cancelled); replaced.revision += 2;
+  replaced.last_move = color === "white" ? "e8d8" : "e1d1";
+  replaced.clock[color + "_ms"] = 120500; replaced.clock.sampled_monotonic_ms = ++now;
+  probe.applyState(replaced);
+  assert.equal(probe.state().clock.enabled, true, "replacement remains timed: " + control + "/" + color);
+  assert.equal(probe.state().clock.control_id, control);
+  assert.equal(probe.state().clock.increment_ms, original.clock.increment_ms, "replacement keeps the chosen increment");
+  assert.equal(probe.state().clock[opponent + "_ms"], 234000, "replacement does not reset or add a second increment");
+  assert.equal(probe.state().engine.sparring_mode, true);
+  assert.equal(byId("think-time-field").hidden, true, "replacement keeps automatic sparring timing");
+  assert.match(byId("opponent-detail").textContent, /생각시간 자동 조절/);
+  assert.equal(byId("clock-adjust").hidden, false, "live time buttons return after replacement");
+  now += 2000; probe.renderClockAndAdvice();
+  assert.equal(byId("human-clock").textContent, "▶ 1:59", "human clock continues after replacement");
+  assert.equal(byId("opponent-clock").textContent, initialEngine);
+  probe.applyState(secondPreview, true);
+  assert.equal(probe.state().handicap_mode, false, "late preview cannot pause the resumed game");
+  assert.equal(byId("human-clock").textContent, "▶ 1:59");
+  void probe.pollClock();
+  const resumedPoll = structuredClone(replaced); resumedPoll.clock.sampled_monotonic_ms = now;
+  resumedPoll.clock[color + "_ms"] = 118500; resumedPoll.clock.turn_elapsed_ms = 2000;
+  await reply("/api/state", resumedPoll);
+  assert.equal(byId("human-clock").textContent, "▶ 1:59", "replacement keeps normal clock polling");
+ }
  assert.equal(probe.clockText(-300),"0:00");assert.equal(probe.clockText(NaN),"—");
- console.log("Rapid clock browser checks: PASS (controls, live clock, stale/duplicate packets, increments, pause, flags, background poll, advice, legacy)");
+ console.log("Rapid clock browser checks: PASS (controls, live clock, stale/duplicate packets, increments, pause, flags, background poll, advice, legacy, handicap preview/cancel/replacement for 3 controls and both colors)");
 })().catch(e=>{console.error(e);process.exitCode=1;});

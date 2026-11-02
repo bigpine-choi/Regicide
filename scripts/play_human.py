@@ -1338,10 +1338,21 @@ class HumanGame:
                 "original_termination": backup["outcome"][1],
                 "original_error": backup["error"],
                 "original_clock": backup["clock"].metadata(),
+                "clock_restore_policy": "after_replaced_move_no_extra_increment",
+                "clock_restore_ply": ply,
                 "at": datetime.datetime.now(datetime.timezone.utc).isoformat()})
-            self._clock = game_clock.GameClock(None, monotonic=self._clock_now)
-            self._clock.ply = len(self.board.move_stack)
-            self._clock.pause_reason = "handicap_practice"
+            # Replace the move, not the time control. Retain the original
+            # move's elapsed time and its one increment, exactly as recorded.
+            # Preview time and the discarded continuation must not be charged
+            # to the new branch, nor may replacing a move earn an increment.
+            original_clock = backup["clock"]
+            restored_clock = game_clock.GameClock(original_clock.control_id, monotonic=self._clock_now,
+                timeout_policy=original_clock.timeout_policy, soft_timeout_color=original_clock.soft_timeout_color)
+            restored_clock.history = copy.deepcopy(original_clock.history)
+            restored_clock.adjustments = copy.deepcopy(original_clock.adjustments)
+            restored_clock.edit_revision = max(original_clock.edit_revision, self._clock.edit_revision)
+            restored_clock.restore_ply(ply, "white" if self.board.turn else "black")
+            self._clock = restored_clock
             self._handicap_backup = None
             # python-chess sends ucinewgame and the complete new branch before
             # the next search, including all repetition/castling/EP history.

@@ -26,6 +26,97 @@ func fixture(revision: int = 1, sample_ms: int = 1000) -> Dictionary:
 		"decision_support":{"status":"ready", "complexity":{"score":67, "label":"높음", "reasons":["기물 접촉이 많습니다."]},
 			"recommendation":{"status":"ready", "total_ms":30000, "remaining_ms":30000, "reason":"남은 시간을 보존하면서 위협을 확인하세요.", "urgency":"normal"}}}
 
+
+func handicap_fixture(color: String, revision: int, control: String, preview: bool = false, replaced: bool = false) -> Dictionary:
+	var value: Dictionary = fixture(revision, revision * 1000)
+	value.human_color = color
+	value.engine.sparring_mode = true
+	value.engine.time_management = "automatic"
+	value.engine.automatic_think_time = true
+	value.handicap_mode = preview
+	value.can_handicap = not preview
+	value.human_to_move = not preview
+	value.engine_to_move = false
+	value.clock.control_id = control
+	value.clock.editable = not preview
+	value.clock.edit_revision = revision
+	value.clock.timeout_policy = "engine_only"
+	value.clock.soft_timeout_color = color
+	value.clock.white_ms = 597000
+	value.clock.black_ms = 594000
+	value.clock.status = "paused" if preview else "running"
+	value.clock.running_color = null if preview else color
+	value.clock.pause_reason = "handicap_preview" if preview else null
+	value.board = {"e1":"K", "e8":"k", "e2":"P", "e7":"p"}
+	value.moves = []
+	if color == "white":
+		value.board.erase("e2")
+		value.board.e4 = "P"
+		value.moves.append({"ply":1,"uci":"e2e4","san":"e4","actor":"human","color":"white"})
+		if not preview:
+			value.board.erase("e7")
+			value.board["e6" if replaced else "e5"] = "p"
+			value.moves.append({"ply":2,"uci":"e7e6" if replaced else "e7e5","san":"e6" if replaced else "e5","actor":"engine","color":"black","forced":replaced})
+		value.fen = "4k3/4p3/8/8/4P3/8/8/4K3 b - - 0 1" if preview else "4k3/8/4p3/8/4P3/8/8/4K3 w - - 0 2" if replaced else "4k3/8/8/4p3/4P3/8/8/4K3 w - - 0 2"
+		value.legal_moves = ["e7e6"] if preview else ["e1d1"]
+	else:
+		if not preview:
+			value.board.erase("e2")
+			value.board["e3" if replaced else "e4"] = "P"
+			value.moves.append({"ply":1,"uci":"e2e3" if replaced else "e2e4","san":"e3" if replaced else "e4","actor":"engine","color":"white","forced":replaced})
+		value.fen = "4k3/4p3/8/8/8/8/4P3/4K3 w - - 0 1" if preview else "4k3/4p3/8/8/8/4P3/8/4K3 b - - 0 1" if replaced else "4k3/4p3/8/8/4P3/8/8/4K3 b - - 0 1"
+		value.legal_moves = ["e2e3"] if preview else ["e7e5"]
+	value.turn = ("black" if color == "white" else "white") if preview else color
+	return value
+
+
+func check_handicap_clock_continuation() -> void:
+	var revision: int = 40
+	for control in ["10+0", "10+5", "15+10"]:
+		for color in ["white", "black"]:
+			var label: String = control + " / " + color
+			app.accept_state(handicap_fixture(color, revision, control))
+			var preview: Dictionary = handicap_fixture(color, revision + 1, control, true)
+			app.next_response = {"ok":true,"data":preview}
+			app.handicap_button.pressed.emit()
+			await process_frame
+			await process_frame
+			verify(app.captured_requests[-1].path == "/api/handicap", "replacement button enters preview: " + label)
+			verify(app.state.handicap_mode and app.top_clock.visible and app.bottom_clock.visible, "preview keeps both timed clocks visible: " + label)
+			app._clock_received_ticks = Time.get_ticks_msec() - 60000
+			app._render_clock_and_advice()
+			verify(app.top_clock.text == "9:54" and app.bottom_clock.text == "9:57", "preview freezes both clock displays: " + label)
+			verify(not app.clock_adjust_toggle.visible, "preview disables clock adjustment: " + label)
+			var cancelled: Dictionary = handicap_fixture(color, revision + 2, control)
+			app.next_response = {"ok":true,"data":cancelled}
+			app.handicap_cancel_button.pressed.emit()
+			await process_frame
+			await process_frame
+			verify(app.captured_requests[-1].path == "/api/handicap-cancel" and not app.state.handicap_mode, "cancel resumes original live branch: " + label)
+			app._clock_received_ticks = Time.get_ticks_msec() - 2200
+			app._render_clock_and_advice()
+			verify(app.bottom_clock.text == ("▶ 9:55" if color == "white" else "9:57") and app.top_clock.text == ("9:54" if color == "white" else "▶ 9:52"), "cancel restarts only the human countdown: " + label)
+			preview = handicap_fixture(color, revision + 3, control, true)
+			app.next_response = {"ok":true,"data":preview}
+			app.handicap_button.pressed.emit()
+			await process_frame
+			await process_frame
+			var replacement: Dictionary = handicap_fixture(color, revision + 4, control, false, true)
+			app.next_response = {"ok":true,"data":replacement}
+			app._submit_selected_move("e7e6" if color == "white" else "e2e3")
+			await process_frame
+			await process_frame
+			verify(app.captured_requests[-1].path == "/api/forced-move", "board replacement uses forced-move endpoint: " + label)
+			verify(app.state.clock.enabled and app.state.clock.control_id == control and not app.state.handicap_mode, "replacement preserves chosen time control: " + label)
+			verify(app.auto_time_label.visible and not app.time_option.visible and app.state.engine.time_management == "automatic", "replacement keeps automatic sparring time management: " + label)
+			verify(app.clock_adjust_toggle.visible and app._can_select_move(), "live human controls return after replacement: " + label)
+			app._clock_received_ticks = Time.get_ticks_msec() - 2200
+			app._render_clock_and_advice()
+			verify(app.bottom_clock.text == ("▶ 9:55" if color == "white" else "9:57") and app.top_clock.text == ("9:54" if color == "white" else "▶ 9:52"), "replacement clock keeps ticking for the next human turn: " + label)
+			app.accept_clock_refresh(preview)
+			verify(app.state.revision == replacement.revision and app.state.clock.status == "running", "late preview response cannot pause the replacement branch: " + label)
+			revision += 5
+
 func _run() -> void:
 	root.size = Vector2i(1240, 860)
 	app = CaptureApp.new()
@@ -176,6 +267,7 @@ func _run() -> void:
 		verify(app.state.result == "*" and not app.recommendation_label.text.contains("내 시간 소진"), "server increment clears overtime without inventing result: " + color)
 	verify(app._clock_text(-500) == "0:00", "negative clock clamped")
 	verify(app._clock_text(null) == "—", "missing value not fabricated")
+	await check_handicap_clock_continuation()
 	app.queue_free()
 	await process_frame
 	print("Godot rapid clock checks: %d, failures: %d" % [checks, failures])
