@@ -84,6 +84,7 @@ class RapidClockArchiveTests(unittest.TestCase):
         self.assertEqual(data["summary"]["result"], "0-1")
         self.assertEqual(data["frames"][0]["clock"]["white_ms"], 0)
         self.assertIn('[Termination "time forfeit"]', data["pgn"])
+
         for mutation in ("missing", "wrong_winner", "wrong_flag", "positive_clock", "no_flag"):
             changed = copy.deepcopy(record)
             if mutation == "missing":
@@ -98,6 +99,17 @@ class RapidClockArchiveTests(unittest.TestCase):
                 changed["clock"]["snapshot"]["flagged_color"] = None
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 self.load(changed)
+
+    def test_pgn_preserves_recorded_timing_version_without_relabelling_old_games(self):
+        record = self.record()
+        self.assertNotIn('EnginePacingPolicy', self.load(record)["pgn"])
+        for policy in ("regicide-engine-pacing-v1", "regicide-engine-pacing-v2", "regicide-engine-pacing-v3"):
+            record["engine_pacing"] = {"enabled": True, "policy": policy}
+            self.assertIn(f'[EnginePacingPolicy "{policy}"]', self.load(record)["pgn"])
+        for invalid in ({"enabled": False, "policy": "regicide-engine-pacing-v3"},
+                        {"enabled": True, "policy": "unrecognized"}):
+            record["engine_pacing"] = invalid
+            self.assertNotIn('EnginePacingPolicy', self.load(record)["pgn"])
 
     def test_timeout_bare_king_draw_and_not_false_win(self):
         self.board = chess.Board("7k/8/8/8/8/8/1R6/K7 w - - 0 1")

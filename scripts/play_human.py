@@ -728,7 +728,9 @@ class HumanGame:
                 clock_state = self._clock.snapshot()
                 clock_remaining_ms = (clock_state["white_ms" if board.turn else "black_ms"]
                                       if clock_state["enabled"] else None)
-                pacing_plan = engine_pacing.plan(board, clock_state, evaluation=self.evaluation(), seed=self._opening_seed)
+                pacing_history = copy.deepcopy(self._engine_pacing_decisions)
+                pacing_plan = engine_pacing.plan(board, clock_state, evaluation=self.evaluation(),
+                                                seed=self._opening_seed, history=pacing_history)
                 allocation = engine_pacing.search_budget(
                     pacing_plan, clock_state, movetime_ms,
                     automatic=self.sparring_mode and clock_state["enabled"])
@@ -780,6 +782,7 @@ class HumanGame:
             watchdog = None
             clock_watchdog = None
             pacing_receipt = None
+            baseline_packets, timing_infos = {}, {}
             timed_out = threading.Event()
             try:
                 engine = self._engine
@@ -841,6 +844,18 @@ class HumanGame:
                             self._publish_evaluation(latest)
                         if type(latest.get("depth")) is int and "score" in latest:
                             packets[latest["depth"]] = latest
+                    # Retain a completed packet for the actually returned root
+                    # move. Child verification evaluates a different position
+                    # and must never become the current turn's expected line.
+                    if (position is None and callable(getattr(engine, "analysis", None))
+                            and result.move is not None):
+                        for completed_depth in sorted(packets, reverse=True):
+                            packet = packets[completed_depth]
+                            sample = sparring_evaluation.validate_packet(board, packet)
+                            if sample is not None and sample["root"] == result.move.uci():
+                                if sample["depth"] >= timing_infos.get(sample["root"], {}).get("depth", 0):
+                                    timing_infos[sample["root"]] = copy.deepcopy(packet)
+                                break
                     return result, latest, packets
 
                 remembered_move = (chess.Move.from_uci(remembered["selected_uci"])
@@ -854,6 +869,7 @@ class HumanGame:
                     compare = bool(search_plan and search_plan["eligible"])
                     baseline_started = time.monotonic()
                     reply, baseline_info, _packets = search(first_budget)
+                    baseline_packets = _packets
                     baseline_elapsed_ms = (time.monotonic() - baseline_started) * 1000
                     if watchdog is not None:
                         watchdog.cancel()
@@ -983,6 +999,27 @@ class HumanGame:
                 if clock_watchdog is not None:
                     clock_watchdog.cancel()
             if failure is None:
+                # Search allocation is already spent/frozen. Refine only the
+                # whole-turn timing target using the selected move's evidence.
+                with self._lock:
+                    same_turn = (not self._closing and self._game_open and self.game_id == game_id
+                                 and self._game_token is token and self.revision == revision)
+                    refinement_clock = self._clock.snapshot()
+                if same_turn:
+                    try:
+                        pacing_plan = engine_pacing.refine(
+                            board, pacing_plan, refinement_clock, selected_move=reply.move,
+                            baseline_packets=baseline_packets,
+                            selected_info=timing_infos.get(reply.move.uci()),
+                            history=pacing_history, seed=self._opening_seed)
+                    except Exception as timing_error:
+                        # Timing imitation is optional; never discard a legal
+                        # engine move or leave a game locked because it failed.
+                        pacing_plan = {**pacing_plan, "refinement_error": type(timing_error).__name__}
+                    with self._lock:
+                        if (not self._closing and self.game_id == game_id
+                                and self._game_token is token and self.revision == revision):
+                            self._active_pacing = {**pacing_plan, "status": "searching"}
                 pacing_receipt = self._wait_for_engine_turn(pacing_plan, game_id, token, revision, pacing_event)
             with self._lock:
                 self._engine_searching = False

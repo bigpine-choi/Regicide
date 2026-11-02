@@ -275,7 +275,7 @@ def _stable_cp(board, evaluation):
     if (not isinstance(evaluation, dict)
             or evaluation.get("fen") != board.fen(en_passant="fen")
             or evaluation.get("reliability") != "stable"
-            or evaluation.get("bound") is not None
+            or evaluation.get("bound") not in (None, "exact")
             or evaluation.get("source") != "search"
             or type(evaluation.get("depth")) is not int or evaluation["depth"] < 4
             or type(evaluation.get("cp")) is not int or evaluation.get("mate") is not None):

@@ -124,6 +124,8 @@ class DecisionSupportTests(unittest.TestCase):
         good = support.assess(board, chess.WHITE, clock(), evaluation(board))["recommendation"]
         self.assertTrue(good["balanced_evaluation_used"])
         self.assertGreater(good["total_ms"], plain["total_ms"])
+        actual_packet = {**evaluation(board), "bound": "exact"}
+        self.assertEqual(support.assess(board, chess.WHITE, clock(), actual_packet)["recommendation"], good)
         for change in ({"fen":chess.Board().fen()}, {"bound":"lower"}, {"depth":3}, {"reliability":"volatile"}, {"source":"result"}, {"cp":True}):
             ev = evaluation(board);ev.update(change)
             current = support.assess(board, chess.WHITE, clock(), ev)["recommendation"]
