@@ -20,9 +20,10 @@ import opening_variety as opening
 import sparring_pacing
 import sparring_evaluation
 
-POLICY = "regicide-sparring-play-v5"
+POLICY = "regicide-sparring-play-v6"
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
-                      "regicide-sparring-play-v3", "regicide-sparring-play-v4", POLICY)
+                      "regicide-sparring-play-v3", "regicide-sparring-play-v4",
+                      "regicide-sparring-play-v5", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -46,6 +47,11 @@ DISCOVERY_DEPTH = 3
 MAX_DISCOVERY = 16
 RANKED_DISCOVERY = 6
 MAX_PROBES = 4
+MAX_RECOVERY_EXTRA_MS = 12000
+RECOVERY_DISCOVERY = 40
+RECOVERY_RANKED_DISCOVERY = 8
+RECOVERY_PROBES = 10
+RECOVERY_POSTMOVE_RESERVE_MS = 2400
 POSTMOVE_POLICY = "regicide-sparring-postmove-v1"
 POSTMOVE_MIN_MS = 100
 POSTMOVE_MAX_MS = 600
@@ -94,7 +100,7 @@ def _finish_ply(policy):
 
 
 def phase(board, *, policy=None):
-    """v5: close through move 20, ramp 21..49, full on each side's move 50."""
+    """v5/v6: close through move 20, ramp 21..49, full on each side's move 50."""
     ply = len(board.move_stack)
     legacy = policy == SUPPORTED_POLICIES[0]
     if ply >= _finish_ply(policy):
@@ -501,13 +507,15 @@ def _choose_verified(board, baseline_move, baseline, probes, control, seed):
 
 
 def choose(board, baseline_move, baseline_info, baseline_packets, search, close_engine, *,
-           decisions, seed, movetime_ms, forced=False):
+           decisions, seed, movetime_ms, forced=False, recovery_budget_ms=None):
     """Preserve the full search; spend bounded extra time on position feedback.
 
     Finite alternatives reach the original finite baseline's completed depth.
     An exact winning-mate reference instead uses an absolute CP target with
     candidate depth at least four; mate is never converted to CP. An unstable
     finite baseline can be checked again without replacing its original label.
+    An explicit recovery allowance is extra work, not a minimum waiting time.
+    The host must cap each search to its fresh clock/turn deadline as well.
     """
     started = time.monotonic()
     rows = _rows(decisions)
@@ -523,6 +531,20 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     resource_guard = sparring_pacing.resource_guard(board)
     analysis_only = phase(board) == "finish" or resource_guard.get("active") is True
     extra = extra_budget(movetime_ms, ply=len(board.move_stack), analysis_only=analysis_only)
+    if recovery_budget_ms is not None and (type(recovery_budget_ms) is not int or recovery_budget_ms < 0):
+        raise ValueError("Recovery allowance must be nonnegative integer milliseconds.")
+    standard_history = (not board.chess960 and board.is_valid()
+                        and board.root().fen(en_passant="fen") == chess.STARTING_FEN
+                        and _replay(board) is not None)
+    recovery_eligible = (standard_history and not analysis_only and len(board.move_stack) < RAMP_PLY
+                         and (absolute or finite_baseline is not None
+                              and finite_baseline["depth"] >= MIN_DEPTH and finite_baseline["cp"] > BAND_CP))
+    recovery = bool(recovery_eligible and recovery_budget_ms)
+    if recovery:
+        extra = min(MAX_RECOVERY_EXTRA_MS, recovery_budget_ms)
+    discovery_limit = RECOVERY_DISCOVERY if recovery else MAX_DISCOVERY
+    ranked_limit = RECOVERY_RANKED_DISCOVERY if recovery else RANKED_DISCOVERY
+    probe_limit = RECOVERY_PROBES if recovery else MAX_PROBES
     control = _target(board, profile, baseline["cp"]) if finite_baseline else {
         "active": phase(board) != "finish", "basis": "own_engine_selected_root",
         "lower_cp": -BAND_CP, "upper_cp": BAND_CP, "target_cp": TARGET_CP,
@@ -553,10 +575,16 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
               "position_floor_cp": -BAND_CP, "reliability": reliability,
               "comparison_basis": None, "reference_revalidation": None,
               "verification_policy": POSTMOVE_POLICY, "postmove_verification": None,
+              "postmove_attempts": [],
               "postmove_reserved_ms": 0,
               "discovery": [], "probes": [], "naturalness": None,
               "baseline_budget_ms": movetime_ms, "extra_budget_ms": extra, "extra_elapsed_ms": 0,
               "analysis_only": analysis_only, "candidate_budget_ms": 0,
+              "recovery": {"enabled": recovery, "eligible": recovery_eligible,
+                           "requested_budget_ms": recovery_budget_ms, "extra_budget_ms": extra if recovery else 0,
+                           "discovery_limit": discovery_limit, "probe_limit": probe_limit,
+                           "forced_provenance": bool(forced), "forced_recovery": bool(forced and recovery),
+                           "blocked_by_forced_game": bool(forced and not recovery), "postmove_retries": 0},
               "quality_budget_ms": 0, "discovery_budget_ms": 0, "probe_budget_sum_ms": 0,
               "reason": "baseline_preserved",
               "scope": "position feedback from own-engine scores; no continuous-band or victory guarantee"}
@@ -564,6 +592,8 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     def finish(reason, discarded=False, unavailable=False):
         result["reason"] = reason
         result["extra_elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
+        result["recovery"]["elapsed_ms"] = result["extra_elapsed_ms"] if recovery else 0
+        result["recovery"]["postmove_retries"] = max(0, len(result["postmove_attempts"]) - 1)
         cp, final_cp = control.get("selected_cp"), control.get("selected_final_cp")
         known = type(cp) in (int, float) and type(final_cp) in (int, float)
         values = [cp, final_cp]
@@ -600,7 +630,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
             result["profile"] = {**result["profile"], "status": "holding", "constraint": reason}
         return result, discarded
 
-    if forced:
+    if forced and not recovery:
         return finish("user_forced_game", unavailable=True)
     if board.chess960 or not board.is_valid() or board.root().fen(en_passant="fen") != chess.STARTING_FEN:
         return finish("custom_or_invalid_root", unavailable=True)
@@ -650,8 +680,9 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     result["candidate_budget_ms"] = round(max(0, (deadline - time.monotonic()) * 1000), 3)
     if result["candidate_budget_ms"] < POSTMOVE_MIN_MS:
         return finish("postmove_verification_budget", unavailable=True)
-    reserved = min(POSTMOVE_MAX_MS, max(POSTMOVE_MIN_MS,
-                   result["candidate_budget_ms"] * POSTMOVE_RESERVE_FRACTION))
+    reserve_cap = RECOVERY_POSTMOVE_RESERVE_MS if recovery else POSTMOVE_MAX_MS
+    reserved = min(reserve_cap, max(POSTMOVE_MIN_MS,
+                   result["candidate_budget_ms"] * (0.35 if recovery else POSTMOVE_RESERVE_FRACTION)))
     result["postmove_reserved_ms"] = round(reserved, 3)
     done, expired = threading.Event(), threading.Event()
     def expire():
@@ -673,7 +704,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
             result["comparison_basis"] = "stable_completed_depth"
         else:
             remaining = (deadline - time.monotonic()) * 1000 - reserved
-            budget = min(350, remaining * .25)
+            budget = min(1000 if recovery else 350, remaining * .25)
             if budget < 25:
                 failure = "reference_revalidation_budget"
             else:
@@ -697,21 +728,22 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
 
         if failure is None:
             discovery_started = time.monotonic()
-            discovery_budget = min(650, max(0, (deadline - discovery_started) * 1000 - reserved) * .42)
+            discovery_budget = min(2000 if recovery else 650,
+                                   max(0, (deadline - discovery_started) * 1000 - reserved) * (.30 if recovery else .42))
             result["discovery_budget_ms"] = round(discovery_budget, 3)
             discovery_deadline = discovery_started + discovery_budget / 1000
             excluded = {baseline_move}
             legal = sorted(board.legal_moves, key=lambda move: move.uci())
             direct_order = None
-            for index in range(MAX_DISCOVERY):
+            for index in range(discovery_limit):
                 remaining = (discovery_deadline - time.monotonic()) * 1000
                 if remaining < 12 or expired.is_set():
                     break
                 allowed = [move for move in legal if move not in excluded]
                 if not allowed:
                     break
-                budget = max(12, remaining / max(1, MAX_DISCOVERY - index))
-                if index < RANKED_DISCOVERY:
+                budget = max(12, remaining / max(1, discovery_limit - index))
+                if index < ranked_limit:
                     candidate, final, packets = search(budget, root_moves=allowed, publish=False,
                                                        fresh=True, depth=DISCOVERY_DEPTH)
                     move = candidate.move
@@ -720,8 +752,12 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                     if direct_order is None:
                         # Spread direct probes across quiet legal moves rather
                         # than repeatedly asking only for the engine's top six.
+                        # Once the concealment delay has passed, include the
+                        # compensated captures that may repay a major loss.
+                        prefer_returns = recovery and pacing.get("allow_material_return") is True
                         direct_order = sorted(allowed, key=lambda move: (
-                            board.is_capture(move), board.gives_check(move),
+                            not board.is_capture(move) if prefer_returns else board.is_capture(move),
+                            board.gives_check(move),
                             opening._digest([POLICY, seed, opening.history_key(board), "direct", move.uci()])))
                     move = next((move for move in direct_order if move not in excluded), None)
                     if move is None:
@@ -744,11 +780,16 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                 2 if row["line"] is None else 0 if control["lower_cp"] <= row["line"]["cp"] <= control["upper_cp"] else 1,
                 abs(row["line"]["cp"] - control["target_cp"]) if row["line"] else 100000,
                 -row["naturalness"]["style_points"], row["uci"]))
-            for index, candidate in enumerate(candidates[:MAX_PROBES]):
+            for index, candidate in enumerate(candidates[:probe_limit]):
                 remaining = (deadline - time.monotonic()) * 1000 - reserved
                 if failure or remaining < 25 or expired.is_set():
                     break
-                budget = remaining / max(1, min(MAX_PROBES, len(candidates)) - index)
+                remaining_candidates = min(probe_limit, len(candidates)) - index
+                # Broad discovery must not divide the exact-depth budget into
+                # ten tiny searches. Front-load the strongest recovery leads;
+                # later candidates use savings when earlier searches finish.
+                divisor = min(MAX_PROBES, remaining_candidates) if recovery else remaining_candidates
+                budget = remaining / max(1, divisor)
                 move = chess.Move.from_uci(candidate["uci"])
                 probe_started = time.monotonic()
                 reply, final, packets = search(budget, root_move=move, publish=False,
@@ -776,21 +817,31 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                 result["probes"].append(probe)
                 result["probe_budget_sum_ms"] += round(budget, 3)
         if failure is None:
-            chosen = _choose_verified(board, baseline_move, baseline, result["probes"], control, seed)
-            if chosen["probe"] is not None:
+            remaining_probes = list(result["probes"])
+            while True:
+                chosen = _choose_verified(board, baseline_move, baseline, remaining_probes, control, seed)
+                if chosen["probe"] is None:
+                    break
                 budget = min(POSTMOVE_MAX_MS, (deadline - time.monotonic()) * 1000)
                 if budget < POSTMOVE_MIN_MS or expired.is_set():
                     failure = "postmove_verification_budget"
+                    break
                 else:
                     verified = _postmove_verification(board, chess.Move.from_uci(chosen["uci"]),
                         chosen["probe"], search, depth=max(MIN_DEPTH, verification_depth - 1),
                         budget_ms=budget, floor_cp=control["lower_cp"])
                     result["postmove_verification"] = verified
+                    result["postmove_attempts"].append(verified)
                     if not verified["valid"]:
                         failure = verified["reason"]
+                        if recovery:
+                            remaining_probes.remove(chosen["probe"])
+                            continue
                     else:
+                        failure = None
                         chosen["inside"] = (chosen["inside"] and
                             control["lower_cp"] <= verified["cp_own"] <= control["upper_cp"])
+                    break
     except Exception as error:
         failure = "candidate_search_failed"
         result["error"] = type(error).__name__

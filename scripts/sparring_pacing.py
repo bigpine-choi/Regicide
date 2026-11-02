@@ -130,8 +130,13 @@ def _episodes(board, positions):
     return episodes
 
 
-def derive(board, decisions, baseline_cp, *, ramp_fraction=0.0):
-    """Four bot decisions after settlement; later losses cannot reset a clock."""
+def derive(board, decisions, baseline_cp, *, ramp_fraction=0.0, persist_recovery=True):
+    """Keep the concealment delay; carry unfinished recovery through move 20.
+
+    The original four stages still fade normally after move 20. Before then,
+    failure to find a safe return does not consume the final recovery stage.
+    ``persist_recovery=False`` reproduces the historical four-turn window.
+    """
     inactive = {"active": False, "reason": "no_recent_major_loss", "event_ply": None,
                 "stage": None, "debt_cp": 0, "anchor_cp": None, "target_cp": None,
                 "upper_cp": None, "allow_material_return": False, "return_cap_cp": 0,
@@ -146,9 +151,13 @@ def derive(board, decisions, baseline_cp, *, ramp_fraction=0.0):
         return inactive
     episode = episodes[-1]
     root_ply, start = len(board.move_stack), episode["start_root_ply"]
-    stage = 0 if start is None else (root_ply - start) // 2 + 1
+    elapsed_stage = 0 if start is None else (root_ply - start) // 2 + 1
+    persistent = persist_recovery and root_ply < CLOSE_PLIES and elapsed_stage > 4
+    stage = min(4, elapsed_stage) if persistent else elapsed_stage
     if stage < 0 or stage > 4:
         return {**inactive, "reason": "recovery_window_finished"}
+    if persist_recovery and -100 <= baseline_cp <= 100:
+        return {**inactive, "reason": "strict_band_recovered"}
     debt = (_balance(board, board.turn) - _balance(positions[episode["start_ply"]], board.turn)
             - _own_promotion_gain(board, positions, episode["start_ply"], root_ply, board.turn))
     if debt <= 0:
@@ -178,10 +187,13 @@ def derive(board, decisions, baseline_cp, *, ramp_fraction=0.0):
     target = 30 + (target - 30) * (1 - fade)
     upper = 100 + (upper - 100) * (1 - fade)
     guard = resource_guard(board)
-    return {**inactive, "active": True, "reason": "settle_exchange" if stage == 0 else "staged_major_loss_recovery",
+    return {**inactive, "active": True,
+            "reason": ("persistent_major_loss_recovery" if persistent else
+                       "settle_exchange" if stage == 0 else "staged_major_loss_recovery"),
             "event_ply": episode["event_ply"], "exchange_start_ply": episode["start_ply"],
             "settled_ply": episode["settled_ply"], "start_root_ply": start,
-            "stage": stage, "debt_cp": debt, "anchor_cp": round(anchor, 3),
+            "stage": stage, "elapsed_stage": elapsed_stage, "persistent": persistent,
+            "debt_cp": debt, "anchor_cp": round(anchor, 3),
             "target_cp": round(target, 3), "upper_cp": round(upper, 3),
             "allow_material_return": stage in (3, 4) and not guard["material_concessions_blocked"],
             "return_cap_cp": min(400, debt), "ramp_fraction": round(fade, 4),

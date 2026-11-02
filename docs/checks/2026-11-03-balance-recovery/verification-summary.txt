@@ -1,0 +1,54 @@
+Balance-recovery host and native verification, 2026-11-03
+
+Controlled host: tests/recovery_host_tests.py, 14 tests passed in 10.402s.
+Coverage: short-opening ahead and behind routes; real extra-search callback;
+no cosmetic wait after recovery; both-color move-20/21/50 boundaries; no
+recovery inside the band or outside sparring; edited active clocks; engine
+zero timeout; close, revision/token invalidation and skip-wait cancellation;
+failed/illegal recovery reply retaining the legal baseline; shallow ahead
+confirmation failure and confirmation changing the direction to behind.
+These use deterministic controlled peers and do not establish playing strength.
+
+Native: tests/recovery_native_integration.py, four single-turn cases passed.
+The previous host snapshot is commit d871d04b76b6f6d120f0fbf5e1c0ba972e296940.
+The current production source hashes matched before and after the run.
+Exact source, binary and fixture hashes/conditions are recorded in native.json.
+Both variants use the same active Regicide native binary, one thread, 16 MB
+hash, fresh engines, the same legal position history/seed and 600000ms each.
+Extra search allowance differs intentionally. External system load was not
+controlled. Only a single next turn is played for each variant and position.
+
+Public ahead position: existing project match game-001, prefix18, White.
+Both baseline searches request296ms, reach depth5 and return g2g4 at +410cp.
+Previous host: selects g2g4; three searches total535.316ms; cosmetic447.140ms;
+whole turn1040.521ms; fresh same-engine 2000ms child audit depth7 is +381cp.
+Current host: selects d1d6; accepted_sparring_alternative; 48 searches total
+932.818ms; cosmetic0ms; whole turn1070.890ms. Recovery allowance5559ms and
+recovery elapsed734.858ms. Successful child verification depth4 gives +46cp;
+fresh same-engine 2000ms child audit depth8 also gives +46cp, inside +/-100cp.
+The policy stops extra work after finding a verified candidate; it does not
+wait out the unused recovery allowance.
+
+Synthetic behind position: e4 e5 Nf3 Nc6 Nxe5 Nxe5, White; deliberately
+declared synthetic history, not a user record. Both baseline searches request
+242ms, reach depth5 and return d2d4 at -159cp. Previous host search total
+412.512ms, cosmetic395.298ms, whole turn851.269ms. Current host search total
+5797.037ms, cosmetic0ms, whole turn5837.947ms; additional unrestricted search
+reaches depth7 and estimates -156cp. Both select d2d4; both fresh same-engine
+2000ms child audits return -188cp. More real search ran, but this deficit was
+not restored to the target band. No restoration guarantee is supported.
+
+Scope and limitations: audits are fresh searches by the SAME Regicide binary,
+not an external Stockfish oracle. Scores are finite-depth estimates. This is
+neither a match series nor an Elo estimate. Both native cases have White as
+Regicide; controlled host routing uses Black and covers both colors at the
+move-number boundaries. Source and test receipts distinguish actual native
+work, deterministic peer testing and the unachieved behind-case restoration.
+
+All worker games/snapshots were temporary, engine processes were closed, and
+no active user game or private raw game file was read or edited. The preliminary
+run overlapped development and was rejected by the source-hash consistency
+guard; only the subsequent stable-source run is represented by native.json.
+
+Evidence: recovery-host.log, native.log, native.json. Python workers' stdout
+and stderr are stored per case in native.json (empty on this successful run).

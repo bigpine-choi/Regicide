@@ -1,5 +1,6 @@
 """Adaptive practice evidence, candidate safeguards and late full-strength play."""
 import copy
+from contextlib import nullcontext
 from pathlib import Path
 import sys
 import unittest
@@ -128,7 +129,7 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile["policy"], "regicide-sparring-play-v4")
         self.assertAlmostEqual(profile["target_loss_cp"], profile["skill_target_loss_cp"] * .18, places=2)
         current = policy.derive_profile(board, rows)
-        self.assertEqual(current["policy"], "regicide-sparring-play-v5")
+        self.assertEqual(current["policy"], "regicide-sparring-play-v6")
         self.assertEqual(current["phase"], "finish")
         self.assertEqual(current["target_loss_cp"], 0)
         self.assertEqual(policy._target(board, profile, 300)["target_cp"], 300)
@@ -469,7 +470,8 @@ class PositionFeedbackTests(unittest.TestCase):
 
     def run_case(self, board, base_uci, cp, candidates, *, depth=5, mate=None, deeper=None,
                  reference_cp=None, stable=True, rows=(), pacing=None, child_cp=None, child_change=None,
-                 clock=None, exhaust_before_child=False):
+                 clock=None, exhaust_before_child=False, recovery_budget_ms=None, movetime_ms=1000,
+                 forced=False, child_values=None, actual_observation=False):
         base_move = chess.Move.from_uci(base_uci)
         info = packet(board, base_uci, cp, depth)
         if mate is not None:
@@ -486,6 +488,8 @@ class PositionFeedbackTests(unittest.TestCase):
                     clock[0] += budget / 1000
                 selected = after.peek().uci()
                 value = candidates.get(selected, cp if cp is not None else 300) if child_cp is None else child_cp
+                if child_values is not None:
+                    value = child_values.get(selected, value)
                 reply = sorted(after.legal_moves, key=lambda move: move.uci())[0]
                 final = packet(after, reply.uci(), -value, options["depth"])
                 if child_change:
@@ -507,11 +511,13 @@ class PositionFeedbackTests(unittest.TestCase):
                 clock[0] = 1.95  # Only 50ms of the 2s deadline survives a simulated stall.
             return chess.engine.BestMove(move, None), final, {searched: common, final["depth"]: final}
         unknown = {"valid": False, "forced": False, "reason": "test_unknown", "loss_cp": None}
-        with patch.object(policy.sparring_pacing, "derive", return_value=pacing or {"active": False}), patch.object(
-                policy.boss_play, "observe_human_move", return_value=(unknown, False)), patch.object(
+        observation = (nullcontext() if actual_observation else patch.object(
+            policy.boss_play, "observe_human_move", return_value=(unknown, False)))
+        with patch.object(policy.sparring_pacing, "derive", return_value=pacing or {"active": False}), observation, patch.object(
                 policy.evaluation_stability, "assess", return_value={"reliability": "stable" if stable else "volatile"}):
             result, discarded = policy.choose(board, base_move, info, packets, search, lambda: None,
-                                               decisions=rows, seed="position-feedback", movetime_ms=1000)
+                                               decisions=rows, seed="position-feedback", movetime_ms=movetime_ms,
+                                               forced=forced, recovery_budget_ms=recovery_budget_ms)
         self.assertFalse(discarded)
         return result, calls
 

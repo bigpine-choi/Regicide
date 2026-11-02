@@ -156,6 +156,7 @@ const saveRating = value => { byId("rating-label-input").value = String(value); 
   selectMode("sparring");
   assert.match(byId("boss-mode-help").textContent, /20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다\./);
   assert.match(byId("boss-mode-help").title, /21~49수.*양쪽 모두 50번째 수부터 전력/);
+  assert.match(byId("boss-mode-help").textContent, /20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분/);
   assert.match(byId("boss-mode-help").textContent, /자동으로 조절/);
   assert.equal(byId("think-time-field").hidden, true);
   assert.equal(byId("auto-think-time").hidden, false);

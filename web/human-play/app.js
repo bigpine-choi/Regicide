@@ -666,7 +666,7 @@
     const descriptions = {
       normal: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
       boss: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
-      sparring: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
+      sparring: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
     };
     const mode = byId("boss-mode").value;
     byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;

@@ -333,6 +333,11 @@ class HumanGame:
             if self._active_timing_evidence is not None:
                 pacing = engine_pacing.refine(self.board, pacing, clock,
                     **self._active_timing_evidence, history=history, seed=self._opening_seed)
+            if previous.get("balance_recovery", {}).get("active"):
+                pacing["balance_recovery"] = copy.deepcopy(previous["balance_recovery"])
+                cap = engine_pacing.recovery_clock_limit(
+                    clock, pacing["color"], pacing["balance_recovery"]["direction"])
+                pacing["target_total_ms"] = min(previous["target_total_ms"], clock["turn_elapsed_ms"] + cap)
         except Exception as exc:
             # A cosmetic timing failure must never undo an accepted clock edit.
             pacing = {**previous, "refinement_error": type(exc).__name__}
@@ -858,6 +863,7 @@ class HumanGame:
             active_analysis = [None]
             pacing_receipt = None
             baseline_packets, timing_infos = {}, {}
+            recovery_deadline = None
             timed_out = threading.Event()
             try:
                 engine = self._engine
@@ -868,13 +874,20 @@ class HumanGame:
                     def monitor_clock():
                         while not clock_monitor_done.wait(.02):
                             with self._lock:
-                                if (self._closing or self.game_id != game_id or self._game_token is not token):
+                                if (self._closing or self.game_id != game_id or self._game_token is not token
+                                        or recovery_deadline is not None and
+                                           (self.revision != revision or pacing_event.is_set())):
+                                    if recovery_deadline is not None and active_analysis[0] is not None:
+                                        stop = getattr(active_analysis[0], "stop", None)
+                                        if callable(stop):
+                                            stop()
                                     return
                                 current = self._clock.snapshot()
                                 expired = (self._clock.flagged_color is not None or
                                            current["white_ms" if board.turn else "black_ms"] <= 0)
                                 pacing = self._active_pacing
-                                if not expired and pacing and pacing.get("clock_adjusted"):
+                                if not expired and pacing and (pacing.get("clock_adjusted")
+                                        or pacing.get("balance_recovery", {}).get("active")):
                                     left = max(0, pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"])
                                     available = current["white_ms" if board.turn else "black_ms"]
                                     if min(left, available) <= 100 and active_analysis[0] is not None:
@@ -897,11 +910,21 @@ class HumanGame:
                 def search(budget, *, root_move=None, root_moves=None, publish=True, fresh=False, depth=None, position=None):
                     with self._lock:
                         pacing = self._active_pacing
-                        if pacing and pacing.get("clock_adjusted"):
+                        if recovery_deadline is not None:
+                            if (self._closing or not self._game_open or self.game_id != game_id
+                                    or self._game_token is not token or self.revision != revision
+                                    or pacing_event.is_set()):
+                                raise InterruptedError("Balance recovery cancelled")
+                            budget = min(budget, (recovery_deadline - time.monotonic()) * 1000)
+                        if pacing and (pacing.get("clock_adjusted") or recovery_deadline is not None):
                             current = self._clock.snapshot()
-                            left = max(1, pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"] - 100)
-                            available = max(1, current["white_ms" if board.turn else "black_ms"] - 100)
+                            left = pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"] - 100
+                            available = current["white_ms" if board.turn else "black_ms"] - 100
+                            if recovery_deadline is None:
+                                left, available = max(1, left), max(1, available)
                             budget = min(budget, left, available)
+                        if budget < 1:
+                            raise TimeoutError("No remaining search budget")
                     search_board = board if position is None else position
                     if position is not None or root_move is not None or root_moves is not None:
                         publish = False
@@ -986,7 +1009,132 @@ class HumanGame:
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     boss_extra_started = None
-                    if self.sparring_mode and rating_only_cap:
+                    recovery = None
+                    if self.sparring_mode:
+                        with self._lock:
+                            recovery_clock = self._clock.snapshot()
+                            current_pacing = copy.deepcopy(self._active_pacing or pacing_plan)
+                            recovery_requested = engine_pacing.recovery_plan(
+                                board, current_pacing, recovery_clock,
+                                baseline_info=baseline_info, baseline_move=reply.move)["balance_recovery"]["direction"] is not None
+                            if recovery_requested:
+                                try:
+                                    current_pacing = engine_pacing.refine(
+                                        board, current_pacing, recovery_clock, selected_move=reply.move,
+                                        baseline_packets=baseline_packets, selected_info=timing_infos.get(reply.move.uci()),
+                                        history=pacing_history, seed=self._opening_seed)
+                                except Exception as timing_error:
+                                    current_pacing["refinement_error"] = type(timing_error).__name__
+                            current_pacing = engine_pacing.recovery_plan(
+                                board, current_pacing, recovery_clock,
+                                baseline_info=baseline_info, baseline_move=reply.move)
+                            recovery = current_pacing["balance_recovery"]
+                            if recovery["active"]:
+                                pacing_plan = current_pacing
+                                self._active_pacing = {**current_pacing, "status": "searching"}
+                                self._active_extra_budget_ms = recovery["budget_ms"]
+                                self._active_timing_evidence = {
+                                    "selected_move": reply.move, "baseline_packets": baseline_packets,
+                                    "selected_info": timing_infos.get(reply.move.uci())}
+                    if recovery and recovery["active"]:
+                        recovery_started = time.monotonic()
+                        recovery_deadline = recovery_started + recovery["budget_ms"] / 1000
+                        recovery.update(outcome="baseline_retained", forced_game=forced_game)
+
+                        def rescue(budget):
+                            # Optional deeper search must never destroy the legal
+                            # baseline when the engine stops or returns bad evidence.
+                            done, expired = threading.Event(), threading.Event()
+                            def expire_rescue():
+                                if not done.is_set():
+                                    expired.set()
+                                    engine.close()
+                            guard = threading.Timer(budget / 1000 + .1, expire_rescue)
+                            guard.daemon = True
+                            guard.start()
+                            started = time.monotonic()
+                            try:
+                                candidate, info, packets = search(budget)
+                                sample = sparring_evaluation.validate_packet(board, info)
+                                previous = sparring_evaluation.validate_packet(board, baseline_info)
+                                if (expired.is_set() or (time.monotonic() - started) * 1000 > budget + 100):
+                                    raise TimeoutError("Recovery search exceeded allowance")
+                                if (candidate.move not in board.legal_moves or sample is None
+                                        or sample["root"] != candidate.move.uci()
+                                        or previous is not None and sample["depth"] < previous["depth"]):
+                                    recovery["outcome"] = "unverified_rescue_baseline_retained"
+                                    return None, False
+                                recovery.update(outcome="deeper_search_completed", recovered_depth=sample["depth"],
+                                                recovered_cp_own=(sample["cp"] * (1 if board.turn else -1)
+                                                                  if sample["cp"] is not None else None))
+                                return (candidate, info, packets), False
+                            except Exception as exc:
+                                recovery.update(outcome="rescue_failed_baseline_retained", error=type(exc).__name__)
+                                engine.close()
+                                return None, True
+                            finally:
+                                done.set()
+                                guard.cancel()
+                                guard.join(timeout=.2)
+
+                        # Short opening searches may detect imbalance at depth1.
+                        # Confirm it before attempting any verified concession.
+                        if recovery["direction"] == "ahead" and recovery["baseline_depth"] < sparring_play.MIN_DEPTH:
+                            confirmed, discard_engine = rescue(min(1000, recovery["budget_ms"] / 4))
+                            if confirmed is not None:
+                                reply, baseline_info, _packets = confirmed
+                                baseline_packets = _packets
+                                confirmed_sample = sparring_evaluation.validate_packet(board, baseline_info)
+                                cp_own = (confirmed_sample["cp"] * (1 if board.turn else -1)
+                                          if confirmed_sample["cp"] is not None else None)
+                                if (cp_own is not None and cp_own < -100
+                                        or cp_own is None and confirmed_sample["winner"] != ("white" if board.turn else "black")):
+                                    recovery["direction"] = "behind"
+                        remaining = max(0, (recovery_deadline - time.monotonic()) * 1000)
+                        if recovery["direction"] == "behind":
+                            observation = None
+                            if remaining >= 800 and not forced_game:
+                                observation, discard_engine = boss_play.observe_human_move(
+                                    board, search, engine.close, budget_ms=min(500, remaining / 5), forced=forced_game)
+                            remaining = max(0, (recovery_deadline - time.monotonic()) * 1000 - 25)
+                            if remaining >= 100 and not discard_engine:
+                                rescued, discard_engine = rescue(remaining)
+                                if rescued is not None:
+                                    reply, baseline_info, _packets = rescued
+                                    baseline_packets = _packets
+                            decision, _ = sparring_play.choose(
+                                board, reply.move, baseline_info, _packets, search, engine.close,
+                                decisions=sparring_decisions, seed=self._opening_seed, movetime_ms=0, forced=forced_game)
+                            decision["reason"] = "balance_recovery_strongest"
+                            if observation is not None:
+                                decision["opponent_observation"] = observation
+                                decision["profile"] = sparring_play.derive_profile(
+                                    board, [*sparring_decisions, {"opponent_observation": observation}])
+                        elif not discard_engine and remaining >= 100:
+                            decision, discard_engine = sparring_play.choose(
+                                board, reply.move, baseline_info, _packets, search, engine.close,
+                                decisions=sparring_decisions, seed=self._opening_seed,
+                                movetime_ms=movetime_ms, forced=forced_game, recovery_budget_ms=int(remaining))
+                            reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                            recovery["outcome"] = decision["reason"]
+                            if (recovery.get("recovered_depth", 0) >= sparring_play.MIN_DEPTH
+                                    and recovery.get("recovered_cp_own") is not None
+                                    and abs(recovery["recovered_cp_own"]) <= 100
+                                    and reply.move.uci() == decision.get("baseline_uci")):
+                                recovery["outcome"] = "baseline_rechecked_inside_band"
+                        if decision is None:
+                            decision, _ = sparring_play.choose(
+                                board, reply.move, baseline_info, _packets, search, engine.close,
+                                decisions=sparring_decisions, seed=self._opening_seed, movetime_ms=0, forced=forced_game)
+                        recovery["elapsed_ms"] = round((time.monotonic() - recovery_started) * 1000, 3)
+                        decision.update(balance_recovery=copy.deepcopy(recovery),
+                                        baseline_budget_ms=movetime_ms,
+                                        extra_budget_ms=recovery["budget_ms"], extra_elapsed_ms=recovery["elapsed_ms"],
+                                        baseline_elapsed_ms=round(baseline_elapsed_ms, 3))
+                        with self._lock:
+                            if self._active_pacing is not None:
+                                self._active_pacing["balance_recovery"] = copy.deepcopy(recovery)
+                    elif self.sparring_mode and rating_only_cap:
                         with self._lock:
                             observation_clock = self._clock.snapshot()
                             current_remaining = observation_clock["white_ms" if board.turn else "black_ms"]

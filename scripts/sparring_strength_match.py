@@ -357,7 +357,7 @@ def run_match(config, *, sparring_factory=None, stockfish_factory=None):
     output.mkdir(parents=True, exist_ok=False)
     target_fullmoves = {'regicide-sparring-play-v1': 50, 'regicide-sparring-play-v2': 40,
                        'regicide-sparring-play-v3': 30, 'regicide-sparring-play-v4': 20,
-                       'regicide-sparring-play-v5': 20}[sparring_play.POLICY]
+                       'regicide-sparring-play-v5': 20, 'regicide-sparring-play-v6': 20}[sparring_play.POLICY]
     target_plies = 2 * target_fullmoves
     metadata = {'schema': 'regicide.sparring-strength-match.v1', 'started_at': utc(), 'config': config,
                 'source': source, 'source_sha256': {path: sha(ROOT / path) for path in SOURCES},

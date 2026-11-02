@@ -1,8 +1,8 @@
 """Reproducible human-style turn timing, independent of move selection.
 
-The first plan allocates a search budget. After that search a single cosmetic
-refinement uses its validated evidence, never starts another search, and never
-rewrites the allocation. All targets include time already spent this turn.
+The first plan allocates a search budget. Validated move evidence refines the
+turn target. Early sparring imbalance may spend that target on real recovery
+search instead of a cosmetic hold. All targets include elapsed turn time.
 This is an authored timing heuristic, not a learned human-response model.
 """
 
@@ -18,7 +18,7 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v8"
+POLICY = "regicide-engine-pacing-v9"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
@@ -319,6 +319,9 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
                            and board.color_at(selected_move.to_square) != board.turn)
     line = _selected_line(board, selected_move, selected_info)
     result["forecast"] = line
+    if result.get("balance_recovery", {}).get("active"):
+        details["kind"] = "balance_recovery_search"
+        return result
     if line is None or seed is None:
         details["kind"] = "neutral" if seed is None else "no_selected_evidence"
         if clarity in QUICK_KINDS and not obvious_selected and not known_continuation:
@@ -425,7 +428,70 @@ def search_budget(pacing, clock, configured_ms, *, automatic=False):
             "completion_margin_ms": round(margin, 3), "automatic": automatic}
 
 
+def recovery_clock_limit(clock, color, direction):
+    """Extra computation cap, with progressively stronger pressure below 3min."""
+    current = clock.get(color + "_ms") if isinstance(clock, dict) else None
+    if not _number(current) or current <= LOW_CLOCK_MS:
+        return 0
+    pressure = min(1.0, current / PRESSURE_START_MS)
+    cap = 12000 if direction == "ahead" else 30000
+    return max(0, min(cap * pressure ** 2, current - LOW_CLOCK_MS - 150))
+
+
+def recovery_plan(board, pacing, clock, *, baseline_info, baseline_move):
+    """Allocate actual recovery work only for an exact current-root imbalance.
+
+    A shallow completed score can request confirmation, never certify a
+    concession. The move policy retains its own depth and safety checks.
+    """
+    result = copy.deepcopy(pacing)
+    recovery = {"active": False, "reason": "outside_close_phase", "budget_ms": 0,
+                "direction": None, "initial_cp_own": None}
+    result["balance_recovery"] = recovery
+    if len(board.move_stack) >= 40 or board.root().fen() != chess.STARTING_FEN:
+        return result
+    sample = sparring_evaluation.validate_packet(board, baseline_info)
+    if (sample is None or not isinstance(baseline_move, chess.Move)
+            or sample["root"] != baseline_move.uci()):
+        recovery["reason"] = "unverified_baseline"
+        return result
+    own_cp = sample["cp"] * (1 if board.turn else -1) if sample["cp"] is not None else None
+    recovery.update(initial_cp_own=own_cp, baseline_depth=sample["depth"])
+    if own_cp is not None and abs(own_cp) <= 100:
+        recovery["reason"] = "within_close_band"
+        return result
+    color = "white" if board.turn else "black"
+    direction = ("ahead" if own_cp > 100 else "behind") if own_cp is not None else (
+        "ahead" if sample["winner"] == color else "behind")
+    recovery["direction"] = direction
+    if (not isinstance(clock, dict) or clock.get("enabled") is not True
+            or clock.get("status") != "running" or clock.get("running_color") != color):
+        recovery["reason"] = "inactive_clock"
+        return result
+    current, elapsed = clock.get(color + "_ms"), clock.get("turn_elapsed_ms")
+    if not _number(current) or not _number(elapsed):
+        recovery["reason"] = "invalid_clock"
+        return result
+    pressure = min(1.0, current / PRESSURE_START_MS)
+    target = max(result.get("target_total_ms", 0), 6000 * pressure)
+    reserve = max(LOW_CLOCK_MS, result.get("reserve_ms", 0))
+    budget = int(max(0, min(target - elapsed - 150, current - reserve - 150,
+                            recovery_clock_limit(clock, color, direction))))
+    if budget < 100:
+        recovery["reason"] = "insufficient_clock_budget"
+        return result
+    recovery.update(active=True, reason="early_balance_recovery", budget_ms=budget,
+                    target_total_ms=int(elapsed + budget + 150),
+                    original_target_total_ms=pacing.get("target_total_ms", 0),
+                    opening_cap_bypassed=bool(result.get("opening_budget")))
+    result.update(target_total_ms=recovery["target_total_ms"], balance_recovery=recovery,
+                  rhythm_profile="balance_recovery_search")
+    return result
+
+
 def remaining_wait_ms(pacing, clock):
+    if pacing.get("balance_recovery", {}).get("active"):
+        return 0
     if not pacing.get("enabled") or not isinstance(clock, dict):
         return 0
     color = pacing["color"]

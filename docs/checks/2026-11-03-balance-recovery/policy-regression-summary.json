@@ -1,0 +1,45 @@
+{
+  "run_at": "2026-11-02T19:12:42.462531+00:00",
+  "modules": [
+    "sparring_play_tests",
+    "sparring_pacing_tests",
+    "recovery_policy_tests"
+  ],
+  "tests_run": 74,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "successful": true,
+  "source_sha256_before": {
+    "scripts/sparring_play.py": "c4b08b10af83a27d95c39a48e58ff54f4a7a611f93432827d2aac75ae906ea31",
+    "scripts/sparring_pacing.py": "fce58059b8da2c92e54d5e0c1f629a80411f0ab99db6bab689fb24fcee1c20e5",
+    "tests/sparring_play_tests.py": "765be0bc0a0966e5682c3ae987a58546f3da267e952c32ca1dcca521713cea91",
+    "tests/sparring_pacing_tests.py": "180549dbce693f9d3f4b38514b55dc80b12a394872bc4e24173660a386215343",
+    "tests/recovery_policy_tests.py": "c695fcad803c34f4b99d5caa7259012e93588d405f228cfbd87cdea8ff698d6a"
+  },
+  "source_sha256_after": {
+    "scripts/sparring_play.py": "c4b08b10af83a27d95c39a48e58ff54f4a7a611f93432827d2aac75ae906ea31",
+    "scripts/sparring_pacing.py": "fce58059b8da2c92e54d5e0c1f629a80411f0ab99db6bab689fb24fcee1c20e5",
+    "tests/sparring_play_tests.py": "765be0bc0a0966e5682c3ae987a58546f3da267e952c32ca1dcca521713cea91",
+    "tests/sparring_pacing_tests.py": "180549dbce693f9d3f4b38514b55dc80b12a394872bc4e24173660a386215343",
+    "tests/recovery_policy_tests.py": "c695fcad803c34f4b99d5caa7259012e93588d405f228cfbd87cdea8ff698d6a"
+  },
+  "policy": "regicide-sparring-play-v6",
+  "max_recovery_extra_ms": 12000,
+  "recovery_candidate_limits": {
+    "discovery": 40,
+    "exact_probes": 10
+  },
+  "exact_probe_allocation": "remaining / min(4, remaining candidate count)",
+  "coverage": [
+    "short baseline override only for verified own advantage before root40",
+    "failed postmove candidate retries without admitting unsafe candidates",
+    "full consumed budget stays bounded; high-ranked candidates retain exact-depth allowance",
+    "forced recovery preserves provenance and excludes human rating observations",
+    "positive mate remains mate; finite candidate and postmove depth>=4",
+    "custom root, resource guard, losing side and safety floors remain protected",
+    "concealment stages1/2 retained; unfinished stage4 persists only before root40",
+    "v5/v6 phase schedule20/50 preserved"
+  ],
+  "scope": "Move policy, recovery accounting and safeguard correctness; no engine strength or recovery success-rate claim"
+}

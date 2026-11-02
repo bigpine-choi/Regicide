@@ -42,7 +42,7 @@ class RatingTests(unittest.TestCase):
         expected = rating.snapshot(board, rows, chess.WHITE, rating.prior())
         self.assertEqual(rating.POLICIES, ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
                                          "regicide-sparring-play-v3", "regicide-sparring-play-v4",
-                                         "regicide-sparring-play-v5"))
+                                         "regicide-sparring-play-v5", "regicide-sparring-play-v6"))
         for policy in rating.POLICIES:
             versioned = copy.deepcopy(rows)
             for row in versioned:
