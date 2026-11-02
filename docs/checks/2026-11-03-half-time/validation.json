@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-11-02T15:53:55.934703+00:00",
+  "baseline_commit": "12039b36d8b9c488a869107df9751cb238539e26",
+  "method": "regicide-human-decision-support-v2",
+  "source_sha256": "c9f9ae8778fce502e10eea2f708c7a9472ae3aa26a4cd482f2475fe64b9f9be3",
+  "comparison_cases": 384,
+  "all_passed": true,
+  "examples": [
+    {
+      "starting_ms": 600000,
+      "increment_ms": 0,
+      "before_ms": 14189,
+      "after_ms": 7094
+    },
+    {
+      "starting_ms": 600000,
+      "increment_ms": 5000,
+      "before_ms": 17325,
+      "after_ms": 8662
+    },
+    {
+      "starting_ms": 900000,
+      "increment_ms": 10000,
+      "before_ms": 27930,
+      "after_ms": 13965
+    }
+  ],
+  "assertions": [
+    "new total = previous total // 2",
+    "unchanged complexity and real elapsed time",
+    "remaining budget bounded and exhausted at new deadline"
+  ],
+  "rounding": "integer milliseconds floor; existing UI rounds up to whole seconds",
+  "regression_checks": [
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/decision_support_tests.py",
+      "tests": 16,
+      "exit_code": 0
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe tests/rapid_clock_host_tests.py",
+      "tests": 19,
+      "exit_code": 0
+    }
+  ]
+}

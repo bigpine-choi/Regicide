@@ -15,7 +15,7 @@ import math
 
 import chess
 
-METHOD = "regicide-human-decision-support-v1"
+METHOD = "regicide-human-decision-support-v2"
 NOTE = "사람의 판단 부담을 구조적으로 추정한 실험 지표이며, 실제 난이도나 정답 확률을 측정한 값은 아닙니다."
 
 
@@ -210,6 +210,8 @@ def _recommend(board, human_color, clock, complexity, evaluation):
         total = min(total, max(1, int(at_start * .12)), max(0, at_start - reserve))
     elif at_start <= 30000:
         total = min(total, max(500, int(at_start * .10)))
+    # Halve the final per-turn allowance; elapsed thinking time stays real.
+    total //= 2
     remaining = max(0, min(total - elapsed, current - reserve))
     if current <= 10000:
         urgency = "critical"
