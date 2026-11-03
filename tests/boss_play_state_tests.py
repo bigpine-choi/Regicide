@@ -237,7 +237,9 @@ class BossStateTests(unittest.TestCase):
     def test_stale_search_does_not_append_move_or_boss_receipt(self):
         from hint_state_tests import wait_for
         gate = threading.Event()
-        self.prepare(gate=gate)
+        before = self.prepare(gate=gate)
+        record_path = self.game.save_dir / f'{self.game.game_id}.json'
+        saved_record = record_path.read_bytes()
         with ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(self.reply)
             try:
@@ -247,9 +249,12 @@ class BossStateTests(unittest.TestCase):
             finally:
                 gate.set()
             result = future.result(timeout=3)
-        self.assertIsNotNone(result['error'])
+        self.assertIsNone(result['error'], 'obsolete search does not attach an error to the current state')
+        self.assertEqual(result['revision'], before['revision'])
         self.assertEqual([move.uci() for move in self.game.board.move_stack], ['d2d4'])
         self.assertEqual(self.game._boss_decisions, {})
+        self.assertEqual(self.game._boss_memo, {})
+        self.assertEqual(record_path.read_bytes(), saved_record)
 
 
 class BossHTTPTests(unittest.TestCase):
