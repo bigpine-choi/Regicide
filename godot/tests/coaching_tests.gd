@@ -138,7 +138,7 @@ func _synthetic() -> void:
 	verify(panel.show_after and panel.board.state.fen == fixture.report.frames[3].fen, "mistake selection defaults to exact actual after-position")
 	verify(panel.board.hint_move.is_empty() and panel.board.move_annotation.get("symbol") == "??", "actual move badge is shown without a misplaced recommendation arrow")
 	panel._show_phase(false)
-	verify(panel.board.hint_move == "e2e4" and panel.evaluation_bar.has_score, "explicit before view shows recommendation and matching root estimate")
+	verify(panel.board.hint_move == "e2e4" and not panel.evaluation_bar.has_score, "before view shows native recommendation while Stockfish gauge waits")
 	verify(panel.focus_option.get_selected_id() == 0 and panel.critical_list.item_count == 2, "default important positions include both players")
 	verify(panel.critical_list.get_item_text(0).contains("흑 · 상대 수"), "opponent's black mistake is clearly labelled")
 	verify(panel.summary_label.text.contains("백 · 내 수") and panel.summary_label.text.contains("흑 · 상대 수"), "separate summaries identify both sides")
@@ -151,12 +151,12 @@ func _synthetic() -> void:
 	panel._change_side(0)
 	panel._show_phase(true)
 	verify(panel.board.state.fen == fixture.report.frames[3].fen, "actual move after-position shown")
-	verify(panel.board.hint_move.is_empty() and panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.fen == panel.board.state.fen, "after-position uses its own next-row root evaluation without a recommendation arrow")
+	verify(panel.board.hint_move.is_empty() and not panel.evaluation_bar.has_score, "after-position waits for its own Stockfish evaluation without a recommendation arrow")
 	for kind in ["best", "played"]:
 		panel._show_line(kind)
 		var frames: Array = fixture.report.moves[2][kind].pv_frames
 		verify(panel.board.state.fen == frames[0].fen, kind + " line starts at original pre-position")
-		verify(panel.evaluation_bar.has_score, kind + " root estimate has correct reference")
+		verify(not panel.evaluation_bar.has_score, kind + " native root does not substitute for Stockfish")
 		for index in range(1, frames.size()):
 			panel._line_step(1)
 			verify(panel.board.state.fen == frames[index].fen, kind + " legal PV frame %d" % index)
@@ -183,6 +183,8 @@ func _synthetic() -> void:
 	_windows_voice_checks(snapshot)
 	_perspective_voice_checks(snapshot)
 	_teaching_voice_checks(snapshot)
+	_uncertain_checks(snapshot)
+	_key_scene_checks(snapshot)
 	await _badge_checks(snapshot)
 	var before_flip: Dictionary = panel.board.state.duplicate(true)
 	var old_view: bool = panel.model.view_from_white
@@ -275,7 +277,14 @@ func _synthetic() -> void:
 		var sidebar: Control = panel.find_child("CoachingSidebar", true, false)
 		verify(sidebar.get_global_rect().end.x <= float(viewport.x) + 1, "sidebar inside viewport %s" % viewport)
 		verify(panel.board.get_board_rect().size.x > 250, "board remains usable at %s" % viewport)
-		geometries.append({"viewport": [viewport.x, viewport.y], "maximum_delta": maximum, "geometry": base})
+		var notation: Rect2 = panel.move_list.get_global_rect()
+		var details: Rect2 = panel.find_child("CoachingSidebarScroll", true, false).get_global_rect()
+		var visible_rows: int = int(notation.size.y / panel.move_list.get_item_rect(0).size.y)
+		verify(notation.end.y <= float(viewport.y) - 20 and notation.position.y >= details.end.y, "notation has an independent visible region below scrollable explanations at %s" % viewport)
+		verify(visible_rows >= 9, "notation shows at least nine half-moves at %s" % viewport)
+		verify(panel.key_previous.get_global_rect().end.y < float(viewport.y) and panel.key_next.get_global_rect().end.x <= sidebar.get_global_rect().position.x, "key-scene buttons remain outside the sidebar scroll at %s" % viewport)
+		geometries.append({"viewport": [viewport.x, viewport.y], "maximum_delta": maximum, "geometry": base,
+			"visible_move_rows": visible_rows, "move_list_height": notation.size.y})
 	verify(geometries[0].geometry != geometries[1].geometry and geometries[1].geometry != geometries[2].geometry, "explicit window resizing changes available board area")
 	panel._accept_snapshot(snapshot, true)
 	await panel._return()
@@ -373,24 +382,24 @@ func _evaluation_checks(snapshot: Dictionary) -> void:
 	value.moves[3].best.bound = "upper"
 	panel._accept_snapshot(value.duplicate(true), true, true)
 	panel._select_ply(3)
-	verify(panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.cp == -240, "after-position uses next-row search, not previous restricted played score")
-	verify(panel.evaluation_bar.snapshot.bound == "upper" and panel.evaluation_label.text.contains("≤"), "white-perspective bound survives the after-position lookup")
+	verify(not panel.evaluation_bar.has_score, "native after-position score does not fill Stockfish gauge")
+	verify(panel.evaluation_label.text.contains("Stockfish"), "pending gauge names Stockfish")
 	panel._show_phase(false)
-	verify(panel.evaluation_bar.snapshot.cp == 45, "before-position retains its own root estimate")
+	verify(not panel.evaluation_bar.has_score, "native before-position estimate stays out of gauge")
 	panel._show_phase(true)
 	var share: float = panel.evaluation_bar.white_share
 	panel.flip_view()
-	verify(panel.evaluation_bar.snapshot.cp == -240 and panel.evaluation_bar.white_share == share, "board flip never changes the white-perspective sign")
+	verify(not panel.evaluation_bar.has_score and panel.evaluation_bar.white_share == share, "board flip keeps pending reference neutral")
 	panel.flip_view()
 	panel._walkthrough_active = true
 	panel._walkthrough_cursor = 1
 	panel._walkthrough_target = 3
 	panel._render()
-	verify(panel.evaluation_bar.snapshot.cp == 180 and panel.evaluation_bar.snapshot.fen == value.frames[1].fen, "walkthrough score follows actual cursor rather than selected lesson")
-	verify(panel.board.hint_move.is_empty() and panel.evaluation_label.text.contains("+1.80"), "black-to-move replay keeps white score and no answer arrow")
+	verify(not panel.evaluation_bar.has_score, "walkthrough waits for matching Stockfish position")
+	verify(panel.board.hint_move.is_empty() and panel.evaluation_label.text.contains("Stockfish"), "replay waits for Stockfish without answer arrow")
 	panel._cancel_walkthrough()
 	panel._show_line("played")
-	verify(panel.evaluation_bar.snapshot.cp == 45, "played-line root gauge uses unrestricted best instead of constrained played score")
+	verify(not panel.evaluation_bar.has_score, "played-line native root does not fill gauge")
 	verify(panel._selected_line().score_cp_white == -1300 and panel.comparison_label.text.contains("-13.00"), "played move's separate evaluation remains in comparison card")
 	panel._line_step(1)
 	verify(not panel.evaluation_bar.has_score, "PV child does not borrow root or mainline score even at matching FEN")
@@ -402,7 +411,7 @@ func _evaluation_checks(snapshot: Dictionary) -> void:
 	panel._render()
 	verify(not panel.evaluation_bar.has_score, "fresh retry feedback stays hidden until explicitly revealed")
 	panel._show_retry_line("retry_candidate")
-	verify(panel.evaluation_bar.snapshot.cp == 92 and panel._selected_line().score_cp_white == -1300, "revealed retry candidate gauge uses fresh retry best rather than candidate or archived best")
+	verify(not panel.evaluation_bar.has_score and panel._selected_line().score_cp_white == -1300, "revealed retry comparison remains native while gauge waits for Stockfish")
 	panel._line_step(1)
 	verify(not panel.evaluation_bar.has_score, "revealed retry child never inherits fresh root score")
 	panel._line_step(-1)
@@ -434,7 +443,7 @@ func _evaluation_checks(snapshot: Dictionary) -> void:
 	panel.report = value.duplicate(true)
 	panel.report.moves[3].best.merge({"score_cp_white": null, "mate_white": -2, "winner": "black"}, true)
 	panel._select_ply(3)
-	verify(panel.evaluation_bar.has_score and panel.evaluation_bar.white_share == 0.0 and panel.evaluation_label.text.contains("흑 메이트"), "matching root mate keeps black-winning perspective")
+	verify(not panel.evaluation_bar.has_score, "native mate score never replaces Stockfish gauge")
 	panel._accept_snapshot(snapshot, true, true)
 
 
@@ -450,7 +459,7 @@ func _walkthrough_checks(snapshot: Dictionary) -> void:
 	for expected in [1, 2]:
 		panel._advance_walkthrough()
 		verify(panel.board.state.fen == snapshot.frames[expected].fen, "every intervening real move shown in order: %d" % expected)
-		verify(panel.board.hint_move.is_empty() and panel.evaluation_bar.has_score and panel.evaluation_bar.snapshot.fen == panel.board.state.fen, "intervening replay displays matching position analysis without recommendation arrow")
+		verify(panel.board.hint_move.is_empty() and not panel.evaluation_bar.has_score, "intervening replay stays neutral until Stockfish response")
 	verify(visited == [1, 2], "includes prior selected move and opponent reply, without skips")
 	verify(panel.walkthrough_label.text.contains("【1… e5】"), "SAN progression marks current actual move")
 	panel._advance_walkthrough()
@@ -918,6 +927,108 @@ func _teaching_voice_checks(snapshot: Dictionary) -> void:
 	voice.free()
 
 
+func _uncertain_checks(snapshot: Dictionary) -> void:
+	var voice := VoicePanel.new()
+	voice.offline_mode = true
+	root.add_child(voice)
+	voice.show()
+	voice._accept_snapshot(snapshot.duplicate(true), true)
+	voice._select_ply(3)
+	voice.flush_voice()
+	var count: int = voice.spoken.size()
+	var old: Dictionary = snapshot.duplicate(true)
+	var row: Dictionary = old.moves[2]
+	row.classification = "uncertain"
+	row.label = "판단 보류"
+	row.annotation = {"symbol": "…", "kind": "uncertain", "label": "판단 보류", "square": "g4", "scope": "actual_move", "provisional": true,
+		"ply": 3, "uci": row.uci, "fen_after": row.fen_after}
+	row.coach.dialogue = "This position needs a closer look. Check the forcing replies before deciding whether this move works."
+	row.coach.perspectives = {"white": {"dialogue": row.coach.dialogue}}
+	voice._accept_snapshot(old, true)
+	voice._select_ply(3)
+	voice.flush_voice()
+	verify(voice.board.move_annotation.is_empty() and voice.board.move_badge_rect().size == Vector2.ZERO and not voice.annotation_label.visible, "legacy uncertainty metadata has no gray badge")
+	verify(voice.coach_dialogue.text.is_empty() and not voice.coach_dialogue.visible, "legacy uncertainty dialogue is removed from the current card")
+	verify(voice.spoken.size() == count and voice._speech_pending_key.is_empty() and not voice.mock_speaking, "entering an uncertain row stops speech without narrating cached commentary")
+	verify(not voice.annotation_legend.text.contains("…") and not voice.annotation_legend.text.contains("판단 보류"), "legend only lists supported move grades")
+	verify(not voice.comparison_label.text.contains("판단 보류") and not voice.move_list.get_item_text(2).contains("판단 보류"), "uncertainty is not a comparison or move-list grade")
+	voice.board.move_annotation = row.annotation.duplicate(true)
+	verify(voice.board.move_badge_rect().size == Vector2.ZERO, "board itself rejects injected uncertainty badges")
+	row.coach = null
+	voice._accept_snapshot(old, true)
+	voice._select_ply(3)
+	voice.flush_voice()
+	verify(voice.spoken.size() == count and voice.coach_dialogue.text.is_empty(), "missing uncertain coach does not create a replacement fallback narration")
+	for move in voice.report.moves:
+		move.classification = "uncertain"
+		move.label = "판단 보류"
+	verify(voice._summary_for_side("white").contains("평가 가능한 수 없음") and not voice._summary_for_side("white").contains("해당 실수 없음"), "all ungraded rows do not imply that no mistakes occurred")
+	voice._accept_snapshot(snapshot.duplicate(true), true)
+	voice._select_ply(4)
+	voice.flush_voice()
+	verify(voice.spoken.size() == count + 1 and voice.coach_dialogue.visible and not voice.coach_dialogue.text.is_empty(), "ordinary coaching and speech resume on a graded move")
+	root.remove_child(voice)
+	voice.free()
+
+
+func _key_scene_checks(snapshot: Dictionary) -> void:
+	panel._accept_snapshot(snapshot, true)
+	panel._change_side(0)
+	panel.focus_option.select(0)
+	panel._select_ply(1)
+	verify(panel._key_plies() == [1, 2, 3, 4], "key scenes combine positive lessons and both players' mistakes without duplicates")
+	verify(panel.key_previous.disabled and not panel.key_next.disabled, "key-scene navigation exposes chronological boundaries")
+	panel.key_next.pressed.emit()
+	verify(panel.selected_ply == 2 and panel.show_after and not panel._walkthrough_active and panel.board.state.fen == snapshot.frames[2].fen, "next key-scene button jumps directly to the exact actual position")
+	panel.key_next.pressed.emit()
+	panel.key_next.pressed.emit()
+	verify(panel.selected_ply == 4 and panel.key_next.disabled and not panel.key_previous.disabled, "direct key navigation reaches a positive final lesson and stops")
+	panel.key_previous.pressed.emit()
+	verify(panel.selected_ply == 3 and not panel._walkthrough_active, "previous key-scene button jumps directly")
+	panel.focus_option.select(1)
+	verify(panel._key_plies() == [1, 3], "personal key scenes include personal good moves and personal mistakes")
+	panel.focus_option.select(2)
+	verify(panel._key_plies() == [2, 4], "opponent key scenes include opponent good moves and mistakes")
+	panel._change_side(1)
+	verify(panel._key_plies() == [1, 3], "key scenes honor a changed personal color")
+	panel._change_side(0)
+	panel.focus_option.select(0)
+	var legacy: Dictionary = snapshot.duplicate(true)
+	legacy.erase("coach")
+	panel._accept_snapshot(legacy, true)
+	verify(panel._key_plies() == [1, 2, 3], "old reports retain important mistakes and one positive example without a stored course")
+	legacy.moves[0].classification = "uncertain"
+	legacy.moves[1].classification = "pending"
+	legacy.coach = {"lesson_plies": [1, 2, 3, 4]}
+	panel._accept_snapshot(legacy, true)
+	verify(panel._key_plies() == [3, 4], "pending and uncertain rows never become key lessons even in an old course")
+	panel._accept_snapshot(snapshot, true)
+	panel._select_ply(1)
+	panel.busy = true
+	panel._render()
+	panel._step_key_scene(1)
+	verify(panel.selected_ply == 1 and panel.key_next.disabled, "key navigation cannot change a busy review")
+	panel.busy = false
+	panel._begin_retry()
+	panel._step_key_scene(1)
+	verify(panel.retry_active and panel.selected_ply == 1 and panel.key_previous.disabled and panel.key_next.disabled, "key navigation does not reveal another lesson during an exercise")
+	panel._end_retry()
+	panel._select_ply(1)
+	panel.next_button.pressed.emit()
+	verify(panel.selected_ply == 2 and not panel._walkthrough_active, "ordinary single-move navigation remains available")
+	verify(panel.annotation_legend.text.contains("👍 좋은 수") and panel.annotation_legend.text.contains("× 기회 놓침") and not panel.annotation_legend.text.contains("✓"), "legend uses the approved thumbs-up and missed-opportunity symbols")
+	var old_good: Dictionary = snapshot.duplicate(true)
+	var row: Dictionary = old_good.moves[0]
+	row.annotation = {"symbol": "✓", "kind": "good", "label": "좋은 수", "square": "f3", "scope": "actual_move", "provisional": true,
+		"ply": 1, "uci": row.uci, "fen_after": row.fen_after}
+	panel._accept_snapshot(old_good, true)
+	panel._select_ply(1)
+	panel.board.finish_animation()
+	verify(panel.board.move_annotation.get("symbol") == "👍" and panel.board.move_badge_rect().size.x > 0, "legacy good checkmark metadata renders the approved thumbs-up instead of disappearing")
+	verify(row.annotation.symbol == "✓", "legacy symbol normalization does not mutate the stored report")
+	panel._accept_snapshot(snapshot, true)
+
+
 func _badge_checks(snapshot: Dictionary) -> void:
 	panel._accept_snapshot(snapshot, true)
 	panel._select_ply(3)
@@ -930,7 +1041,7 @@ func _badge_checks(snapshot: Dictionary) -> void:
 	verify(panel.selected_ply == 1 and panel.show_after and panel.board.state.fen == snapshot.frames[1].fen, "next from initial applies the first actual move")
 	panel._step(-1)
 	verify(panel.board.state.fen == snapshot.frames[0].fen, "previous after first move returns to initial position")
-	var labels := {"best": "★", "good": "✓", "inaccuracy": "?!", "mistake": "?", "blunder": "??", "allows_mate": "??", "missed_mate": "?", "uncertain": "…"}
+	var labels := {"best": "★", "good": "👍", "inaccuracy": "?!", "mistake": "?", "blunder": "??", "allows_mate": "??", "missed_mate": "×"}
 	for kind in labels:
 		var modified: Dictionary = snapshot.duplicate(true)
 		modified.moves[2].classification = kind
@@ -941,11 +1052,15 @@ func _badge_checks(snapshot: Dictionary) -> void:
 	var great: Dictionary = snapshot.duplicate(true)
 	var row: Dictionary = great.moves[3]
 	row.classification = "best"
-	row.annotation = {"symbol": "!!", "kind": "great", "label": "탁월 후보", "square": "h4", "scope": "actual_move", "provisional": true,
+	row.annotation = {"symbol": "!", "kind": "great", "label": "탁월 후보", "square": "h4", "scope": "actual_move", "provisional": true,
 		"ply": 4, "uci": row.uci, "fen_after": row.fen_after, "reason": "제한 시간의 대안 비교에 따른 후보입니다."}
 	panel._accept_snapshot(great, true)
 	panel._select_ply(4)
-	verify(panel.board.move_annotation.get("symbol") == "!!" and panel.annotation_label.text.contains("제한 시간"), "explicit verified great metadata gets candidate label and caveat")
+	verify(panel.board.move_annotation.get("symbol") == "!" and panel.annotation_label.text.contains("제한 시간"), "explicit verified great metadata gets ! candidate label and caveat")
+	var brilliant_mismatch: Dictionary = great.duplicate(true)
+	brilliant_mismatch.moves[3].annotation.symbol = "!!"
+	panel._accept_snapshot(brilliant_mismatch, true)
+	verify(panel.board.move_annotation.is_empty(), "Great cannot use the Brilliant symbol")
 	for field in ["fen_after", "uci", "square", "scope", "ply"]:
 		var invalid: Dictionary = great.duplicate(true)
 		invalid.moves[3].annotation[field] = 1 if field == "ply" else "wrong"

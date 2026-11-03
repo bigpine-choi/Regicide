@@ -1,0 +1,917 @@
+{
+  "run_utc": "2026-11-03T18:23:32.987797+00:00",
+  "python_version": "3.13.16",
+  "git_head": "2f7e86888387ce1cdce5e661fd5724fcae57a847",
+  "python_chess_version": "1.11.2",
+  "assertions_passed": 146,
+  "production_function_snapshot": "    def _outcome(self):\n        if self._override:\n            return self._override\n        outcome = automatic_outcome(self.board)\n        return (outcome.result(), outcome.termination.name.lower()) if outcome else (\"*\", None)\n",
+  "production_sources_sha256": {
+    "play_human.py": "0a169d7c8ce0c20b93982c6a7c67d3d4b2740368c9e8f3222085b0c1f307a7df",
+    "game_archive.py": "758130cfa07507d0225f270e7dc295c3769831214f18177ca3a6a05e9e6d5a6b",
+    "game_outcome.py": "d3744f7717b1b18e81293d260fc0dce8a2c780d48e8346f0efff4a6fce0aee98"
+  },
+  "archive_reproduction": {
+    "input_result": "*",
+    "prepared_result": "*",
+    "prepared_termination": null
+  },
+  "positions": [
+    {
+      "label": "7 plies: only next Ng8 creates the third occurrence",
+      "fen": "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 7 4",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1"
+      ],
+      "current_twofold": true,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": false,
+      "can_claim_threefold": true,
+      "can_claim_fifty_moves": false,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "threefold_repetition"
+      },
+      "actual_HumanGame_outcome": [
+        "*",
+        null
+      ],
+      "proposed_online_outcome": null
+    },
+    {
+      "label": "8 plies: actual third occurrence",
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 8 5",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8"
+      ],
+      "current_twofold": true,
+      "current_threefold": true,
+      "current_fivefold": false,
+      "current_fifty_moves": false,
+      "can_claim_threefold": true,
+      "can_claim_fifty_moves": false,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "threefold_repetition"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "threefold_repetition"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "threefold_repetition"
+      }
+    },
+    {
+      "label": "15 plies: compulsory fivefold boundary",
+      "fen": "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 15 8",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1"
+      ],
+      "current_twofold": true,
+      "current_threefold": true,
+      "current_fivefold": false,
+      "current_fifty_moves": false,
+      "can_claim_threefold": true,
+      "can_claim_fifty_moves": false,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "threefold_repetition"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "threefold_repetition"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "threefold_repetition"
+      }
+    },
+    {
+      "label": "16 plies: compulsory fivefold boundary",
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 16 9",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8"
+      ],
+      "current_twofold": true,
+      "current_threefold": true,
+      "current_fivefold": true,
+      "current_fifty_moves": false,
+      "can_claim_threefold": true,
+      "can_claim_fifty_moves": false,
+      "compulsory_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fivefold_repetition"
+      },
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fivefold_repetition"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "fivefold_repetition"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fivefold_repetition"
+      }
+    },
+    {
+      "label": "99 reversible halfmoves",
+      "fen": "8/8/8/8/8/2k5/8/R5K1 w - - 99 51",
+      "moves": [],
+      "current_twofold": false,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": false,
+      "can_claim_threefold": false,
+      "can_claim_fifty_moves": true,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fifty_moves"
+      },
+      "actual_HumanGame_outcome": [
+        "*",
+        null
+      ],
+      "proposed_online_outcome": null
+    },
+    {
+      "label": "100 reversible halfmoves",
+      "fen": "8/8/8/8/8/2k5/8/R5K1 w - - 100 51",
+      "moves": [],
+      "current_twofold": false,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": true,
+      "can_claim_threefold": false,
+      "can_claim_fifty_moves": true,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fifty_moves"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "fifty_moves"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fifty_moves"
+      }
+    },
+    {
+      "label": "149 reversible halfmoves",
+      "fen": "8/8/8/8/8/2k5/8/R5K1 w - - 149 51",
+      "moves": [],
+      "current_twofold": false,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": true,
+      "can_claim_threefold": false,
+      "can_claim_fifty_moves": true,
+      "compulsory_outcome": null,
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fifty_moves"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "fifty_moves"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "fifty_moves"
+      }
+    },
+    {
+      "label": "150 reversible halfmoves",
+      "fen": "8/8/8/8/8/2k5/8/R5K1 w - - 150 51",
+      "moves": [],
+      "current_twofold": false,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": true,
+      "can_claim_threefold": false,
+      "can_claim_fifty_moves": true,
+      "compulsory_outcome": {
+        "result": "1/2-1/2",
+        "reason": "seventyfive_moves"
+      },
+      "legacy_claim_outcome": {
+        "result": "1/2-1/2",
+        "reason": "seventyfive_moves"
+      },
+      "actual_HumanGame_outcome": [
+        "1/2-1/2",
+        "seventyfive_moves"
+      ],
+      "proposed_online_outcome": {
+        "result": "1/2-1/2",
+        "reason": "seventyfive_moves"
+      }
+    },
+    {
+      "label": "checkmate at halfmove 150 has precedence over 75 moves",
+      "fen": "7k/6Q1/5K2/8/8/8/8/8 b - - 150 75",
+      "moves": [
+        "g6g7"
+      ],
+      "current_twofold": false,
+      "current_threefold": false,
+      "current_fivefold": false,
+      "current_fifty_moves": false,
+      "can_claim_threefold": false,
+      "can_claim_fifty_moves": false,
+      "compulsory_outcome": {
+        "result": "1-0",
+        "reason": "checkmate"
+      },
+      "legacy_claim_outcome": {
+        "result": "1-0",
+        "reason": "checkmate"
+      },
+      "actual_HumanGame_outcome": [
+        "1-0",
+        "checkmate"
+      ],
+      "proposed_online_outcome": {
+        "result": "1-0",
+        "reason": "checkmate"
+      }
+    }
+  ],
+  "position_identity": [
+    {
+      "label": "castling rights distinguish positions",
+      "initial_fen": "4k1n1/8/8/8/8/8/8/4K1NR w K - 0 1",
+      "final_fen": "4k1n1/8/8/8/8/8/8/4K1NR w - - 8 5",
+      "same_piece_placement": true,
+      "current_threefold": false
+    },
+    {
+      "label": "legal en passant right distinguishes initial position",
+      "initial_fen": "4k1n1/8/8/3pP3/8/8/8/4K1NR w K d6 0 1",
+      "initial_legal_en_passant": true,
+      "initial_pseudo_legal_en_passant": true,
+      "final_fen": "4k1n1/8/8/3pP3/8/8/8/4K1NR w K - 8 5",
+      "current_threefold": false
+    },
+    {
+      "label": "unusable en passant square does not distinguish position",
+      "initial_fen": "4k1n1/8/8/3p4/8/8/8/4K1NR w K d6 0 1",
+      "initial_legal_en_passant": false,
+      "initial_pseudo_legal_en_passant": false,
+      "final_fen": "4k1n1/8/8/3p4/8/8/8/4K1NR w K - 8 5",
+      "current_threefold": true
+    },
+    {
+      "label": "pinned en passant is not a legal capture and does not distinguish position",
+      "initial_fen": "k3r1n1/8/8/3pP3/8/8/8/4K1NR w K d6 0 1",
+      "initial_legal_en_passant": false,
+      "initial_pseudo_legal_en_passant": true,
+      "final_fen": "k3r1n1/8/8/3pP3/8/8/8/4K1NR w K - 8 5",
+      "current_threefold": true
+    },
+    {
+      "label": "side to move distinguishes positions",
+      "initial_fen": "7k/8/8/8/3R4/8/8/K7 w - - 0 1",
+      "final_fen": "7k/8/8/8/3R4/8/8/K7 b - - 5 3",
+      "same_piece_placement": true,
+      "current_twofold": false
+    }
+  ],
+  "checks": [
+    {
+      "label": "valid initial FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 7 plies: only next Ng8 creates the third occurrence",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 7 plies: only next Ng8 creates the third occurrence",
+      "passed": true
+    },
+    {
+      "label": "7 plies: actual position is not threefold",
+      "passed": true
+    },
+    {
+      "label": "7 plies: a repetition is claimable by intended move",
+      "passed": true
+    },
+    {
+      "label": "7 plies: legacy claim policy would end one ply before occurrence",
+      "passed": true
+    },
+    {
+      "label": "7 plies: repaired host continues",
+      "passed": true
+    },
+    {
+      "label": "7 plies: proposed policy continues",
+      "passed": true
+    },
+    {
+      "label": "7 plies: side to move can avoid repetition with e5",
+      "passed": true
+    },
+    {
+      "label": "repaired archive keeps an uncompleted third repetition open",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 8 plies: actual third occurrence",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 8 plies: actual third occurrence",
+      "passed": true
+    },
+    {
+      "label": "third occurrence must end under proposed online policy",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 15 plies: compulsory fivefold boundary",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 15 plies: compulsory fivefold boundary",
+      "passed": true
+    },
+    {
+      "label": "fivefold only after actual fifth occurrence: 15",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 16 plies: compulsory fivefold boundary",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 16 plies: compulsory fivefold boundary",
+      "passed": true
+    },
+    {
+      "label": "fivefold only after actual fifth occurrence: 16",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 4k1n1/8/8/8/8/8/8/4K1NR w K - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: h1h2",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: h2h1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: h1h2",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: h2h1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "same placement with lost castling rights does not count original",
+      "passed": true
+    },
+    {
+      "label": "lost-rights positions themselves can repeat",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 4k1n1/8/8/3pP3/8/8/8/4K1NR w K d6 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal en passant right distinguishes initial position",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 4k1n1/8/8/3p4/8/8/8/4K1NR w K d6 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "unusable en passant square does not distinguish position",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: k3r1n1/8/8/3pP3/8/8/8/4K1NR w K d6 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: g1f3",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8f6",
+      "passed": true
+    },
+    {
+      "label": "legal move: f3g1",
+      "passed": true
+    },
+    {
+      "label": "legal move: f6g8",
+      "passed": true
+    },
+    {
+      "label": "pinned en passant is not a legal capture and does not distinguish position",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 7k/8/8/8/3R4/8/8/K7 w - - 0 1",
+      "passed": true
+    },
+    {
+      "label": "legal move: a1b1",
+      "passed": true
+    },
+    {
+      "label": "legal move: h8g8",
+      "passed": true
+    },
+    {
+      "label": "legal move: b1b2",
+      "passed": true
+    },
+    {
+      "label": "legal move: g8h8",
+      "passed": true
+    },
+    {
+      "label": "legal move: b2a1",
+      "passed": true
+    },
+    {
+      "label": "same placement with opposite side to move is not a repetition",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 99 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 99 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "50-move current boundary: 99",
+      "passed": true
+    },
+    {
+      "label": "75-move compulsory boundary: 99",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 100 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 100 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "50-move current boundary: 100",
+      "passed": true
+    },
+    {
+      "label": "75-move compulsory boundary: 100",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 149 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 149 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "50-move current boundary: 149",
+      "passed": true
+    },
+    {
+      "label": "75-move compulsory boundary: 149",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: 150 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: 150 reversible halfmoves",
+      "passed": true
+    },
+    {
+      "label": "50-move current boundary: 150",
+      "passed": true
+    },
+    {
+      "label": "75-move compulsory boundary: 150",
+      "passed": true
+    },
+    {
+      "label": "at 99 reversible halfmoves legacy policy would end before 100",
+      "passed": true
+    },
+    {
+      "label": "at 99 reversible halfmoves repaired host continues",
+      "passed": true
+    },
+    {
+      "label": "at 99 proposed policy continues",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 8/8/8/8/8/2k5/4P3/R5K1 w - - 99 51",
+      "passed": true
+    },
+    {
+      "label": "legal move: e2e4",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 8/8/8/8/8/2k5/r7/R5K1 w - - 99 51",
+      "passed": true
+    },
+    {
+      "label": "legal move: a1a2",
+      "passed": true
+    },
+    {
+      "label": "pawn move resets fifty-move clock",
+      "passed": true
+    },
+    {
+      "label": "capture resets fifty-move clock",
+      "passed": true
+    },
+    {
+      "label": "valid initial FEN: 7k/8/5KQ1/8/8/8/8/8 w - - 149 75",
+      "passed": true
+    },
+    {
+      "label": "legal move: g6g7",
+      "passed": true
+    },
+    {
+      "label": "production helper agrees with independent completed-position oracle: checkmate at halfmove 150 has precedence over 75 moves",
+      "passed": true
+    },
+    {
+      "label": "inspection preserves full board and history: checkmate at halfmove 150 has precedence over 75 moves",
+      "passed": true
+    },
+    {
+      "label": "checkmate has priority over all draw thresholds",
+      "passed": true
+    }
+  ]
+}

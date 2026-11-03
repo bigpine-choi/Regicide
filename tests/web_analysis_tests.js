@@ -30,6 +30,9 @@ function evaluated(values={},position={}) {
   const next=advised(position);
   next.evaluation={game_id:next.game_id,revision:next.revision,fen:next.fen,turn:next.turn,
     status:"ready",cp:100,mate:null,depth:3,bound:"exact",white_share:null,winner:null,result:"*",source:"search",source_fen:next.fen,...values};
+  next.reference_evaluation={...next.evaluation,source:"stockfish_gauge",...values};
+  // The native recommendation score deliberately disagrees with the gauge.
+  next.evaluation={...next.evaluation,cp:-7777,mate:null};
   return next;
 }
 async function browser() {
@@ -282,45 +285,52 @@ test("evaluation signs always use White's perspective and zero means balance",as
     const ui=await browser();await ui.click("analysis-start");
     const fen=state().fen.replace(" w ",turn==="white" ? " w " : " b ");
     await ui.finish(evaluated({cp},{turn,fen}));
-    assert.equal(ui.get("analysis-evaluation-label").textContent,label);
+    assert.equal(ui.get("analysis-evaluation-label").textContent,"Stockfish · "+label);
     assert.equal(ui.get("analysis-evaluation-score").textContent,score);
     const share=parseFloat(ui.get("analysis-evaluation-white").style.height);
     assert.ok(cp>0 ? share>50 : cp<0 ? share<50 : share===50);
-    assert.match(ui.get("analysis-evaluation-bar").attributes["aria-label"],/자체 엔진 추정, 백 기준.*승률이 아닙니다/);
+    assert.match(ui.get("analysis-evaluation-bar").attributes["aria-label"],/Stockfish 평가, 백 기준.*승률이 아닙니다/);
   }
 });
-test("same-search streamed evaluation appears before advice completes and updates in place",async()=>{
+test("native scores cannot fill a missing Stockfish gauge",async()=>{
+  const ui=await browser();await ui.click("analysis-start");
+  const next=evaluated({cp:750});delete next.reference_evaluation;
+  await ui.finish(next);
+  assert.equal(ui.get("analysis-evaluation-score").textContent,"—");
+  assert.equal(ui.get("analysis-evaluation-white").style.height,"50%");
+  assert.match(ui.get("analysis-evaluation-label").textContent,/Stockfish.*계산 중/);
+});
+test("only completed Stockfish evaluations display while native advice remains independent",async()=>{
   const ui=await browser();await ui.click("analysis-start");
   await ui.finish(evaluated({status:"searching",cp:null,depth:null}));
   assert.equal(ui.get("analysis-evaluation-score").textContent,"—");
   void ui.api.poll();await ui.finish(evaluated({status:"searching",cp:-120,depth:1}));
-  assert.equal(ui.get("analysis-evaluation-score").textContent,"−1.20");
-  assert.match(ui.get("analysis-evaluation-detail").textContent,/계산 중.*깊이 1/);
+  assert.equal(ui.get("analysis-evaluation-score").textContent,"—");
+  assert.equal(ui.get("analysis-evaluation-white").style.height,"50%");
   void ui.api.poll();await ui.finish(evaluated({cp:160,depth:5}));
   assert.equal(ui.get("analysis-evaluation-score").textContent,"+1.60");
   assert.match(ui.get("analysis-evaluation-detail").textContent,/깊이 5/);
   assert.equal(ui.requests.filter((request)=>request.options.method==="POST").length,1);
   assert.ok(ui.requests.every((request)=>request.url==="/api/analysis"));
 });
-test("search bounds show lower or upper limits instead of declaring an exact advantage",async()=>{
+test("non-exact Stockfish bounds leave the gauge neutral",async()=>{
   for(const [bound,cp,label,score] of [["lower",-100,"백 평가 하한","≥ −1.00"],["upper",100,"백 평가 상한","≤ +1.00"]]) {
     const ui=await browser();await ui.click("analysis-start");await ui.finish(evaluated({cp,bound}));
-    assert.equal(ui.get("analysis-evaluation-label").textContent,label);
-    assert.equal(ui.get("analysis-evaluation-score").textContent,score);
-    assert.match(ui.get("analysis-evaluation-detail").textContent,/경계값이며 확정 형세가 아닙니다/);
-    assert.match(ui.get("analysis-evaluation-bar").className,/bounded/);
+    assert.equal(ui.get("analysis-evaluation-score").textContent,"—");
+    assert.equal(ui.get("analysis-evaluation-white").style.height,"50%");
+    assert.match(ui.get("analysis-evaluation-bar").className,/unknown/);
   }
 });
 test("mate scores including M0 preserve the winner and terminal draws remain balanced",async()=>{
   for(const [mate,winner,label,score,share] of [[3,"white","백 메이트 예상","+M3","100%"],[-2,"black","흑 메이트 예상","−M2","0%"],[0,"white","백 체크메이트","M0","100%"],[0,"black","흑 체크메이트","M0","0%"]]) {
     const ui=await browser();await ui.click("analysis-start");await ui.finish(evaluated({cp:null,mate,winner}));
-    assert.equal(ui.get("analysis-evaluation-label").textContent,label);
+    assert.equal(ui.get("analysis-evaluation-label").textContent,"Stockfish · "+label);
     assert.equal(ui.get("analysis-evaluation-score").textContent,score);
     assert.equal(ui.get("analysis-evaluation-white").style.height,share);
   }
   for(const [result,label,share] of [["1-0","백 승리","100%"],["0-1","흑 승리","0%"],["1/2-1/2","무승부","50%"]]) {
     const ui=await browser();await ui.click("analysis-start");
-    await ui.finish(evaluated({status:"terminal",result},{status:"draw",legal_moves:[]}));
+    await ui.finish(evaluated({status:"terminal",source:"chess_rules",result},{status:"draw",legal_moves:[]}));
     assert.equal(ui.get("analysis-evaluation-label").textContent,label);
     assert.equal(ui.get("analysis-evaluation-score").textContent,result);
     assert.equal(ui.get("analysis-evaluation-white").style.height,share);
@@ -339,11 +349,11 @@ test("flipping the board swaps the bar ends while retaining the White POV score"
   await ui.click("analysis-flip");assert.doesNotMatch(ui.get("analysis-evaluation-bar").className,/black-view/);
 });
 test("foreign and unavailable evaluation snapshots never display an old score",async()=>{
-  for(const values of [{game_id:"old"},{revision:99},{fen:"old"},{source_fen:"old"},{status:"unavailable"},{status:"waiting",cp:999},{cp:"200",mate:null}]) {
+  for(const values of [{game_id:"old"},{revision:99},{fen:"old"},{turn:"black"},{source_fen:"old"},{source:"search"},{status:"unavailable"},{status:"waiting",cp:999},{cp:"200",mate:null}]) {
     const ui=await browser();await ui.click("analysis-start");await ui.finish(evaluated(values));
     assert.equal(ui.get("analysis-evaluation-score").textContent,"—");
     assert.match(ui.get("analysis-evaluation-bar").className,/unknown/);
-    assert.equal(ui.get("analysis-evaluation-white").style.height,"0%");
+    assert.equal(ui.get("analysis-evaluation-white").style.height,"50%");
   }
 });
 test("moves, connection errors and returning to the editor clear evaluation immediately",async()=>{
@@ -369,8 +379,8 @@ test("a late pre-move poll cannot replace the current position's evaluation",asy
 test("the analysis evaluation explains its units and distinguishes the bar from a win probability",async()=>{
   const html=fs.readFileSync(path.join(__dirname,"../web/human-play/index.html"),"utf8");
   assert.match(html,/id="analysis-evaluation-bar" class="evaluation-bar unknown"/);
-  assert.match(html,/자체 엔진 추정 · 백 기준 · \+는 백 \/ −는 흑 우세 · 1\.00 ≈ 폰 한 개/);
-  assert.match(html,/막대는 형세의 시각적 척도이며 승률이 아닙니다/);
+  assert.match(html,/Stockfish 평가 · 백 기준 · \+는 백 \/ −는 흑 우세 · 1\.00 ≈ 폰 한 개/);
+  assert.match(html,/막대는 승률이 아닙니다/);
 });
 test("four castling rights follow FEN imports, manual toggles and standard presets",async()=>{
   const ui=await browser();

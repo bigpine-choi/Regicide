@@ -97,8 +97,9 @@ const test = (name, run) => cases.push({name, run});
 test("opening guidance lives in its own panel while common game tools precede the scrolling panels", () => {
   const html = fs.readFileSync(path.join(__dirname, "../web/human-play/index.html"), "utf8");
   assert.ok(html.indexOf('id="undo"') < html.indexOf('id="live-sidebar-panel-game"'));
-  assert.ok(html.indexOf('id="live-sidebar-panel-opening"') < html.indexOf('id="opening-guide"'));
-  assert.ok(html.indexOf('id="opening-guide"') < html.indexOf('id="live-sidebar-panel-records"'));
+  assert.ok(html.indexOf('id="live-opening-workspace"') >= 0);
+  assert.ok(html.indexOf('id="live-opening-workspace"') < html.indexOf('id="opening-guide"'));
+  assert.ok(html.indexOf('id="live-sidebar-panel-records"') < html.indexOf('id="live-opening-workspace"'));
   assert.ok(html.indexOf('id="live-sidebar-panel-records"') < html.indexOf('class="card moves-card"'));
   assert.match(html, /id="opening-status"[^>]+aria-live="polite"/);
 });

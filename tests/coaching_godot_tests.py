@@ -169,7 +169,7 @@ def main():
             assert game.state() == initial, "coaching modified live board"
             assert originals == {p.name: p.read_bytes() for p in game.save_dir.iterdir() if p.is_file()}, "coaching modified saved games"
             posts = [e["path"] for e in server.audit if e["method"] == "POST"]
-            assert posts and set(posts) <= {"/api/pgn-preview", "/api/coaching"}, posts
+            assert posts and set(posts) <= {"/api/pgn-preview", "/api/coaching", "/api/coaching-reference", "/api/opening-explorer"}, posts
             (args.output / "coaching-integration.json").write_text(json.dumps({
                 "engine": game.engine_name, "binary_sha256": game.binary_sha256,
                 "live_state_unchanged": True, "original_archive_files_unchanged": True,

@@ -1,0 +1,18 @@
+PASS saved connection restores once without querying hidden positions or showing token entry
+PASS late connection bootstrap respects hidden view and token replacement
+PASS rejected saved key exposes replacement form and preserves the server reason
+PASS analysis first opened after saving uses the updated shared connection
+PASS transient local bootstrap failure retries on a later view update with backoff
+PASS visible board automatically queries only FEN and selected filters without a toggle
+PASS query follows new board; stale responses cannot restore old rows
+PASS polls only matching generation and stops when leaving the view
+PASS poll identity rejects another client's request key
+PASS source and rating/speed changes are query parameters and reject stale filters
+PASS explore opens separate analysis context and never sends a game move
+PASS reference URLs are allowlisted, invalid rows are skipped, names are text
+PASS authentication clears password before request and never displays the token
+PASS explorer tabs show one section and connection setup pauses remote polling
+PASS hidden parent tabs stop queries and retain filters and usable ready rows on return
+PASS internal keyboard navigation uses roving focus and does not fetch while connection is selected
+PASS no data, rate limit and network failure have useful states without stale rows
+17 opening explorer web tests passed

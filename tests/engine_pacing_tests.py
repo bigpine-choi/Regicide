@@ -1,4 +1,4 @@
-"""Total-turn pacing, time pressure, automatic sparring and interrupt safety."""
+"""Total-turn pacing, common time pressure, automatic play and interrupt safety."""
 from concurrent.futures import ThreadPoolExecutor
 import io
 import json
@@ -8,6 +8,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 import chess
 import chess.engine
@@ -40,25 +41,26 @@ class PacingPlanTests(unittest.TestCase):
     def test_already_spent_time_is_subtracted_not_added(self):
         plan = engine_pacing.plan(self.board, self.clock)
         later = {**self.clock, "turn_elapsed_ms": 3000, "white_ms": 597000}
-        self.assertEqual(engine_pacing.remaining_wait_ms(plan, later), max(0, plan["target_total_ms"] - 3000))
+        self.assertEqual(engine_pacing.remaining_wait_ms(plan, later), max(0, engine_pacing.wait_target_ms(plan) - 3000))
 
     def test_search_past_target_needs_no_hold(self):
         plan = engine_pacing.plan(self.board, self.clock)
         later = {**self.clock, "turn_elapsed_ms": 60000, "white_ms": 540000}
         self.assertEqual(engine_pacing.remaining_wait_ms(plan, later), 0)
 
-    def test_three_minute_boundary_and_monotonic_pressure(self):
+    def test_five_minute_boundary_and_monotonic_pressure(self):
         plans = [engine_pacing.plan(self.board, self.at(ms))
-                 for ms in (360000, 240000, 180001, 180000, 179999, 120000, 90000, 60000, 30000)]
-        self.assertEqual([p["pressure_factor"] for p in plans[:4]], [1, 1, 1, 1])
-        self.assertLess(plans[4]["pressure_factor"], 1)
-        self.assertLessEqual(abs(plans[3]["target_total_ms"] - plans[4]["target_total_ms"]), 1)
+                 for ms in (360000, 300001, 300000, 299999, 240000, 180000, 120000, 60000, 30000)]
+        self.assertEqual([p["pressure_factor"] for p in plans[:3]], [1, 1, 1])
+        self.assertLess(plans[3]["pressure_factor"], 1)
+        self.assertLessEqual(abs(plans[2]["target_total_ms"] - plans[3]["target_total_ms"]), 1)
         targets = [p["target_total_ms"] for p in plans]
         self.assertEqual(targets, sorted(targets, reverse=True))
-        self.assertAlmostEqual(plans[5]["pressure_factor"], 5 / 6)
-        self.assertAlmostEqual(plans[6]["pressure_factor"], 3 / 4)
-        self.assertAlmostEqual(plans[7]["pressure_factor"], 2 / 3)
-        self.assertAlmostEqual(plans[8]["pressure_factor"], 7 / 12)
+        self.assertAlmostEqual(plans[4]["pressure_factor"], .9)
+        self.assertAlmostEqual(plans[5]["pressure_factor"], .8)
+        self.assertAlmostEqual(plans[6]["pressure_factor"], .7)
+        self.assertAlmostEqual(plans[7]["pressure_factor"], .6)
+        self.assertAlmostEqual(plans[8]["pressure_factor"], .55)
 
     def test_automatic_budget_independent_of_old_manual_setting(self):
         plan = engine_pacing.plan(self.board, self.clock)
@@ -68,6 +70,45 @@ class PacingPlanTests(unittest.TestCase):
         self.assertLessEqual(a["baseline_ms"], 3000)
         self.assertLessEqual(a["baseline_ms"], a["total_search_ms"])
         self.assertGreater(a["completion_margin_ms"], 0)
+
+    def test_sparring_five_minute_pressure_is_continuous_and_progressive(self):
+        times=(600000,300001,300000,299999,240000,180000,60000,10000,1000,1)
+        plans=[engine_pacing.plan(self.board,self.at(ms),
+                    pressure_start_ms=engine_pacing.SPARRING_PRESSURE_START_MS) for ms in times]
+        self.assertEqual([p["pressure_factor"] for p in plans[:3]],[1,1,1])
+        self.assertLess(plans[3]["pressure_factor"],1)
+        self.assertLessEqual(abs(plans[2]["target_total_ms"]-plans[3]["target_total_ms"]),1)
+        self.assertAlmostEqual(plans[5]["pressure_factor"],.8)
+        self.assertAlmostEqual(plans[6]["pressure_factor"],.6)
+        # Under ten seconds the existing urgent-search allowance replaces
+        # presentation timing; it remains bounded by the live balance below.
+        targets=[p["target_total_ms"] for p in plans[:7]]
+        self.assertEqual(targets,sorted(targets,reverse=True))
+        for remaining,result in zip(times,plans):
+            clock={**self.at(remaining),"increment_ms":10000}
+            allocation=engine_pacing.search_budget(result,clock,5000,automatic=True)
+            self.assertLessEqual(allocation["total_search_ms"],remaining)
+            self.assertGreaterEqual(allocation["baseline_ms"],1)
+            if remaining<=10000:
+                self.assertFalse(result["enabled"])
+                self.assertEqual(engine_pacing.remaining_wait_ms(result,clock),0)
+
+    def test_refinement_rechecks_five_minute_pressure_after_search(self):
+        result=engine_pacing.plan(self.board,self.clock,seed="five-minute-test",
+                    pressure_start_ms=engine_pacing.SPARRING_PRESSURE_START_MS)
+        result.update(clarity_kind="unclassified",complexity_score=20,opening_budget=None,
+                      recommended_total_ms=10000,variation_factor=1,target_total_ms=9000)
+        packets={depth:{"depth":depth,"score":chess.engine.PovScore(chess.engine.Cp(20),chess.WHITE),
+                        "pv":[chess.Move.from_uci(uci) for uci in ("e2e4","e7e5")]}
+                 for depth in (4,5,6)}
+        later={**self.at(180000),"turn_elapsed_ms":1000}
+        refined=engine_pacing.refine(self.board,result,later,
+                    selected_move=chess.Move.from_uci("e2e4"),baseline_packets=packets,
+                    selected_info=packets[6],seed="five-minute-test")
+        self.assertTrue(refined["refinement"]["applied"])
+        self.assertAlmostEqual(refined["pressure_factor"],.8)
+        self.assertEqual(refined["pressure_start_ms"],300000)
+        self.assertLess(refined["target_total_ms"],result["target_total_ms"])
 
     def test_low_clock_omits_hold_but_still_caps_search(self):
         for remaining in (10000, 1000, 100, 1):
@@ -156,13 +197,25 @@ class PacingHostTests(unittest.TestCase):
         if move: self.factory.instances[-1].replies.append(move)
         return self.game.engine_move(self.game.revision)
 
+    def require_hold(self):
+        # Cancellation tests need a deliberate hold; the starting position
+        # can now finish immediately after search under the production pace.
+        original = engine_pacing.plan
+        def with_hold(*args, **kwargs):
+            result = original(*args, **kwargs)
+            result["target_total_ms"] = 5000
+            return result
+        hold = patch.object(engine_pacing, "plan", side_effect=with_hold)
+        hold.start()
+        self.addCleanup(hold.stop)
+
     def test_search_and_prior_elapsed_count_toward_total(self):
         self.new(); self.now.advance(2)
         expected = engine_pacing.plan(self.game.board, self.game._clock.snapshot(), seed=self.game._opening_seed)
         state = self.engine("e2e4")
         elapsed = self.game._clock.history[1]["elapsed_ms"]
-        self.assertAlmostEqual(elapsed, max(3000, expected["target_total_ms"]), delta=1)
-        self.assertAlmostEqual(sum(self.waits) * 1000, max(0, expected["target_total_ms"] - 3000), delta=1)
+        self.assertAlmostEqual(elapsed, max(3000, engine_pacing.wait_target_ms(expected)), delta=1)
+        self.assertAlmostEqual(sum(self.waits) * 1000, max(0, engine_pacing.wait_target_ms(expected) - 3000), delta=1)
         self.assertFalse(state["engine_thinking"])
         self.assertIsNone(state["engine"]["pacing"])
         self.assertFalse(self.factory.instances[0].closed)
@@ -180,15 +233,21 @@ class PacingHostTests(unittest.TestCase):
         self.assertEqual(self.factory.instances[0].calls[0][1].time, 1.0)
 
     def test_all_timed_modes_use_same_pacing_plan(self):
-        targets = []
+        targets, allocations = [], []
         self.search_seconds = 0
         for modes in ({}, {"boss_mode": True}, {"sparring_mode": True}):
             self.new(**modes); self.waits.clear()
-            self.engine("e2e4")
+            # A shared custom-root position disables the different move
+            # selection policies, isolating timing from their analysis needs.
+            self.game.board = chess.Board("r3k2r/ppp2ppp/2n5/8/8/2N5/PPP2PPP/R3K2R w KQkq - 0 12")
+            self.game.revision += 1
+            self.engine("e1g1")
             receipt = self.game._engine_pacing_decisions[1]
             targets.append(receipt["target_total_ms"])
-            self.assertTrue(self.waits)
+            allocations.append(receipt["allocation"])
+            self.assertAlmostEqual(sum(self.waits) * 1000, receipt["wait_target_total_ms"], delta=1)
         self.assertEqual(len(set(targets)), 1)
+        self.assertEqual(allocations, [allocations[0]] * 3)
 
     def test_timed_sparring_manual_setting_rejected_and_omission_allowed(self):
         state = self.new(sparring_mode=True, ms=None)
@@ -212,7 +271,22 @@ class PacingHostTests(unittest.TestCase):
         self.assertEqual(state["result"], "*")
         self.assertGreater(state["clock"]["white_ms"], 0)
 
+    def test_all_game_modes_start_pressure_at_five_minutes(self):
+        self.search_seconds=0
+        for modes in ({}, {"boss_mode": True}, {"sparring_mode": True}):
+            with self.subTest(modes=modes):
+                self.new(**modes)
+                # Set the fixture's balance without spending the turn itself.
+                self.game._clock.adjust("white",-360000)
+                self.engine("e2e4")
+                receipt=self.game._engine_pacing_decisions[1]
+                self.assertEqual(receipt["pressure_start_ms"],300000)
+                self.assertAlmostEqual(receipt["pressure_factor"],.9)
+                self.assertEqual(receipt["turn_reduction_ms"],1000)
+                self.assertEqual(receipt["post_search_reduction_ms"],1500)
+
     def test_polling_during_hold_does_not_block_and_flag_discards_move(self):
+        self.require_hold()
         self.new(); entered = threading.Event(); release = threading.Event()
         self.search_seconds = 0
         def wait(seconds, cancel_event):
@@ -231,6 +305,7 @@ class PacingHostTests(unittest.TestCase):
         self.assertEqual(state["moves"], [])
 
     def test_close_interrupts_hold_without_applying_selected_move(self):
+        self.require_hold()
         self.new(); entered = threading.Event()
         self.search_seconds = 0
         def wait(seconds, cancel_event):
@@ -247,6 +322,7 @@ class PacingHostTests(unittest.TestCase):
         self.assertEqual(record["uci_moves"], [])
 
     def test_skip_wait_is_bound_to_current_turn(self):
+        self.require_hold()
         self.new()
         self.search_seconds = 0
         self.assertTrue(self.game.skip_engine_wait(self.game.revision)["released"])
@@ -258,6 +334,7 @@ class PacingHostTests(unittest.TestCase):
         with self.assertRaises(RevisionError): self.game.skip_engine_wait(self.game.revision - 1)
 
     def test_revision_change_during_hold_drops_reply_without_error(self):
+        self.require_hold()
         self.new(); changed = False
         self.search_seconds = 0
         def wait(seconds, cancel_event):
@@ -279,7 +356,7 @@ class PacingHostTests(unittest.TestCase):
         receipt = self.game._engine_pacing_decisions[4]
         self.assertEqual(receipt["before_fen"], before_fen)
         self.assertGreater(receipt["recommended_total_ms"], 0)
-        self.assertGreaterEqual(self.game._clock.history[4]["elapsed_ms"], receipt["target_total_ms"] - 1)
+        self.assertGreaterEqual(self.game._clock.history[4]["elapsed_ms"], receipt["wait_target_total_ms"] - 1)
         self.assertEqual(state["termination"], "checkmate")
 
 

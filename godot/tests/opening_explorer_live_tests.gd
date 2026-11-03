@@ -47,8 +47,8 @@ func capture(name: String) -> void:
 
 func finish() -> void:
 	if is_instance_valid(app):
-		app.opening_explorer.enabled_toggle.button_pressed = false
-		app.analysis_overlay.opening_explorer.enabled_toggle.button_pressed = false
+		app.opening_explorer.suspend_queries()
+		app.analysis_overlay.opening_explorer.suspend_queries()
 		app.queue_free()
 	await process_frame
 	print("Godot opening-explorer HTTP checks: %d, failures: %d" % [checks, failures])
@@ -60,8 +60,8 @@ func _run() -> void:
 	for index in range(args.size() - 1):
 		if args[index] == "--evidence-dir":
 			evidence_dir = args[index + 1]
-	root.size = Vector2i(1280, 900)
-	root.content_scale_size = Vector2i(1280, 900)
+	root.size = Vector2i(1760, 960)
+	root.content_scale_size = Vector2i(1760, 960)
 	app = load("res://main.tscn").instantiate()
 	root.add_child(app)
 	if not await wait_for(func(): return not app.state.is_empty() and not app.request_in_flight,
@@ -70,9 +70,11 @@ func _run() -> void:
 		return
 	var original := identity(app.state)
 	verify(not app.own_backend, "validation attaches without owning or stopping host")
-	verify(not app.opening_explorer.enabled_toggle.button_pressed, "external statistics start disabled")
-	app.select_sidebar_tab(1)
-	app.opening_explorer.enabled_toggle.button_pressed = true
+	if not await wait_for(func(): return app.opening_explorer._connection_configured,
+		"configured local connection is restored after launch"):
+		await finish()
+		return
+	verify(app.opening_explorer.contents.visible, "opening statistics are visible without an enable action")
 	if not await wait_for(func(): return app.opening_explorer.snapshot.get("status", "") == "ready",
 		"real host worker returns validated fixture statistics"):
 		await finish()
@@ -81,8 +83,15 @@ func _run() -> void:
 	verify(explorer.snapshot.fen == app.state.fen and explorer.rows.get_child_count() > 0,
 		"HTTP statistics render for displayed game position")
 	verify(explorer.games.get_child_count() > 1, "masters reference links survive native URL validation")
+	explorer.source_option.select(1)
+	explorer._filter_changed(1)
+	if not await wait_for(func(): return explorer.snapshot.get("status", "") == "ready" and explorer.snapshot.get("source", "") == "lichess",
+		"real JSON general-game rating and speed filters match native controls"):
+		await finish()
+		return
+	verify(explorer.rows.get_child_count() > 0 and explorer._matches(explorer.snapshot),
+		"general-game statistics render after HTTP JSON number decoding")
 	var target: String = str(explorer.snapshot.moves[0].fen_after)
-	app.sidebar_scroll.scroll_vertical = int(explorer.position.y)
 	var fixture_note := Label.new()
 	fixture_note.text = "검증 화면 · 통계 수치는 테스트 응답이며 실제 리체스 통계가 아닙니다."
 	fixture_note.position = Vector2(24, 82)
@@ -96,7 +105,7 @@ func _run() -> void:
 		await finish()
 		return
 	var analysis: Variant = app.analysis_overlay
-	verify(analysis.opening_explorer.enabled_toggle.button_pressed and analysis.opening_explorer.source_option.selected == explorer.source_option.selected,
+	verify(analysis.opening_explorer.preferences().enabled and analysis.opening_explorer.source_option.selected == explorer.source_option.selected,
 		"analysis inherits enabled source and filters")
 	if not await wait_for(func(): return analysis._hint_ready(analysis.analysis_state.get("hint", {})),
 		"actual Regicide engine supplies a legal analysis recommendation"):

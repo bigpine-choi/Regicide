@@ -127,12 +127,30 @@ class RatingStateTests(unittest.TestCase):
                 self.game.label_sparring_rating(1900, self.game.game_id, self.game.revision)
         self.assertEqual(self.game.state(), before)
 
-    def test_normal_mode_has_no_rating_and_rejects_labels(self):
-        self.game.new_game("white", 1000, self.game.revision)
-        self.game.resign(self.game.revision)
-        self.assertIsNone(self.game.state()["engine"]["sparring_rating"])
-        with self.assertRaises(ValueError):
-            self.game.label_sparring_rating(1800, self.game.game_id, self.game.revision)
+    def test_all_modes_record_actual_rating_privately_without_inventing_observations(self):
+        for mode in ("basic", "gambit", "sparring"):
+            with self.subTest(mode=mode):
+                self.game.new_game("white", 1000, self.game.revision,
+                    boss_mode=mode == "gambit", sparring_mode=mode == "sparring")
+                with self.assertRaises(ValueError):
+                    self.game.label_opponent_rating(1800, self.game.game_id, self.game.revision)
+                self.game.resign(self.game.revision)
+                value = self.game.label_opponent_rating(1800, self.game.game_id, self.game.revision)["engine"]
+                self.assertEqual(value["rating"], value["sparring_rating"])
+                self.assertEqual(value["rating"]["label"]["rating"], 1800)
+                self.assertFalse(value["rating"]["label"]["eligible_for_calibration"])
+                self.assertIsNone(value["rating"]["estimate"])
+                self.game.label_opponent_rating(1900, self.game.game_id, self.game.revision)
+                with closing(sqlite3.connect(self.game._rating_store.path)) as connection:
+                    rating, encoded = connection.execute("SELECT rating,sample_json FROM labels WHERE game_id=?",
+                                                        (self.game.game_id,)).fetchone()
+                self.assertEqual(rating, 1900)
+                self.assertEqual(json.loads(encoded)["runtime"]["mode"], mode)
+                path = self.game.save_dir / (self.game.game_id + ".json")
+                record = json.loads(path.read_text(encoding="utf-8"))
+                for key in ("rating", "sparring_rating"):
+                    self.assertIsNone(record["state"]["engine"][key]["label"])
+                self.assertNotIn("user_reported", path.read_text(encoding="utf-8"))
 
     def _quality_only_turn(self, expected_reason):
         board = self.game.board
@@ -208,6 +226,25 @@ class RatingHTTPTests(unittest.TestCase):
     setUp = base.HumanHTTPTests.setUp
     stop_server = base.HumanHTTPTests.stop_server
     request = base.HumanHTTPTests.request
+
+    def test_common_endpoint_accepts_every_completed_mode_and_rejects_live_games(self):
+        for mode in ("basic", "gambit", "sparring"):
+            with self.subTest(mode=mode):
+                self.game.new_game("white", None, self.game.revision,
+                    boss_mode=mode == "gambit", sparring_mode=mode == "sparring", time_control="10+0")
+                payload = {"game_id": self.game.game_id, "revision": self.game.revision, "rating": 1500}
+                self.assertEqual(self.request("/api/rating-label", payload)[0], 400)
+                for side in ("human", "engine"):
+                    code, _, body = self.request("/api/clock-adjust", {"game_id": self.game.game_id,
+                        "clock_revision": self.game._clock.edit_revision, "side": side, "delta_ms": 10000})
+                    self.assertEqual(code, 200)
+                    self.assertTrue(json.loads(body)["clock"]["editable"])
+                self.game.resign(self.game.revision)
+                payload["revision"] = self.game.revision
+                code, _, body = self.request("/api/rating-label", payload)
+                self.assertEqual(code, 200)
+                self.assertEqual(json.loads(body)["engine"]["rating"]["label"]["rating"], 1500)
+                self.assertEqual(self.request("/api/rating-label", payload)[0], 409)
 
     def test_endpoint_requires_current_terminal_sparring_game_and_corrects(self):
         self.game.new_game("white", 1000, self.game.revision, sparring_mode=True)

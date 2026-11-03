@@ -247,6 +247,10 @@ func _piece_center(square: String, area: Rect2, cell: float) -> Vector2:
 func move_badge_rect() -> Rect2:
 	if move_annotation.is_empty() or is_animating():
 		return Rect2()
+	var symbols := {"great": "!", "best": "★", "good": "👍", "inaccuracy": "?!", "mistake": "?", "blunder": "??", "allows_mate": "??", "missed_mate": "×"}
+	var kind: String = str(move_annotation.get("kind", ""))
+	if not symbols.has(kind) or move_annotation.get("symbol") != symbols[kind]:
+		return Rect2()
 	var square: String = str(move_annotation.get("square", ""))
 	var uci: String = str(move_annotation.get("uci", ""))
 	if move_annotation.get("scope") != "actual_move" or str(move_annotation.get("fen_after", "")).is_empty() or move_annotation.get("fen_after") != state.get("fen") or int(move_annotation.get("ply", -1)) != int(state.get("ply", -2)):
@@ -269,7 +273,7 @@ func _draw_move_badge() -> void:
 	var bounds := move_badge_rect()
 	if bounds.size.x <= 0.0:
 		return
-	var colors := {"great": "42cbbb", "best": "8ecb6b", "good": "8daf8d", "inaccuracy": "e7bc58", "mistake": "e38c49", "blunder": "e76069", "allows_mate": "e76069", "missed_mate": "e38c49", "uncertain": "a5aebc"}
+	var colors := {"great": "749bbf", "best": "81b64c", "good": "95b776", "inaccuracy": "f7c631", "mistake": "ffa459", "blunder": "fa412d", "allows_mate": "fa412d", "missed_mate": "ff7769"}
 	var center := bounds.get_center()
 	var radius: float = bounds.size.x / 2.0
 	draw_circle(center + Vector2(0, 2), radius + 1, Color(0.03, 0.07, 0.11, 0.45))
@@ -279,7 +283,7 @@ func _draw_move_badge() -> void:
 	var font_size: int = clampi(int(bounds.size.x * 0.64), 13, 22)
 	var extent: Vector2 = label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	var baseline: float = (label_font.get_ascent(font_size) - label_font.get_descent(font_size)) * 0.5
-	draw_string(label_font, center + Vector2(-extent.x * 0.5, baseline), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("112633"))
+	draw_string(label_font, center + Vector2(-extent.x * 0.5, baseline), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
 
 
 func _draw_piece(piece: String, center: Vector2, cell: float, scale_factor: float = 1.0, opacity: float = 1.0) -> void:

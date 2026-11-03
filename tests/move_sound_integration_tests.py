@@ -71,7 +71,7 @@ func _run() -> void:
 	await create_timer(0.6).timeout
 	sample("opponent capture produces actual mixer PCM", true)
 	var capture_length := board._move_sound.stream.get_length()
-	if not (is_equal_approx(move_length, 0.12) and is_equal_approx(capture_length, 0.18)):
+	if not (is_equal_approx(move_length, 0.12) and is_equal_approx(capture_length, 0.22)):
 		failures += 1
 		printerr("FAIL: distinct move and capture samples")
 	board.state = moved

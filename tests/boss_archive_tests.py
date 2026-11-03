@@ -66,6 +66,18 @@ class BossArchiveTests(unittest.TestCase):
                 self.assertNotIn("BossPolicy", parsed.headers)
                 self.assertEqual(parsed.headers["Result"], "*")
 
+    def test_legacy_v3_mode_and_policy_are_preserved_without_rewriting_the_game(self):
+        metadata = self.metadata()
+        metadata['policy'] = 'regicide-boss-play-v3'
+        self.save(metadata)
+        original = self.path.read_bytes()
+        result = self.archive.get_game(self.game.game_id)
+        self.assertTrue(result['summary']['boss_mode'])
+        self.assertTrue(all(frame['engine']['boss_mode'] for frame in result['frames']))
+        parsed, _ = baseline.read_pgn(result['pgn'])
+        self.assertEqual(parsed.headers['BossPolicy'], 'regicide-boss-play-v3')
+        self.assertEqual(self.path.read_bytes(), original)
+
     def test_decisions_must_match_actual_engine_move_and_history(self):
         metadata = self.metadata()
         valid = metadata["decisions"][0]

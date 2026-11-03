@@ -36,8 +36,10 @@ LABELS = {"pending": "분석 대기", "best": "추천 수", "good": "좋은 수"
           "uncertain": "판단 보류"}
 SEVERITY = {"allows_mate": 6, "missed_mate": 5, "blunder": 4,
             "mistake": 3, "inaccuracy": 2}
-ANNOTATION_SYMBOLS = {"best": "★", "good": "✓", "inaccuracy": "?!", "mistake": "?",
-                      "blunder": "??", "missed_mate": "?", "allows_mate": "??", "uncertain": "…"}
+# Chess.com Game Review notation; the classification remains Regicide's own.
+# Great is !; !! denotes Brilliant (a sound sacrifice), which we do not grade.
+ANNOTATION_SYMBOLS = {"best": "★", "good": "👍", "inaccuracy": "?!", "mistake": "?",
+                      "blunder": "??", "missed_mate": "×", "allows_mate": "??"}
 
 
 class CoachingRevisionError(ValueError):
@@ -156,7 +158,7 @@ def _annotation(board, row):
         losing_alternative = (alternative["winner"] != color if alternative["mate_white"] is not None
                               else (1 if board.turn else -1) * alternative["score_cp_white"] <= -200)
         if losing_alternative:
-            kind, symbol, label = "great", "!!", "탁월 후보"
+            kind, symbol, label = "great", "!", "탁월 후보"
             reason = ("실제 수를 제외한 모든 합법수 중 최선 대안도 같은 제한 시간으로 탐색했습니다. "
                       "이번 탐색에서는 실제 수가 착수한 쪽 기준 0.00 이상 또는 승리 메이트로, "
                       "다른 최선 대안이 −2.00 이하 또는 패배 메이트로 평가되어 탁월 후보로 표시합니다. "

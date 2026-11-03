@@ -1,13 +1,13 @@
 """Short tactical opening proposals for the optional boss mode.
 
 Each project-selected seed ends at the opening's defining move. The caller must
-evaluate proposals with Regicide and return to ordinary full-strength search
-when a seed ends or the opponent deviates. These are prospective opening names,
+evaluate proposals with Regicide; later moves belong to native continuation
+policies rather than a scripted book. These are prospective opening names,
 not a claim that the current position already belongs to the named gambit.
 
-Names and factual move sequences were checked on 2026-11-02 against the bundled
-Lichess chess-openings catalogue (CC0-1.0; data/openings/LICENSE and manifest.json)
-and, where listed, Chess.com's own opening definitions. No explanatory prose,
+Names and factual move sequences were rechecked on 2026-11-04 against the bundled
+Lichess chess-openings catalogue (CC0-1.0; data/openings/LICENSE and manifest.json).
+Optional earlier Chess.com definition links remain references. No explanatory prose,
 win rates, engine evaluations, or large external opening book is imported.
 The candidate list does not establish objective soundness or playing strength.
 """
@@ -19,8 +19,8 @@ import json
 import chess
 
 
-POLICY = "regicide-boss-traps-v3"
-VERIFIED_ON = "2026-11-02"
+POLICY = "regicide-boss-traps-v4"
+VERIFIED_ON = "2026-11-04"
 CATALOG_COMMIT = "a6189a30dc273ccb21fc2536a9a2fefd5592a67a"
 CATALOG_LICENSE = "CC0-1.0"
 CATALOG_URL = f"https://github.com/lichess-org/chess-openings/tree/{CATALOG_COMMIT}"
@@ -34,6 +34,7 @@ class _Seed:
     moves: tuple[str, ...]
     catalog_file: str
     definition_url: str | None = None
+    catalog_moves: tuple[str, ...] | None = None
 
 
 # These deliberately stop before trap continuations. For example, the Englund
@@ -85,6 +86,16 @@ _SEEDS = (
           ("e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "g8f6", "e1g1", "f6g4"), "c.tsv"),
     _Seed("from", "Bird Opening: From's Gambit", chess.BLACK,
           ("f2f4", "e7e5"), "a.tsv"),
+    _Seed("tennison", "Zukertort Opening: Tennison Gambit", chess.WHITE,
+          ("e2e4", "d7d5", "g1f3"), "a.tsv"),
+    _Seed("caro-von-hennig", "Caro-Kann Defense: von Hennig Gambit", chess.WHITE,
+          ("e2e4", "c7c6", "d2d4", "d7d5", "b1c3", "d5e4", "f1c4"), "b.tsv"),
+    # The pinned catalogue lists e4 before d4. This legal d4/c6 entry reaches
+    # exactly the same full position at Bc4; expose that source relation rather
+    # than claiming the alternate move order is printed in the catalogue.
+    _Seed("caro-von-hennig-d4", "Caro-Kann Defense: von Hennig Gambit", chess.WHITE,
+          ("d2d4", "c7c6", "e2e4", "d7d5", "b1c3", "d5e4", "f1c4"), "b.tsv",
+          catalog_moves=("e2e4", "c7c6", "d2d4", "d7d5", "b1c3", "d5e4", "f1c4")),
 )
 MAX_PLIES = max(len(line.moves) for line in _SEEDS)
 
@@ -94,6 +105,8 @@ def repertoire():
     return [{"line_id": line.line_id, "name": line.name,
              "color": "white" if line.color else "black", "moves": list(line.moves),
              "prefix_to_signature": list(line.moves),
+             "catalog_moves": list(line.catalog_moves or line.moves),
+             "catalog_relation": "same_final_position" if line.catalog_moves else "exact",
              "source_url": f"{CATALOG_URL.replace('/tree/', '/blob/')}/{line.catalog_file}",
              "definition_url": line.definition_url,
              "source_license": CATALOG_LICENSE, "verified_on": VERIFIED_ON}
@@ -124,7 +137,7 @@ def _valid_history(board):
 def proposals(board, seed):
     """Propose unique legal next moves for the side that owns each gambit.
 
-    Exact history matching intentionally excludes transpositions and re-entry.
+    Exact history matching excludes unlisted transpositions and re-entry.
     A different seed only changes proposal order; it never changes legality,
     supplies an opponent move, or authorizes bypassing the caller's risk gate.
     """
@@ -148,9 +161,15 @@ def proposals(board, seed):
                               .encode("utf-8")).digest()
 
     result = []
-    # Order moves, not seed rows: shared initial e4 paths get no extra weight.
-    for uci in sorted(matches, key=lambda value: (rank(value), value)):
-        line = min(matches[uci], key=lambda value: (rank(value.line_id), value.line_id))
+    # A defining offer takes precedence over preparing a longer line. Keep
+    # seeded variety among multiple immediate offers and deduplicate moves,
+    # so shared e4 prefixes do not receive extra lottery weight.
+    def signature(line):
+        return offset == len(line.moves) - 1
+
+    for uci in sorted(matches, key=lambda value: (not any(signature(line) for line in matches[value]),
+                                                rank(value), value)):
+        line = min(matches[uci], key=lambda value: (not signature(value), rank(value.line_id), value.line_id))
         result.append({"uci": uci, "name": line.name, "line_id": line.line_id,
-                       "signature": offset == len(line.moves) - 1})
+                       "signature": signature(line)})
     return result

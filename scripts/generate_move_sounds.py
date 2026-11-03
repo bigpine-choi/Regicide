@@ -1,48 +1,46 @@
-"""Rebuild Regicide's original wooden move/capture sounds (no third-party samples).
+"""Prepare short wooden chess sounds from Kenney's CC0 Impact Sounds 1.0.
 
-Only Python's standard library is needed. Fixed seeds keep the PCM reproducible.
+Original OGGs, decoded PCM sources and licence are in assets/audio.
+Rebuilding/checking the runtime WAVs needs only Python's standard library.
 """
 
 import argparse
+import hashlib
 import io
-import math
 from pathlib import Path
-import random
 import struct
 import wave
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "assets/audio/kenney-impact-sounds"
 SAMPLE_RATE = 44100
-
-
-def impact(t, rng, frequencies, decay):
-    """An inharmonic wooden body plus a very short, softened contact transient."""
-    attack = 1.0 - math.exp(-t / 0.0007)
-    body = sum(weight * math.sin(2.0 * math.pi * frequency * t)
-               * math.exp(-t / (decay / (1.0 + index * 0.55)))
-               for index, (frequency, weight) in enumerate(frequencies))
-    noise = rng.uniform(-1.0, 1.0) * 0.38 * math.exp(-t / 0.005)
-    return attack * (body + noise)
+SAMPLES = {
+    False: ("impactWood_light_000.wav", .12, .65,
+            "97b4548ef9b6579ccd882a2f409920b00cf6498a461e25eb0533074be99e82a6"),
+    True: ("impactWood_medium_002.wav", .22, .72,
+           "43f6c8febc8e34b79e80fb232b9ee93ab5105c77ad409322ba7276356fa04340"),
+}
 
 
 def make_wav(capture=False):
-    duration = 0.18 if capture else 0.12
-    rng = random.Random(2803 if capture else 1409)
-    frequencies = [(247, .50), (631, .56), (1087, .30), (1733, .12)] if capture else [
-        (389, .45), (947, .50), (1621, .22), (2371, .09)]
-    samples = []
-    previous = 0.0
-    for index in range(round(SAMPLE_RATE * duration)):
-        t = index / SAMPLE_RATE
-        value = impact(t, rng, frequencies, .025 if capture else .017)
-        if capture and t >= .018:
-            # A softer second contact makes taking a piece fuller, not louder.
-            value += .36 * impact(t - .018, rng, frequencies, .017)
-        previous = .35 * previous + .65 * value
-        samples.append(previous * min(1.0, (duration - t) / .012))
+    filename, duration, amplitude, expected_hash = SAMPLES[bool(capture)]
+    data = (SOURCE / filename).read_bytes()
+    if hashlib.sha256(data).hexdigest() != expected_hash:
+        raise ValueError(f"Unexpected source audio: {filename}")
+    with wave.open(io.BytesIO(data), "rb") as wav:
+        if wav.getsampwidth() != 2 or wav.getframerate() != SAMPLE_RATE:
+            raise ValueError("Source must be signed PCM16 at 44100 Hz")
+        channels = wav.getnchannels()
+        raw = wav.readframes(round(SAMPLE_RATE * duration))
+    values = struct.unpack(f"<{len(raw) // 2}h", raw)
+    samples = [sum(values[i:i + channels]) / channels
+               for i in range(0, len(values), channels)]
+    # Keep the wood transient and body; soften sample boundaries to avoid clicks.
+    for i in range(len(samples)):
+        samples[i] *= min(1.0, i / (SAMPLE_RATE * .001),
+                          (len(samples) - 1 - i) / (SAMPLE_RATE * .008))
     peak = max(map(abs, samples))
-    amplitude = .72 if capture else .65
     pcm = b"".join(struct.pack("<h", round(value / peak * amplitude * 32767))
                    for value in samples)
     output = io.BytesIO()
@@ -64,11 +62,11 @@ def main():
             path = folder / filename
             if args.check:
                 if not path.exists() or path.read_bytes() != data:
-                    raise SystemExit(f"Audio differs from generator: {path}")
+                    raise SystemExit(f"Audio differs from prepared sample: {path}")
             else:
                 folder.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(data)
-            print(f"{'Verified' if args.check else 'Generated'} {path.relative_to(ROOT)} ({len(data)} bytes)")
+            print(f"{'Verified' if args.check else 'Prepared'} {path.relative_to(ROOT)} ({len(data)} bytes)")
 
 
 if __name__ == "__main__":

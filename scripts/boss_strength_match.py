@@ -30,9 +30,11 @@ from play_human import HumanGame, runtime_evaluation
 from runtime_engine import resolve_runtime_engine
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ('scripts/boss_strength_match.py', 'scripts/play_human.py', 'scripts/boss_play.py',
-           'scripts/boss_opponent.py', 'scripts/boss_openings.py', 'scripts/poisoned_piece.py',
-           'scripts/opening_variety.py', 'scripts/runtime_engine.py')
+# Snapshot the complete local Python host graph, including optional policy
+# modules such as gambit_initiative. A hand-maintained shortlist can silently
+# omit a newly imported selector or time-control dependency.
+SOURCES = tuple(path.relative_to(ROOT).as_posix()
+                for path in sorted(ROOT.joinpath('scripts').glob('*.py')))
 
 
 def utc():

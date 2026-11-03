@@ -7,6 +7,7 @@ const AnalysisBoard = preload("res://scripts/analysis_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const ViewModel = preload("res://scripts/board_view_model.gd")
 const OpeningExplorer = preload("res://scripts/opening_explorer.gd")
+const OpeningWorkspace = preload("res://scripts/opening_workspace.gd")
 const START_FEN := "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 var backend_url: String = ""
@@ -117,11 +118,18 @@ func _build_ui() -> void:
 	header.add_child(title)
 	return_button = _button("대국으로 돌아가기", _return_to_game, "AnalysisReturn")
 	header.add_child(return_button)
+	var workspace_scroll := ScrollContainer.new()
+	workspace_scroll.name = "AnalysisWorkspaceScroll"
+	workspace_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	workspace_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(workspace_scroll)
+	var opening_workspace := OpeningWorkspace.new()
+	workspace_scroll.add_child(opening_workspace)
 	var body := HBoxContainer.new()
 	body.name = "AnalysisBody"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 16)
-	page.add_child(body)
+	opening_workspace.add_child(body)
 	var board_column := VBoxContainer.new()
 	board_column.name = "AnalysisBoardColumn"
 	board_column.add_theme_constant_override("separation", 8)
@@ -198,7 +206,7 @@ func _build_ui() -> void:
 	sidebar_tabs = TabBar.new()
 	sidebar_tabs.name = "AnalysisSidebarTabs"
 	OpeningExplorer.style_tabs(sidebar_tabs)
-	for tab_caption in ["분석", "오프닝"]:
+	for tab_caption in ["분석"]:
 		sidebar_tabs.add_tab(tab_caption)
 	sidebar_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
 	sidebar_tabs.tab_changed.connect(select_sidebar_tab)
@@ -225,16 +233,14 @@ func _build_ui() -> void:
 	sidebar.add_theme_constant_override("separation", 8)
 	page_stack.add_child(sidebar)
 	sidebar_pages.append(sidebar)
-	var opening_sidebar := VBoxContainer.new()
-	opening_sidebar.name = "AnalysisOpeningContents"
-	opening_sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page_stack.add_child(opening_sidebar)
-	sidebar_pages.append(opening_sidebar)
+	var opening_sidebar := opening_workspace.add_opening_panel()
 	select_sidebar_tab(0)
 	status_label = _label("원하는 위치를 만들어 보세요", 19, "f6f0de")
 	sidebar.add_child(status_label)
 	error_label = _label("", 13, "ffb4a1")
 	error_label.name = "AnalysisError"
+	error_label.max_lines_visible = 3
+	error_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	side_shell.add_child(error_label)
 	side_shell.move_child(error_label, 2)
 	sidebar.add_child(evaluation_detail)
@@ -392,7 +398,7 @@ func open_position(fen: String, url: String, token: String, explorer_preferences
 	opening_explorer.set_context(source_fen, backend_url, backend_token, offline_mode)
 	if not explorer_preferences.is_empty():
 		opening_explorer.apply_preferences(explorer_preferences)
-	select_sidebar_tab(1 if not explorer_preferences.is_empty() and explorer_preferences.get("enabled", false) else 0)
+	select_sidebar_tab(0)
 	show()
 	_render()
 	if not offline_mode:
@@ -947,6 +953,10 @@ func _evaluation_matches(value: Dictionary) -> bool:
 		and value.get("turn", "") == analysis_state.get("turn", "-")
 
 
+static func _score_integer(value: Variant) -> bool:
+	return typeof(value) in [TYPE_INT, TYPE_FLOAT] and is_finite(float(value)) and float(value) == floor(float(value))
+
+
 func _render_evaluation() -> void:
 	if evaluation_bar == null:
 		return
@@ -956,12 +966,20 @@ func _render_evaluation() -> void:
 	elif busy:
 		presented = {"status": "searching"}
 	elif not editing and analysis_state.get("active", false):
-		var value: Variant = analysis_state.get("evaluation", {})
+		var value: Variant = analysis_state.get("reference_evaluation", {})
 		if value is Dictionary and _evaluation_matches(value):
-			presented = value
+			if value.get("status") == "terminal" and value.get("source") == "chess_rules":
+				presented = value
+			elif value.get("source") == "stockfish_gauge" and value.get("status") == "ready" and value.get("bound") == "exact" and _score_integer(value.get("depth")) and int(value.depth) > 0 and (_score_integer(value.get("cp")) or _score_integer(value.get("mate"))):
+				presented = value
+			elif value.get("status") in ["unavailable", "error", "disabled"]:
+				presented = {"status": "unavailable", "source": "stockfish_gauge"}
 	evaluation_bar.present(presented, model.view_from_white)
-	evaluation_summary.text = evaluation_bar.summary_text
+	evaluation_summary.text = ("Stockfish · " + evaluation_bar.summary_text) if evaluation_bar.has_score else ("Stockfish 평가 사용 불가" if presented.get("status") == "unavailable" else "Stockfish 형세 계산 중")
+	if presented.get("status") == "terminal":
+		evaluation_summary.text = evaluation_bar.summary_text
 	evaluation_detail.text = evaluation_bar.detail_text + "\n+는 백, −는 흑 우세 · 1.00은 폰 한 개의 평가 단위이며 승률이 아닙니다."
+	evaluation_detail.text += "\n수와 추천은 Regicide가 선택하고, 형세 게이지는 Stockfish가 평가합니다."
 	if editing and _error.is_empty():
 		evaluation_detail.text = "기물 배치를 마치고 분석을 시작하면 현재 위치의 우세를 표시합니다."
 	evaluation_summary.tooltip_text = evaluation_bar.tooltip_text
@@ -991,6 +1009,7 @@ func _render() -> void:
 	board.state = {"board": editor_pieces, "turn": "white" if editor_fields[0] == "w" else "black", "legal_moves": []} if editing else analysis_state
 	board.hint_move = ""
 	error_label.text = _error
+	error_label.tooltip_text = _error
 	error_label.visible = not _error.is_empty()
 	status_label.text = "기물을 자유롭게 배치하세요" if editing else str(analysis_state.get("message", "현재 위치 분석"))
 	turn_label.text = "기물 배치 편집" if editing else ("백 차례" if analysis_state.get("turn", "white") == "white" else "흑 차례")

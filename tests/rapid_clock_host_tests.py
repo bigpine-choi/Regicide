@@ -135,7 +135,12 @@ class HostClockTests(unittest.TestCase):
         limit = self.factory.instances[0].calls[-1][1]
         self.assertLessEqual(limit.time, .191)
         self.assertEqual(state["result"], "*")
-        self.assertEqual(len(self.game._sparring_decisions), 0)
+        self.assertEqual(len(self.factory.instances[0].calls),1)
+        receipt=self.game._sparring_decisions[1]
+        self.assertEqual(receipt["reason"],"short_budget")
+        self.assertEqual(receipt["quality_guard"]["status"],"skipped")
+        self.assertFalse(receipt["quality_guard"]["repair_attempted"])
+        self.assertFalse(receipt["quality_guard"]["applied"])
 
     def test_undo_restores_clock_and_clears_timeout(self):
         self.new(); self.now.advance(10); self.human("e2e4")

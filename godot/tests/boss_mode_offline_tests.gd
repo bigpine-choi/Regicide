@@ -46,7 +46,7 @@ func _run() -> void:
 	app.backend_url = "http://127.0.0.1:1"
 	app.accept_state(fixture(1))
 	verify(app.boss_mode_option.get_selected_id() == 0, "basic mode is the default")
-	verify(not app.boss_phase_label.text.contains("보스 모드"), "legacy state has no invented boss status")
+	verify(not app.boss_phase_label.text.contains("갬빗 모드"), "legacy state has no invented boss status")
 	app.next_response = {"ok": true, "data": fixture(2)}
 	app._on_new_game_pressed()
 	await process_frame
@@ -56,40 +56,43 @@ func _run() -> void:
 	app.boss_mode_option.select(1)
 	app.accept_state(fixture(3))
 	verify(app.boss_mode_option.get_selected_id() == 1, "draft mode survives rendering")
-	verify(not app.boss_phase_label.text.contains("보스 모드"), "draft mode does not modify the live game")
+	verify(not app.boss_phase_label.text.contains("갬빗 모드"), "draft mode does not modify the live game")
 	app.next_response = {"ok": true, "data": fixture(4, "opening")}
 	app._on_new_game_pressed()
 	await process_frame
 	await process_frame
 	verify(app.captured_requests[-1].path == "/api/new" and app.captured_requests[-1].payload.boss_mode == true, "boss selection goes only to new-game request")
 	verify(app.captured_requests[-1].payload.sparring_mode == false, "boss selection excludes sparring")
-	verify(app.boss_phase_label.text == "보스 모드 · 변칙 오프닝", "opening label is displayed")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 갬빗 준비", "opening label is displayed")
 	await process_frame
 	var normal_board: Rect2 = app.board.get_global_rect()
+	app.accept_state(fixture(6, "initiative"))
+	await process_frame
+	verify(app.boss_phase_label.text == "갬빗 모드 · 공격 전개", "post-gambit initiative phase label is displayed")
 	app.accept_state(fixture(7, "full_strength"))
 	await process_frame
-	verify(app.boss_phase_label.text == "보스 모드 · 전력 대국", "full-strength label is displayed")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 전력 대국", "full-strength label is displayed")
 	verify(app.board.get_global_rect().is_equal_approx(normal_board), "phase change keeps board geometry")
 	app.accept_state(fixture(8, "trap_hunt"))
-	verify(app.boss_phase_label.text == "보스 모드 · 전술 사냥", "tactical lure phase label is displayed")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 전술 사냥", "tactical lure phase label is displayed")
 	var late_setting: Dictionary = fixture(5, "opening")
 	late_setting.engine.movetime_ms = 3000
 	late_setting.engine.settings_revision = 1
 	app.accept_state(late_setting)
-	verify(app.boss_phase_label.text == "보스 모드 · 전술 사냥", "late settings cannot rewind tactical lure phase")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 전술 사냥", "late settings cannot rewind tactical lure phase")
 	verify(app.time_option.get_selected_id() == 3000, "newer time setting still applies")
 	app.boss_mode_option.select(0)
 	app._render()
-	verify(app.boss_phase_label.text == "보스 모드 · 전술 사냥", "normal-mode draft leaves active boss phase intact")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 전술 사냥", "normal-mode draft leaves active boss phase intact")
 	app.accept_state(fixture(9, "opening"))
-	verify(app.boss_phase_label.text == "보스 모드 · 변칙 오프닝", "new board revision can rewind phase after undo")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 갬빗 준비", "new board revision can rewind phase after undo")
 	app.review_mode = true
 	app.review_frames = [fixture(1, "full_strength")]
 	app.review_moves = []
 	app.review_summary = {"human_color": "white"}
 	app.review_ply = 0
 	app._render()
-	verify(app.boss_phase_label.text == "보스 모드 · 전력 대국", "replay uses saved frame phase, not current game phase")
+	verify(app.boss_phase_label.text == "갬빗 모드 · 전력 대국", "replay uses saved frame phase, not current game phase")
 	verify(app.boss_mode_option.disabled and not app.live_settings.visible, "replay cannot alter new-game controls")
 	app.review_mode = false
 	app.state.handicap_mode = true
@@ -101,11 +104,12 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	verify(app.captured_requests[-1].payload.boss_mode == false, "switch back to normal is explicit")
-	verify(not app.boss_phase_label.text.contains("보스 모드"), "normal new game clears phase display")
+	verify(not app.boss_phase_label.text.contains("갬빗 모드"), "normal new game clears phase display")
 	app.accept_state(fixture(9, "full_strength"))
-	verify(not app.boss_phase_label.text.contains("보스 모드"), "stale board cannot resurrect previous boss display")
+	verify(not app.boss_phase_label.text.contains("갬빗 모드"), "stale board cannot resurrect previous boss display")
 	await _sparring_checks()
 	await _rating_checks()
+	await _common_automatic_checks()
 	app.queue_free()
 	await process_frame
 	print("Godot boss-mode offline checks: %d, failures: %d" % [checks, failures])
@@ -134,9 +138,8 @@ func _sparring_checks() -> void:
 	verify(app.boss_mode_option.tooltip_text.contains("21~49수") and app.boss_mode_option.tooltip_text.contains("양쪽 모두 50번째 수부터 전력"), "sparring tooltip applies the shortened ramp to both colors")
 	verify(app.game_mode_help.text.contains("20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분"), "sparring help explains prioritizing computation when the early position becomes unbalanced")
 	verify(app.game_mode_help.text.contains("자동으로 조절"), "sparring draft explains automatic time management")
-	verify(not app.time_option.visible and app.auto_time_label.visible and app.time_option.disabled, "sparring draft immediately replaces the manual selector")
-	app._on_think_time_selected(app.time_option.get_item_index(5000))
-	verify(app.captured_requests.size() == requests_before, "hidden manual control cannot update the current normal game")
+	verify(app.time_option.visible and not app.auto_time_label.visible and not app.time_option.disabled, "draft mode leaves the current untimed game manual")
+	verify(app._can_change_think_time(), "draft mode does not disable the current untimed API setting")
 	verify(app.time_option.get_selected_id() == 100 and app.captured_requests.size() == requests_before, "draft mode selection never changes time or sends a time mutation")
 	verify(not app.think_time_help.text.contains("맞춤 조절을 쉬고"), "draft sparring does not mislabel an active normal game")
 	var minimum_eligible: int = 5000
@@ -152,7 +155,7 @@ func _sparring_checks() -> void:
 	await process_frame
 	verify(app.captured_requests[-1].payload.sparring_mode == true and app.captured_requests[-1].payload.boss_mode == false, "sparring payload is mutually exclusive with boss")
 	verify(app.boss_phase_label.text == "스파링 모드" and app.state.engine.sparring.observations == 0, "calibration observations remain in state without live diagnostics")
-	verify(app.think_time_help.text.contains("사람 권장시간") and app.think_time_help.text.contains("3분 미만"), "automatic sparring explains recommendation and human time pressure")
+	verify(app.think_time_help.text.contains("사람 권장시간") and app.think_time_help.text.contains("5분 이하"), "automatic sparring explains recommendation and human time pressure")
 	verify(not app.captured_requests[-1].payload.has("movetime_ms"), "new sparring lets the host choose automatic search budget")
 	var geometry: Rect2 = app.board.get_global_rect()
 	for row in [[12, "sparring", "맞춤 스파링"], [13, "ramp", "압박 높이는 중"], [14, "finish", "전력 마무리"]]:
@@ -178,7 +181,7 @@ func _sparring_checks() -> void:
 	verify(app.boss_phase_label.text == "스파링 모드", "missing profile is null-safe")
 	app.boss_mode_option.select(1)
 	app._render()
-	verify(app.game_mode_help.text.contains("함정") and app.boss_phase_label.text == "스파링 모드", "prospective boss help does not change active sparring state")
+	verify(app.game_mode_help.text.contains("기물 미끼") and app.boss_phase_label.text == "스파링 모드", "prospective boss help does not change active sparring state")
 	app.review_mode = true
 	app.review_frames = [sparring_fixture(1, "ramp", 4)]
 	app.review_moves = []
@@ -196,7 +199,7 @@ func _sparring_checks() -> void:
 	verify(app.think_time_help.text.contains("사람 권장시간") and not app.time_option.visible, "active sparring never exposes a manual short-time option")
 	app.boss_mode_option.select(0)
 	app._render()
-	verify(app.time_option.get_selected_id() == 100 and not app.time_option.visible and app.think_time_help.text.contains("현재 스파링 대국"), "normal draft cannot change automatic management of the active sparring game")
+	verify(app.time_option.get_selected_id() == 100 and not app.time_option.visible and app.think_time_help.text.contains("5분 이하"), "normal draft cannot change automatic management of the active sparring game")
 	requests_before = app.captured_requests.size()
 	app._on_think_time_selected(app.time_option.get_item_index(5000))
 	verify(app.captured_requests.size() == requests_before, "active sparring blocks manual settings even with normal draft selected")
@@ -280,7 +283,7 @@ func _rating_checks() -> void:
 	verify(app.rating_label_save.disabled, "saving prevents duplicate clicks")
 	await process_frame
 	await process_frame
-	verify(app.captured_requests[-1].path == "/api/sparring/rating-label" and app.captured_requests[-1].payload == {"game_id": "sparring-ui-game", "rating": 1420, "revision": 25}, "label request carries exact game revision and integer rating")
+	verify(app.captured_requests[-1].path == "/api/rating-label" and app.captured_requests[-1].payload == {"game_id": "sparring-ui-game", "rating": 1420, "revision": 25}, "label request carries exact game revision and integer rating")
 	verify(app.rating_label_note.text.contains("1420 저장됨") and app.rating_label_note.text.contains("다음 대국"), "confirmed server label explains future calibration")
 	verify(app.sparring_rating_label.text.contains("~1210 (-40)") and app.rating_label_save.text == "레이팅 수정", "label does not rewrite current estimates and remains editable")
 	var correction: Dictionary = saved.duplicate(true)
@@ -299,3 +302,63 @@ func _rating_checks() -> void:
 	verify(app.rating_label_note.text.contains("1500 저장됨"), "late older terminal reply cannot erase saved correction")
 	app.accept_state(fixture(28))
 	verify(not app.sparring_rating_label.visible and not app.rating_label_panel.visible and app.rating_label_input.text.is_empty(), "normal new game clears rating and label draft")
+	for mode in ["normal", "boss"]:
+		var shared: Dictionary = rating_fixture(int(app.state.revision) + 10)
+		shared.engine.sparring_mode = false
+		shared.engine.boss_mode = mode == "boss"
+		shared.engine.rating = shared.engine.sparring_rating
+		shared.engine.erase("sparring_rating")
+		shared.result = "1/2-1/2"
+		app.accept_state(shared)
+		verify(app.rating_label_panel.visible and not app.rating_label_save.disabled, "completed " + mode + " game accepts actual rating without estimate")
+		var saved_shared := shared.duplicate(true)
+		saved_shared.revision += 1
+		saved_shared.engine.rating.label = {"rating": 1550}
+		app.next_response = {"ok": true, "data": saved_shared}
+		app.rating_label_input.text = "1550"
+		app._on_rating_label_save()
+		for _frame in range(4):
+			await process_frame
+		verify(app.captured_requests[-1].path == "/api/rating-label" and app.rating_label_note.text.contains("1550 저장됨"), "common rating endpoint saves " + mode + " label")
+
+
+func _common_automatic_checks() -> void:
+	for mode in range(3):
+		var value: Dictionary = fixture(100 + mode)
+		value.game_id = "shared-auto-%d" % mode
+		value.engine.automatic_think_time = true
+		value.engine.time_management = "automatic"
+		value.engine.boss_mode = mode == 1
+		value.engine.sparring_mode = mode == 2
+		value.clock = {"enabled": true, "control_id": "10+0", "label": "10분 래피드",
+			"white_ms": 600000, "black_ms": 600000, "running_color": "white",
+			"status": "running", "turn_elapsed_ms": 0}
+		app.boss_mode_option.select(mode)
+		app.next_response = {"ok": true, "data": value}
+		app._on_new_game_pressed()
+		await process_frame
+		await process_frame
+		var payload: Dictionary = app.captured_requests[-1].payload
+		verify(not payload.has("movetime_ms") and payload.time_control == "10+0", "every timed mode delegates its search budget")
+		verify(not app.time_option.visible and app.auto_time_label.visible and app.time_option.disabled, "all three live modes have automatic timing")
+		verify(app.think_time_help.text.contains("기본·갬빗·스파링") and app.think_time_help.text.contains("5분 이하"), "all automatic modes explain the common human rhythm")
+		verify(app.status_detail.text.contains("자동으로 조절"), "normal and gambit status also report automatic timing")
+		app.boss_mode_option.select((mode + 1) % 3)
+		app._on_game_mode_selected((mode + 1) % 3)
+		var before: int = app.captured_requests.size()
+		app._on_think_time_selected(0)
+		verify(app.captured_requests.size() == before and not app.time_option.visible, "draft mode cannot enable a live timed manual mutation")
+	var untimed: Dictionary = fixture(110)
+	untimed.game_id = "explicit-untimed"
+	untimed.engine.automatic_think_time = false
+	untimed.engine.time_management = "fixed_legacy"
+	untimed.clock = {"enabled": false}
+	app.accept_state(untimed)
+	app.boss_mode_option.select(2)
+	app._on_game_mode_selected(2)
+	verify(app.time_option.visible and not app.auto_time_label.visible, "draft timed mode preserves the current untimed API game")
+	var clock_only: Dictionary = fixture(111)
+	clock_only.game_id = "clock-only-timing"
+	clock_only.clock = {"enabled": true}
+	app.accept_state(clock_only)
+	verify(not app.time_option.visible and app.auto_time_label.visible, "timed normal state is automatic even without optional metadata")

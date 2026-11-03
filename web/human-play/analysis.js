@@ -252,18 +252,19 @@
     if (!visible || editing) return unknown("형세 분석 대기", "배치를 마치고 분석을 시작하세요.");
     if (busy) return unknown("새 위치 분석 대기", "현재 체스판의 새 평가를 기다립니다.");
     if (failure) return unknown("형세 분석 없음", "연결을 확인하고 현재 위치를 다시 분석해 주세요.");
-    const value = snapshot?.evaluation;
+    const value = snapshot?.reference_evaluation;
     if (!snapshot?.active || !value || value.game_id !== snapshot.game_id || value.revision !== snapshot.revision ||
-        value.fen !== snapshot.fen || (value.source_fen && value.source_fen !== snapshot.fen))
-      return unknown("형세 분석 대기", "현재 체스판의 평가를 기다립니다.");
-    if (value.status === "terminal" && ["1-0","0-1","1/2-1/2"].includes(value.result)) {
+        value.fen !== snapshot.fen || value.turn !== snapshot.turn || (value.source_fen && value.source_fen !== snapshot.fen))
+      return unknown("Stockfish 형세 계산 중", "현재 체스판의 Stockfish 평가를 기다립니다.");
+    if (value.status === "terminal" && value.source === "chess_rules" && ["1-0","0-1","1/2-1/2"].includes(value.result)) {
       const label = value.result === "1-0" ? "백 승리" : value.result === "0-1" ? "흑 승리" : "무승부";
       return {label, score:value.result, share:value.result === "1-0" ? 1 : value.result === "0-1" ? 0 : .5,
         detail:"현재 위치의 종료 판정", bounded:false};
     }
-    if (value.status === "unavailable") return unknown("형세 분석 없음", "현재 위치의 평가값을 사용할 수 없습니다.");
-    if (!["ready","searching"].includes(value.status)) return unknown("형세 분석 대기", "현재 체스판의 평가를 기다립니다.");
-    const hasMate = Number.isInteger(value.mate), hasCp = Number.isFinite(value.cp);
+    if (["unavailable", "error", "disabled"].includes(value.status)) return unknown("Stockfish 평가 사용 불가", "현재 위치의 Stockfish 평가값을 사용할 수 없습니다.");
+    if (value.source !== "stockfish_gauge" || value.status !== "ready" || value.bound !== "exact" || !Number.isInteger(value.depth) || value.depth <= 0)
+      return unknown("Stockfish 형세 계산 중", "현재 체스판의 정확한 Stockfish 평가를 기다립니다.");
+    const hasMate = Number.isInteger(value.mate), hasCp = Number.isInteger(value.cp);
     if (!hasMate && !hasCp) return unknown("형세 계산 중…", "첫 탐색 점수를 기다립니다.");
     const bound = value.bound === "lower" ? "lower" : value.bound === "upper" ? "upper" : "exact";
     const prefix = bound === "lower" ? "≥ " : bound === "upper" ? "≤ " : "";
@@ -285,7 +286,7 @@
     if (value.status === "searching") detail.push("계산 중");
     if (Number.isInteger(value.depth) && value.depth >= 0) detail.push(`탐색 깊이 ${value.depth}`);
     if (prefix) detail.push("경계값이며 확정 형세가 아닙니다");
-    return {label, score:prefix + score, share, detail:detail.join(" · ") || "현재 위치의 탐색 평가", bounded:Boolean(prefix)};
+    return {label:"Stockfish · " + label, score:prefix + score, share, detail:detail.join(" · ") || "현재 위치의 Stockfish 평가", bounded:Boolean(prefix)};
   }
 
   function renderEvaluation() {
@@ -293,8 +294,8 @@
     bar.classList.toggle("black-view", blackView);
     bar.classList.toggle("unknown", view.share === null);
     bar.classList.toggle("bounded", view.bounded);
-    bar.setAttribute("aria-label", `${view.label}, ${view.score}. ${view.detail}. 자체 엔진 추정, 백 기준. 막대는 승률이 아닙니다.`);
-    get("analysis-evaluation-white").style.height = `${(view.share ?? 0) * 100}%`;
+    bar.setAttribute("aria-label", `${view.label}, ${view.score}. ${view.detail}. Stockfish 평가, 백 기준. 수와 추천은 Regicide가 선택합니다. 막대는 승률이 아닙니다.`);
+    get("analysis-evaluation-white").style.height = `${(view.share ?? .5) * 100}%`;
     get("analysis-evaluation-top").textContent = blackView ? "백" : "흑";
     get("analysis-evaluation-bottom").textContent = blackView ? "흑" : "백";
     get("analysis-evaluation-label").textContent = view.label;
@@ -355,8 +356,7 @@
   }
 
   function render() {
-    const openingVisible = !window.RegicideSidebar || window.RegicideSidebar.selected("analysis") === "opening";
-    window.RegicideExplorer?.update("analysis", {fen:snapshot?.fen, active:Boolean(visible && !editing && !busy && snapshot?.active && openingVisible)});
+    window.RegicideExplorer?.update("analysis", {fen:snapshot?.fen, active:Boolean(visible && !editing && !busy && snapshot?.active)});
     if (!visible || busy || (drag && !validDrag())) cancelDrag();
     returnNotice.textContent = returnFailure;
     returnNotice.hidden = visible || !returnFailure;
@@ -480,7 +480,7 @@
     const fen = event.detail?.fen;
     if (typeof fen !== "string" || busy) return;
     try { readFen(fen); } catch (_) { return; }
-    window.RegicideSidebar?.select("analysis", opening ? "opening" : "analysis");
+    window.RegicideSidebar?.select("analysis", "analysis");
     if (!visible) await enter();
     if (!visible || busy || !snapshot) return;
     if (await action("start", {fen,movetime_ms:Number(get("analysis-time").value)})) {

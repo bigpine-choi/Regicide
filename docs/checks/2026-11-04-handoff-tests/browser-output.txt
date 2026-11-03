@@ -1,0 +1,293 @@
+FILE: boss_mode_web_tests.log
+Browser mode/reliability checks: PASS (three exclusive modes, phases, draft, stale settings, undo, separate reliability, identity guards)
+
+
+FILE: clock_adjust_web_tests.log
+Clock adjustment browser checks: PASS (buttons, colors, AI overlap, edit ordering, zero, caps, mode guards, errors, game identity)
+
+
+FILE: coaching_reference_web_tests.log
+PASS both colors use Stockfish white score while native classification stays unchanged
+PASS later PV position gets its own history and score, never the root score
+PASS late POST and stale request id cannot populate a different position
+PASS polling only accepts completed matching reference and failures keep the gauge neutral
+PASS retry hides the score immediately and late replies do not reveal answers
+PASS mate winner and board orientation stay white based
+PASS temporary failure retries after backoff at most twice and recovers
+PASS leaving coaching rejects reference replies and cancels owned reference context
+8 coaching reference browser checks passed.
+
+
+FILE: opening_explorer_web_tests.log
+PASS saved connection restores once without querying hidden positions or showing token entry
+PASS late connection bootstrap respects hidden view and token replacement
+PASS rejected saved key exposes replacement form and preserves the server reason
+PASS analysis first opened after saving uses the updated shared connection
+PASS transient local bootstrap failure retries on a later view update with backoff
+PASS visible board automatically queries only FEN and selected filters without a toggle
+PASS query follows new board; stale responses cannot restore old rows
+PASS polls only matching generation and stops when leaving the view
+PASS poll identity rejects another client's request key
+PASS source and rating/speed changes are query parameters and reject stale filters
+PASS explore opens separate analysis context and never sends a game move
+PASS reference URLs are allowlisted, invalid rows are skipped, names are text
+PASS authentication clears password before request and never displays the token
+PASS explorer tabs show one section and connection setup pauses remote polling
+PASS hidden parent tabs stop queries and retain filters and usable ready rows on return
+PASS internal keyboard navigation uses roving focus and does not fetch while connection is selected
+PASS no data, rate limit and network failure have useful states without stale rows
+17 opening explorer web tests passed
+
+
+FILE: opening_guide_web_tests.log
+PASS opening guidance lives in its own panel while common game tools precede the scrolling panels
+PASS current exact and transposed names keep ECO and source labels
+PASS a next-move preview shows future registered names, distance and remaining SAN without playing
+PASS selection and same-position time refresh preserve expanded examples
+PASS state and replay payload changes replace old lines while late revisions stay ignored
+PASS outside catalog, unknown and missing data stay useful without stale branches
+PASS white setup and black response are distinct with exact combined classification retained
+PASS pending, historical and position-only sides do not claim current confirmed openings
+PASS long and hostile side names remain plain text with complete tooltip and no actions
+PASS verified supplemental names without ECO display no invented code or trailing separator
+PASS finite coverage and malformed or human-illegal branches are explicit
+PASS source failure and hostile labels never inject markup, unsafe links or game actions
+12 opening-guide browser behavior cases passed.
+
+
+FILE: rapid_clock_web_tests.log
+Rapid clock browser checks: PASS (controls, live clock, stale/duplicate packets, increments, pause, flags, background poll, advice, legacy, handicap preview/cancel/replacement for 3 controls and both colors)
+
+
+FILE: sidebar_web_tests.log
+PASS only the selected tool panel occupies sidebar space and switching never changes game controls
+PASS keyboard tabs support arrows home end and preserve each panel scroll
+PASS frequent actions remain outside scrollable panels while clocks errors and promotion stay independent
+PASS opening content and records have separate panels; coaching setup precedes long coaching content
+PASS archive shortcut uses the existing archive entry without affecting sidebar selection
+5 sidebar web checks passed
+
+
+FILE: think_time_web_tests.log
+Browser time-setting checks: PASS (legacy, dynamic wording, phase crossing, captured budget, selection, response order, CAS failure)
+
+
+FILE: web_analysis_tests.log
+PASS editor paints and erases while preserving unrelated castling rights
+PASS FEN import preserves side, castling, en passant and counters; malformed rows reject
+PASS invalid server position stays editable with reason and no game mutations
+PASS recommendation is shown as square markers and arrow without auto playing
+PASS foreign or illegal recommendations never display
+PASS old poll after a move cannot restore the previous recommendation
+PASS both sides move manually; returning cancels analysis and reveals live game
+PASS terminal position has no recommendation and can undo
+PASS promotion requires an explicit piece choice
+PASS a successful poll clears a transient connection error and restores advice
+PASS current-position loading times out and releases the editor controls
+PASS a failed stop still returns to the live screen and discards late advice
+PASS palette drags copy in both orientations and preserve untouched home-piece rights
+PASS board dragging preserves its source until drop, moves and replaces without painting the brush
+PASS completed off-board and trash drops remove board pieces while palette drops cancel
+PASS Escape, release outside the window, same-square and invalid board drops preserve source and metadata
+PASS rotation, FEN changes and busy requests cancel old editor drags
+PASS leaving or starting cancels editor drags and running off-board drops never delete
+PASS a drop suppresses its duplicate click while later click placement and erasing remain available
+PASS evaluation signs always use White's perspective and zero means balance
+PASS native scores cannot fill a missing Stockfish gauge
+PASS only completed Stockfish evaluations display while native advice remains independent
+PASS non-exact Stockfish bounds leave the gauge neutral
+PASS mate scores including M0 preserve the winner and terminal draws remain balanced
+PASS flipping the board swaps the bar ends while retaining the White POV score
+PASS foreign and unavailable evaluation snapshots never display an old score
+PASS moves, connection errors and returning to the editor clear evaluation immediately
+PASS a late pre-move poll cannot replace the current position's evaluation
+PASS the analysis evaluation explains its units and distinguishes the bar from a win probability
+PASS four castling rights follow FEN imports, manual toggles and standard presets
+PASS rights need their home king and rook and survive unrelated editor changes
+PASS an invalid imported right remains intact for the backend to reject
+PASS both colors can castle on either side through a single move and undo
+PASS castling buttons obey legal moves even with rights during check, blocked or attacked paths
+PASS a pending promotion blocks castle buttons until selection is cancelled
+PASS editor clears only touched home-piece rights and never restores a lost flag
+PASS clearing bishop and knight paths and editing a pawn retain the existing right then standard drag castles
+PASS running two-square and king-rook drags use canonical castling in both colors and orientations
+PASS legal king-rook click aliases work both ways while missing rights remain rejected
+PASS same-position polling keeps a running drag source alive and a position change cancels it
+PASS active illegal and off-board drops preserve position and promotion drag requires a choice
+PASS backend diagnostics remain available and connection errors block castle gestures
+PASS normal opening input events reach both standard two-square castling drags
+PASS explorer opens its resulting FEN in separate analysis without a live-game move
+PASS invalid explorer positions cannot start analysis
+45 browser analysis behavior cases passed.
+
+
+FILE: web_board_motion_tests.log
+PASS single known forward move plans from authoritative board difference
+PASS mismatched metadata, jumps, flip and editor replacements do not animate
+PASS opponent reply animates when the live host omits selectable moves
+PASS ordinary capture fades only the actual captured piece
+PASS en passant removes the pawn on its actual square in both colors
+PASS all four castles animate the king and rook together
+PASS promotion and promotion capture retain pawn origin and final piece
+PASS impossible transition shapes and blocked slides safely snap
+PASS state commits immediately while overlays have no input semantics
+PASS same-position polling preserves the current animation without retriggering
+PASS actual move badge stays hidden until all moving pieces land
+PASS repaint and rapid reverse movement cannot reveal a badge from the unfinished animation
+PASS badges are immediate with reduced motion or cancelled transitions
+PASS rapid next move cancels the previous overlay and reveals its committed piece
+PASS castling has simultaneous motion and promotion crossfades to final glyph
+PASS flip, jumps, hidden mode and resize clean all ghosts
+PASS one-ply undo reverses motion and restores captured pieces without ghosts
+PASS undo preserves castling, en passant and promotion transitions
+PASS document hiding removes animation overlays and cancels effects
+PASS animation ignores legacy saved preferences while respecting system reduced motion
+PASS move sounds land once for human and opponent moves despite repeated polling
+PASS captures, en passant and promotion captures sound once; castle is one tap
+PASS cancel, undo, jumps, editor updates and hidden boards never emit stale sounds
+PASS reduced motion sounds immediately and a fast reply preserves both taps without late duplicates
+PASS CSS overlays cannot intercept moves and all three boards use the shared motion layer
+Browser board motion: 25 checks passed.
+
+
+FILE: web_coaching_tests.log
+PASS opening the chooser does not start an engine or alter live game
+PASS saved game is reviewed before explicit analysis with selected side and budget
+PASS live current source must still be finished at load time
+PASS finished current game auto previews but never auto starts coaching
+PASS both sides display by default with actor labels and optional my-side filter
+PASS both alternatives replay server frames including both king and rook
+PASS next mistake replays every actual intervening move including the target and ends after it
+PASS context replay can pause, resume or skip without applying missing moves
+PASS context replay from a variation returns to its actual source before following the game
+PASS manual stepping, changing sources and leaving stop stale context timers
+PASS foreign job replacement stops the previous context traversal
+PASS hiding the browser stops replay instead of advancing in the background
+PASS both-side critical navigation includes opponent mistakes and explicit opponent filtering
+PASS archive entry shows local timestamps and replays saved game without starting analysis
+PASS mainline first/end and flip do not alter logical positions or report
+PASS pending results have no guessed score, label, recommendation or line
+PASS scores retain white perspective, mate winner zero and bounds
+PASS native scores remain in move details while the main gauge waits for Stockfish throughout replay
+PASS native roots never populate the main gauge whether matched, mismatched or pending
+PASS hypothetical positions never inherit native scores even when their FEN occurs in the mainline
+PASS terminal frame results override search values while zero mate without a winner remains unknown
+PASS old poll cannot undo cancellation or replace the newer report
+PASS foreign job detaches old report and is not cancelled on return
+PASS changing my side after completion updates filters, both-side summary and actor labels
+PASS failed new-source start never attaches the previous job report
+PASS foreign running job at entry is never silently adopted or rendered
+PASS revision conflict carries forward server revision without displaying foreign data
+PASS return cancels only owned running work and rejects late responses
+PASS failed cancel still returns with visible and truthful warning
+PASS file is size bounded, UTF-8 validated, previewed and requires explicit side choice
+PASS timeout releases controls and pagehide invalidates delayed snapshots
+PASS arrow keys navigate only coaching, never intercept input controls
+PASS analysis mode prevents overlapping coaching ownership
+PASS coaching mode pauses and resumes live hint and evaluation polling
+PASS Rook uses server dialogue and highlights evidence only at its matching position
+PASS positive lesson navigation follows the actual game with neutral transit guidance
+PASS positive retry hides played-equals-best solution, lists, evaluation and arrows
+PASS retry click submits once, preserves report and reveals fresh candidate and best replay explicitly
+PASS pointer-owned retry drag supports rook-to-king castling without native HTML takeover
+PASS mouse-only drag and compatibility mouse events each submit exactly one legal move
+PASS pointer release uses final hit test even without intermediate events or with captured source target
+PASS pointer cancellation, lost window focus and Escape discard an unfinished drag
+PASS pointer drag submits legal move once and rejects offboard, stale and invalid drops
+PASS each promotion choice is explicit and submitted with its exact suffix
+PASS retry en passant display removes captured pawn while leaving archived board untouched
+PASS late retry responses cannot revive exercises after navigation, source, filter, side or exit changes
+PASS retry revision conflict adopts only new revision and releases stale job ownership
+PASS retry mismatched response remains hidden and network failure permits reset
+PASS retry rejects mismatched candidate or best root even when response outer identity matches
+PASS retry is unavailable for running or unanalyzed rows and keyboard input uses legal targets
+PASS automatic speech is absent-safe and selects only local English voices
+PASS automatic speech stops on retry, navigation and hidden document; stale callbacks cannot stop newer speech
+PASS 300ms speech debounce keeps only the latest scene and ignores repeated renders and late timers
+PASS voice toggle defaults on, mutes navigation and resumes only the current scene
+PASS actual-game walkthrough remains quiet until its target, including paused intermediate frames
+PASS overview, variation and retry feedback are read from revealed content only
+PASS teaching dialogue automatically reads the better move, reason and principle from either player's perspective
+PASS unsolved retry hides nested teaching and cancels pending solution speech until explicit reveal
+PASS pending speech is invalidated on return, pagehide, source replacement and hidden documents
+PASS actual move badges use Game Review symbols and require explicit Great metadata
+PASS legacy good check marks become thumbs up while missed opportunities keep X
+PASS foreign or inconsistent annotation metadata never falls back to a plausible-looking badge
+PASS key-scene buttons jump immediately through lessons and important mistakes from either side
+PASS old reports still offer positive key scenes and skip pending or uncertain rows
+PASS uncertain retry never reads a legacy cached hint
+PASS uncertain moves suppress legacy gray badges, grades and automatic dialogue
+PASS badge attachment requires exact actual frame ply, FEN, UCI and occupied destination
+PASS selection and before-after controls keep the same evaluated move while first and step show their exact frames
+PASS badges remain absent on every hypothetical line and throughout retry including revealed answer
+PASS castle badge stays on the moved king when flipped and on the correct promotion piece at every edge
+PASS pending analysis and archive-only replay have no grades and a matching update adds the settled badge
+PASS badge CSS is an inert overlay sized from the board, and the legend distinguishes limited candidate evidence
+PASS coach wording and automatic narration follow the selected human side
+PASS six-ply explanation animates every server frame, highlights SAN and keeps the final board for its summary
+PASS guided speech waits for voice completion without interrupting each step and reads the final summary
+PASS guided pause and manual stepping cancel stale work, resume the current explanation and retain the original review
+PASS manual continuation steps read once while paused, never auto advance, and reject stale speech or timers
+PASS manual steps with muted or absent speech remain paused without reading timers
+PASS short confirmed lines and terminal lines never promise six available moves
+PASS continuation gate rejects untrusted mismatches, noncritical rows and actual-equals-best
+PASS guided callbacks cannot revive after navigation, overview, evidence, retry, job replacement or leaving
+PASS retry hides the continuation completely, and revealed retry feedback never starts the original solution
+PASS muting or unavailable speech uses bounded reading time, errors recover, and selected perspective is spoken
+PASS strategic overview and three deeper parts speak the selected perspective and show exact evidence frames
+PASS positive lessons explain the actual move and reject missing, bounded or mismatched evidence
+PASS strategy speech and evidence stop on replay, retry, new selection, overview and page lifecycle
+PASS opening the game overview from a deep explanation reads the overview, not the move summary
+PASS strategy selection cancels six-ply replay and normal variation stepping leaves the deep explanation
+PASS opening choices explain both plans and the measured balance on the actual board with speech
+PASS opening packets reject stale positions, malformed sections and absent knowledge
+PASS opening narration cancels on navigation, side, source, strategy, guide, practice and lifecycle
+PASS opening to overview reads the overview and returning keeps ordinary move feedback
+PASS opening review entry remains discoverable from later lessons and finds the latest valid opening checkpoint
+PASS unrelated analysis progress keeps the opening lesson speaking while changed evidence cancels it
+PASS all UI ids exist and output has no HTML interpolation sink
+Browser coaching: 95 checks passed.
+
+
+FILE: web_hint_tests.log
+PASS default off and reload restores the saved preference
+PASS a legacy legal recommendation draws a ranked arrow in both orientations
+PASS promotion recommendation names the promotion piece
+PASS foreign game, revision, FEN and illegal moves never appear
+PASS rapid on/off/on keeps preference and ignores earlier replies
+PASS turning off clears immediately and an in-flight poll cannot restore highlights
+PASS new games, undo, terminal states and errors clear existing or late hints
+PASS toggle works during opponent search without starting a second game action
+PASS both opponent colors stream ranked arrows while the move request waits, then clear stale replies
+PASS opponent hint legality, side identity, and unrelated mutations remain isolated
+PASS hint request failures leave the game usable and remove the recommendation
+PASS shutdown and navigation discard delayed recommendations
+PASS three candidates are sorted, colored and numbered without choosing a move
+PASS explicit empty or malformed lists never resurrect the legacy first move
+PASS illegal, duplicate, invalid-rank and mismatched-coordinate candidates are discarded and capped at three
+PASS all candidates obey game, revision and FEN identity
+PASS promotion alternatives share centered endpoints with distinct widths and badges, including edge files after flipping
+PASS collinear shared sources and destinations stay centered with distinct badges
+PASS analysis and coaching transitions clear arrows and invalidate in-flight replies even after returning
+PASS hint arrows remain click-through and normal board input still submits only the selected legal move
+PASS candidate SAN is plain text and cannot create markup
+PASS native refinement cannot substitute for a missing Stockfish score
+PASS ranked hints preserve the current gameplay evaluation and board state
+PASS ready exact sparring referee controls gauge while own score and source remain explicit
+PASS stale, incomplete, bounded and malformed Stockfish scores leave a neutral gauge
+PASS uninstalled Stockfish stays neutral even with a ready cached reference
+PASS old hosts without Stockfish keep a neutral gauge
+PASS normal and gambit display the common Stockfish gauge metadata
+PASS reference mate values and absent visual share preserve white perspective
+PASS terminal result remains authoritative and reference metadata never changes root fields
+30 browser hint behavior cases passed.
+
+
+FILE: web_move_sound_tests.log
+PASS preload does not create an audio context or queue pre-gesture moves
+PASS keyboard unlock supports the independent capture buffer without speech APIs
+PASS loading, unsupported devices and autoplay rejection never queue or throw
+PASS suspension never resumes from a move callback or replays earlier moves
+PASS hidden page, leaving and disabling stop effects without changing speech
+PASS effects script loads before shared motion in all board modes
+Browser move audio: 6 checks passed.

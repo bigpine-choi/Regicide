@@ -1,0 +1,39 @@
+{
+  "created_utc": "2026-11-03T14:46:13.700389+00:00",
+  "passed": true,
+  "web": {
+    "command": "node tests/opening_explorer_web_tests.js",
+    "tests": 17,
+    "failures": 0
+  },
+  "godot": {
+    "command": "C:/Users/hanso/Tools/Godot/Godot_v4.7.2-stable_win64_console.exe --headless --path godot --script res://tests/opening_explorer_tests.gd",
+    "checks": 40,
+    "failures": 0
+  },
+  "native_integration": {
+    "command": "./.venv-tests/Scripts/python.exe tests/opening_explorer_integration_tests.py --binary build/regicide.exe --godot C:/Users/hanso/Tools/Godot/Godot_v4.7.2-stable_win64_console.exe --output build/opening-explorer-persistent-general-final",
+    "checks": [
+      "real HTTP + explorer worker + filtered synthetic statistics",
+      "candidate position reaches independent analysis and real Regicide produces a legal recommendation",
+      "live game and durable game files are unchanged",
+      "native Godot scene queries HTTP statistics and opens real-engine analysis without changing the game"
+    ],
+    "godot_http_checks": 17,
+    "failures": 0,
+    "scope": "Real localhost, shipped Godot UI and Regicide engine; external public statistics replaced with fixtures. No user credential used.",
+    "additional_coverage": "Switch masters to Lichess general with default 1600+ ratings and rapid/classical through real HTTP JSON; confirm statistics render and selected analysis inherits general filters."
+  },
+  "source_sha256": {
+    "godot/scripts/opening_explorer.gd": "de3bdebb855cb942377f36fb2daf709ff9bee19d43f7c72f367c543fb3078105",
+    "web/human-play/explorer.js": "f365e228059d4918b17b811e4d3281946cd866f3759f3ef28d5998bb92bb2749",
+    "godot/tests/opening_explorer_tests.gd": "4508ed7888f27dfb9adec3dd0d5e4212cd3ca633bf74a01235f8066b6707e16a",
+    "godot/tests/opening_explorer_live_tests.gd": "eb9c522a5e21dcdd84c43559820097d4e4c85f9ac5f8af15ea527f2966b29c26",
+    "tests/opening_explorer_web_tests.js": "b79c0682e0a28f57d362b2a10b89d11c3885c1a4bb39a80232b4ff243fe146d1"
+  },
+  "json_filter_regression": {
+    "before_fix": "JSON serialize/parse regression reproduced failure: 39 checks, 1 failure",
+    "after_fix": "40 checks, 0 failures; exact numeric comparison accepts JSON float ratings and rejects fractional/string/bool impostors",
+    "scope": "Godot presentation filter identity only; backend authentication/statistics unchanged"
+  }
+}

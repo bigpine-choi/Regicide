@@ -19,7 +19,7 @@
     }
     announce(name, tab); return true;
   }
-  for (const [name, tabs] of [["live", ["game", "opening", "records"]], ["analysis", ["analysis", "opening"]]]) {
+  for (const [name, tabs] of [["live", ["game", "records"]], ["analysis", ["analysis"]]]) {
     const items = tabs.map((tab) => ({tab, button:get(`${name}-sidebar-tab-${tab}`), panel:get(`${name}-sidebar-panel-${tab}`)})).filter((item) => item.button && item.panel);
     if (!items.length) continue;
     groups.set(name, {items, selected:tabs[0]});

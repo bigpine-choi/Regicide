@@ -1,0 +1,3005 @@
+{
+  "schema": "regicide.gambit-ranking-dataset.v1",
+  "created_utc": "2026-11-03T18:37:48.529659+00:00",
+  "seed": 20261104,
+  "nodes": 6000,
+  "roots_per_family": 12,
+  "max_candidates": 6,
+  "source_sha256": {
+    "scripts/gambit_learning.py": "04bfe5191dfb5da80b3ec3b82e6cd29064369b9ede8669b7e3211bda64112617",
+    "scripts/train_gambit_policy.py": "f5b8092f4153c7c5a9a06e53f5a21bc5973d2e091dac46e0e64805721a9b8f0e",
+    "scripts/dynamic_play.py": "e186c6e24e24242c40d692dffacee5ddf45539dd3d8933363a3148caaaae5fc4",
+    "scripts/neural_search_data/engine.py": "5669810b21d9daeecf57d21840a70aab2bd3507243db5db48bbe5821acb89873",
+    "scripts/gambit_knowledge.py": "d123a232818878e2757a751b8babcdc3d191d99f5558bb808382e6ec1730737b"
+  },
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "splits": {
+    "families": {
+      "kings": "train",
+      "danish": "train",
+      "albin": "train",
+      "scotch": "train",
+      "vienna": "train",
+      "englund": "train",
+      "blackmar-diemer": "train",
+      "from": "train",
+      "benko": "train",
+      "smith-morra": "validation",
+      "budapest": "validation",
+      "evans": "holdout",
+      "stafford": "holdout"
+    },
+    "root_counts": {
+      "albin": 8,
+      "benko": 12,
+      "blackmar-diemer": 12,
+      "budapest": 1,
+      "danish": 2,
+      "evans": 12,
+      "from": 1,
+      "kings": 12,
+      "scotch": 3,
+      "smith-morra": 12,
+      "stafford": 3,
+      "vienna": 1
+    },
+    "split_counts": {
+      "train": 51,
+      "validation": 13,
+      "holdout": 15
+    },
+    "multi_graph_counts": {
+      "train": 13,
+      "validation": 4,
+      "holdout": 8
+    },
+    "cross_split_root_intersections": 0,
+    "excluded": [],
+    "assignment_sha256": "2995ed8d03d44b73c14faf326cd0c4657b37ed4c2b9ae706ea61abb97daa9088"
+  },
+  "target": "negative child side-to-move exact CP from fresh own fixed-node search; mate/bound/missing excluded",
+  "external_data_role": "CC0 catalog supplies positions/proposals only, not target evaluations",
+  "feature_names": [
+    "capture_gain",
+    "moving_piece",
+    "check",
+    "castling",
+    "promotion_gain",
+    "mobility_delta",
+    "development_delta",
+    "rook_files_delta",
+    "pressure_delta",
+    "opponent_mobility_delta",
+    "opponent_pressure_delta",
+    "center_control_delta",
+    "king_ring_danger_delta",
+    "pawn_advance",
+    "destination_defended",
+    "destination_attacked",
+    "worst_capture_net",
+    "reply_min_mobility_delta",
+    "reply_min_development_delta",
+    "reply_min_pressure_delta",
+    "reply_check_fraction",
+    "reply_mate",
+    "own_material_balance",
+    "opponent_castling_rights"
+  ],
+  "feature_schema": "regicide-gambit-features-v1",
+  "roots": [
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3",
+        "b8c6",
+        "g2g3"
+      ],
+      "fen": "r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5NP1/PP2PP1P/RNBQKB1R b KQkq - 0 5",
+      "position_key": "r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5NP1/PP2PP1P/RNBQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "c8e6",
+        "c8f5",
+        "c8g4"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-781864b6fe211a7a",
+        "knowledge-8fe141f26f911ca5",
+        "knowledge-a7bb5956f638c6a0"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-ccdfb56a117ac3"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/ppp2ppp/8/4P3/2Pp4/5N2/PP2PPPP/RNBQKB1R b KQkq - 1 4",
+      "position_key": "rnbqkbnr/ppp2ppp/8/4P3/2Pp4/5N2/PP2PPPP/RNBQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "c7c5",
+        "b8c6"
+      ],
+      "stages": [
+        "defense",
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-49dc3633b5c62c72",
+        "knowledge-51d214ccb949a567",
+        "knowledge-781864b6fe211a7a",
+        "knowledge-809167438fc0ad92",
+        "knowledge-8fe141f26f911ca5",
+        "knowledge-a7bb5956f638c6a0",
+        "knowledge-b54b6f04c12a1f30",
+        "knowledge-d536ef7348c98771",
+        "knowledge-f02aff8d6a48aa66"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-bb43a34b574fa3"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3",
+        "b8c6",
+        "b1d2"
+      ],
+      "fen": "r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5N2/PP1NPPPP/R1BQKB1R b KQkq - 3 5",
+      "position_key": "r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5N2/PP1NPPPP/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d8e7",
+        "c8g4",
+        "f7f6"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-51d214ccb949a567",
+        "knowledge-809167438fc0ad92",
+        "knowledge-f02aff8d6a48aa66"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-afc02113c625e4"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "e2e3"
+      ],
+      "fen": "rnbqkbnr/ppp2ppp/8/4P3/2Pp4/4P3/PP3PPP/RNBQKBNR b KQkq - 0 4",
+      "position_key": "rnbqkbnr/ppp2ppp/8/4P3/2Pp4/4P3/PP3PPP/RNBQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "f8b4"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-4313eb3536264264"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-b3b8e3054bff50"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3",
+        "b8c6",
+        "b1d2",
+        "c8g4",
+        "h2h3"
+      ],
+      "fen": "r2qkbnr/ppp2ppp/2n5/4P3/2Pp2b1/5N1P/PP1NPPP1/R1BQKB1R b KQkq - 0 6",
+      "position_key": "r2qkbnr/ppp2ppp/2n5/4P3/2Pp2b1/5N1P/PP1NPPP1/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "g4f3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-809167438fc0ad92"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-ac4b3ffff878cc"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3",
+        "b8c6",
+        "b1d2",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d2f3"
+      ],
+      "fen": "r2qkbnr/ppp2ppp/2n5/4P3/2Pp4/5N1P/PP2PPP1/R1BQKB1R b KQkq - 0 7",
+      "position_key": "r2qkbnr/ppp2ppp/2n5/4P3/2Pp4/5N1P/PP2PPP1/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "f8b4"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-809167438fc0ad92"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-d6ecf6f15a0e57"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "e2e3",
+        "f8b4",
+        "c1d2"
+      ],
+      "fen": "rnbqk1nr/ppp2ppp/8/4P3/1bPp4/4P3/PP1B1PPP/RN1QKBNR b KQkq - 2 5",
+      "position_key": "rnbqk1nr/ppp2ppp/8/4P3/1bPp4/4P3/PP1B1PPP/RN1QKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d4e3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-4313eb3536264264"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-6e8304fb979310"
+    },
+    {
+      "family_id": "albin",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "d5d4",
+        "g1f3",
+        "b8c6",
+        "b1d2",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d2f3",
+        "f8b4",
+        "c1d2"
+      ],
+      "fen": "r2qk1nr/ppp2ppp/2n5/4P3/1bPp4/5N1P/PP1BPPP1/R2QKB1R b KQkq - 2 8",
+      "position_key": "r2qk1nr/ppp2ppp/2n5/4P3/1bPp4/5N1P/PP1BPPP1/R2QKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d8e7"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-809167438fc0ad92"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "albin-1b4ead3ab6cfb8"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6"
+      ],
+      "fen": "rnbqkb1r/3ppppp/P4n2/2pP4/8/8/PP2PPPP/RNBQKBNR b KQkq - 0 5",
+      "position_key": "rnbqkb1r/3ppppp/P4n2/2pP4/8/8/PP2PPPP/RNBQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "c8a6",
+        "g7g6"
+      ],
+      "stages": [
+        "accepted",
+        "variation",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-2d78b4be28b3b164",
+        "knowledge-365e09db73424126",
+        "knowledge-4560107cc50251ad",
+        "knowledge-8b1413a51ae900e2",
+        "knowledge-a591234c053b8aa8",
+        "knowledge-b9a723fbac869ffe",
+        "knowledge-dc58190731d79d21",
+        "knowledge-dee28be8f83fa09a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-e9c3c857498c46"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "g7g6",
+        "b1c3",
+        "c8a6",
+        "g1f3",
+        "d7d6",
+        "e2e4"
+      ],
+      "fen": "rn1qkb1r/4pp1p/b2p1np1/2pP4/4P3/2N2N2/PP3PPP/R1BQKB1R b KQkq e3 0 8",
+      "position_key": "rn1qkb1r/4pp1p/b2p1np1/2pP4/4P3/2N2N2/PP3PPP/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "a6f1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-b9a723fbac869ffe"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-5cd68f2799abc5"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b1c3",
+        "a6b5",
+        "e2e4",
+        "b5b4",
+        "c3b5"
+      ],
+      "fen": "rnbqkb1r/3ppppp/5n2/1NpP4/1p2P3/8/PP3PPP/R1BQKBNR b KQkq - 1 7",
+      "position_key": "rnbqkb1r/3ppppp/5n2/1NpP4/1p2P3/8/PP3PPP/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d7d6"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-bb5220c4d32fb1db"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-f1cd53464bba1a"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "g7g6",
+        "b1c3",
+        "c8a6",
+        "e2e4",
+        "a6f1",
+        "e1f1"
+      ],
+      "fen": "rn1qkb1r/3ppp1p/5np1/2pP4/4P3/2N5/PP3PPP/R1BQ1KNR b kq - 0 8",
+      "position_key": "rn1qkb1r/3ppp1p/5np1/2pP4/4P3/2N5/PP3PPP/R1BQ1KNR b kq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d7d6"
+      ],
+      "stages": [
+        "accepted",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-4560107cc50251ad",
+        "knowledge-dc58190731d79d21"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-efd5e673e793a1"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b1c3",
+        "a6b5",
+        "e2e4"
+      ],
+      "fen": "rnbqkb1r/3ppppp/5n2/1ppP4/4P3/2N5/PP3PPP/R1BQKBNR b KQkq e3 0 6",
+      "position_key": "rnbqkb1r/3ppppp/5n2/1ppP4/4P3/2N5/PP3PPP/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "b5b4"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-bb5220c4d32fb1db",
+        "knowledge-db9beb1bc8770de6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-15d36444ff890a"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "g7g6",
+        "b1c3"
+      ],
+      "fen": "rnbqkb1r/3ppp1p/P4np1/2pP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 6",
+      "position_key": "rnbqkb1r/3ppp1p/P4np1/2pP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "c8a6"
+      ],
+      "stages": [
+        "accepted",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-4560107cc50251ad",
+        "knowledge-a591234c053b8aa8",
+        "knowledge-b9a723fbac869ffe",
+        "knowledge-dc58190731d79d21",
+        "knowledge-dee28be8f83fa09a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-5eaa95e9d80c92"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "c8a6",
+        "b1c3",
+        "d7d6",
+        "g1f3"
+      ],
+      "fen": "rn1qkb1r/4pppp/b2p1n2/2pP4/8/2N2N2/PP2PPPP/R1BQKB1R b KQkq - 1 7",
+      "position_key": "rn1qkb1r/4pppp/b2p1n2/2pP4/8/2N2N2/PP2PPPP/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "g7g6"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-365e09db73424126",
+        "knowledge-8b1413a51ae900e2"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-ecc2c963aebd13"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "g7g6",
+        "b1c3",
+        "c8a6",
+        "g2g3"
+      ],
+      "fen": "rn1qkb1r/3ppp1p/b4np1/2pP4/8/2N3P1/PP2PP1P/R1BQKBNR b KQkq - 0 7",
+      "position_key": "rn1qkb1r/3ppp1p/b4np1/2pP4/8/2N3P1/PP2PP1P/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d7d6"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-a591234c053b8aa8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-d7b92ec254dbe5"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b1c3"
+      ],
+      "fen": "rnbqkb1r/3ppppp/p4n2/1PpP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 5",
+      "position_key": "rnbqkb1r/3ppppp/p4n2/1PpP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "a6b5"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-bb5220c4d32fb1db",
+        "knowledge-db9beb1bc8770de6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-ed087d4a3c9e54"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5"
+      ],
+      "fen": "rnbqkb1r/p2ppppp/5n2/1PpP4/8/8/PP2PPPP/RNBQKBNR b KQkq - 0 4",
+      "position_key": "rnbqkb1r/p2ppppp/5n2/1PpP4/8/8/PP2PPPP/RNBQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "a7a6"
+      ],
+      "stages": [
+        "accepted",
+        "variation",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-1632c5df488fe61a",
+        "knowledge-2d78b4be28b3b164",
+        "knowledge-365e09db73424126",
+        "knowledge-4560107cc50251ad",
+        "knowledge-7c20505a28751b7c",
+        "knowledge-8b1413a51ae900e2",
+        "knowledge-9fd0dc0949fd1f4d",
+        "knowledge-a23c95934d30d8e7",
+        "knowledge-a591234c053b8aa8",
+        "knowledge-b6376ef5770ff6f5",
+        "knowledge-b9a723fbac869ffe",
+        "knowledge-bb5220c4d32fb1db",
+        "knowledge-db9beb1bc8770de6",
+        "knowledge-dc58190731d79d21",
+        "knowledge-dee28be8f83fa09a",
+        "knowledge-e007a59b7d3c005f"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-fbb639644509a5"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "c8a6",
+        "b1c3"
+      ],
+      "fen": "rn1qkb1r/3ppppp/b4n2/2pP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 6",
+      "position_key": "rn1qkb1r/3ppppp/b4n2/2pP4/8/2N5/PP2PPPP/R1BQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d7d6"
+      ],
+      "stages": [
+        "accepted",
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-2d78b4be28b3b164",
+        "knowledge-365e09db73424126",
+        "knowledge-8b1413a51ae900e2"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-cf89b79b769f34"
+    },
+    {
+      "family_id": "benko",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "b7b5",
+        "c4b5",
+        "a7a6",
+        "b5a6",
+        "g7g6",
+        "b1c3",
+        "c8a6",
+        "g1f3",
+        "d7d6",
+        "e2e4",
+        "a6f1",
+        "e1f1"
+      ],
+      "fen": "rn1qkb1r/4pp1p/3p1np1/2pP4/4P3/2N2N2/PP3PPP/R1BQ1K1R b kq - 0 9",
+      "position_key": "rn1qkb1r/4pp1p/3p1np1/2pP4/4P3/2N2N2/PP3PPP/R1BQ1K1R b kq -",
+      "turn": "black",
+      "graph_candidates": [
+        "f8g7"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-b9a723fbac869ffe"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "benko-7f9fe9aa1672d6"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "g7g6",
+        "f1c4",
+        "f8g7",
+        "e1g1",
+        "e8g8"
+      ],
+      "fen": "rnbq1rk1/ppp1ppbp/5np1/8/2BP4/2N2N2/PPP3PP/R1BQ1RK1 w - - 4 8",
+      "position_key": "rnbq1rk1/ppp1ppbp/5np1/8/2BP4/2N2N2/PPP3PP/R1BQ1RK1 w - -",
+      "turn": "white",
+      "graph_candidates": [
+        "g1h1",
+        "d1e1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-2519dbd786332063",
+        "knowledge-80da8fd689f2c371"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-889b2178c34d8a"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "c7c6"
+      ],
+      "fen": "rn1qkb1r/pp2pppp/2p2n2/8/3P4/2N2Q1P/PPP3P1/R1B1KB1R w KQkq - 0 8",
+      "position_key": "rn1qkb1r/pp2pppp/2p2n2/8/3P4/2N2Q1P/PPP3P1/R1B1KB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g2g4",
+        "f3f2",
+        "c1e3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-097b19d5c1bf27b9",
+        "knowledge-75100231d046595a",
+        "knowledge-f04cb40df4c45ba8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-45fe9b9db683ea"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "g7g6",
+        "f1c4",
+        "f8g7"
+      ],
+      "fen": "rnbqk2r/ppp1ppbp/5np1/8/2BP4/2N2N2/PPP3PP/R1BQK2R w KQkq - 2 7",
+      "position_key": "rnbqk2r/ppp1ppbp/5np1/8/2BP4/2N2N2/PPP3PP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "h2h4",
+        "e1g1",
+        "f3e5"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-233d6883b5b7595b",
+        "knowledge-2519dbd786332063",
+        "knowledge-80da8fd689f2c371",
+        "knowledge-88739dfe894f84ce"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-030697efeb044a"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "c8f5",
+        "f3e5",
+        "e7e6"
+      ],
+      "fen": "rn1qkb1r/ppp2ppp/4pn2/4Nb2/3P4/2N5/PPP3PP/R1BQKB1R w KQkq - 0 7",
+      "position_key": "rn1qkb1r/ppp2ppp/4pn2/4Nb2/3P4/2N5/PPP3PP/R1BQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g2g4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-fafcfaac9e1071a6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-5c5e9a8f04166b"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "c8f5",
+        "f2f3",
+        "g8f6"
+      ],
+      "fen": "rn1qkb1r/ppp1pppp/5n2/5b2/3Pp3/2N2P2/PPP3PP/R1BQKBNR w KQkq - 1 5",
+      "position_key": "rn1qkb1r/ppp1pppp/5n2/5b2/3Pp3/2N2P2/PPP3PP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f1c4"
+      ],
+      "stages": [
+        "defense"
+      ],
+      "source_lines": [
+        "knowledge-21037619dd9718be"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-efcf8e764566cb"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6"
+      ],
+      "fen": "rnbqkb1r/ppp1pppp/5n2/8/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+      "position_key": "rnbqkb1r/ppp1pppp/5n2/8/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f2f3"
+      ],
+      "stages": [
+        "accepted",
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-097b19d5c1bf27b9",
+        "knowledge-0bb0e4d6a6aef372",
+        "knowledge-1733398767a93b8d",
+        "knowledge-233d6883b5b7595b",
+        "knowledge-2519dbd786332063",
+        "knowledge-2700627e384d39ee",
+        "knowledge-34919f8462e3f5d4",
+        "knowledge-3bc8357c1d95dd60",
+        "knowledge-48d5d3cdb1e512ba",
+        "knowledge-647448ea25300433",
+        "knowledge-6d79974b5ffaf512",
+        "knowledge-6e22c882bc3b551a",
+        "knowledge-75100231d046595a",
+        "knowledge-7d9306471ecb1f7f",
+        "knowledge-7dd0971542a44dcf",
+        "knowledge-80da8fd689f2c371",
+        "knowledge-88739dfe894f84ce",
+        "knowledge-b323d5ef63494872",
+        "knowledge-c7994ac1652178a8",
+        "knowledge-d482b5d2e999a2e2",
+        "knowledge-dba5ff2f1a736e2d",
+        "knowledge-ea16157ac79207d4",
+        "knowledge-ee4721c35340706f",
+        "knowledge-f04cb40df4c45ba8",
+        "knowledge-fafcfaac9e1071a6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-4084f5f49336ca"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "c8f5"
+      ],
+      "fen": "rn1qkbnr/ppp1pppp/8/5b2/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+      "position_key": "rn1qkbnr/ppp1pppp/8/5b2/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f2f3"
+      ],
+      "stages": [
+        "defense"
+      ],
+      "source_lines": [
+        "knowledge-21037619dd9718be"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-978a1909657d90"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "c8g4"
+      ],
+      "fen": "rn1qkb1r/ppp1pppp/5n2/8/3P2b1/2N2N2/PPP3PP/R1BQKB1R w KQkq - 1 6",
+      "position_key": "rn1qkb1r/ppp1pppp/5n2/8/3P2b1/2N2N2/PPP3PP/R1BQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "h2h3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-097b19d5c1bf27b9",
+        "knowledge-75100231d046595a",
+        "knowledge-f04cb40df4c45ba8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-411ac472e00789"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "c8g4",
+        "h2h3",
+        "g4f3"
+      ],
+      "fen": "rn1qkb1r/ppp1pppp/5n2/8/3P4/2N2b1P/PPP3P1/R1BQKB1R w KQkq - 0 7",
+      "position_key": "rn1qkb1r/ppp1pppp/5n2/8/3P4/2N2b1P/PPP3P1/R1BQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1f3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-097b19d5c1bf27b9",
+        "knowledge-75100231d046595a",
+        "knowledge-f04cb40df4c45ba8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-2757540c5caf25"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/5np1/8/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq - 0 6",
+      "position_key": "rnbqkb1r/ppp1pp1p/5np1/8/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f1c4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-233d6883b5b7595b",
+        "knowledge-2519dbd786332063",
+        "knowledge-80da8fd689f2c371",
+        "knowledge-88739dfe894f84ce"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-576bb0e12a4a94"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3",
+        "g1f3",
+        "c8f5"
+      ],
+      "fen": "rn1qkb1r/ppp1pppp/5n2/5b2/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq - 1 6",
+      "position_key": "rn1qkb1r/ppp1pppp/5n2/5b2/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f3e5"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-fafcfaac9e1071a6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-ed90aae949b6fd"
+    },
+    {
+      "family_id": "blackmar-diemer",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "d7d5",
+        "e2e4",
+        "d5e4",
+        "b1c3",
+        "g8f6",
+        "f2f3",
+        "e4f3"
+      ],
+      "fen": "rnbqkb1r/ppp1pppp/5n2/8/3P4/2N2p2/PPP3PP/R1BQKBNR w KQkq - 0 5",
+      "position_key": "rnbqkb1r/ppp1pppp/5n2/8/3P4/2N2p2/PPP3PP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g1f3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-097b19d5c1bf27b9",
+        "knowledge-0bb0e4d6a6aef372",
+        "knowledge-233d6883b5b7595b",
+        "knowledge-2519dbd786332063",
+        "knowledge-2700627e384d39ee",
+        "knowledge-3bc8357c1d95dd60",
+        "knowledge-6e22c882bc3b551a",
+        "knowledge-75100231d046595a",
+        "knowledge-7dd0971542a44dcf",
+        "knowledge-80da8fd689f2c371",
+        "knowledge-88739dfe894f84ce",
+        "knowledge-b323d5ef63494872",
+        "knowledge-c7994ac1652178a8",
+        "knowledge-d482b5d2e999a2e2",
+        "knowledge-dba5ff2f1a736e2d",
+        "knowledge-ee4721c35340706f",
+        "knowledge-f04cb40df4c45ba8",
+        "knowledge-fafcfaac9e1071a6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/d.tsv"
+      ],
+      "query_id": "blackmar-diemer-e298c63247c107"
+    },
+    {
+      "family_id": "budapest",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e5",
+        "d4e5",
+        "f6g4",
+        "e2e4"
+      ],
+      "fen": "rnbqkb1r/pppp1ppp/8/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR b KQkq e3 0 4",
+      "position_key": "rnbqkb1r/pppp1ppp/8/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "g4e5",
+        "d7d6"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-30f3dda9f41313d8",
+        "knowledge-78b919d19bd054f8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "budapest-74b61f34437424"
+    },
+    {
+      "family_id": "danish",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "d2d4",
+        "e5d4",
+        "c2c3",
+        "d4c3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq - 0 4",
+      "position_key": "rnbqkbnr/pppp1ppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f1c4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-6c73a584bfd4e346",
+        "knowledge-73b720c9a69f87dc",
+        "knowledge-f1477ea414fa5ed7",
+        "knowledge-f5a5424554edb4d6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "danish-65e648205513c6"
+    },
+    {
+      "family_id": "danish",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "d2d4",
+        "e5d4",
+        "c2c3",
+        "d4c3",
+        "f1c4",
+        "c3b2"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/8/2B1P3/8/Pp3PPP/RNBQK1NR w KQkq - 0 5",
+      "position_key": "rnbqkbnr/pppp1ppp/8/8/2B1P3/8/Pp3PPP/RNBQK1NR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c1b2"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-6c73a584bfd4e346",
+        "knowledge-73b720c9a69f87dc",
+        "knowledge-f1477ea414fa5ed7",
+        "knowledge-f5a5424554edb4d6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "danish-d4d11838f50ac9"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5"
+      ],
+      "fen": "r1bqk1nr/pppp1ppp/2n5/b3p3/2B1P3/2P2N2/P2P1PPP/RNBQK2R w KQkq - 1 6",
+      "position_key": "r1bqk1nr/pppp1ppp/2n5/b3p3/2B1P3/2P2N2/P2P1PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d4",
+        "e1g1"
+      ],
+      "stages": [
+        "variation",
+        "defense",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-05dddbbba8ee87f7",
+        "knowledge-154f2bff563b8771",
+        "knowledge-3378569d85d17906",
+        "knowledge-3c406e59cb614238",
+        "knowledge-4f38a4df8456c2c0",
+        "knowledge-57c63bb634df71a6",
+        "knowledge-60c194d206b5c192",
+        "knowledge-6c5a223ef2a1470a",
+        "knowledge-6f2618ad451139d3",
+        "knowledge-723415ab7def3f80",
+        "knowledge-7ece13d253806c78",
+        "knowledge-96622b9a74dfc504",
+        "knowledge-97968d75c518a834",
+        "knowledge-9ce325626e446bd3",
+        "knowledge-9d0c9a0b03de8616",
+        "knowledge-a210e227504b7f42",
+        "knowledge-c4f28de743f287df",
+        "knowledge-c59bb481439d651a",
+        "knowledge-e1f8e8fc02163729",
+        "knowledge-e7e3b427e9e284d9",
+        "knowledge-fe7b70eeaa78a77e"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-3c887ded4da83c"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5",
+        "d2d4",
+        "d7d6"
+      ],
+      "fen": "r1bqk1nr/ppp2ppp/2np4/b3p3/2BPP3/2P2N2/P4PPP/RNBQK2R w KQkq - 0 7",
+      "position_key": "r1bqk1nr/ppp2ppp/2np4/b3p3/2BPP3/2P2N2/P4PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1b3",
+        "c1g5"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-4f38a4df8456c2c0",
+        "knowledge-60c194d206b5c192",
+        "knowledge-c4f28de743f287df"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-185858c374ba24"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5",
+        "d2d4",
+        "e5d4",
+        "e1g1",
+        "d4c3",
+        "d1b3",
+        "d8f6",
+        "e4e5",
+        "f6g6",
+        "b1c3",
+        "g8e7"
+      ],
+      "fen": "r1b1k2r/ppppnppp/2n3q1/b3P3/2B5/1QN2N2/P4PPP/R1B2RK1 w kq - 1 11",
+      "position_key": "r1b1k2r/ppppnppp/2n3q1/b3P3/2B5/1QN2N2/P4PPP/R1B2RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c1a3",
+        "f1d1"
+      ],
+      "stages": [
+        "defense"
+      ],
+      "source_lines": [
+        "knowledge-6f2618ad451139d3",
+        "knowledge-96622b9a74dfc504"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-adf8251a4dbefa"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5",
+        "d2d4",
+        "e5d4",
+        "e1g1",
+        "d7d6",
+        "c3d4",
+        "a5b6"
+      ],
+      "fen": "r1bqk1nr/ppp2ppp/1bnp4/8/2BPP3/5N2/P4PPP/RNBQ1RK1 w kq - 1 9",
+      "position_key": "r1bqk1nr/ppp2ppp/1bnp4/8/2BPP3/5N2/P4PPP/RNBQ1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "b1c3",
+        "d4d5"
+      ],
+      "stages": [
+        "variation",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-05dddbbba8ee87f7",
+        "knowledge-5d4b12ff24b5a23a",
+        "knowledge-5ebde72d80204c2c",
+        "knowledge-a9621730784884d4",
+        "knowledge-c90d9e9c3f2aefed",
+        "knowledge-e77ec0da0f308a88",
+        "knowledge-f2cd24f585045d52",
+        "knowledge-fe5308b7e9111af2"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-af79a8ea66b27b"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5",
+        "d2d4",
+        "e5d4",
+        "e1g1",
+        "d7d6"
+      ],
+      "fen": "r1bqk1nr/ppp2ppp/2np4/b7/2BpP3/2P2N2/P4PPP/RNBQ1RK1 w kq - 0 8",
+      "position_key": "r1bqk1nr/ppp2ppp/2np4/b7/2BpP3/2P2N2/P4PPP/RNBQ1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c3d4",
+        "d1b3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-05dddbbba8ee87f7",
+        "knowledge-97968d75c518a834"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-f2c9b931cb0332"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b6",
+        "b4b5",
+        "c6a5",
+        "f3e5",
+        "d8g5"
+      ],
+      "fen": "r1b1k1nr/pppp1ppp/1b6/nP2N1q1/2B1P3/8/P1PP1PPP/RNBQK2R w KQkq - 1 7",
+      "position_key": "r1b1k1nr/pppp1ppp/1b6/nP2N1q1/2B1P3/8/P1PP1PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1f3",
+        "c4f7"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-43579f6f3ea3dc6e",
+        "knowledge-4897609787b20e9a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-31112b6b993f46"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4c5",
+        "d2d4",
+        "e5d4"
+      ],
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b5/2BpP3/2P2N2/P4PPP/RNBQK2R w KQkq - 0 7",
+      "position_key": "r1bqk1nr/pppp1ppp/2n5/2b5/2BpP3/2P2N2/P4PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e1g1",
+        "c3d4"
+      ],
+      "stages": [
+        "defense",
+        "variation",
+        "offer"
+      ],
+      "source_lines": [
+        "knowledge-4b025b1ca9ce03ea",
+        "knowledge-572fc3fb6a058b94",
+        "knowledge-5d4b12ff24b5a23a",
+        "knowledge-5ebde72d80204c2c",
+        "knowledge-a9621730784884d4",
+        "knowledge-c90d9e9c3f2aefed",
+        "knowledge-e77ec0da0f308a88",
+        "knowledge-f2cd24f585045d52",
+        "knowledge-fe5308b7e9111af2"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-82700e1119f848"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b6"
+      ],
+      "fen": "r1bqk1nr/pppp1ppp/1bn5/4p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 1 5",
+      "position_key": "r1bqk1nr/pppp1ppp/1bn5/4p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "b4b5",
+        "a2a4",
+        "c1b2"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-06ab4643ac221e88",
+        "knowledge-23f1c10272d2a9a0",
+        "knowledge-3c954d0a1262b0c7",
+        "knowledge-43579f6f3ea3dc6e",
+        "knowledge-4897609787b20e9a",
+        "knowledge-6f4ed43fd9b6f4d9",
+        "knowledge-877f911b0ad6ff06",
+        "knowledge-a188058f84c229a5"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-0fa357d4b7797a"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b6",
+        "b4b5",
+        "c6a5",
+        "f3e5",
+        "d8g5",
+        "c4f7",
+        "e8e7"
+      ],
+      "fen": "r1b3nr/ppppkBpp/1b6/nP2N1q1/4P3/8/P1PP1PPP/RNBQK2R w KQ - 1 8",
+      "position_key": "r1b3nr/ppppkBpp/1b6/nP2N1q1/4P3/8/P1PP1PPP/RNBQK2R w KQ -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1h5"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-4897609787b20e9a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-dcac633ac41573"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4a5",
+        "e1g1",
+        "g8f6"
+      ],
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/b3p3/2B1P3/2P2N2/P2P1PPP/RNBQ1RK1 w kq - 3 7",
+      "position_key": "r1bqk2r/pppp1ppp/2n2n2/b3p3/2B1P3/2P2N2/P2P1PPP/RNBQ1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d4"
+      ],
+      "stages": [
+        "variation",
+        "defense"
+      ],
+      "source_lines": [
+        "knowledge-3c406e59cb614238",
+        "knowledge-6c5a223ef2a1470a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-f67ceae0597715"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b4",
+        "c2c3",
+        "b4c5",
+        "d2d4",
+        "e5d4",
+        "e1g1",
+        "d7d6",
+        "c3d4",
+        "c5b6",
+        "b1c3",
+        "c6a5",
+        "c1g5",
+        "f7f6"
+      ],
+      "fen": "r1bqk1nr/ppp3pp/1b1p1p2/n5B1/2BPP3/2N2N2/P4PPP/R2Q1RK1 w kq - 0 11",
+      "position_key": "r1bqk1nr/ppp3pp/1b1p1p2/n5B1/2BPP3/2N2N2/P4PPP/R2Q1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g5e3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-5d4b12ff24b5a23a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-407658314c4095"
+    },
+    {
+      "family_id": "evans",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "b2b4",
+        "c5b6",
+        "b4b5",
+        "c6a5",
+        "f3e5",
+        "g8h6",
+        "d2d4",
+        "d7d6",
+        "c1h6",
+        "d6e5",
+        "h6g7",
+        "h8g8",
+        "c4f7",
+        "e8f7"
+      ],
+      "fen": "r1bq2r1/ppp2kBp/1b6/nP2p3/3PP3/8/P1P2PPP/RN1QK2R w KQ - 0 11",
+      "position_key": "r1bq2r1/ppp2kBp/1b6/nP2p3/3PP3/8/P1P2PPP/RN1QK2R w KQ -",
+      "turn": "white",
+      "graph_candidates": [
+        "g7e5"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-23f1c10272d2a9a0"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "evans-30f784c01abc1a"
+    },
+    {
+      "family_id": "from",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "f2f4",
+        "e7e5",
+        "f4e5",
+        "d7d6",
+        "e5d6",
+        "f8d6",
+        "g1f3"
+      ],
+      "fen": "rnbqk1nr/ppp2ppp/3b4/8/8/5N2/PPPPP1PP/RNBQKB1R b KQkq - 1 4",
+      "position_key": "rnbqk1nr/ppp2ppp/3b4/8/8/5N2/PPPPP1PP/RNBQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "g8h6",
+        "g7g5"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-0495783ed3f1773c",
+        "knowledge-dc738d40f681270b"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/a.tsv"
+      ],
+      "query_id": "from-5abfed04a68a99"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "g7g5"
+      ],
+      "fen": "rnbqkbnr/pppp1p1p/8/6p1/4Pp2/5N2/PPPP2PP/RNBQKB1R w KQkq g6 0 4",
+      "position_key": "rnbqkbnr/pppp1p1p/8/6p1/4Pp2/5N2/PPPP2PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "h2h4",
+        "f1c4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-02d3995b0c49009c",
+        "knowledge-1811567f480360a2",
+        "knowledge-3cb63720159f29cd",
+        "knowledge-3eb527958961fcc2",
+        "knowledge-407b9a96095889d1",
+        "knowledge-6478bf269c31bfcb",
+        "knowledge-8f2b34ee5702fa48",
+        "knowledge-c2d60d4371fa857b"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-1d13ce7151bd04"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "g7g5",
+        "h2h4",
+        "g5g4"
+      ],
+      "fen": "rnbqkbnr/pppp1p1p/8/8/4PppP/5N2/PPPP2P1/RNBQKB1R w KQkq - 0 5",
+      "position_key": "rnbqkbnr/pppp1p1p/8/8/4PppP/5N2/PPPP2P1/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f3g5",
+        "f3e5"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-02d3995b0c49009c",
+        "knowledge-3cb63720159f29cd",
+        "knowledge-3eb527958961fcc2",
+        "knowledge-407b9a96095889d1",
+        "knowledge-6478bf269c31bfcb",
+        "knowledge-8f2b34ee5702fa48",
+        "knowledge-c2d60d4371fa857b"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-12f9f7272b7389"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "g7g5",
+        "h2h4",
+        "g5g4",
+        "f3g5",
+        "h7h6",
+        "g5f7",
+        "e8f7"
+      ],
+      "fen": "rnbq1bnr/pppp1k2/7p/8/4PppP/8/PPPP2P1/RNBQKB1R w KQ - 0 7",
+      "position_key": "rnbq1bnr/pppp1k2/7p/8/4PppP/8/PPPP2P1/RNBQKB1R w KQ -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d4",
+        "f1c4",
+        "d1g4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-02d3995b0c49009c",
+        "knowledge-3cb63720159f29cd",
+        "knowledge-6478bf269c31bfcb"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-0f7b2d2651314f"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "f8c5",
+        "g1f3",
+        "d7d6"
+      ],
+      "fen": "rnbqk1nr/ppp2ppp/3p4/2b1p3/4PP2/5N2/PPPP2PP/RNBQKB1R w KQkq - 0 4",
+      "position_key": "rnbqk1nr/ppp2ppp/3p4/2b1p3/4PP2/5N2/PPPP2PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f4e5",
+        "c2c3",
+        "b1c3"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-03ba9fb7ce03fd8d",
+        "knowledge-05fef6f6d19419eb",
+        "knowledge-7fdc3d996d43aea0",
+        "knowledge-acd462583d5d199c",
+        "knowledge-ddc53393beffb0fe"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-edf63e24fa7152"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "d7d5",
+        "e4d5",
+        "g8f6",
+        "f1b5",
+        "c7c6"
+      ],
+      "fen": "rnbqkb1r/pp3ppp/2p2n2/1B1P4/5p2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 6",
+      "position_key": "rnbqkb1r/pp3ppp/2p2n2/1B1P4/5p2/5N2/PPPP2PP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d5c6"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-88f5737818c2384a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-3047d34eb87efc"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f1c4",
+        "b8c6",
+        "b1c3",
+        "g8f6",
+        "d2d3",
+        "f8c5",
+        "f2f4",
+        "d7d6",
+        "g1f3",
+        "c8g4"
+      ],
+      "fen": "r2qk2r/ppp2ppp/2np1n2/2b1p3/2B1PPb1/2NP1N2/PPP3PP/R1BQK2R w KQkq - 2 7",
+      "position_key": "r2qk2r/ppp2ppp/2np1n2/2b1p3/2B1PPb1/2NP1N2/PPP3PP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "h2h3"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-4e76ce468b3d229b"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-06344a0ae16bef"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "g7g5",
+        "h2h4",
+        "g5g4",
+        "f3g5",
+        "h7h6",
+        "g5f7",
+        "e8f7",
+        "f1c4",
+        "d7d5",
+        "c4d5",
+        "f7g7"
+      ],
+      "fen": "rnbq1bnr/ppp3k1/7p/3B4/4PppP/8/PPPP2P1/RNBQK2R w KQ - 1 9",
+      "position_key": "rnbq1bnr/ppp3k1/7p/3B4/4PppP/8/PPPP2P1/RNBQK2R w KQ -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-3cb63720159f29cd"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-9913704f624ea3"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "f8c5",
+        "g1f3",
+        "d7d6",
+        "c2c3",
+        "c8g4",
+        "f4e5",
+        "d6e5"
+      ],
+      "fen": "rn1qk1nr/ppp2ppp/8/2b1p3/4P1b1/2P2N2/PP1P2PP/RNBQKB1R w KQkq - 0 6",
+      "position_key": "rn1qk1nr/ppp2ppp/8/2b1p3/4P1b1/2P2N2/PP1P2PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1a4"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-ddc53393beffb0fe"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-b44ddb956e66fa"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "g8f6",
+        "e4e5",
+        "f6h5"
+      ],
+      "fen": "rnbqkb1r/pppp1ppp/8/4P2n/5p2/5N2/PPPP2PP/RNBQKB1R w KQkq - 1 5",
+      "position_key": "rnbqkb1r/pppp1ppp/8/4P2n/5p2/5N2/PPPP2PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g2g4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-9d3474fbcc1b00e8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-57642074c7feba"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "f8c5",
+        "g1f3",
+        "d7d6",
+        "c2c3",
+        "f7f5",
+        "f4e5",
+        "d6e5"
+      ],
+      "fen": "rnbqk1nr/ppp3pp/8/2b1pp2/4P3/2P2N2/PP1P2PP/RNBQKB1R w KQkq - 0 6",
+      "position_key": "rnbqk1nr/ppp3pp/8/2b1pp2/4P3/2P2N2/PP1P2PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d4"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-7fdc3d996d43aea0"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-2ec49303fd9ff3"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "g1f3",
+        "d7d6",
+        "d2d4",
+        "g8f6"
+      ],
+      "fen": "rnbqkb1r/ppp2ppp/3p1n2/8/3PPp2/5N2/PPP3PP/RNBQKB1R w KQkq - 1 5",
+      "position_key": "rnbqkb1r/ppp2ppp/3p1n2/8/3PPp2/5N2/PPP3PP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f1d3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-684f43b4bfa06336"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-f899da0aebdf89"
+    },
+    {
+      "family_id": "kings",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f1c4",
+        "b8c6",
+        "b1c3",
+        "g8f6"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR w KQkq - 4 4",
+      "position_key": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d2d3"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-4e76ce468b3d229b"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "kings-9f1ec6eaa9f6ed"
+    },
+    {
+      "family_id": "scotch",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "e5d4",
+        "f1c4",
+        "f8c5"
+      ],
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b5/2BpP3/5N2/PPP2PPP/RNBQK2R w KQkq - 2 5",
+      "position_key": "r1bqk1nr/pppp1ppp/2n5/2b5/2BpP3/5N2/PPP2PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f3g5",
+        "e1g1"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-034409aaf0be1e78",
+        "knowledge-f8e2493d9ce66bef"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "scotch-126a8a745c365f"
+    },
+    {
+      "family_id": "scotch",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "e5d4",
+        "f1c4",
+        "f8c5",
+        "e1g1",
+        "d7d6"
+      ],
+      "fen": "r1bqk1nr/ppp2ppp/2np4/2b5/2BpP3/5N2/PPP2PPP/RNBQ1RK1 w kq - 0 6",
+      "position_key": "r1bqk1nr/ppp2ppp/2np4/2b5/2BpP3/5N2/PPP2PPP/RNBQ1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c2c3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-f8e2493d9ce66bef"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "scotch-f1a2ccf41cc07d"
+    },
+    {
+      "family_id": "scotch",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "g8f6",
+        "d2d4",
+        "e5d4"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/8/2BpP3/5N2/PPP2PPP/RNBQK2R w KQkq - 0 5",
+      "position_key": "r1bqkb1r/pppp1ppp/2n2n2/8/2BpP3/5N2/PPP2PPP/RNBQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e4e5"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-b9e5ed242a973d02",
+        "knowledge-d79c3e3875114ca6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "scotch-39f01b282239fe"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq - 0 4",
+      "position_key": "rnbqkbnr/pp1ppppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "b1c3",
+        "g1f3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-08e160058af947bd",
+        "knowledge-0a4d9906b66917a9",
+        "knowledge-0b8ce1f254151ef2",
+        "knowledge-460d7d04f5520058",
+        "knowledge-481c1822146b7d0e",
+        "knowledge-4f08e150c536bd25",
+        "knowledge-4f16e494518d80b8",
+        "knowledge-577591fd16a3def6",
+        "knowledge-5b1f5cc9deaeb892",
+        "knowledge-74d406ffdf28d5e8",
+        "knowledge-7e0c57602010caba",
+        "knowledge-8e41bd5a2ee74257",
+        "knowledge-9226a61c2661f422",
+        "knowledge-9e8efc31e021aa93",
+        "knowledge-a712b97fd8c699c8",
+        "knowledge-b2279f9ca74706f0",
+        "knowledge-b6af92446165b2da",
+        "knowledge-d45afd8fb18ce938",
+        "knowledge-e1bf4dcc5989be8a",
+        "knowledge-f52e99a942994456"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-074064ed8ec100"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "e7e6"
+      ],
+      "fen": "rnbqkbnr/pp1p1ppp/4p3/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq - 0 5",
+      "position_key": "rnbqkbnr/pp1p1ppp/4p3/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "f1c4",
+        "g1f3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-5b1f5cc9deaeb892",
+        "knowledge-9e8efc31e021aa93",
+        "knowledge-d45afd8fb18ce938"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-c81c8200e584bf"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6"
+      ],
+      "fen": "r1bqkbnr/pp1ppppp/2n5/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq - 1 5",
+      "position_key": "r1bqkbnr/pp1ppppp/2n5/8/4P3/2N5/PP3PPP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g1f3",
+        "f1c4"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-08e160058af947bd",
+        "knowledge-0a4d9906b66917a9",
+        "knowledge-0b8ce1f254151ef2",
+        "knowledge-460d7d04f5520058",
+        "knowledge-481c1822146b7d0e",
+        "knowledge-4f16e494518d80b8",
+        "knowledge-577591fd16a3def6",
+        "knowledge-74d406ffdf28d5e8",
+        "knowledge-7e0c57602010caba",
+        "knowledge-8e41bd5a2ee74257",
+        "knowledge-9226a61c2661f422",
+        "knowledge-b2279f9ca74706f0",
+        "knowledge-e1bf4dcc5989be8a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-c4da3fd9e3adad"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "a7a6"
+      ],
+      "fen": "r1bqkbnr/1p2pppp/p1np4/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq - 0 7",
+      "position_key": "r1bqkbnr/1p2pppp/p1np4/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e1g1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-577591fd16a3def6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-f4ddb1315311d8"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4d3"
+      ],
+      "fen": "rnbqkbnr/pp1ppppp/8/8/4P3/2Pp4/PP3PPP/RNBQKBNR w KQkq - 0 4",
+      "position_key": "rnbqkbnr/pp1ppppp/8/8/4P3/2Pp4/PP3PPP/RNBQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c3c4"
+      ],
+      "stages": [
+        "declined"
+      ],
+      "source_lines": [
+        "knowledge-223151a9b03ee348"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-bb43e1dd63615e"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "e7e6",
+        "d2d4",
+        "c5d4"
+      ],
+      "fen": "rnbqkbnr/pp1p1ppp/4p3/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4",
+      "position_key": "rnbqkbnr/pp1p1ppp/4p3/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c2c3"
+      ],
+      "stages": [
+        "variation"
+      ],
+      "source_lines": [
+        "knowledge-0d3db65243e42919"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-cf569c13d3715f"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "f1c4",
+        "e7e6"
+      ],
+      "fen": "r1bqkbnr/pp1p1ppp/2n1p3/8/2B1P3/2N5/PP3PPP/R1BQK1NR w KQkq - 0 6",
+      "position_key": "r1bqkbnr/pp1p1ppp/2n1p3/8/2B1P3/2N5/PP3PPP/R1BQK1NR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g1f3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-481c1822146b7d0e",
+        "knowledge-e1bf4dcc5989be8a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-e26cd48ab32cce"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "e7e6",
+        "f1c4",
+        "a7a6"
+      ],
+      "fen": "r1bqkbnr/1p1p1ppp/p1n1p3/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq - 0 7",
+      "position_key": "r1bqkbnr/1p1p1ppp/p1n1p3/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e1g1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-74d406ffdf28d5e8"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-8c046bd198e814"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "f1c4",
+        "e7e6",
+        "g1f3",
+        "d7d6",
+        "e1g1",
+        "a7a6"
+      ],
+      "fen": "r1bqkbnr/1p3ppp/p1npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 w kq - 0 8",
+      "position_key": "r1bqkbnr/1p3ppp/p1npp3/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "d1e2"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-481c1822146b7d0e",
+        "knowledge-e1bf4dcc5989be8a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-4590e4a395a7f6"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "f1c4",
+        "e7e6",
+        "g1f3",
+        "d7d6"
+      ],
+      "fen": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq - 0 7",
+      "position_key": "r1bqkbnr/pp3ppp/2npp3/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e1g1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-481c1822146b7d0e",
+        "knowledge-e1bf4dcc5989be8a"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-a5ef8393b00800"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "f1c4",
+        "e7e6",
+        "g1f3",
+        "d7d6",
+        "e1g1",
+        "a7a6",
+        "d1e2",
+        "b7b5"
+      ],
+      "fen": "r1bqkbnr/5ppp/p1npp3/1p6/2B1P3/2N2N2/PP2QPPP/R1B2RK1 w kq b6 0 9",
+      "position_key": "r1bqkbnr/5ppp/p1npp3/1p6/2B1P3/2N2N2/PP2QPPP/R1B2RK1 w kq -",
+      "turn": "white",
+      "graph_candidates": [
+        "c4b3"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-481c1822146b7d0e"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-fdbfdd599a01b5"
+    },
+    {
+      "family_id": "smith-morra",
+      "split": "validation",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "d7d6",
+        "g1f3",
+        "e7e6",
+        "f1c4",
+        "g8f6"
+      ],
+      "fen": "rnbqkb1r/pp3ppp/3ppn2/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq - 2 7",
+      "position_key": "rnbqkb1r/pp3ppp/3ppn2/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "e1g1"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-f52e99a942994456"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/b.tsv"
+      ],
+      "query_id": "smith-morra-ff41c7f9fadca3"
+    },
+    {
+      "family_id": "stafford",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "g8f6",
+        "f3e5",
+        "b8c6",
+        "e5c6",
+        "d7c6",
+        "b1c3"
+      ],
+      "fen": "r1bqkb1r/ppp2ppp/2p2n2/8/4P3/2N5/PPPP1PPP/R1BQKB1R b KQkq - 1 5",
+      "position_key": "r1bqkb1r/ppp2ppp/2p2n2/8/4P3/2N5/PPPP1PPP/R1BQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "f8c5"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-9eaa85bbdbad1ef6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "stafford-7b0d27b5cbb476"
+    },
+    {
+      "family_id": "stafford",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "g8f6",
+        "f3e5",
+        "b8c6",
+        "e5c6"
+      ],
+      "fen": "r1bqkb1r/pppp1ppp/2N2n2/8/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 4",
+      "position_key": "r1bqkb1r/pppp1ppp/2N2n2/8/4P3/8/PPPP1PPP/RNBQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "d7c6"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-211fe076aa2fb6f0",
+        "knowledge-8a263603f5814049",
+        "knowledge-9eaa85bbdbad1ef6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "stafford-c79e9f3dae2426"
+    },
+    {
+      "family_id": "stafford",
+      "split": "holdout",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "g8f6",
+        "f3e5",
+        "b8c6",
+        "e5c6",
+        "d7c6",
+        "d2d3"
+      ],
+      "fen": "r1bqkb1r/ppp2ppp/2p2n2/8/4P3/3P4/PPP2PPP/RNBQKB1R b KQkq - 0 5",
+      "position_key": "r1bqkb1r/ppp2ppp/2p2n2/8/4P3/3P4/PPP2PPP/RNBQKB1R b KQkq -",
+      "turn": "black",
+      "graph_candidates": [
+        "f8c5"
+      ],
+      "stages": [
+        "accepted"
+      ],
+      "source_lines": [
+        "knowledge-211fe076aa2fb6f0"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "stafford-0758744cad4df7"
+    },
+    {
+      "family_id": "vienna",
+      "split": "train",
+      "root_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "b1c3",
+        "b8c6",
+        "f2f4",
+        "e5f4"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/8/4Pp2/2N5/PPPP2PP/R1BQKBNR w KQkq - 0 4",
+      "position_key": "r1bqkbnr/pppp1ppp/2n5/8/4Pp2/2N5/PPPP2PP/R1BQKBNR w KQkq -",
+      "turn": "white",
+      "graph_candidates": [
+        "g1f3"
+      ],
+      "stages": [
+        "defense"
+      ],
+      "source_lines": [
+        "knowledge-1a2184848e5dfcdc",
+        "knowledge-461130c2677e24b6"
+      ],
+      "source_urls": [
+        "https://raw.githubusercontent.com/lichess-org/chess-openings/a6189a30dc273ccb21fc2536a9a2fefd5592a67a/c.tsv"
+      ],
+      "query_id": "vienna-d7fae1c1e41582"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "date_local": "2026-11-04",
+  "scope": "Move symbols and post-search pacing; prior to the concurrent coaching-reference gauge integration",
+  "checks": [
+    {
+      "command": ".venv-tests/Scripts/python.exe -m unittest discover -s tests -p '*pacing*tests.py'",
+      "passed": 89,
+      "failures": 0,
+      "seconds": 11.432
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe -m unittest discover -s tests -p coaching_tests.py",
+      "passed": 28,
+      "failures": 0,
+      "seconds": 6.753
+    },
+    {
+      "command": "node --test tests/web_coaching_tests.js",
+      "passed": 90,
+      "failures": 0
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe build/validate_move_symbols.py",
+      "reproduction_script": "validate_move_symbols.py",
+      "godot_synthetic_passed": 456,
+      "failures": 0,
+      "rendered_states": 20,
+      "evidence": ["godot-symbol-regressions.log", "godot-symbol-render.log", "coaching-native-synthetic.json", "render/native-badge-render.json", "render-provenance.json"]
+    },
+    {
+      "command": ".venv-tests/Scripts/python.exe docs/checks/2026-11-04-coaching-symbols-pacing/capture_pacing_receipts.py",
+      "evidence": "pacing-receipts.json",
+      "same_search_same_move_saved_ms": 500,
+      "long_search_saved_ms": 0,
+      "is_actual_game_average": false
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "official_symbol_sources": [
+    "https://support.chess.com/en/articles/8572705-how-are-moves-classified-what-is-a-blunder-or-brilliant-etc",
+    "https://www.chess.com/terms/game-review"
+  ]
+}

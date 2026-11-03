@@ -95,7 +95,7 @@ function continuationSnapshot(count=6,terminal=false) {
   return result;
 }
 function annotation(row,kind=row.classification) {
-  const symbols={great:"!!",best:"★",good:"✓",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"?",uncertain:"…"};
+  const symbols={great:"!",best:"★",good:"👍",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"×",uncertain:"…"};
   return {symbol:symbols[kind],kind,label:kind==="great" ? "탁월 후보" : row.label,square:row.uci.slice(2,4),
     scope:"actual_move",provisional:true,ply:row.ply,uci:row.uci,fen_after:row.fen_after,reason:"제한 시간 분석 결과입니다."};
 }
@@ -173,6 +173,13 @@ function browser(options={}) {
   return ui;
 }
 const cases=[]; const test=(name,run)=>cases.push({name,run});
+function assertStockfishPending(ui) {
+  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+  assert.equal(ui.get("coaching-evaluation-white").style.height,"50%");
+  assert.match(ui.get("coaching-score").textContent,/Stockfish.*계산 중/);
+  assert.match(ui.get("coaching-evaluation-bar").attributes["aria-label"],/Stockfish.*계산 중/);
+  assert.doesNotMatch(ui.get("coaching-score").textContent,/Regicide|[+-]\d+\.\d+|메이트/);
+}
 
 test("opening the chooser does not start an engine or alter live game",async()=>{
   const ui=browser();await ui.open();
@@ -243,8 +250,7 @@ test("both alternatives replay server frames including both king and rook",async
   assert.equal(ui.square("f1").children[0].textContent,"♖");
   assert.equal(ui.square("e1").children.some((x)=>x.className.includes("piece")),false);
   assert.equal(ui.get("coaching-board").children.filter((x)=>x.tag==="svg").length,0);
-  assert.match(ui.get("coaching-score").textContent,/별도로 평가하지/);
-  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+  assertStockfishPending(ui);
   await ui.click("coaching-line-next");assert.equal(ui.square("g8").children[0].textContent,"♚");
   await ui.click("coaching-mainline");assert.equal(ui.square("g1").children[0].textContent,"♔");
   await ui.click("coaching-played-line");assert.equal(ui.get("coaching-variation").hidden,false);
@@ -373,55 +379,52 @@ test("scores retain white perspective, mate winner zero and bounds",async()=>{
   const next=snapshot();next.moves[0].best={...next.moves[0].best,score_cp_white:null,mate_white:0,winner:"black"};
   void ui.api.poll();await ui.finish(next);
   assert.match(ui.get("coaching-best").textContent,/흑 메이트 0/);
-  assert.equal(ui.get("coaching-evaluation-white").style.height,"0%");
+  assertStockfishPending(ui);
 });
 
-test("board evaluation follows the displayed root through replay, not the selected lesson or previous played score",async()=>{
+test("native scores remain in move details while the main gauge waits for Stockfish throughout replay",async()=>{
   const ui=browser();await ui.start(snapshot({status:"completed"}));
-  // After White's move, the displayed board is Black's next search root.
-  assert.match(ui.get("coaching-score").textContent,/-1\.20.*백 기준/);
-  assert.notEqual(ui.get("coaching-evaluation-white").style.height,"60%");
-  const height=ui.get("coaching-evaluation-white").style.height;
+  assertStockfishPending(ui);
+  assert.match(ui.get("coaching-best").textContent,/\+1\.00/);
   await ui.click("coaching-flip");
-  assert.equal(ui.get("coaching-evaluation-white").style.height,height);
-  assert.match(ui.get("coaching-evaluation-bar").attributes["aria-label"],/-1\.20/);
+  assertStockfishPending(ui);
   ui.api.choosePly(3);
-  assert.match(ui.get("coaching-score").textContent,/-1\.20/);
+  assertStockfishPending(ui);
   await ui.replayStep();
-  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
-  assert.equal(ui.get("coaching-evaluation-white").style.height,"60%");
+  assertStockfishPending(ui);
   await ui.replayStep();
-  // The final nonterminal board has no independent root search in this report.
-  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
-  assert.match(ui.get("coaching-score").textContent,/현재 위치 평가 대기/);
+  assertStockfishPending(ui);
   assert.match(ui.get("coaching-played").textContent,/-2\.50/);
   await ui.click("coaching-before");
-  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+  assertStockfishPending(ui);
+  assert.match(ui.get("coaching-best").textContent,/\+1\.00/);
 });
 
-test("board evaluation requires both row and search root FEN identity and an analyzed row",async()=>{
+test("native roots never populate the main gauge whether matched, mismatched or pending",async()=>{
   for(const change of [
+    ()=>{},
     row=>row.fen_before="wrong position",
     row=>row.best={...row.best,pv_frames:[{...row.best.pv_frames[0],fen:"wrong root"},...row.best.pv_frames.slice(1)]},
     row=>row.classification="pending"
   ]) {
     const ui=browser(),data=snapshot({status:"completed"});change(data.moves[1]);await ui.start(data);
-    assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
-    assert.equal(ui.get("coaching-evaluation-white").style.height,"50%");
+    assertStockfishPending(ui);
+    assert.match(ui.get("coaching-best").textContent,/\+1\.00/);
   }
 });
 
-test("hypothetical positions do not inherit a root score even when their FEN occurs in the mainline",async()=>{
+test("hypothetical positions never inherit native scores even when their FEN occurs in the mainline",async()=>{
   const ui=browser(),data=snapshot({status:"completed"});
   data.moves[0].played={...data.moves[0].played,score_cp_white:-300};
   await ui.start(data);await ui.click("coaching-played-line");
-  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+  assertStockfishPending(ui);
+  assert.match(ui.get("coaching-best").textContent,/\+1\.00/);
+  assert.match(ui.get("coaching-played").textContent,/-3\.00/);
   await ui.click("coaching-line-next");
   assert.equal(ui.square("g1").children[0].textContent,"♔");
-  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
-  assert.doesNotMatch(ui.get("coaching-score").textContent,/\+1\.00|-3\.00|-1\.20/);
+  assertStockfishPending(ui);
   await ui.click("coaching-line-prev");
-  assert.match(ui.get("coaching-score").textContent,/\+1\.00/);
+  assertStockfishPending(ui);
 });
 
 test("terminal frame results override search values while zero mate without a winner remains unknown",async()=>{
@@ -634,12 +637,12 @@ test("retry click submits once, preserves report and reveals fresh candidate and
   assert.match(ui.get("coach-retry-revealed").textContent,/O-O-O.*1.75/);
   assert.equal(ui.get("coach-retry-lines").hidden,false);
   await ui.click("coach-retry-best-line");
-  assert.match(ui.get("coaching-score").textContent,/\+2.75/);
+  assertStockfishPending(ui);
+  assert.match(ui.get("coach-retry-revealed").textContent,/O-O-O.*1.75/);
   await ui.click("coaching-line-next");
   assert.match(ui.get("coaching-position").textContent,/재도전의 새 추천/);
   assert.equal(ui.square("c1").children[0].textContent,"♔");
-  assert.match(ui.get("coaching-score").textContent,/별도로 평가하지/);
-  assert.equal(ui.get("coaching-evaluation-bar").classList.contains("unknown"),true);
+  assertStockfishPending(ui);
   await ui.click("coach-retry-candidate-line");await ui.click("coaching-line-next");
   assert.equal(ui.square("g1").children[0].textContent,"♔");
   await ui.click("coach-retry-again");
@@ -939,28 +942,93 @@ test("pending speech is invalidated on return, pagehide, source replacement and 
   }
 });
 
-test("actual move badges use safe class fallbacks and reserve brilliant symbol for explicit validated metadata",async()=>{
-  for(const [kind,symbol] of Object.entries({best:"★",good:"✓",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"?",uncertain:"…"})) {
+test("actual move badges use Game Review symbols and require explicit Great metadata",async()=>{
+  for(const [kind,symbol] of Object.entries({best:"★",good:"👍",inaccuracy:"?!",mistake:"?",blunder:"??",allows_mate:"??",missed_mate:"×"})) {
     const ui=browser(),report=taughtSnapshot();report.moves[0].classification=kind;
     await ui.start(report);assert.equal(ui.badges().length,1);
     assert.equal(ui.badges()[0].textContent,symbol);assert.equal(ui.badges()[0].parentElement.dataset.coachingSquare,"g1");
     assert.match(ui.badges()[0].attributes["aria-label"],/Regicide 제한 탐색/);
   }
   const ui=browser(),report=taughtSnapshot();report.moves[0].annotation=annotation(report.moves[0],"great");
-  await ui.start(report);assert.equal(ui.badges()[0].textContent,"!!");
+  await ui.start(report);assert.equal(ui.badges()[0].textContent,"!");
   assert.match(ui.badges()[0].title,/탁월 후보/);assert.match(ui.get("coaching-badge-status").textContent,/탁월 후보/);
   const invented=browser(),invalid=taughtSnapshot();invalid.moves[0].classification="great";
   await invented.start(invalid);assert.equal(invented.badges().length,0);
 });
 
+test("legacy good check marks become thumbs up while missed opportunities keep X",async()=>{
+  const ui=browser(),report=taughtSnapshot(),row=report.moves[0];
+  row.classification="good";row.label="좋은 수";row.annotation={...annotation(row),symbol:"✓"};
+  await ui.start(report);assert.equal(ui.badges()[0].textContent,"👍");
+  const html=fs.readFileSync(path.join(__dirname,"../web/human-play/index.html"),"utf8");
+  assert.match(html,/badge-good">👍/);assert.match(html,/badge-missed_mate">×/);
+});
+
 test("foreign or inconsistent annotation metadata never falls back to a plausible-looking badge",async()=>{
   for(const change of [
     {scope:"best_line"},{provisional:false},{ply:2},{uci:"e1c1"},{square:"f1"},{fen_after:initialFrame.fen},
-    {symbol:"!!"},{kind:"great",symbol:"★"},{kind:"blunder",symbol:"??"}
+    {symbol:"!!"},{kind:"great",symbol:"!!"},{kind:"great",symbol:"★"},{kind:"blunder",symbol:"??"}
   ]) {
     const ui=browser(),report=taughtSnapshot();report.moves[0].annotation={...annotation(report.moves[0]),...change};
     await ui.start(report);assert.equal(ui.badges().length,0,JSON.stringify(change));
   }
+});
+
+test("key-scene buttons jump immediately through lessons and important mistakes from either side",async()=>{
+  const ui=browser(),report=taughtSnapshot();
+  report.coach.lesson_plies=[3,1,1,99];
+  await ui.start(report);
+  assert.match(ui.get("coaching-key-status").textContent,/핵심 장면 1 \/ 3/);
+  assert.equal(ui.get("coaching-prev-key").disabled,true);
+  await ui.click("coaching-next-key");
+  assert.match(ui.get("coaching-move-title").textContent,/42\.\.\. O-O/);
+  assert.equal(ui.get("coaching-context").hidden,true);assert.equal(await ui.replayStep(),false);
+  assert.match(ui.get("coaching-key-status").textContent,/핵심 장면 2 \/ 3/);
+  await ui.click("coaching-next-key");assert.equal(ui.get("coaching-next-key").disabled,true);
+  assert.match(ui.get("coaching-key-status").textContent,/핵심 장면 3 \/ 3/);
+  await ui.click("coaching-prev-key");assert.match(ui.get("coaching-move-title").textContent,/42\.\.\. O-O/);
+  ui.get("coaching-filter").value="mine";ui.get("coaching-filter").dispatch("change");
+  assert.match(ui.get("coaching-key-status").textContent,/핵심 장면 2개/);
+  await ui.click("coaching-next-key");assert.match(ui.get("coaching-move-title").textContent,/43\. Rb1/);
+  await ui.click("coaching-prev-key");assert.match(ui.get("coaching-move-title").textContent,/42\. O-O/);
+});
+
+test("old reports still offer positive key scenes and skip pending or uncertain rows",async()=>{
+  const ui=browser(),report=taughtSnapshot();delete report.coach;
+  report.moves[1].classification="uncertain";report.moves[2].classification="good";
+  await ui.start(report);assert.match(ui.get("coaching-key-status").textContent,/1 \/ 2/);
+  await ui.click("coaching-next-key");assert.match(ui.get("coaching-move-title").textContent,/43\. Rb1/);
+  assert.equal(ui.get("coaching-next-key").disabled,true);
+  await ui.click("coach-retry");assert.equal(ui.get("coaching-key-navigation").hidden,true);
+  const title=ui.get("coaching-move-title").textContent;await ui.click("coaching-prev-key");
+  assert.equal(ui.get("coaching-move-title").textContent,title);
+});
+
+test("uncertain retry never reads a legacy cached hint",async()=>{
+  const ui=browser(),report=taughtSnapshot(),row=report.moves[0];
+  row.classification="uncertain";row.coach.hint="Legacy cached hint must stay silent.";
+  await ui.start(report);await ui.click("coach-retry");
+  assert.doesNotMatch(ui.get("coach-dialogue").textContent,/Legacy cached hint/);
+  assert.match(ui.get("coach-dialogue").textContent,/Check for threats/);
+});
+
+test("uncertain moves suppress legacy gray badges, grades and automatic dialogue",async()=>{
+  for(const legacyAnnotation of [false,true]) {
+    const ui=browser({voices:[{name:"English",lang:"en-US",localService:true}]}),report=taughtSnapshot();
+    const row=report.moves[0];row.classification="uncertain";row.label="판단 보류";
+    row.coach.dialogue="This position needs a closer look. Check the forcing replies.";
+    if(legacyAnnotation)row.annotation=annotation(row,"uncertain");
+    await ui.start(report);
+    assert.equal(ui.badges().length,0);
+    assert.equal(ui.get("coach-dialogue").textContent,"");
+    assert.equal(ui.get("coaching-classification").textContent,"");
+    assert.doesNotMatch(ui.get("coaching-moves").children[0].children[0].textContent,/판단 보류|…/);
+    for(const item of [...ui.timeouts.values()])if(item.ms===300)item.callback();
+    await ui.voiceStep();assert.equal(ui.speech.spoken.length,0);
+    assert.equal(row.classification,"uncertain");
+  }
+  const html=fs.readFileSync(path.join(__dirname,"../web/human-play/index.html"),"utf8");
+  assert.doesNotMatch(html,/badge-uncertain/);
 });
 
 test("badge attachment requires exact actual frame ply, FEN, UCI and occupied destination",async()=>{

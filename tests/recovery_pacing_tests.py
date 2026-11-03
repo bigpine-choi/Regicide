@@ -81,9 +81,25 @@ class RecoveryBudgetTests(unittest.TestCase):
             for uci in ("g1f3", "g8f6", "f3g1", "f6g8"):
                 self.board.push_uci(uci)
         self.assertFalse(self.recover(200)["balance_recovery"]["active"])
+
         self.board = chess.Board("8/8/8/8/8/4k3/8/KQ6 w - - 0 1")
         self.move = chess.Move.from_uci("b1b2")
         self.assertFalse(self.recover(200)["balance_recovery"]["active"])
+
+    def test_sparring_recovery_uses_its_five_minute_clock_boundary(self):
+        self.plan.update(target_total_ms=45000,pressure_start_ms=pacing.SPARRING_PRESSURE_START_MS)
+        for cp in (-200,200):
+            budgets=[]
+            for current in (600000,300001,300000,299999,180000,60000,30000,10000,1):
+                clock={**self.clock,"white_ms":current,"increment_ms":10000}
+                budget=self.recover(cp,clock=clock)["balance_recovery"]["budget_ms"]
+                budgets.append(budget)
+                self.assertLessEqual(budget,max(0,current-pacing.LOW_CLOCK_MS))
+            self.assertEqual(budgets,sorted(budgets,reverse=True))
+            self.assertLessEqual(abs(budgets[2]-budgets[3]),1)
+            self.assertEqual(budgets[-2:],[0,0])
+            expected=(30000 if cp<0 else 12000)*(.6**2)
+            self.assertAlmostEqual(budgets[4],expected,delta=1)
 
     def test_inactive_clock_cannot_authorize_extra_search(self):
         for clock in (None, {}, {**self.clock, "enabled": False},

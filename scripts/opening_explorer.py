@@ -196,7 +196,14 @@ class OpeningExplorer:
 
     def _copy_locked(self):
         result = copy.deepcopy(self._snapshot)
-        result["configured"] = bool(self._credentials.token())
+        if hasattr(self._credentials, "status"):
+            result["connection"] = self._credentials.status()
+            result["configured"] = result["connection"]["configured"]
+        else:
+            result["configured"] = bool(self._credentials.token())
+            result["connection"] = {"configured": result["configured"],
+                                    "source": "session" if result["configured"] else "missing",
+                                    "remembered": False, "message": "연결키가 설정되어 있습니다." if result["configured"] else "처음 한 번 리체스를 연결해 주세요."}
         if result["status"] == "rate_limited":
             result["retry_after"] = max(0, math.ceil(self._blocked_until - self._monotonic()))
         return result

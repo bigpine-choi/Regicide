@@ -9,6 +9,7 @@ const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const AnalysisMode = preload("res://scripts/analysis_mode.gd")
 const CoachingMode = preload("res://scripts/coaching_mode.gd")
 const OpeningExplorer = preload("res://scripts/opening_explorer.gd")
+const OpeningWorkspace = preload("res://scripts/opening_workspace.gd")
 # A complete paced turn can take 45 seconds in addition to search/transport.
 const ENGINE_HTTP_TIMEOUT_SECONDS: float = 70.0
 const ORDINARY_HTTP_TIMEOUT_SECONDS: float = 15.0
@@ -292,10 +293,18 @@ func _build_ui() -> void:
 	sparring_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	sparring_rating_label.visible = false
 	header_right.add_child(sparring_rating_label)
+	var workspace_scroll := ScrollContainer.new()
+	workspace_scroll.name = "WorkspaceScroll"
+	workspace_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	workspace_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(workspace_scroll)
+	var opening_workspace := OpeningWorkspace.new()
+	workspace_scroll.add_child(opening_workspace)
 	var body := HBoxContainer.new()
+	body.name = "PlayArea"
 	body.add_theme_constant_override("separation", 20)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(body)
+	opening_workspace.add_child(body)
 	var board_column := VBoxContainer.new()
 	board_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_column.add_theme_constant_override("separation", 2)
@@ -375,7 +384,7 @@ func _build_ui() -> void:
 	sidebar_tabs = TabBar.new()
 	sidebar_tabs.name = "SidebarTabs"
 	OpeningExplorer.style_tabs(sidebar_tabs)
-	for title in ["대국", "오프닝", "기보"]:
+	for title in ["대국", "기보"]:
 		sidebar_tabs.add_tab(title)
 	sidebar_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
 	sidebar_tabs.tab_changed.connect(select_sidebar_tab)
@@ -396,17 +405,19 @@ func _build_ui() -> void:
 	side_shell.add_child(sidebar_scroll)
 	var page_stack := VBoxContainer.new()
 	page_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sidebar_scroll.add_child(page_stack)
-	for title in ["GameControls", "OpeningControls", "RecordControls"]:
+	for title in ["GameControls", "RecordControls"]:
 		var section := VBoxContainer.new()
 		section.name = title
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		section.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		section.add_theme_constant_override("separation", 8)
 		page_stack.add_child(section)
 		sidebar_pages.append(section)
 	var sidebar: VBoxContainer = sidebar_pages[0]
-	var opening_sidebar: VBoxContainer = sidebar_pages[1]
-	var record_sidebar: VBoxContainer = sidebar_pages[2]
+	var opening_sidebar := opening_workspace.add_opening_panel()
+	var record_sidebar: VBoxContainer = sidebar_pages[1]
 	select_sidebar_tab(0)
 	status_label = _label("체스판을 준비하고 있어요", 18, "f6f0de")
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -435,10 +446,10 @@ func _build_ui() -> void:
 	decision_panel.add_child(recommendation_detail)
 	# A required move choice stays above optional learning content.
 	_build_promotion(sidebar)
-	_build_opening_guide(opening_sidebar)
 	opening_explorer = OpeningExplorer.new()
 	opening_explorer.explore_position.connect(_on_explorer_position)
 	opening_sidebar.add_child(opening_explorer)
+	_build_opening_guide(opening_sidebar)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
 	hint_button.tooltip_text = "양쪽 차례의 후보를 최대 3개 표시합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 내 수는 직접 두고, 상대 수는 Regicide가 선택합니다."
@@ -530,7 +541,7 @@ func _build_ui() -> void:
 	boss_mode_option = OptionButton.new()
 	boss_mode_option.name = "BossMode"
 	boss_mode_option.add_item("기본", 0)
-	boss_mode_option.add_item("보스 모드", 1)
+	boss_mode_option.add_item("갬빗 모드", 1)
 	boss_mode_option.add_item("스파링 모드", 2)
 	boss_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	boss_mode_option.item_selected.connect(_on_game_mode_selected)
@@ -609,6 +620,7 @@ func _build_ui() -> void:
 	move_count = _label("0수", 13, "8197aa")
 	history_title.add_child(move_count)
 	move_history = RichTextLabel.new()
+	move_history.name = "LiveMoveHistory"
 	move_history.custom_minimum_size.y = 64
 	move_history.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	move_history.bbcode_enabled = true
@@ -618,7 +630,7 @@ func _build_ui() -> void:
 	record_sidebar.add_child(move_history)
 	save_button = _button("기보 파일로 저장 (PGN)", _on_save_pressed)
 	record_sidebar.add_child(save_button)
-	var footer := _label("시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n반복·50수 청구 무승부는 자동 처리합니다.", 12, "8197aa")
+	var footer := _label("시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n현재 위치의 3회 반복·50수 완료 후 무승부를 자동 처리합니다.", 12, "8197aa")
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(footer)
 	http = HTTPRequest.new()
@@ -1363,7 +1375,7 @@ func _adopt_review(detail: Dictionary) -> bool:
 	board_model.pending_promotions.clear()
 	_notice_message = ""
 	error_message = ""
-	select_sidebar_tab(2)
+	select_sidebar_tab(1)
 	return true
 
 
@@ -1554,10 +1566,14 @@ func _render_evaluation() -> void:
 	var presented: Dictionary = {"status": "waiting"}
 	if review_mode:
 		# Older records contain no analysis. A live score must not leak into replay.
-		presented = {"status": "unavailable", "message": "이 기보 위치에는 저장된 평가값이 없습니다."}
+		presented = {"status": "waiting", "source": "stockfish_gauge", "message": "이 기보 위치의 Stockfish 평가를 기다립니다."}
 		var saved: Variant = shown.get("evaluation")
 		if saved is Dictionary and str(saved.get("fen", "")) == str(shown.get("fen", "")):
-			presented = saved
+			var saved_reference: Variant = saved.get("reference_evaluation", saved if saved.get("source") == "stockfish_gauge" else {})
+			if saved_reference is Dictionary and saved_reference.get("fen") == shown.get("fen") and _reference_evaluation_ready(saved_reference, shown):
+				presented = saved_reference
+		if shown.get("result", "*") in ["1-0", "0-1", "1/2-1/2"]:
+			presented = {"status": "terminal", "source": "chess_rules", "result": shown.result}
 	elif shown.get("result", "*") in ["1-0", "0-1", "1/2-1/2"]:
 		presented = {"status": "terminal", "source": "result", "result": shown.result}
 	elif _evaluation_matches(evaluation, shown):
@@ -1570,21 +1586,25 @@ func _render_evaluation() -> void:
 		var candidate: Variant = presented.get("reference_evaluation", {})
 		if candidate is Dictionary:
 			reference = candidate
-		use_reference = referee.get("available", false) == true and _reference_evaluation_ready(reference, shown)
+		use_reference = referee.get("enabled", false) == true and referee.get("available", false) == true and _reference_evaluation_ready(reference, shown)
 		if use_reference:
 			presented = reference.duplicate(true)
 			var share: Variant = presented.get("white_share")
 			if typeof(share) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(share)):
 				presented["white_share"] = null
+		else:
+			presented = {"status": "waiting", "source": "stockfish_gauge"}
 	evaluation_bar.present(presented, board_model.view_from_white)
+	if review_mode and presented.get("status") != "terminal":
+		evaluation_bar.summary_text = "Stockfish · " + evaluation_bar.summary_text if evaluation_bar.has_score else "Stockfish 형세 계산 중"
 	if not referee.is_empty():
 		var own_note := "Regicide 자체 " + _evaluation_score_note(own)
 		if use_reference:
 			evaluation_bar.summary_text = "형세 · Stockfish 심판 · " + evaluation_bar.summary_text
 			evaluation_bar.detail_text = "%s · 깊이 %d · %s" % [str(reference.get("engine_name", referee.get("name", "Stockfish"))), int(reference.get("depth", 0)), own_note]
 		else:
-			evaluation_bar.summary_text = "Regicide 자체 · " + evaluation_bar.summary_text
-			evaluation_bar.detail_text = _reference_fallback_note(reference, referee, shown) + " · " + own_note
+			evaluation_bar.summary_text = "형세 · " + _reference_fallback_note(reference, referee, shown)
+			evaluation_bar.detail_text = "현재 위치의 Stockfish 평가를 기다립니다. 수는 Regicide가 선택합니다."
 		evaluation_bar.tooltip_text = evaluation_bar.summary_text + "\n" + evaluation_bar.detail_text + "\n+는 백, −는 흑 우세입니다. 막대는 제한된 탐색의 추정 형세이며 승률이나 정답의 보장이 아닙니다."
 		var referee_message: String = str(reference.get("message", referee.get("message", "")))
 		if not referee_message.is_empty():
@@ -1596,10 +1616,11 @@ func _render_evaluation() -> void:
 
 
 func _live_referee_metadata(value: Dictionary, shown: Dictionary) -> Dictionary:
-	if review_mode or shown.get("result", "*") != "*" or value.get("status") == "terminal" or shown.get("engine", {}).get("sparring_mode", false) != true:
+	if review_mode or shown.get("result", "*") != "*" or value.get("status") == "terminal":
 		return {}
-	var meta: Variant = value.get("sparring_referee", shown.get("engine", {}).get("sparring_referee", {}))
-	return meta if meta is Dictionary and meta.get("enabled", false) == true else {}
+	var engine: Dictionary = shown.get("engine", {})
+	var meta: Variant = value.get("stockfish_reference", engine.get("stockfish_reference", value.get("sparring_referee", engine.get("sparring_referee", {"enabled": true, "available": true, "status": "loading"}))))
+	return meta if meta is Dictionary else {}
 
 
 static func _integer_score(value: Variant) -> bool:
@@ -1608,6 +1629,7 @@ static func _integer_score(value: Variant) -> bool:
 
 func _reference_evaluation_ready(value: Dictionary, shown: Dictionary) -> bool:
 	return _evaluation_matches(value, shown) and value.get("turn", "") == shown.get("turn", "") \
+		and value.get("source", "") == "stockfish_gauge" \
 		and value.get("status", "") == "ready" and value.get("bound", "") == "exact" \
 		and _integer_score(value.get("depth")) and int(value.depth) > 0 \
 		and (_integer_score(value.get("cp")) or _integer_score(value.get("mate")))
@@ -1628,13 +1650,13 @@ func _evaluation_score_note(value: Dictionary) -> String:
 
 
 func _reference_fallback_note(value: Dictionary, meta: Dictionary, shown: Dictionary) -> String:
-	if meta.get("available", false) != true or value.get("status", "") in ["disabled", "unavailable", "error"]:
-		return "Stockfish 심판 사용 불가 · Regicide 자체 평가 표시"
+	if meta.get("enabled", false) != true or meta.get("available", false) != true or value.get("status", "") in ["disabled", "unavailable", "error"]:
+		return "Stockfish 평가 사용 불가"
 	if not value.is_empty() and (not _evaluation_matches(value, shown) or value.get("turn", "") != shown.get("turn", "")):
-		return "다른 위치의 심판 평가 제외 · Regicide 자체 평가 표시"
+		return "Stockfish 형세 계산 중 · 다른 위치의 평가 제외"
 	if value.get("status", "") == "ready" and value.get("bound", "") != "exact":
-		return "심판 범위 평가 제외 · Regicide 자체 평가 표시"
-	return "Stockfish 심판 준비 중 · Regicide 자체 평가 표시"
+		return "Stockfish 형세 계산 중 · 범위 평가 제외"
+	return "Stockfish 형세 계산 중"
 
 
 func _hint_legal_moves() -> Array:
@@ -1900,7 +1922,19 @@ func _can_change_think_time() -> bool:
 
 
 func _uses_auto_think_time() -> bool:
-	return state.get("engine", {}).get("sparring_mode", false) == true or boss_mode_option.get_selected_id() == 2
+	var engine: Dictionary = state.get("engine", {})
+	var clock: Variant = state.get("clock")
+	if clock is Dictionary and clock.get("enabled") == true:
+		return true
+	if engine.has("automatic_think_time"):
+		return engine.get("automatic_think_time") == true
+	if engine.has("time_management"):
+		return engine.get("time_management") == "automatic"
+	if clock is Dictionary and clock.has("enabled"):
+		return clock.get("enabled") == true
+	if not state.is_empty():
+		return engine.get("sparring_mode", false) == true
+	return rapid_time_option != null and rapid_time_option.selected >= 0
 
 
 func _on_think_time_selected(index: int) -> void:
@@ -2017,8 +2051,6 @@ func _on_new_game_pressed() -> void:
 		"boss_mode": boss_mode_option.get_selected_id() == 1,
 		"sparring_mode": boss_mode_option.get_selected_id() == 2,
 		"time_control": RAPID_CONTROLS[rapid_time_option.selected]}
-	if not payload.sparring_mode:
-		payload["movetime_ms"] = time_option.get_selected_id()
 	_mutate("/api/new", payload)
 
 
@@ -2206,7 +2238,7 @@ func _build_clock_adjustments(parent: VBoxContainer) -> void:
 func _clock_adjust_available() -> bool:
 	var clock: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
 	return not closing and not review_mode and not state.is_empty() and state.get("result", "*") == "*" \
-		and not state.get("handicap_mode", false) and state.get("engine", {}).get("sparring_mode", false) == true \
+		and not state.get("handicap_mode", false) \
 		and clock.get("enabled", false) == true and clock.get("editable", false) == true
 
 
@@ -2287,8 +2319,8 @@ func _poll_clock() -> void:
 
 func _on_game_mode_selected(_index: int) -> void:
 	var descriptions := {
-		0: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
-		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
+		0: "기본 기풍으로 두며, 남은 시간과 국면에 맞춰 생각 시간을 조절합니다. 새 대국부터 적용됩니다.",
+		1: "갬빗 오프닝을 적극적으로 선택하고, 성립 후 전개·중앙 돌파·왕 압박을 이어갑니다. 기물 미끼는 상대의 포획 뒤 응징을 검증한 경우에만 선택합니다. 새 대국부터 적용됩니다.",
 		2: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."}
 	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
 	var meta: Variant = state.get("engine", {}).get("sparring_referee")
@@ -2321,11 +2353,7 @@ func _render_think_time_controls() -> void:
 		if time_index >= 0:
 			time_option.select(time_index)
 	if automatic:
-		think_time_help.text = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다.\nRegicide의 남은 시간이 3분 미만이면 점차 빠르게 둡니다."
-		if engine.get("sparring_mode", false) != true:
-			think_time_help.text += "\n새 스파링 대국부터 자동 관리합니다."
-		elif boss_mode_option.get_selected_id() != 2:
-			think_time_help.text += "\n현재 스파링 대국은 자동 관리합니다."
+		think_time_help.text = "기본·갬빗·스파링 모두 익숙하거나 명백한 수는 빠르게, 복잡한 국면은 더 고민해 둡니다.\n사람 권장시간을 바탕으로 남은 시간이 5분 이하부터는 점차 빠르게 둡니다."
 		return
 	var thinking_now: bool = engine_thinking or bool(state.get("engine_thinking", false))
 	if thinking_now:
@@ -2351,8 +2379,8 @@ static func _rating_integer(value: Variant, minimum: int = 100, maximum: int = 4
 
 func _render_sparring_rating(shown: Dictionary, enabled: bool) -> void:
 	var engine: Dictionary = shown.get("engine", {})
-	var rating: Variant = engine.get("sparring_rating")
-	var supported: bool = engine.get("sparring_mode", false) == true and rating is Dictionary and rating.get("target") == "chess_com_rapid"
+	var rating: Variant = engine.get("rating", engine.get("sparring_rating"))
+	var supported: bool = rating is Dictionary and rating.get("target") == "chess_com_rapid"
 	sparring_rating_label.visible = supported and not closing
 	sparring_rating_label.text = ""
 	sparring_rating_label.tooltip_text = "내 수를 바탕으로 한 실험용 추정이며 공식 레이팅이 아닙니다. 검증된 수 분석이 있을 때만 갱신합니다."
@@ -2385,7 +2413,7 @@ func _render_sparring_rating(shown: Dictionary, enabled: bool) -> void:
 	rating_label_input.editable = terminal and enabled
 	rating_label_save.disabled = not terminal or not enabled
 	rating_label_save.text = "레이팅 저장" if saved == null else "레이팅 수정"
-	rating_label_note.text = "입력한 값은 다음 대국의 추정 보정에 반영합니다." if saved == null else "%d 저장됨 · 수정할 수 있습니다. 다음 대국의 추정 보정에 반영합니다." % int(saved)
+	rating_label_note.text = "실제 레이팅을 기록합니다. 다음 대국 추정에는 보정 가능한 대국만 반영합니다." if saved == null else "%d 저장됨 · 수정할 수 있습니다. 다음 대국 추정에는 보정 가능한 대국만 반영합니다." % int(saved)
 	if saved != null and rating.label.get("eligible_for_calibration") == false:
 		rating_label_note.text = "%d 저장됨 · 이번 대국은 추정 보정에 쓰지 않습니다. 수정할 수 있습니다." % int(saved)
 
@@ -2398,7 +2426,7 @@ func _on_rating_label_save() -> void:
 		error_message = "100~4000 사이의 정수 레이팅을 입력해 주세요."
 		_render()
 		return
-	_mutate("/api/sparring/rating-label", {"game_id": str(state.get("game_id", "")), "rating": int(value)})
+	_mutate("/api/rating-label", {"game_id": str(state.get("game_id", "")), "rating": int(value)})
 
 
 func _on_undo_pressed() -> void:
@@ -2585,8 +2613,8 @@ func _render() -> void:
 	boss_phase_label.text = "LOCAL PRACTICE  ·  기보 자동 저장"
 	boss_phase_label.tooltip_text = ""
 	if engine.get("boss_mode", false) == true:
-		var phase: String = str({"opening": "변칙 오프닝", "trap_hunt": "전술 사냥", "full_strength": "전력 대국"}.get(str(engine.get("boss_phase", "")), ""))
-		boss_phase_label.text = "보스 모드" + (" · " + phase if not phase.is_empty() else "")
+		var phase: String = str({"opening": "갬빗 준비", "initiative": "공격 전개", "trap_hunt": "전술 사냥", "full_strength": "전력 대국"}.get(str(engine.get("boss_phase", "")), ""))
+		boss_phase_label.text = "갬빗 모드" + (" · " + phase if not phase.is_empty() else "")
 	elif engine.get("sparring_mode", false) == true:
 		# Adjustment details remain in state/records, outside the live presentation.
 		boss_phase_label.text = "스파링 모드"
@@ -2660,7 +2688,7 @@ func _render() -> void:
 			status_detail.text = "Regicide의 기물과 도착 칸을 선택하세요.\n이 수부터 새 기보로 이어집니다."
 		else:
 			var color_name := "백" if human_color == "white" else "흑"
-			status_detail.text = "당신은 %s · Regicide가 생각시간을 자동으로 조절합니다." % color_name if engine.get("sparring_mode", false) == true else "당신은 %s · Regicide 기준 생각시간 %s초" % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
+			status_detail.text = "당신은 %s · Regicide가 생각시간을 자동으로 조절합니다." % color_name if _uses_auto_think_time() else "당신은 %s · Regicide 기준 생각시간 %s초" % [color_name, str(float(engine.get("movetime_ms", 1000)) / 1000.0)]
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
 	var promotion_was_visible: bool = promotion_panel.visible

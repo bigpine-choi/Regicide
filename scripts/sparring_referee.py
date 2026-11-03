@@ -8,6 +8,7 @@ proofs of safety, an Elo calibration, or a guarantee of a close game.
 """
 
 import copy
+from contextlib import contextmanager
 import hashlib
 import math
 import os
@@ -18,6 +19,8 @@ import time
 
 import chess
 import chess.engine
+import sparring_play
+from game_outcome import automatic_outcome
 
 
 POLICY = "regicide-stockfish-referee-v3"
@@ -26,6 +29,10 @@ SOURCE = "local_stockfish_referee"
 MAX_LIVE_MS = 1500
 LIVE_STARTUP_SECONDS = 1.5
 MAX_SCREEN_MS = 2000
+MAX_QUALITY_MS = 2150
+QUALITY_ANALYSIS_MS = 650
+MAX_QUALITY_SESSION_MS = 8000
+MIN_QUALITY_DEPTH = 10
 MAX_CANDIDATES = 4
 MIN_SCREEN_DEPTH = 6
 MIN_POST_DEPTH = 4
@@ -104,14 +111,16 @@ def _packet(board, info, *, allowed=None, multipv=None):
             return None
     nodes = info.get("nodes")
     nodes = nodes if type(nodes) is int and 0 <= nodes <= 10 ** 15 else None
-    wdl_white, share = None, None
+    # Match the ordinary evaluation bar: cp is a visual advantage scale,
+    # not expected game points. Keep WDL as separate reference metadata.
+    share = .5 + .5 * cp / (abs(cp) + 400) if cp is not None else (1.0 if mate > 0 else 0.0)
+    wdl_white = None
     wdl = info.get("wdl")
     if isinstance(wdl, chess.engine.PovWdl) and wdl.turn == board.turn:
         values = wdl.white()
         counts = [values.wins, values.draws, values.losses]
         if all(type(value) is int and 0 <= value <= 1000 for value in counts) and sum(counts) == 1000:
             wdl_white = {"wins": counts[0], "draws": counts[1], "losses": counts[2]}
-            share = (counts[0] + counts[1] / 2) / 1000
     return {"uci": pv[0].uci(), "cp": cp, "mate": mate, "cp_white": cp, "mate_white": mate,
             "depth": info["depth"], "nodes": nodes, "bound": "exact", "multipv": rank,
             "pv_uci": [move.uci() for move in pv], "white_share": share, "wdl_white": wdl_white}
@@ -152,6 +161,14 @@ class _Control:
         if stopped:
             _close_engine(engine)
 
+    def detach(self):
+        """Transfer a live peer only before cancellation takes ownership."""
+        with self.lock:
+            if self.cancel.is_set():
+                return None
+            engine, self.engine = self.engine, None
+            return engine
+
     def stop(self, reason="cancelled"):
         with self.lock:
             if self.reason is None:
@@ -185,11 +202,15 @@ def _close_engine(engine):
 
 
 class SparringReferee:
-    def __init__(self, binary=None, engine_factory=None, *, hash_mb=32, timeout_grace=.35):
+    def __init__(self, binary=None, engine_factory=None, *, hash_mb=32, timeout_grace=.35, live_claim_draw=True):
         if hash_mb not in (32, 64):
             raise ValueError("별도 심판 Hash는 32 또는 64MiB로 지정해 주세요.")
+        if type(live_claim_draw) is not bool:
+            raise ValueError("무승부 청구 판정 여부를 명시해 주세요.")
+        self._live_claim_draw = live_claim_draw
         self._condition = threading.Condition()
-        self._screen_lock = threading.Lock()
+        self._screen_lock = threading.RLock()
+        self._quality_state = None
         self._factory = engine_factory
         self._hash_mb = hash_mb
         self._grace = max(0.05, min(float(timeout_grace), .5))
@@ -267,15 +288,18 @@ class SparringReferee:
             self._context = context
             self._pending = None
             controls = [control for control in (self._live_control, self._screen_control) if control is not None]
+            if self._quality_state is not None:
+                controls.append(self._quality_state["control"])
             self._snapshot = self._blank(context)
             self._snapshot["budget_ms"] = budget_ms
-            if active and self._snapshot["available"] and not board.is_game_over(claim_draw=True):
+            outcome = automatic_outcome(board) if self._live_claim_draw else board.outcome(claim_draw=False)
+            if active and self._snapshot["available"] and outcome is None:
                 self._snapshot.update(status="loading", message="별도 Stockfish가 현재 위치를 분석합니다.")
                 self._pending = (self._generation, context)
                 if self._worker is None:
                     self._worker = threading.Thread(target=self._run_live, name="regicide-stockfish-reference", daemon=True)
                     self._worker.start()
-            elif board.is_game_over(claim_draw=True):
+            elif outcome is not None:
                 self._snapshot.update(status="idle", message="체스 규칙에 따른 종료 판정을 우선합니다.")
             self._condition.notify_all()
         for control in controls:
@@ -287,6 +311,8 @@ class SparringReferee:
             self._generation += 1
             self._pending = None
             controls = [control for control in (self._live_control, self._screen_control) if control is not None]
+            if self._quality_state is not None:
+                controls.append(self._quality_state["control"])
             self._snapshot = self._blank(self._context)
             self._snapshot["message"] = "별도 심판 조회를 중단했습니다. 자체 Regicide는 유지합니다."
             self._condition.notify_all()
@@ -298,7 +324,7 @@ class SparringReferee:
             self._closed = True
         self.cancel()
 
-    def _start_engine(self, control):
+    def _start_engine(self, control, *, startup_timeout=1.0):
         if control.stopped():
             raise TimeoutError()
         try:
@@ -312,7 +338,7 @@ class SparringReferee:
         remaining = max(.05, control.deadline - time.monotonic())
         if self._factory is None:
             options = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
-            engine = chess.engine.SimpleEngine.popen_uci([str(self._binary)], timeout=min(1.0, remaining), **options)
+            engine = chess.engine.SimpleEngine.popen_uci([str(self._binary)], timeout=min(startup_timeout, remaining), **options)
         else:
             engine = self._factory(self._binary)
         control.attach(engine)
@@ -338,7 +364,8 @@ class SparringReferee:
         return engine
 
     @staticmethod
-    def _analyse(engine, board, control, seconds, *, allowed=None, multipv=1, publish=None):
+    def _analyse(engine, board, control, seconds, *, allowed=None, multipv=1, publish=None,
+                 completed_reference=False):
         packets, invalid_depths = {}, set()
         options = {"game": object(), "info": chess.engine.INFO_ALL}
         if allowed is not None:
@@ -355,7 +382,14 @@ class SparringReferee:
                             and "score" in info and 1 <= info["depth"] <= MAX_PACKET_DEPTH):
                         invalid_depths.add(info["depth"])
                     continue
-                packets.setdefault(packet["depth"], {})[packet["uci"]] = packet
+                if completed_reference:
+                    # A single-PV reference value is one complete iteration.
+                    # An exact retry replaces an earlier aspiration bound;
+                    # another later bound still invalidates this depth.
+                    packets[packet["depth"]] = {packet["uci"]: packet}
+                    invalid_depths.discard(packet["depth"])
+                else:
+                    packets.setdefault(packet["depth"], {})[packet["uci"]] = packet
                 # Only a bounded number of recent complete-iteration packets
                 # survives, independent of arbitrary engine output messages.
                 for old in sorted(packets)[:-8]:
@@ -439,6 +473,222 @@ class SparringReferee:
                                               message="별도 심판 제한 시간을 넘어 자체 평가를 유지합니다.")
                     self._live_done.set()
                     self._condition.notify_all()
+
+    @contextmanager
+    def quality_session(self):
+        """Reuse one peer within a bounded final audit, never across turns.
+
+        Entry cannot wait behind another screen. The host can preserve its
+        native move if this optional session is unavailable. The session owns
+        an idle peer; an individual audit owns it while searching.
+        """
+        if not self._screen_lock.acquire(blocking=False):
+            raise RefereeUnavailable("referee_busy")
+        state = None
+        try:
+            with self._condition:
+                if self._closed or self._quality_state is not None:
+                    raise RefereeUnavailable("quality_session_unavailable")
+                control = _Control(time.monotonic() + MAX_QUALITY_SESSION_MS / 1000)
+                state = {"owner": threading.get_ident(), "control": control,
+                         "generation": self._generation}
+                self._quality_state = state
+                self._screen_active = True
+                live = self._live_control
+            control.start()
+            if live is not None:
+                live.stop("screen_priority")
+            yield self
+        finally:
+            if state is not None:
+                state["control"].finish()
+                with self._condition:
+                    self._quality_state = None
+                    self._screen_active = False
+                    if (not self._closed and not state["control"].cancel.is_set()
+                            and state["generation"] == self._generation
+                            and self._context is not None and self._context.get("active")
+                            and self._pending is None and self._metadata()["available"]):
+                        self._pending = (self._generation, self._context)
+                    self._condition.notify_all()
+            self._screen_lock.release()
+
+    def assess_move_quality(self, *, game_id, revision, board, selected_move,
+                            budget_ms=650, cancelled=None):
+        """Audit one native move against unrestricted root/opponent searches.
+
+        The root PV is diagnostic only: this method never supplies a move for
+        Regicide to play. Both scores use the original side's perspective, and
+        only two completed exact depth-10 searches (or a rule-proven terminal
+        child) make the comparison ready. This also runs for a lone baseline
+        and after sparring concessions have ended.
+        """
+        context = _board_context(game_id, revision, board)
+        board = context["board"]
+        selected = _move(selected_move)
+        budget_ms = _budget(budget_ms, MAX_QUALITY_MS)
+        started = time.monotonic()
+        deadline = started + budget_ms / 1000
+        result = {**self._metadata(),
+                  **{key: context[key] for key in ("game_id", "revision", "fen", "turn")},
+                  "history_uci": list(context["history"]), "selected_uci": selected.uci(),
+                  "status": "unverified", "reason": "quality_not_verified",
+                  "elapsed_ms": 0, "budget_ms": budget_ms, "startup_ms": None,
+                  "analysis_budget_ms": None, "engine_reused": False, "root": None, "child": None,
+                  "root_search": None, "child_search": None}
+
+        def finish(reason, *, status="unverified"):
+            result.update(self._metadata())
+            result.update(reason=reason, status=status,
+                          elapsed_ms=round((time.monotonic() - started) * 1000, 3))
+            return copy.deepcopy(result)
+
+        if board.is_game_over(claim_draw=True):
+            return finish("terminal_position", status="skipped")
+        if selected not in board.legal_moves:
+            raise ValueError("Regicide 검사 대상은 현재 위치의 합법 수여야 합니다.")
+        if not result["available"]:
+            return finish("referee_unavailable")
+        control = _Control(deadline, cancelled)
+        while not control.stopped():
+            if self._screen_lock.acquire(timeout=min(.01, max(0, deadline - time.monotonic()))):
+                break
+        else:
+            return finish(control.reason or "cancelled")
+        generation = None
+        session = None
+        sign = 1 if board.turn else -1
+
+        def completed_packet(position, returned, packets, invalid):
+            # The score describes this unrestricted position, not a move we
+            # will play. A final bestmove from an incomplete later iteration
+            # must not erase an earlier complete exact position evaluation.
+            eligible = [packet for depth, rows in packets.items()
+                        if depth >= MIN_QUALITY_DEPTH and depth not in invalid
+                        for packet in rows.values() if packet["multipv"] == 1]
+            if not eligible:
+                return None
+            packet = copy.deepcopy(max(eligible, key=lambda row: row["depth"]))
+            mate = packet["mate"]
+            packet.update(fen=position.fen(en_passant="fen"),
+                          cp_own=packet["cp"] * sign if packet["cp"] is not None else None,
+                          mate_own=mate * sign if mate is not None else None,
+                          terminal=False,
+                          evaluated_completed_uci=packet["uci"], returned_uci=returned.uci(),
+                          scope="completed_position_value",
+                          winner=("white" if mate > 0 else "black") if mate is not None else None)
+            return packet
+
+        def search_diagnostics(returned, packets, invalid):
+            return {"returned_uci": returned.uci(), "completed_depths": sorted(packets),
+                    "matching_depths": sorted(depth for depth, rows in packets.items()
+                                              if returned.uci() in rows),
+                    "invalid_depths": sorted(invalid)}
+
+        try:
+            with self._condition:
+                session = self._quality_state
+                if self._closed or self._context is not None and not _same_context(self._context, context):
+                    return finish("stale_position")
+                if self._context is None:
+                    self._context = {**context, "active": False, "budget_ms": 500}
+                generation = self._generation
+                self._screen_active = True
+                self._screen_control = control
+                live = self._live_control
+            if live is not None:
+                live.stop("screen_priority")
+            control.start()
+            while not self._live_done.wait(.01):
+                if control.stopped():
+                    return finish(control.reason or "cancelled")
+            if control.stopped():
+                return finish(control.reason or "cancelled")
+            engine = None
+            startup_started = time.monotonic()
+            if session is not None:
+                session_control = session["control"]
+                session_control.cancelled = cancelled
+                if session_control.stopped():
+                    return finish(session_control.reason or "cancelled")
+                deadline = min(deadline, session_control.deadline)
+                control.deadline = deadline
+                engine = session_control.detach()
+                if engine is not None:
+                    control.attach(engine)
+                    result["engine_reused"] = True
+            if engine is None:
+                engine = self._start_engine(control, startup_timeout=LIVE_STARTUP_SECONDS)
+            result["startup_ms"] = round((time.monotonic() - startup_started) * 1000, 3)
+            deadline = min(deadline, time.monotonic() + QUALITY_ANALYSIS_MS / 1000)
+            control.deadline = deadline
+            search_budget = deadline - time.monotonic() - .02
+            result["analysis_budget_ms"] = max(0, round(search_budget * 1000, 3))
+            if search_budget < .08:
+                return finish("insufficient_budget")
+            returned, packets, invalid = self._analyse(engine, board, control, search_budget * .35,
+                                                      completed_reference=True)
+            result["root_search"] = search_diagnostics(returned, packets, invalid)
+            result["root"] = completed_packet(board, returned, packets, invalid)
+            if result["root"] is None:
+                return finish("root_incomplete")
+            child = board.copy(stack=True)
+            child.push(selected)
+            outcome = child.outcome(claim_draw=True)
+            if outcome is not None:
+                # A completed mate is distance zero; its winner must be explicit
+                # because the sign of zero cannot encode the winning side.
+                draw = outcome.winner is None
+                result["child"] = {
+                    "uci": None, "cp": 0 if draw else None, "cp_white": 0 if draw else None,
+                    "cp_own": 0 if draw else None, "mate": None if draw else 0,
+                    "mate_white": None if draw else 0, "mate_own": None if draw else 0,
+                    "depth": None, "nodes": 0, "bound": "exact", "multipv": 1,
+                    "pv_uci": [], "white_share": .5 if draw else float(outcome.winner),
+                    "wdl_white": None, "fen": child.fen(en_passant="fen"), "terminal": True,
+                    "winner": None if draw else "white" if outcome.winner else "black",
+                    "termination": outcome.termination.name.lower(), "outcome": outcome.result()}
+            else:
+                remaining = deadline - time.monotonic() - .01
+                if remaining < .05:
+                    return finish("child_budget_missing")
+                returned, packets, invalid = self._analyse(engine, child, control, remaining,
+                                                          completed_reference=True)
+                result["child_search"] = search_diagnostics(returned, packets, invalid)
+                result["child"] = completed_packet(child, returned, packets, invalid)
+                if result["child"] is None:
+                    return finish("child_incomplete")
+            if control.stopped():
+                return finish(control.reason or "cancelled")
+            with self._condition:
+                if self._closed or generation != self._generation or not _same_context(self._context, context):
+                    return finish("stale_position")
+                return finish("exact_root_and_child", status="ready")
+        except RefereeUnavailable:
+            return finish("engine_identity_or_options_failed")
+        except Exception:
+            return finish(control.reason or "referee_search_failed")
+        finally:
+            if (session is not None and result["reason"] in (
+                    "exact_root_and_child", "root_incomplete", "child_incomplete", "child_budget_missing")
+                    and not control.stopped() and not session["control"].stopped()):
+                with self._condition:
+                    if (not self._closed and generation == self._generation
+                            and _same_context(self._context, context)):
+                        engine = control.detach()
+                        if engine is not None:
+                            session["control"].attach(engine)
+            control.finish()
+            with self._condition:
+                if self._screen_control is control:
+                    self._screen_control = None
+                self._screen_active = session is not None
+                if (session is None and not self._closed and generation == self._generation
+                        and _same_context(self._context, context) and self._context.get("active")
+                        and self._pending is None and self._metadata()["available"]):
+                    self._pending = (self._generation, self._context)
+                self._condition.notify_all()
+            self._screen_lock.release()
 
     def screen_candidates(self, *, game_id, revision, board, baseline_move, candidates,
                           budget_ms=1500, cancelled=None):
@@ -545,12 +795,16 @@ class SparringReferee:
             if baseline_cp is None:
                 return finish("mate_baseline_not_comparable")
             baseline_own = baseline_cp * sign
-            ramp = max(0.0, min(1.0, (len(board.move_stack) - 40) / 58))
-            target = 20 + ramp * (baseline_own - 20)
-            lower = -80 + ramp * min(0, baseline_own + 80)
-            upper = 80 + ramp * max(0, baseline_own - 80)
+            ramp = sparring_play._ramp_fraction(board)
+            schedule = sparring_play.ramp_target(board, baseline_own, target_cp=20, band_cp=80)
+            target, lower, upper = (schedule[key] for key in ("target_cp", "lower_cp", "upper_cp"))
+            guard = schedule["ramp_guard"]
+            result["ramp_guard"] = guard
             result["band"] = {"lower_cp_own": lower, "upper_cp_own": upper, "target_cp_own": target,
                               "ramp": ramp, "baseline_cp_own": baseline_own,
+                              "pressure_strength": schedule["strength"],
+                              "pressure_policy": sparring_play.PRESSURE_POLICY,
+                              "ramp_guard": guard,
                               "safety_floor_cp_own": min(lower, baseline_own),
                               "selection": ("distance_to_target_then_band" if ramp > 0 else
                                             "distance_to_band_then_target") + "; baseline wins ties"}
@@ -567,10 +821,29 @@ class SparringReferee:
                         if row["cp_own"] is not None and row["cp_own"] >= floor]
             if not eligible:
                 return finish("no_candidate_in_reference_band", status="ready")
+            if ramp > 0 and baseline_own <= 0 and sparring_play.draw_risk(board, baseline)["draw_or_claimable"]:
+                return finish("regicide_draw_defense_preserved", status="ready")
+            if ramp > 0 and baseline_own >= 80:
+                for row in eligible:
+                    row["draw_risk"] = sparring_play.draw_risk(board, chess.Move.from_uci(row["uci"]))
+                non_draw = [row for row in eligible if not row["draw_risk"]["draw_or_claimable"]]
+                eligible = non_draw or eligible
             # Repair large imbalances in verified steps without crossing the
             # safety floor or worsening an already losing baseline.
             chosen = min(eligible, key=lambda row: (*distance(row["cp_own"]),
                          row["uci"] != baseline.uci(), row["uci"]))
+            if ramp > 0:
+                near = [row for row in eligible if distance(row["cp_own"])[0] <= distance(chosen["cp_own"])[0] + sparring_play.PRESSURE_TIE_CP]
+                strongest = max(row["cp_own"] for row in near)
+                near = [row for row in near if row["cp_own"] >= strongest - sparring_play.PRESSURE_TIE_CP]
+                for row in near:
+                    pressure = sparring_play.pressure_for_move(board, baseline, chess.Move.from_uci(row["uci"]))
+                    row["pressure"] = pressure
+                    row["pressure_score"] = pressure["weight"] * pressure["points"]
+                    if baseline_own >= 80:
+                        row["pressure_score"] -= 6 * schedule["strength"] * int(row["draw_risk"]["twofold"])
+                chosen = min(near, key=lambda row: (-row["pressure_score"], -row["cp_own"],
+                             row["uci"] != baseline.uci(), row["uci"]))
             result.update(cp=chosen["cp"], mate=chosen["mate"], cp_white=chosen["cp"], mate_white=chosen["mate"])
             if chosen["uci"] == baseline.uci():
                 return finish("reference_prefers_regicide_baseline", status="ready")
@@ -600,7 +873,21 @@ class SparringReferee:
                 return finish("postmove_outside_reference_band")
             if delta > MAX_POST_DELTA_CP:
                 return finish("postmove_score_disagreement")
-            if distance(own_cp) >= distance(baseline_own):
+            pressure_progress = False
+            if ramp > 0:
+                baseline_row = next(row for row in result["candidates"] if row["uci"] == baseline.uci())
+                baseline_risk = baseline_row.get("draw_risk", {})
+                chosen_risk = chosen.get("draw_risk", {})
+                avoids_draw = (baseline_own >= 80 and baseline_risk.get("draw_or_claimable") is True
+                               and chosen_risk.get("draw_or_claimable") is False)
+                baseline_pressure = -6 * schedule["strength"] * int(baseline_risk.get("twofold", False))
+                improves_pressure = chosen.get("pressure_score", 0) > baseline_pressure
+                close_score = min(chosen["cp_own"], own_cp) >= baseline_own - sparring_play.PRESSURE_TIE_CP
+                pressure_progress = close_score and (avoids_draw or improves_pressure)
+                result["postmove"]["pressure_progress"] = {"accepted": pressure_progress,
+                    "avoids_rules_draw": avoids_draw, "improves_geometric_tiebreak": improves_pressure,
+                    "within_five_cp_of_baseline": close_score}
+            if distance(own_cp) >= distance(baseline_own) and not pressure_progress:
                 return finish("postmove_no_reference_progress")
             if control.stopped():
                 return finish(control.reason or "cancelled")

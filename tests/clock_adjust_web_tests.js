@@ -60,7 +60,7 @@ function assertPayload(side, delta, revision, game = "clock-adjust-game") {
   await reply("/api/state", fixture());
   assert.equal(byId("clock-adjust").hidden, false);
   assert.equal(byId("think-time-field").hidden, true, "sparring retains automatic thinking");
-  assert.match(byId("think-time-help").textContent, /3분 미만/);
+  assert.match(byId("think-time-help").textContent, /5분 이하/);
   click("clock-adjust-toggle");
   assert.equal(byId("clock-adjust-panel").hidden, false);
   assert.equal(byId("clock-adjust-toggle").attributes["aria-expanded"], "true");
@@ -147,7 +147,9 @@ function assertPayload(side, delta, revision, game = "clock-adjust-game") {
   const handicap = fixture(7, 9000, 8); handicap.handicap_mode = true; probe.applyState(handicap);
   assert.equal(byId("clock-adjust").hidden, true);
   const normal = fixture(8, 10000, 8); normal.engine.sparring_mode = false; probe.applyState(normal);
-  assert.equal(byId("clock-adjust").hidden, true, "draft sparring selector cannot enable normal-game editing");
+  assert.equal(byId("clock-adjust").hidden, false, "normal game exposes server-authorized clock edits");
+  const gambit = fixture(8, 10000, 8); Object.assign(gambit.engine, {sparring_mode:false, boss_mode:true}); probe.applyState(gambit);
+  assert.equal(byId("clock-adjust").hidden, false, "gambit game shares clock controls");
   const notEditable = fixture(9, 11000, 8); notEditable.clock.editable = false; probe.applyState(notEditable);
   assert.equal(byId("clock-human-plus-ten").disabled, true, "server eligibility is respected");
 

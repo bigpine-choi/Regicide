@@ -34,6 +34,8 @@ jobs:
       - run: python tests/boss_strength_match_tests.py
       - run: python tests/boss_strength_summary_tests.py
       - run: python tests/boss_mode_match_tests.py
+      - name: Verify gambit knowledge and post-sacrifice operations
+        run: python -m unittest discover -s tests -p "gambit_*tests.py" -v
       - run: python tests/learning_cycle_tests.py
       - run: python tests/teacher_quality_tests.py
       - run: python tests/neural_cost_diagnostic_tests.py
@@ -112,11 +114,16 @@ jobs:
       - run: node tests/web_analysis_tests.js
       - run: node tests/web_board_motion_tests.js
       - run: node tests/web_coaching_tests.js
+      - run: node tests/coaching_reference_web_tests.js
+      - run: node tests/clock_adjust_web_tests.js
+      - run: node tests/web_move_sound_tests.js
       - run: python tests/analysis_tests.py
       - run: python tests/analysis_castling_tests.py
       - run: python tests/analysis_castling_workflow_tests.py
       - run: python tests/analysis_evaluation_tests.py
       - run: python tests/coaching_tests.py
+      - run: python tests/coaching_reference_tests.py
+      - run: python tests/stockfish_gauge_tests.py
       - run: python tests/coach_explanations_tests.py
       - run: python tests/character_coach_tests.py
       - run: python tests/opening_guide_tests.py
@@ -142,6 +149,10 @@ jobs:
       - run: python tests/human_rhythm_tests.py
       - run: python tests/human_rhythm_host_tests.py
       - run: python tests/human_rhythm_diagnostic_tests.py
+      - run: python tests/common_pacing_policy_tests.py
+      - run: python tests/common_human_pacing_host_tests.py
+      - run: python tests/faster_pacing_tests.py
+      - run: python tests/clock_adjust_host_tests.py
       - run: python tests/engine_only_clock_tests.py
       - run: python tests/decision_clarity_tests.py
       - run: python tests/installed_think_time_stream_tests.py
@@ -158,6 +169,21 @@ jobs:
       - run: python tests/sparring_referee_host_tests.py
       - run: python tests/compare_sparring_referee_tests.py
       - run: python tests/audit_sparring_counterfactual_tests.py
+      - name: Verify sparring material and tactical guards
+        run: python -m unittest discover -s tests -p "sparring_safety*tests.py" -v
+      - name: Verify sparring post-move quality guards
+        run: python -m unittest discover -s tests -p "sparring_quality_*tests.py" -v
+      - run: python tests/sparring_material_tests.py
+      - run: python tests/pending_exchange_tests.py
+      - run: python tests/referee_quality_tests.py
+      - run: python tests/early_balance_quality_tests.py
+      - run: python tests/sparring_clock_budget_tests.py
+      - run: python tests/ramp_guard_tests.py
+      - run: python tests/ramp_pressure_tests.py
+      - run: python tests/ramp_quality_pressure_tests.py
+      - run: python tests/ramp_record_replay_tests.py
+      - run: python tests/audit_sparring_validation_tests.py
+      - run: python tests/game_outcome_tests.py
       - run: python tests/sparring_play_tests.py
       - run: python tests/rating_evidence_tests.py
       - run: python tests/rating_observation_host_tests.py

@@ -91,7 +91,7 @@ func _run() -> void:
 		await capture("native-moving-no-badge" + suffix, false)
 		panel.board.finish_animation()
 	var file := FileAccess.open(folder.path_join("native-badge-render.json"), FileAccess.WRITE)
-	file.store_string(JSON.stringify({"mode": "private offline renderer; actual own-engine reports for !!, star and blunder",
+	file.store_string(JSON.stringify({"mode": "private offline renderer; actual own-engine reports for !, star and blunder",
 		"great_source": args[2], "actual_source": args[1], "captures": records}, "  "))
 	file.close()
 	print("Rendered ", records.size(), " badge states. No live game or preferences modified.")

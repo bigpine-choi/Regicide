@@ -40,8 +40,8 @@ def refine(board, plan, current_clock, moves="e2e4 e7e5 g1f3", packets=None):
 
 class PacingV4Tests(unittest.TestCase):
     def test_version_and_pressure_contract(self):
-        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v9")
-        self.assertEqual(pacing.PRESSURE_START_MS, 180000)
+        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v13")
+        self.assertEqual(pacing.PRESSURE_START_MS, 300000)
         self.assertEqual(pacing.TURN_REDUCTION_MS, 1000)
         self.assertEqual(pacing.MIN_TURN_TARGET_MS, 100)
 
@@ -87,17 +87,17 @@ class PacingV4Tests(unittest.TestCase):
             self.assertAlmostEqual(plan["local_beat_factor"], beat, places=14)
             self.assertEqual(plan["target_total_ms"], target)
 
-    def test_three_minute_boundary_is_continuous_and_pressure_is_monotonic(self):
+    def test_five_minute_boundary_is_continuous_and_pressure_is_monotonic(self):
         board = chess.Board(TACTICAL)
-        remaining = (600000, 360000, 240000, 180001, 180000, 179999, 120000, 90000, 60000, 30000)
+        remaining = (600000, 480000, 360000, 300001, 300000, 299999, 180000, 120000, 60000, 30000)
         plans = [pacing.plan(board, clock(board, left), seed=SEED) for left in remaining]
         self.assertEqual([p["pressure_factor"] for p in plans[:5]], [1.] * 5)
         self.assertLess(plans[5]["pressure_factor"], 1.)
         self.assertLessEqual(plans[4]["target_total_ms"] - plans[5]["target_total_ms"], 1)
-        self.assertAlmostEqual(plans[6]["pressure_factor"], 5 / 6)
-        self.assertEqual(plans[7]["pressure_factor"], .75)
-        self.assertAlmostEqual(plans[8]["pressure_factor"], 2 / 3)
-        self.assertAlmostEqual(plans[9]["pressure_factor"], 7 / 12)
+        self.assertAlmostEqual(plans[6]["pressure_factor"], .8)
+        self.assertEqual(plans[7]["pressure_factor"], .7)
+        self.assertAlmostEqual(plans[8]["pressure_factor"], .6)
+        self.assertAlmostEqual(plans[9]["pressure_factor"], .55)
         targets = [p["target_total_ms"] for p in plans]
         self.assertEqual(targets, sorted(targets, reverse=True))
 
@@ -136,7 +136,7 @@ class PacingV4Tests(unittest.TestCase):
         self.assertEqual(plan, original)
         self.assertEqual(pacing.remaining_wait_ms(result, clock(board, 599000, 1000)), 0)
 
-    def test_reconsideration_premium_also_uses_three_minute_pressure(self):
+    def test_reconsideration_premium_also_uses_five_minute_pressure(self):
         board = chess.Board()
         packets = {4: packet(board, "d2d4 d7d5", 4), 5: packet(board, "e2e4 e7e5", 5),
                    6: packet(board, "g1f3 d7d5", 6)}
@@ -144,8 +144,8 @@ class PacingV4Tests(unittest.TestCase):
         result = refine(board, plan, clock(board, 90000), "g1f3 d7d5", packets)
         detail = result["refinement"]
         self.assertEqual(detail["kind"], "reconsidering_choices")
-        self.assertEqual(detail["premium_pressure_fraction"], .5)
-        self.assertAlmostEqual(detail["factor"], 1 + .5 * (detail["unpressured_factor"] - 1), places=5)
+        self.assertEqual(detail["premium_pressure_fraction"], .3)
+        self.assertAlmostEqual(detail["factor"], 1 + .3 * (detail["unpressured_factor"] - 1), places=5)
 
     def test_untimed_game_keeps_manual_search_budget(self):
         board = chess.Board()

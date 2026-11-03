@@ -71,7 +71,7 @@ class PGNPreviewTests(unittest.TestCase):
         text = '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *\n'
         details = preview_pgn(text)
         self.assert_frames(text, details)
-        self.assertEqual(details['frames'][5]['opening_guide']['matched_opening']['name'], 'Ruy Lopez')
+        self.assertEqual(details['frames'][5]['opening_guide']['matched_opening']['name'], 'Ruy Lopez Opening')
         summary = details['summary']
         self.assertEqual(summary['title'], 'PGN 파일')
         self.assertEqual(summary['source_kind'], 'pgn')

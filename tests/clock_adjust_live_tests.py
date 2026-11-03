@@ -108,32 +108,32 @@ class ClockAdjustmentNativeTests(unittest.TestCase):
             time.sleep(.005)
         self.fail("Native engine did not expose a concurrently editable thinking state")
 
-    def test_both_roles_during_native_thinking_and_three_minute_pressure(self):
+    def test_both_roles_during_native_thinking_and_five_minute_pressure(self):
         for color in ("white", "black"):
             with self.subTest(human_color=color):
                 state = self.new_position(color)
                 engine_color = "black" if color == "white" else "white"
-                for delta in [-60000] * 6 + [-10000] * 4:
+                for delta in [-60000] * 4 + [-10000] * 4:
                     state = self.click(state, "engine", delta)
-                self.assertGreater(state["clock"][engine_color + "_ms"], 190000)
+                self.assertGreater(state["clock"][engine_color + "_ms"], 310000)
                 start_revision, start_fen = state["revision"], state["fen"]
                 start_moves = len(state["moves"])
                 with ThreadPoolExecutor(max_workers=1) as workers:
                     future = workers.submit(self.request, "/api/engine", {"revision": start_revision})
                     thinking = self.wait_thinking(future)
                     self.assertEqual(thinking["engine"]["pacing"]["pressure_factor"], 1.0)
-                    self.assertEqual(thinking["engine"]["pacing"]["pressure_start_ms"], 180000)
+                    self.assertEqual(thinking["engine"]["pacing"]["pressure_start_ms"], 300000)
                     before_human = thinking["clock"][color + "_ms"]
                     human_edit = self.click(thinking, "human", 10000)
                     self.assertEqual(human_edit["clock"][color + "_ms"], before_human + 10000)
                     self.assertTrue(human_edit["engine_thinking"])
                     pressed = self.click(human_edit, "engine", -60000)
                     self.assertTrue(pressed["engine_thinking"])
-                    self.assertLess(pressed["clock"][engine_color + "_ms"], 180000)
+                    self.assertLess(pressed["clock"][engine_color + "_ms"], 300000)
                     self.assertLess(pressed["engine"]["pacing"]["pressure_factor"], 1.0)
                     self.assertEqual(pressed["engine"]["pacing"]["clock_edit_revision"], pressed["clock"]["edit_revision"])
                     relieved = self.click(pressed, "engine", 60000)
-                    self.assertGreater(relieved["clock"][engine_color + "_ms"], 180000)
+                    self.assertGreater(relieved["clock"][engine_color + "_ms"], 300000)
                     self.assertEqual(relieved["engine"]["pacing"]["pressure_factor"], 1.0)
                     self.assertGreater(relieved["engine"]["pacing"]["target_total_ms"], pressed["engine"]["pacing"]["target_total_ms"])
                     self.assertTrue(relieved["engine_thinking"])

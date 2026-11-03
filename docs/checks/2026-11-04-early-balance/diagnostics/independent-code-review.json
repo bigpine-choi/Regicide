@@ -1,0 +1,56 @@
+{
+  "reviewed_utc": "2026-11-03T16:07:56.358230+00:00",
+  "review_scope": [
+    "scripts/sparring_balance.py",
+    "scripts/sparring_quality.py"
+  ],
+  "mode": "read-only independent review; no production or test edits",
+  "findings": [
+    {
+      "issue": "finite incumbent could be replaced by a candidate farther from target",
+      "reproduced_before": {
+        "incumbent_cp": 90,
+        "candidate_cp": -95,
+        "target_cp": 30,
+        "selected": "d2d4",
+        "status": "improved",
+        "distance_before": 60,
+        "distance_after": 125
+      },
+      "verified_after": {
+        "selected": null,
+        "status": "unmet"
+      },
+      "status": "fixed"
+    },
+    {
+      "issue": "pre20 winning mate deferral was allowed for custom starting FENs",
+      "verified_after": "verdict now requires standard starting root and ply below 40",
+      "status": "fixed"
+    }
+  ],
+  "regressions": {
+    "command": ".venv-tests/Scripts/python.exe -m unittest discover -s tests -p early_balance_quality_tests.py -q",
+    "tests_run": 12,
+    "failures": 0,
+    "errors": 0
+  },
+  "review_checks": [
+    "elective concessions use naturalness without material-return exceptions",
+    "accepted alternatives require matching completed native evidence and independent full-history root/child assessment",
+    "winning mate is not counted as early close objective",
+    "safe but outside-band incumbent remains an explicit unmet balance result if no verified improvement exists",
+    "user/clock/context cancellation overrides cached completed optional work; bounded optional work may preserve previously completed safe progress",
+    "standard root and pre20 boundaries preserve later forced-win policy",
+    "existing unsafe-incumbent repair and mitigation loop remains separate from elective concessions"
+  ],
+  "source_sha256": {
+    "scripts/sparring_balance.py": "ac905f71b375c45ff4392242228303a28c4e90fa5377e5a6f5f774720711ea80",
+    "scripts/sparring_quality.py": "ff2503547280296bac1edd16f0d8fbbca3dbb0a72f0554b9497ebea97cf647b7",
+    "tests/early_balance_quality_tests.py": "bf0b36a9cf83ff4a2d994becda1403eb0839a82b3ce65c627c97c6413391b948"
+  },
+  "limits": [
+    "legal-capture naturalness is a short donation screen, not a proof against all tactical sacrifices",
+    "review and synthetic callbacks do not prove all 20-move actual games remain close"
+  ]
+}

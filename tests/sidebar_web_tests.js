@@ -41,9 +41,9 @@ function browser() {
 const cases=[],test=(name,run)=>cases.push({name,run});
 test("only the selected tool panel occupies sidebar space and switching never changes game controls",()=>{
   const ui=browser();assert.equal(ui.api.selected("live"),"game");assert.equal(ui.api.selected("analysis"),"analysis");
-  ui.get("live-sidebar-tab-opening").click();
-  for(const tab of ["game","opening","records"]){assert.equal(ui.get(`live-sidebar-panel-${tab}`).hidden,tab!=="opening");assert.equal(ui.get(`live-sidebar-tab-${tab}`).attributes["aria-selected"],String(tab==="opening"));}
-  assert.equal(ui.events.at(-1).type,"regicide-sidebar-change");assert.equal(ui.events.at(-1).detail.tab,"opening");
+  ui.get("live-sidebar-tab-records").click();
+  for(const tab of ["game","records"]){assert.equal(ui.get(`live-sidebar-panel-${tab}`).hidden,tab!=="records");assert.equal(ui.get(`live-sidebar-tab-${tab}`).attributes["aria-selected"],String(tab==="records"));}
+  assert.equal(ui.events.at(-1).type,"regicide-sidebar-change");assert.equal(ui.events.at(-1).detail.tab,"records");
   const count=ui.events.length;assert.equal(ui.api.select("live","missing"),false);assert.equal(ui.events.length,count);
   assert.equal(ui.get("new-game").listeners.click,undefined);assert.equal(ui.get("resign").listeners.click,undefined);
 });
@@ -55,7 +55,7 @@ test("keyboard tabs support arrows home end and preserve each panel scroll",()=>
   ui.get("live-sidebar-tab-records").dispatch("keydown",{key:"Home",preventDefault(){}});
   assert.equal(ui.api.selected("live"),"game");assert.equal(ui.get("live-sidebar-panel-game").scrollTop,160);
   ui.get("analysis-sidebar-tab-analysis").dispatch("keydown",{key:"End",preventDefault(){}});
-  assert.equal(ui.api.selected("analysis"),"opening");assert.equal(ui.get("analysis-sidebar-panel-analysis").hidden,true);
+  assert.equal(ui.api.selected("analysis"),"analysis");assert.equal(ui.get("analysis-sidebar-panel-analysis").hidden,false);
 });
 test("frequent actions remain outside scrollable panels while clocks errors and promotion stay independent",()=>{
   const ui=browser();
@@ -71,7 +71,9 @@ test("frequent actions remain outside scrollable panels while clocks errors and 
 });
 test("opening content and records have separate panels; coaching setup precedes long coaching content",()=>{
   const ui=browser();
-  for(const id of ["opening-guide","live-opening-explorer"]) assert.equal(ui.parent(id,(node)=>node.attributes.role==="tabpanel").attributes.id,"live-sidebar-panel-opening");
+  for(const id of ["opening-guide","live-opening-explorer"]) { assert.equal(ui.parent(id,(node)=>node.attributes.role==="tabpanel"),null); assert.equal(ui.parent(id,(node)=>node.tag==="aside").attributes.id,"live-opening-workspace"); }
+  ui.api.select("live","records"); assert.equal(ui.get("live-opening-workspace").hidden,false);
+  assert.equal(ui.get("analysis-opening-workspace").hidden,false);
   assert.equal(ui.parent("move-list",(node)=>node.attributes.role==="tabpanel").attributes.id,"live-sidebar-panel-records");
   const coachingParent=ui.get("coaching-setup").parent;
   assert.ok(coachingParent.children.indexOf(ui.get("coaching-setup"))<coachingParent.children.indexOf(ui.get("coach-card")));

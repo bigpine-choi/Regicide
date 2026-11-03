@@ -1,0 +1,101 @@
+.F.........................................................F.............F..............F.................F..F..F
+======================================================================
+FAIL: test_all_timed_modes_use_same_pacing_plan (engine_pacing_tests.PacingHostTests.test_all_timed_modes_use_same_pacing_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\engine_pacing_tests.py", line 244, in test_all_timed_modes_use_same_pacing_plan
+    self.assertEqual(len(set(targets)), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically (human_rhythm_tests.HumanRhythmTests.test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\human_rhythm_tests.py", line 296, in test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically
+    self.assertEqual(factors[:4], [factors[0]] * 4)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1.400831, 1.320665, 1.2405, 1.240499] != [1.400831, 1.400831, 1.400831, 1.400831]
+
+First differing element 1:
+1.320665
+1.400831
+
+- [1.400831, 1.320665, 1.2405, 1.240499]
++ [1.400831, 1.400831, 1.400831, 1.400831]
+
+======================================================================
+FAIL: test_long_thought_reacts_continuously_at_three_minutes_and_shrinks_under_pressure (contrast_pacing_tests.ContrastPacingTests.test_long_thought_reacts_continuously_at_three_minutes_and_shrinks_under_pressure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\contrast_pacing_tests.py", line 119, in test_long_thought_reacts_continuously_at_three_minutes_and_shrinks_under_pressure
+    self.assertEqual(targets[:5], [targets[0]] * 5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [30599, 30599, 23551, 17368, 17367] != [30599, 30599, 30599, 30599, 30599]
+
+First differing element 2:
+23551
+30599
+
+- [30599, 30599, 23551, 17368, 17367]
++ [30599, 30599, 30599, 30599, 30599]
+
+======================================================================
+FAIL: test_three_minute_pressure_shrinks_the_cap_continuously (opening_pacing_tests.OpeningPacingTests.test_three_minute_pressure_shrinks_the_cap_continuously)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\opening_pacing_tests.py", line 150, in test_three_minute_pressure_shrinks_the_cap_continuously
+    self.assertEqual(targets[:5], [targets[0]] * 5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1185, 1185, 1066, 762, 762] != [1185, 1185, 1185, 1185, 1185]
+
+First differing element 2:
+1066
+1185
+
+- [1185, 1185, 1066, 762, 762]
++ [1185, 1185, 1185, 1185, 1185]
+
+======================================================================
+FAIL: test_reconsideration_premium_also_uses_three_minute_pressure (pacing_v4_tests.PacingV4Tests.test_reconsideration_premium_also_uses_three_minute_pressure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\pacing_v4_tests.py", line 147, in test_reconsideration_premium_also_uses_three_minute_pressure
+    self.assertEqual(detail["premium_pressure_fraction"], .5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.3 != 0.5
+
+======================================================================
+FAIL: test_three_minute_boundary_is_continuous_and_pressure_is_monotonic (pacing_v4_tests.PacingV4Tests.test_three_minute_boundary_is_continuous_and_pressure_is_monotonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\pacing_v4_tests.py", line 94, in test_three_minute_boundary_is_continuous_and_pressure_is_monotonic
+    self.assertEqual([p["pressure_factor"] for p in plans[:5]], [1.] * 5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1.0, 1.0, 0.9, 0.8000016666666667, 0.8] != [1.0, 1.0, 1.0, 1.0, 1.0]
+
+First differing element 2:
+0.9
+1.0
+
+- [1.0, 1.0, 0.9, 0.8000016666666667, 0.8]
++ [1.0, 1.0, 1.0, 1.0, 1.0]
+
+======================================================================
+FAIL: test_version_and_pressure_contract (pacing_v4_tests.PacingV4Tests.test_version_and_pressure_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\pacing_v4_tests.py", line 43, in test_version_and_pressure_contract
+    self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v12")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'regicide-engine-pacing-v13' != 'regicide-engine-pacing-v12'
+- regicide-engine-pacing-v13
+?                          ^
++ regicide-engine-pacing-v12
+?                          ^
+
+
+----------------------------------------------------------------------
+Ran 113 tests in 10.532s
+
+FAILED (failures=7)

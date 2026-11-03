@@ -5,6 +5,7 @@
   const endpoint = "/api/opening-explorer";
   const token = document.querySelector('meta[name="regicide-token"]').content;
   const components = new Map();
+  let connectionBootstrap = null;
   const initialRatings = [1600, 1800, 2000, 2200, 2500];
   const initialSpeeds = ["rapid", "classical"];
   const position = (fen) => String(fen || "").trim().split(/\s+/).slice(0, 4).join(" ");
@@ -43,9 +44,12 @@
 
   class Explorer {
     constructor(host, name) {
-      this.host = host; this.name = name; this.enabled = false; this.active = false; this.fen = "";
+      this.host = host; this.name = name; this.enabled = true; this.active = false; this.fen = "";
       this.epoch = 0; this.timer = null; this.state = null; this.signature = ""; this.requestKey = null;
       this.section = "stats"; this.pending = false;
+      this.connectionChecked = false; this.connectionEpoch = 0;
+      this.connectionRetryAt = 0;
+      this.connectionConfigured = false;
       this.mount();
     }
 
@@ -54,12 +58,8 @@
       this.host.setAttribute("aria-label", "통계형 오프닝 탐색기");
       const heading = element("div", "section-heading");
       heading.append(element("h2", "", "오프닝 탐색기"));
-      const toggleLabel = element("label", "explorer-toggle");
-      this.toggle = element("input"); this.toggle.type = "checkbox";
-      this.toggle.setAttribute("aria-label", "리체스 오프닝 통계 켜기");
-      toggleLabel.append(this.toggle, element("span", "", "통계 켜기")); heading.append(toggleLabel);
-      this.host.append(heading, element("p", "help-note", "실제 대국 통계 · 켜면 현재 위치를 리체스로 전송합니다."));
-      this.body = element("div", "explorer-body"); this.body.hidden = true;
+      this.host.append(heading, element("p", "help-note", "현재 위치의 실제 대국 통계를 자동으로 조회합니다."));
+      this.body = element("div", "explorer-body");
       const tabs = element("div", "explorer-tabs"); tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "오프닝 탐색기 도구");
       this.sections = new Map(); this.sectionButtons = new Map();
       for (const [key, title] of [["stats", "통계"], ["games", "참고 기보"], ["connection", "연결 설정"]]) {
@@ -110,10 +110,6 @@
       this.mountAuthentication();
       this.host.append(this.body);
       this.selectSection("stats", false);
-      this.toggle.addEventListener("change", () => {
-        this.enabled = this.toggle.checked; this.body.hidden = !this.enabled;
-        this.invalidate(); this.signature = ""; if (this.enabled) this.sync();
-      });
       for (const control of [this.source, this.ratings, this.speeds]) control.addEventListener("change", () => {
         this.filters.hidden = this.source.value !== "lichess"; this.signature = ""; this.sync();
       });
@@ -122,9 +118,12 @@
 
     mountAuthentication() {
       const details = element("div", "explorer-auth");
+      this.tokenForm = element("div", "explorer-token-form");
+      this.changeToken = element("button", "secondary-button", "연결키 변경"); this.changeToken.type = "button"; this.changeToken.hidden = true;
+      this.changeToken.addEventListener("click", () => { this.tokenForm.hidden = false; this.changeToken.hidden = true; });
       const link = element("a", "", "리체스 연결키 만들기 ↗");
       link.href = "https://lichess.org/account/oauth/token/create"; link.target = "_blank"; link.rel = "noopener noreferrer";
-      const note = element("p", "help-note", "연결키는 Regicide가 리체스의 오프닝 자료를 읽을 수 있게 하는 열쇠입니다. 리체스 화면에서는 ‘토큰’이라고 부릅니다.");
+      const note = element("p", "help-note", "처음 한 번 연결하면 다음 실행부터 저장된 연결키를 사용합니다. 리체스 화면에서는 연결키를 ‘토큰’이라고 부릅니다.");
       const steps = element("ol", "explorer-auth-steps");
       steps.append(element("li", "", "위 링크를 열고 리체스에 로그인하세요."),
         element("li", "", "설명에는 Regicide를 적고, 권한 항목은 아무것도 체크하지 않은 채 생성하세요."),
@@ -138,7 +137,8 @@
       rememberLabel.append(this.remember, element("span", "", "이 컴퓨터에 안전하게 저장"));
       this.save = element("button", "secondary-button", "연결하기"); this.save.type = "button";
       this.connection = element("p", "help-note"); this.connection.setAttribute("role", "status");
-      details.append(link, note, steps, privacy, label, this.secret, rememberLabel, this.save, this.connection);
+      this.tokenForm.append(link, note, steps, privacy, label, this.secret, rememberLabel, this.save);
+      details.append(this.connection, this.changeToken, this.tokenForm);
       this.sections.get("connection").append(details);
       this.save.addEventListener("click", () => { void this.saveToken(); });
     }
@@ -166,7 +166,42 @@
     update(value) {
       const changed = this.fen !== value.fen || this.active !== Boolean(value.active);
       this.fen = value.fen || ""; this.active = Boolean(value.active);
+      if (this.fen && !this.connectionChecked && Date.now() >= this.connectionRetryAt) void this.restoreConnection();
       if (changed) this.sync();
+    }
+
+    async restoreConnection() {
+      this.connectionChecked = true;
+      const epoch = this.connectionEpoch;
+      // Shared localhost metadata request; this never sends a position to Lichess.
+      if (!connectionBootstrap) connectionBootstrap = request();
+      const pending = connectionBootstrap;
+      try {
+        const value = await pending;
+        if (epoch !== this.connectionEpoch) return;
+        this.updateConnection(value);
+
+      } catch (_) {
+        if (epoch !== this.connectionEpoch) return;
+        if (connectionBootstrap === pending) connectionBootstrap = null;
+        this.connectionChecked = false; this.connectionRetryAt = Date.now() + 5000;
+        // No retry timer: a later board/view update may retry after backoff.
+      }
+    }
+
+    updateConnection(value) {
+      const configured = value.configured === true;
+      let message = text(value.connection?.message, 400);
+      if (!message && configured && (!this.connectionConfigured || !this.connection.textContent))
+        message = "연결키가 설정되어 있습니다. 다시 입력할 필요가 없습니다.";
+      if (value.status === "auth_required") {
+        message = text(value.message, 400) || "리체스 연결이 필요합니다. 연결키를 입력해 주세요.";
+        this.tokenForm.hidden = false; this.changeToken.hidden = true;
+      } else {
+        this.tokenForm.hidden = configured; this.changeToken.hidden = !configured;
+      }
+      this.connectionConfigured = configured && value.status !== "auth_required";
+      if (message) this.connection.textContent = message;
     }
 
     query() {
@@ -182,7 +217,7 @@
       if (!this.active || !this.fen || this.section === "connection") {
         this.pause();
         if (this.section === "connection") this.status.textContent = "연결 설정 · 통계 탭으로 돌아가면 현재 위치를 조회합니다.";
-        else if (!this.state) this.status.textContent = "분석을 시작하거나 오프닝 탭으로 돌아오면 통계를 조회합니다.";
+        else if (!this.state) this.status.textContent = "보드가 활성화되면 현재 위치의 통계를 조회합니다.";
         this.refresh.disabled = true; return;
       }
       this.refresh.disabled = false;
@@ -228,12 +263,15 @@
     async saveToken() {
       const secret = this.secret.value.trim(); this.secret.value = "";
       if (!secret || this.save.disabled) { this.connection.textContent = "만든 연결키를 아래 입력칸에 붙여 넣으세요."; return; }
+      for (const component of components.values()) component.connectionEpoch++;
       this.save.disabled = true; this.connection.textContent = "연결 설정을 저장합니다…";
       try {
         const value = await request({action:"token", token:secret, remember:this.remember.checked});
+        connectionBootstrap = Promise.resolve(value);
         const message = text(value.message, 400);
-        this.connection.textContent = value.configured ? `${message || "연결키를 설정했습니다."} 실제 통계 조회로 연결 상태를 확인합니다.` : message || "연결 설정을 확인해 주세요.";
         for (const component of components.values()) {
+          component.updateConnection(value);
+          if (component === this) this.connection.textContent = value.configured ? `${message || "연결키를 설정했습니다."} 실제 통계 조회로 연결 상태를 확인합니다.` : message || "연결 설정을 확인해 주세요.";
           component.signature = "";
           if (component === this && value.configured) component.selectSection("stats");
           else component.sync();
@@ -243,10 +281,11 @@
     }
 
     render(value) {
+      this.updateConnection(value);
       this.results.replaceChildren(); this.games.replaceChildren(); this.summary.textContent = "";
       const messages = {idle:"현재 위치를 조회하세요.", loading:"리체스 통계를 불러오고 있습니다…", auth_required:"리체스 연결이 필요합니다. 연결 설정 탭에서 연결키를 입력하세요.",
         rate_limited:`리체스 조회 한도에 도달했습니다. ${Math.max(0, Number(value.retry_after) || 0)}초 뒤 다시 조회해 주세요.`, error:"통계를 읽지 못했습니다. 잠시 후 다시 조회해 주세요."};
-      this.status.textContent = messages[value.status] || text(value.message) || "통계를 준비하고 있습니다.";
+      this.status.textContent = value.status === "auth_required" ? text(value.message, 400) || messages.auth_required : messages[value.status] || text(value.message) || "통계를 준비하고 있습니다.";
       if (value.status !== "ready") return;
       const source = value.source === "masters" ? "리체스 마스터 대국" : "리체스 일반 대국";
       const fetched = value.fetched_at ? new Date(value.fetched_at) : null;
@@ -267,12 +306,12 @@
           if (ticket !== this.epoch || !this.active || !this.enabled || this.state?.request_key !== requestKey) return;
           const analysis = components.get("analysis");
           if (analysis) {
-            analysis.enabled = true; analysis.toggle.checked = true; analysis.body.hidden = false;
+            analysis.enabled = true; analysis.body.hidden = false;
             analysis.source.value = this.source.value; analysis.ratings.value = this.ratings.value; analysis.speeds.value = this.speeds.value;
             analysis.filters.hidden = analysis.source.value !== "lichess"; analysis.signature = "";
             analysis.selectSection("stats", false);
           }
-          window.RegicideSidebar?.select("analysis", "opening");
+          window.RegicideSidebar?.select("analysis", "analysis");
           window.dispatchEvent(new CustomEvent("regicide-explorer-analyze", {detail:{fen}}));
         });
         this.results.append(row);

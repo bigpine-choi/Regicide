@@ -182,7 +182,7 @@ class SparringRefereeTests(unittest.TestCase):
                                                      "UCI_LimitStrength": False, "UCI_ShowWDL": True})
         self.assertEqual(value["source"], "local_stockfish_referee")
         self.assertEqual(value["bound"], "exact")
-        self.assertIsNone(value["white_share"])
+        self.assertAlmostEqual(value["white_share"], .5 + .5 * value["cp"] / (abs(value["cp"]) + 400))
         self.assertTrue(factory.engines[0].closed.is_set())
 
     def test_black_position_is_still_reported_from_white_view(self):
@@ -198,9 +198,30 @@ class SparringRefereeTests(unittest.TestCase):
         value = self.completed(service)
         self.assertEqual((value["cp"], value["turn"]), (-85, "black"))
         self.assertEqual(value["wdl_white"], {"wins": 100, "draws": 300, "losses": 600})
-        self.assertEqual(value["white_share"], .25)
+        self.assertAlmostEqual(value["white_share"], .5 - .5 * 85 / 485)
         value["pv_uci"].clear()
         self.assertTrue(service.snapshot()["pv_uci"])
+
+    def test_gauge_uses_cp_even_when_wdl_is_saturated(self):
+        board = chess.Board()
+        previous = 0.0
+        for cp in [-10000, -900, -400, -100, 0, 100, 400, 900, 10000]:
+            with self.subTest(cp=cp):
+                row = packet(board, "e2e4", cp)
+                row["wdl"] = chess.engine.PovWdl(chess.engine.Wdl(1000, 0, 0), chess.WHITE)
+                value = referee._packet(board, row, multipv=1)
+                share = value["white_share"]
+                self.assertGreater(share, previous)
+                self.assertLess(share, 1.0)
+                self.assertAlmostEqual(share, .5 + .5 * cp / (abs(cp) + 400))
+                self.assertEqual(value["wdl_white"]["wins"], 1000)
+                row.pop("wdl")
+                self.assertEqual(referee._packet(board, row, multipv=1)["white_share"], share)
+                previous = share
+        for mate, share in [(3, 1.0), (-3, 0.0)]:
+            row = packet(board, "e2e4", mate_white=mate)
+            row["wdl"] = chess.engine.PovWdl(chess.engine.Wdl(0, 1000, 0), chess.WHITE)
+            self.assertEqual(referee._packet(board, row, multipv=1)["white_share"], share)
 
     def test_non_stockfish_identity_is_unavailable_and_cannot_select(self):
         service, factory = self.peer(FakeFactory(name="Regicide not an external referee"))
@@ -340,8 +361,10 @@ class SparringRefereeTests(unittest.TestCase):
         result = self.screen(service, board, moves[0], moves[1])
         self.assertEqual(result["selected_uci"], moves[0].uci())
         self.assertEqual(result["reason"], "reference_prefers_regicide_baseline")
-        self.assertAlmostEqual(result["band"]["ramp"], 56 / 58)
-        self.assertAlmostEqual(result["band"]["target_cp_own"], 20 + 56 / 58 * 280)
+        # Same fullmove fraction as native play for both colors; the late
+        # four-cp concession cap also raises the target to the296cp floor.
+        self.assertAlmostEqual(result["band"]["ramp"], 29 / 30)
+        self.assertAlmostEqual(result["band"]["target_cp_own"], 299.883333)
 
     def test_move_fifty_skips_every_external_search(self):
         board = long_board(98)

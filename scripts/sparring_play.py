@@ -19,8 +19,14 @@ import evaluation_stability
 import opening_variety as opening
 import sparring_pacing
 import sparring_evaluation
+import sparring_material
 
 POLICY = "regicide-sparring-play-v6"
+RAMP_GUARD_POLICY = "regicide-sparring-ramp-guard-v2"
+PRESSURE_POLICY = "regicide-sparring-pressure-v1"
+RAMP_MAX_CONCESSION_CP = 120
+RAMP_ADVANTAGE_RETURN_FRACTION = .35
+PRESSURE_TIE_CP = 5
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
                       "regicide-sparring-play-v3", "regicide-sparring-play-v4",
                       "regicide-sparring-play-v5", POLICY)
@@ -136,7 +142,46 @@ def _phase_factor(board, *, policy=None):
         return 1.0
     if policy == SUPPORTED_POLICIES[0]:
         return max(0., (LEGACY_FINISH_PLY - len(board.move_stack)) / (LEGACY_FINISH_PLY - LEGACY_RAMP_PLY))
+    if policy is None or policy == POLICY:
+        return 1 - _ramp_strength(board, policy=policy)
     return 1 - _ramp_fraction(board, policy=policy)
+
+
+def _ramp_strength(board, *, policy=None):
+    """Release concessions faster as pressure builds, without a phase jump."""
+    fraction = _ramp_fraction(board, policy=policy)
+    return 1 - (1 - fraction) ** 2
+
+
+def draw_risk(board, move):
+    """Rules and actual history only; a repetition is not an evaluation."""
+    after = board.copy(stack=True)
+    after.push(move)
+    return _draw_risk_after(after)
+
+
+def _draw_risk_after(after):
+    outcome = after.outcome(claim_draw=True)
+    draw = outcome is not None and outcome.winner is None
+    return {"draw_or_claimable": draw,
+            "reason": outcome.termination.name.lower() if draw else None,
+            "twofold": after.is_repetition(2), "terminal_or_claimable": outcome is not None}
+
+
+def _pressure_profile(after, replies=None):
+    """Geometric activity, with no pawn-count or exchange-count reward."""
+    replies = list(after.legal_moves) if replies is None else replies
+    destinations = {}
+    for square, piece in after.piece_map().items():
+        if piece.color == after.turn and piece.piece_type not in (chess.PAWN, chess.KING):
+            destinations[square] = set()
+    for reply in replies:
+        if reply.from_square in destinations and not after.is_attacked_by(not after.turn, reply.to_square):
+            destinations[reply.from_square].add(reply.to_square)
+    return {"unattacked_piece_destinations": sum(min(8, len(squares)) for squares in destinations.values()),
+            "restricted_pieces": sum(not squares for squares in destinations.values()),
+            "king_moves": sum(after.piece_type_at(reply.from_square) == chess.KING for reply in replies),
+            "forcing_check": after.is_check()}
 
 
 def derive_profile(board, decisions, *, policy=None):
@@ -256,12 +301,13 @@ def naturalness(board, move, *, pacing=None, resource_guard=None):
             immediate_mate = True
         if captured < 300:
             continue
-        recaptured = max((_capture_value(branch, answer) for answer in branch.legal_moves
-                          if answer.to_square == reply.to_square and branch.is_capture(answer)), default=0)
+        exchange = sparring_material.exchange_gain(branch, reply.to_square)
+        recaptured = exchange["gain_cp"]
         swing = gained - captured + recaptured
         if swing <= -200:
             vulnerabilities.append({"reply_uci": reply.uci(), "victim_cp": captured,
                                     "recapture_cp": recaptured, "candidate_capture_cp": gained,
+                                    "recapture_exchange": exchange,
                                     "net_material_cp": swing,
                                     "resources_after_reply": sparring_pacing.current_resources(branch, board.turn)})
     home_rank = 0 if board.turn else 7
@@ -273,7 +319,8 @@ def naturalness(board, move, *, pacing=None, resource_guard=None):
                   if (target := after.piece_at(square)) is not None
                   and target.color != board.turn and VALUES[target.piece_type] >= 300)
     style = 3 * development + 2 * int(board.is_castling(move)) + center + min(2, threats)
-    terminal = after.is_game_over(claim_draw=True)
+    draw = _draw_risk_after(after) if len(board.move_stack) >= RAMP_PLY else None
+    terminal = draw["terminal_or_claimable"] if draw else after.is_game_over(claim_draw=True)
     # A delayed, compensated exchange can return some previously won material.
     # Merely leaving a piece en prise (or capturing a pawn with a queen) cannot
     # use this exception. Final exact engine verification remains mandatory.
@@ -306,8 +353,45 @@ def naturalness(board, move, *, pacing=None, resource_guard=None):
             "opponent_legal_moves": len(replies), "opponent_king_moves": sum(
                 after.piece_type_at(reply.from_square) == chess.KING for reply in replies),
             "forcing_check": after.is_check(),
+            "draw_risk": draw,
+            "pressure_profile": _pressure_profile(after, replies) if len(board.move_stack) >= RAMP_PLY else None,
             "vulnerable_captures": vulnerabilities,
             "scope": "local legal capture screen; not exhaustive tactical or human-perception proof"}
+
+
+def ramp_guard(board, baseline_cp):
+    """A per-move loss cap shared by native play and the optional referee.
+
+Both colors share quadratic release on each full move from move 21.
+After the close phase, a concession cannot reverse a positive baseline or
+deliberately worsen an already losing position. This is a bounded estimate.
+"""
+    fraction = _ramp_fraction(board)
+    active = len(board.move_stack) >= RAMP_PLY
+    remaining = (1 - fraction) ** 2
+    cap = (round(min(RAMP_MAX_CONCESSION_CP, max(0, baseline_cp) * RAMP_ADVANTAGE_RETURN_FRACTION)
+                 * remaining, 6) if active else None)
+    floor = round(baseline_cp - cap, 6) if active else None
+    return {"policy": RAMP_GUARD_POLICY, "active": active, "ramp_fraction": fraction,
+            "strength": round(_ramp_strength(board), 6),
+            "max_loss_cp": cap, "floor_cp": floor, "baseline_cp": baseline_cp,
+            "advantage_return_fraction": RAMP_ADVANTAGE_RETURN_FRACTION,
+            "scope": "per-move estimated concession cap, not a cumulative win guarantee"}
+
+
+def ramp_target(board, baseline_cp, *, target_cp=TARGET_CP, band_cp=BAND_CP):
+    """Shared phase curve with each consumer's unchanged close-phase band."""
+    strength = _ramp_strength(board)
+    target = target_cp + strength * (baseline_cp - target_cp)
+    upper = band_cp + strength * max(0, baseline_cp - band_cp)
+    guard = ramp_guard(board, baseline_cp)
+    lower = -band_cp
+    if guard["active"]:
+        lower = guard["floor_cp"]
+        target = max(lower, target)
+        upper = max(target, upper)
+    return {"target_cp": target, "lower_cp": lower, "upper_cp": upper,
+            "ramp_guard": guard, "strength": strength}
 
 
 def _target(board, profile, baseline_cp):
@@ -315,11 +399,14 @@ def _target(board, profile, baseline_cp):
     ply = len(board.move_stack)
     ramp = _ramp_fraction(board)
     active = phase(board) != "finish"
-    target = TARGET_CP + ramp * (baseline_cp - TARGET_CP)
-    upper = BAND_CP + ramp * max(0, baseline_cp - BAND_CP)
+    schedule = ramp_target(board, baseline_cp)
+    target, lower, upper = (schedule[key] for key in ("target_cp", "lower_cp", "upper_cp"))
+    guard = schedule["ramp_guard"]
     return {"active": active, "basis": "own_engine_selected_root",
-            "lower_cp": -BAND_CP if active else None, "upper_cp": round(upper, 3) if active else None,
+            "lower_cp": lower if active else None, "upper_cp": round(upper, 3) if active else None,
+            "ramp_guard": guard,
             "target_cp": round(target, 3), "ramp_fraction": round(ramp, 4),
+            "pressure_strength": round(schedule["strength"], 6), "pressure_policy": PRESSURE_POLICY,
             "baseline_cp": baseline_cp, "selected_cp": baseline_cp, "selected_final_cp": baseline_cp,
             "selected_postmove_cp": None,
             "status": "pending" if active else "inactive", "deviation_cp": None,
@@ -328,7 +415,8 @@ def _target(board, profile, baseline_cp):
             "pre40_inside": -BAND_CP <= baseline_cp <= BAND_CP,
             "pre50_inside": -BAND_CP <= baseline_cp <= BAND_CP, "recovered": False,
             "failure_reason": None,
-            "selection_objective": "inside band first, then nearest target; small-distance ties prefer less concession and natural style",
+            "selection_objective": ("within ramp loss floor, nearest target including baseline" if guard["active"] else
+                                    "inside band first, then nearest target") + "; small-distance ties prefer less concession and natural style",
             "scope": "own-engine root estimates; selected alternatives also require a recorded post-move counter-search; not a guarantee"}
 
 
@@ -344,7 +432,9 @@ def _paced_control(control, pacing):
             control["upper_cp"] = max(control["upper_cp"], upper)
             control["pacing_applied"] = True
             control["selection_objective"] = (
-                "temporary recovery band first, then nearest paced target; "
+                ("within ramp loss floor, nearest paced target including baseline; "
+                 if control.get("ramp_guard", {}).get("active") else
+                 "temporary recovery band first, then nearest paced target; ") +
                 "ordinary band compliance is reported separately")
     return control
 
@@ -354,17 +444,31 @@ def _deviation(control, cp):
 
 
 def _candidate_pressure(board, baseline_move, natural):
+    if len(board.move_stack) < RAMP_PLY:
+        return {"policy": PRESSURE_POLICY, "points": 0, "weight": 0,
+                "components": {}, "scope": "inactive before move 21"}
     after = board.copy(stack=True)
     after.push(baseline_move)
     replies = list(after.legal_moves)
-    kings = sum(after.piece_type_at(move.from_square) == chess.KING for move in replies)
-    points = min(8, max(0, len(replies) - natural["opponent_legal_moves"]))
-    points += 2 * max(0, kings - natural["opponent_king_moves"])
-    if natural["forcing_check"] or after.is_check():
-        points = 0
-    weight = _ramp_fraction(board)
-    return {"points": points, "weight": round(weight, 4),
-            "scope": "geometric tie-break among verified candidates, not a proven playing style"}
+    baseline = _pressure_profile(after, replies)
+    candidate = natural.get("pressure_profile")
+    components = {"piece_activity_restriction": 0, "restricted_pieces": 0, "king_escape_restriction": 0}
+    if candidate and not candidate["forcing_check"] and not baseline["forcing_check"]:
+        components = {
+            "piece_activity_restriction": max(-8, min(8, baseline["unattacked_piece_destinations"]
+                                                       - candidate["unattacked_piece_destinations"])),
+            "restricted_pieces": 2 * (candidate["restricted_pieces"] - baseline["restricted_pieces"]),
+            "king_escape_restriction": 2 * (baseline["king_moves"] - candidate["king_moves"])}
+    points = max(-12, min(12, sum(components.values())))
+    return {"policy": PRESSURE_POLICY, "points": points, "weight": round(_ramp_strength(board), 4),
+            "components": components,
+            "scope": "geometric tie-break within five CP of verified candidates; not tactical safety or proven style"}
+
+
+def pressure_for_move(board, baseline_move, candidate_move):
+    after = board.copy(stack=True)
+    after.push(candidate_move)
+    return _candidate_pressure(board, baseline_move, {"pressure_profile": _pressure_profile(after)})
 
 
 def _mate_reference(board, info, required_move):
@@ -475,8 +579,15 @@ def _postmove_verification(board, move, candidate, search, *, depth, budget_ms, 
 
 def _choose_verified(board, baseline_move, baseline, probes, control, seed):
     """Rank exact evidence; neither discovery scores nor profile labels enter."""
+    ramping = control.get("ramp_fraction", 0) > 0
+    preserve_win = ramping and baseline["cp"] is not None and baseline["cp"] >= 80
     pool = [{"uci": baseline_move.uci(), "cp": baseline["cp"], "final_cp": baseline["cp"],
-             "loss": 0 if baseline["cp"] is not None else None, "style": 0, "probe": None}]
+             "loss": 0 if baseline["cp"] is not None else None, "style": 0, "pressure_score": 0, "probe": None}]
+    if ramping and baseline["cp"] is not None and baseline["cp"] <= 0:
+        risk = draw_risk(board, baseline_move)
+        if risk["draw_or_claimable"]:
+            pool[0]["draw_risk"] = risk
+            return pool[0]
     for probe in probes:
         if not probe["admitted"]:
             continue
@@ -485,8 +596,13 @@ def _choose_verified(board, baseline_move, baseline, probes, control, seed):
         probe["pressure"] = pressure
         pool.append({"uci": probe["uci"], "cp": probe["candidate_compared"]["cp"],
                      "final_cp": probe["candidate_final"]["cp"], "loss": probe["loss_cp"],
-                     "style": natural["style_points"] + pressure["weight"] * pressure["points"], "probe": probe})
+                     "style": natural["style_points"] + pressure["weight"] * pressure["points"],
+                     "pressure_score": pressure["weight"] * pressure["points"], "probe": probe})
     for item in pool:
+        if preserve_win:
+            risk = draw_risk(board, chess.Move.from_uci(item["uci"]))
+            item["draw_risk"] = risk
+            item["pressure_score"] -= 6 * _ramp_strength(board) * int(risk["twofold"])
         values = (item["cp"], item["final_cp"])
         if any(value is None for value in values):
             item.update(inside=False, deviation=float("inf"), distance=float("inf"))
@@ -494,13 +610,31 @@ def _choose_verified(board, baseline_move, baseline, probes, control, seed):
         item["inside"] = all(control["lower_cp"] <= cp <= control["upper_cp"] for cp in values)
         item["deviation"] = max(_deviation(control, cp) for cp in values)
         item["distance"] = max(abs(cp - control["target_cp"]) for cp in values)
+    # Recheck the current floor even for a previously admitted/replayed probe.
+    # During ramp, the legal baseline always participates: merely being inside
+    # a band must never force a large concession near full-strength play.
+    if ramping:
+        pool = [item for item in pool if item["probe"] is None or
+                all(value is not None and value >= control["lower_cp"]
+                    for value in (item["cp"], item["final_cp"]))]
+    if preserve_win:
+        non_draw = [item for item in pool if not item["draw_risk"]["draw_or_claimable"]]
+        # Preserve the legal baseline when every verified option draws.
+        pool = non_draw or pool
     inside = [item for item in pool if item["inside"]]
-    eligible = inside or pool
+    eligible = pool if ramping else inside or pool
     # Within the band use its actual center target. Outside, first make the
     # largest verified progress towards the band, then towards the center.
-    metric = "distance" if inside else "deviation"
+    metric = "distance" if ramping or inside else "deviation"
     best = min(item[metric] for item in eligible)
-    near = [item for item in eligible if item[metric] <= best + (5 if inside else 0)]
+    near = [item for item in eligible if item[metric] <= best + (5 if ramping or inside else 0)]
+    if ramping:
+        strongest = max(min(item["cp"], item["final_cp"]) for item in near)
+        near = [item for item in near if min(item["cp"], item["final_cp"]) >= strongest - PRESSURE_TIE_CP]
+        return min(near, key=lambda item: (-item["pressure_score"],
+            item["loss"] if item["loss"] is not None else -(item["cp"] or 0),
+            -item["style"], item["distance"],
+            opening._digest([POLICY, seed, opening.history_key(board), item["uci"]])))
     return min(near, key=lambda item: (item["loss"] if item["loss"] is not None else -(item["cp"] or 0),
                                       -item["style"], item["distance"],
                                       opening._digest([POLICY, seed, opening.history_key(board), item["uci"]])))
@@ -526,7 +660,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     verification_depth = max(MIN_DEPTH, baseline["depth"]) if baseline else None
     reliability = evaluation_stability.assess(board, baseline_packets)
     profile = derive_profile(board, rows)
-    pacing = (sparring_pacing.derive(board, rows, baseline["cp"], ramp_fraction=_ramp_fraction(board))
+    pacing = (sparring_pacing.derive(board, rows, baseline["cp"], ramp_fraction=_ramp_strength(board))
               if finite_baseline else {"active": False, "reason": "no_finite_reference"})
     resource_guard = sparring_pacing.resource_guard(board)
     analysis_only = phase(board) == "finish" or resource_guard.get("active") is True
@@ -571,8 +705,10 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
               "profile": profile, "phase": phase(board), "band_control": control,
               "pacing": pacing, "resource_guard": resource_guard,
               "target_loss_cp": max(0, baseline["cp"] - control["target_cp"]) if finite_baseline else None,
-              "max_loss_cp": max(0, baseline["cp"] + BAND_CP) if finite_baseline else None,
-              "position_floor_cp": -BAND_CP, "reliability": reliability,
+              "max_loss_cp": (control["ramp_guard"]["max_loss_cp"] if finite_baseline and control["ramp_guard"]["active"]
+                              else max(0, baseline["cp"] + BAND_CP) if finite_baseline else None),
+              "position_floor_cp": control.get("lower_cp"), "ramp_guard": control.get("ramp_guard"),
+              "reliability": reliability,
               "comparison_basis": None, "reference_revalidation": None,
               "verification_policy": POSTMOVE_POLICY, "postmove_verification": None,
               "postmove_attempts": [],

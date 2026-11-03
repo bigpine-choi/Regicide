@@ -18,6 +18,17 @@ def row(actual, played, best=None, kind="good"):
 
 
 class CoachDialogueTests(unittest.TestCase):
+    def test_uncertain_moves_have_no_automatic_dialogue_or_strategy(self):
+        source = row("e2e4", ["e2e4", "e7e5"], kind="uncertain")
+        packet = describe_move(chess.Board(), source)
+        self.assertEqual(source["classification"], "uncertain")
+        for view in [packet, *packet["perspectives"].values()]:
+            self.assertEqual(view["dialogue"], "")
+            self.assertEqual(view["hint"], "")
+            self.assertIsNone(view["teaching"])
+            self.assertIsNone(view["insight"])
+            self.assertIsNone(view["continuation"])
+
     def check_packet(self, board, source):
         packet = describe_move(board, source)
         self.assertLessEqual(len(packet["dialogue"].split()), 40)
@@ -156,7 +167,7 @@ class CoachDialogueTests(unittest.TestCase):
                 {"ply": 3, "color": "white", "classification": "pending"}]
         report = describe_report(rows, [1])
         self.assertEqual(report["version"], COACH_VERSION)
-        self.assertEqual(COACH_VERSION, 7)
+        self.assertEqual(COACH_VERSION, 8)
         self.assertEqual(report["lesson_plies"], [1, 2])
         self.assertIn("White has 1", report["summary"])
         self.assertIn("Black has 0", report["summary"])

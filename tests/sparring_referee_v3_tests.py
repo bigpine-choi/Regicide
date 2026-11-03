@@ -296,7 +296,10 @@ class NativeDiscoveryHostTests(unittest.TestCase):
             self.game._active_pacing["target_total_ms"] = 0
             return copy.deepcopy(decision), False
 
-        with mock.patch.object(host.engine_pacing, "recovery_plan", side_effect=short_recovery), \
+        # This fixture supplies only discovery packets. The independent final
+        # safety gate has its own host tests with child/root/child packets.
+        with mock.patch.object(host.sparring_safety, "inspect", return_value={"risky": False}), \
+             mock.patch.object(host.engine_pacing, "recovery_plan", side_effect=short_recovery), \
              mock.patch.object(host.sparring_play, "choose", side_effect=choose), \
              mock.patch.object(discovery.sparring_play, "naturalness", return_value={"admitted": True}), \
              mock.patch.object(self.game, "_wait_for_engine_turn", return_value=None):

@@ -1,0 +1,202 @@
+{
+  "policy": "regicide-engine-pacing-v12",
+  "scope": "deterministic clock policy and actual host audit-budget regression checks; not a playing-strength measurement",
+  "created_at_utc": "2026-11-03T17:20:03.250458+00:00",
+  "python": "3.13.16",
+  "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  "sparring_pressure_start_ms": 300000,
+  "manual_pressure_start_ms": 180000,
+  "base_turn_reduction_ms": 1000,
+  "post_search_reduction_ms": 1500,
+  "low_clock_ms": 10000,
+  "constraints": [
+    "Current balance only; future increments do not fund a search.",
+    "Extra audits keep the existing ten-second reserve plus 150ms completion margin.",
+    "At ten seconds or less there is no presentation wait; urgent baseline search remains bounded by current balance.",
+    "An exhausted or too-short external audit is unverified, never reported as safety confirmation."
+  ],
+  "source_sha256": {
+    "scripts/engine_pacing.py": "b250f933d73d2b56841e951baa4a8826f1e60fbd2a6a40692a0b30db27d38368",
+    "scripts/play_human.py": "073c170c0e7e12f2db46305f1a5209f8a6313dd15a0fc5a8ef9eb40552ab2292"
+  },
+  "samples": [
+    {
+      "remaining_ms": 600000,
+      "pressure_factor": 1.0,
+      "turn_target_ms": 1000,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 300,
+        "total_search_ms": 900,
+        "completion_margin_ms": 100.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 12000.0,
+      "behind_recovery_cap_ms": 30000.0
+    },
+    {
+      "remaining_ms": 300001,
+      "pressure_factor": 1.0,
+      "turn_target_ms": 1000,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 300,
+        "total_search_ms": 900,
+        "completion_margin_ms": 100.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 12000.0,
+      "behind_recovery_cap_ms": 30000.0
+    },
+    {
+      "remaining_ms": 300000,
+      "pressure_factor": 1.0,
+      "turn_target_ms": 1000,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 300,
+        "total_search_ms": 900,
+        "completion_margin_ms": 100.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 12000.0,
+      "behind_recovery_cap_ms": 30000.0
+    },
+    {
+      "remaining_ms": 299999,
+      "pressure_factor": 0.9999983333333333,
+      "turn_target_ms": 999,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 299,
+        "total_search_ms": 899,
+        "completion_margin_ms": 99.9,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 11999.920000133332,
+      "behind_recovery_cap_ms": 29999.800000333333
+    },
+    {
+      "remaining_ms": 240000,
+      "pressure_factor": 0.9,
+      "turn_target_ms": 800,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 240,
+        "total_search_ms": 720,
+        "completion_margin_ms": 80.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 7680.000000000002,
+      "behind_recovery_cap_ms": 19200.000000000004
+    },
+    {
+      "remaining_ms": 180000,
+      "pressure_factor": 0.8,
+      "turn_target_ms": 535,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 160,
+        "total_search_ms": 481,
+        "completion_margin_ms": 53.5,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 4320.0,
+      "behind_recovery_cap_ms": 10800.0
+    },
+    {
+      "remaining_ms": 60000,
+      "pressure_factor": 0.6,
+      "turn_target_ms": 100,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 90,
+        "total_search_ms": 90,
+        "completion_margin_ms": 10.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 480.0000000000001,
+      "behind_recovery_cap_ms": 1200.0000000000002
+    },
+    {
+      "remaining_ms": 30000,
+      "pressure_factor": 0.55,
+      "turn_target_ms": 100,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 90,
+        "total_search_ms": 90,
+        "completion_margin_ms": 10.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 120.00000000000003,
+      "behind_recovery_cap_ms": 300.00000000000006
+    },
+    {
+      "remaining_ms": 10001,
+      "pressure_factor": 0.5166683333333333,
+      "turn_target_ms": 100,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 90,
+        "total_search_ms": 90,
+        "completion_margin_ms": 10.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 0,
+      "behind_recovery_cap_ms": 0
+    },
+    {
+      "remaining_ms": 10000,
+      "pressure_factor": 0.5166666666666667,
+      "turn_target_ms": 258,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 100,
+        "total_search_ms": 232,
+        "completion_margin_ms": 25.8,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 0,
+      "behind_recovery_cap_ms": 0
+    },
+    {
+      "remaining_ms": 1000,
+      "pressure_factor": 0.5016666666666667,
+      "turn_target_ms": 30,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 27,
+        "total_search_ms": 27,
+        "completion_margin_ms": 3.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 0,
+      "behind_recovery_cap_ms": 0
+    },
+    {
+      "remaining_ms": 1,
+      "pressure_factor": 0.5000016666666667,
+      "turn_target_ms": 0,
+      "wait_ms": 0,
+      "allocation": {
+        "baseline_ms": 1,
+        "total_search_ms": 1,
+        "completion_margin_ms": 0.0,
+        "automatic": true
+      },
+      "ahead_recovery_cap_ms": 0,
+      "behind_recovery_cap_ms": 0
+    }
+  ],
+  "validation": {
+    "regression_tests": 211,
+    "failures": 0,
+    "errors": 0,
+    "elapsed_seconds": 71.269,
+    "log": "clock-tests.log",
+    "native_clock_edit_fixture": "updated to five-minute boundary, not executed in this task",
+    "audit_gate_cases": "actual host paths with controlled UCI/referee peers; five-minute boundary, three minutes, one minute, thirty seconds and ten seconds",
+    "native_games": "run separately by root; no native playing-strength claim in this clock-policy report"
+  }
+}

@@ -44,9 +44,9 @@ class BossPolicyTests(unittest.TestCase):
         return policy.assess(self.board, self.base_move, self.base, 'e7e5',
                              {depth: candidate}, candidate, chess.Move.from_uci('e7e5'), **kwargs)
 
-    def test_authored_variety_full_budget_and_bounded_single_probe(self):
+    def test_immediate_gambit_priority_full_budget_and_bounded_single_probe(self):
         choices = {policy.plan(self.board, 1000, f'{n:032x}')['candidate_uci'] for n in range(128)}
-        self.assertTrue({'e7e5', 'g8f6', 'd7d5'}.issubset(choices))
+        self.assertEqual(choices, {'e7e5'})
         plan = policy.plan(self.board, 1000, self.seed)
         self.assertEqual(plan['baseline_budget_ms'], 1000)
         self.assertEqual(plan['extra_budget_ms'], 1000)
@@ -79,24 +79,26 @@ class BossPolicyTests(unittest.TestCase):
                                        {candidate['depth']: candidate}, candidate, chess.Move.from_uci('e7e5'))
                 self.assertFalse(result['admitted'])
 
-    def test_signature_completes_book_and_switches_to_speculative_trap_search(self):
+    def test_signature_completes_book_and_keeps_the_gambit_attack_active(self):
         plan = policy.plan(self.board, 1000, self.seed)
         row = policy.receipt(self.board, plan, self.base_move, self.base, [self.assessed()], self.seed)
         self.board.push_uci('e7e5')
-        self.assertEqual(policy.phase(self.board, [row], engine_color=chess.BLACK), 'trap_hunt')
+        self.assertEqual(policy.phase(self.board, [row], engine_color=chess.BLACK), 'initiative')
         self.board.push_uci('d4e5')
         following = policy.plan(self.board, 1000, self.seed, decisions=[row])
         self.assertTrue(following['eligible'])
-        self.assertEqual(following['mode'], 'trap_hunt')
+        self.assertEqual(following['mode'], 'initiative')
         self.assertIsNone(following['candidate_uci'])
+        self.assertTrue(following['initiative_context']['accepted'])
+        self.assertEqual(following['initiative_context']['material_debt_cp'], 100)
 
-    def test_committed_shared_prefix_keeps_its_identity(self):
-        board = after('e2e4', 'e7e5', 'g1f3', 'b8c6')
+    def test_preparation_can_switch_to_a_matching_immediate_gambit(self):
+        board = after('e2e4', 'e7e5')
         row = {'ply': 1, 'line_id': 'evans', 'candidate_uci': 'e2e4', 'selected_uci': 'e2e4', 'line_complete': False}
         for n in range(20):
             plan = policy.plan(board, 1000, f'{n:032x}', decisions=[row])
-            self.assertEqual(plan['line_id'], 'evans')
-            self.assertEqual(plan['candidate_uci'], 'f1c4')
+            self.assertEqual(plan['line_id'], 'kings')
+            self.assertEqual(plan['candidate_uci'], 'f2f4')
         diverted = after('e2e4', 'c7c5')
         self.assertEqual(policy.plan(diverted, 1000, self.seed, decisions=[row])['mode'], 'opening')
         self.assertEqual(policy.plan(diverted, 1000, self.seed, decisions=[row])['line_id'], 'smith-morra')
@@ -117,12 +119,56 @@ class BossPolicyTests(unittest.TestCase):
         self.assertIsNone(row['line_id'])
         self.assertEqual(policy.commitment([row]), (None, False))
 
+    def test_opening_frequency_is_separate_from_traps_and_probe_failure(self):
+        plan = policy.plan(self.board, 1000, self.seed)
+        original = dict(plan)
+        closed = {'attempt_trap': False, 'probability': .1}
+        selected, gate = policy.apply_frequency(plan, closed, self.base_move)
+        self.assertTrue(selected['eligible'])
+        self.assertTrue(selected['opening_frequency_exempt'])
+        self.assertFalse(selected['frequency_gate_applied'])
+        self.assertFalse(selected['conservative_setup'])
+        self.assertFalse(gate['attempt_trap'])
+        self.assertTrue(gate['opening_exempt'])
+        self.assertEqual(plan, original)
+        self.assertEqual(closed, {'attempt_trap': False, 'probability': .1})
+        failed, _ = policy.apply_frequency(plan, closed, self.base_move, probe_failed=True)
+        self.assertFalse(failed['eligible'])
+        self.assertEqual(failed['reason'], 'quality_probe_failed')
+        trap = {**plan, 'mode': 'trap_hunt', 'candidate_uci': None}
+        held, _ = policy.apply_frequency(trap, closed, self.base_move)
+        self.assertFalse(held['eligible'])
+        self.assertTrue(held['frequency_gate_applied'])
+        self.assertEqual(held['reason'], 'opponent_frequency_hold')
+
+    def test_preparation_cost_limit_is_independent_of_an_open_trap_gate(self):
+        board = chess.Board()
+        plan = policy.plan(board, 1000, seed_for(board, 'e2e4'))
+        selected, gate = policy.apply_frequency(plan, {'attempt_trap': True}, chess.Move.from_uci('b1c3'))
+        self.assertTrue(selected['eligible'])
+        self.assertFalse(selected['line_complete'])
+        self.assertTrue(selected['conservative_setup'])
+        self.assertTrue(gate['opening_exempt'])
+
+    def test_native_baseline_signature_records_authorship_and_completion(self):
+        plan = policy.plan(self.board, 1000, self.seed)
+        move = chess.Move.from_uci('e7e5')
+        info = packet(self.board, 'e7e5', -150)
+        row = policy.receipt(self.board, plan, move, info, seed=self.seed)
+        self.assertEqual(row['selected_uci'], row['candidate_uci'])
+        self.assertEqual(row['reason'], 'authored_move_is_baseline')
+        self.assertEqual(row['line_id'], 'englund')
+        self.assertTrue(row['line_complete'])
+        self.assertEqual(policy.commitment([row]), ('englund', True))
+
     def test_memo_and_pgn_identity(self):
         args = (self.board, 1000, 'binary', 'evaluation')
         key = policy.memo_key(*args, seed=self.seed, catalog_id='englund')
         self.assertNotEqual(key, policy.memo_key(*args, seed=self.seed, catalog_id='albin'))
         meta = {'enabled': True, 'policy': policy.POLICY, 'seed': self.seed}
         self.assertEqual(policy.pgn_headers(meta)['BossMode'], '1')
+        legacy = policy.pgn_headers({**meta, 'policy': 'regicide-boss-play-v3'})
+        self.assertEqual(legacy['BossPolicy'], 'regicide-boss-play-v3')
         for changed in ({'enabled': 1}, {'seed': 'bad'}, {'policy': 'unknown'}):
             self.assertEqual(policy.pgn_headers({**meta, **changed}), {})
 

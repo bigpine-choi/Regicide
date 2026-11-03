@@ -65,7 +65,8 @@ class HumanRhythmHostTests(unittest.TestCase):
         self.addCleanup(self.plan_patch.stop)
         self.addCleanup(self.refine_patch.stop)
 
-    def controlled_plan(self, board, clock, evaluation=None, *, seed=None, history=None):
+    def controlled_plan(self, board, clock, evaluation=None, *, seed=None, history=None,
+                        pressure_start_ms=host.engine_pacing.PRESSURE_START_MS):
         self.plan_calls.append({"board": board.copy(stack=True), "clock": copy.deepcopy(clock),
                                 "history": copy.deepcopy(history), "seed": seed})
         color = "white" if board.turn else "black"
@@ -74,6 +75,7 @@ class HumanRhythmHostTests(unittest.TestCase):
                 "recommended_total_ms": 10000, "target_total_ms": 10000, "reserve_ms": 10000,
                 "spent_at_request_ms": clock.get("turn_elapsed_ms", 0),
                 "initial_remaining_ms": clock.get(color + "_ms"), "pressure_factor": 1.0,
+                "pressure_start_ms": pressure_start_ms,
                 "variation_factor": 1.0, "rhythm_profile": "controlled_test",
                 "reason": "controlled_total_turn" if clock.get("enabled") else "untimed"}
 

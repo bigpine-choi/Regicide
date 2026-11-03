@@ -60,7 +60,7 @@ class BossStateTests(unittest.TestCase):
         result = self.reply()
         self.assertEqual(result['last_move'], 'e7e5')
         self.assertIsNone(result['error'])
-        self.assertEqual(result['engine']['boss_phase'], 'trap_hunt')
+        self.assertEqual(result['engine']['boss_phase'], 'initiative')
         self.assertEqual(result['engine']['extra_budget_ms'], 1000)
         self.assertEqual(len(self.peer.searches), 3)
         self.assertEqual(self.peer.searches[0]['limit'].time, 1)
@@ -77,6 +77,10 @@ class BossStateTests(unittest.TestCase):
         with patch('poisoned_piece.enumerate_offers', return_value=[]):
             next_result = self.reply()
         self.assertEqual(next_result['last_move'], 'b8c6')
+        continuation = self.game._boss_decisions[4]
+        self.assertEqual(continuation['mode'], 'initiative')
+        self.assertFalse(continuation['frequency_gate_applied'])
+        self.assertTrue(continuation['initiative']['context']['accepted'])
         self.assertEqual(len(self.peer.searches), 5)
         self.assertIsNone(self.peer.searches[-2]['root_moves'])
         self.assertEqual(self.peer.searches[-2]['limit'].time, 1)
@@ -98,7 +102,7 @@ class BossStateTests(unittest.TestCase):
         self.assertIn('[BossMode "1"]', self.game.pgn())
         self.assertNotIn('DynamicPlayPolicy', self.game.pgn())
 
-    def test_conservative_gate_keeps_risky_signature_at_full_baseline(self):
+    def test_closed_trap_gate_still_verifies_the_authored_gambit_signature(self):
         board = after('d2d4')
         self.game._opening_seed = next(f'{n:032x}' for n in range(4096)
             if host.boss_play.plan(board, 1000, f'{n:032x}')['candidate_uci'] == 'e7e5'
@@ -106,10 +110,15 @@ class BossStateTests(unittest.TestCase):
         self.prepare()
         result = self.reply()
         row = self.game._boss_decisions[2]
-        self.assertEqual(result['last_move'], 'g8f6')
+        self.assertEqual(result['last_move'], 'e7e5')
         self.assertFalse(row['frequency']['attempt_trap'])
-        self.assertEqual(row['reason'], 'opponent_frequency_hold')
-        self.assertEqual(len(self.peer.searches), 2)
+        self.assertTrue(row['frequency']['opening_exempt'])
+        self.assertTrue(row['opening_frequency_exempt'])
+        self.assertFalse(row['frequency_gate_applied'])
+        self.assertEqual(row['reason'], 'accepted_authored_gambit')
+        self.assertTrue(row['line_complete'])
+        self.assertEqual(row['loss_cp'], 175)
+        self.assertEqual(len(self.peer.searches), 3)
         self.assertEqual(self.peer.searches[0]['limit'].time, 1)
 
     def test_closed_gate_allows_only_checked_near_reference_gambit_setup(self):
@@ -152,6 +161,20 @@ class BossStateTests(unittest.TestCase):
         self.assertEqual(self.peer.searches[2]['root_moves'][0].uci(), 'd2d4')
         self.game.undo(self.game.revision)
         self.assertEqual(self.game.state()['engine']['boss_opponent']['quality_observations'], 0)
+
+    def test_open_trap_gate_does_not_remove_the_preparation_cost_limit(self):
+        board = chess.Board()
+        self.game.new_game('black', 1000, self.game.revision, True)
+        self.game._opening_seed = admitted_seed(board, 'e2e4')
+        self.peer.scripts = [{'move': 'b1c3', 'packets': [packet(board, 'b1c3', 50)]},
+                             {'move': 'e2e4', 'packets': [packet(board, 'e2e4', 14)]}]
+        result = self.reply()
+        row = self.game._boss_decisions[1]
+        self.assertEqual(result['last_move'], 'b1c3')
+        self.assertTrue(row['frequency']['attempt_trap'])
+        self.assertTrue(row['conservative_setup'])
+        self.assertEqual(row['setup_max_loss_cp'], 35)
+        self.assertEqual(row['reason'], 'conservative_setup_cost')
 
     def test_undo_removes_decisions_and_replays_same_cached_choice(self):
         self.prepare()

@@ -279,10 +279,10 @@ class HumanRhythmTests(unittest.TestCase):
         result = refine_current(board, "g1f3 d7d6 d2d4", seed=seed, plan=plan, history=[row])
         self.assertTrue(result["refinement"]["long_think_cooldown"])
 
-    def test_three_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
+    def test_five_minute_pressure_shrinks_premiums_and_total_targets_monotonically(self):
         board = board_after("e2e4", "c7c5")
         values = []
-        for left in (360000, 240000, 180001, 180000, 179999, 120000, 60000, 30000, 10000):
+        for left in (600000, 360000, 300001, 300000, 299999, 180000, 60000, 30000, 10000):
             plan = neutral_context(board, left=left)
             result = refine_current(board, "g1f3 d7d6 d2d4", plan=plan, left=left, history=[previous()])
             values.append(result)

@@ -1,0 +1,85 @@
+{
+  "source": "Kenney Impact Sounds 1.0 / CC0-1.0",
+  "source_url": "https://kenney.nl/assets/impact-sounds",
+  "source_manifest": "../../../assets/audio/kenney-impact-sounds/source.json",
+  "runtime_clips": [
+    {
+      "name": "move",
+      "seconds": 0.12,
+      "sample_rate": 44100,
+      "channels": 1,
+      "peak": 0.6500137333292642,
+      "boundary_samples": [
+        0,
+        0
+      ],
+      "sha256": "e5317de125fea167c50f24b1bb80cbebf551743464708e82fb2b8976285188fb"
+    },
+    {
+      "name": "capture",
+      "seconds": 0.22,
+      "sample_rate": 44100,
+      "channels": 1,
+      "peak": 0.7199926755577257,
+      "boundary_samples": [
+        0,
+        0
+      ],
+      "sha256": "74a7ca887c905f283152c50afc53303c58466b5bdabce2090ad567251fb743bd"
+    }
+  ],
+  "web_audio_checks": 6,
+  "native_lifecycle_log": "native-sound.txt",
+  "actual_mixer": {
+    "capture_seconds": 0.22,
+    "driver": "WASAPI",
+    "failures": 0,
+    "mix_rate": 48000.0,
+    "move_seconds": 0.12,
+    "results": [
+      {
+        "case": "initial board is silent",
+        "frames": 22528,
+        "pass": true,
+        "peak": 0.0,
+        "rms": 0.0
+      },
+      {
+        "case": "human move produces actual mixer PCM",
+        "frames": 28672,
+        "pass": true,
+        "peak": 0.258961915969849,
+        "rms": 0.0141482679436954
+      },
+      {
+        "case": "repeated state is silent",
+        "frames": 24576,
+        "pass": true,
+        "peak": 0.0,
+        "rms": 0.0
+      },
+      {
+        "case": "opponent capture produces actual mixer PCM",
+        "frames": 28672,
+        "pass": true,
+        "peak": 0.286832481622696,
+        "rms": 0.017312110461486
+      },
+      {
+        "case": "undo is silent",
+        "frames": 28672,
+        "pass": true,
+        "peak": 0.0,
+        "rms": 0.0
+      },
+      {
+        "case": "hidden transition is silent",
+        "frames": 28672,
+        "pass": true,
+        "peak": 0.0,
+        "rms": 0.0
+      }
+    ]
+  },
+  "limits": "Mixer PCM and playback lifecycle verified; no physical-speaker listening or subjective preference claim. Game and system audio settings untouched."
+}

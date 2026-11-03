@@ -157,7 +157,7 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
                 self.assertEqual(board.fullmove_number, fullmove)
                 self.assertEqual(board.turn, chess.WHITE if ply % 2 == 0 else chess.BLACK)
                 self.assertAlmostEqual(policy._ramp_fraction(board), expected_fraction, msg=(fullmove, board.turn))
-                self.assertAlmostEqual(policy._phase_factor(board), 1 - expected_fraction, msg=(fullmove, board.turn))
+                self.assertAlmostEqual(policy._phase_factor(board), (1 - expected_fraction) ** 2, msg=(fullmove, board.turn))
             if ply in (38, 39, 40, 41, 136, 137, 138, 139):
                 old_fraction = {20: 0, 21: 1 / 50, 69: 49 / 50, 70: 1}[board.fullmove_number]
                 self.assertAlmostEqual(policy._ramp_fraction(board, policy="regicide-sparring-play-v4"), old_fraction)
@@ -177,7 +177,7 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         sparse = chess.Board("7k/8/8/8/8/8/8/KQ6 w - - 0 1")
         self.assertEqual(policy.phase(sparse), "calibration")
 
-    def test_both_colors_gain_exactly_one_thirtieth_each_full_move(self):
+    def test_both_colors_share_linear_progress_and_quadratic_concession_release(self):
         board = chess.Board()
         by_color = {chess.WHITE: [], chess.BLACK: []}
         for ply in range(140):
@@ -185,7 +185,7 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
                 fraction = policy._ramp_fraction(board)
                 concession = policy._phase_factor(board)
                 self.assertAlmostEqual(fraction, (board.fullmove_number - 20) / 30)
-                self.assertAlmostEqual(concession, 1 - fraction)
+                self.assertAlmostEqual(concession, (1 - fraction) ** 2)
                 by_color[board.turn].append((fraction, concession))
             if ply < 139:
                 board.push_uci(("g1f3", "g8f6", "f3g1", "f6g8")[ply % 4])
@@ -196,7 +196,7 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
             self.assertEqual(values[-1], (1, 0))
             for before, after in zip(values, values[1:]):
                 self.assertAlmostEqual(after[0] - before[0], 1 / 30, msg=color)
-                self.assertAlmostEqual(before[1] - after[1], 1 / 30, msg=color)
+                self.assertGreater(before[1], after[1], msg=color)
 
     def test_budget_and_phase_target_are_bounded_and_decline_smoothly(self):
         self.assertEqual(policy.extra_budget(599), 0)
@@ -216,7 +216,8 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
                 targets.append(policy._target(board, profile, 300)["target_cp"])
             if ply < 140:
                 board.push_uci(["g1f3", "g8f6", "f3g1", "f6g8"][ply % 4])
-        self.assertEqual(targets[:2], [30, 39])
+        # Move21 retains its advantage under both the quadratic and 35% caps.
+        self.assertEqual(targets[:2], [30, 201.883])
         self.assertEqual(targets[-1], 300)
         self.assertTrue(all(a <= b for a, b in zip(targets, targets[1:])))
         self.assertFalse(policy._target(board, profile, 300)["active"])

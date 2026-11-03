@@ -18,14 +18,19 @@ import evaluation_stability
 import sparring_evaluation
 
 
-POLICY = "regicide-engine-pacing-v9"
+POLICY = "regicide-engine-pacing-v13"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
-PRESSURE_START_MS = 180_000
+PRESSURE_START_MS = 300_000
+# Compatibility name for existing callers and archived policy descriptions.
+SPARRING_PRESSURE_START_MS = PRESSURE_START_MS
 WAIT_SLICE_SECONDS = .05
 MAX_TURN_MS = 45_000
 TURN_REDUCTION_MS = 1000
+# Trim presentation time after search, including capped opening turns, without
+# reducing the baseline, recovery, or tactical-verification search allowances.
+POST_SEARCH_REDUCTION_MS = 1500
 # Include search in this floor: shortening only the post-search hold could
 # never produce a genuinely near-instant response to an obvious move.
 MIN_TURN_TARGET_MS = 100
@@ -114,7 +119,8 @@ def _opening_budget(board, features, seed):
             "unpressured_cap_ms": int(cap), "max_fullmove": OPENING_MAX_FULLMOVE}
 
 
-def plan(board, clock, evaluation=None, *, seed=None, history=None):
+def plan(board, clock, evaluation=None, *, seed=None, history=None,
+         pressure_start_ms=PRESSURE_START_MS):
     color = "white" if board.turn else "black"
     base = {"policy": POLICY, "recommendation_method": decision_support.METHOD,
             "enabled": False, "color": color, **_identity(board),
@@ -122,8 +128,9 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
             "spent_at_request_ms": 0, "initial_remaining_ms": None,
             "pressure_factor": 1.0, "variation_factor": 1.0,
             "game_tempo_factor": 1.0, "local_beat_factor": 1.0,
-            "rhythm_profile": "neutral", "pressure_start_ms": PRESSURE_START_MS,
+            "rhythm_profile": "neutral", "pressure_start_ms": pressure_start_ms,
             "turn_reduction_ms": TURN_REDUCTION_MS, "fast_target_floor_ms": MIN_TURN_TARGET_MS,
+            "post_search_reduction_ms": POST_SEARCH_REDUCTION_MS,
             "reason": "untimed", "complexity_score": 0, "clarity_kind": "unclassified",
             "position_features": {}, "rhythm_identity": _rhythm_identity(seed),
             "alternatives_basis_ms": 0, "alternatives_variation_factor": 1.0,
@@ -140,7 +147,7 @@ def plan(board, clock, evaluation=None, *, seed=None, history=None):
     base.update(initial_remaining_ms=current, spent_at_request_ms=elapsed)
     if recommendation.get("status") != "ready" or not _number(total) or not _number(reserve):
         return {**base, "reason": "no_recommendation"}
-    factor = .5 + .5 * min(1.0, current / PRESSURE_START_MS)
+    factor = .5 + .5 * min(1.0, current / pressure_start_ms)
     variation, profile, tempo, beat = _rhythm(board, support, seed)
     complexity = support.get("complexity", {})
     alternatives_basis, alternatives_variation = total, variation
@@ -283,8 +290,11 @@ def _completed_long_think(row):
     # threshold. A rushed/aborted/shortened pause cannot suppress the next one.
     # A completed pause at the global cap also counts. Without this limit a
     # 32s initial target stretched to 44s could never activate the cooldown.
-    return spent + waited >= max(3000, target - 100,
-                                 min(original * 1.4, MAX_TURN_MS - TURN_REDUCTION_MS - 100))
+    reduction = row.get("post_search_reduction_ms", 0)
+    if not _number(reduction):
+        return False
+    return spent + waited >= max(3000, target - reduction - 100,
+                                 min(original * 1.4, MAX_TURN_MS - TURN_REDUCTION_MS - 100) - reduction)
 
 
 def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
@@ -370,7 +380,8 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
                 and _unit(seed, "long-think", board.fen(en_passant="fen")) < .10):
             # Less frequent, more distinct pauses: a long tail rather than
             # making every ordinary decision slower. Clock pressure below
-            # three minutes still fades this premium and caps the whole turn.
+            # the configured pressure boundary fades this premium and caps
+            # the whole turn (five minutes in sparring).
             factor, kind = 2.80 + .60 * innovation, "long_deliberation"
     color = result["color"]
     if not isinstance(clock, dict):
@@ -380,7 +391,7 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
             or clock.get("running_color") != color or not _number(current) or not _number(elapsed)):
         result.update(enabled=False, reason="inactive_clock")
         return result
-    pressure = min(1.0, current / PRESSURE_START_MS)
+    pressure = min(1.0, current / result.get("pressure_start_ms", PRESSURE_START_MS))
     applied_factor = 1.0 + (factor - 1.0) * pressure if factor > 1 else factor
     # Re-evaluate pressure after search, not from a stale turn-start balance.
     pressure_factor = .5 + .5 * pressure
@@ -409,31 +420,106 @@ def refine(board, pacing, clock, *, selected_move, baseline_packets=None,
     return result
 
 
+def reserve_analysis(pacing, clock, *, minimum_baseline_ms, optional_ms):
+    """Reserve verified move-selection work inside the common turn target.
+
+    The caller supplies requirements, never a mode name. This only raises a
+    short timing target enough to investigate an eligible alternative. Actual
+    balance, the ten-second reserve, and the ordinary turn ceiling take
+    priority. Obvious moves keep their fast path.
+    """
+    result = copy.deepcopy(pacing) if isinstance(pacing, dict) else {}
+    reserve = {"active": False, "reason": "inactive_plan",
+               "requested_minimum_baseline_ms": minimum_baseline_ms if _number(minimum_baseline_ms) else None,
+               "requested_optional_ms": optional_ms if _number(optional_ms) else None,
+               "minimum_baseline_ms": 0, "optional_ms": 0,
+               "target_before_ms": result.get("target_total_ms", 0),
+               "target_total_ms": result.get("target_total_ms", 0),
+               "completion_margin_ms": 150, "pressure_fraction": 0,
+               "clock_reserve_ms": LOW_CLOCK_MS}
+    result["analysis_reserve"] = reserve
+    if not _number(minimum_baseline_ms) or not _number(optional_ms):
+        reserve["reason"] = "invalid_analysis_requirements"
+        return result
+    if minimum_baseline_ms <= 0:
+        reserve["reason"] = "no_analysis_requested"
+        return result
+    if (result.get("policy") != POLICY
+            or not isinstance(clock, dict) or clock.get("enabled") is not True):
+        return result
+    color = result.get("color")
+    current, elapsed = clock.get(str(color) + "_ms"), clock.get("turn_elapsed_ms")
+    if (color not in ("white", "black") or clock.get("status") != "running"
+            or clock.get("running_color") != color or not _number(current) or not _number(elapsed)):
+        reserve["reason"] = "inactive_clock"
+        return result
+    if current <= LOW_CLOCK_MS:
+        reserve["reason"] = "low_clock"
+        return result
+    if result.get("enabled") is not True:
+        return result
+    if result.get("clarity_kind") in ("single_reply", "mate_in_one", "clear_queen_gain"):
+        reserve["reason"] = "obvious_move"
+        return result
+    pressure_start = result.get("pressure_start_ms", PRESSURE_START_MS)
+    if not _number(pressure_start) or pressure_start <= 0:
+        pressure_start = PRESSURE_START_MS
+    pressure = min(1., current / pressure_start)
+    optional = int(optional_ms * pressure ** 2)
+    minimum = int(math.ceil(minimum_baseline_ms))
+    available = max(0, min(current - LOW_CLOCK_MS, MAX_TURN_MS - elapsed))
+    reserve.update(pressure_fraction=round(pressure, 6),
+                   pressure_scaled_optional_ms=optional,
+                   available_analysis_ms=int(available))
+    if available < minimum + reserve["completion_margin_ms"]:
+        reserve["reason"] = "insufficient_baseline_reserve"
+        return result
+    actual_optional = min(optional, max(0, int(available) - minimum - reserve["completion_margin_ms"]))
+    required = minimum + actual_optional + reserve["completion_margin_ms"]
+    original_target = result.get("target_total_ms", 0)
+    original_target = original_target if _number(original_target) else 0
+    target = min(max(original_target, elapsed + required), elapsed + available)
+    reserve.update(active=True, minimum_baseline_ms=minimum, optional_ms=actual_optional,
+                   target_total_ms=int(target),
+                   reason="clock_capped_analysis" if actual_optional < optional else
+                          "reserved_policy_analysis")
+    result["target_total_ms"] = int(target)
+    return result
+
+
 def search_budget(pacing, clock, configured_ms, *, automatic=False):
     """Allocate baseline+optional analysis inside the same total-turn target."""
     if not isinstance(clock, dict) or clock.get("enabled") is not True:
         return {"baseline_ms": configured_ms, "total_search_ms": None, "completion_margin_ms": 0,
-                "automatic": False}
+                "automatic": False, "optional_ms": None, "analysis_reserve_active": False}
     current = clock[pacing["color"] + "_ms"]
     elapsed = clock["turn_elapsed_ms"]
     remainder = max(0, pacing["target_total_ms"] - elapsed)
     if pacing["reason"] in ("inactive_clock", "no_recommendation"):
         remainder = current
     available = max(0, min(remainder, current))
-    margin = min(150, available * .10)
+    reserve = pacing.get("analysis_reserve") or {}
+    reserved = automatic and reserve.get("active") is True
+    margin = min(150, available if reserved else available * .10)
     total_search = max(1, int(available - margin))
     baseline = min(3000, max(100, total_search // 3)) if automatic else configured_ms
+    if reserved:
+        baseline = max(baseline, reserve["minimum_baseline_ms"])
     baseline = max(1, min(baseline, total_search))
+    optional = (min(reserve["optional_ms"], max(0, total_search - baseline)) if reserved else
+                0 if automatic else max(0, total_search - baseline))
     return {"baseline_ms": baseline, "total_search_ms": total_search,
-            "completion_margin_ms": round(margin, 3), "automatic": automatic}
+            "completion_margin_ms": round(margin, 3), "automatic": automatic,
+            "optional_ms": optional,
+            "analysis_reserve_active": bool(reserved and baseline >= reserve["minimum_baseline_ms"])}
 
 
-def recovery_clock_limit(clock, color, direction):
-    """Extra computation cap, with progressively stronger pressure below 3min."""
+def recovery_clock_limit(clock, color, direction, *, pressure_start_ms=PRESSURE_START_MS):
+    """Extra computation cap with continuous pressure from this game's boundary."""
     current = clock.get(color + "_ms") if isinstance(clock, dict) else None
     if not _number(current) or current <= LOW_CLOCK_MS:
         return 0
-    pressure = min(1.0, current / PRESSURE_START_MS)
+    pressure = min(1.0, current / pressure_start_ms)
     cap = 12000 if direction == "ahead" else 30000
     return max(0, min(cap * pressure ** 2, current - LOW_CLOCK_MS - 150))
 
@@ -472,11 +558,13 @@ def recovery_plan(board, pacing, clock, *, baseline_info, baseline_move):
     if not _number(current) or not _number(elapsed):
         recovery["reason"] = "invalid_clock"
         return result
-    pressure = min(1.0, current / PRESSURE_START_MS)
+    pressure_start_ms = result.get("pressure_start_ms", PRESSURE_START_MS)
+    pressure = min(1.0, current / pressure_start_ms)
     target = max(result.get("target_total_ms", 0), 6000 * pressure)
     reserve = max(LOW_CLOCK_MS, result.get("reserve_ms", 0))
     budget = int(max(0, min(target - elapsed - 150, current - reserve - 150,
-                            recovery_clock_limit(clock, color, direction))))
+                            recovery_clock_limit(clock, color, direction,
+                                                 pressure_start_ms=pressure_start_ms))))
     if budget < 100:
         recovery["reason"] = "insufficient_clock_budget"
         return result
@@ -489,8 +577,18 @@ def recovery_plan(board, pacing, clock, *, baseline_info, baseline_move):
     return result
 
 
+def wait_target_ms(pacing):
+    """Presentation deadline only; never feed this back into search budgets.
+
+    Always derive it from the original target so polling and clock edits do
+    not repeatedly subtract time. Legacy receipts retain their original pace.
+    """
+    return max(0, pacing["target_total_ms"] - pacing.get("post_search_reduction_ms", 0))
+
+
 def remaining_wait_ms(pacing, clock):
-    if pacing.get("balance_recovery", {}).get("active"):
+    if (pacing.get("balance_recovery", {}).get("active") or pacing.get("safety_check", {}).get("active")
+            or pacing.get("quality_check", {}).get("active")):
         return 0
     if not pacing.get("enabled") or not isinstance(clock, dict):
         return 0
@@ -500,5 +598,5 @@ def remaining_wait_ms(pacing, clock):
             or clock.get("running_color") != color
             or not _number(current) or not _number(elapsed) or current <= LOW_CLOCK_MS):
         return 0
-    return max(0, min(pacing["target_total_ms"] - elapsed,
+    return max(0, min(wait_target_ms(pacing) - elapsed,
                       current - pacing["reserve_ms"]))

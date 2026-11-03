@@ -117,7 +117,7 @@ def main():
                 assert annotation["square"] == row["uci"][2:4]
                 assert annotation["fen_after"] == expected.fen(en_passant="fen")
                 assert annotation["label"] and annotation["reason"]
-                if annotation["symbol"] == "!!":
+                if annotation["symbol"] == "!":
                     best, alternative = row["best"], row["alternative"]
                     direction = 1 if row["color"] == "white" else -1
                     assert row["classification"] == "best" and alternative is not None
@@ -133,7 +133,7 @@ def main():
             assert report["moves"][3]["best"]["uci"] == "d8h4"
             assert 3 in report["critical_plies"]
             checks.append("real engine identifies g4 allowing mate and Qh4#; every returned variation replays legally")
-            checks.append("move badges are anchored to the actual destination/FEN; optional alternatives exclude the actual move and !! requires exact comparison evidence")
+            checks.append("move badges are anchored to the actual destination/FEN; optional alternatives exclude the actual move and ! requires exact comparison evidence")
             checks.append("incremental progress was observed" if partial_seen else "completed report was observed")
             assert report["coach"]["name"] == "Rook"
             lessons = report["coach"]["lesson_plies"]

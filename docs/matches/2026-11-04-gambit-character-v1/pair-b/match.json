@@ -1,0 +1,1022 @@
+{
+  "schema": "regicide.boss-strength-match.v1",
+  "started_at": "2026-11-03T17:50:11.584137+00:00",
+  "config": {
+    "boss_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+    "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+    "stockfish_elo": 1700,
+    "games": 2,
+    "boss_ms": 1000,
+    "stockfish_ms": 300,
+    "threads": 1,
+    "hash_mb": 16,
+    "max_plies": 80,
+    "cap_policy": "incomplete",
+    "seed": "2026-11-04-gambit-character-v1-b",
+    "output_dir": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\docs\\matches\\2026-11-04-gambit-character-v1\\pair-b",
+    "classical": true,
+    "neural_model": null,
+    "learning_state": null
+  },
+  "purpose": "External opponent diagnostic, not calibrated FIDE or online-platform Elo",
+  "source": {
+    "commit": "2f7e86888387ce1cdce5e661fd5724fcae57a847",
+    "dirty": true,
+    "label": "2f7e86888387ce1cdce5e661fd5724fcae57a847-dirty"
+  },
+  "source_sha256": {
+    "scripts/analysis_session.py": "df1fdf2d49ee9e3a40d07a9c92b1363dd8d5e73b7c196ba82291a30a59963220",
+    "scripts/analyze_learning_losses.py": "1a68bcdccfbedf55f933a4364dfef4b7534298b428e639801f85597efbd4e1b7",
+    "scripts/analyze_neural_ab_counterfactuals.py": "bd824d86263c8b2848996e990ada6c087225a55f48c599720295b53c880929ae",
+    "scripts/analyze_neural_ab_losses.py": "c78d2af8783958d3a87e0bf6cecfad0284126a1dea714391232e6db82b7e2fb2",
+    "scripts/analyze_neural_ab_residuals.py": "7e7b5ef8808ccd9a9dfd4530858a3adcd6a681f176ff7b1d001896aaa5bfb424",
+    "scripts/analyze_neural_time_scaling.py": "5412cd183bd85a9f72959a6818409dffae855ad982416c357be93dc6545ca9a1",
+    "scripts/analyze_stockfish_overfit.py": "a5d93bfa6a0dbb23aa7be2f021a1da1c32d162bfb5271743f17e2f7f6ff3b1f5",
+    "scripts/archive_m2_job_attempt.py": "5abc6935b6c286bffbc73e0db43dc1de90f2eea4b571c2c030784df25a6eca4c",
+    "scripts/audit_dynamic_play_records.py": "48de774c8e03833d980aad3db5ce3501a8b9c5525ec11ec373b013972b43da86",
+    "scripts/audit_sparring_counterfactual.py": "ddde2f6e4a1eb8fdbeee3b9e03c84b48a47b4f70711899bdbb08ca6ea5610c63",
+    "scripts/audit_sparring_validation.py": "8b05286e8d923c8d7903e20a3bad62fa0b4b0292cbc2ec00ce746987e1623db1",
+    "scripts/benchmark_neural_incremental.py": "27e33fb48bc97cf1dc3a223e137fa01a31291778283c2346738301e7473aaf26",
+    "scripts/benchmark_neural_inference.py": "ce5504bb4316fe0dcbebd31097060007a8665072abee7b429b0c02cbd00efc07",
+    "scripts/benchmark_qat_models.py": "f0abe66d480ee2f9b484cc0843521c6ff087376bce3e2a31a8f0aca231b3f9b9",
+    "scripts/benchmark_search.py": "d5f2e374f524dbe5d823718490dc84a1bb9dd9ded60383362a507411a8dae15f",
+    "scripts/boss_mode_match.py": "185f283a4e654aa424f7401ac1abef0d9075b05511d851169924400bdde8b9c6",
+    "scripts/boss_openings.py": "2b927938136ee0265f8cb58d7eec504b767be62a8641328d622e2b10cbff9fb6",
+    "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+    "scripts/boss_play.py": "28c10d2736f40051017a35478b0fb952fef8c02c901fd2f165c0a52e019ed535",
+    "scripts/boss_strength_match.py": "f6848bd9a42c0f24898a1534b94527955d4ddd1973bd86eeb4a4cd63e86259ca",
+    "scripts/boss_strength_summary.py": "def8e6c8e8ed2a6104ffdec274d710a3347a064bd7617470aefea228bacfc398",
+    "scripts/calibrate_neural_qat.py": "0437c8ee0eeb5e9f2dc20b81e06cee979f522d8e194dbb163f6ecb753908ac56",
+    "scripts/check_coach_continuation.py": "e4c629f7b813c654a197969a93b3b5a61970aadca388c14e7bedb34f9259a34b",
+    "scripts/check_coach_openings.py": "1d8dfc7afc110bacd321e741b26f56561a6b1c746413905f18a69a19a84b723d",
+    "scripts/check_coach_strategy.py": "e4afa1049072e81312ef44fa0ef7042284489fcc439a88f1f2f5f453e8482d39",
+    "scripts/check_dynamic_play.py": "a887141bd08832331b064a9bf907504fb1e055019957bb3fa9868b59425fed6c",
+    "scripts/check_early_opening_variety.py": "ebe6802025c658643f9154053ee417c4bf5634bee00b9c6cf7aa47d8753db1ed",
+    "scripts/check_evaluation_quality.py": "6f84d3f404eb4800a95db3a3d5f2ea8cae376c3fc072c40c45009e6467db2906",
+    "scripts/check_human_rhythm.py": "923067501493394d206dfda55363df8e3d9e08f94fed49fb25302de181a22a32",
+    "scripts/check_nnue_choice_development.py": "59d1896e9e6af452d91d88f00da4585527fd3935b4d9a3bfe23488b7b580b9ad",
+    "scripts/check_nnue_head_repair.py": "79e7bf841712fbf14bb3a5ba88241a39e749aa6fdbe43301a47b449a5a615768",
+    "scripts/check_nnue_qsearch_cost.py": "b7df2e4e95811387e917629ef9042d2b46df4180cca97022127aad2ec305dcc6",
+    "scripts/check_nnue_reply_budget.py": "88ffed727072df780096f4f9b8d96a4811637d7444baa1a170ae4ce62da8924a",
+    "scripts/check_nnue_tactical_search.py": "c70e40d6fc06edf8880fae230b366712276ad767a1121d150f0b8e1703bd0a11",
+    "scripts/check_opening_variety.py": "20d47b422b66bcb27f240613b24eb96b5eeeb2a598d117815b8610636c03047a",
+    "scripts/check_sparring.py": "667777ed22a75ace308f31429fe21a8f9277a162862099628dcda165d1892e62",
+    "scripts/check_sparring_band.py": "479ac06ac4e53ff0ec3fbc96ff268503771cc99fbdc2c6e1ac320d8716f26702",
+    "scripts/check_sparring_evaluation.py": "65b911f8650d2cd26af4ff69c5b5f2e945b17d9a0bcf7aa9130d8c3a5de7a984",
+    "scripts/classical_evaluation.py": "c539e0a093ac2d4e68cf363a87faf6010de085c28668129e4ee704ac5c11e0d7",
+    "scripts/coach_explanations.py": "601821df07bf7d6894ea91d8cfd81e206da313bf4adb36e01e4bef8cd1d87b95",
+    "scripts/coach_openings.py": "b62780e30d89299c9bb5fdabeb45aa8ba6c65cd59dbbb4f0f2b5ac9bcf9e80fb",
+    "scripts/coach_strategy.py": "62e2dc2924f5b6d99b0046ba8cdeeac1f60817f4d26042fc6101ff8255aac492",
+    "scripts/coaching_reference.py": "7926c70829909f827db19519161ade17e41e0a302b3ccaa8934f4420ff108f3f",
+    "scripts/coaching_session.py": "febf199ab52566fe1d29c718240f87cdefd8745a65208824042cefb4510d2a9c",
+    "scripts/collect_endgame_data.py": "94fa8d0aae2ef0cd84b422a47c6f046fb284d27d76c861281a9849c5d711e083",
+    "scripts/collect_learning_data.py": "cc2c67100677d571adeafe178cb9f5d5241cd6926057cced292d8ceca764c76d",
+    "scripts/compare_engines.py": "ab8b56f4298fbe2442156108ad3ade7db2e2f265a00c502f6986c25370ecab7c",
+    "scripts/compare_sparring_referee.py": "56b752ac16c1fd6b81206684bb4fc8424d0135485d6dc219e7c5c78118ae1af4",
+    "scripts/decision_support.py": "687e204cd21c10c8a24c48c6bca46edd7c5b6c20ccf61f6ee97e1081e6ec8868",
+    "scripts/diagnose_endgames.py": "e268cb36c504ee265eb5885b4c84912e60bced2803d59ace45334c11a6c5f385",
+    "scripts/diagnose_neural_cost.py": "cf9e547e5e1e50b6305d2d9d10af666c0fe64d4e180d5eaa059d64d4b4dbbfc5",
+    "scripts/diagnose_nnue_choice.py": "b0226d6d55ee409c876405d9b366843ad0d365d63a3314c660312b7301859cd3",
+    "scripts/diagnose_nnue_generalization.py": "deb572b6cbc070489fa260d4dc4408b8dc218c69ae8997df2e7e80aab281d755",
+    "scripts/diagnose_nnue_head_regression.py": "79a24f8487e3695fa680b67540c75a8ad000e47b18e3ff20ad563dce77c72040",
+    "scripts/diagnose_nnue_position_model.py": "f5f5b2ad39d532b225174df5040f240f2a59b519a0213d052d6b9f77c765bb47",
+    "scripts/diagnose_nnue_preservation.py": "83db418fd8a903b0d62b5fc8db32e9eaec8afb2e5ad1f7b11536ede9e9aa79e1",
+    "scripts/dynamic_play.py": "e186c6e24e24242c40d692dffacee5ddf45539dd3d8933363a3148caaaae5fc4",
+    "scripts/endgame_learning_curve.py": "be3540ea6f759d16ad8ca5adbfdbacb2e6e73b5fcae2af48d4654a6eb50ae05d",
+    "scripts/endgame_matches.py": "9062119567e47113af4e4af8bf248420005395b47e3da0085c5ddf2bb865b9d1",
+    "scripts/endgame_study.py": "2d6cc367a30db2c21bb04c5d9d35178ea4b10a0ab4b75ebff8c0f4eec551fac3",
+    "scripts/engine_pacing.py": "b250f933d73d2b56841e951baa4a8826f1e60fbd2a6a40692a0b30db27d38368",
+    "scripts/engine_profile.py": "785a99869611cdce0c37bc4cb498aacde896e81b72754e188b485244261ebe89",
+    "scripts/evaluation_comparison.py": "231561dfd386ec8fba948bdd146dec24300371f79d3a4c08f00d901f16657fc0",
+    "scripts/evaluation_stability.py": "37a610cb15d838c98ebbe4c0b63a34e1dea40138e150b3aacf8001a217a2a09f",
+    "scripts/external_baseline_matrix.py": "6ad7c85089f2049edc1d8c9efd7d1bc87ddd357bc1a433b27865d71ebd5fb170",
+    "scripts/finalize_nnue_choice_cached.py": "f5f0efddaba5c5416e3e54d6a7e4b55eaf99d80ccf8a9ea0cfbed58bc4fd3aa3",
+    "scripts/finalize_nnue_head_repair_cached.py": "0cadd34415084c0524681cfcee968d02eed64bcb1e2b5884d04d0b7e41ae64f9",
+    "scripts/gambit_initiative.py": "ed658ca1892631aedaff76b0dbf9c236308c8d6be8efd4980fbbe09c83319836",
+    "scripts/game_archive.py": "4cc9b21bbdc952d4ac142fe0410a734db8a44c99f727d553d8f69eafc35b2cae",
+    "scripts/game_clock.py": "649d918a9b20f64b0680974c49abba2c32d4d405641039d36538a29ff40d1974",
+    "scripts/generate_move_sounds.py": "dd26e0c61a0e9e1aa7a89c13722dbbbd8d2525f4a3a4811ad96a378205dc5878",
+    "scripts/generate_neural_long_time_openings.py": "420bac791624b55f40e4aaabcd8aed5bbf15aec213bdb496d75f760a1497efb8",
+    "scripts/generate_neural_strength_openings.py": "f4d1047d290096b0892585ecdae39ca77d47a0349180e4bcdf7327cc88463841",
+    "scripts/learning_arena.py": "fce6cbbdb2bbd8cceadb4f04369828e06cf6a56d615ddcab0a3065a17bb7e983",
+    "scripts/learning_corpus.py": "9fe5b681b17388d57f7bd7016624abc85923700f1f91432cb0d3a47eeaf23826",
+    "scripts/learning_cycle.py": "9c7480dbdd8c1e5e1b0f9903367544c178317ae3d7fce57636629bfa7f0f6b29",
+    "scripts/learning_registry.py": "a819333e35dfcdcf353ed8a989e2cbbd73de560f67d36e4ed06de0a2a863ffe3",
+    "scripts/lichess_credentials.py": "4e50a44ee712635bd31544b1b7404c0b44d81cee90f1e31a278148dfae765ccf",
+    "scripts/lmr_experiment.py": "1ae3b0f3e23a8f1250e11ef61fc6465bef1bb047b63e9dae4c076db64bb1c74f",
+    "scripts/m2_baseline96.py": "ccdb2f3562168f02d519fbcc63c9351b73cb7ca05b67c937195b165207872411",
+    "scripts/m2_engine_cpu.py": "22031f37168983d6fe5eb26340a9c03d675be95997f3f3d0568a1ebcbf1d83aa",
+    "scripts/m2_engine_identity.py": "9c80fd44a3a405ede42c5ceb72b3bdb6c7cebc1d1528ed21b0b40409152ebe9d",
+    "scripts/m2_engine_identity_v2.py": "36ab54956ea84cac94abf00f96346defb2abf85edc7163eaeefc7f02ac5f7cc4",
+    "scripts/m2_engine_receipts.py": "6ffae5ddf98b1c5f3c2375717775f98810d69ed944b708f636e9a93934c4cf8a",
+    "scripts/m2_engine_receipts_v2.py": "7d55ba95623810495ead7a8bc4873d398aed9a935cfd99029e539d742ddee093",
+    "scripts/m2_engine_tracking.py": "f24a79484b108cb3ca4243de78802a7463beaea24c36448fbd0ea25f30fd0c93",
+    "scripts/m2_engine_tracking_v2.py": "f5eb5321ce1bcf6f43cad32dfb45ab601576cf2daafc8d6adcf20fe10136c5e5",
+    "scripts/m2_formal.py": "6b1b575279e9f14a8ca26934c21ea827f2a5839ebfb4cfb2aa1b77319dcfe6fa",
+    "scripts/m2_formal_summary.py": "73c0f580bc5682e2c94074641b4d030c81bb22241fb56af021a7887cc7aa8fea",
+    "scripts/m2_formal_summary_v2.py": "c66c05c47ffc7fd65320196b1d958fc9814aa63d015137c8978555b62b61598e",
+    "scripts/m2_formal_summary_v3.py": "dfc47b759b2af9100a6a39df050c26d9177038041cfe985d09da8697bfe38334",
+    "scripts/m2_formal_summary_v4.py": "0c228964c5e288c45e6c18e36784efcdfac8eced5da9ea365d4d51e68d2469e5",
+    "scripts/m2_formal_summary_v5.py": "a9a0bbcfd1b16ac3103c327444c0402b43ef8d8a4ee3ad43040c78ff038d46e2",
+    "scripts/m2_formal_summary_v6.py": "d41af1bbf14d220e27471e80d1298c9c9341ea4cef019ae6abfe8a1e0af6f719",
+    "scripts/m2_formal_v2.py": "6a3995529cf1ad9289d32b23cf114549b4f2d611074f04a985229500ebd301b4",
+    "scripts/m2_formal_v3.py": "31f68fe9184792e7603119178ee32f0d458f90a0c4a8782a79f3256a0569b64c",
+    "scripts/m2_formal_v4.py": "c9597b1739da3640fa04941f547ab70b3499d1ed5d71a9d4f302525c339409c2",
+    "scripts/m2_formal_v5.py": "1da9fdd16306c6ddd6b8e996946a171c10dff6a99b98dd851236bc0d21747612",
+    "scripts/m2_formal_v6.py": "100b3413e4a1e4b890f435a6c2e985636a4b1182460551a60bbc00fd04e1bdd7",
+    "scripts/m2_job_accounting.py": "c18f74176a85e3cc0a7376568aa34bf55662e58977f068e763bdb3cfcd9f94ac",
+    "scripts/m2_job_load_guard.py": "c4b5546d61798cd24d82dfba42d272726a84581dd42d597ffb55497482fff743",
+    "scripts/m2_job_operations.py": "72f25233bad8ad8efef926955e6b4c2e125f75f1ade1ce90fc8283b9fcfda472",
+    "scripts/m2_job_process_scope.py": "5cc98087d2b630127ed86e5a3b49b4939d6025f6b02b003b2fa4b205cb9f6d1b",
+    "scripts/m2_job_receipts.py": "5e141c94fd4d6340c72022161e164082d611e379a0176d4d83e9fafa6c2dbd98",
+    "scripts/m2_load_guard.py": "39b25242e03faef0dd65708481ea08720eadf62cf163604ba173df26725d5b13",
+    "scripts/m2_warning_load_guard.py": "1f6156bc1df9a42c6c0e3d78506bafa534d1469ec56d4932b12ad13e9245778c",
+    "scripts/m2_warning_load_guard_v2.py": "ab9ba84ca4044ccc92dc5897dc912188cb68b492d03690a93d5612076472f133",
+    "scripts/m2_warning_receipts.py": "9cc8aeac11aac33c792f1c5408f3d38e1c6048a0560e58cca251dc1e23c38812",
+    "scripts/m2_warning_receipts_v2.py": "4bc4cf8ea7feb49d2e532a5fc445ab4f05d02b9cd1ef5918826b05026eddc998",
+    "scripts/move_hints.py": "11702793d2eb4442d2be7ea14820af73cc4fe50b0690c25d6e9c72a08266d3b6",
+    "scripts/neural_diverse_bank.py": "a25399d0bc67ef5ef3337d5fcb15076771ddc121191997c001e198a730a465d0",
+    "scripts/neural_model.py": "f15fa3deebbea2d39f34f9c0af39be7033db0d20465ad9c1aaef5e28d532d0d2",
+    "scripts/neural_precision.py": "97b05c7869226abc4ce57f77e36d46627cb12301c0add431f5e152d139c0d5a2",
+    "scripts/neural_precision_experiment.py": "66649d05beb1cc0f845a5c2015acd3589ff2261ab7f2f08888e99e9058e22aeb",
+    "scripts/neural_qat.py": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d",
+    "scripts/neural_qat_experiment.py": "52d97ad265e73cfb3ccda8d533d4661e9c1c52027d6147baedeff0e4225e7418",
+    "scripts/neural_stm.py": "898c33a333c36a2b8dce2b23855a14d29f27ae894e8f5fb6f6fe3f887e92c0c9",
+    "scripts/neural_stm_guarded.py": "15a4e74b0851e9bf22a8bb655e948b1c04a162277430f882907bb9409b2cc6fe",
+    "scripts/neural_stm_ordering.py": "899d3cf314d59ae3dce4fcc94d9f47e3a8ab7714eb264d95bb510705b31b9ee6",
+    "scripts/neural_stm_output_only.py": "48dd2fd97582931adb76752451e0e05121700e340ff605ee0042e698cd1c719b",
+    "scripts/neural_stm_preservation.py": "c19f66774d95241f6552df0e13327567f6f9b67ef07dadbdff47731a166e3df5",
+    "scripts/neural_stm_preservation_step.py": "db36f339e6062b738a28f3a378d2678f56a86202629f61616681bdcc3f8cd425",
+    "scripts/neural_target_ab.py": "98fc1852daa858552e34d48072bfece92b398228ba446bcd2a3b8b1dd9b7d100",
+    "scripts/neural_target_ab_data.py": "7a615b857923963689d20d6b6c867244959f1600573d1ac19dda842647a35339",
+    "scripts/neural_training.py": "81e94fcf5123c6dc9d9bd1f66be520b512151a40219a390a5ed7d091cffe8302",
+    "scripts/nnue_choice_gate.py": "f05d195cc91a9622111ba19e5e5be8cfe617b0058bc1676edc021663ad32dd1a",
+    "scripts/nnue_choice_pairs.py": "f1d6b95beed2fb9ac73f296b65d78fd625db4daa4cecbf5112331bca1b9b735f",
+    "scripts/nnue_generalization_gate.py": "5de53aad45bc63ca2071927fb06a3b5cfc8e808824202186126c65e761d233ab",
+    "scripts/nnue_head_repair_gate.py": "63c0303985caacfda97766f5a979e6b73999a2138787536a431a4ce17d007b69",
+    "scripts/nnue_leaf_gate.py": "a0da51379ee90613ab15de0927ea0277efcca6a21320c5d3714366b86ff1a609",
+    "scripts/nnue_live_pairs.py": "fa971a34d367f357cf5d399721ba7ab96e431aba1a1ce2de036ee0e62236466e",
+    "scripts/nnue_ordering_gate.py": "175b08f62f31b0cdfe73314f3c7113935fc84312ed6046def136fb093736a6d1",
+    "scripts/nnue_qsearch_cost_gate.py": "1255f3d68af74836ff64f1dc9d14ab79317260214036c8c4e8905e514070cabe",
+    "scripts/nnue_reply_budget_gate.py": "a1fef9da8abc86018f5de244b68d0cd2dbd3051d475a0bd165a28c80d527f79b",
+    "scripts/nnue_tactical_search_gate.py": "dd02bbb467b9da3f68f77d134085974cd7a345e314a498e91eecd3e308d7d3f1",
+    "scripts/opening_explorer.py": "66fd30a8ad5caa201f111bf98fac82084f94010767e3633c5b24a2de22621785",
+    "scripts/opening_guide.py": "28155d745984a2053d9d79a87af3a366294232aa98860835788a9ba8261a8649",
+    "scripts/opening_names.py": "643ada2cd16ac2d8900ab48f1468618d6e569ae2112e07612a9c88cf16a8cc1a",
+    "scripts/opening_presentation.py": "2673b9d3076166fc80220bfb063ff61c9eda21defa939a4f9fffdb6b269b8ff3",
+    "scripts/opening_sides.py": "ee6e6c9a699da0a48cea54cee5df73f2ff60c74a18063826bdbf70ffb189aba6",
+    "scripts/opening_variety.py": "9959b83af40609deeaada3016aa638b7f8e7979c276cee34551bfdae328db561",
+    "scripts/pending_exchange.py": "956b07df45056699b69d4d0e6b3168fcd645b744c089417a45bd418724979ef5",
+    "scripts/pgn_preview.py": "7d24776502df491dc0d95f1e202f17cc55d02057678a631451fa145b2402bbbe",
+    "scripts/play_game.py": "a825f89362a80250d24602627bdc59d090ba86ab5c749e7c331d0f2c86bd4a1e",
+    "scripts/play_human.py": "5248a93f5fc47019310728b33f6b6041357003430dc90e855b98defde26abf0e",
+    "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+    "scripts/prepare_m2_formal_openings.py": "5d6ba4e160a9bd461e23f0db661f85f6d45a1d0809d67008642f76f888a4a528",
+    "scripts/prepare_neural_huber.py": "fa14b709794974a12966fce72a5c1a8285a290ed6f81feae4e3d77f87ca11b16",
+    "scripts/prepare_nnue_choice.py": "a5531f43bfbb1d8eaa3289a51c9cfbd76fe5731dcf9a7a1465477b316925c55d",
+    "scripts/prepare_nnue_diverse_data.py": "e511ad60db326076643e1b69890c40c89f58885c03eb05f8f77167d197a6d3ff",
+    "scripts/prepare_nnue_generalization.py": "65ae485d0968fddb84c42c4f39a4c1d469f45e843b99222c2d9f7ca08345e8f0",
+    "scripts/prepare_nnue_head_repair.py": "9764ef49ee6d23436cf1f6c435e2847a9775a8c90125ff422839dff303964ea5",
+    "scripts/prepare_nnue_leaf.py": "f00b39388d18368eedd9ee3b1be156b25f541e969ebd91101d8b8d5a7d29c5c0",
+    "scripts/prepare_nnue_loss_repair.py": "525f340fd42b3a440f635a9bd779bc115b914e8050558429a43d83ad5825bd3f",
+    "scripts/prepare_nnue_ordering_data.py": "305f21c48ef3daebb85c5fcd40c463a3cd1b8473ce1645366904d506b027fc0d",
+    "scripts/probe_loss_search.py": "bb3f20e1dd66ca37ce6ad7cc8d981ce30d1a7ff3519886a007325b10116e700c",
+    "scripts/probe_nnue_loss_repair.py": "240b033fe9f5686603bd128d468b621c64506927cdaeabecdf26d01da68075ec",
+    "scripts/profile_neural_audit.py": "a83c9cdbad7293c5a0dd530bc8e849abe52b0020dcaf885976a08adacbdf47c9",
+    "scripts/rating_evidence.py": "8c7b4774444355aa34f38d96cd442cce713fe84f3d34fb4f78485f13673af25e",
+    "scripts/referee_engine.py": "e98a0bec8d3e45953983efc4cb2405cfc9957f9b20b8bbee00b244fcf3742626",
+    "scripts/reference_loss_scan.py": "4e4ab008b4ae83a3db1f28f91944bf5db1fc4a12b6cce089590a8de1e8294c10",
+    "scripts/refine_endgame_holdout.py": "f05a63effafd4a04e1cf9a547c4edefc75b347c685183c057f07261e9a97fab0",
+    "scripts/remote_arena_import.py": "5e82480d69d04eb9bac2096fcec05a6d0c64b5ffc85874e5f30e8eaa4941992e",
+    "scripts/remote_learning_arena.py": "5c0bc64f07350117b689e9c89a7657e0ec433a2a5e94fe14f81363c8ecbb244d",
+    "scripts/run_neural_long_time_comparison.py": "735fa1ed4af29628c167fe34dcd46d9f743ef42e4de0cc856bbdd899709204fa",
+    "scripts/run_neural_strength_comparison.py": "965f1f71f94c37bb6ec47c3ba58f9a427730bdf5e41852fd1bc84fcec297261f",
+    "scripts/run_neural_target_ab_matches.py": "b2680b4040a0435521343eb38e4eef423ac3a14f72476ec1a95702ef7f0d6f30",
+    "scripts/run_quiescence_cost_probe.py": "0696141bf1f0ec267237bb96e1ef57a82c6b146492da2ce7e4fb124cac61512a",
+    "scripts/run_remaining_q_probe.py": "00b1be4b9eb7b68d41efe172be523b387e1f8b590a583853da3c12b319ffa817",
+    "scripts/runtime_engine.py": "50190b024619b7ccb383349377b5298778f140e0de1833eaa518ca5773d9f884",
+    "scripts/see_clean_guard.py": "f9d4f7121684e7bf4bbd3db50089d8955f806195e65a888dee062841cbdaf228",
+    "scripts/select_neural_ab_early_positions.py": "c5fa953ee13534ddeb8a0cb36c4861408765e7930c0435c5fa4b787dbae3d37b",
+    "scripts/setup_rook_voice.py": "c7e180ec4ea169434c750a862b06d241b659fec0dd7b34707d323baa86ca039d",
+    "scripts/sparring_balance.py": "3b201b0e5b7e88c02f99499c550a37f88860136aef7d443001f8fc2e1e00662d",
+    "scripts/sparring_evaluation.py": "c18b131697ec3a65fe6504bbd135dbefc68f777be47c61d17c0a923cbb3b7d48",
+    "scripts/sparring_material.py": "1d8a8fbbb6c604f0a8ee836df1764a27e378ac15ed436e90f4ae84a063241dba",
+    "scripts/sparring_pacing.py": "fce58059b8da2c92e54d5e0c1f629a80411f0ab99db6bab689fb24fcee1c20e5",
+    "scripts/sparring_play.py": "5979c4f09d15289cb2bfdfac6f94804c13dccd3e5e2edb6354e9ee8a002b0cea",
+    "scripts/sparring_quality.py": "a3e5c1f7432be5d8af96c1c02fcc87ede42bdf0a789a74f73b7bc3cab8b9c1ff",
+    "scripts/sparring_rating.py": "195651524de22b93cbd1d575d440b7eb7f457e626f3322fd945ebc5a3ee239b7",
+    "scripts/sparring_referee.py": "02559e331e0e48161be27ea4980668abe936beff7a14d3bcc69e8e8afdee6df9",
+    "scripts/sparring_referee_discovery.py": "f7f00d17e7d3f11392df8a18eee229e5a64cf9d4d4879f1e55e74f52bc8c8eae",
+    "scripts/sparring_referee_pool.py": "1b02e0b68474992852cb93349377400dff301c12dd9fa49d9dec2532dec0a8dc",
+    "scripts/sparring_safety.py": "9cdd17991062ff93cb7df282bb03bd0fb14da9d7128ca0725b934e69fdd38f32",
+    "scripts/sparring_strength_match.py": "a086507563fa72115016ef5582fa49b048d222cc64f311622d05f22c822d7c80",
+    "scripts/stockfish_teacher.py": "f338ce2bd2c05f8a5c9957147f17e896cf9820528b08da9967483887961cb1b1",
+    "scripts/summarize_sparring_match.py": "8bb22f37d3e3451c67c10e034c8e1f008c9cf5b3b382495faa39570817d40a28",
+    "scripts/teacher_quality.py": "775a8de97a3d9b9b3c559db0df43dcb8a20dd2dbb89778622f0e2fc2ff92a9e7",
+    "scripts/train_neural.py": "bc7874998e696139818e4cad8e78e5f77223f34a5ee8a5323d03c9be710f27d9",
+    "scripts/train_neural_stm.py": "bf31f8f63f177ec3d70fad7de86b9fdc967921f087608813c757e327b5419ed0",
+    "scripts/train_nnue_choice.py": "5adba95521c5fd8d7fdd2c58c9dc60c58e5f98c8e18ff04049b490d77ac41332",
+    "scripts/train_nnue_diverse.py": "ef4774130c0e76e370ec818a329a91c24d03515dea74b2555a3685365d97ab70",
+    "scripts/train_nnue_generalization.py": "461ce725a0043d296366d2dcad684fe3e274e719b7658a6cac170c77c750704b",
+    "scripts/train_nnue_guarded.py": "f2f9a5819cc842c2315c8e62e04da78bb9d0fa92577127774618bb15c3c6ea8a",
+    "scripts/train_nnue_head_repair.py": "d655d10461928a3f16706b45220a6e1191d5049ab313768a3613a09e4dcca163",
+    "scripts/train_nnue_leaf.py": "106c746d90fc8c226c28098f9082c59d98246af08552709324ddb5d1d5c8074b",
+    "scripts/train_nnue_loss_repair.py": "abd4b228a5a30fd9b0639e6a7220dcc5c9c1e82fef51f83e14c035b4afc30559",
+    "scripts/train_nnue_ordering.py": "34d9f4388aef27fdf089abcb62a5b0ea4164ef729816211c76b6835616d04605",
+    "scripts/train_nnue_output_only.py": "674265f9202bca774765f3d26fc5a6cb6f5d44eff31094ec4444ee73bf91ed99",
+    "scripts/train_nnue_preservation.py": "ade66f5f3f731c542aab2f2b66b858e87666eee1bc8a6f1f13a4ee6c85231c2f",
+    "scripts/train_nnue_preservation_step.py": "fa4943c0dd59e1cd50b267e8b3c95ddc76687555774ae95ef836adb38254eeab",
+    "scripts/train_stockfish_teacher.py": "d152bea6fb63ed38d83a5e6c35948d4b7479c8b8af0e3c4a0149e9c3799677cb"
+  },
+  "binary_sha256": {
+    "boss": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+    "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+  },
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "logical_cpus": 16,
+  "policy": "regicide-boss-play-v4",
+  "opponent_policy": "regicide-boss-opponent-v1",
+  "repertoire_policy": "regicide-boss-traps-v3",
+  "evaluation_selection": {
+    "model": null,
+    "generation": null,
+    "warning": null
+  },
+  "protocol": {
+    "start": "standard starting position; no forced opening moves",
+    "draws": "Always claim available threefold/50-move draws",
+    "adjudication": "Legal chess outcomes only; no score adjudication",
+    "cap": "incomplete",
+    "pairing": "Alternating colors, same boss seed per pair",
+    "ponder": false,
+    "display_helpers": "Non-playing no-search peers; no UI engine compute",
+    "stockfish_randomness": "No externally controllable seed; exact moves are preserved",
+    "budget": "Boss full configured baseline plus optional at most 1000ms extra; opponent fixed movetime"
+  },
+  "schedule": [
+    {
+      "game": 1,
+      "pair": 1,
+      "boss_color": "white",
+      "stockfish_elo": 1700,
+      "boss_seed": "0bcf14a365b731f5c882d3dcdc971465"
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "boss_color": "black",
+      "stockfish_elo": 1700,
+      "boss_seed": "0bcf14a365b731f5c882d3dcdc971465"
+    }
+  ],
+  "games": [
+    {
+      "game": 1,
+      "pair": 1,
+      "boss_color": "white",
+      "stockfish_elo": 1700,
+      "boss_seed": "0bcf14a365b731f5c882d3dcdc971465",
+      "started_at": "2026-11-03T17:50:12.291388+00:00",
+      "result": "1-0",
+      "termination": "checkmate",
+      "completed": true,
+      "legal_result": true,
+      "capped": false,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "rk3b1r/1R1Q1p1p/4pNp1/p4N2/8/3P3P/P4PP1/6K1 b - - 0 27",
+      "plies": 53,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1700,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-001.json",
+      "pgn_file": "game-001.pgn",
+      "host_game_id": "20261104-025016-6b047d8a4596",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-03T17:50:56.951693+00:00",
+      "elapsed_seconds": 44.66
+    },
+    {
+      "game": 2,
+      "pair": 1,
+      "boss_color": "black",
+      "stockfish_elo": 1700,
+      "boss_seed": "0bcf14a365b731f5c882d3dcdc971465",
+      "started_at": "2026-11-03T17:50:56.961591+00:00",
+      "result": "*",
+      "termination": "ply_cap",
+      "completed": false,
+      "legal_result": false,
+      "capped": true,
+      "error": null,
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "final_fen": "6k1/5p2/1R4p1/8/1p6/4P3/5PK1/1r6 w - - 0 41",
+      "plies": 80,
+      "boss_engines": [
+        {
+          "id": {
+            "name": "Regicide 0.7.0-dev",
+            "author": "Regicide project"
+          },
+          "configured_options": {
+            "Hash": 16,
+            "UsePieceActivity": true
+          },
+          "advertised_options": {
+            "Move Overhead": {
+              "type": "spin",
+              "default": 20,
+              "min": 0,
+              "max": 5000,
+              "var": []
+            },
+            "UsePositionalEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescence": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTranspositionTable": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "Hash": {
+              "type": "spin",
+              "default": 16,
+              "min": 1,
+              "max": 256,
+              "var": []
+            },
+            "Clear Hash": {
+              "type": "button",
+              "default": null,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseFastMoves": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuietMoveOrdering": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceChecks": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreats": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceThreatCache": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseTacticalThreatOrdering": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseQuiescenceReplyBudget": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "PVS": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseSEE": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnShield": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePawnStructure": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UsePieceActivity": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseLMR": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "EvalFile": {
+              "type": "string",
+              "default": "<empty>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNeuralEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseNNUEEvaluation": {
+              "type": "check",
+              "default": false,
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "NeuralModelFile": {
+              "type": "string",
+              "default": "<builtin>",
+              "min": null,
+              "max": null,
+              "var": []
+            },
+            "UseIncrementalNeuralEvaluation": {
+              "type": "check",
+              "default": true,
+              "min": null,
+              "max": null,
+              "var": []
+            }
+          }
+        }
+      ],
+      "stockfish_engine": {
+        "id": {
+          "name": "Stockfish 18",
+          "author": "the Stockfish developers (see AUTHORS file)"
+        },
+        "configured_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1700,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "advertised_options": {
+          "Debug Log File": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "NumaPolicy": {
+            "type": "string",
+            "default": "auto",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Threads": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 1024,
+            "var": []
+          },
+          "Hash": {
+            "type": "spin",
+            "default": 16,
+            "min": 1,
+            "max": 33554432,
+            "var": []
+          },
+          "Clear Hash": {
+            "type": "button",
+            "default": null,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "Ponder": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "MultiPV": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 256,
+            "var": []
+          },
+          "Skill Level": {
+            "type": "spin",
+            "default": 20,
+            "min": 0,
+            "max": 20,
+            "var": []
+          },
+          "Move Overhead": {
+            "type": "spin",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "var": []
+          },
+          "nodestime": {
+            "type": "spin",
+            "default": 0,
+            "min": 0,
+            "max": 10000,
+            "var": []
+          },
+          "UCI_Chess960": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_LimitStrength": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "UCI_Elo": {
+            "type": "spin",
+            "default": 1320,
+            "min": 1320,
+            "max": 3190,
+            "var": []
+          },
+          "UCI_ShowWDL": {
+            "type": "check",
+            "default": false,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyPath": {
+            "type": "string",
+            "default": "<empty>",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeDepth": {
+            "type": "spin",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "var": []
+          },
+          "Syzygy50MoveRule": {
+            "type": "check",
+            "default": true,
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "SyzygyProbeLimit": {
+            "type": "spin",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "var": []
+          },
+          "EvalFile": {
+            "type": "string",
+            "default": "nn-c288c895ea92.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          },
+          "EvalFileSmall": {
+            "type": "string",
+            "default": "nn-37f18f62d772.nnue",
+            "min": null,
+            "max": null,
+            "var": []
+          }
+        }
+      },
+      "record_file": "game-002.json",
+      "pgn_file": "game-002.pgn",
+      "host_game_id": "20261104-025058-3e8c1b5ac9b9",
+      "evaluation": "classical_activity_v1",
+      "model_sha256": null,
+      "finished_at": "2026-11-03T17:52:05.667176+00:00",
+      "elapsed_seconds": 68.706
+    }
+  ],
+  "status": "completed",
+  "errors": [],
+  "active_game": null,
+  "summary": {
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "capped": 1,
+    "failed": 0,
+    "unfinished": 1,
+    "scored_games": 1,
+    "score": 1.0
+  },
+  "legal_results_only": {
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "capped": 1,
+    "failed": 0,
+    "unfinished": 1,
+    "scored_games": 1,
+    "score": 1.0
+  },
+  "finished_at": "2026-11-03T17:52:05.803894+00:00",
+  "sources_unchanged": true,
+  "binaries_unchanged": true
+}

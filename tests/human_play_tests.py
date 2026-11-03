@@ -230,12 +230,11 @@ class HumanPlayTests(unittest.TestCase):
         self.assertEqual(pgn.headers["Result"], "1-0")
         self.assertTrue(board.is_checkmate())
 
-    def test_terminal_and_claimable_positions_do_not_call_engine(self):
+    def test_completed_terminal_positions_do_not_call_engine(self):
         positions = (
             (chess.Board("7k/5K2/6Q1/8/8/8/8/8 b - - 0 1"), "stalemate"),
             (chess.Board("7k/8/8/8/8/8/8/4K3 b - - 0 1"), "insufficient_material"),
             (chess.Board("7k/8/8/8/8/8/R7/4K3 b - - 100 1"), "fifty_moves"),
-            (chess.Board("7k/8/8/8/8/8/R7/4K3 b - - 99 1"), "fifty_moves"),
         )
         for board, termination in positions:
             with self.subTest(termination=termination, fen=board.fen()):
@@ -248,7 +247,7 @@ class HumanPlayTests(unittest.TestCase):
                 self.assertEqual(state["result"], "1/2-1/2")
                 self.assertEqual(state["termination"], termination)
 
-    def test_intended_repetition_claim_uses_complete_history(self):
+    def test_intended_repetition_waits_for_completed_move_with_full_history(self):
         self.new()
         board = chess.Board()
         for move in ("g1f3", "g8f6", "f3g1", "f6g8", "g1f3", "g8f6", "f3g1"):
@@ -258,11 +257,46 @@ class HumanPlayTests(unittest.TestCase):
         self.game.board = board
         before = len(self.factory.instances[-1].calls)
         state = self.game.state()
-        self.assert_unchanged_error(ValueError, lambda: self.engine())
-        self.assertEqual(len(self.factory.instances[-1].calls), before)
+        self.assertEqual(state["result"], "*")
+        self.assertTrue(state["engine_to_move"])
+        self.assertEqual(len(self.game.board.move_stack), 7)
+        state = self.engine("f6g8")
+        self.assertEqual(len(self.factory.instances[-1].calls), before + 1)
         self.assertEqual(state["result"], "1/2-1/2")
         self.assertEqual(state["termination"], "threefold_repetition")
-        self.assertEqual(len(self.game.board.move_stack), 7)
+        self.assertEqual(len(self.game.board.move_stack), 8)
+        self.assertTrue(self.game.board.is_repetition(3))
+        pgn, replayed = read_pgn(self.game.pgn())
+        self.assertEqual(pgn.headers["Result"], "1/2-1/2")
+        self.assertEqual(len(replayed.move_stack), 8)
+        self.assertTrue(replayed.is_repetition(3))
+        self.assert_unchanged_error(ValueError, lambda: self.engine())
+
+    def test_intended_repetition_can_be_avoided_by_different_move(self):
+        self.new()
+        board = chess.Board()
+        for move in ("g1f3", "g8f6", "f3g1", "f6g8", "g1f3", "g8f6", "f3g1"):
+            board.push_uci(move)
+        self.game.board = board
+        state = self.engine("e7e5")
+        self.assertEqual(state["result"], "*")
+        self.assertTrue(state["human_to_move"])
+        self.assertFalse(self.game.board.can_claim_threefold_repetition())
+
+    def test_fifty_move_draw_waits_for_actual_hundredth_halfmove(self):
+        self.new()
+        self.game.board = chess.Board("7k/8/8/8/8/8/R7/4K3 b - - 99 1")
+        before = len(self.factory.instances[-1].calls)
+        state = self.game.state()
+        self.assertEqual(state["result"], "*")
+        self.assertTrue(state["engine_to_move"])
+        self.assertTrue(self.game.board.can_claim_fifty_moves())
+        self.assertFalse(self.game.board.is_fifty_moves())
+        state = self.engine("h8g8")
+        self.assertEqual(len(self.factory.instances[-1].calls), before + 1)
+        self.assertEqual(self.game.board.halfmove_clock, 100)
+        self.assertEqual(state["result"], "1/2-1/2")
+        self.assertEqual(state["termination"], "fifty_moves")
 
     def test_undo_white_pair_and_pending_human_move(self):
         self.new()

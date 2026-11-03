@@ -1,0 +1,922 @@
+{
+  "schema": "regicide.sparring-validation-reviewed-cases.v1",
+  "reviewed_at_utc": "2026-11-03T13:11:36.800219+00:00",
+  "scope": "Read-only interpretation of saved production decisions and independent3second Stockfish audits; no new engine searches or production changes. Scores are finite-search estimates, not proofs.",
+  "sources": {
+    "1320-black/game.json": "ffb213ce04734b8a19bd1944074921e140bb6a11ed5608d951e6514b3a50334b",
+    "audit-1320-black/audit-game-001.json": "b97146d6a9c61765b53bd42d911c74251f064198e5a7615edf256d1fde69820c",
+    "1700-white/game.json": "8ec4f29a0c3c74969e701539d1d5838df3158fbd546930f1031cf6c7770d61a2",
+    "audit-1700-white/audit-game-001.json": "2faba31d76c3f250eaf640d375f030b44369806cb02a60a6d3f84b80a5332cf8",
+    "1700-black/game.json": "1b3d0d3f610f2bcdae2c35fbd44731a9a383a2ce29bd4572b13d0b9642f45b86",
+    "audit-1700-black/audit-game-001.json": "89ecbae34bfbc61db2815eea4d247c57ee1db5b288e319d77ccc5b8b32b6484b",
+    "1320-white/game.json": "adddd1c114c42dab0c903a70274cbbb26dc799eba177526569ef72e934b42daf",
+    "audit-1320-white/audit-game-001.json": "6f504db820a8cef1858bd9abd044a5f1721e46b7acd97268b54f939f64fd2919"
+  },
+  "cases": [
+    {
+      "game": "1320-black",
+      "ply": 30,
+      "fullmove": 15,
+      "move_uci": "a5b4",
+      "move_san": "axb4",
+      "fen": "r2qkb1r/1pp1ppp1/1n1p1nbp/p2P4/PP1QPP2/2P2BP1/1B1N3P/R3K1NR b KQkq - 2 15",
+      "in_check": false,
+      "selection_kind": "native_baseline",
+      "decision_reason": "baseline_inside_band",
+      "baseline_uci": "a5b4",
+      "own_baseline_depth": 6,
+      "own_baseline_cp_own": -23,
+      "independent_before_cp_own": 55,
+      "independent_after_cp_own": -165,
+      "independent_loss_cp": 220,
+      "independent_before_depth": 19,
+      "independent_after_depth": 20,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "e7e5",
+      "independent_before_pv_uci": [
+        "e7e5",
+        "d5e6",
+        "f7e6",
+        "g1e2",
+        "f8e7",
+        "e4e5",
+        "f6d5",
+        "f3e4",
+        "g6h5",
+        "e5d6",
+        "e7f6",
+        "d4d3",
+        "e8g8",
+        "b4b5",
+        "d8d6",
+        "e1g1",
+        "d5b4",
+        "d3d6",
+        "c7d6",
+        "e2d4",
+        "f6d4",
+        "c3d4",
+        "d6d5",
+        "e4f3",
+        "h5f3",
+        "f1f3"
+      ],
+      "independent_after_pv_uci": [
+        "a4a5",
+        "b6d7",
+        "e4e5",
+        "d6e5",
+        "f4e5",
+        "d7e5",
+        "d4e5",
+        "e7e6",
+        "e5e2",
+        "f6d5",
+        "e2b5",
+        "c7c6",
+        "b5b7",
+        "a8c8",
+        "f3d5",
+        "c6d5",
+        "c3b4",
+        "c8b8",
+        "b7c6",
+        "d8d7",
+        "c6d7",
+        "e8d7",
+        "g1e2",
+        "f8b4",
+        "b2g7",
+        "h8c8",
+        "a5a6",
+        "c8c2",
+        "g7h6",
+        "e6e5",
+        "a6a7",
+        "b8a8",
+        "h2h4",
+        "d7e6"
+      ],
+      "immediate_exposure": [],
+      "actual_next4ply_min_material_swing_cp": 100,
+      "actual_next_moves": [
+        {
+          "ply": 31,
+          "san": "a5",
+          "uci": "a4a5"
+        },
+        {
+          "ply": 32,
+          "san": "Nc8",
+          "uci": "b6c8"
+        },
+        {
+          "ply": 33,
+          "san": "Ne2",
+          "uci": "g1e2"
+        },
+        {
+          "ply": 34,
+          "san": "e6",
+          "uci": "e7e6"
+        },
+        {
+          "ply": 35,
+          "san": "cxb4",
+          "uci": "c3b4"
+        }
+      ],
+      "referee_reason": "baseline_only",
+      "referee_native_discovery_reason": "unreliable_candidate",
+      "safety_status": null,
+      "safety_reason": null,
+      "classification": "native_baseline_positional_error_not_material_donation",
+      "summary_ko": "폰을 잡은 뒤 a5로 나이트가 밀리는 위치적 문제를 얕은 자체 탐색이 놓쳤다. 의도적인 양보나 기물 헌납의 증거는 아니다.",
+      "mechanism": "Own depth6 estimated close; poisoned-structure pawn capture does not match piece-exposure triggers. Referee had baseline only because candidate discovery returned unreliable_candidate.",
+      "recommendation": "Investigate risk signals or wider native verification for consequential baseline pawn captures and unsupported close estimates.",
+      "false_positive_caution": "Independent loss is evidence of a worse positional choice, not gratuitous material donation; actual next4ply material swing was +100cp for sparring."
+    },
+    {
+      "game": "1320-black",
+      "ply": 42,
+      "fullmove": 21,
+      "move_uci": "f6e4",
+      "move_san": "Nxe4",
+      "fen": "r1nqkb1r/1pp2ppb/3p1n1p/P4P2/1P2B3/3Q2P1/1B1NN2P/R3K2R b KQkq - 0 21",
+      "in_check": false,
+      "selection_kind": "native_baseline",
+      "decision_reason": "baseline_inside_band",
+      "baseline_uci": "f6e4",
+      "own_baseline_depth": 5,
+      "own_baseline_cp_own": 21,
+      "independent_before_cp_own": 67,
+      "independent_after_cp_own": -154,
+      "independent_loss_cp": 221,
+      "independent_before_depth": 26,
+      "independent_after_depth": 21,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "d6d5",
+      "independent_before_pv_uci": [
+        "d6d5",
+        "b2f6",
+        "d8f6",
+        "d3b5",
+        "f6c6",
+        "b5d5",
+        "c6d5",
+        "e4d5",
+        "f8b4",
+        "d5b7",
+        "a8a5",
+        "a1a5",
+        "b4a5",
+        "b7c8",
+        "e8e7",
+        "e2d4",
+        "a5d2",
+        "e1d2",
+        "h8c8",
+        "g3g4",
+        "c7c5",
+        "d4f3",
+        "f7f6",
+        "h1a1",
+        "c8d8",
+        "d2e3",
+        "c5c4"
+      ],
+      "independent_after_pv_uci": [
+        "d3e4",
+        "f8e7",
+        "b2g7",
+        "h8g8",
+        "g7c3",
+        "d6d5",
+        "e4d3",
+        "c8d6",
+        "e1g1",
+        "d8d7",
+        "e2d4",
+        "h6h5",
+        "a1e1",
+        "h5h4",
+        "e1e5",
+        "h4g3",
+        "h2g3",
+        "e8c8",
+        "a5a6",
+        "b7b6",
+        "g1h2",
+        "g8g4",
+        "e5d5",
+        "d8g8",
+        "f1f3",
+        "c8b8",
+        "d2c4"
+      ],
+      "immediate_exposure": [],
+      "actual_next4ply_min_material_swing_cp": 0,
+      "actual_next_moves": [
+        {
+          "ply": 43,
+          "san": "Nxe4",
+          "uci": "d2e4"
+        },
+        {
+          "ply": 44,
+          "san": "Bxf5",
+          "uci": "h7f5"
+        },
+        {
+          "ply": 45,
+          "san": "Nf4",
+          "uci": "e2f4"
+        },
+        {
+          "ply": 46,
+          "san": "c6",
+          "uci": "c7c6"
+        },
+        {
+          "ply": 47,
+          "san": "Nh5",
+          "uci": "f4h5"
+        }
+      ],
+      "referee_reason": "baseline_only",
+      "referee_native_discovery_reason": null,
+      "safety_status": null,
+      "safety_reason": null,
+      "classification": "native_baseline_equal_exchange_evaluation_error",
+      "summary_ko": "나이트와 비숍을 동가 교환한 기본 수가 별도 평가에서는 형세를 악화시켰다. 램프의 의도적인 양보 위반은 아니다.",
+      "mechanism": "Own depth5 estimated +21cp. Equal-value capture bypassed exposure trigger; after20 extra referee discovery is disabled, leaving baseline only. Independent best was d6d5.",
+      "recommendation": "Distinguish baseline evaluation errors from ramp policy losses; examine equal-exchange positions and baseline verification after20.",
+      "false_positive_caution": "Nxe4 exchanges a knight for a bishop, so the loss is positional/tactical rather than an unsupported minor-piece donation."
+    },
+    {
+      "game": "1320-black",
+      "ply": 64,
+      "fullmove": 32,
+      "move_uci": "e8f8",
+      "move_san": "Kf8",
+      "fen": "r1n1k1r1/1p3pN1/2p4p/P7/1q2p1P1/8/1B3bKP/5R2 b q - 0 32",
+      "in_check": true,
+      "selection_kind": "native_baseline",
+      "decision_reason": "forcing_or_repeated_position",
+      "baseline_uci": "e8f8",
+      "own_baseline_depth": 7,
+      "own_baseline_cp_own": 1677,
+      "independent_before_cp_own": 1074,
+      "independent_after_cp_own": 905,
+      "independent_loss_cp": 169,
+      "independent_before_depth": 20,
+      "independent_after_depth": 21,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "g8g7",
+      "independent_before_pv_uci": [
+        "g8g7",
+        "b2g7",
+        "e4e3",
+        "g2f3",
+        "f2h4",
+        "h2h3",
+        "b4d2",
+        "g4g5",
+        "h6g5",
+        "g7d4",
+        "d2d4",
+        "f1b1",
+        "c8d6",
+        "f3g2",
+        "d4e4",
+        "g2g1",
+        "e4b1",
+        "g1h2",
+        "a8a5"
+      ],
+      "independent_after_pv_uci": [
+        "f1f2",
+        "g8g7",
+        "h2h3",
+        "g7g6",
+        "b2c1",
+        "b4a5",
+        "c1e3",
+        "f8e8",
+        "f2c2",
+        "c8d6",
+        "g2f2",
+        "a5a1",
+        "c2c5",
+        "a1b2",
+        "f2e1"
+      ],
+      "immediate_exposure": [
+        {
+          "reply": "g2f2",
+          "victim_cp": 300,
+          "recapture_cp": 0,
+          "candidate_gain_cp": 0,
+          "net_cp": -300
+        },
+        {
+          "reply": "f1f2",
+          "victim_cp": 300,
+          "recapture_cp": 0,
+          "candidate_gain_cp": 0,
+          "net_cp": -300
+        }
+      ],
+      "actual_next4ply_min_material_swing_cp": 0,
+      "actual_next_moves": [
+        {
+          "ply": 65,
+          "san": "Bf6",
+          "uci": "b2f6"
+        },
+        {
+          "ply": 66,
+          "san": "e3",
+          "uci": "e4e3"
+        },
+        {
+          "ply": 67,
+          "san": "h3",
+          "uci": "h2h3"
+        },
+        {
+          "ply": 68,
+          "san": "Qe4+",
+          "uci": "b4e4"
+        },
+        {
+          "ply": 69,
+          "san": "Kh2",
+          "uci": "g2h2"
+        }
+      ],
+      "referee_reason": "baseline_only",
+      "referee_native_discovery_reason": null,
+      "safety_status": "unverified",
+      "safety_reason": "no_safe_native_alternative",
+      "classification": "check_evasion_compensation_tradeoff_local_filter_limitation",
+      "summary_ko": "체크 대응 중 모든 합법 응수가 정적 재료 손실로 표시되어 대안이 전부 제외됐다. 킹 이동 후에도 큰 우세가 남으며 실제 상대는 노출된 비숍을 잡지 않았다.",
+      "mechanism": "Four legal king evasions expose Bf2 (-300cp static); sole nonking Rxg7 is a locally flagged exchange sacrifice (-200cp). Safety checks original child then reports no_safe_native_alternative because all alternatives were filtered, not because no superior chess move exists.",
+      "recommendation": "When every legal evasion has material exposure, compare native compensating alternatives using root and child search instead of concluding no safe alternative. Requires separate code/design validation.",
+      "false_positive_caution": "The king was in check. Stockfish prefers Rxg7 Bxg7 e3, but Kf8 remains +9.05 for sparring. Actual opponent Bf6 did not capture Bf2; next4ply material swing was0. Do not call this a proven gratuitous giveaway.",
+      "legal_evasions_uci": [
+        "e8f8",
+        "e8d8",
+        "e8e7",
+        "e8d7",
+        "g8g7"
+      ],
+      "own_safety_child_cp_own": 1842
+    },
+    {
+      "game": "1700-white",
+      "ply": 99,
+      "fullmove": 50,
+      "move_uci": "f3e5",
+      "move_san": "Ne5",
+      "fen": "2r2k2/1R3p2/6pp/p4p2/P2P2nP/1P3NP1/3NbP2/6K1 w - - 3 50",
+      "in_check": false,
+      "selection_kind": "native_baseline",
+      "decision_reason": "finish_full_strength",
+      "baseline_uci": "f3e5",
+      "own_baseline_depth": 6,
+      "own_baseline_cp_own": 132,
+      "baseline_budget_ms": 794,
+      "baseline_elapsed_ms": 780.603,
+      "advertised_extra_budget_ms": 500,
+      "turn_real_elapsed_ms": 1480.289,
+      "turn_virtual_wait_ms": 2313.264,
+      "turn_target_total_ms": 3801,
+      "allocation": {
+        "baseline_ms": 794,
+        "total_search_ms": 2383,
+        "completion_margin_ms": 150,
+        "automatic": true
+      },
+      "forecast_search_evidence": {
+        "completed_depths": [
+          4,
+          5,
+          6
+        ],
+        "cp_span": 9,
+        "root_changes": 0,
+        "invalid_latest": false,
+        "unsettled": false,
+        "stable_selected_root": true
+      },
+      "own_remaining_clock_ms_after": 178304.317,
+      "independent_before_cp_own": 0,
+      "independent_after_cp_own": -394,
+      "independent_loss_cp": 394,
+      "independent_before_depth": 31,
+      "independent_after_depth": 24,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "d4d5",
+      "independent_before_pv_uci": [
+        "d4d5",
+        "c8d8",
+        "b3b4",
+        "d8d5",
+        "b4b5",
+        "g4f6",
+        "b7a7",
+        "f6d7",
+        "g1g2",
+        "d5d3",
+        "f3g1",
+        "d3d2",
+        "g1e2",
+        "d7c5",
+        "e2c3",
+        "d2d3",
+        "c3b1",
+        "c5a4",
+        "a7a5",
+        "a4b6",
+        "a5a3",
+        "d3a3",
+        "b1a3",
+        "f8e7",
+        "g2f3",
+        "e7d6",
+        "f3e3",
+        "d6c5",
+        "e3e2"
+      ],
+      "independent_after_pv_uci": [
+        "g4e5",
+        "d4e5",
+        "c8d8",
+        "h4h5",
+        "g6h5",
+        "d2c4",
+        "e2f3",
+        "c4d6",
+        "f3b7",
+        "d6b7",
+        "d8d5",
+        "g1g2",
+        "d5e5",
+        "b7d6",
+        "e5d5",
+        "d6c4",
+        "h5h4",
+        "g3h4",
+        "f8g7",
+        "g2g3",
+        "d5d3",
+        "f2f3",
+        "d3b3",
+        "c4d6"
+      ],
+      "immediate_exposure": [],
+      "actual_next4ply_min_material_swing_cp": 0,
+      "actual_next_moves": [
+        {
+          "ply": 100,
+          "san": "Rc3",
+          "uci": "c8c3"
+        },
+        {
+          "ply": 101,
+          "san": "Rxf7+",
+          "uci": "b7f7"
+        },
+        {
+          "ply": 102,
+          "san": "Kg8",
+          "uci": "f8g8"
+        },
+        {
+          "ply": 103,
+          "san": "Re7",
+          "uci": "f7e7"
+        },
+        {
+          "ply": 104,
+          "san": "Rc1+",
+          "uci": "c3c1"
+        }
+      ],
+      "referee_reason": "full_strength_phase",
+      "safety_status": null,
+      "safety_reason": null,
+      "classification": "full_strength_native_equal_exchange_tactical_error",
+      "summary_ko": "50수 전력 모드의 기본 수 Ne5가 균형인 위치를 약4점 열세로 만들었다. 의도적인 봐주기가 아니다.",
+      "mechanism": "Own depth6 +132cp in794ms baseline allocation; safety trigger absent because expected Nxe5 dxe5 is an equal recapture. Independent best d4d5 preserves0; after Ne5 the line includes Nxe5 dxe5 Rd8 and later Bf3 with rook tactics. Referee is intentionally disabled in full-strength phase.",
+      "recommendation": "Investigate full-strength time allocation and quiet/equal-exchange tactical verification. Consider using available turn allowance for real search rather than only cosmetic waiting when baseline confidence is unsupported.",
+      "false_positive_caution": "No immediate or next4ply material drop was measured; this is a deep positional/tactical evaluation miss, not a proved immediate piece donation. Independent scores remain finite-search estimates."
+    },
+    {
+      "game": "1700-black",
+      "ply": 86,
+      "fullmove": 43,
+      "move_uci": "e5c3",
+      "move_san": "Bxc3",
+      "fen": "2r5/B1p1k3/2Bp4/PR2b3/2P3p1/2P2pP1/5P1r/1K6 b - - 2 43",
+      "in_check": false,
+      "selection_kind": "native_baseline",
+      "decision_reason": "bounded_search_no_verified_candidate",
+      "baseline_uci": "e5c3",
+      "own_baseline_depth": 6,
+      "own_baseline_cp_own": 147,
+      "baseline_budget_ms": 1597,
+      "baseline_elapsed_ms": 1583.161,
+      "advertised_extra_budget_ms": 2000,
+      "turn_real_elapsed_ms": 3144.935,
+      "turn_virtual_wait_ms": 3896.176,
+      "turn_target_total_ms": 6998,
+      "allocation": {
+        "baseline_ms": 1597,
+        "total_search_ms": 4791,
+        "completion_margin_ms": 150,
+        "automatic": true
+      },
+      "forecast_search_evidence": {
+        "completed_depths": [
+          4,
+          5,
+          6
+        ],
+        "cp_span": 23,
+        "root_changes": 0,
+        "invalid_latest": false,
+        "unsettled": false,
+        "stable_selected_root": true
+      },
+      "own_remaining_clock_ms_after": 248784.681,
+      "independent_before_cp_own": 49,
+      "independent_after_cp_own": -208,
+      "independent_loss_cp": 257,
+      "independent_before_depth": 23,
+      "independent_after_depth": 24,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "h2h1",
+      "independent_before_pv_uci": [
+        "h2h1",
+        "b1c2",
+        "h1a1",
+        "a7e3",
+        "c8h8",
+        "c4c5",
+        "e5g3",
+        "f2g3",
+        "h8h2",
+        "c2d3",
+        "f3f2",
+        "e3f2",
+        "h2f2",
+        "c6b7",
+        "a1g1",
+        "a5a6",
+        "f2a2",
+        "c5d6",
+        "c7d6",
+        "b5g5",
+        "g1g3",
+        "d3c4",
+        "a2a1",
+        "g5g8"
+      ],
+      "independent_after_pv_uci": [
+        "a5a6",
+        "c8h8",
+        "a7e3",
+        "c3e1",
+        "b5b2",
+        "h2h1",
+        "b1a2",
+        "h1h5",
+        "c6d5",
+        "c7c6",
+        "b2b7",
+        "e7f6",
+        "e3d4",
+        "h5e5",
+        "d5c6",
+        "e1f2",
+        "d4f2",
+        "h8h2",
+        "b7b2",
+        "e5a5",
+        "a2b3",
+        "h2f2",
+        "b2f2",
+        "a5a6",
+        "c6d7",
+        "f6g5",
+        "f2d2",
+        "a6a1",
+        "d2d5",
+        "g5h6",
+        "d5d6",
+        "h6g7",
+        "d6d2"
+      ],
+      "immediate_exposure": [],
+      "actual_next4ply_min_material_swing_cp": 100,
+      "actual_next_moves": [
+        {
+          "ply": 87,
+          "san": "a6",
+          "uci": "a5a6"
+        },
+        {
+          "ply": 88,
+          "san": "Be1",
+          "uci": "c3e1"
+        },
+        {
+          "ply": 89,
+          "san": "Bb7",
+          "uci": "c6b7"
+        },
+        {
+          "ply": 90,
+          "san": "Rf8",
+          "uci": "c8f8"
+        },
+        {
+          "ply": 91,
+          "san": "Be4",
+          "uci": "b7e4"
+        }
+      ],
+      "referee_reason": "baseline_only",
+      "safety_status": null,
+      "safety_reason": null,
+      "classification": "native_baseline_pawn_capture_passed_pawn_priority_error",
+      "summary_ko": "43수 Bxc3 기본 수는 폰을 얻지만 상대 통과폰 a6 전진을 허용하며 형세를 악화시켰다. 램프 후보 양보가 아니다.",
+      "mechanism": "Own depth6 +147cp in1597ms baseline allocation; no verified alternative emerged. Bishop capture is not immediately capturable so safety trigger absent. Independent best Rh1 retains slight advantage; Bxc3 permits a6, after which black is about2points worse.",
+      "recommendation": "Investigate passed-pawn/endgame urgency and native baseline validation when a pawn grab neglects opposing promotion threats.",
+      "false_positive_caution": "Actual next4ply material swing was +100cp; the bishop was not simply hung. Do not label the257cp evaluation loss as deliberate ramp concession."
+    },
+    {
+      "game": "1320-white",
+      "ply": 53,
+      "fullmove": 27,
+      "move_uci": "d7b7",
+      "move_san": "Qxb7",
+      "fen": "r6k/1b1Q2pp/1p6/2bpP3/p7/P1N5/1q2B1PP/5R1K w - - 0 27",
+      "in_check": false,
+      "selection_kind": "native_baseline",
+      "decision_reason": "baseline_inside_band",
+      "baseline_uci": "d7b7",
+      "own_baseline_depth": 6,
+      "own_baseline_cp_own": 24,
+      "baseline_budget_ms": 3000,
+      "baseline_elapsed_ms": 2984.312,
+      "advertised_extra_budget_ms": 2000,
+      "turn_real_elapsed_ms": 3465.397,
+      "turn_virtual_wait_ms": 12705.463,
+      "turn_target_total_ms": 16183,
+      "allocation": {
+        "baseline_ms": 3000,
+        "total_search_ms": 9881,
+        "completion_margin_ms": 150,
+        "automatic": true
+      },
+      "forecast_search_evidence": {
+        "completed_depths": [
+          4,
+          5,
+          6
+        ],
+        "cp_span": 213,
+        "root_changes": 0,
+        "invalid_latest": false,
+        "unsettled": true,
+        "stable_selected_root": false
+      },
+      "own_remaining_clock_ms_after": 352857.418,
+      "independent_before_cp_own": 278,
+      "independent_after_cp_own": 0,
+      "independent_loss_cp": 278,
+      "independent_before_depth": 22,
+      "independent_after_depth": 29,
+      "independent_budget_ms_each": 3000,
+      "independent_bestmove": "e5e6",
+      "independent_before_pv_uci": [
+        "e5e6",
+        "a8g8",
+        "e6e7",
+        "c5e7",
+        "d7e7",
+        "b7c6",
+        "c3d1",
+        "b2c2",
+        "f1f8",
+        "c2c5",
+        "f8g8",
+        "h8g8",
+        "e7d8",
+        "g8f7",
+        "d8c7",
+        "c5e7",
+        "c7c6",
+        "e7e2",
+        "c6d5",
+        "f7e7",
+        "h2h3",
+        "e2f1",
+        "h1h2",
+        "f1f4",
+        "h2g1",
+        "b6b5",
+        "d5b5"
+      ],
+      "independent_after_pv_uci": [
+        "a8g8",
+        "b7d5",
+        "b2c3",
+        "e2d3",
+        "c5a3",
+        "d3h7",
+        "h8h7",
+        "d5e4",
+        "g7g6",
+        "e4h4",
+        "h7g7",
+        "h4f6",
+        "g7h6",
+        "f6h4"
+      ],
+      "immediate_exposure": [],
+      "actual_next4ply_min_material_swing_cp": 0,
+      "actual_next_moves": [
+        {
+          "ply": 54,
+          "san": "Rg8",
+          "uci": "a8g8"
+        },
+        {
+          "ply": 55,
+          "san": "Bf3",
+          "uci": "e2f3"
+        },
+        {
+          "ply": 56,
+          "san": "Qxc3",
+          "uci": "b2c3"
+        },
+        {
+          "ply": 57,
+          "san": "Bxd5",
+          "uci": "f3d5"
+        },
+        {
+          "ply": 58,
+          "san": "Re8",
+          "uci": "g8e8"
+        }
+      ],
+      "referee_reason": "baseline_only",
+      "safety_status": null,
+      "safety_reason": null,
+      "classification": "native_baseline_missed_passed_pawn_winning_continuation",
+      "summary_ko": "27수 Qxb7 기본 수는 비숍을 잡지만 강한 e6 전진 기회를 놓치며 우세를 균형으로 되돌렸다.",
+      "mechanism": "Own depth6 +24cp after3000ms baseline considered close, although iteration CP span213 was marked unsettled by timing refinement. Referee only had baseline after20, safety trigger absent. Independent best e5e6 +278cp; Qxb7 enables Rg8 and drawing defense.",
+      "recommendation": "Use unsettled completed scores and advanced-passed-pawn opportunities as candidates for deeper baseline search; preserve the difference between deliberate concessions and missed winning chances.",
+      "false_positive_caution": "Qxb7 captures a bishop (not a pawn) and no immediate material exposure appears. The observed failure is missed winning continuation; the side remains approximately balanced, not clearly losing."
+    }
+  ],
+  "open_issues": [
+    {
+      "id": "baseline_non_material_blind_spots",
+      "cases": [
+        30,
+        42
+      ],
+      "description": "Current local safety trigger misses positional damage from pawn captures and equal exchanges; shallow in-band baseline estimates can bypass broader checking."
+    },
+    {
+      "id": "all_evasions_filtered",
+      "cases": [
+        64
+      ],
+      "description": "no_safe_native_alternative describes the local admission filter, not proof that no better or compensated chess move exists."
+    },
+    {
+      "id": "full_strength_search_allocation_vs_wait",
+      "cases": [
+        {
+          "game": "1700-white",
+          "ply": 99
+        }
+      ],
+      "description": "At50thmove baseline search794ms reacheddepth6 while2313ms displaywait was charged; no weakness policy active, yet independent394cp loss remains."
+    },
+    {
+      "id": "unsettled_baseline_only_wait",
+      "cases": [
+        {
+          "game": "1320-white",
+          "ply": 53
+        }
+      ],
+      "description": "Completed score span213cp marked unsettled, but result stayed baseline and12705ms cosmeticwait followed; not direct evidence that more search would fix it."
+    }
+  ],
+  "early_pattern_review": {
+    "game": "1700-white",
+    "early_all_roots": {
+      "positions": 41,
+      "known_cp": 41,
+      "close": 22,
+      "unknown_or_mate": 0,
+      "fraction_known": 0.5365853658536586,
+      "fraction_all": 0.5365853658536586,
+      "outside_plies": [
+        19,
+        20,
+        21,
+        23,
+        24,
+        25,
+        26,
+        27,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ]
+    },
+    "early_after_sparring": {
+      "positions": 20,
+      "known_cp": 20,
+      "close": 9,
+      "unknown_or_mate": 0,
+      "fraction_known": 0.45,
+      "fraction_all": 0.45,
+      "outside_plies": [
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39
+      ]
+    },
+    "first_outside_after_sparring": {
+      "ply": 19,
+      "fullmove": 10,
+      "uci": "c3e2",
+      "san": "Ne2",
+      "selection_kind": "native_baseline",
+      "decision_reason": "baseline_inside_band",
+      "cp_loss": 116,
+      "new_losing_mate": false,
+      "lost_winning_mate": false,
+      "comparison_known": true,
+      "cp_before_own": -22,
+      "cp_after_own": -138,
+      "immediate_exposure": [],
+      "minimum_actual_material_swing_next4plies": -100,
+      "independent_ramp_excess_signal": false,
+      "ramp_cap_cp": null,
+      "own_decision_cp": 1
+    },
+    "early_deep_reviews": [
+      {
+        "ply": 29,
+        "loss": {
+          "cp_loss": 42,
+          "new_losing_mate": false,
+          "lost_winning_mate": false,
+          "comparison_known": true
+        },
+        "classification": "quick_signal_not_confirmed"
+      },
+      {
+        "ply": 31,
+        "loss": {
+          "cp_loss": 64,
+          "new_losing_mate": false,
+          "lost_winning_mate": false,
+          "comparison_known": true
+        },
+        "classification": "quick_signal_not_confirmed"
+      }
+    ],
+    "summary_ko": "20수까지 스파링 직후 접전9/20. 첫 이탈은10.Ne2(ply19)이며 고정노드 평가 -0.22에서-1.38, 자체 평가는+0.01이었다. 이후 대체로-1~2점 열세가 지속됐다. 초반에150cp 초과 단일 큰 손실로 재확인된 장면은 없으며, 작은 오차와 접전 판단의 낙관 편향이 누적된 양상이다.",
+    "caution": "First boundary-crossing numbers are quick fixed-node audit estimates, not new3second reanalysis. Only ply29/31 underwent deep review and losses were42/64cp. No new engine searches in this review."
+  }
+}

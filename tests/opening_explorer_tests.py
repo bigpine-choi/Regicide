@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import threading
 import time
@@ -415,6 +416,69 @@ class CredentialTests(unittest.TestCase):
         store.set("", remember=True)
         self.assertEqual(store.token(), "")
         self.assertFalse(self.path.exists())
+
+    @unittest.skipUnless(os.name == "nt", "Windows protected storage")
+    def test_saved_connection_restores_in_a_fresh_process_without_reentry(self):
+        store = credentials.LichessCredentials(self.path)
+        store.set(TOKEN, remember=True)
+        code = ("import sys; sys.path.insert(0, sys.argv[1]); "
+                "from lichess_credentials import LichessCredentials; "
+                "s=LichessCredentials(sys.argv[2]); "
+                "assert s.token() == 'fixture-token-only-not-a-real-credential'; "
+                "assert s.status()['source'] == 'stored'; print('restored')")
+        child = subprocess.run([sys.executable, "-c", code, str(ROOT / "scripts"), str(self.path)],
+                               capture_output=True, text=True, timeout=15)
+        self.assertEqual(child.returncode, 0)
+        self.assertEqual(child.stdout.strip(), "restored")
+        self.assertNotIn(TOKEN, json.dumps(store.status()))
+
+    @unittest.skipUnless(os.name == "nt", "Windows protected storage")
+    def test_an_already_open_window_notices_saved_replaced_and_removed_key(self):
+        waiting = credentials.LichessCredentials(self.path)
+        self.assertEqual(waiting.token(), "")
+        writer = credentials.LichessCredentials(self.path)
+        writer.set(TOKEN, remember=True)
+        self.assertEqual(waiting.token(), TOKEN)
+        self.assertTrue(waiting.status()["remembered"])
+        writer.set("replacement-fixture", remember=True)
+        self.assertEqual(waiting.token(), "replacement-fixture")
+        writer.set("")
+        self.assertEqual(waiting.token(), "")
+        self.assertEqual(waiting.status()["source"], "missing")
+
+    @unittest.skipUnless(os.name == "nt", "Windows protected storage")
+    def test_failed_saved_replacement_does_not_erase_working_stored_key(self):
+        store = credentials.LichessCredentials(self.path)
+        store.set(TOKEN, remember=True)
+        original = self.path.read_bytes()
+        with patch.object(credentials.os, "replace", side_effect=OSError("fixture")):
+            message = store.set("replacement-fixture", remember=True)
+        self.assertIn("이번 실행", message)
+        self.assertEqual(store.token(), "replacement-fixture")
+        self.assertEqual(store.status()["source"], "session")
+        self.assertEqual(self.path.read_bytes(), original)
+        self.assertEqual(credentials.LichessCredentials(self.path).token(), TOKEN)
+        self.assertEqual(list(self.path.parent.glob("*.tmp")), [])
+
+    def test_corrupt_storage_status_does_not_claim_a_saved_connection(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_bytes(b"invalid-encrypted-fixture")
+        store = credentials.LichessCredentials(self.path)
+        with patch.object(credentials, "_dpapi", side_effect=OSError("fixture")):
+            state = store.status()
+        self.assertFalse(state["configured"])
+        self.assertFalse(state["remembered"])
+        self.assertEqual(state["source"], "unavailable")
+
+    def test_transient_read_failure_retries_without_restarting_or_reentering(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_bytes(b"encrypted-fixture")
+        store = credentials.LichessCredentials(self.path)
+        with patch.object(credentials, "_dpapi", return_value=TOKEN.encode()):
+            with patch.object(Path, "read_bytes", side_effect=PermissionError("fixture")):
+                self.assertEqual(store.token(), "")
+            self.assertEqual(store.token(), TOKEN)
+            self.assertEqual(store.status()["source"], "stored")
 
     def test_protection_failure_keeps_memory_without_plain_file(self):
         store = credentials.LichessCredentials(self.path)

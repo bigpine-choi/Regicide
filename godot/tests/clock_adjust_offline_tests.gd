@@ -147,10 +147,15 @@ func _run() -> void:
 	black_human.human_color = "black"
 	app.accept_state(black_human)
 	verify(app.clock_adjust_labels.human.text == "내 시간 · 9:50" and app.clock_adjust_labels.engine.text == "Regicide · 10:00", "role controls follow human playing black")
-	for hidden_case in ["normal", "untimed", "not_editable", "handicap", "ended"]:
+	for mode in ["normal", "boss", "sparring"]:
+		var shared: Dictionary = fixture(int(app.state.revision) + 1, 21, 4000)
+		shared.engine.sparring_mode = mode == "sparring"
+		shared.engine.boss_mode = mode == "boss"
+		app.accept_state(shared)
+		verify(app.clock_adjust_toggle.visible and not app.clock_adjust_buttons.human[2].disabled, "clock edits shared by " + mode)
+	for hidden_case in ["untimed", "not_editable", "handicap", "ended"]:
 		var hidden: Dictionary = fixture(int(app.state.revision) + 1, 21, 4000)
 		match hidden_case:
-			"normal": hidden.engine.sparring_mode = false
 			"untimed": hidden.clock.enabled = false
 			"not_editable": hidden.clock.editable = false
 			"handicap": hidden.handicap_mode = true

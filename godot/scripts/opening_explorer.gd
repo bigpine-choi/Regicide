@@ -11,7 +11,6 @@ var backend_token: String = ""
 var current_fen: String = ""
 var offline_mode: bool = false
 var snapshot: Dictionary = {}
-var enabled_toggle: CheckButton
 var contents: VBoxContainer
 var source_option: OptionButton
 var rating_option: OptionButton
@@ -25,6 +24,12 @@ var games: VBoxContainer
 var token_input: LineEdit
 var remember_token: CheckBox
 var token_button: Button
+var token_form: VBoxContainer
+var change_token_button: Button
+var _connection_context: String = ""
+var _connection_generation: int = 0
+var _connection_retry_after_ms: int = 0
+var _connection_configured: bool = false
 var _generation: int = 0
 var _context_key: String = ""
 var _request_key: String = ""
@@ -43,18 +48,12 @@ var _section_active: int = 0
 func _ready() -> void:
 	name = "OpeningExplorer"
 	add_theme_constant_override("separation", 6)
-	enabled_toggle = CheckButton.new()
-	enabled_toggle.name = "ExplorerEnabled"
-	enabled_toggle.text = "통계형 오프닝 탐색기 · 켜기"
-	enabled_toggle.add_theme_font_size_override("font_size", 14)
-	enabled_toggle.toggled.connect(_toggle)
-	add_child(enabled_toggle)
+	add_child(_label("오프닝 탐색기", 22))
 	contents = VBoxContainer.new()
 	contents.name = "ExplorerContents"
 	contents.add_theme_constant_override("separation", 6)
-	contents.hide()
 	add_child(contents)
-	status_label = _label("켜면 현재 위치를 리체스로 조회합니다.", 12)
+	status_label = _label("현재 위치의 실제 대국 통계를 보여줍니다.", 14)
 	status_label.name = "ExplorerStatus"
 	contents.add_child(status_label)
 	section_tabs = TabBar.new()
@@ -62,7 +61,7 @@ func _ready() -> void:
 	style_tabs(section_tabs)
 	for caption in ["통계", "참고 기보", "연결 설정"]:
 		section_tabs.add_tab(caption)
-	section_tabs.add_theme_font_size_override("font_size", 12)
+	section_tabs.add_theme_font_size_override("font_size", 15)
 	section_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
 	contents.add_child(section_tabs)
 	connection_label = _label("", 12)
@@ -86,6 +85,8 @@ func _ready() -> void:
 	source_option.add_item("리체스 일반 대국", 1)
 	source_option.item_selected.connect(_filter_changed)
 	source_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	source_option.add_theme_font_size_override("font_size", 15)
+	source_option.custom_minimum_size.y = 36
 	source_row.add_child(source_option)
 	var refresh := Button.new()
 	refresh.name = "ExplorerRefresh"
@@ -108,13 +109,13 @@ func _ready() -> void:
 		speed_option.add_item(title)
 	speed_option.item_selected.connect(_filter_changed)
 	filter_box.add_child(speed_option)
-	summary_label = _label("", 12)
+	summary_label = _label("", 14)
 	summary_label.name = "ExplorerSummary"
 	statistics.add_child(summary_label)
-	statistics.add_child(_label("수를 누르면 별도 분석에서 이어갑니다.", 12))
+	statistics.add_child(_label("수를 누르면 별도 분석에서 이어갑니다.", 14))
 	moves_scroll = ScrollContainer.new()
 	moves_scroll.name = "ExplorerMoveScroll"
-	moves_scroll.custom_minimum_size.y = 245
+	moves_scroll.custom_minimum_size.y = 330
 	moves_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	statistics.add_child(moves_scroll)
 	rows = VBoxContainer.new()
@@ -124,7 +125,7 @@ func _ready() -> void:
 	moves_scroll.add_child(rows)
 	games_scroll = ScrollContainer.new()
 	games_scroll.name = "ExplorerGameScroll"
-	games_scroll.custom_minimum_size.y = 245
+	games_scroll.custom_minimum_size.y = 330
 	games_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	references.add_child(games_scroll)
 	games = VBoxContainer.new()
@@ -132,30 +133,39 @@ func _ready() -> void:
 	games.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	games_scroll.add_child(games)
 	connection.add_child(_label("리체스 연결", 13))
+	change_token_button = Button.new()
+	change_token_button.name = "ExplorerChangeToken"
+	change_token_button.text = "연결키 변경"
+	change_token_button.hide()
+	change_token_button.pressed.connect(func(): token_form.show(); change_token_button.hide())
+	connection.add_child(change_token_button)
+	token_form = VBoxContainer.new()
+	token_form.name = "ExplorerTokenForm"
+	connection.add_child(token_form)
 	var issue := Button.new()
 	issue.name = "ExplorerIssueToken"
 	issue.text = "리체스 연결키 만들기 ↗"
 	issue.pressed.connect(func(): OS.shell_open(TOKEN_URL))
-	connection.add_child(issue)
-	connection.add_child(_label("① 리체스에 로그인하세요.\n② 설명에 Regicide를 적고, 권한은 체크하지 않은 채 연결키(토큰)를 만드세요.\n③ 만들어진 긴 문자열을 복사해 아래에 붙여넣으세요. 채팅에 보내지 마세요.", 12))
+	token_form.add_child(issue)
+	token_form.add_child(_label("처음 한 번만 연결하면 다음 실행부터 저장된 연결키를 사용합니다.\n① 리체스에 로그인하세요.\n② 설명에 Regicide를 적고, 권한은 체크하지 않은 채 연결키(토큰)를 만드세요.\n③ 만들어진 긴 문자열을 복사해 아래에 붙여넣으세요. 채팅에 보내지 마세요.", 12))
 	token_input = LineEdit.new()
 	token_input.name = "ExplorerToken"
 	token_input.secret = true
 	token_input.placeholder_text = "리체스 연결키(토큰) 붙여넣기"
 	token_input.max_length = 1024
-	connection.add_child(token_input)
+	token_form.add_child(token_input)
 	remember_token = CheckBox.new()
 	remember_token.name = "ExplorerRemember"
 	remember_token.text = "이 Windows 계정에 연결 기억"
 	remember_token.button_pressed = OS.get_name() == "Windows"
 	remember_token.disabled = OS.get_name() != "Windows"
 	remember_token.add_theme_font_size_override("font_size", 12)
-	connection.add_child(remember_token)
+	token_form.add_child(remember_token)
 	token_button = Button.new()
 	token_button.name = "ExplorerConnect"
 	token_button.text = "리체스 연결"
 	token_button.pressed.connect(_save_token)
-	connection.add_child(token_button)
+	token_form.add_child(token_button)
 	section_tabs.tab_changed.connect(select_section)
 	select_section(0)
 	_poll_timer = Timer.new()
@@ -164,6 +174,7 @@ func _ready() -> void:
 	_poll_timer.timeout.connect(_poll)
 	add_child(_poll_timer)
 	visibility_changed.connect(_visibility_changed)
+	_restore_connection()
 
 
 func select_section(index: int) -> void:
@@ -202,11 +213,58 @@ func set_context(fen: String, url: String, token: String, offline: bool = false)
 	current_fen = fen
 	offline_mode = offline
 	if key == _context_key:
+		if is_node_ready():
+			_restore_connection()
 		return
 	_context_key = key
 	_invalidate()
-	if is_node_ready() and enabled_toggle.button_pressed and is_visible_in_tree():
+	if is_node_ready() and is_visible_in_tree():
 		_query()
+	if is_node_ready():
+		_restore_connection()
+
+
+func _restore_connection() -> void:
+	if offline_mode or backend_url.is_empty() or Time.get_ticks_msec() < _connection_retry_after_ms:
+		return
+	var context := backend_url + "|" + backend_token
+	if context == _connection_context:
+		return
+	_connection_context = context
+	_connection_generation += 1
+	var generation := _connection_generation
+	# This GET only reads local connection metadata. Statistics are requested
+	# later, only while this opening panel is visible.
+	var response: Dictionary = await _request()
+	if generation != _connection_generation:
+		return
+	if response.has("error"):
+		_connection_context = ""
+		_connection_retry_after_ms = Time.get_ticks_msec() + 5000
+		# No retry timer; a later context/visibility update can retry safely.
+		return
+	_update_connection(response)
+
+
+func _update_connection(value: Dictionary) -> void:
+	var configured: bool = value.get("configured", false)
+	var connection: Variant = value.get("connection", {})
+	var message: String = str(connection.get("message", "")) if connection is Dictionary else ""
+	if message.is_empty() and configured and (not _connection_configured or connection_label.text.is_empty()):
+		message = "연결키가 설정되어 있습니다. 다시 입력할 필요가 없습니다."
+	if value.get("status", "") == "auth_required":
+		message = str(value.get("message", "리체스 연결이 필요합니다. 연결키를 입력해 주세요."))
+		if message.is_empty():
+			message = "리체스 연결이 필요합니다. 연결키를 입력해 주세요."
+		token_form.show()
+		change_token_button.hide()
+	else:
+		token_form.visible = not configured
+		change_token_button.visible = configured
+	_connection_configured = configured and value.get("status", "") != "auth_required"
+	if not message.is_empty():
+		connection_label.text = message
+		connection_label.show()
 
 
 func _invalidate() -> void:
@@ -236,18 +294,10 @@ func _visibility_changed() -> void:
 	if not is_node_ready():
 		return
 	_invalidate()
-	if is_visible_in_tree() and enabled_toggle.button_pressed:
+	if is_visible_in_tree():
 		_query()
-
-
-func _toggle(on: bool) -> void:
-	contents.visible = on
-	enabled_toggle.text = "통계형 오프닝 탐색기 · 켜짐" if on else "통계형 오프닝 탐색기 · 켜기"
-	_invalidate()
-	if on:
-		_query()
-	else:
-		token_input.clear()
+	if is_visible_in_tree():
+		_restore_connection()
 
 
 func _filter_changed(_index: int) -> void:
@@ -257,8 +307,7 @@ func _filter_changed(_index: int) -> void:
 
 func _refresh() -> void:
 	_invalidate()
-	if enabled_toggle.button_pressed:
-		_query()
+	_query()
 
 
 func selected_ratings() -> Array:
@@ -285,7 +334,7 @@ func _filters() -> Dictionary:
 
 
 func preferences() -> Dictionary:
-	return {"enabled": enabled_toggle.button_pressed, "source": source_option.selected,
+	return {"enabled": true, "source": source_option.selected,
 		"rating": rating_option.selected, "speed": speed_option.selected}
 
 
@@ -294,13 +343,11 @@ func apply_preferences(value: Dictionary) -> void:
 	rating_option.select(clampi(int(value.get("rating", 0)), 0, rating_option.item_count - 1))
 	speed_option.select(clampi(int(value.get("speed", 0)), 0, speed_option.item_count - 1))
 	filter_box.visible = source_option.selected == 1
-	var enabled: bool = value.get("enabled", false)
-	enabled_toggle.set_pressed_no_signal(enabled)
-	_toggle(enabled)
+	_refresh()
 
 
 func _query() -> void:
-	if _suspended or _token_busy or section_tabs.current_tab == 2 or not enabled_toggle.button_pressed or not is_visible_in_tree():
+	if _suspended or _token_busy or section_tabs.current_tab == 2 or not is_visible_in_tree():
 		return
 	if offline_mode or backend_url.is_empty():
 		status_label.text = "오프라인입니다. Regicide 연결 후 사용할 수 있습니다."
@@ -312,19 +359,19 @@ func _query() -> void:
 	status_label.text = "리체스 통계를 조회합니다…"
 	_network_busy = true
 	var response: Dictionary = await _request(_filters())
-	if generation != _generation or not is_visible_in_tree() or not enabled_toggle.button_pressed:
+	if generation != _generation or not is_visible_in_tree():
 		return
 	_network_busy = false
 	_accept_response(response)
 
 
 func _poll() -> void:
-	if _suspended or _network_busy or _token_busy or section_tabs.current_tab == 2 or not enabled_toggle.button_pressed or not is_visible_in_tree():
+	if _suspended or _network_busy or _token_busy or section_tabs.current_tab == 2 or not is_visible_in_tree():
 		return
 	var generation := _generation
 	_network_busy = true
 	var response: Dictionary = await _request()
-	if generation != _generation or not is_visible_in_tree() or not enabled_toggle.button_pressed:
+	if generation != _generation or not is_visible_in_tree():
 		return
 	_network_busy = false
 	_accept_response(response)
@@ -370,6 +417,7 @@ func _save_token() -> void:
 		status_label.text = "Regicide에 연결한 뒤 연결키를 넣어 주세요."
 		return
 	_invalidate()
+	_connection_generation += 1
 	_token_busy = true
 	token_button.disabled = true
 	var payload := {"action": "token", "token": token, "remember": remember_token.button_pressed}
@@ -385,6 +433,7 @@ func _save_token() -> void:
 		connection_label.text = str(response.error)
 	else:
 		# Persistence failures and environment overrides remain visible after query.
+		_update_connection(response)
 		connection_label.text = str(response.get("message", "연결 설정을 저장했습니다."))
 		status_label.text = "현재 위치의 통계를 확인합니다."
 		if section_tabs.current_tab == 2:
@@ -407,7 +456,18 @@ func _same_values(left: Variant, right: Array) -> bool:
 	var b := right.duplicate()
 	a.sort()
 	b.sort()
-	return a == b
+	if a.size() != b.size():
+		return false
+	for index in range(a.size()):
+		# JSON decodes rating numbers as floats; native menu values are ints.
+		# Compare their exact numeric values without truncating malformed floats
+		# or accepting strings/bools as rating numbers.
+		if b[index] is int:
+			if not (a[index] is int or a[index] is float) or float(a[index]) != float(b[index]):
+				return false
+		elif typeof(a[index]) != typeof(b[index]) or a[index] != b[index]:
+			return false
+	return true
 
 
 func _matches(value: Dictionary) -> bool:
@@ -442,13 +502,16 @@ func _clear(container: Node) -> void:
 
 
 func render_snapshot(value: Dictionary) -> void:
+	_update_connection(value)
 	_clear(rows)
 	_clear(games)
 	summary_label.text = ""
 	var state := str(value.get("status", "idle"))
 	status_label.text = str(value.get("message", ""))
 	if state == "auth_required":
-		status_label.text = "리체스 연결이 필요합니다. 아래에 연결키(토큰)를 넣어 주세요."
+		status_label.text = str(value.get("message", "리체스 연결이 필요합니다. 연결키(토큰)를 넣어 주세요."))
+		if status_label.text.is_empty():
+			status_label.text = "리체스 연결이 필요합니다. 연결키(토큰)를 넣어 주세요."
 		select_section(2)
 		_connection_auto = true
 	elif state == "rate_limited":
@@ -477,7 +540,7 @@ func render_snapshot(value: Dictionary) -> void:
 func _add_move(move: Dictionary) -> void:
 	var row := Button.new()
 	row.name = "ExplorerMove" + str(move.get("uci", ""))
-	row.custom_minimum_size.y = 58
+	row.custom_minimum_size.y = 76
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.tooltip_text = str(move.get("san", "")) + "부터 별도 분석에서 이어가기"
 	var inner := VBoxContainer.new()
@@ -489,14 +552,14 @@ func _add_move(move: Dictionary) -> void:
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_theme_constant_override("separation", 1)
 	row.add_child(inner)
-	var title := _label("%s · %d판 · %.1f%% 선택" % [str(move.get("san", "")), int(move.get("count", 0)), float(move.get("play_pct", 0))], 13)
+	var title := _label("%s · %d판 · %.1f%% 선택" % [str(move.get("san", "")), int(move.get("count", 0)), float(move.get("play_pct", 0))], 16)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title.clip_text = true
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(title)
 	var bar := HBoxContainer.new()
-	bar.custom_minimum_size.y = 7
+	bar.custom_minimum_size.y = 10
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_theme_constant_override("separation", 0)
 	for item in [["white_pct", "e6e8e8"], ["draw_pct", "8294a7"], ["black_pct", "27384c"]]:
@@ -510,7 +573,7 @@ func _add_move(move: Dictionary) -> void:
 		segment.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bar.add_child(segment)
 	inner.add_child(bar)
-	var percentages := _label("백 %.1f%% · 무 %.1f%% · 흑 %.1f%%" % [float(move.get("white_pct", 0)), float(move.get("draw_pct", 0)), float(move.get("black_pct", 0))], 11)
+	var percentages := _label("백 %.1f%% · 무 %.1f%% · 흑 %.1f%%" % [float(move.get("white_pct", 0)), float(move.get("draw_pct", 0)), float(move.get("black_pct", 0))], 14)
 	percentages.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(percentages)
 	var fen_after := str(move.get("fen_after", ""))
@@ -526,7 +589,7 @@ func _add_game(game: Dictionary) -> void:
 	var link := Button.new()
 	link.text = str(game.get("white", "백")) + " — " + str(game.get("black", "흑"))
 	link.tooltip_text = str(game.get("year", "")) + " · 리체스에서 기보 열기"
-	link.add_theme_font_size_override("font_size", 12)
+	link.add_theme_font_size_override("font_size", 15)
 	link.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	link.pressed.connect(func(): OS.shell_open(url))
 	games.add_child(link)

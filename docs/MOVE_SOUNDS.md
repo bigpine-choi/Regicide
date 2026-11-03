@@ -8,12 +8,17 @@
 
 ## 소스와 재현
 
-외부 녹음이나 타 서비스의 소리를 사용하지 않았다. `scripts/generate_move_sounds.py`가 고정 시드로 만든 원본 PCM이며, Godot과 웹은 같은 WAV를 사용한다. 일반 이동은 120ms, 잡기는 180ms, 44.1kHz 모노 16비트다. 재생 음량은 Godot -8dB, 웹 0.4로 맞췄다.
+[Kenney의 Impact Sounds 1.0](https://kenney.nl/assets/impact-sounds) 중 나무 타격 샘플 두 개를 사용한다. 배포 조건은 CC0이며 원본 라이선스와 출처·해시는 `assets/audio/kenney-impact-sounds/`에 보관한다.
+
+- 일반 이동: `impactWood_light_000.ogg`의 짧고 가벼운 타격, 120ms.
+- 잡기: `impactWood_medium_002.ogg`의 더 긴 타격, 220ms.
+
+원본 OGG를 PCM으로 풀어 둔 WAV에서 모노 변환, 뒤 무음 제거, 시작 1ms·끝 8ms 페이드, 최대 음량 조절을 적용한다. Godot과 웹은 같은 44.1kHz 모노 16비트 WAV를 사용한다. 재생 음량은 Godot -8dB, 웹 0.4로 유지한다. 원본을 처음 푸는 데 사용한 도구와 버전도 `source.json`에 기록했으며 게임 실행이나 재생성에는 추가 패키지가 필요 없다.
 
 ```powershell
 .venv-tests/Scripts/python.exe scripts/generate_move_sounds.py --check
 ```
 
-`--check`를 빼면 두 화면의 파일을 함께 다시 만든다. Godot은 WAV 원본을 직접 읽으므로 새 소리를 적용하기 위해 편집기에서 별도로 가져올 필요가 없다.
+`--check`를 빼면 보관된 PCM 원본에서 두 화면의 파일을 함께 다시 만든다. Godot은 WAV 원본을 직접 읽으므로 새 소리를 적용하기 위해 편집기에서 별도로 가져올 필요가 없다.
 
-검증 기록은 [2026-11-02 착수 효과음](checks/2026-11-02-move-sounds/result.json)에 남긴다. 자동 검증은 실제 오디오 데이터와 재생 경로를 확인하며, 사용자의 스피커 음량이나 음질 취향을 판정하지 않는다.
+교체 검증은 [2026-11-04 착수 효과음](checks/2026-11-04-move-sounds/result.json)에 남긴다. 이전 합성음의 검증은 [2026-11-02 기록](checks/2026-11-02-move-sounds/result.json)에 보존한다. 자동 검증은 실제 오디오 데이터와 재생 경로를 확인하며, 사용자의 스피커 음량이나 음질 취향을 판정하지 않는다.

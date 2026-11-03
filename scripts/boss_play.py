@@ -7,6 +7,7 @@ or a claimed Elo rating. Conditional punishment is not a forced win.
 """
 
 import re
+import copy
 import threading
 import time
 
@@ -15,10 +16,17 @@ import chess.engine
 
 import boss_openings
 import boss_opponent
+import gambit_initiative
+import gambit_knowledge
+import gambit_learning
+import gambit_repertoire_play
+import gambit_operations
+import gambit_practice_memory
 import opening_variety as opening
 import rating_evidence
 
-POLICY = "regicide-boss-play-v3"
+POLICY = "regicide-boss-play-v7"
+SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", POLICY)
 MAX_PLIES = 16
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
@@ -85,6 +93,16 @@ def phase(board, decisions=(), forced=False, engine_color=None, budget_ms=None):
             continue
         if len(history) < len(row["moves"]) and row["moves"][:len(history)] == history:
             return "opening"
+    attack = gambit_initiative.context(board, decisions)
+    if (attack.get("active") or attack.get("reason") == "opponent_to_move") and (
+            engine_color is None or attack.get("owner") == ("white" if engine_color else "black")):
+        return "initiative"
+    if (engine_color is None or engine_color == board.turn) and gambit_knowledge.proposals(board, "phase", decisions=decisions):
+        return "initiative"
+    operation = gambit_operations.context(board, decisions)
+    if (operation.get("active") or operation.get("reason") == "opponent_to_move") and (
+            engine_color is None or operation.get("owner") == ("white" if engine_color else "black")):
+        return "initiative"
     return "trap_hunt" if _trap_position(board) else "full_strength"
 
 
@@ -93,12 +111,20 @@ def extra_budget(budget_ms, *, ply=0):
 
 
 def memo_key(board, budget_ms, binary_sha256, evaluation_id, *, seed="", catalog_id=None):
-    return opening._digest([POLICY, boss_openings.POLICY, boss_opponent.POLICY, seed, opening.history_key(board), budget_ms,
+    return opening._digest([POLICY, boss_openings.POLICY, boss_opponent.POLICY, gambit_initiative.POLICY,
+                            gambit_knowledge.metadata().get("catalog_sha256"), gambit_learning.model_identity(),
+                            gambit_operations.metadata().get("curriculum_sha256"), gambit_practice_memory.memory_identity(),
+                            seed, opening.history_key(board), budget_ms,
                             binary_sha256, evaluation_id, catalog_id])
 
 
-def plan(board, budget_ms, seed, *, forced=False, decisions=()):
+def plan(board, budget_ms, seed, *, forced=False, decisions=(), engine_identity=None):
     line_id, complete = _effective_commitment(board, decisions)
+    # A shared preparation move is a prospective route, not a promise that
+    # the opponent will follow that line. Reconsider every matching route
+    # until an actual defining gambit move has been selected.
+    if not complete:
+        line_id = None
     result = {"eligible": False, "reason": "outside_repertoire", "candidate_uci": None, "mode": "full_strength",
               "candidates": [], "candidate_order": [], "proposal_limit": 1,
               "candidate_source": "authored_boss_repertoire", "catalog_commit": line_id,
@@ -143,6 +169,47 @@ def plan(board, budget_ms, seed, *, forced=False, decisions=()):
                           line_complete=len(board.move_stack) + 1 == len(source["moves"]),
                           catalog_commit=candidate["line_id"])
     if (not result["eligible"] and result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late")
+            and not forced and budget_ms >= MIN_TOTAL_MS):
+        attack = gambit_initiative.context(board, decisions)
+        if attack.get("active"):
+            extra = extra_budget(budget_ms)
+            result.update(eligible=True, mode="initiative", reason="continue_gambit_attack",
+                          candidate_source="native_gambit_initiative",
+                          catalog_commit=[attack["line_id"], attack.get("stage"), attack.get("entry_ply")],
+                          initiative_context=attack, candidate_budget_ms=extra, extra_budget_ms=extra)
+    if ((not result["eligible"] and result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late")
+         or result.get("mode") == "initiative") and not forced and budget_ms >= MIN_TOTAL_MS):
+        rows = gambit_knowledge.proposals(board, seed, decisions=decisions)
+        if rows:
+            rows, ranking = gambit_learning.rank_with_metadata(board, rows, engine_identity=engine_identity)
+            extra = extra_budget(budget_ms)
+            result.update(eligible=True, mode="initiative", candidate_source="gambit_knowledge",
+                          knowledge_candidates=rows, knowledge_ranking=ranking,
+                          knowledge_context=gambit_knowledge.context(board, decisions),
+                          candidate_budget_ms=extra, extra_budget_ms=extra)
+            if result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late"):
+                result.update(reason="verify_gambit_knowledge", catalog_commit=rows[0]["catalog_sha256"])
+    if ((not result["eligible"] and result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late")
+         or result.get("mode") == "initiative") and not forced and budget_ms >= MIN_TOTAL_MS):
+        operation = gambit_operations.context(board, decisions)
+        if operation.get("active"):
+            memory = gambit_practice_memory.proposals(board, seed, engine_identity=engine_identity,
+                                                       context=operation, limit=4)
+            native = gambit_operations.proposals(board, seed, context_value=operation, limit=4)
+            rows, seen = [], set()
+            for row in [*memory, *result.get("knowledge_candidates", []), *native]:
+                if row["uci"] not in seen:
+                    rows.append(row)
+                    seen.add(row["uci"])
+            if rows:
+                extra = extra_budget(budget_ms)
+                result.update(eligible=True, mode="initiative", reason="practice_post_sacrifice_operations",
+                    candidate_source="post_sacrifice_operations", knowledge_candidates=rows[:4],
+                    operations_context=operation, operations_engine_identity=copy.deepcopy(engine_identity),
+                    practice_memory=gambit_practice_memory.memory_identity(),
+                    candidate_budget_ms=extra, extra_budget_ms=extra,
+                    catalog_commit=[operation["curriculum_sha256"], operation["context_id"]])
+    if (not result["eligible"] and result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late")
             and not forced and budget_ms >= MIN_TOTAL_MS and _trap_position(board)):
         extra = extra_budget(budget_ms)
         result.update(eligible=True, mode="trap_hunt", reason="verify_poisoned_piece", candidate_source="poisoned_piece",
@@ -152,6 +219,26 @@ def plan(board, budget_ms, seed, *, forced=False, decisions=()):
 
 def proposals(search_plan, baseline_move):
     return [uci for uci in search_plan["candidate_order"] if uci != baseline_move.uci()]
+
+
+def apply_frequency(search_plan, frequency, baseline_move, *, probe_failed=False):
+    """Keep authored gambit entry separate from adaptive poisoned-piece offers.
+
+    Every legal repertoire proposal still needs the ordinary native evidence.
+    Preparation has its own 35cp cost limit; defining gambit moves disclose
+    speculative cost without inheriting the midgame trap-frequency lottery.
+    """
+    result, gate = dict(search_plan), dict(frequency)
+    opening = result.get("eligible") is True and result.get("mode") == "opening"
+    gated = result.get("eligible") is True and result.get("mode") == "trap_hunt"
+    gate.update(baseline_matches_repertoire=baseline_move.uci() == result.get("candidate_uci"),
+                scope="poisoned_piece_frequency_only", opening_exempt=opening)
+    result.update(conservative_setup=opening and not result.get("line_complete"),
+                  opening_frequency_exempt=opening, frequency_gate_applied=gated)
+    if probe_failed or gated and not gate.get("attempt_trap"):
+        result.update(eligible=False, extra_budget_ms=0, candidate_budget_ms=0,
+                      reason="quality_probe_failed" if probe_failed else "opponent_frequency_hold")
+    return result, gate
 
 
 def score_line(board, info, required_move=None):
@@ -322,6 +409,8 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
                                       score_line(board, baseline_info, baseline_move)) or {}).get("pv_uci", []),
             "risk_profile": RISK_PROFILE,
             "conservative_setup": bool(search_plan.get("conservative_setup")),
+            "opening_frequency_exempt": bool(search_plan.get("opening_frequency_exempt")),
+            "frequency_gate_applied": bool(search_plan.get("frequency_gate_applied")),
             "setup_max_loss_cp": SETUP_MAX_LOSS_CP if search_plan.get("conservative_setup") else None,
             "reference_delta_cp": chosen["reference_delta_cp"] if chosen else 0,
             "best_defense_cp": (chosen["candidate_compared"]["cp"] if chosen else
@@ -331,6 +420,45 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
             "baseline_budget_ms": search_plan["baseline_budget_ms"], "extra_budget_ms": search_plan["extra_budget_ms"],
             "baseline_elapsed_ms": round(baseline_elapsed_ms, 3), "extra_elapsed_ms": round(extra_elapsed_ms, 3),
             "reused": False}
+
+
+def explore_initiative(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
+                       search, close_engine, *, baseline_elapsed_ms=0):
+    """Keep gambit compensation active inside the existing shared allowance."""
+    knowledge = bool(search_plan.get("knowledge_candidates"))
+    if knowledge:
+        detail, discard = gambit_repertoire_play.choose(
+            board, search_plan, baseline_move, baseline_info, baseline_packets, seed, search, close_engine)
+    else:
+        detail, discard = gambit_initiative.choose(
+            board, baseline_move, baseline_info, baseline_packets, search, close_engine,
+            seed=seed, budget_ms=search_plan["extra_budget_ms"],
+            context=search_plan.get("initiative_context"))
+    result = receipt(board, {**search_plan, "eligible": False, "reason": detail["reason"]},
+                     baseline_move, baseline_info, seed=seed,
+                     baseline_elapsed_ms=baseline_elapsed_ms,
+                     extra_elapsed_ms=detail["extra_elapsed_ms"])
+    evidence = detail.get("evidence") or {}
+    compared, final = evidence.get("candidate_compared"), evidence.get("candidate_final")
+    initiative_detail = copy.deepcopy(detail) if knowledge else detail
+    if knowledge and isinstance(search_plan.get("initiative_context"), dict):
+        initiative_detail["context"] = copy.deepcopy(search_plan["initiative_context"])
+    result.update(mode="initiative", selected_uci=detail["selected_uci"],
+                  candidate_uci=detail["selected_uci"] if detail["applied"] else None,
+                  initiative=initiative_detail, reason=detail["reason"], loss_cp=detail["loss_cp"],
+                  trap_evidence=None, trap_attempts=[],
+                  verification_policy="native_same_depth_reply_supported_initiative")
+    if knowledge:
+        result.update(knowledge=detail, verification_policy=gambit_repertoire_play.POLICY)
+    if search_plan.get("operations_context"):
+        result.update(operations=copy.deepcopy(detail),
+                      operations_context=copy.deepcopy(search_plan["operations_context"]),
+                      practice_memory=copy.deepcopy(search_plan.get("practice_memory")))
+    if compared is not None and final is not None:
+        result.update(compared_depth=compared["depth"], best_defense_cp=compared["cp"],
+                      final_best_defense_cp=final["cp"], best_defense_pv_uci=compared["pv_uci"],
+                      reference_delta_cp=result["baseline"]["cp"] - compared["cp"])
+    return result, discard
 
 
 def explore_traps(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
@@ -473,9 +601,10 @@ def explore_traps(board, search_plan, baseline_move, baseline_info, baseline_pac
 
 
 def pgn_headers(metadata):
-    if not isinstance(metadata, dict) or metadata.get("enabled") is not True or metadata.get("policy") != POLICY:
+    if (not isinstance(metadata, dict) or metadata.get("enabled") is not True
+            or metadata.get("policy") not in SUPPORTED_POLICIES):
         return {}
     seed = metadata.get("seed")
     if not isinstance(seed, str) or not re.fullmatch(r"[0-9a-f]{32}", seed):
         return {}
-    return {"BossMode": "1", "BossPolicy": POLICY, "BossSeed": seed}
+    return {"BossMode": "1", "BossPolicy": metadata["policy"], "BossSeed": seed}

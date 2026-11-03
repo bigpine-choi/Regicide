@@ -95,6 +95,8 @@ func present(value: Dictionary, from_white: bool) -> void:
 
 func _search_detail(value: Dictionary, status: String) -> String:
 	var detail: String = "직전 탐색 · 백 기준" if value.get("source", "search") == "previous_search" else "자체 엔진 추정 · 백 기준"
+	if value.get("source") in ["stockfish_coaching_reference", "stockfish_gauge"]:
+		detail = "Stockfish 참고 형세 · 백 기준"
 	if value.get("depth") != null:
 		detail += " · 깊이 %d" % int(value.depth)
 	var bound: String = str(value.get("bound", "exact"))

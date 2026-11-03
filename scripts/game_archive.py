@@ -22,6 +22,7 @@ import threading
 import chess
 import chess.pgn
 
+from game_outcome import automatic_outcome, LEGACY_DRAW_POLICY
 from opening_presentation import OpeningGuideCache
 from opening_variety import pgn_headers as opening_variety_headers
 from dynamic_play import pgn_headers as dynamic_play_headers
@@ -451,7 +452,7 @@ class GameArchive:
         result = state.get("result", "*")
         if not isinstance(result, str) or result not in RESULTS:
             raise ValueError("대국 결과가 올바르지 않습니다.")
-        outcome = board.outcome(claim_draw=True)
+        outcome = automatic_outcome(board)
         termination = _text(state.get("termination"), limit=100) or None
         clock = _recorded_clock(record, board)
         if outcome is not None:
@@ -459,6 +460,14 @@ class GameArchive:
                 raise ValueError("체스판과 대국 결과가 일치하지 않습니다.")
             result = outcome.result()
             termination = outcome.termination.name.lower()
+        elif (result == "1/2-1/2"
+              and record.get("draw_policy") in (None, LEGACY_DRAW_POLICY)
+              and ((termination == "threefold_repetition" and board.can_claim_threefold_repetition())
+                   or (termination == "fifty_moves" and board.can_claim_fifty_moves()))):
+            # Old versions automatically claimed an available intended-move
+            # draw. Preserve those explicitly saved results, without turning
+            # an unfinished old record into a draw under the new policy.
+            pass
         elif result != "*" and termination in TIMEOUTS:
             flagged = clock["snapshot"].get("flagged_color") if clock else None
             if flagged not in ("white", "black") or (flagged == "white") != board.turn:
@@ -628,7 +637,7 @@ class GameArchive:
             "EngineMoveTimeMS": str(prepared["movetime_ms"] or "unknown"),
             "EngineSHA256": _text(engine.get("binary_sha256"), "unknown", 128),
             "InterfaceSourceCommit": _text(source.get("commit"), "unknown", 128),
-            "DrawPolicy": _text(record.get("draw_policy"), "always claim available threefold/50-move draws"),
+            "DrawPolicy": _text(record.get("draw_policy"), LEGACY_DRAW_POLICY),
             "Termination": "unterminated" if prepared["result"] == "*" else "normal",
             "TerminationReason": prepared["termination"] or ("engine_error" if prepared["error"] else "in_progress"),
             "HandicapMoves": str(sum(bool(move.get("forced")) for move in prepared["moves"]))})
@@ -654,7 +663,7 @@ class GameArchive:
                                                   "regicide-engine-pacing-v3", "regicide-engine-pacing-v4",
                                                   "regicide-engine-pacing-v5", "regicide-engine-pacing-v6",
                                                   "regicide-engine-pacing-v7", "regicide-engine-pacing-v8",
-                                                  "regicide-engine-pacing-v9")):
+                                                  "regicide-engine-pacing-v9", "regicide-engine-pacing-v10")):
                 game.headers["EnginePacingPolicy"] = pacing["policy"]
             if clock["timeout_policy"] == "engine_only":
                 game.headers["TimeForfeitPolicy"] = "engine_only"

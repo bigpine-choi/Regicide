@@ -39,6 +39,7 @@ func score(state: Dictionary) -> Dictionary:
 		"status": "ready", "cp": 350, "mate": null, "depth": 7, "bound": "exact", "white_share": 0.7,
 		"source": "search", "reliability": "stable", "sparring_referee": metadata(),
 		"reference_evaluation": {"game_id": state.game_id, "revision": state.revision, "fen": state.fen,
+			"source": "stockfish_gauge",
 			"turn": state.turn, "status": "ready", "cp": -85, "mate": null, "depth": 16,
 			"bound": "exact", "white_share": 0.42, "engine_name": "Stockfish fixture"}}
 
@@ -105,26 +106,31 @@ func _run() -> void:
 		var value := score(state)
 		value.reference_evaluation.merge(changed, true)
 		app.accept_evaluation(value)
-		verify(app.evaluation_bar.snapshot.cp == 350 and app.evaluation_summary.text.contains("Regicide 자체"),
-			"unusable reference preserves own gauge: " + str(changed.keys()))
-		verify(app.evaluation_detail.text.contains("자체 평가 표시"), "fallback reason is visible")
+		verify(not app.evaluation_bar.has_score and app.evaluation_summary.text.contains("Stockfish"),
+			"unusable reference leaves neutral gauge: " + str(changed.keys()))
+		verify(not app.evaluation_detail.text.contains("자체 평가 표시"), "native score never fills the Stockfish gauge")
 	var missing := score(state)
 	missing.sparring_referee.available = false
 	app.accept_evaluation(missing)
-	verify(app.evaluation_bar.snapshot.cp == 350 and app.evaluation_detail.text.contains("사용 불가"),
+	verify(not app.evaluation_bar.has_score and app.evaluation_summary.text.contains("사용 불가"),
 		"uninstalled referee cannot override even a cached ready value")
 	await capture("native-referee-fallback-fixture")
 	var disabled := score(state)
 	disabled.sparring_referee.enabled = false
 	app.accept_evaluation(disabled)
-	verify(app.evaluation_bar.snapshot.cp == 350 and not app.evaluation_summary.text.contains("Stockfish") and not app.evaluation_detail.text.contains("심판"),
-		"disabled metadata preserves legacy presentation")
+	verify(not app.evaluation_bar.has_score and app.evaluation_summary.text.contains("사용 불가"),
+		"disabled Stockfish leaves a neutral gauge")
 	for mode in ["normal", "boss"]:
 		var other := position(mode)
+		other.engine.stockfish_reference = other.engine.sparring_referee
+		other.engine.erase("sparring_referee")
 		app.accept_state(other)
-		app.accept_evaluation(score(other))
-		verify(app.evaluation_bar.snapshot.cp == 350 and not app.evaluation_summary.text.contains("Stockfish"),
-			"reference metadata cannot alter " + mode + " game")
+		var shared := score(other)
+		shared.stockfish_reference = shared.sparring_referee
+		shared.erase("sparring_referee")
+		app.accept_evaluation(shared)
+		verify(app.evaluation_bar.snapshot.cp == -85 and app.evaluation_summary.text.contains("Stockfish"),
+			"common Stockfish reference applies to " + mode + " game")
 	state = position()
 	state.engine.erase("sparring_referee")
 	app.accept_state(state)
@@ -132,8 +138,8 @@ func _run() -> void:
 	legacy.erase("sparring_referee")
 	legacy.erase("reference_evaluation")
 	app.accept_evaluation(legacy)
-	verify(app.evaluation_bar.snapshot.cp == 350 and not app.evaluation_detail.text.contains("심판"),
-		"old host responses remain compatible")
+	verify(not app.evaluation_bar.has_score and app.evaluation_summary.text.contains("Stockfish"),
+		"old host responses cannot display a native gauge")
 	state = position()
 	app.accept_state(state)
 	for distance in [3, -4, 0]:

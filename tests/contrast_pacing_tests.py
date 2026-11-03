@@ -71,7 +71,7 @@ class ContrastPacingTests(unittest.TestCase):
         budget = pacing.search_budget(plan, current, 5000, automatic=True)
         self.assertEqual(plan["target_total_ms"], 100)
         self.assertEqual(budget["total_search_ms"], 54)
-        self.assertEqual(pacing.remaining_wait_ms(plan, clock(board, elapsed=75)), 25)
+        self.assertEqual(pacing.remaining_wait_ms(plan, clock(board, elapsed=75)), 0)
         self.assertEqual(pacing.remaining_wait_ms(plan, clock(board, elapsed=150)), 0)
 
     def test_opening_and_queen_grab_have_both_instant_and_short_checking_turns(self):
@@ -109,11 +109,11 @@ class ContrastPacingTests(unittest.TestCase):
         self.assertTrue(ordinary)
         self.assertTrue(all(result["target_total_ms"] == 9000 for result in ordinary))
 
-    def test_long_thought_reacts_continuously_at_three_minutes_and_shrinks_under_pressure(self):
+    def test_long_thought_reacts_continuously_at_five_minutes_and_shrinks_under_pressure(self):
         seed = next(str(seed) for seed in range(128)
                     if deliberation(str(seed))[2]["refinement"]["kind"] == "long_deliberation")
         results = [deliberation(seed, remaining)[2]
-                   for remaining in (600000, 360000, 240000, 180001, 180000, 179999, 120000, 60000, 10000)]
+                   for remaining in (600000, 480000, 360000, 300001, 300000, 299999, 180000, 60000, 10000)]
         targets = [result["target_total_ms"] for result in results]
         self.assertEqual(targets, sorted(targets, reverse=True))
         self.assertEqual(targets[:5], [targets[0]] * 5)

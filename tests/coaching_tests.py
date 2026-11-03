@@ -209,12 +209,12 @@ class CoachingTests(unittest.TestCase):
     def test_great_candidate_needs_exact_nonlosing_best_and_losing_alternative(self):
         self.session._cache_dir = None
         fixtures = [
-            (packet(0, pv=["e2e4"]), packet(-200, pv=["d2d4"]), "!!", 2),
+            (packet(0, pv=["e2e4"]), packet(-200, pv=["d2d4"]), "!", 2),
             (packet(100, pv=["e2e4"]), packet(-199, pv=["d2d4"]), "★", 2),
             (packet(-1, pv=["e2e4"]), packet(-300, pv=["d2d4"]), "★", 1),
-            (packet(100, pv=["e2e4"], lowerbound=True), packet(-300, pv=["d2d4"]), "…", 1),
+            (packet(100, pv=["e2e4"], lowerbound=True), packet(-300, pv=["d2d4"]), None, 1),
             (packet(100, pv=["e2e4"]), packet(-300, pv=["d2d4"], upperbound=True), "★", 2),
-            (packet(mate=3, pv=["e2e4"]), packet(mate=-4, pv=["d2d4"]), "!!", 2),
+            (packet(mate=3, pv=["e2e4"]), packet(mate=-4, pv=["d2d4"]), "!", 2),
             (packet(mate=-3, pv=["e2e4"]), packet(mate=-4, pv=["d2d4"]), "★", 1),
             (packet(100, pv=["e2e4"]), packet(200, pv=["d2d4"]), "★", 2),
             (packet(100, pv=["e2e4"]), packet(-300, pv=["e2e4"]), "★", 2),
@@ -225,15 +225,34 @@ class CoachingTests(unittest.TestCase):
                 peer = FakeEngine([best, alternative])
                 self.start(peer)
                 row = self.ready()["moves"][0]
-                self.assertEqual(row["annotation"]["symbol"], symbol)
+                self.assertEqual(row["annotation"]["symbol"] if row["annotation"] else None, symbol)
                 self.assertEqual(len(peer.calls), calls)
                 self.assertNotEqual(row["classification"], "great")
-                if symbol == "!!":
+                if symbol == "!":
                     self.assertEqual(row["classification"], "best")
                     self.assertEqual(row["annotation"]["label"], "탁월 후보")
                     self.assertEqual(row["annotation"]["kind"], "great")
                     self.assertIn("같은 제한 시간", row["annotation"]["reason"])
                     self.assertIn("증명한 것은 아니며", row["annotation"]["reason"])
+
+    def test_legacy_uncertain_cache_loses_badge_and_dialogue_without_reanalysis(self):
+        self.start(FakeEngine([packet(100, pv=["e2e4"], lowerbound=True)]))
+        state = self.ready()
+        self.assertEqual(state["moves"][0]["classification"], "uncertain")
+        self.assertIsNone(state["moves"][0]["annotation"])
+        path = next((self.root / "games/coaching").glob("*.json"))
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        row = stored["report"]["moves"][0]
+        row["annotation"] = {"kind": "uncertain", "symbol": "…", "label": "판단 보류"}
+        row["coach"]["dialogue"] = "This position needs a closer look."
+        path.write_text(json.dumps(stored), encoding="utf-8")
+        reused = self.session.start(SHORT, "white", 500, self.session.revision)
+        self.assertTrue(reused["cached"])
+        row = reused["moves"][0]
+        self.assertEqual(row["classification"], "uncertain")
+        self.assertIsNone(row["annotation"])
+        self.assertEqual(row["coach"]["dialogue"], "")
+        self.assertEqual(self.factory.calls, 1)
 
     def test_great_candidate_uses_black_perspective_and_exact_actual_frame(self):
         pgn = '[SetUp "1"]\n[FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"]\n[Result "*"]\n\n1... e5 *'
@@ -242,7 +261,7 @@ class CoachingTests(unittest.TestCase):
         self.start(peer, pgn, human="white")
         row = self.ready()["moves"][0]
         annotation = row["annotation"]
-        self.assertEqual((annotation["symbol"], annotation["square"], annotation["uci"]), ("!!", "e5", "e7e5"))
+        self.assertEqual((annotation["symbol"], annotation["square"], annotation["uci"]), ("!", "e5", "e7e5"))
         self.assertEqual((annotation["ply"], annotation["fen_after"]), (row["ply"], row["fen_after"]))
         self.assertEqual(annotation["scope"], "actual_move")
         self.assertTrue(annotation["provisional"])
@@ -259,13 +278,14 @@ class CoachingTests(unittest.TestCase):
 
     def test_annotation_mappings_and_special_move_destination(self):
         board = chess.Board()
-        expected = {"best": "★", "good": "✓", "inaccuracy": "?!", "mistake": "?",
-                    "blunder": "??", "allows_mate": "??", "missed_mate": "?", "uncertain": "…"}
+        expected = {"best": "★", "good": "👍", "inaccuracy": "?!", "mistake": "?",
+                    "blunder": "??", "allows_mate": "??", "missed_mate": "×"}
         best = _line(board, packet(0, pv=["e2e4"]), "white")
         row = {"ply": 1, "uci": "e2e4", "fen_after": "after", "best": best, "alternative": None}
         for kind, symbol in expected.items():
             self.assertEqual(_annotation(board, {**row, "classification": kind})["symbol"], symbol)
         self.assertIsNone(_annotation(board, {**row, "classification": "pending"}))
+        self.assertIsNone(_annotation(board, {**row, "classification": "uncertain"}))
         for fen, uci, square in [
                 ("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1g1", "g1"),
                 ("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8c8", "c8"),
@@ -285,12 +305,15 @@ class CoachingTests(unittest.TestCase):
         stored = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(stored["identity"]["schema"], SCHEMA)
         self.assertGreater(SCHEMA, 1)
-        stored["report"]["moves"][0]["annotation"] = {"symbol": "wrong", "square": "a1"}
+        # Reports saved before the notation fix must show Great (!) after load,
+        # never the former Brilliant (!!) glyph, without another engine search.
+        stored["report"]["moves"][0]["annotation"]["symbol"] = "!!"
         stored["report"]["moves"][0]["alternative"]["pv_frames"][1]["board"].clear()
         path.write_text(json.dumps(stored), encoding="utf-8")
         reused = self.session.start(SHORT, "white", 500, self.session.revision)
         self.assertTrue(reused["cached"])
         self.assertEqual(reused["moves"], state["moves"])
+        self.assertEqual(reused["moves"][0]["annotation"]["symbol"], "!")
         self.assertEqual(self.factory.calls, 1)
         for replacement in (stored["report"]["moves"][0]["best"], {**stored["report"]["moves"][0]["alternative"], "pv_uci": ["d2d5"]}):
             changed = copy.deepcopy(stored)

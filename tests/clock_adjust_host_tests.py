@@ -63,8 +63,8 @@ class ClockAdjustHostTests(unittest.TestCase):
             self.assertEqual(self.game._clock.metadata(), before)
             self.assertEqual(self.game.revision, revision)
 
-    def test_normal_untimed_and_finished_games_reject_clock_edits(self):
-        for sparring, control in ((False, "10+0"), (True, None)):
+    def test_untimed_and_finished_games_reject_clock_edits(self):
+        for sparring, control in ((False, None), (True, None)):
             self.new("white", sparring=sparring, control=control)
             self.assertFalse(self.game.state()["clock"]["editable"])
             with self.assertRaises(ValueError):
@@ -74,6 +74,24 @@ class ClockAdjustHostTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.edit("human", 10000)
         self.assertFalse(self.game.state()["clock"]["editable"])
+
+    def test_all_modes_offer_both_clocks_for_either_human_color(self):
+        for mode in ("basic", "gambit", "sparring"):
+            for color in ("white", "black"):
+                with self.subTest(mode=mode, color=color):
+                    self.game.new_game(color, None, self.game.revision,
+                        boss_mode=mode == "gambit", sparring_mode=mode == "sparring", time_control="10+0")
+                    before = self.game.state()
+                    self.assertTrue(before["clock"]["editable"])
+                    self.edit("human", 60000)
+                    after = self.edit("engine", -10000)
+                    other = "black" if color == "white" else "white"
+                    self.assertEqual(after["clock"][color + "_ms"], 660000)
+                    self.assertEqual(after["clock"][other + "_ms"], 590000)
+                    self.assertEqual(after["revision"], before["revision"])
+                    self.assertEqual(after["fen"], before["fen"])
+                    self.assertEqual(len(self.record()["clock"]["adjustments"]), 2)
+                    self.replay()
 
     def test_human_overtime_can_be_refilled_without_spurious_result(self):
         self.new("white", sparring=True)

@@ -140,6 +140,9 @@ var next_button: Button
 var last_button: Button
 var critical_previous: Button
 var critical_next: Button
+var key_previous: Button
+var key_next: Button
+var key_scene_label: Label
 var move_list: ItemList
 var critical_list: ItemList
 var walkthrough_label: Label
@@ -169,6 +172,16 @@ var stop_speech_button: Button
 var requester: HTTPRequest
 var poll_requester: HTTPRequest
 var poll_timer: Timer
+var reference_requester: HTTPRequest
+var _reference: Dictionary = {}
+var _reference_context: Dictionary = {}
+var _reference_key: String = ""
+var _reference_request_id: String = ""
+var _reference_sent_id: String = ""
+var _reference_serial: int = 0
+var _reference_polling: bool = false
+var _reference_retries: int = 0
+var _reference_retry_at: int = 0
 
 
 func _ready() -> void:
@@ -291,6 +304,23 @@ func _build_ui() -> void:
 	for button in [first_button, previous_button, next_button, last_button]:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		navigation.add_child(button)
+	var key_navigation := HBoxContainer.new()
+	key_navigation.name = "CoachingKeyNavigation"
+	key_navigation.add_theme_constant_override("separation", 8)
+	board_column.add_child(key_navigation)
+	key_previous = _button("← 이전 핵심 장면", _step_key_scene.bind(-1), "CoachingPreviousKeyScene")
+	key_next = _button("다음 핵심 장면 →", _step_key_scene.bind(1), "CoachingNextKeyScene")
+	for button in [key_previous, key_next]:
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size.y = 44
+		button.add_theme_font_size_override("font_size", 16)
+		button.add_theme_color_override("font_color", Color("f4e9c9"))
+		button.tooltip_text = "좋은 구상과 중요한 실수가 있는 실제 국면으로 바로 이동합니다."
+		key_navigation.add_child(button)
+	key_scene_label = _label("핵심 장면 · 분석된 수에서 배울 점을 찾아요", 13, "9bd7ca")
+	key_scene_label.name = "CoachingKeySceneStatus"
+	_single_line(key_scene_label)
+	board_column.add_child(key_scene_label)
 	var panel := PanelContainer.new()
 	panel.name = "CoachingSidebar"
 	panel.custom_minimum_size.x = 380
@@ -300,10 +330,20 @@ func _build_ui() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		inset.add_theme_constant_override("margin_" + side, 12)
 	panel.add_child(inset)
+	var workspace := VBoxContainer.new()
+	workspace.add_theme_constant_override("separation", 12)
+	inset.add_child(workspace)
 	var scroll := ScrollContainer.new()
 	scroll.name = "CoachingSidebarScroll"
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	inset.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_stretch_ratio = 1.3
+	workspace.add_child(scroll)
+	var notation := VBoxContainer.new()
+	notation.name = "CoachingNotationColumn"
+	notation.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	notation.add_theme_constant_override("separation", 6)
+	workspace.add_child(notation)
 	var sidebar := VBoxContainer.new()
 	sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sidebar.add_theme_constant_override("separation", 9)
@@ -349,7 +389,7 @@ func _build_ui() -> void:
 	progress_label = _label("", 12, "9bd7ca")
 	sidebar.add_child(progress_label)
 	_build_coach(sidebar)
-	annotation_legend = _label("기물 위 배지 · ★ 추천  ✓ 좋은 수  ?! 아쉬움  ? 실수  ?? 큰 실수  … 판단 보류\n!! 탁월 후보: 제한 시간 안에서 다른 대안까지 비교한 결과입니다. 배지는 더 깊은 분석에서 달라질 수 있습니다.", 12, "8197aa")
+	annotation_legend = _label("기물 위 배지 · ! 탁월 후보  ★ 추천  👍 좋은 수  ?! 아쉬움  ? 실수  ?? 큰 실수  × 기회 놓침\n!는 제한 시간 안에서 다른 대안까지 비교한 결과입니다. 배지는 더 깊은 분석에서 달라질 수 있습니다.", 12, "8197aa")
 	sidebar.add_child(annotation_legend)
 	summary_label = _label("", 14, "f6f0de")
 	sidebar.add_child(summary_label)
@@ -409,12 +449,13 @@ func _build_ui() -> void:
 	line_return = _button("실제 기보로", _leave_line, "CoachingLineReturn")
 	for button in [line_previous, line_next, line_return]:
 		line_navigation.add_child(button)
-	sidebar.add_child(_label("전체 기보 · 수를 선택해 비교", 14, "f6f0de"))
+	notation.add_child(_label("전체 기보 · 수를 선택해 비교", 14, "f6f0de"))
 	move_list = ItemList.new()
 	move_list.name = "CoachingMoveList"
-	move_list.custom_minimum_size.y = 190
+	move_list.custom_minimum_size.y = 250
+	move_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	move_list.item_selected.connect(func(index: int): _select_ply(index + 1))
-	sidebar.add_child(move_list)
+	notation.add_child(move_list)
 	notice_label = _label("Regicide가 선택한 시간 안에 찾은 수를 비교합니다. 더 깊이 분석하면 추천과 실수 분류가 달라질 수 있습니다. +는 백, −는 흑 우세이며 1.00은 폰 한 개에 해당하는 평가 단위입니다.", 12, "8197aa")
 	sidebar.add_child(notice_label)
 	requester = HTTPRequest.new()
@@ -426,10 +467,14 @@ func _build_ui() -> void:
 	poll_requester = HTTPRequest.new()
 	poll_requester.timeout = 8.0
 	add_child(poll_requester)
+	reference_requester = HTTPRequest.new()
+	reference_requester.timeout = 8.0
+	add_child(reference_requester)
 	poll_timer = Timer.new()
 	poll_timer.wait_time = 0.5
 	poll_timer.timeout.connect(_poll)
 	poll_timer.timeout.connect(_poll_speech)
+	poll_timer.timeout.connect(_poll_reference)
 	add_child(poll_timer)
 	poll_timer.start()
 	walkthrough_timer = Timer.new()
@@ -995,20 +1040,68 @@ func _side_label(color: String) -> String:
 
 func _summary_for_side(color: String) -> String:
 	var analyzed: int = 0
+	var graded: int = 0
 	var counts: Dictionary = {}
 	for row in _moves():
 		var classification: String = str(row.get("classification", "pending"))
 		if _row_color(row) != color or classification == "pending":
 			continue
 		analyzed += 1
+		if classification != "uncertain":
+			graded += 1
 		counts[classification] = int(counts.get(classification, 0)) + 1
-	var labels := {"inaccuracy": "아쉬운 수", "mistake": "실수", "blunder": "큰 실수", "missed_mate": "메이트 기회 놓침", "allows_mate": "메이트 허용", "uncertain": "판단 보류"}
+	var labels := {"inaccuracy": "아쉬운 수", "mistake": "실수", "blunder": "큰 실수", "missed_mate": "메이트 기회 놓침", "allows_mate": "메이트 허용"}
 	var details: PackedStringArray = PackedStringArray()
 	for key in labels:
 		if int(counts.get(key, 0)) > 0:
 			details.append(str(labels[key]) + " %d" % int(counts[key]))
-	var detail: String = " · ".join(details) if not details.is_empty() else ("해당 실수 없음" if analyzed > 0 else "분석 대기")
+	var detail: String = " · ".join(details) if not details.is_empty() else ("평가된 수에서 해당 실수 없음" if graded > 0 else ("평가 가능한 수 없음" if analyzed > 0 else "분석 대기"))
 	return _side_label(color) + "  |  %d수 분석\n" % analyzed + detail
+
+
+func _move_grade(row: Dictionary) -> String:
+	return "" if row.get("classification") == "uncertain" else str(row.get("label", "분석 대기"))
+
+
+func _key_row_allowed(row: Dictionary) -> bool:
+	if row.get("classification", "pending") not in ["best", "good", "inaccuracy", "mistake", "blunder", "missed_mate", "allows_mate"]:
+		return false
+	var focus: int = focus_option.get_selected_id()
+	var mine: bool = _row_color(row) == human_color
+	return focus == 0 or (focus == 1 and mine) or (focus == 2 and not mine)
+
+
+func _key_plies() -> Array:
+	var highlights: Array = []
+	var moves: Array = _moves()
+	for ply in _lesson_plies():
+		if _key_row_allowed(moves[int(ply) - 1]):
+			highlights.append(int(ply))
+	for row in _critical_rows():
+		var ply: int = int(row.ply)
+		if not highlights.has(ply):
+			highlights.append(ply)
+	# Older reports may not contain a course. Keep a positive example available.
+	var has_positive: bool = highlights.any(func(ply: int): return moves[ply - 1].get("classification") in ["best", "good"])
+	if not has_positive:
+		for row in moves:
+			if _key_row_allowed(row) and row.get("classification") in ["best", "good"]:
+				highlights.append(int(row.ply))
+				break
+	highlights.sort()
+	return highlights
+
+
+func _step_key_scene(direction: int) -> void:
+	if busy or retry_active or _walkthrough_active:
+		return
+	var highlights: Array = _key_plies()
+	if direction < 0:
+		highlights.reverse()
+	for ply in highlights:
+		if (direction > 0 and int(ply) > selected_ply) or (direction < 0 and int(ply) < selected_ply):
+			_select_ply(int(ply))
+			return
 
 
 func _critical_step(direction: int) -> void:
@@ -1409,6 +1502,12 @@ func _coach_for_side() -> Dictionary:
 				coach["continuation"] = perspective.continuation
 			if perspective.get("insight") is Dictionary:
 				coach["insight"] = perspective.insight
+	# Old cached reports may still contain the removed uncertainty commentary.
+	if _move().get("classification") == "uncertain":
+		coach["dialogue"] = ""
+		coach["hint"] = ""
+		coach["insight"] = null
+		coach["continuation"] = null
 	return coach
 
 
@@ -1897,6 +1996,7 @@ func _render_coach() -> void:
 		dialogue = str(coach.get("hint", "Check for threats against the king and pieces that can be captured.")) if _retry_hint else "Your turn: find a move, then check the opponent's strongest reply."
 		avatar.mood = "think" if _retry_reply.is_empty() else ("celebrate" if _retry_reply.get("verdict") in ["recommended", "good"] else "encourage")
 	coach_dialogue.text = dialogue
+	coach_dialogue.visible = not dialogue.is_empty()
 	_schedule_speech()
 	_render_opening_review(not retry_active and not viewing_retry_line)
 	_render_opening(not retry_active and not viewing_retry_line and not _walkthrough_active and not _coach_overview)
@@ -2196,27 +2296,121 @@ func _annotation_for_frame(frame: Dictionary) -> Dictionary:
 	if int(row.get("ply", -1)) != ply or str(frame.get("fen", "")).is_empty() or frame.get("fen") != row.get("fen_after") or uci.length() not in [4, 5] or frame.get("last_move") != uci:
 		return {}
 	var classification: String = str(row.get("classification", "pending"))
-	var symbols := {"best": "★", "good": "✓", "inaccuracy": "?!", "mistake": "?", "blunder": "??", "allows_mate": "??", "missed_mate": "?", "uncertain": "…"}
-	var labels := {"best": "추천 수", "good": "좋은 수", "inaccuracy": "아쉬운 수", "mistake": "실수", "blunder": "큰 실수", "allows_mate": "메이트 허용", "missed_mate": "메이트 기회 놓침", "uncertain": "판단 보류"}
+	var symbols := {"best": "★", "good": "👍", "inaccuracy": "?!", "mistake": "?", "blunder": "??", "allows_mate": "??", "missed_mate": "×"}
+	var labels := {"best": "추천 수", "good": "좋은 수", "inaccuracy": "아쉬운 수", "mistake": "실수", "blunder": "큰 실수", "allows_mate": "메이트 허용", "missed_mate": "메이트 기회 놓침"}
 	if not symbols.has(classification) or not frame.get("board", {}).has(uci.substr(2, 2)):
 		return {}
 	var metadata: Variant = row.get("annotation")
 	if metadata is Dictionary:
 		if metadata.get("scope") != "actual_move" or int(metadata.get("ply", -1)) != ply or metadata.get("uci") != uci or metadata.get("fen_after") != frame.fen or metadata.get("square") != uci.substr(2, 2):
 			return {}
+		if classification == "good" and metadata.get("kind") == "good" and metadata.get("symbol") == "✓":
+			metadata = metadata.duplicate(true)
+			metadata.symbol = symbols.good
 		if metadata.get("kind") == "great":
-			if classification != "best" or metadata.get("symbol") != "!!" or not row.get("best") is Dictionary or row.best.get("uci") != uci:
+			if classification != "best" or metadata.get("symbol") != "!" or not row.get("best") is Dictionary or row.best.get("uci") != uci:
 				return {}
 		elif metadata.get("kind") != classification or metadata.get("symbol") != symbols[classification]:
 			return {}
 		return metadata.duplicate(true)
-	# Old reports can retain ordinary labels; never infer the extra !! judgment.
+	# Old reports can retain ordinary labels; never infer the extra ! judgment.
 	return {"symbol": symbols[classification], "kind": classification, "label": labels[classification],
 		"square": uci.substr(2, 2), "scope": "actual_move", "provisional": true, "ply": ply,
 		"uci": uci, "fen_after": frame.fen, "reason": "저장된 제한 시간 분석의 분류입니다. 더 깊게 분석하면 달라질 수 있습니다."}
 
 
+func _reference_position(frame: Dictionary) -> Dictionary:
+	if retry_active or frame.get("fen", "").is_empty():
+		return {}
+	var frames: Array = _frames()
+	if frames.is_empty():
+		return {}
+	var base: int = selected_ply - 1 if not line_kind.is_empty() and not _walkthrough_active else int(frame.get("ply", -1))
+	if base < 0 or base >= frames.size():
+		return {}
+	var history: Array = []
+	for index in range(1, base + 1):
+		var uci: String = str(frames[index].get("last_move", ""))
+		if uci.is_empty():
+			return {}
+		history.append(uci)
+	if not line_kind.is_empty() and not _walkthrough_active:
+		var pv: Array = _selected_line().get("pv_uci", [])
+		if line_index < 0 or line_index > pv.size():
+			return {}
+		history.append_array(pv.slice(0, line_index))
+	return {"root_fen": frames[0].get("fen", ""), "history_uci": history, "fen": frame.fen}
+
+
+func _sync_reference_context(frame: Dictionary) -> void:
+	var context: Dictionary = _reference_position(frame) if is_visible_in_tree() else {}
+	var key: String = JSON.stringify(context) + ":" + str(_epoch) if not context.is_empty() else ""
+	if key == _reference_key:
+		return
+	_reference_key = key
+	_reference_context = context
+	_reference = {}
+	_reference_retries = 0
+	_reference_retry_at = 0
+	_reference_serial += 1
+	_reference_request_id = str(get_instance_id()) + "-" + str(_reference_serial) if not key.is_empty() else ""
+
+
+func _poll_reference() -> void:
+	if offline_mode or backend_url.is_empty() or _reference_polling:
+		return
+	_sync_reference_context(_shown_frame())
+	if _reference_key.is_empty():
+		if not _reference_sent_id.is_empty():
+			var hidden_id: String = _reference_sent_id
+			_reference_sent_id = ""
+			_reference_polling = true
+			await _request(reference_requester, "/api/coaching-reference", {"request_id": hidden_id, "hidden": true})
+			_reference_polling = false
+		return
+	if _reference_sent_id == _reference_request_id and _reference.get("status", "loading") != "loading":
+		if _reference.get("status") not in ["error", "unavailable"] or _reference_retries >= 2 or Time.get_ticks_msec() < _reference_retry_at:
+			return
+		_reference_retries += 1
+		_reference_serial += 1
+		_reference_request_id = str(get_instance_id()) + "-" + str(_reference_serial)
+		_reference = {}
+	var ticket: String = _reference_request_id
+	var key: String = _reference_key
+	var payload: Variant = null
+	if _reference_sent_id != ticket:
+		payload = _reference_context.duplicate(true)
+		payload["request_id"] = ticket
+		_reference_sent_id = ticket
+	_reference_polling = true
+	var response: Dictionary = await _request(reference_requester, "/api/coaching-reference", payload)
+	_reference_polling = false
+	_sync_reference_context(_shown_frame())
+	if ticket != _reference_request_id or key != _reference_key or retry_active or not is_visible_in_tree():
+		return
+	var value: Dictionary = response.get("data", {}) if response.get("ok", false) else {}
+	if value.get("request_id", "") == ticket and value.get("fen", "") == _reference_context.get("fen", ""):
+		_reference = value.duplicate(true)
+	else:
+		_reference = {"status": "unavailable"}
+	if _reference.get("status") in ["error", "unavailable"]:
+		_reference_retry_at = Time.get_ticks_msec() + 3000
+	_render()
+
+
 func _evaluation_for_frame(frame: Dictionary) -> Dictionary:
+	if not retry_active and _reference.get("fen", "") == frame.get("fen", "") and _reference.get("request_id", "") == _reference_request_id and not _reference_request_id.is_empty() and (_reference.get("status") == "terminal" or (_reference.get("source") == "stockfish_coaching_reference" and _reference.get("status") == "ready" and _reference.get("bound") == "exact" and _reference_integer(_reference.get("depth")) and int(_reference.depth) > 0 and (_reference_integer(_reference.get("cp")) or _reference_integer(_reference.get("mate"))))):
+		return _reference.duplicate(true)
+	if not retry_active and frame.get("result", "*") in ["1-0", "0-1", "1/2-1/2"]:
+		return {"status": "terminal", "result": frame.result, "source": "chess_rules"}
+	return {"status": "unavailable" if _reference.get("status") in ["unavailable", "error"] else "waiting", "source": "stockfish_coaching_reference"}
+
+
+static func _reference_integer(value: Variant) -> bool:
+	return typeof(value) in [TYPE_INT, TYPE_FLOAT] and is_finite(float(value)) and float(value) == floor(float(value))
+
+
+func _own_evaluation_for_frame(frame: Dictionary) -> Dictionary:
 	var unavailable := {"status": "unavailable", "message": "이 위치의 별도 평가가 없습니다."}
 	var fen: String = str(frame.get("fen", ""))
 	if retry_active or fen.is_empty():
@@ -2265,6 +2459,7 @@ func _render() -> void:
 	var moves: Array = _moves()
 	var move: Dictionary = _move()
 	var frame: Dictionary = _shown_frame()
+	_sync_reference_context(frame)
 	var running: bool = report.get("status") == "running"
 	var has_moves: bool = not moves.is_empty()
 	board.state = frame
@@ -2285,6 +2480,11 @@ func _render() -> void:
 	var evaluation: Dictionary = _evaluation_for_frame(frame)
 	evaluation_bar.present(evaluation, model.view_from_white)
 	evaluation_label.text = evaluation_bar.summary_text if evaluation_bar.has_score else ("선택한 수를 분석하고 있습니다" if move.get("classification", "pending") == "pending" else "이 위치의 별도 평가 없음")
+	if not retry_active and evaluation.get("status") != "terminal":
+		if evaluation.get("source") == "stockfish_coaching_reference" and evaluation_bar.has_score:
+			evaluation_label.text = "Stockfish · " + evaluation_label.text
+		else:
+			evaluation_label.text = "Stockfish 평가 사용 불가" if _reference.get("status") in ["unavailable", "error"] else "Stockfish 형세 계산 중"
 	var prefix: String = _move_prefix(move) + " " + str(move.get("san", "")) + " · " + _side_label(_row_color(move))
 	position_label.text = prefix + (" · 둔 뒤" if show_after else " · 두기 전") if has_moves else "기보 준비"
 	if not line_kind.is_empty():
@@ -2328,7 +2528,8 @@ func _render() -> void:
 	if report.get("cached", false):
 		progress_label.text += " · 저장된 분석"
 	summary_label.text = _summary_for_side("white") + "\n\n" + _summary_for_side("black")
-	comparison_label.text = prefix + " · " + str(move.get("label", "분석 대기")) if has_moves else "기보를 준비하고 있습니다."
+	var grade: String = _move_grade(move)
+	comparison_label.text = prefix + (" · " + grade if not grade.is_empty() else "") if has_moves else "기보를 준비하고 있습니다."
 	if best is Dictionary:
 		comparison_label.text += "\n최선 후보  " + str(best.get("san", "")) + "  (" + _score(best) + ")"
 	if played is Dictionary:
@@ -2383,9 +2584,11 @@ func _render() -> void:
 		_list_key = list_key
 		move_list.clear()
 		for row in moves:
-			move_list.add_item(_move_prefix(row) + " " + str(row.get("san", "")) + " · " + _side_label(_row_color(row)) + " · " + str(row.get("label", "분석 대기")))
+			var row_grade: String = _move_grade(row)
+			move_list.add_item(_move_prefix(row) + " " + str(row.get("san", "")) + " · " + _side_label(_row_color(row)) + (" · " + row_grade if not row_grade.is_empty() else ""))
 	if has_moves:
 		move_list.select(selected_ply - 1)
+		move_list.ensure_current_is_visible()
 	var critical: Array = _critical_rows()
 	var critical_key: String = human_color + JSON.stringify(critical.map(func(row: Dictionary): return [row.get("ply"), row.get("label")]))
 	if critical_key != _critical_key:
@@ -2409,5 +2612,13 @@ func _render() -> void:
 	critical_list.mouse_filter = Control.MOUSE_FILTER_IGNORE if _walkthrough_active else Control.MOUSE_FILTER_STOP
 	critical_list.visible = not retry_active
 	move_list.visible = not retry_active
+	var highlights: Array = _key_plies()
+	key_previous.disabled = busy or _walkthrough_active or retry_active or not highlights.any(func(ply: int): return ply < selected_ply)
+	key_next.disabled = busy or _walkthrough_active or retry_active or not highlights.any(func(ply: int): return ply > selected_ply)
+	var key_index: int = highlights.find(selected_ply)
+	key_scene_label.text = "핵심 장면 · 좋은 구상과 중요한 실수 %d곳" % highlights.size() if key_index < 0 else "핵심 장면 · %d / %d · 좋은 구상과 중요한 실수" % [key_index + 1, highlights.size()]
+	if highlights.is_empty():
+		key_scene_label.text = "핵심 장면 · 분석된 수에서 배울 점을 찾아요"
+	key_scene_label.visible = not retry_active
 	summary_label.visible = not retry_active
 	_render_coach()

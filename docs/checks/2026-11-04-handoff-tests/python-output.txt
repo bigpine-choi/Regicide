@@ -1,0 +1,507 @@
+FILE: analysis_tests.log
+test_analysis_authorization_and_action_flow (analysis_tests.AnalysisHTTPTests.test_analysis_authorization_and_action_flow) ... ok
+test_analysis_concurrent_revision_accepts_only_one_move (analysis_tests.AnalysisHTTPTests.test_analysis_concurrent_revision_accepts_only_one_move) ... ok
+test_analysis_success_and_errors_do_not_wait_for_live_game_lock (analysis_tests.AnalysisHTTPTests.test_analysis_success_and_errors_do_not_wait_for_live_game_lock) ... ok
+test_api_requires_valid_token_and_same_origin (analysis_tests.AnalysisHTTPTests.test_api_requires_valid_token_and_same_origin) ... ok
+test_concurrent_same_revision_accepts_only_one_move (analysis_tests.AnalysisHTTPTests.test_concurrent_same_revision_accepts_only_one_move) ... ok
+test_legally_play_two_plies_and_export (analysis_tests.AnalysisHTTPTests.test_legally_play_two_plies_and_export) ... ok
+test_loopback_and_static_assets (analysis_tests.AnalysisHTTPTests.test_loopback_and_static_assets) ... ok
+test_malformed_or_oversized_body (analysis_tests.AnalysisHTTPTests.test_malformed_or_oversized_body) ... ok
+test_move_audio_assets_are_binary_same_origin_and_allowlisted (analysis_tests.AnalysisHTTPTests.test_move_audio_assets_are_binary_same_origin_and_allowlisted) ... ok
+test_revision_conflict_and_bad_moves_preserve_board (analysis_tests.AnalysisHTTPTests.test_revision_conflict_and_bad_moves_preserve_board) ... ok
+test_unauthorized_mutation_does_not_change_game (analysis_tests.AnalysisHTTPTests.test_unauthorized_mutation_does_not_change_game) ... ok
+test_unknown_or_traversal_paths_do_not_serve_files (analysis_tests.AnalysisHTTPTests.test_unknown_or_traversal_paths_do_not_serve_files) ... ok
+test_analysis_preserves_live_game_evaluation_and_archive (analysis_tests.AnalysisTests.test_analysis_preserves_live_game_evaluation_and_archive) ... ok
+test_bad_fen_is_atomic_and_reports_useful_errors (analysis_tests.AnalysisTests.test_bad_fen_is_atomic_and_reports_useful_errors) ... ok
+test_inflight_replaced_position_cannot_publish_old_recommendation (analysis_tests.AnalysisTests.test_inflight_replaced_position_cannot_publish_old_recommendation) ... ok
+test_recommends_for_both_sides_without_automatically_moving (analysis_tests.AnalysisTests.test_recommends_for_both_sides_without_automatically_moving) ... ok
+test_special_moves_and_exact_undo (analysis_tests.AnalysisTests.test_special_moves_and_exact_undo) ... ok
+test_starts_inactive_and_read_only_snapshot (analysis_tests.AnalysisTests.test_starts_inactive_and_read_only_snapshot) ... ok
+test_stop_cancels_and_rejects_late_result (analysis_tests.AnalysisTests.test_stop_cancels_and_rejects_late_result) ... ok
+test_terminal_positions_do_not_start_helper (analysis_tests.AnalysisTests.test_terminal_positions_do_not_start_helper) ... ok
+test_time_budget_type_and_range (analysis_tests.AnalysisTests.test_time_budget_type_and_range) ... ok
+test_turn_illegality_and_stale_actions_preserve_state (analysis_tests.AnalysisTests.test_turn_illegality_and_stale_actions_preserve_state) ... ok
+test_real_engine_recommends_legal_moves_for_both_sides_and_promotion (analysis_tests.RealAnalysisTests.test_real_engine_recommends_legal_moves_for_both_sides_and_promotion) ... skipped 'pass a Regicide binary for actual UCI search'
+
+----------------------------------------------------------------------
+Ran 23 tests in 15.492s
+
+OK (skipped=1)
+
+
+FILE: analysis_castling_tests.log
+test_all_four_castles_move_both_pieces_and_undo_exact_fen (analysis_castling_tests.AnalysisCastlingTests.test_all_four_castles_move_both_pieces_and_undo_exact_fen) ... ok
+test_analysis_castles_leave_live_game_and_archive_unchanged (analysis_castling_tests.AnalysisCastlingTests.test_analysis_castles_leave_live_game_and_archive_unchanged) ... ok
+test_castling_restrictions_and_b_file_attack_for_both_colors (analysis_castling_tests.AnalysisCastlingTests.test_castling_restrictions_and_b_file_attack_for_both_colors) ... ok
+test_invalid_home_piece_rights_are_rejected_atomically (analysis_castling_tests.AnalysisCastlingTests.test_invalid_home_piece_rights_are_rejected_atomically) ... ok
+test_rook_or_king_movement_does_not_restore_lost_rights (analysis_castling_tests.AnalysisCastlingTests.test_rook_or_king_movement_does_not_restore_lost_rights) ... ok
+test_actual_core_move_lists_match_castling_restrictions (analysis_castling_tests.RealAnalysisCastlingTests.test_actual_core_move_lists_match_castling_restrictions) ... skipped 'pass a Regicide binary for actual UCI castling checks'
+test_actual_uci_all_four_castles_then_analysis_exact_undo (analysis_castling_tests.RealAnalysisCastlingTests.test_actual_uci_all_four_castles_then_analysis_exact_undo) ... skipped 'pass a Regicide binary for actual UCI castling checks'
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.719s
+
+OK (skipped=2)
+
+
+FILE: analysis_castling_workflow_tests.log
+test_attacked_b_file_is_not_a_queenside_restriction (analysis_castling_workflow_tests.CastlingWorkflowTests.test_attacked_b_file_is_not_a_queenside_restriction) ... ok
+test_blocking_squares_are_named_at_standard_start (analysis_castling_workflow_tests.CastlingWorkflowTests.test_blocking_squares_are_named_at_standard_start) ... ok
+test_diagnostic_reads_preserve_live_game_and_archive (analysis_castling_workflow_tests.CastlingWorkflowTests.test_diagnostic_reads_preserve_live_game_and_archive) ... ok
+test_failure_diagnostics_match_oracle_for_both_colors (analysis_castling_workflow_tests.CastlingWorkflowTests.test_failure_diagnostics_match_oracle_for_both_colors) ... ok
+test_inactive_diagnostics_and_nested_snapshots_are_read_only (analysis_castling_workflow_tests.CastlingWorkflowTests.test_inactive_diagnostics_and_nested_snapshots_are_read_only) ... ok
+test_missing_initial_rights_are_not_granted_by_legal_opening (analysis_castling_workflow_tests.CastlingWorkflowTests.test_missing_initial_rights_are_not_granted_by_legal_opening) ... ok
+test_moved_king_or_rook_explains_lost_rights_and_undo_restores (analysis_castling_workflow_tests.CastlingWorkflowTests.test_moved_king_or_rook_explains_lost_rights_and_undo_restores) ... ok
+test_standard_opening_keeps_rights_and_allows_both_sides_to_castle (analysis_castling_workflow_tests.CastlingWorkflowTests.test_standard_opening_keeps_rights_and_allows_both_sides_to_castle) ... ok
+test_terminal_and_stopped_positions_explain_unavailability (analysis_castling_workflow_tests.CastlingWorkflowTests.test_terminal_and_stopped_positions_explain_unavailability) ... ok
+test_actual_engine_and_standard_opening_support_both_castles (analysis_castling_workflow_tests.RealCastlingWorkflowTests.test_actual_engine_and_standard_opening_support_both_castles) ... skipped 'pass a Regicide binary for real standard-opening workflow'
+
+----------------------------------------------------------------------
+Ran 10 tests in 4.272s
+
+OK (skipped=1)
+
+
+FILE: analysis_evaluation_tests.log
+test_black_pov_scores_and_bounds_are_normalized_to_white (analysis_evaluation_tests.AnalysisEvaluationTests.test_black_pov_scores_and_bounds_are_normalized_to_white) ... ok
+test_editing_snapshot_is_unknown_and_copies_are_immutable (analysis_evaluation_tests.AnalysisEvaluationTests.test_editing_snapshot_is_unknown_and_copies_are_immutable) ... ok
+test_ignored_graceful_stop_retains_bounded_force_close (analysis_evaluation_tests.AnalysisEvaluationTests.test_ignored_graceful_stop_retains_bounded_force_close) ... ok
+test_iterator_failure_consumes_completion_without_masking_failure (analysis_evaluation_tests.AnalysisEvaluationTests.test_iterator_failure_consumes_completion_without_masking_failure) ... ok
+test_mate_sign_and_mate_zero_keep_the_winner (analysis_evaluation_tests.AnalysisEvaluationTests.test_mate_sign_and_mate_zero_keep_the_winner) ... ok
+test_no_score_and_failed_searches_clear_any_streamed_score (analysis_evaluation_tests.AnalysisEvaluationTests.test_no_score_and_failed_searches_clear_any_streamed_score) ... ok
+test_normal_ranked_hints_use_exact_packets_without_publishing_evaluation (analysis_evaluation_tests.AnalysisEvaluationTests.test_normal_ranked_hints_use_exact_packets_without_publishing_evaluation) ... ok
+test_partial_packets_cannot_relabel_score_with_incomplete_depth (analysis_evaluation_tests.AnalysisEvaluationTests.test_partial_packets_cannot_relabel_score_with_incomplete_depth) ... ok
+test_play_only_fallback_uses_final_info_from_same_search (analysis_evaluation_tests.AnalysisEvaluationTests.test_play_only_fallback_uses_final_info_from_same_search) ... ok
+test_position_change_clears_old_score_and_cancels_late_packet (analysis_evaluation_tests.AnalysisEvaluationTests.test_position_change_clears_old_score_and_cancels_late_packet) ... ok
+test_publishes_before_search_completes_and_uses_one_search_only (analysis_evaluation_tests.AnalysisEvaluationTests.test_publishes_before_search_completes_and_uses_one_search_only) ... ok
+test_stop_discards_late_scores_and_resets_every_score_field (analysis_evaluation_tests.AnalysisEvaluationTests.test_stop_discards_late_scores_and_resets_every_score_field) ... ok
+test_terminal_scores_come_from_position_result_without_search (analysis_evaluation_tests.AnalysisEvaluationTests.test_terminal_scores_come_from_position_result_without_search) ... ok
+test_timeout_clears_streamed_score (analysis_evaluation_tests.AnalysisEvaluationTests.test_timeout_clears_streamed_score) ... ok
+test_actual_engine_returns_matching_white_pov_score_and_move (analysis_evaluation_tests.RealAnalysisEvaluationTests.test_actual_engine_returns_matching_white_pov_score_and_move) ... skipped 'pass a Regicide binary for real UCI stream'
+test_actual_stream_cancellation_has_no_unretrieved_future_stderr (analysis_evaluation_tests.RealAnalysisEvaluationTests.test_actual_stream_cancellation_has_no_unretrieved_future_stderr) ... skipped 'pass a Regicide binary for real cancellation stderr check'
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.550s
+
+OK (skipped=2)
+
+
+FILE: coaching_tests.log
+test_annotation_mappings_and_special_move_destination (coaching_tests.CoachingTests.test_annotation_mappings_and_special_move_destination) ... ok
+test_atomic_validation_and_revisions (coaching_tests.CoachingTests.test_atomic_validation_and_revisions) ... ok
+test_best_same_move_compares_all_other_roots_without_researching_actual (coaching_tests.CoachingTests.test_best_same_move_compares_all_other_roots_without_researching_actual) ... ok
+test_black_loss_normalized_to_white_perspective (coaching_tests.CoachingTests.test_black_loss_normalized_to_white_perspective) ... ok
+test_both_sides_blunders_are_ranked_with_correct_perspective_and_cached (coaching_tests.CoachingTests.test_both_sides_blunders_are_ranked_with_correct_perspective_and_cached) ... ok
+test_bound_or_illegal_line_withholds_grade (coaching_tests.CoachingTests.test_bound_or_illegal_line_withholds_grade) ... ok
+test_cache_evaluator_and_profile_identity (coaching_tests.CoachingTests.test_cache_evaluator_and_profile_identity) ... ok
+test_cached_illegal_pv_is_rejected_and_display_fields_recomputed (coaching_tests.CoachingTests.test_cached_illegal_pv_is_rejected_and_display_fields_recomputed) ... ok
+test_cancel_bounded_and_late_worker_cannot_publish (coaching_tests.CoachingTests.test_cancel_bounded_and_late_worker_cannot_publish) ... ok
+test_cancel_during_alternative_search_never_publishes_candidate (coaching_tests.CoachingTests.test_cancel_during_alternative_search_never_publishes_candidate) ... ok
+test_complete_cache_reuses_result_and_preserves_originals (coaching_tests.CoachingTests.test_complete_cache_reuses_result_and_preserves_originals) ... ok
+test_corrupt_cache_is_ignored_and_failed_cache_write_is_nonfatal (coaching_tests.CoachingTests.test_corrupt_cache_is_ignored_and_failed_cache_write_is_nonfatal) ... ok
+test_engine_failure_preserves_replay_and_reports_error (coaching_tests.CoachingTests.test_engine_failure_preserves_replay_and_reports_error) ... ok
+test_fivefold_repetition_remains_terminal_in_pv_frames (coaching_tests.CoachingTests.test_fivefold_repetition_remains_terminal_in_pv_frames) ... ok
+test_forced_line_must_start_at_played_move (coaching_tests.CoachingTests.test_forced_line_must_start_at_played_move) ... ok
+test_frame_distinguishes_fifty_move_claim_from_automatic_draws (coaching_tests.CoachingTests.test_frame_distinguishes_fifty_move_claim_from_automatic_draws) ... ok
+test_full_history_repetition_castle_ep_and_promotion_frames (coaching_tests.CoachingTests.test_full_history_repetition_castle_ep_and_promotion_frames) ... ok
+test_great_cache_regenerates_annotations_and_rejects_wrong_alternative (coaching_tests.CoachingTests.test_great_cache_regenerates_annotations_and_rejects_wrong_alternative) ... ok
+test_great_candidate_needs_exact_nonlosing_best_and_losing_alternative (coaching_tests.CoachingTests.test_great_candidate_needs_exact_nonlosing_best_and_losing_alternative) ... ok
+test_great_candidate_uses_black_perspective_and_exact_actual_frame (coaching_tests.CoachingTests.test_great_candidate_uses_black_perspective_and_exact_actual_frame) ... ok
+test_legacy_uncertain_cache_loses_badge_and_dialogue_without_reanalysis (coaching_tests.CoachingTests.test_legacy_uncertain_cache_loses_badge_and_dialogue_without_reanalysis) ... ok
+test_loss_thresholds_and_search_inconsistency (coaching_tests.CoachingTests.test_loss_thresholds_and_search_inconsistency) ... ok
+test_mates_have_winner_not_giant_cp (coaching_tests.CoachingTests.test_mates_have_winner_not_giant_cp) ... ok
+test_only_legal_move_is_never_great_and_needs_no_alternative_search (coaching_tests.CoachingTests.test_only_legal_move_is_never_great_and_needs_no_alternative_search) ... ok
+test_opponent_mate_loss_included_in_both_side_critical_list (coaching_tests.CoachingTests.test_opponent_mate_loss_included_in_both_side_critical_list) ... ok
+test_pv_clipped_to_documented_bound (coaching_tests.CoachingTests.test_pv_clipped_to_documented_bound) ... ok
+test_review_and_cached_pv_continue_after_optional_repetition_claim (coaching_tests.CoachingTests.test_review_and_cached_pv_continue_after_optional_repetition_claim) ... ok
+test_start_has_every_replay_position_and_pending_rows (coaching_tests.CoachingTests.test_start_has_every_replay_position_and_pending_rows) ... ok
+test_white_loss_uses_same_root_and_fresh_search_game_token (coaching_tests.CoachingTests.test_white_loss_uses_same_root_and_fresh_search_game_token) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 5.150s
+
+OK
+
+
+FILE: coach_explanations_tests.log
+test_attacked_queen_capturing_the_attacker_is_an_exchange_not_an_escape (coach_explanations_tests.CoachDialogueTests.test_attacked_queen_capturing_the_attacker_is_an_exchange_not_an_escape) ... ok
+test_black_development_names_only_immediate_reply (coach_explanations_tests.CoachDialogueTests.test_black_development_names_only_immediate_reply) ... ok
+test_black_tactical_loss_keeps_actor_and_victim_correct (coach_explanations_tests.CoachDialogueTests.test_black_tactical_loss_keeps_actor_and_victim_correct) ... ok
+test_capture_and_recapture_are_not_free_material (coach_explanations_tests.CoachDialogueTests.test_capture_and_recapture_are_not_free_material) ... ok
+test_capture_elsewhere_is_not_called_recapture (coach_explanations_tests.CoachDialogueTests.test_capture_elsewhere_is_not_called_recapture) ... ok
+test_direct_advice_varies_with_verified_chess_events (coach_explanations_tests.CoachDialogueTests.test_direct_advice_varies_with_verified_chess_events) ... ok
+test_discovered_check_does_not_name_the_moving_piece_as_checker (coach_explanations_tests.CoachDialogueTests.test_discovered_check_does_not_name_the_moving_piece_as_checker) ... ok
+test_invalid_or_different_played_line_cannot_explain_actual_move (coach_explanations_tests.CoachDialogueTests.test_invalid_or_different_played_line_cannot_explain_actual_move) ... ok
+test_later_mate_is_a_shown_continuation_not_an_immediate_forced_finish (coach_explanations_tests.CoachDialogueTests.test_later_mate_is_a_shown_continuation_not_an_immediate_forced_finish) ... ok
+test_mate_distinguishes_actual_finish_allowed_threat_and_missed_attack (coach_explanations_tests.CoachDialogueTests.test_mate_distinguishes_actual_finish_allowed_threat_and_missed_attack) ... ok
+test_perspectives_address_the_user_without_switching_actor_or_ownership (coach_explanations_tests.CoachDialogueTests.test_perspectives_address_the_user_without_switching_actor_or_ownership) ... ok
+test_pinned_piece_does_not_supply_false_attack_or_protection (coach_explanations_tests.CoachDialogueTests.test_pinned_piece_does_not_supply_false_attack_or_protection) ... ok
+test_positive_moves_ignore_remote_capture_and_castle_in_dialogue_and_evidence (coach_explanations_tests.CoachDialogueTests.test_positive_moves_ignore_remote_capture_and_castle_in_dialogue_and_evidence) ... ok
+test_protection_after_promotion_names_the_resulting_piece (coach_explanations_tests.CoachDialogueTests.test_protection_after_promotion_names_the_resulting_piece) ... ok
+test_report_is_short_english_factual_and_excludes_unready_lessons (coach_explanations_tests.CoachDialogueTests.test_report_is_short_english_factual_and_excludes_unready_lessons) ... ok
+test_retreat_is_only_called_an_escape_if_that_attacker_no_longer_attacks (coach_explanations_tests.CoachDialogueTests.test_retreat_is_only_called_an_escape_if_that_attacker_no_longer_attacks) ... ok
+test_same_square_alternative_explains_piece_choice_without_inventing_cause (coach_explanations_tests.CoachDialogueTests.test_same_square_alternative_explains_piece_choice_without_inventing_cause) ... ok
+test_short_tactical_reply_prioritizes_queen_over_pawn_and_keeps_scope (coach_explanations_tests.CoachDialogueTests.test_short_tactical_reply_prioritizes_queen_over_pawn_and_keeps_scope) ... ok
+test_special_moves_are_literal_without_safety_or_profit_claims (coach_explanations_tests.CoachDialogueTests.test_special_moves_are_literal_without_safety_or_profit_claims) ... ok
+test_uncertain_moves_have_no_automatic_dialogue_or_strategy (coach_explanations_tests.CoachDialogueTests.test_uncertain_moves_have_no_automatic_dialogue_or_strategy) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 1.898s
+
+OK
+
+
+FILE: character_coach_tests.log
+test_capture_facts_name_piece_square_and_finite_net_material (character_coach_tests.ExplanationTests.test_capture_facts_name_piece_square_and_finite_net_material) ... ok
+test_en_passant_castle_promotion_and_check_use_legal_positions (character_coach_tests.ExplanationTests.test_en_passant_castle_promotion_and_check_use_legal_positions) ... ok
+test_exchange_does_not_claim_net_gain_after_recapture (character_coach_tests.ExplanationTests.test_exchange_does_not_claim_net_gain_after_recapture) ... ok
+test_identical_best_and_played_lines_have_one_set_of_actual_evidence (character_coach_tests.ExplanationTests.test_identical_best_and_played_lines_have_one_set_of_actual_evidence) ... ok
+test_invented_or_malformed_pv_cannot_supply_evidence (character_coach_tests.ExplanationTests.test_invented_or_malformed_pv_cannot_supply_evidence) ... ok
+test_lessons_are_bounded_chronological_diverse_and_include_positive (character_coach_tests.ExplanationTests.test_lessons_are_bounded_chronological_diverse_and_include_positive) ... ok
+test_mate_is_verified_on_actual_pv_board_and_hint_does_not_leak_solution (character_coach_tests.ExplanationTests.test_mate_is_verified_on_actual_pv_board_and_hint_does_not_leak_solution) ... ok
+test_missed_mate_teaches_attack_and_prefers_best_line_evidence (character_coach_tests.ExplanationTests.test_missed_mate_teaches_attack_and_prefers_best_line_evidence) ... ok
+test_black_perspective_and_fresh_best_are_not_stale_report_scores (character_coach_tests.RetryTests.test_black_perspective_and_fresh_best_are_not_stale_report_scores) ... ok
+test_cancel_during_engine_construction_closes_late_peer (character_coach_tests.RetryTests.test_cancel_during_engine_construction_closes_late_peer) ... ok
+test_cancelled_report_allows_only_already_analyzed_rows (character_coach_tests.RetryTests.test_cancelled_report_allows_only_already_analyzed_rows) ... ok
+test_engine_failure_does_not_poison_report_or_next_retry (character_coach_tests.RetryTests.test_engine_failure_does_not_poison_report_or_next_retry) ... ok
+test_invalid_legal_move_revision_and_job_do_not_launch_engine (character_coach_tests.RetryTests.test_invalid_legal_move_revision_and_job_do_not_launch_engine) ... ok
+test_legacy_cached_mistake_gets_current_alternative_and_principle_without_search (character_coach_tests.RetryTests.test_legacy_cached_mistake_gets_current_alternative_and_principle_without_search) ... ok
+test_new_start_and_close_cancel_retry (character_coach_tests.RetryTests.test_new_start_and_close_cancel_retry) ... ok
+test_packet_and_cached_commentary_regenerated_from_evidence (character_coach_tests.RetryTests.test_packet_and_cached_commentary_regenerated_from_evidence) ... ok
+test_recommended_good_try_again_uncertain_and_no_solution_leak (character_coach_tests.RetryTests.test_recommended_good_try_again_uncertain_and_no_solution_leak) ... ok
+test_retry_deadline_closes_peer_and_clears_concurrency_slot (character_coach_tests.RetryTests.test_retry_deadline_closes_peer_and_clears_concurrency_slot) ... ok
+test_retry_preserves_repetition_history (character_coach_tests.RetryTests.test_retry_preserves_repetition_history) ... ok
+test_single_retry_and_cancel_suppress_late_result (character_coach_tests.RetryTests.test_single_retry_and_cancel_suppress_late_result) ... ok
+test_underpromotion_is_a_legal_retry_and_requires_promotion_kind (character_coach_tests.RetryTests.test_underpromotion_is_a_legal_retry_and_requires_promotion_kind) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 2.946s
+
+OK
+
+
+FILE: coaching_reference_tests.log
+test_cache_is_full_path_specific_and_does_not_restart_same_frame (coaching_reference_tests.ReferenceTests.test_cache_is_full_path_specific_and_does_not_restart_same_frame) ... ok
+test_claimable_fifty_move_draw_does_not_end_coaching_position (coaching_reference_tests.ReferenceTests.test_claimable_fifty_move_draw_does_not_end_coaching_position) ... ok
+test_close_clears_cache_and_stops_only_owned_referee (coaching_reference_tests.ReferenceTests.test_close_clears_cache_and_stops_only_owned_referee) ... ok
+test_explicit_retry_restarts_failed_same_position_but_polling_does_not (coaching_reference_tests.ReferenceTests.test_explicit_retry_restarts_failed_same_position_but_polling_does_not) ... ok
+test_full_history_repetition_and_fen_are_validated (coaching_reference_tests.ReferenceTests.test_full_history_repetition_and_fen_are_validated) ... ok
+test_hidden_retry_erases_score_and_rejects_late_packets (coaching_reference_tests.ReferenceTests.test_hidden_retry_erases_score_and_rejects_late_packets) ... ok
+test_http_auth_validation_and_read_only_isolation (coaching_reference_tests.ReferenceTests.test_http_auth_validation_and_read_only_isolation) ... ok
+test_mate_winners_and_terminal_rules (coaching_reference_tests.ReferenceTests.test_mate_winners_and_terminal_rules) ... ok
+test_missing_engine_is_explicit_fallback_without_fabricated_scores (coaching_reference_tests.ReferenceTests.test_missing_engine_is_explicit_fallback_without_fabricated_scores) ... ok
+test_old_hide_does_not_cancel_new_selected_frame (coaching_reference_tests.ReferenceTests.test_old_hide_does_not_cancel_new_selected_frame) ... ok
+test_stale_position_packet_cannot_replace_new_frame (coaching_reference_tests.ReferenceTests.test_stale_position_packet_cannot_replace_new_frame) ... ok
+test_white_and_black_keep_white_score_and_native_reports_unchanged (coaching_reference_tests.ReferenceTests.test_white_and_black_keep_white_score_and_native_reports_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.606s
+
+OK
+
+
+FILE: opening_guide_tests.log
+test_actual_fivefold_history_filters_future_lines_at_terminal_child (opening_guide_tests.OpeningGuideTests.test_actual_fivefold_history_filters_future_lines_at_terminal_child) ... ok
+test_canonical_family_boundary_and_exact_override_priority (opening_guide_tests.OpeningGuideTests.test_canonical_family_boundary_and_exact_override_priority) ... ok
+test_concurrent_first_lookup_builds_one_shared_index (opening_guide_tests.OpeningGuideTests.test_concurrent_first_lookup_builds_one_shared_index) ... ok
+test_custom_root_position_match_does_not_invent_move_history (opening_guide_tests.OpeningGuideTests.test_custom_root_position_match_does_not_invent_move_history) ... ok
+test_data_failure_is_readable_and_no_runtime_network_is_used (opening_guide_tests.OpeningGuideTests.test_data_failure_is_readable_and_no_runtime_network_is_used) ... ok
+test_every_preview_is_legal_and_reaches_its_advertised_name (opening_guide_tests.OpeningGuideTests.test_every_preview_is_legal_and_reaches_its_advertised_name) ... ok
+test_family_only_evidence_is_consistent_in_current_and_branches (opening_guide_tests.OpeningGuideTests.test_family_only_evidence_is_consistent_in_current_and_branches) ... ok
+test_game_over_keeps_name_but_hides_continuations (opening_guide_tests.OpeningGuideTests.test_game_over_keeps_name_but_hides_continuations) ... ok
+test_morphy_is_immediate_but_exchange_requires_more_moves (opening_guide_tests.OpeningGuideTests.test_morphy_is_immediate_but_exchange_requires_more_moves) ... ok
+test_name_policy_provenance_is_explicit_and_response_local (opening_guide_tests.OpeningGuideTests.test_name_policy_provenance_is_explicit_and_response_local) ... ok
+test_new_verified_reti_gambits_include_source_transpositions (opening_guide_tests.OpeningGuideTests.test_new_verified_reti_gambits_include_source_transpositions) ... ok
+test_non_object_and_malformed_manifest_fields_report_unavailable (opening_guide_tests.OpeningGuideTests.test_non_object_and_malformed_manifest_fields_report_unavailable) ... ok
+test_off_catalog_preserves_last_known_name_and_undo_restores (opening_guide_tests.OpeningGuideTests.test_off_catalog_preserves_last_known_name_and_undo_restores) ... ok
+test_output_mutation_does_not_change_index_board_or_next_response (opening_guide_tests.OpeningGuideTests.test_output_mutation_does_not_change_index_board_or_next_response) ... ok
+test_pinned_files_and_license_hashes_are_verified (opening_guide_tests.OpeningGuideTests.test_pinned_files_and_license_hashes_are_verified) ... ok
+test_position_key_retains_turn_castling_and_legal_ep (opening_guide_tests.OpeningGuideTests.test_position_key_retains_turn_castling_and_legal_ep) ... ok
+test_preview_move_numbers_come_from_actual_current_board (opening_guide_tests.OpeningGuideTests.test_preview_move_numbers_come_from_actual_current_board) ... ok
+test_quiet_99_is_claimable_but_149_cannot_cross_automatic_draw (opening_guide_tests.OpeningGuideTests.test_quiet_99_is_claimable_but_149_cannot_cross_automatic_draw) ... ok
+test_real_named_openings (opening_guide_tests.OpeningGuideTests.test_real_named_openings) ... ok
+test_reti_names_match_current_last_known_immediate_and_reachable (opening_guide_tests.OpeningGuideTests.test_reti_names_match_current_last_known_immediate_and_reachable) ... ok
+test_reti_position_transposition_and_later_opening_are_not_overwritten (opening_guide_tests.OpeningGuideTests.test_reti_position_transposition_and_later_opening_are_not_overwritten) ... ok
+test_source_reference_arrays_round_trip_without_mutating_catalogue (opening_guide_tests.OpeningGuideTests.test_source_reference_arrays_round_trip_without_mutating_catalogue) ... ok
+test_terminal_unnamed_child_drops_branch_and_filtered_counts_match_oracle (opening_guide_tests.OpeningGuideTests.test_terminal_unnamed_child_drops_branch_and_filtered_counts_match_oracle) ... ok
+test_transposition_uses_position_identity_and_is_labeled (opening_guide_tests.OpeningGuideTests.test_transposition_uses_position_identity_and_is_labeled) ... ok
+test_truncation_has_explicit_totals_and_does_not_mean_recommendation (opening_guide_tests.OpeningGuideTests.test_truncation_has_explicit_totals_and_does_not_mean_recommendation) ... ok
+test_unknown_custom_fen_and_initial_board_are_truthful (opening_guide_tests.OpeningGuideTests.test_unknown_custom_fen_and_initial_board_are_truthful) ... ok
+test_unnamed_catalog_position_is_in_catalog (opening_guide_tests.OpeningGuideTests.test_unnamed_catalog_position_is_in_catalog) ... ok
+test_unverified_and_independent_zukertort_names_are_preserved (opening_guide_tests.OpeningGuideTests.test_unverified_and_independent_zukertort_names_are_preserved) ... ok
+test_verified_first_move_names_preserve_unverified_variant_suffixes (opening_guide_tests.OpeningGuideTests.test_verified_first_move_names_preserve_unverified_variant_suffixes) ... ok
+test_verified_reti_names_cover_exact_rows_without_changing_catalogue (opening_guide_tests.OpeningGuideTests.test_verified_reti_names_cover_exact_rows_without_changing_catalogue) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 2.595s
+
+OK
+
+
+FILE: opening_guide_integration_tests.log
+test_archive_frames_reconstruct_guides_without_trusting_saved_snapshot (opening_guide_integration_tests.OpeningPresentationTests.test_archive_frames_reconstruct_guides_without_trusting_saved_snapshot) ... ok
+test_authenticated_http_includes_read_only_live_and_replay_guides (opening_guide_integration_tests.OpeningPresentationTests.test_authenticated_http_includes_read_only_live_and_replay_guides) ... ok
+test_cache_is_bounded_and_keeps_distinct_history_and_client_copies (opening_guide_integration_tests.OpeningPresentationTests.test_cache_is_bounded_and_keeps_distinct_history_and_client_copies) ... ok
+test_catalog_departure_keeps_last_named_opening (opening_guide_integration_tests.OpeningPresentationTests.test_catalog_departure_keeps_last_named_opening) ... ok
+test_custom_fen_does_not_claim_unknown_earlier_history (opening_guide_integration_tests.OpeningPresentationTests.test_custom_fen_does_not_claim_unknown_earlier_history) ... ok
+test_handicap_preview_cancel_and_replacement_have_own_guides (opening_guide_integration_tests.OpeningPresentationTests.test_handicap_preview_cancel_and_replacement_have_own_guides) ... ok
+test_initial_state_has_legal_catalog_branches_without_engine_search (opening_guide_integration_tests.OpeningPresentationTests.test_initial_state_has_legal_catalog_branches_without_engine_search) ... ok
+test_named_opening_and_concrete_future_line_preview (opening_guide_integration_tests.OpeningPresentationTests.test_named_opening_and_concrete_future_line_preview) ... ok
+test_reads_and_response_mutation_do_not_change_game_or_save (opening_guide_integration_tests.OpeningPresentationTests.test_reads_and_response_mutation_do_not_change_game_or_save) ... ok
+test_unavailable_optional_data_does_not_block_play_and_recovers (opening_guide_integration_tests.OpeningPresentationTests.test_unavailable_optional_data_does_not_block_play_and_recovers) ... ok
+test_undo_recomputes_guide_for_actual_remaining_history (opening_guide_integration_tests.OpeningPresentationTests.test_undo_recomputes_guide_for_actual_remaining_history) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 8.968s
+
+OK
+
+
+FILE: opening_explorer_tests.log
+test_an_already_open_window_notices_saved_replaced_and_removed_key (opening_explorer_tests.CredentialTests.test_an_already_open_window_notices_saved_replaced_and_removed_key) ... ok
+test_corrupt_storage_status_does_not_claim_a_saved_connection (opening_explorer_tests.CredentialTests.test_corrupt_storage_status_does_not_claim_a_saved_connection) ... ok
+test_dpapi_or_memory_fallback_never_writes_plaintext (opening_explorer_tests.CredentialTests.test_dpapi_or_memory_fallback_never_writes_plaintext) ... ok
+test_environment_precedes_memory_and_memory_only_does_not_persist (opening_explorer_tests.CredentialTests.test_environment_precedes_memory_and_memory_only_does_not_persist) ... ok
+test_failed_saved_replacement_does_not_erase_working_stored_key (opening_explorer_tests.CredentialTests.test_failed_saved_replacement_does_not_erase_working_stored_key) ... ok
+test_forget_clears_stored_token (opening_explorer_tests.CredentialTests.test_forget_clears_stored_token) ... ok
+test_invalid_header_tokens_are_rejected (opening_explorer_tests.CredentialTests.test_invalid_header_tokens_are_rejected) ... ok
+test_protection_failure_keeps_memory_without_plain_file (opening_explorer_tests.CredentialTests.test_protection_failure_keeps_memory_without_plain_file) ... ok
+test_saved_connection_restores_in_a_fresh_process_without_reentry (opening_explorer_tests.CredentialTests.test_saved_connection_restores_in_a_fresh_process_without_reentry) ... ok
+test_transient_read_failure_retries_without_restarting_or_reentering (opening_explorer_tests.CredentialTests.test_transient_read_failure_retries_without_restarting_or_reentering) ... ok
+test_auth_and_network_errors_never_reflect_diagnostics (opening_explorer_tests.OpeningExplorerTests.test_auth_and_network_errors_never_reflect_diagnostics) ... ok
+test_bad_move_rows_and_game_references_are_not_presented (opening_explorer_tests.OpeningExplorerTests.test_bad_move_rows_and_game_references_are_not_presented) ... ok
+test_close_discards_inflight_result (opening_explorer_tests.OpeningExplorerTests.test_close_discards_inflight_result) ... ok
+test_disk_cache_is_public_only_and_survives_new_service (opening_explorer_tests.OpeningExplorerTests.test_disk_cache_is_public_only_and_survives_new_service) ... ok
+test_equivalent_positions_share_cache_but_rebuild_child_counters (opening_explorer_tests.OpeningExplorerTests.test_equivalent_positions_share_cache_but_rebuild_child_counters) ... ok
+test_expired_and_malformed_cache_are_ignored (opening_explorer_tests.OpeningExplorerTests.test_expired_and_malformed_cache_are_ignored) ... ok
+test_filters_and_castling_rights_change_request_identity (opening_explorer_tests.OpeningExplorerTests.test_filters_and_castling_rights_change_request_identity) ... ok
+test_http429_stops_all_sources_for_at_least_sixty_seconds (opening_explorer_tests.OpeningExplorerTests.test_http429_stops_all_sources_for_at_least_sixty_seconds) ... ok
+test_invalid_payload_size_counts_and_json_fail_closed (opening_explorer_tests.OpeningExplorerTests.test_invalid_payload_size_counts_and_json_fail_closed) ... ok
+test_invalid_query_cannot_start_network_work (opening_explorer_tests.OpeningExplorerTests.test_invalid_query_cannot_start_network_work) ... ok
+test_legal_en_passant_identity_and_unusable_target (opening_explorer_tests.OpeningExplorerTests.test_legal_en_passant_identity_and_unusable_target) ... ok
+test_lichess_game_reference_uses_different_trusted_route (opening_explorer_tests.OpeningExplorerTests.test_lichess_game_reference_uses_different_trusted_route) ... ok
+test_memory_and_disk_cache_limits_are_bounded (opening_explorer_tests.OpeningExplorerTests.test_memory_and_disk_cache_limits_are_bounded) ... ok
+test_no_credential_stays_offline_and_constructor_is_lazy (opening_explorer_tests.OpeningExplorerTests.test_no_credential_stays_offline_and_constructor_is_lazy) ... ok
+test_redirect_handler_never_forwards_authorization (opening_explorer_tests.OpeningExplorerTests.test_redirect_handler_never_forwards_authorization) ... ok
+test_request_is_fixed_host_with_bearer_and_bucket_filters (opening_explorer_tests.OpeningExplorerTests.test_request_is_fixed_host_with_bearer_and_bucket_filters) ... ok
+test_single_worker_coalesces_pending_and_never_publishes_old_position (opening_explorer_tests.OpeningExplorerTests.test_single_worker_coalesces_pending_and_never_publishes_old_position) ... ok
+test_token_change_invalidates_pending_and_requires_new_query (opening_explorer_tests.OpeningExplorerTests.test_token_change_invalidates_pending_and_requires_new_query) ... ok
+test_totals_and_probabilities_use_full_position_denominator (opening_explorer_tests.OpeningExplorerTests.test_totals_and_probabilities_use_full_position_denominator) ... ok
+test_zero_games_is_a_ready_empty_result (opening_explorer_tests.OpeningExplorerTests.test_zero_games_is_a_ready_empty_result) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.348s
+
+OK
+
+
+FILE: opening_explorer_http_tests.log
+test_authentication_and_same_origin_required (opening_explorer_http_tests.ExplorerHttpTests.test_authentication_and_same_origin_required) ... ok
+test_browser_module_is_served_and_close_releases_worker (opening_explorer_http_tests.ExplorerHttpTests.test_browser_module_is_served_and_close_releases_worker) ... ok
+test_invalid_requests_are_isolated_and_cannot_supply_remote_url (opening_explorer_http_tests.ExplorerHttpTests.test_invalid_requests_are_isolated_and_cannot_supply_remote_url) ... ok
+test_query_and_poll_do_not_change_game_analysis_or_durable_files (opening_explorer_http_tests.ExplorerHttpTests.test_query_and_poll_do_not_change_game_analysis_or_durable_files) ... ok
+test_token_response_never_contains_token (opening_explorer_http_tests.ExplorerHttpTests.test_token_response_never_contains_token) ... ok
+test_transport_failure_cannot_log_or_return_a_secret (opening_explorer_http_tests.ExplorerHttpTests.test_transport_failure_cannot_log_or_return_a_secret) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 7.955s
+
+OK
+
+
+FILE: opening_sides_tests.log
+test_common_opening_roles_are_not_two_unrelated_names (opening_sides_tests.OpeningSidesTests.test_common_opening_roles_are_not_two_unrelated_names) ... ok
+test_display_supplement_never_mutates_engine_candidate_catalog (opening_sides_tests.OpeningSidesTests.test_display_supplement_never_mutates_engine_candidate_catalog) ... ok
+test_fen_only_uses_position_not_historical_choice (opening_sides_tests.OpeningSidesTests.test_fen_only_uses_position_not_historical_choice) ... ok
+test_first_move_and_response_wait_are_independent (opening_sides_tests.OpeningSidesTests.test_first_move_and_response_wait_are_independent) ... ok
+test_last_known_does_not_claim_current_confirmation (opening_sides_tests.OpeningSidesTests.test_last_known_does_not_claim_current_confirmation) ... ok
+test_modern_supplement_is_current_and_has_no_invented_eco (opening_sides_tests.OpeningSidesTests.test_modern_supplement_is_current_and_has_no_invented_eco) ... ok
+test_portuguese_is_whites_opening (opening_sides_tests.OpeningSidesTests.test_portuguese_is_whites_opening) ... ok
+test_shared_move_does_not_invent_a_different_defense (opening_sides_tests.OpeningSidesTests.test_shared_move_does_not_invent_a_different_defense) ... ok
+test_transposition_updates_roles_from_current_family (opening_sides_tests.OpeningSidesTests.test_transposition_updates_roles_from_current_family) ... ok
+test_unavailable_is_safe_and_has_both_sides (opening_sides_tests.OpeningSidesTests.test_unavailable_is_safe_and_has_both_sides) ... ok
+test_undo_cache_is_current_and_returns_independent_copies (opening_sides_tests.OpeningSidesTests.test_undo_cache_is_current_and_returns_independent_copies) ... ok
+test_white_confirmed_variant_replaces_generic_first_pawn (opening_sides_tests.OpeningSidesTests.test_white_confirmed_variant_replaces_generic_first_pawn) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.010s
+
+OK
+
+
+FILE: pgn_preview_tests.log
+test_auth_origin_and_content_type_checks_remain_required (pgn_preview_tests.PGNPreviewHTTPTests.test_auth_origin_and_content_type_checks_remain_required) ... ok
+test_only_preview_accepts_large_body_and_extra_path_fields_are_rejected (pgn_preview_tests.PGNPreviewHTTPTests.test_only_preview_accepts_large_body_and_extra_path_fields_are_rejected) ... ok
+test_valid_and_invalid_preview_do_not_touch_live_game_archive_or_engine (pgn_preview_tests.PGNPreviewHTTPTests.test_valid_and_invalid_preview_do_not_touch_live_game_archive_or_engine) ... ok
+test_automatic_repetition_prevents_moves_after_game_end (pgn_preview_tests.PGNPreviewTests.test_automatic_repetition_prevents_moves_after_game_end) ... ok
+test_cr_only_text_is_parsed_but_returned_unchanged (pgn_preview_tests.PGNPreviewTests.test_cr_only_text_is_parsed_but_returned_unchanged) ... ok
+test_empty_header_only_malformed_and_illegal_data_rejected (pgn_preview_tests.PGNPreviewTests.test_empty_header_only_malformed_and_illegal_data_rejected) ... ok
+test_exact_byte_limit_and_missing_result_are_supported (pgn_preview_tests.PGNPreviewTests.test_exact_byte_limit_and_missing_result_are_supported) ... ok
+test_exact_mainline_cap_has_bounded_complete_replay (pgn_preview_tests.PGNPreviewTests.test_exact_mainline_cap_has_bounded_complete_replay) ... ok
+test_multiple_games_including_same_line_are_rejected (pgn_preview_tests.PGNPreviewTests.test_multiple_games_including_same_line_are_rejected) ... ok
+test_ply_and_utf8_byte_limits_reject_before_framing (pgn_preview_tests.PGNPreviewTests.test_ply_and_utf8_byte_limits_reject_before_framing) ... ok
+test_regicide_handicap_comment_and_player_headers_survive_preview (pgn_preview_tests.PGNPreviewTests.test_regicide_handicap_comment_and_player_headers_survive_preview) ... ok
+test_results_are_reported_neutrally_without_invented_resignation (pgn_preview_tests.PGNPreviewTests.test_results_are_reported_neutrally_without_invented_resignation) ... ok
+test_setup_roots_castling_en_passant_and_all_promotions (pgn_preview_tests.PGNPreviewTests.test_setup_roots_castling_en_passant_and_all_promotions) ... ok
+test_standard_replay_and_real_opening_name (pgn_preview_tests.PGNPreviewTests.test_standard_replay_and_real_opening_name) ... FAIL
+test_utf8_bom_crlf_headers_comments_variations_preserved_on_file_roundtrip (pgn_preview_tests.PGNPreviewTests.test_utf8_bom_crlf_headers_comments_variations_preserved_on_file_roundtrip) ... ok
+test_variants_chess960_bad_roots_and_null_moves_rejected (pgn_preview_tests.PGNPreviewTests.test_variants_chess960_bad_roots_and_null_moves_rejected) ... ok
+
+======================================================================
+FAIL: test_standard_replay_and_real_opening_name (pgn_preview_tests.PGNPreviewTests.test_standard_replay_and_real_opening_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\hanso\.codex\.chatgpt-projects\g-p-6a8b058617088191ac7cb44895558f31\Regicide-m1-integration\tests\pgn_preview_tests.py", line 74, in test_standard_replay_and_real_opening_name
+    self.assertEqual(details['frames'][5]['opening_guide']['matched_opening']['name'], 'Ruy Lopez')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Ruy Lopez Opening' != 'Ruy Lopez'
+- Ruy Lopez Opening
++ Ruy Lopez
+
+
+----------------------------------------------------------------------
+Ran 16 tests in 13.817s
+
+FAILED (failures=1)
+
+
+FILE: game_outcome_tests.log
+test_actual_third_occurrence_is_terminal_for_all_archive_versions (game_outcome_tests.ArchiveDrawPolicyTests.test_actual_third_occurrence_is_terminal_for_all_archive_versions) ... ok
+test_explicit_legacy_claim_results_remain_viewable (game_outcome_tests.ArchiveDrawPolicyTests.test_explicit_legacy_claim_results_remain_viewable) ... ok
+test_legacy_claim_requires_verifiable_claim_and_matching_reason (game_outcome_tests.ArchiveDrawPolicyTests.test_legacy_claim_requires_verifiable_claim_and_matching_reason) ... ok
+test_legacy_fifty_move_result_preserved_but_unfinished_remains_open (game_outcome_tests.ArchiveDrawPolicyTests.test_legacy_fifty_move_result_preserved_but_unfinished_remains_open) ... ok
+test_legacy_pgn_retains_explicit_historical_policy (game_outcome_tests.ArchiveDrawPolicyTests.test_legacy_pgn_retains_explicit_historical_policy) ... ok
+test_new_policy_rejects_unsupported_early_draw_result (game_outcome_tests.ArchiveDrawPolicyTests.test_new_policy_rejects_unsupported_early_draw_result) ... ok
+test_pgn_result_and_policy_match_actual_repetition_history (game_outcome_tests.ArchiveDrawPolicyTests.test_pgn_result_and_policy_match_actual_repetition_history) ... ok
+test_unfinished_records_are_not_upgraded_by_intended_repetition (game_outcome_tests.ArchiveDrawPolicyTests.test_unfinished_records_are_not_upgraded_by_intended_repetition) ... ok
+test_castling_rights_distinguish_same_piece_placement (game_outcome_tests.AutomaticOutcomeTests.test_castling_rights_distinguish_same_piece_placement) ... ok
+test_checkmate_precedes_draw_threshold (game_outcome_tests.AutomaticOutcomeTests.test_checkmate_precedes_draw_threshold) ... ok
+test_claim_can_be_declined_by_playing_an_alternative (game_outcome_tests.AutomaticOutcomeTests.test_claim_can_be_declined_by_playing_an_alternative) ... ok
+test_compulsory_fivefold_has_priority_after_actual_fifth_occurrence (game_outcome_tests.AutomaticOutcomeTests.test_compulsory_fivefold_has_priority_after_actual_fifth_occurrence) ... ok
+test_fifty_moves_does_not_end_before_hundredth_halfmove (game_outcome_tests.AutomaticOutcomeTests.test_fifty_moves_does_not_end_before_hundredth_halfmove) ... ok
+test_full_history_is_preserved_and_fen_alone_is_not_repetition (game_outcome_tests.AutomaticOutcomeTests.test_full_history_is_preserved_and_fen_alone_is_not_repetition) ... ok
+test_only_legal_en_passant_opportunity_distinguishes_positions (game_outcome_tests.AutomaticOutcomeTests.test_only_legal_en_passant_opportunity_distinguishes_positions) ... ok
+test_opposite_turn_does_not_count_same_piece_placement (game_outcome_tests.AutomaticOutcomeTests.test_opposite_turn_does_not_count_same_piece_placement) ... ok
+test_pawn_and_capture_can_reset_anticipated_fifty_move_condition (game_outcome_tests.AutomaticOutcomeTests.test_pawn_and_capture_can_reset_anticipated_fifty_move_condition) ... ok
+test_seventyfive_moves_is_compulsory_only_at_150_halfmoves (game_outcome_tests.AutomaticOutcomeTests.test_seventyfive_moves_is_compulsory_only_at_150_halfmoves) ... ok
+test_threefold_waits_until_position_is_actually_reached (game_outcome_tests.AutomaticOutcomeTests.test_threefold_waits_until_position_is_actually_reached) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.010s
+
+OK
+
+
+FILE: game_archive_tests.log
+test_archive_reads_require_token_and_allowed_origin (game_archive_tests.ArchiveHTTPTests.test_archive_reads_require_token_and_allowed_origin) ... ok
+test_browsing_is_read_only_and_validates_paths (game_archive_tests.ArchiveHTTPTests.test_browsing_is_read_only_and_validates_paths) ... ok
+test_accumulates_across_new_games_and_backend_restarts (game_archive_tests.ArchiveTests.test_accumulates_across_new_games_and_backend_restarts) ... ok
+test_bad_files_do_not_hide_other_games (game_archive_tests.ArchiveTests.test_bad_files_do_not_hide_other_games) ... ok
+test_close_during_handicap_preserves_original_full_history (game_archive_tests.ArchiveTests.test_close_during_handicap_preserves_original_full_history) ... ok
+test_completed_result_and_end_timestamp_remain_stable_on_close (game_archive_tests.ArchiveTests.test_completed_result_and_end_timestamp_remain_stable_on_close) ... ok
+test_engine_error_is_archived_without_fabricating_a_result (game_archive_tests.ArchiveTests.test_engine_error_is_archived_without_fabricating_a_result) ... ok
+test_finished_game_reopened_by_undo_clears_end_timestamp (game_archive_tests.ArchiveTests.test_finished_game_reopened_by_undo_clears_end_timestamp) ... ok
+test_handicap_preview_preserves_original_and_forced_move_is_attributed (game_archive_tests.ArchiveTests.test_handicap_preview_preserves_original_and_forced_move_is_attributed) ... ok
+test_invalid_results_initial_positions_and_excessive_history_are_rejected (game_archive_tests.ArchiveTests.test_invalid_results_initial_positions_and_excessive_history_are_rejected) ... ok
+test_local_date_time_survives_restart_orders_by_instant_and_preserves_bytes (game_archive_tests.ArchiveTests.test_local_date_time_survives_restart_orders_by_instant_and_preserves_bytes) ... ok
+test_local_timestamp_uses_saved_season_offset_and_unknown_is_explicit (game_archive_tests.ArchiveTests.test_local_timestamp_uses_saved_season_offset_and_unknown_is_explicit) ... ok
+test_migration_deduplicates_copies_but_keeps_conflicting_histories (game_archive_tests.ArchiveTests.test_migration_deduplicates_copies_but_keeps_conflicting_histories) ... ok
+test_migration_is_idempotent_and_preserves_source_bytes (game_archive_tests.ArchiveTests.test_migration_is_idempotent_and_preserves_source_bytes) ... ok
+test_offset_timestamp_is_normalized_to_utc_for_the_viewer (game_archive_tests.ArchiveTests.test_offset_timestamp_is_normalized_to_utc_for_the_viewer) ... ok
+test_old_valid_json_remains_readable_without_new_metadata (game_archive_tests.ArchiveTests.test_old_valid_json_remains_readable_without_new_metadata) ... ok
+test_opening_variety_seed_survives_archive_pgn_export (game_archive_tests.ArchiveTests.test_opening_variety_seed_survives_archive_pgn_export) ... ok
+test_replay_and_engine_provenance_survive_without_pgn_sidecar (game_archive_tests.ArchiveTests.test_replay_and_engine_provenance_survive_without_pgn_sidecar) ... ok
+test_symlinked_record_cannot_escape_library (game_archive_tests.ArchiveTests.test_symlinked_record_cannot_escape_library) ... skipped 'This OS account cannot create file symlinks'
+test_terminal_checkmate_and_draw_replay_without_extra_engine_move (game_archive_tests.ArchiveTests.test_terminal_checkmate_and_draw_replay_without_extra_engine_move) ... ok
+test_undo_updates_current_record_without_making_another_game (game_archive_tests.ArchiveTests.test_undo_updates_current_record_without_making_another_game) ... ok
+test_unsafe_ids_cannot_access_files_outside_library (game_archive_tests.ArchiveTests.test_unsafe_ids_cannot_access_files_outside_library) ... ok
+test_untrusted_opening_metadata_cannot_inject_pgn_headers (game_archive_tests.ArchiveTests.test_untrusted_opening_metadata_cannot_inject_pgn_headers) ... ok
+test_actual_regicide_library_replays_both_colors_after_restart (game_archive_tests.RealArchiveTests.test_actual_regicide_library_replays_both_colors_after_restart) ... skipped 'Supply the Regicide binary for real-engine archive validation'
+
+----------------------------------------------------------------------
+Ran 24 tests in 16.943s
+
+OK (skipped=2)
+
+
+FILE: godot_bootstrap_tests.log
+test_browser_startup_contract_stays_compatible (godot_bootstrap_tests.BootstrapTests.test_browser_startup_contract_stays_compatible) ... skipped 'supply the Regicide binary for isolated real-process checks'
+test_desktop_mode_requires_a_private_startup_file (godot_bootstrap_tests.BootstrapTests.test_desktop_mode_requires_a_private_startup_file) ... ok
+test_desktop_secret_file_authenticates_without_stdout_disclosure (godot_bootstrap_tests.BootstrapTests.test_desktop_secret_file_authenticates_without_stdout_disclosure) ... skipped 'supply the Regicide binary for isolated real-process checks'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.355s
+
+OK (skipped=2)
+
+
+FILE: human_play_tests.log
+test_api_requires_valid_token_and_same_origin (human_play_tests.HumanHTTPTests.test_api_requires_valid_token_and_same_origin) ... ok
+test_concurrent_same_revision_accepts_only_one_move (human_play_tests.HumanHTTPTests.test_concurrent_same_revision_accepts_only_one_move) ... ok
+test_legally_play_two_plies_and_export (human_play_tests.HumanHTTPTests.test_legally_play_two_plies_and_export) ... ok
+test_loopback_and_static_assets (human_play_tests.HumanHTTPTests.test_loopback_and_static_assets) ... ok
+test_malformed_or_oversized_body (human_play_tests.HumanHTTPTests.test_malformed_or_oversized_body) ... ok
+test_move_audio_assets_are_binary_same_origin_and_allowlisted (human_play_tests.HumanHTTPTests.test_move_audio_assets_are_binary_same_origin_and_allowlisted) ... ok
+test_revision_conflict_and_bad_moves_preserve_board (human_play_tests.HumanHTTPTests.test_revision_conflict_and_bad_moves_preserve_board) ... ok
+test_unauthorized_mutation_does_not_change_game (human_play_tests.HumanHTTPTests.test_unauthorized_mutation_does_not_change_game) ... ok
+test_unknown_or_traversal_paths_do_not_serve_files (human_play_tests.HumanHTTPTests.test_unknown_or_traversal_paths_do_not_serve_files) ... ok
+test_checked_king_state_and_mate (human_play_tests.HumanPlayTests.test_checked_king_state_and_mate) ... ok
+test_completed_terminal_positions_do_not_call_engine (human_play_tests.HumanPlayTests.test_completed_terminal_positions_do_not_call_engine) ... ok
+test_engine_fault_preserves_unfinished_game_and_recovers (human_play_tests.HumanPlayTests.test_engine_fault_preserves_unfinished_game_and_recovers) ... ok
+test_engine_receives_full_history_and_exact_time (human_play_tests.HumanPlayTests.test_engine_receives_full_history_and_exact_time) ... ok
+test_fifty_move_draw_waits_for_actual_hundredth_halfmove (human_play_tests.HumanPlayTests.test_fifty_move_draw_waits_for_actual_hundredth_halfmove) ... ok
+test_human_engine_turn_and_san_history (human_play_tests.HumanPlayTests.test_human_engine_turn_and_san_history) ... ok
+test_human_resignation_and_restart (human_play_tests.HumanPlayTests.test_human_resignation_and_restart) ... ok
+test_initial_state_and_metadata (human_play_tests.HumanPlayTests.test_initial_state_and_metadata) ... ok
+test_intended_repetition_can_be_avoided_by_different_move (human_play_tests.HumanPlayTests.test_intended_repetition_can_be_avoided_by_different_move) ... ok
+test_intended_repetition_waits_for_completed_move_with_full_history (human_play_tests.HumanPlayTests.test_intended_repetition_waits_for_completed_move_with_full_history) ... ok
+test_invalid_configuration_preserves_existing_game (human_play_tests.HumanPlayTests.test_invalid_configuration_preserves_existing_game) ... ok
+test_invalid_uci_and_illegal_moves_do_not_mutate (human_play_tests.HumanPlayTests.test_invalid_uci_and_illegal_moves_do_not_mutate) ... ok
+test_new_game_and_close_preserve_legal_unfinished_pgns (human_play_tests.HumanPlayTests.test_new_game_and_close_preserve_legal_unfinished_pgns) ... ok
+test_promotion_requires_explicit_piece (human_play_tests.HumanPlayTests.test_promotion_requires_explicit_piece) ... ok
+test_special_moves_match_independent_board (human_play_tests.HumanPlayTests.test_special_moves_match_independent_board) ... ok
+test_stale_revisions_reject_all_mutations (human_play_tests.HumanPlayTests.test_stale_revisions_reject_all_mutations) ... ok
+test_undo_black_preserves_engine_opening (human_play_tests.HumanPlayTests.test_undo_black_preserves_engine_opening) ... ok
+test_undo_white_pair_and_pending_human_move (human_play_tests.HumanPlayTests.test_undo_white_pair_and_pending_human_move) ... ok
+test_real_engine_white_and_black_100ms (human_play_tests.RealEngineSmokeTests.test_real_engine_white_and_black_100ms) ... skipped 'supply binary path to run the real Regicide smoke'
+
+----------------------------------------------------------------------
+Ran 28 tests in 20.491s
+
+OK (skipped=1)
+
+
+FILE: windows_speech_tests.log
+{"desktop_voice": "Microsoft Zira Desktop", "pcm_peak": 21046, "played_audio": false}
+test_cancellation_and_invalid_voice_never_produce_a_playable_result (windows_speech_tests.WindowsSpeechTests.test_cancellation_and_invalid_voice_never_produce_a_playable_result) ... ok
+test_installed_english_voice_produces_non_silent_pcm_without_playback (windows_speech_tests.WindowsSpeechTests.test_installed_english_voice_produces_non_silent_pcm_without_playback) ... ok
+test_request_text_stays_data_and_helper_has_no_speaker_output (windows_speech_tests.WindowsSpeechTests.test_request_text_stays_data_and_helper_has_no_speaker_output) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.263s
+
+OK
+
+
+FILE: pgn-preview-followup.log
+test_auth_origin_and_content_type_checks_remain_required (pgn_preview_tests.PGNPreviewHTTPTests.test_auth_origin_and_content_type_checks_remain_required) ... ok
+test_only_preview_accepts_large_body_and_extra_path_fields_are_rejected (pgn_preview_tests.PGNPreviewHTTPTests.test_only_preview_accepts_large_body_and_extra_path_fields_are_rejected) ... ok
+test_valid_and_invalid_preview_do_not_touch_live_game_archive_or_engine (pgn_preview_tests.PGNPreviewHTTPTests.test_valid_and_invalid_preview_do_not_touch_live_game_archive_or_engine) ... ok
+test_automatic_repetition_prevents_moves_after_game_end (pgn_preview_tests.PGNPreviewTests.test_automatic_repetition_prevents_moves_after_game_end) ... ok
+test_cr_only_text_is_parsed_but_returned_unchanged (pgn_preview_tests.PGNPreviewTests.test_cr_only_text_is_parsed_but_returned_unchanged) ... ok
+test_empty_header_only_malformed_and_illegal_data_rejected (pgn_preview_tests.PGNPreviewTests.test_empty_header_only_malformed_and_illegal_data_rejected) ... ok
+test_exact_byte_limit_and_missing_result_are_supported (pgn_preview_tests.PGNPreviewTests.test_exact_byte_limit_and_missing_result_are_supported) ... ok
+test_exact_mainline_cap_has_bounded_complete_replay (pgn_preview_tests.PGNPreviewTests.test_exact_mainline_cap_has_bounded_complete_replay) ... ok
+test_multiple_games_including_same_line_are_rejected (pgn_preview_tests.PGNPreviewTests.test_multiple_games_including_same_line_are_rejected) ... ok
+test_ply_and_utf8_byte_limits_reject_before_framing (pgn_preview_tests.PGNPreviewTests.test_ply_and_utf8_byte_limits_reject_before_framing) ... ok
+test_regicide_handicap_comment_and_player_headers_survive_preview (pgn_preview_tests.PGNPreviewTests.test_regicide_handicap_comment_and_player_headers_survive_preview) ... ok
+test_results_are_reported_neutrally_without_invented_resignation (pgn_preview_tests.PGNPreviewTests.test_results_are_reported_neutrally_without_invented_resignation) ... ok
+test_setup_roots_castling_en_passant_and_all_promotions (pgn_preview_tests.PGNPreviewTests.test_setup_roots_castling_en_passant_and_all_promotions) ... ok
+test_standard_replay_and_real_opening_name (pgn_preview_tests.PGNPreviewTests.test_standard_replay_and_real_opening_name) ... ok
+test_utf8_bom_crlf_headers_comments_variations_preserved_on_file_roundtrip (pgn_preview_tests.PGNPreviewTests.test_utf8_bom_crlf_headers_comments_variations_preserved_on_file_roundtrip) ... ok
+test_variants_chess960_bad_roots_and_null_moves_rejected (pgn_preview_tests.PGNPreviewTests.test_variants_chess960_bad_roots_and_null_moves_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 13.042s
+
+OK

@@ -299,22 +299,24 @@
   }
 
   function refereePresentation() {
-    const unchanged = {value:evaluation, prefix:"", note:"Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다."};
-    const meta = evaluation?.sparring_referee ?? state?.engine?.sparring_referee;
+    const unchanged = {value:evaluation, prefix:"", note:"Stockfish 평가 · 수는 Regicide가 선택합니다. 백 기준 점수 · 승률이 아닙니다."};
+    const meta = evaluation?.stockfish_reference ?? state?.engine?.stockfish_reference ??
+      evaluation?.sparring_referee ?? state?.engine?.sparring_referee ?? {enabled:true,available:true,status:"loading"};
     if (analysisMode || coachingMode || state?.result !== "*" || evaluation?.status === "terminal" ||
-        state?.engine?.sparring_mode !== true || meta?.enabled !== true) return unchanged;
+        !meta) return unchanged;
     const reference = evaluation?.reference_evaluation;
     const identity = samePosition(state, reference) && reference.turn === state.turn;
-    const ready = meta.available === true && identity && reference.status === "ready" && reference.bound === "exact" &&
+    const ready = meta.enabled === true && meta.available === true && identity && reference.source === "stockfish_gauge" && reference.status === "ready" && reference.bound === "exact" &&
       Number.isInteger(reference.depth) && reference.depth > 0 && (Number.isInteger(reference.cp) || Number.isInteger(reference.mate));
     const own = `Regicide 자체 ${evaluationScoreNote(evaluation)}`;
     if (ready) return {value:reference, prefix:"형세 · Stockfish 심판 · ", reference:true,
       note:`${reference.engine_name || meta.name || "Stockfish"} 보조 심판 · ${own} · 백 기준 점수 · 승률이나 정답의 보장이 아닙니다.`};
-    let warning = "Stockfish 심판 준비 중";
-    if (meta.available !== true || ["disabled", "unavailable", "error"].includes(reference?.status)) warning = "Stockfish 심판 사용 불가";
+    let warning = "Stockfish 형세 계산 중";
+    const unavailable = meta.enabled !== true || meta.available !== true || ["disabled", "unavailable", "error"].includes(reference?.status);
+    if (unavailable) warning = "Stockfish 평가 사용 불가";
     else if (reference && !identity) warning = "다른 위치의 심판 평가 제외";
     else if (reference?.status === "ready" && reference.bound !== "exact") warning = "심판 범위 평가 제외";
-    return {value:evaluation, prefix:"Regicide 자체 · ", note:`${warning} · Regicide 자체 평가 표시 · ${own} · 백 기준 점수 · 승률이 아닙니다.`};
+    return {value:null, pending:warning, note:`${warning} · 현재 위치의 Stockfish 평가를 기다립니다. 수는 Regicide가 선택합니다.`};
   }
 
   function evaluationView() {
@@ -328,6 +330,7 @@
       return {label, score:result, detail:"확정된 대국 결과", share};
     }
     if (closed) return {label:"대국 종료", score:"—", detail:note, share:null};
+    if (selected.pending) return {label:selected.pending, score:"—", detail:note, share:null};
     if (!value || value.status === "waiting") {
       return {label:"분석 대기 중", score:"—", detail:note, share:null};
     }
@@ -385,7 +388,7 @@
     bar.classList.toggle("unknown", view.share === null);
     bar.setAttribute("aria-label", `${view.label}, ${view.score}. ${view.detail}`);
     bar.title = `${view.label}, ${view.score}. ${view.detail}`;
-    byId("evaluation-white").style.height = `${(view.share ?? 0) * 100}%`;
+    byId("evaluation-white").style.height = `${(view.share ?? .5) * 100}%`;
     byId("evaluation-top").textContent = blackView ? "백" : "흑";
     byId("evaluation-bottom").textContent = blackView ? "흑" : "백";
     byId("evaluation-label").textContent = view.label;
@@ -703,8 +706,8 @@
 
   function renderModeHelp() {
     const descriptions = {
-      normal: "기본 기풍으로 두며, 설정한 생각 시간을 사용합니다. 새 대국부터 적용됩니다.",
-      boss: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
+      normal: "기본 기풍으로 두며, 남은 시간과 국면에 맞춰 생각 시간을 조절합니다. 새 대국부터 적용됩니다.",
+      boss: "갬빗 오프닝을 적극적으로 선택하고, 성립 후 전개·중앙 돌파·왕 압박을 이어갑니다. 기물 미끼는 상대의 포획 뒤 응징을 검증한 경우에만 선택합니다. 새 대국부터 적용됩니다.",
       sparring: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
     };
     const mode = byId("boss-mode").value;
@@ -722,7 +725,14 @@
   }
 
   function usesAutoThinkTime() {
-    return state?.engine.sparring_mode === true || byId("boss-mode").value === "sparring";
+    if (state) {
+      if (state.clock?.enabled === true) return true;
+      if (typeof state.engine?.automatic_think_time === "boolean") return state.engine.automatic_think_time;
+      if (typeof state.engine?.time_management === "string") return state.engine.time_management === "automatic";
+      if (typeof state.clock?.enabled === "boolean") return state.clock.enabled;
+      return state.engine?.sparring_mode === true;
+    }
+    return Object.hasOwn(rapidControls, byId("rapid-time-control").value);
   }
 
   function renderThinkTimeControls() {
@@ -735,8 +745,7 @@
     byId("think-time").disabled = automatic || !ready || timeSaving || state?.handicap_mode || (busy && !state?.engine_to_move);
     if (state && !timeSaving && [100, 1000, 3000, 5000].includes(state.engine.movetime_ms)) byId("think-time").value = String(state.engine.movetime_ms);
     if (automatic) {
-      byId("think-time-help").textContent = "사람 권장시간을 바탕으로 초반 전개는 짧게, 복잡한 국면은 충분히 고민해 둡니다. Regicide의 남은 시간이 3분 미만이면 점차 빠르게 둡니다." +
-        (state?.engine.sparring_mode !== true ? " 새 스파링 대국부터 자동 관리합니다." : byId("boss-mode").value !== "sparring" ? " 현재 스파링 대국은 자동 관리합니다." : "");
+      byId("think-time-help").textContent = "기본·갬빗·스파링 모두 사람 권장시간을 바탕으로 익숙하거나 명백한 수는 빠르게, 복잡한 국면은 더 고민해 둡니다. 남은 시간이 5분 이하부터는 점차 빠르게 둡니다.";
       return;
     }
     const currentMS = state?.engine.active_movetime_ms;
@@ -756,8 +765,8 @@
   }
 
   function renderSparringRating() {
-    const rating = state?.engine.sparring_rating;
-    const supported = state?.engine.sparring_mode === true && rating && rating.target === "chess_com_rapid";
+    const rating = state?.engine.rating ?? state?.engine.sparring_rating;
+    const supported = rating && rating.target === "chess_com_rapid";
     const label = byId("sparring-rating");
     label.hidden = !supported || closed || analysisMode || coachingMode;
     label.textContent = "";
@@ -790,9 +799,9 @@
     byId("rating-label-input").disabled = !terminal || busy || timeSaving;
     byId("rating-label-save").disabled = !terminal || busy || timeSaving;
     byId("rating-label-save").textContent = saved == null ? "레이팅 저장" : "레이팅 수정";
-    byId("rating-label-note").textContent = saved == null ? "입력한 값은 다음 대국의 추정 보정에 반영합니다." :
+    byId("rating-label-note").textContent = saved == null ? "실제 레이팅을 기록합니다. 다음 대국 추정에는 보정 가능한 대국만 반영합니다." :
       rating.label.eligible_for_calibration === false ? `${saved} 저장됨 · 이번 대국은 추정 보정에 쓰지 않습니다. 수정할 수 있습니다.` :
-      `${saved} 저장됨 · 수정할 수 있습니다. 다음 대국의 추정 보정에 반영합니다.`;
+      `${saved} 저장됨 · 수정할 수 있습니다. 다음 대국 추정에는 보정 가능한 대국만 반영합니다.`;
   }
 
   function nextClockAnchor(incoming, previous, sameTurn) {
@@ -834,7 +843,7 @@
 
   function canAdjustClock() {
     return Boolean(state && !closed && !analysisMode && !coachingMode &&
-      !state.handicap_mode && state.engine.sparring_mode === true && state.result === "*" &&
+      !state.handicap_mode && state.result === "*" &&
       state.clock?.enabled === true && state.clock.editable === true);
   }
 
@@ -844,8 +853,7 @@
       clockAdjustExpanded = false;
       clockAdjustNotice = "";
     }
-    byId("clock-adjust").hidden = !state?.engine.sparring_mode || !state?.clock?.enabled ||
-      Boolean(state?.handicap_mode) || analysisMode || coachingMode;
+    byId("clock-adjust").hidden = !canAdjustClock();
     byId("clock-adjust-panel").hidden = !clockAdjustExpanded;
     byId("clock-adjust-toggle").setAttribute("aria-expanded", String(clockAdjustExpanded));
     byId("clock-adjust-toggle").disabled = !canAdjustClock();
@@ -971,8 +979,7 @@
   }
 
   function updateSidebarExplorer() {
-    const openingVisible = !window.RegicideSidebar || window.RegicideSidebar.selected("live") === "opening";
-    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode && openingVisible)});
+    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode)});
     const analyze = byId("live-analyze-current");
     if (analyze) analyze.disabled = !state || closed || analysisMode || coachingMode;
   }
@@ -995,12 +1002,12 @@
     if (state) {
       const ms = state.engine.movetime_ms;
       const seconds = Number(ms) / 1000;
-      byId("opponent-detail").textContent = `${state.engine.sparring_mode === true ? "생각시간 자동 조절" : `한 수에 ${seconds}초 생각`} · ${colorName(humanColor === "white" ? "black" : "white")}`;
+      byId("opponent-detail").textContent = `${usesAutoThinkTime() ? "생각시간 자동 조절" : `한 수에 ${seconds}초 생각`} · ${colorName(humanColor === "white" ? "black" : "white")}`;
       byId("opponent-detail").title = "";
       if (state.engine.boss_mode === true) {
-        const phaseLabels = {opening: "변칙 오프닝", trap_hunt: "전술 사냥", full_strength: "전력 대국"};
+        const phaseLabels = {opening: "갬빗 준비", initiative: "공격 전개", trap_hunt: "전술 사냥", full_strength: "전력 대국"};
         const phase = Object.hasOwn(phaseLabels, state.engine.boss_phase) ? phaseLabels[state.engine.boss_phase] : null;
-        byId("opponent-detail").textContent += phase ? ` · 보스 모드 · ${phase}` : " · 보스 모드";
+        byId("opponent-detail").textContent += phase ? ` · 갬빗 모드 · ${phase}` : " · 갬빗 모드";
       } else if (state.engine.sparring_mode === true) {
         // Keep adjustment diagnostics in state/records, outside the live presentation.
         const referee = state.engine.sparring_referee;
@@ -1132,10 +1139,6 @@
     const payload = {color: byId("human-side").value,
       boss_mode: byId("boss-mode").value === "boss", sparring_mode: byId("boss-mode").value === "sparring",
       time_control: Object.hasOwn(rapidControls, byId("rapid-time-control").value) ? byId("rapid-time-control").value : "10+0"};
-    if (!payload.sparring_mode) {
-      const selectedTime = Number(byId("think-time").value);
-      payload.movetime_ms = [100, 1000, 3000, 5000].includes(selectedTime) ? selectedTime : 1000;
-    }
     void mutate("/api/new", payload);
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
@@ -1162,7 +1165,7 @@
       showError("100~4000 사이의 정수 레이팅을 입력해 주세요.");
       return;
     }
-    void mutate("/api/sparring/rating-label", {game_id: state.game_id, rating});
+    void mutate("/api/rating-label", {game_id: state.game_id, rating});
   });
   byId("think-time").addEventListener("change", () => { void changeThinkTime(); });
   byId("undo").addEventListener("click", () => { void mutate("/api/undo"); });

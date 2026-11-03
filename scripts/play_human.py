@@ -5,6 +5,7 @@ Bind only to loopback; JSON mutations require a per-process browser token.
 """
 
 import argparse
+import contextlib
 import copy
 import datetime
 import hashlib
@@ -30,6 +31,9 @@ from game_archive import GameArchive, default_game_directory
 from move_hints import MoveHints
 from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
+from coaching_reference import CoachingReference
+from stockfish_gauge import StockfishGauge
+from game_outcome import automatic_outcome, DRAW_POLICY
 from opening_presentation import OpeningGuideCache
 from opening_explorer import OpeningExplorer
 from sparring_referee import SparringReferee, POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
@@ -42,6 +46,8 @@ import sparring_play
 import sparring_rating
 import evaluation_stability
 import sparring_evaluation
+import sparring_safety
+import sparring_quality
 import game_clock
 import decision_support
 import engine_pacing
@@ -81,7 +87,7 @@ class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
                  neural_adopted_generation=None, *, evaluation_engine_factory=None,
                  opening_variety_enabled=True, dynamic_play_enabled=False, monotonic=None, pacing_wait=None,
-                 referee=None, referee_binary=None, referee_info=None):
+                 referee=None, referee_binary=None, referee_info=None, initial_time_control=None, gauge=None):
         if type(opening_variety_enabled) is not bool:
             raise ValueError("Opening variety must be enabled or disabled explicitly.")
         self.opening_variety_enabled = opening_variety_enabled
@@ -191,19 +197,23 @@ class HumanGame:
         initial_referee = self._referee_snapshot()
         self._referee_sha256 = self._referee_info.get("sha256") or initial_referee.get("binary_sha256")
         self._referee_name = self._referee_info.get("name") or initial_referee.get("engine_name") or "Stockfish"
+        self._gauge = gauge if gauge is not None else StockfishGauge(referee_binary)
         self.analysis = None
         self.coaching = None
+        # Separate ownership: browsing coaching must never cancel the live-game referee.
+        self.coaching_reference = CoachingReference(referee_binary)
         self.revision = 0
         try:
             self._ensure_engine()
             self._hints = MoveHints(self.binary, hint_engine_factory)
             self._live_evaluation = MoveHints(self.binary, evaluation_engine_factory,
                                               stream_evaluation=True)
-            self.analysis = AnalysisSession(self.binary, self.engine_name, hint_engine_factory)
+            self.analysis = AnalysisSession(self.binary, self.engine_name, hint_engine_factory,
+                                            reference_binary=referee_binary)
             self.coaching = CoachingSession(self.binary, self.engine_name, self.save_dir,
                                             hint_engine_factory,
                                             evaluation_id=self.neural_sha256 or self.classical_evaluation_mode)
-            self._reset("white", 1000)
+            self._reset("white", 1000, time_control=initial_time_control)
         except Exception:
             self.close()
             raise
@@ -295,8 +305,8 @@ class HumanGame:
             if type(settings_revision) is not int or settings_revision != self._settings_revision:
                 raise RevisionError("생각 시간 설정이 먼저 바뀌었습니다. 다시 선택해 주세요.")
             self._require_no_handicap()
-            if self.sparring_mode and self._clock.enabled:
-                raise ValueError("스파링 모드는 남은 시간과 형세에 따라 생각시간을 자동으로 조절합니다.")
+            if self._clock.enabled:
+                raise ValueError("시간제 대국은 모든 모드에서 남은 시간과 형세에 따라 생각시간을 자동으로 조절합니다.")
             self._validate_movetime(movetime_ms)
             if movetime_ms != self.movetime_ms:
                 self._time_settings_events.append({
@@ -317,8 +327,8 @@ class HumanGame:
                 raise RevisionError("남은 시간이 먼저 변경됐습니다. 다시 조절해 주세요.")
             self._require_no_handicap()
             self._adjudicate_clock()
-            if not self.sparring_mode or not self._clock.enabled:
-                raise ValueError("시간 제한이 있는 스파링 대국에서 사용할 수 있습니다.")
+            if not self._clock.enabled:
+                raise ValueError("시간 제한이 있는 대국에서 사용할 수 있습니다.")
             if self._outcome()[0] != "*" or self.error:
                 raise ValueError("종료된 대국의 시간은 변경할 수 없습니다.")
             if side not in ("human", "engine"):
@@ -342,7 +352,14 @@ class HumanGame:
         try:
             history = copy.deepcopy(self._engine_pacing_decisions)
             pacing = engine_pacing.plan(self.board, clock, evaluation=self.evaluation(),
-                                        seed=self._opening_seed, history=history)
+                                        seed=self._opening_seed, history=history,
+                                        pressure_start_ms=engine_pacing.PRESSURE_START_MS)
+            reserve = previous.get("analysis_reserve") or {}
+            if reserve:
+                pacing = engine_pacing.reserve_analysis(
+                    pacing, clock,
+                    minimum_baseline_ms=reserve.get("requested_minimum_baseline_ms", 0),
+                    optional_ms=reserve.get("requested_optional_ms", 0))
             for key in ("allocation", "rating_only_budget_ms", "auxiliary_reason"):
                 if key in previous:
                     pacing[key] = previous[key]
@@ -352,7 +369,8 @@ class HumanGame:
             if previous.get("balance_recovery", {}).get("active"):
                 pacing["balance_recovery"] = copy.deepcopy(previous["balance_recovery"])
                 cap = engine_pacing.recovery_clock_limit(
-                    clock, pacing["color"], pacing["balance_recovery"]["direction"])
+                    clock, pacing["color"], pacing["balance_recovery"]["direction"],
+                    pressure_start_ms=pacing["pressure_start_ms"])
                 pacing["target_total_ms"] = min(previous["target_total_ms"], clock["turn_elapsed_ms"] + cap)
         except Exception as exc:
             # A cosmetic timing failure must never undo an accepted clock edit.
@@ -363,7 +381,7 @@ class HumanGame:
     def _outcome(self):
         if self._override:
             return self._override
-        outcome = self.board.outcome(claim_draw=True)
+        outcome = automatic_outcome(self.board)
         return (outcome.result(), outcome.termination.name.lower()) if outcome else ("*", None)
 
     def _adjudicate_clock(self):
@@ -439,9 +457,8 @@ class HumanGame:
     def evaluation_with_reference(self):
         """UI-only envelope. Internal pacing/rating keeps evaluation()'s own score."""
         own = self.evaluation()
-        if not self.sparring_mode:
-            return own
-        return {**own, "reference_evaluation": self._referee_snapshot(),
+        return {**own, "reference_evaluation": self._gauge.snapshot(),
+                "stockfish_reference": self._gauge.metadata(),
                 "sparring_referee": self._referee_metadata()}
 
     def _apply_sparring_referee(self, board, decision, baseline_info, baseline_packets, search,
@@ -602,6 +619,70 @@ class HumanGame:
         decision["referee"] = receipt
         return decision
 
+    def _check_sparring_quality(self, board, move, search, close_engine, game_id, token, revision):
+        """Audit the final native move, independently of concession selection."""
+        def cancelled():
+            with self._lock:
+                clock = self._clock.snapshot()
+                return (self._closing or not self._game_open or self.game_id != game_id
+                        or self._game_token is not token or self.revision != revision
+                        or self._pacing_event.is_set() or clock["enabled"] and
+                        clock["white_ms" if board.turn else "black_ms"] <= engine_pacing.LOW_CLOCK_MS)
+
+        with self._lock:
+            clock = self._clock.snapshot()
+            budget = sparring_quality.MAX_BUDGET_MS
+            if clock["enabled"]:
+                remaining = clock["white_ms" if board.turn else "black_ms"]
+                pressure = min(1.0, remaining / engine_pacing.SPARRING_PRESSURE_START_MS)
+                budget = int(max(0, min(max(sparring_quality.MIN_BUDGET_MS, budget * pressure ** 2),
+                    remaining - engine_pacing.LOW_CLOCK_MS - 150)))
+        assessor = getattr(self._referee, "assess_move_quality", None)
+        # Finish/resource protection disables concessions, not safety audits.
+        skip_reason = "referee_unavailable" if not callable(assessor) else None
+        if skip_reason:
+            _replacement, receipt, _discarded = sparring_quality.verify(
+                board, move, search, close_engine, None, budget_ms=0)
+            receipt.update(reason=skip_reason)
+            return None, receipt, False
+
+        def assess(candidate, amount, interrupted):
+            data = assessor(game_id=game_id, revision=revision, board=board.copy(stack=True),
+                            selected_move=candidate, budget_ms=int(amount), cancelled=interrupted)
+            identity = (isinstance(data, dict) and isinstance(self._referee_sha256, str)
+                and len(self._referee_sha256) == 64 and all(data.get(key) == value for key, value in (
+                    ("game_id", game_id), ("revision", revision), ("fen", board.fen(en_passant="fen")),
+                    ("history_uci", [item.uci() for item in board.move_stack]),
+                    ("turn", "white" if board.turn else "black"), ("selected_uci", candidate.uci()),
+                    ("source", REFEREE_SOURCE), ("policy", REFEREE_POLICY),
+                    ("binary_sha256", self._referee_sha256))))
+            if not identity or cancelled():
+                return {"status": "unverified", "reason": "invalid_or_stale_quality_reference"}
+            return data
+
+        def native_search(amount, **options):
+            if cancelled():
+                raise InterruptedError("Quality check cancelled")
+            with self._lock:
+                current = self._clock.snapshot()
+                if current["enabled"]:
+                    amount = min(amount, current["white_ms" if board.turn else "black_ms"]
+                                 - engine_pacing.LOW_CLOCK_MS - 150)
+                if self._active_pacing is not None:
+                    self._active_pacing["quality_check"] = {"active": True, "budget_ms": budget}
+            return search(amount, **options, referee_discovery=True)
+
+        session = getattr(self._referee, "quality_session", None)
+        try:
+            with session() if callable(session) else contextlib.nullcontext():
+                return sparring_quality.verify(board, move, native_search, close_engine, assess,
+                                               budget_ms=budget, cancelled=cancelled)
+        except Exception as exc:
+            _replacement, receipt, _discarded = sparring_quality.verify(
+                board, move, search, close_engine, None, budget_ms=0)
+            receipt.update(status="unverified", reason="quality_session_unavailable", error=type(exc).__name__)
+            return None, receipt, False
+
     def hint(self):
         """Advice preference and polling never wait for opponent search."""
         return self._hints.snapshot()
@@ -654,6 +735,8 @@ class HumanGame:
             human_color=self.human_color, movetime_ms=self.movetime_ms,
             engine_name=self.engine_name, active=active,
             handicap_mode=self._handicap_backup is not None)
+        self._gauge.update_position(game_id=self.game_id, revision=self.revision,
+                                   board=self.board, active=active)
         if self._referee is not None:
             try:
                 self._referee.update_position(game_id=self.game_id, revision=self.revision,
@@ -728,8 +811,8 @@ class HumanGame:
             engine_turn = active and not handicap_mode and self.board.turn != self.human_color
             names = {"checkmate": "체크메이트", "stalemate": "스테일메이트",
                      "insufficient_material": "메이트 불가능한 기물 구성",
-                     "threefold_repetition": "3회 반복 청구", "fivefold_repetition": "5회 반복",
-                     "fifty_moves": "50수 청구", "seventyfive_moves": "75수 규칙",
+                     "threefold_repetition": "3회 반복", "fivefold_repetition": "5회 반복",
+                     "fifty_moves": "50수 규칙", "seventyfive_moves": "75수 규칙",
                      "resignation": "기권", "time_forfeit": "시간 초과",
                      "time_forfeit_insufficient_material": "시간 초과 · 상대 메이트 기물 부족"}
             if handicap_mode:
@@ -762,7 +845,7 @@ class HumanGame:
             can_undo = (self._game_open and not handicap_mode and bool(self.board.move_stack) and
                         (self.board.turn != self.human_color or len(self.board.move_stack) >= 2))
             clock_snapshot = self._clock.snapshot()
-            clock_snapshot["editable"] = bool(active and self.sparring_mode and self._clock.enabled
+            clock_snapshot["editable"] = bool(active and self._clock.enabled
                                                and not handicap_mode and clock_snapshot["status"] == "running")
             support = (decision_support.assess(self.board, self.human_color, clock_snapshot,
                                               evaluation=self.evaluation(),
@@ -793,8 +876,8 @@ class HumanGame:
                     "handicap_mode": handicap_mode,
                     "can_handicap": not handicap_mode and any(move["actor"] == "engine" for move in moves),
                     "engine": {"name": self.engine_name, "movetime_ms": self.movetime_ms,
-                               "automatic_think_time": self.sparring_mode and self._clock.enabled,
-                               "time_management": ("automatic" if self.sparring_mode and self._clock.enabled
+                               "automatic_think_time": self._clock.enabled,
+                               "time_management": ("automatic" if self._clock.enabled
                                                    else "manual_maximum" if self._clock.enabled else "fixed_legacy"),
                                "pacing": self._pacing_state(clock_snapshot),
                                "opening_variety_enabled": self.opening_variety_enabled and not self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode,
@@ -802,9 +885,11 @@ class HumanGame:
                                "boss_mode": self.boss_mode,
                                "sparring_mode": self.sparring_mode,
                                "sparring_referee": self._referee_metadata(),
+                               "stockfish_reference": self._gauge.metadata(),
                                "sparring": (sparring_play.derive_profile(self.board, list(self._sparring_decisions.values()))
                                             if self.sparring_mode else None),
-                               "sparring_rating": self._rating_state() if self.sparring_mode else None,
+                               "rating": self._rating_state(),
+                               "sparring_rating": self._rating_state(),
                                "sparring_analysis_only": self.sparring_mode and self._sparring_analysis_only(),
                                "extra_budget_purpose": ("rating_observation" if self._sparring_analysis_only()
                                                          else "sparring_control_and_rating") if self.sparring_mode else None,
@@ -815,7 +900,7 @@ class HumanGame:
                                "active_movetime_ms": self._active_movetime_ms,
                                "extra_budget_ms": (self._sparring_extra_budget(self.movetime_ms)
                                                    if self.sparring_mode else (boss_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
-                                                    if boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms) in ("opening", "trap_hunt") else 0)
+                                                    if boss_play.phase(self.board, self._boss_decisions, bool(self._forced_plies), not self.human_color, self.movetime_ms) in ("opening", "initiative", "trap_hunt") else 0)
                                                    if self.boss_mode else dynamic_play.extra_budget(self.movetime_ms, ply=len(self.board.move_stack))
                                                    if self.dynamic_play_enabled else
                                                    opening_variety.extra_budget(self.movetime_ms) if self.opening_variety_enabled else 0),
@@ -839,16 +924,16 @@ class HumanGame:
             self._check_revision(revision)
             self._require_idle()
             self._require_no_handicap()
-            if sparring_mode is True and time_control is not None and movetime_ms is None:
-                movetime_ms = 1000  # Compatibility metadata; timed sparring derives its actual budget.
+            if time_control is not None and movetime_ms is None:
+                movetime_ms = 1000  # Compatibility reference; every timed mode derives its actual budget.
             if color not in ("white", "black") or type(movetime_ms) is not int or not 100 <= movetime_ms <= 5000:
                 raise ValueError("백 또는 흑, 100~5000ms의 생각 시간을 선택해 주세요.")
             if type(boss_mode) is not bool:
-                raise ValueError("보스 모드 여부는 true 또는 false로 지정해 주세요.")
+                raise ValueError("갬빗 모드 여부는 true 또는 false로 지정해 주세요.")
             if type(sparring_mode) is not bool:
                 raise ValueError("스파링 모드 여부는 true 또는 false로 지정해 주세요.")
             if boss_mode and sparring_mode:
-                raise ValueError("보스 모드와 스파링 모드 중 하나를 선택해 주세요.")
+                raise ValueError("갬빗 모드와 스파링 모드 중 하나를 선택해 주세요.")
             game_clock.validate_control(time_control)
             self._ensure_engine()
             self._reset(color, movetime_ms, boss_mode, sparring_mode, time_control)
@@ -913,7 +998,8 @@ class HumanGame:
                     break
                 self._active_pacing = {**pacing, "status": "waiting"}
             self._pacing_wait(min(engine_pacing.WAIT_SLICE_SECONDS, remaining / 1000), cancel_event)
-        return {**pacing, "spent_before_wait_ms": start_clock["turn_elapsed_ms"],
+        return {**pacing, "wait_target_total_ms": engine_pacing.wait_target_ms(pacing),
+                "spent_before_wait_ms": start_clock["turn_elapsed_ms"],
                 "waited_ms": round(max(0, (self._clock_now() - wait_start) * 1000), 3),
                 "completion_reason": reason}
 
@@ -939,7 +1025,7 @@ class HumanGame:
             self._rating_store.invalidate(self.game_id)
             self._rating_label = None
 
-    def label_sparring_rating(self, rating, game_id, revision):
+    def label_opponent_rating(self, rating, game_id, revision):
         """Save private supervision only after the current game has ended."""
         with self._lock:
             self._check_revision(revision)
@@ -947,15 +1033,19 @@ class HumanGame:
             self._require_no_handicap()
             if not isinstance(game_id, str) or game_id != self.game_id:
                 raise RevisionError("다른 대국의 레이팅 요청입니다. 현재 대국에서 다시 입력해 주세요.")
-            if not self.sparring_mode or self._record_status() != "completed":
-                raise ValueError("완료된 스파링 대국에서 실제 래피드 레이팅을 입력해 주세요.")
+            if self._record_status() != "completed":
+                raise ValueError("완료된 대국에서 상대의 실제 래피드 레이팅을 입력해 주세요.")
             result, termination = self._outcome()
             sample = {"completed": True, "fingerprint": sparring_rating.fingerprint(self.board, result, termination),
                       "features": self._rating_metadata(), "result": result, "termination": termination,
                       "handicap": bool(self._handicap_events or self._forced_plies),
                       "runtime": {"source": self.source, "binary_sha256": self.binary_sha256,
                           "evaluation": self.neural_evaluation_mode if self.neural_model else self.classical_evaluation_mode,
-                          "model_sha256": self.neural_sha256, "policy": sparring_play.POLICY,
+                          "model_sha256": self.neural_sha256,
+                          "mode": "sparring" if self.sparring_mode else "gambit" if self.boss_mode else "basic",
+                          "policy": (sparring_play.POLICY if self.sparring_mode else boss_play.POLICY
+                                     if self.boss_mode else dynamic_play.POLICY if self.dynamic_play_enabled
+                                     else opening_variety.POLICY if self.opening_variety_enabled else "regicide-basic"),
                           "engine_movetimes_ms": self._engine_movetimes,
                           "time_settings_events": self._time_settings_events}}
             # The game's calibration remains frozen: its own label cannot
@@ -965,6 +1055,10 @@ class HumanGame:
             self._sync_evaluation()
             self._save()
             return self.state()
+
+    def label_sparring_rating(self, rating, game_id, revision):
+        """Compatibility entry point for older clients."""
+        return self.label_opponent_rating(rating, game_id, revision)
 
     def human_move(self, uci, revision):
         with self._lock:
@@ -1007,16 +1101,33 @@ class HumanGame:
                     self._save()
                     return self.state()
                 board = self.board.copy(stack=True)
-                movetime_ms = self.movetime_ms
+                configured_ms = self.movetime_ms
+                movetime_ms = configured_ms
                 clock_state = self._clock.snapshot()
                 clock_remaining_ms = (clock_state["white_ms" if board.turn else "black_ms"]
                                       if clock_state["enabled"] else None)
                 pacing_history = copy.deepcopy(self._engine_pacing_decisions)
                 pacing_plan = engine_pacing.plan(board, clock_state, evaluation=self.evaluation(),
-                                                seed=self._opening_seed, history=pacing_history)
+                                                seed=self._opening_seed, history=pacing_history,
+                                                pressure_start_ms=engine_pacing.PRESSURE_START_MS)
+                forced_game = bool(self._forced_plies)
+                boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
+                mode_policy = (boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
+                               opening_variety if self.opening_variety_enabled else None)
+                policy_plan = (mode_policy.plan(board, configured_ms, self._opening_seed,
+                                               forced=forced_game,
+                                               **({"decisions": boss_decisions, "engine_identity": {
+                                                   "binary_sha256": self.binary_sha256,
+                                                   "evaluation_id": self.neural_sha256 or self.classical_evaluation_mode}}
+                                                  if self.boss_mode else {}))
+                               if mode_policy is not None and not self.sparring_mode else None)
+                if clock_state["enabled"] and policy_plan and policy_plan["eligible"]:
+                    pacing_plan = engine_pacing.reserve_analysis(
+                        pacing_plan, clock_state, minimum_baseline_ms=mode_policy.MIN_TOTAL_MS,
+                        optional_ms=policy_plan["extra_budget_ms"])
                 allocation = engine_pacing.search_budget(
-                    pacing_plan, clock_state, movetime_ms,
-                    automatic=self.sparring_mode and clock_state["enabled"])
+                    pacing_plan, clock_state, configured_ms,
+                    automatic=clock_state["enabled"])
                 movetime_ms = allocation["baseline_ms"]
                 clock_limited = False
                 if clock_remaining_ms is not None:
@@ -1025,8 +1136,7 @@ class HumanGame:
                                    dynamic_play.extra_budget(movetime_ms, ply=len(board.move_stack)) if self.dynamic_play_enabled else
                                    opening_variety.extra_budget(movetime_ms) if self.opening_variety_enabled else 0)
                     clock_limited = (clock_remaining_ms <= engine_pacing.LOW_CLOCK_MS or
-                                     movetime_ms + optional_ms > allocation["total_search_ms"])
-                forced_game = bool(self._forced_plies)
+                                     self.sparring_mode and movetime_ms + optional_ms > allocation["total_search_ms"])
                 # A short baseline need not discard a human observation when
                 # the original whole-turn allocation still has room. This
                 # path only describes the last human move; it cannot concede
@@ -1046,20 +1156,29 @@ class HumanGame:
                                                      "clock_budget_baseline_only" if clock_limited else
                                                      "below_sparring_observation_minimum" if self.sparring_mode and movetime_ms < sparring_play.MIN_TOTAL_MS
                                                      else "within_budget"))
-                boss_decisions = copy.deepcopy(list(self._boss_decisions.values()))
                 sparring_decisions = copy.deepcopy(list(self._sparring_decisions.values()))
-                move_policy = (None if self.sparring_mode or clock_limited else boss_play if self.boss_mode else dynamic_play if self.dynamic_play_enabled else
-                               opening_variety if self.opening_variety_enabled else None)
-                search_plan = (move_policy.plan(board, movetime_ms, self._opening_seed,
-                                               forced=bool(self._forced_plies),
-                                               **({"decisions": self._boss_decisions} if self.boss_mode else {})) if move_policy else None)
+                move_policy = None if self.sparring_mode or clock_limited else mode_policy
+                search_plan = copy.deepcopy(policy_plan) if move_policy is not None else None
+                if search_plan is not None:
+                    search_plan.update(baseline_budget_ms=movetime_ms, configured_budget_ms=configured_ms)
+                    if clock_state["enabled"]:
+                        available_extra = max(0, allocation["total_search_ms"] - movetime_ms)
+                        if allocation.get("optional_ms") is not None:
+                            available_extra = min(available_extra, allocation["optional_ms"])
+                        allowed_extra = min(search_plan["extra_budget_ms"], available_extra)
+                        search_plan.update(extra_budget_ms=allowed_extra, candidate_budget_ms=allowed_extra)
+                        if (search_plan.get("mode") in ("initiative", "trap_hunt")
+                                and allowed_extra < move_policy.MIN_PROBE_MS):
+                            search_plan.update(eligible=False, reason="insufficient_optional_budget")
                 policy_memo = (self._boss_memo if self.boss_mode else
                                self._dynamic_memo if self.dynamic_play_enabled else self._opening_memo)
                 memo_key = (move_policy.memo_key(board, movetime_ms, self.binary_sha256,
                                                      self.neural_sha256 or self.classical_evaluation_mode,
                                                      seed=self._opening_seed,
                                                      catalog_id=([search_plan.get("catalog_commit"),
-                                                                  boss_play.boss_opponent.derive_profile(board, boss_decisions)]
+                                                                  boss_play.boss_opponent.derive_profile(board, boss_decisions),
+                                                                  search_plan.get("knowledge_ranking", {}).get("model_id"),
+                                                                  search_plan.get("practice_memory")]
                                                                  if self.boss_mode else search_plan.get("catalog_commit")))
                             if search_plan and search_plan["eligible"] else None)
                 remembered = copy.deepcopy(policy_memo.get(memo_key)) if memo_key else None
@@ -1407,19 +1526,18 @@ class HumanGame:
                             board, search, engine.close, budget_ms=quality_budget, forced=forced_game)
                         observed_decisions = [*boss_decisions, {"opponent_observation": observation}]
                         frequency = boss_play.boss_opponent.gate(board, observed_decisions, self._opening_seed)
-                        frequency["baseline_matches_repertoire"] = reply.move.uci() == search_plan["candidate_uci"]
                         remaining_extra = max(0, total_extra - (time.monotonic() - boss_extra_started) * 1000)
                         search_plan = {**search_plan, "extra_budget_ms": remaining_extra,
                                        "candidate_budget_ms": remaining_extra}
-                        conservative_setup = (not frequency["attempt_trap"] and search_plan["eligible"]
-                                              and search_plan["mode"] == "opening" and not search_plan["line_complete"])
-                        search_plan["conservative_setup"] = conservative_setup
-                        if discard_engine or (search_plan["eligible"] and not frequency["attempt_trap"]
-                                              and not frequency["baseline_matches_repertoire"] and not conservative_setup):
-                            search_plan.update(eligible=False, extra_budget_ms=0, candidate_budget_ms=0,
-                                               reason="quality_probe_failed" if discard_engine else "opponent_frequency_hold")
+                        search_plan, frequency = boss_play.apply_frequency(
+                            search_plan, frequency, reply.move, probe_failed=discard_engine)
                         compare = bool(search_plan["eligible"])
-                    if self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "trap_hunt":
+                    if self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "initiative":
+                        decision, discard_engine = boss_play.explore_initiative(
+                            board, search_plan, reply.move, baseline_info, _packets, self._opening_seed,
+                            search, engine.close, baseline_elapsed_ms=baseline_elapsed_ms)
+                        reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                    elif self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "trap_hunt":
                         decision, discard_engine = boss_play.explore_traps(
                             board, search_plan, reply.move, baseline_info, _packets, self._opening_seed,
                             search, engine.close, baseline_elapsed_ms=baseline_elapsed_ms)
@@ -1512,6 +1630,122 @@ class HumanGame:
                         board, decision, baseline_info, baseline_packets, search, game_id, token, revision,
                         discovery_search=discovery_search, close_engine=engine.close)
                     reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                # Final gate covers both the native baseline and concessions,
+                # after the referee can no longer restore an unchecked move.
+                if self.sparring_mode and not discard_engine:
+                    risk = sparring_safety.inspect(board, reply.move)
+                    if risk["risky"]:
+                        def safety_cancelled():
+                            with self._lock:
+                                current = self._clock.snapshot()
+                                return (self._closing or not self._game_open or self.game_id != game_id
+                                        or self._game_token is not token or self.revision != revision
+                                        or pacing_event.is_set() or current["enabled"] and
+                                        current["white_ms" if board.turn else "black_ms"] <= engine_pacing.LOW_CLOCK_MS)
+
+                        with self._lock:
+                            current = self._clock.snapshot()
+                            safety_budget = sparring_safety.MAX_BUDGET_MS
+                            if current["enabled"]:
+                                remaining = current["white_ms" if board.turn else "black_ms"]
+                                pressure = min(1.0, remaining / engine_pacing.SPARRING_PRESSURE_START_MS)
+                                safety_budget = int(max(0, min(max(sparring_safety.MIN_BUDGET_MS, safety_budget * pressure ** 2),
+                                    remaining - engine_pacing.LOW_CLOCK_MS - 150)))
+                            if self._active_pacing is not None and safety_budget >= sparring_safety.MIN_BUDGET_MS:
+                                self._active_pacing.update(
+                                    safety_check={"active": True, "budget_ms": safety_budget},
+                                    target_total_ms=int(current["turn_elapsed_ms"] + safety_budget + 150))
+                                self._active_extra_budget_ms = safety_budget
+
+                        def safety_search(budget, **options):
+                            if safety_cancelled():
+                                raise InterruptedError("Tactical safety cancelled")
+                            with self._lock:
+                                current = self._clock.snapshot()
+                                if current["enabled"]:
+                                    budget = min(budget, current["white_ms" if board.turn else "black_ms"]
+                                                 - engine_pacing.LOW_CLOCK_MS - 150)
+                            return search(budget, **options, referee_discovery=True)
+
+                        referee_search_active.set()  # Old pacing targets must not truncate this allowance.
+                        try:
+                            replacement, safety, discarded = sparring_safety.verify(
+                                board, reply.move, safety_search, engine.close,
+                                budget_ms=safety_budget, cancelled=safety_cancelled)
+                        finally:
+                            referee_search_active.clear()
+                        discard_engine = discard_engine or discarded
+                        previous_decision = copy.deepcopy(decision)
+                        if replacement is not None:
+                            reply, baseline_info, baseline_packets = replacement
+                            decision = None
+                        if decision is None:
+                            decision, _ = sparring_play.choose(
+                                board, reply.move, baseline_info, baseline_packets, search, engine.close,
+                                decisions=sparring_decisions, seed=self._opening_seed,
+                                movetime_ms=0, forced=forced_game)
+                        if replacement is not None:
+                            decision.update(reason="tactical_safety_replacement", pre_safety_selection=previous_decision)
+                            if previous_decision is not None:
+                                for field in ("opponent_observation", "profile"):
+                                    if field in previous_decision:
+                                        decision[field] = copy.deepcopy(previous_decision[field])
+                        checked_child = safety.get("alternative_child" if replacement is not None else "original_child")
+                        if checked_child is not None:
+                            # A failed replacement must not leave a disproven
+                            # original +0.17 labelled as a verified close game.
+                            child_cp = checked_child["cp_own"]
+                            control = decision["band_control"]
+                            control["selected_postmove_cp"] = child_cp
+                            values = [control.get("selected_cp"), child_cp]
+                            inside = all(type(value) in (int, float) and abs(value) <= 100 for value in values)
+                            deviation = max(max(abs(value) - 100, 0) for value in values) if all(
+                                type(value) in (int, float) for value in values) else None
+                            control.update(status="met" if inside else "unmet", strict_band_status="met" if inside else "unmet",
+                                           strict_deviation_cp=deviation, deviation_cp=deviation,
+                                           recovered=inside and replacement is not None,
+                                           failure_reason=None if inside else "tactical_safety_outside_band")
+                            if not control.get("active"):
+                                control.update(status="inactive", failure_reason="finish_full_strength", deviation_cp=None)
+                            for field in ("pre20_inside", "pre30_inside", "pre40_inside", "pre50_inside"):
+                                control[field] = inside
+                        decision["tactical_safety"] = safety
+                        with self._lock:
+                            if self._active_pacing is not None and "safety_check" in self._active_pacing:
+                                self._active_pacing["safety_check"]["reason"] = safety["reason"]
+                # Audit the actual final selection, including quiet baseline
+                # errors and move 50+, after the native tactical gate.
+                if self.sparring_mode and not discard_engine:
+                    referee_search_active.set()
+                    try:
+                        replacement, quality, discarded = self._check_sparring_quality(
+                            board, reply.move, search, engine.close, game_id, token, revision)
+                    finally:
+                        referee_search_active.clear()
+                    discard_engine = discard_engine or discarded
+                    previous_decision = copy.deepcopy(decision)
+                    if replacement is not None:
+                        reply, baseline_info, baseline_packets = replacement
+                        decision = None
+                    if decision is None:
+                        decision, _ = sparring_play.choose(
+                            board, reply.move, baseline_info, baseline_packets, search, engine.close,
+                            decisions=sparring_decisions, seed=self._opening_seed,
+                            movetime_ms=0, forced=forced_game)
+                    if replacement is not None:
+                        decision.update(reason=("quality_guard_damage_limitation" if quality["status"] == "mitigated"
+                                                else "quality_guard_replacement"),
+                                        pre_quality_selection=previous_decision)
+                        if previous_decision is not None:
+                            for field in ("opponent_observation", "profile"):
+                                if field in previous_decision:
+                                    decision[field] = copy.deepcopy(previous_decision[field])
+                    # Keep external position evidence separate from native
+                    # scores; unverified fallbacks must remain explicit.
+                    decision["quality_guard"] = quality
+                    with self._lock:
+                        if self._active_pacing is not None and "quality_check" in self._active_pacing:
+                            self._active_pacing["quality_check"]["reason"] = quality["reason"]
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
             except BaseException as exc:
@@ -1869,6 +2103,10 @@ class HumanGame:
 
     def _boss_metadata(self):
         return {"enabled": self.boss_mode, "policy": boss_play.POLICY, "seed": self._opening_seed,
+                "knowledge": boss_play.gambit_knowledge.metadata(),
+                "learning": boss_play.gambit_learning.model_identity(),
+                "operations": boss_play.gambit_operations.metadata(),
+                "practice_memory": boss_play.gambit_practice_memory.metadata(),
                 "risk_profile": boss_play.RISK_PROFILE, "trap_max_plies": boss_play.TRAP_MAX_PLIES,
                 "opponent_profile": boss_play.boss_opponent.derive_profile(self.board, list(self._boss_decisions.values())),
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._boss_decisions.items())],
@@ -1901,8 +2139,9 @@ class HumanGame:
         state = self.state()
         # Actual reported ratings live only in the ignored private database.
         # Public/exportable game receipts retain the experimental estimate.
-        if state["engine"].get("sparring_rating") is not None:
-            state["engine"]["sparring_rating"]["label"] = None
+        for key in ("rating", "sparring_rating"):
+            if state["engine"].get(key) is not None:
+                state["engine"][key]["label"] = None
         record = {"game_id": self.game_id, "started_at": self.started_at,
                   "updated_at": self.updated_at, "ended_at": self.ended_at,
                   "record_status": self._record_status(), "schema_version": 2,
@@ -1910,7 +2149,7 @@ class HumanGame:
                   "initial_fen": self.board.root().fen(en_passant="fen"),
                   "final_fen": self.board.fen(en_passant="fen"),
                   "uci_moves": [move.uci() for move in self.board.move_stack],
-                  "state": state, "draw_policy": "always claim available threefold/50-move draws",
+                  "state": state, "draw_policy": DRAW_POLICY,
                   "handicap_events": self._handicap_events,
                   "engine_movetimes_ms": self._engine_movetimes,
                   "engine_pacing": {"policy": engine_pacing.POLICY, "enabled": state["clock"]["enabled"],
@@ -1924,6 +2163,7 @@ class HumanGame:
                   "boss_play": self._boss_metadata(),
                   "sparring_play": self._sparring_metadata(),
                   "sparring_referee": self._referee_record(state["engine"]["sparring_referee"]),
+                  "opponent_rating": self._rating_metadata(),
                   "sparring_rating": self._rating_metadata() if self.sparring_mode else None,
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         # state() above already adjudicated. Keep the PGN and JSON on that
@@ -1941,6 +2181,8 @@ class HumanGame:
         self._pacing_event.set()
         if self._live_evaluation is not None:
             self._live_evaluation.close()
+        if getattr(self, "_gauge", None) is not None:
+            self._gauge.close()
         if self._referee is not None:
             try:
                 self._referee.close()
@@ -1948,6 +2190,8 @@ class HumanGame:
                 self._referee_error = "별도 심판을 정리하는 중 오류가 발생했습니다."
         if self.coaching is not None:
             self.coaching.close()
+        if self.coaching_reference is not None:
+            self.coaching_reference.close()
         if self.analysis is not None:
             self.analysis.close()
         if self._hints is not None:
@@ -2072,6 +2316,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.explorer.snapshot())
         elif self.path == "/api/coaching":
             self._send(200, self.server.game.coaching.snapshot())
+        elif self.path == "/api/coaching-reference":
+            self._send(200, self.server.game.coaching_reference.snapshot())
         elif self.path == "/api/pgn":
             self._send(200, self.server.game.pgn(), "application/x-chess-pgn; charset=utf-8")
         elif self.path == "/api/games" or self.path.startswith("/api/games/"):
@@ -2123,7 +2369,7 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            maximum = MAX_PGN_REQUEST_BYTES if self.path in ("/api/pgn-preview", "/api/coaching") else 4096
+            maximum = MAX_PGN_REQUEST_BYTES if self.path in ("/api/pgn-preview", "/api/coaching", "/api/coaching-reference") else 4096
             if not 0 < length <= maximum:
                 raise ValueError("요청 크기가 올바르지 않습니다.")
             data = json.loads(self.rfile.read(length))
@@ -2136,6 +2382,9 @@ class HumanHandler(BaseHTTPRequestHandler):
                 return
             revision = data.get("revision")
             game = self.server.game
+            if self.path == "/api/coaching-reference":
+                self._send(200, game.coaching_reference.select(data))
+                return
             if self.path == "/api/opening-explorer":
                 action = data.get("action")
                 if action == "query":
@@ -2197,8 +2446,9 @@ class HumanHandler(BaseHTTPRequestHandler):
                        "/api/handicap-cancel": lambda: game.cancel_handicap(revision),
                        "/api/undo": lambda: game.undo(revision),
                        "/api/resign": lambda: game.resign(revision)}
-            actions["/api/sparring/rating-label"] = lambda: game.label_sparring_rating(
+            actions["/api/rating-label"] = lambda: game.label_opponent_rating(
                 data.get("rating"), data.get("game_id"), revision)
+            actions["/api/sparring/rating-label"] = actions["/api/rating-label"]
             if self.path == "/api/shutdown":
                 with game._lock:
                     game._check_revision(revision)
@@ -2219,6 +2469,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             error = {"error": str(exc)}
             if self.path == "/api/coaching":
                 error["coaching"] = self.server.game.coaching.snapshot()
+            elif self.path == "/api/coaching-reference":
+                error["reference"] = self.server.game.coaching_reference.snapshot()
             elif self.path == "/api/analysis":
                 error["analysis"] = self.server.game.analysis.snapshot()
             elif self.path == "/api/opening-explorer":
@@ -2235,6 +2487,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             error = {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요."}
             if self.path == "/api/coaching":
                 error["coaching"] = self.server.game.coaching.snapshot()
+            elif self.path == "/api/coaching-reference":
+                error["reference"] = self.server.game.coaching_reference.snapshot()
             elif self.path == "/api/analysis":
                 error["analysis"] = self.server.game.analysis.snapshot()
             elif self.path == "/api/opening-explorer":
@@ -2286,7 +2540,7 @@ def main():
     game = HumanGame(args.binary, save_dir, neural_model=selected["model"],
                      neural_adopted_generation=selected["generation"], dynamic_play_enabled=True,
                      referee_binary=referee_info.get("binary") if referee_info["available"] else None,
-                     referee_info=referee_info)
+                     referee_info=referee_info, initial_time_control="10+0")
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),

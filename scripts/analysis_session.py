@@ -11,6 +11,8 @@ import uuid
 import chess
 
 from move_hints import MoveHints
+from stockfish_gauge import StockfishGauge
+from game_outcome import automatic_outcome
 
 
 class AnalysisRevisionError(ValueError):
@@ -63,9 +65,10 @@ def validated_position(fen):
 
 
 class AnalysisSession:
-    def __init__(self, binary, engine_name="Regicide", engine_factory=None):
+    def __init__(self, binary, engine_name="Regicide", engine_factory=None, *, reference_binary=None, gauge=None):
         self._lock = threading.RLock()
         self._hints = MoveHints(binary, engine_factory, stream_evaluation=True)
+        self._gauge = gauge if gauge is not None else StockfishGauge(reference_binary)
         self.engine_name = engine_name
         self.board = chess.Board()
         self.game_id = "analysis-" + uuid.uuid4().hex
@@ -84,7 +87,7 @@ class AnalysisSession:
     def _position_status(self):
         if not self.active:
             return "editing", "기물을 배치한 뒤 분석 시작을 누르세요."
-        outcome = self.board.outcome(claim_draw=True)
+        outcome = automatic_outcome(self.board)
         if outcome is not None:
             if outcome.termination == chess.Termination.CHECKMATE:
                 return "checkmate", "체크메이트입니다. 추천할 수가 없습니다."
@@ -102,6 +105,8 @@ class AnalysisSession:
                                     movetime_ms=self.movetime_ms, engine_name=self.engine_name,
                                     active=eligible)
         self._hints.set_enabled(eligible)
+        self._gauge.update_position(game_id=self.game_id, revision=self.revision,
+                                    board=self.board, active=eligible)
 
     def _castling_diagnostics(self, status, legal_moves):
         """Explain rejected castles without changing the board or its rights.
@@ -166,7 +171,7 @@ class AnalysisSession:
                                   game_id=self.game_id, revision=self.revision, fen=self.board.fen(en_passant="fen"),
                                   turn="white" if self.board.turn else "black")
             elif status != "active":
-                outcome = self.board.outcome(claim_draw=True)
+                outcome = automatic_outcome(self.board)
                 winner = "white" if outcome.winner == chess.WHITE else "black" if outcome.winner == chess.BLACK else None
                 evaluation.update(status="terminal", cp=None, mate=0 if status == "checkmate" else None,
                                   depth=None, bound=None, white_share=1.0 if winner == "white" else
@@ -193,7 +198,9 @@ class AnalysisSession:
                     "status": status, "message": message, "movetime_ms": self.movetime_ms,
                     "last_move": self.board.peek().uci() if self.board.move_stack else None,
                     "in_check": self.board.is_check(), "moves": moves,
-                    "hint": hint, "evaluation": evaluation}
+                    "hint": hint, "evaluation": evaluation,
+                    "reference_evaluation": self._gauge.snapshot(),
+                    "stockfish_reference": self._gauge.metadata()}
 
     def start(self, fen, movetime_ms, revision):
         with self._lock:
@@ -250,3 +257,4 @@ class AnalysisSession:
             self._closed = True
             self.revision += 1
         self._hints.close()
+        self._gauge.close()

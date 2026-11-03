@@ -140,53 +140,54 @@ func _editor_drag_tests() -> void:
 func _evaluation_tests(position: Dictionary) -> void:
 	var current: Dictionary = position.duplicate(true)
 	var value: Dictionary = {"game_id": current.game_id, "revision": current.revision,
-		"fen": current.fen, "turn": current.turn, "status": "searching", "cp": 250,
+		"fen": current.fen, "turn": current.turn, "status": "ready", "cp": 250,
 		"mate": null, "depth": 4, "bound": "exact", "white_share": null,
-		"winner": null, "result": "*", "source": "search", "source_fen": current.fen}
-	current.evaluation = value.duplicate(true)
+		"winner": null, "result": "*", "source": "stockfish_gauge", "source_fen": current.fen}
+	current.reference_evaluation = value.duplicate(true)
 	panel.accept_state(current)
 	verify(panel.evaluation_bar.has_score and panel.evaluation_summary.text.contains("백 우세") and panel.evaluation_summary.text.contains("+2.50"), "positive analysis score is always white advantage")
-	verify(panel.evaluation_detail.text.contains("계산 중") and panel.evaluation_detail.text.contains("승률이 아닙니다"), "streaming score identifies ongoing search and estimate scale")
+	verify(panel.evaluation_detail.text.contains("Stockfish") and panel.evaluation_detail.text.contains("승률이 아닙니다"), "reference identifies Stockfish source and estimate scale")
 	var prior_text: String = panel.evaluation_summary.text
 	panel.model.view_from_white = true
 	panel._render()
 	verify(is_equal_approx(panel.evaluation_bar.white_rect().end.y, panel.evaluation_bar.bar_rect().end.y), "white view anchors score fill at bottom")
 	panel.flip_view()
 	verify(panel.evaluation_summary.text == prior_text and is_equal_approx(panel.evaluation_bar.white_rect().position.y, panel.evaluation_bar.bar_rect().position.y), "analysis flip changes fill orientation without changing score sign")
-	current.evaluation.status = "ready"
-	current.evaluation.cp = -175
+	current.reference_evaluation.status = "ready"
+	current.reference_evaluation.cp = -175
 	panel.accept_state(current)
 	verify(panel.evaluation_summary.text.contains("흑 우세") and panel.evaluation_summary.text.contains("-1.75") and panel.evaluation_bar.white_share < 0.5, "negative completed analysis score is black advantage")
-	current.evaluation.cp = 0
+	current.reference_evaluation.cp = 0
 	panel.accept_state(current)
 	verify(panel.evaluation_bar.has_score and panel.evaluation_summary.text.contains("0.00"), "real zero is balanced rather than missing")
-	current.evaluation.status = "searching"
-	current.evaluation.cp = null
+	current.reference_evaluation.status = "searching"
+	current.reference_evaluation.cp = null
 	panel.accept_state(current)
 	verify(not panel.evaluation_bar.has_score and panel.evaluation_summary.text.contains("계산 중"), "search before first depth never invents zero")
-	current.evaluation.status = "ready"
+	current.reference_evaluation.status = "ready"
 	for mate in [3, -4]:
-		current.evaluation.mate = mate
+		current.reference_evaluation.mate = mate
 		panel.accept_state(current)
 		verify(panel.evaluation_summary.text.contains("M%d" % absi(mate)) and panel.evaluation_bar.white_share == (1.0 if mate > 0 else 0.0), "signed mate prediction keeps white perspective")
-	current.evaluation.mate = 0
-	current.evaluation.winner = "black"
+	current.reference_evaluation.mate = 0
+	current.reference_evaluation.winner = "black"
 	panel.accept_state(current)
-	verify(panel.evaluation_summary.text == "흑 체크메이트", "mate zero is a decisive score rather than draw")
-	current.evaluation.mate = null
-	current.evaluation.status = "terminal"
-	current.evaluation.result = "1/2-1/2"
+	verify(panel.evaluation_summary.text == "Stockfish · 흑 체크메이트", "mate zero is a decisive score rather than draw")
+	current.reference_evaluation.mate = null
+	current.reference_evaluation.status = "terminal"
+	current.reference_evaluation.result = "1/2-1/2"
+	current.reference_evaluation.source = "chess_rules"
 	panel.accept_state(current)
 	verify(panel.evaluation_summary.text == "무승부" and is_equal_approx(panel.evaluation_bar.white_share, 0.5), "terminal draw has explicit balanced result")
 	for field in ["game_id", "revision", "fen", "turn"]:
-		current.evaluation = value.duplicate(true)
-		current.evaluation[field] = -1 if field == "revision" else "stale"
+		current.reference_evaluation = value.duplicate(true)
+		current.reference_evaluation[field] = -1 if field == "revision" else "stale"
 		panel.accept_state(current)
 		verify(not panel.evaluation_bar.has_score, "analysis rejects stale evaluation " + field)
-	current.evaluation = value.duplicate(true)
-	current.evaluation.bound = "lower"
+	current.reference_evaluation = value.duplicate(true)
+	current.reference_evaluation.bound = "lower"
 	panel.accept_state(current)
-	verify(panel.evaluation_summary.text.contains("≥") and not panel.evaluation_summary.text.contains("백 우세"), "search bound is shown as inequality rather than exact advantage")
+	verify(not panel.evaluation_bar.has_score and panel.evaluation_summary.text.contains("계산 중"), "bounded reference never substitutes for exact Stockfish score")
 	panel.editing = true
 	panel._render()
 	verify(not panel.evaluation_bar.has_score, "editor clears old evaluation immediately")

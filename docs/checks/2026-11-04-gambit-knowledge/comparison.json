@@ -1,0 +1,985 @@
+{
+  "schema": "regicide.gambit-knowledge-comparison.v1",
+  "scope": "Functional continuation diagnostics; authored prefixes; correlated small sample; not complete matches/Elo",
+  "branches_per_version": 12,
+  "native_turns_before": 48,
+  "native_turns_after": 48,
+  "all_branches_passed": true,
+  "all_runtime_snapshots_unchanged": true,
+  "all_binaries_unchanged": true,
+  "equal_binary": true,
+  "equal_requested_budgets": true,
+  "current_source_hash_mismatches": [],
+  "all_audits_depth_12": false,
+  "audit_depth_counts_before": {
+    "12": 48
+  },
+  "audit_depth_counts_after": {
+    "11": 1,
+    "12": 47
+  },
+  "descriptive_only": {
+    "mean_external_loss_cp_before": 30.9583,
+    "mean_external_loss_cp_after": 26.2917,
+    "max_external_loss_cp_before": 138,
+    "max_external_loss_cp_after": 138,
+    "external_loss_over_150_before": 0,
+    "external_loss_over_150_after": 0,
+    "median_wall_ms_before": 1141.769,
+    "median_wall_ms_after": 1159.886
+  },
+  "knowledge_turns": 13,
+  "knowledge_matches_native_baseline": 5,
+  "knowledge_changed_native_candidate": 8,
+  "learned_rank_active": 0,
+  "learned_rank_changed_order": 0,
+  "all_changed_candidates_passed_native_floor_and_capture_screen": true,
+  "changed_candidate_quality": [
+    {
+      "case": "evans-accepted",
+      "ply": 9,
+      "uci": "c2c3",
+      "native_loss_cp": 2,
+      "external_loss_cp": 3,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-declined",
+      "ply": 11,
+      "uci": "f3e5",
+      "native_loss_cp": 33,
+      "external_loss_cp": 0,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-defense",
+      "ply": 9,
+      "uci": "c2c3",
+      "native_loss_cp": 2,
+      "external_loss_cp": 3,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-defense",
+      "ply": 11,
+      "uci": "e1g1",
+      "native_loss_cp": 15,
+      "external_loss_cp": 57,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-defense",
+      "ply": 13,
+      "uci": "d2d4",
+      "native_loss_cp": 1,
+      "external_loss_cp": 0,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "stafford-defense",
+      "ply": 10,
+      "uci": "f8c5",
+      "native_loss_cp": 10,
+      "external_loss_cp": 51,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-accurate-defense-position",
+      "ply": 11,
+      "uci": "e1g1",
+      "native_loss_cp": 15,
+      "external_loss_cp": 57,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    },
+    {
+      "case": "evans-accurate-defense-position",
+      "ply": 13,
+      "uci": "d2d4",
+      "native_loss_cp": 1,
+      "external_loss_cp": 0,
+      "material_screen_passed": true,
+      "native_floor_passed": true
+    }
+  ],
+  "matched_exact_roots": [
+    {
+      "case": "evans-accepted",
+      "ply": 7,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "before_uci": "b2b4",
+      "after_uci": "b2b4",
+      "before_loss_cp": 57,
+      "after_loss_cp": 57,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-accepted",
+      "ply": 9,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/4p3/1bB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 0 5",
+      "before_uci": "a2a3",
+      "after_uci": "c2c3",
+      "before_loss_cp": 117,
+      "after_loss_cp": 3,
+      "knowledge_changed_native_candidate": true
+    },
+    {
+      "case": "evans-declined",
+      "ply": 7,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "before_uci": "b2b4",
+      "after_uci": "b2b4",
+      "before_loss_cp": 57,
+      "after_loss_cp": 57,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-declined",
+      "ply": 9,
+      "fen": "r1bqk1nr/pppp1ppp/1bn5/4p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 1 5",
+      "before_uci": "b4b5",
+      "after_uci": "b4b5",
+      "before_loss_cp": 78,
+      "after_loss_cp": 78,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-declined",
+      "ply": 11,
+      "fen": "r1bqk1nr/pppp1ppp/1b6/nP2p3/2B1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 1 6",
+      "before_uci": "c4d3",
+      "after_uci": "f3e5",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": true
+    },
+    {
+      "case": "evans-defense",
+      "ply": 7,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "before_uci": "b2b4",
+      "after_uci": "b2b4",
+      "before_loss_cp": 57,
+      "after_loss_cp": 57,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-defense",
+      "ply": 9,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/4p3/1bB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 0 5",
+      "before_uci": "a2a3",
+      "after_uci": "c2c3",
+      "before_loss_cp": 117,
+      "after_loss_cp": 3,
+      "knowledge_changed_native_candidate": true
+    },
+    {
+      "case": "evans-unusual-defense",
+      "ply": 7,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "before_uci": "b2b4",
+      "after_uci": "b2b4",
+      "before_loss_cp": 57,
+      "after_loss_cp": 57,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-unusual-defense",
+      "ply": 9,
+      "fen": "r1bqk1nr/ppppbppp/2n5/4p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 1 5",
+      "before_uci": "b4b5",
+      "after_uci": "b4b5",
+      "before_loss_cp": 11,
+      "after_loss_cp": 11,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-unusual-defense",
+      "ply": 11,
+      "fen": "r1bqk1nr/ppppbppp/8/nP2p3/2B1P3/5N2/P1PP1PPP/RNBQK2R w KQkq - 1 6",
+      "before_uci": "f3e5",
+      "after_uci": "f3e5",
+      "before_loss_cp": 62,
+      "after_loss_cp": 62,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-unusual-defense",
+      "ply": 13,
+      "fen": "r1bqk1nr/ppppbppp/8/1P2N3/2n1P3/8/P1PP1PPP/RNBQK2R w KQkq - 0 7",
+      "before_uci": "e5c4",
+      "after_uci": "e5c4",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-accepted",
+      "ply": 6,
+      "fen": "rnbqkb1r/pppp1ppp/5n2/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3",
+      "before_uci": "b8c6",
+      "after_uci": "b8c6",
+      "before_loss_cp": 77,
+      "after_loss_cp": 77,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-accepted",
+      "ply": 8,
+      "fen": "r1bqkb1r/pppp1ppp/2N2n2/8/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 4",
+      "before_uci": "d7c6",
+      "after_uci": "d7c6",
+      "before_loss_cp": 2,
+      "after_loss_cp": 2,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-accepted",
+      "ply": 10,
+      "fen": "r1bqkb1r/ppp2ppp/2p2n2/4P3/8/8/PPPP1PPP/RNBQKB1R b KQkq - 0 5",
+      "before_uci": "f6d7",
+      "after_uci": "f6d7",
+      "before_loss_cp": 29,
+      "after_loss_cp": 29,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-accepted",
+      "ply": 12,
+      "fen": "r1bqkb1r/pppn1ppp/2p5/4P3/3P4/8/PPP2PPP/RNBQKB1R b KQkq d3 0 6",
+      "before_uci": "d7b6",
+      "after_uci": "d7b6",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-declined",
+      "ply": 6,
+      "fen": "rnbqkb1r/pppp1ppp/5n2/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3",
+      "before_uci": "b8c6",
+      "after_uci": "b8c6",
+      "before_loss_cp": 77,
+      "after_loss_cp": 77,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-declined",
+      "ply": 8,
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 2 4",
+      "before_uci": "f6e4",
+      "after_uci": "f6e4",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-declined",
+      "ply": 10,
+      "fen": "r1bqkb1r/pppp1ppp/2n5/8/4n3/3P1N2/PPP2PPP/RNBQKB1R b KQkq - 0 5",
+      "before_uci": "e4f6",
+      "after_uci": "e4f6",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-declined",
+      "ply": 12,
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/8/8/2NP1N2/PPP2PPP/R1BQKB1R b KQkq - 2 6",
+      "before_uci": "d7d5",
+      "after_uci": "d7d5",
+      "before_loss_cp": 13,
+      "after_loss_cp": 13,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-defense",
+      "ply": 6,
+      "fen": "rnbqkb1r/pppp1ppp/5n2/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3",
+      "before_uci": "b8c6",
+      "after_uci": "b8c6",
+      "before_loss_cp": 77,
+      "after_loss_cp": 77,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-defense",
+      "ply": 8,
+      "fen": "r1bqkb1r/pppp1ppp/2N2n2/8/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 4",
+      "before_uci": "d7c6",
+      "after_uci": "d7c6",
+      "before_loss_cp": 2,
+      "after_loss_cp": 2,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "stafford-defense",
+      "ply": 10,
+      "fen": "r1bqkb1r/ppp2ppp/2p2n2/8/4P3/3P4/PPP2PPP/RNBQKB1R b KQkq - 0 5",
+      "before_uci": "f8c5",
+      "after_uci": "f8c5",
+      "before_loss_cp": 51,
+      "after_loss_cp": 51,
+      "knowledge_changed_native_candidate": true
+    },
+    {
+      "case": "stafford-defense",
+      "ply": 12,
+      "fen": "r1bqk2r/ppp2ppp/2p2n2/2b5/4P3/3PB3/PPP2PPP/RN1QKB1R b KQkq - 2 6",
+      "before_uci": "c5e3",
+      "after_uci": "c5e3",
+      "before_loss_cp": 21,
+      "after_loss_cp": 21,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "benko-accepted",
+      "ply": 8,
+      "fen": "rnbqkb1r/p2ppppp/5n2/1PpP4/8/8/PP2PPPP/RNBQKBNR b KQkq - 0 4",
+      "before_uci": "a7a6",
+      "after_uci": "a7a6",
+      "before_loss_cp": 9,
+      "after_loss_cp": 9,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "benko-accepted",
+      "ply": 10,
+      "fen": "rnbqkb1r/3ppppp/p4n2/1PpP4/8/4P3/PP3PPP/RNBQKBNR b KQkq - 0 5",
+      "before_uci": "d7d6",
+      "after_uci": "d7d6",
+      "before_loss_cp": 26,
+      "after_loss_cp": 26,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "benko-accepted",
+      "ply": 12,
+      "fen": "rnbqkb1r/4pppp/p2p1n2/1PpP4/8/2N1P3/PP3PPP/R1BQKBNR b KQkq - 1 6",
+      "before_uci": "e7e6",
+      "after_uci": "c8b7",
+      "before_loss_cp": 40,
+      "after_loss_cp": 32,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "morra-declined",
+      "ply": 7,
+      "fen": "rnbqkb1r/pp1ppppp/5n2/8/3pP3/2P5/PP3PPP/RNBQKBNR w KQkq - 1 4",
+      "before_uci": "e4e5",
+      "after_uci": "e4e5",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "morra-declined",
+      "ply": 9,
+      "fen": "rnbqkb1r/pp1ppppp/8/3nP3/3p4/2P5/PP3PPP/RNBQKBNR w KQkq - 1 5",
+      "before_uci": "c3d4",
+      "after_uci": "c3d4",
+      "before_loss_cp": 3,
+      "after_loss_cp": 3,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "morra-declined",
+      "ply": 11,
+      "fen": "rnbqkb1r/pp2pppp/3p4/3nP3/3P4/8/PP3PPP/RNBQKBNR w KQkq - 0 6",
+      "before_uci": "f1c4",
+      "after_uci": "f1c4",
+      "before_loss_cp": 8,
+      "after_loss_cp": 8,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "morra-declined",
+      "ply": 13,
+      "fen": "rnbqkb1r/pp2pppp/1n1p4/4P3/2BP4/8/PP3PPP/RNBQK1NR w KQkq - 2 7",
+      "before_uci": "b1d2",
+      "after_uci": "b1d2",
+      "before_loss_cp": 138,
+      "after_loss_cp": 138,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "blackmar-transposed",
+      "ply": 7,
+      "fen": "rnbqkb1r/ppp1pppp/5n2/8/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "before_uci": "f2f3",
+      "after_uci": "f2f3",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "blackmar-transposed",
+      "ply": 9,
+      "fen": "rnbqkb1r/ppp1pppp/5n2/8/3P4/2N2p2/PPP3PP/R1BQKBNR w KQkq - 0 5",
+      "before_uci": "g1f3",
+      "after_uci": "g1f3",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "blackmar-transposed",
+      "ply": 11,
+      "fen": "r1bqkb1r/ppp1pppp/2n2n2/8/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq - 1 6",
+      "before_uci": "f1b5",
+      "after_uci": "f1b5",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "blackmar-transposed",
+      "ply": 13,
+      "fen": "r2qkb1r/pppbpppp/2n2n2/1B6/3P4/2N2N2/PPP3PP/R1BQK2R w KQkq - 3 7",
+      "before_uci": "e1g1",
+      "after_uci": "e1g1",
+      "before_loss_cp": 10,
+      "after_loss_cp": 10,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "evans-accurate-defense-position",
+      "ply": 11,
+      "fen": "r1bqk1nr/pppp1ppp/2n5/b3p3/2B1P3/2P2N2/P2P1PPP/RNBQK2R w KQkq - 1 6",
+      "before_uci": "d1b3",
+      "after_uci": "e1g1",
+      "before_loss_cp": 31,
+      "after_loss_cp": 57,
+      "knowledge_changed_native_candidate": true
+    },
+    {
+      "case": "queens-gambit-transposition-position",
+      "ply": 11,
+      "fen": "rnbq1rk1/ppp1bppp/4pn2/3p2B1/2PP4/2N1P3/PP3PPP/R2QKBNR w KQ - 1 6",
+      "before_uci": "g1f3",
+      "after_uci": "g1f3",
+      "before_loss_cp": 0,
+      "after_loss_cp": 0,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "queens-gambit-transposition-position",
+      "ply": 13,
+      "fen": "rnbq1rk1/ppp1bpp1/4pn1p/3p2B1/2PP4/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 7",
+      "before_uci": "g5f6",
+      "after_uci": "g5f6",
+      "before_loss_cp": 7,
+      "after_loss_cp": 7,
+      "knowledge_changed_native_candidate": false
+    },
+    {
+      "case": "queens-gambit-transposition-position",
+      "ply": 15,
+      "fen": "rnbq1rk1/ppp2pp1/4pb1p/3p4/2PP4/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8",
+      "before_uci": "c4d5",
+      "after_uci": "f1d3",
+      "before_loss_cp": 12,
+      "after_loss_cp": 25,
+      "knowledge_changed_native_candidate": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "evans-accepted",
+      "family": "evans",
+      "split": "untrained_family",
+      "before_moves": [
+        "b4",
+        "a3",
+        "O-O",
+        "Ng5"
+      ],
+      "after_moves": [
+        "b4",
+        "c3",
+        "d4",
+        "Nbd2"
+      ],
+      "before_loss_cp": [
+        57,
+        117,
+        14,
+        58
+      ],
+      "after_loss_cp": [
+        57,
+        3,
+        0,
+        0
+      ],
+      "knowledge_turns": 1,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 1,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "evans-declined",
+      "family": "evans",
+      "split": "untrained_family",
+      "before_moves": [
+        "b4",
+        "b5",
+        "Bd3",
+        "Nc3"
+      ],
+      "after_moves": [
+        "b4",
+        "b5",
+        "Nxe5",
+        "Nxc4"
+      ],
+      "before_loss_cp": [
+        57,
+        78,
+        0,
+        0
+      ],
+      "after_loss_cp": [
+        57,
+        78,
+        0,
+        11
+      ],
+      "knowledge_turns": 2,
+      "knowledge_matches_native_baseline": 1,
+      "knowledge_changed_native_candidate": 1,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "evans-defense",
+      "family": "evans",
+      "split": "untrained_family",
+      "before_moves": [
+        "b4",
+        "a3",
+        "O-O",
+        "Ng5"
+      ],
+      "after_moves": [
+        "b4",
+        "c3",
+        "O-O",
+        "d4"
+      ],
+      "before_loss_cp": [
+        57,
+        117,
+        14,
+        58
+      ],
+      "after_loss_cp": [
+        57,
+        3,
+        57,
+        0
+      ],
+      "knowledge_turns": 3,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 3,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 1,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "evans-unusual-defense",
+      "family": "evans",
+      "split": "untrained_family",
+      "before_moves": [
+        "b4",
+        "b5",
+        "Nxe5",
+        "Nxc4"
+      ],
+      "after_moves": [
+        "b4",
+        "b5",
+        "Nxe5",
+        "Nxc4"
+      ],
+      "before_loss_cp": [
+        57,
+        11,
+        62,
+        0
+      ],
+      "after_loss_cp": [
+        57,
+        11,
+        62,
+        0
+      ],
+      "knowledge_turns": 0,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "stafford-accepted",
+      "family": "stafford",
+      "split": "untrained_family",
+      "before_moves": [
+        "Nc6",
+        "dxc6",
+        "Nd7",
+        "Nb6"
+      ],
+      "after_moves": [
+        "Nc6",
+        "dxc6",
+        "Nd7",
+        "Nb6"
+      ],
+      "before_loss_cp": [
+        77,
+        2,
+        29,
+        0
+      ],
+      "after_loss_cp": [
+        77,
+        2,
+        29,
+        0
+      ],
+      "knowledge_turns": 1,
+      "knowledge_matches_native_baseline": 1,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "stafford-declined",
+      "family": "stafford",
+      "split": "untrained_family",
+      "before_moves": [
+        "Nc6",
+        "Nxe4",
+        "Nf6",
+        "d5"
+      ],
+      "after_moves": [
+        "Nc6",
+        "Nxe4",
+        "Nf6",
+        "d5"
+      ],
+      "before_loss_cp": [
+        77,
+        0,
+        0,
+        13
+      ],
+      "after_loss_cp": [
+        77,
+        0,
+        0,
+        13
+      ],
+      "knowledge_turns": 0,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "stafford-defense",
+      "family": "stafford",
+      "split": "untrained_family",
+      "before_moves": [
+        "Nc6",
+        "dxc6",
+        "Bc5",
+        "Bxe3"
+      ],
+      "after_moves": [
+        "Nc6",
+        "dxc6",
+        "Bc5",
+        "Bxe3"
+      ],
+      "before_loss_cp": [
+        77,
+        2,
+        51,
+        21
+      ],
+      "after_loss_cp": [
+        77,
+        2,
+        51,
+        21
+      ],
+      "knowledge_turns": 2,
+      "knowledge_matches_native_baseline": 1,
+      "knowledge_changed_native_candidate": 1,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 1,
+      "conditional_defense_replies_after": 1,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "benko-accepted",
+      "family": "benko",
+      "split": "training_family_functional",
+      "before_moves": [
+        "a6",
+        "d6",
+        "e6",
+        "fxe6"
+      ],
+      "after_moves": [
+        "a6",
+        "d6",
+        "Bb7",
+        "Nbd7"
+      ],
+      "before_loss_cp": [
+        9,
+        26,
+        40,
+        0
+      ],
+      "after_loss_cp": [
+        9,
+        26,
+        32,
+        8
+      ],
+      "knowledge_turns": 1,
+      "knowledge_matches_native_baseline": 1,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "morra-declined",
+      "family": "morra",
+      "split": "tuning_family_functional",
+      "before_moves": [
+        "e5",
+        "cxd4",
+        "Bc4",
+        "Nd2"
+      ],
+      "after_moves": [
+        "e5",
+        "cxd4",
+        "Bc4",
+        "Nd2"
+      ],
+      "before_loss_cp": [
+        0,
+        3,
+        8,
+        138
+      ],
+      "after_loss_cp": [
+        0,
+        3,
+        8,
+        138
+      ],
+      "knowledge_turns": 0,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "blackmar-transposed",
+      "family": "blackmar",
+      "split": "training_family_functional",
+      "before_moves": [
+        "f3",
+        "Nxf3",
+        "Bb5",
+        "O-O"
+      ],
+      "after_moves": [
+        "f3",
+        "Nxf3",
+        "Bb5",
+        "O-O"
+      ],
+      "before_loss_cp": [
+        0,
+        0,
+        0,
+        10
+      ],
+      "after_loss_cp": [
+        0,
+        0,
+        0,
+        10
+      ],
+      "knowledge_turns": 0,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "evans-accurate-defense-position",
+      "family": "evans",
+      "split": "untrained_family",
+      "before_moves": [
+        "Qb3",
+        "Bb5",
+        "O-O",
+        "Bxc6"
+      ],
+      "after_moves": [
+        "O-O",
+        "d4",
+        "dxe5",
+        "Bd3"
+      ],
+      "before_loss_cp": [
+        31,
+        69,
+        18,
+        0
+      ],
+      "after_loss_cp": [
+        57,
+        0,
+        45,
+        92
+      ],
+      "knowledge_turns": 2,
+      "knowledge_matches_native_baseline": 0,
+      "knowledge_changed_native_candidate": 2,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "queens-gambit-transposition-position",
+      "family": "queen-s",
+      "split": "graph_functional",
+      "before_moves": [
+        "Nf3",
+        "Bxf6",
+        "cxd5",
+        "Qb3"
+      ],
+      "after_moves": [
+        "Nf3",
+        "Bxf6",
+        "Bd3",
+        "cxd5"
+      ],
+      "before_loss_cp": [
+        0,
+        7,
+        12,
+        9
+      ],
+      "after_loss_cp": [
+        0,
+        7,
+        25,
+        0
+      ],
+      "knowledge_turns": 1,
+      "knowledge_matches_native_baseline": 1,
+      "knowledge_changed_native_candidate": 0,
+      "learned_rank_active": 0,
+      "learned_rank_changed_order": 0,
+      "ranking_reasons": [
+        "experimental_model"
+      ],
+      "conditional_defense_replies_before": 0,
+      "conditional_defense_replies_after": 0,
+      "before_passed": true,
+      "after_passed": true
+    }
+  ],
+  "interpretation": [
+    "Knowledge graph activation and trained-model deployment are separate facts",
+    "A rejected experimental model must not be reported as active learned play",
+    "Later positions differ between versions; average audit loss is descriptive, not a paired strength estimate",
+    "External audit depth12 is bounded verification, not proof that no tactical loss exists"
+  ]
+}

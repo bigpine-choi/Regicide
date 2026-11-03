@@ -18,6 +18,9 @@
   let strategyView = null;
   let openingView = null;
   let retry = null, retryEpoch = 0, evidenceFocus = null;
+  let reference = null, referenceContext = null, referenceKey = "", referenceId = "", referenceSent = "", referenceSerial = 0, referencePolling = false;
+  let referenceRetries=0,referenceRetryAt=0;
+  const referenceClient = "web-" + Math.random().toString(36).slice(2);
   let retryPointer=null, pointerSource=null, pointerTarget=null, suppressRetryClickUntil=0;
   let speaking = false, speechEpoch = 0;
   let speechEnabled = true, speechTimer = null, pendingSpeechKey = "", lastSpeechKey = "";
@@ -104,17 +107,64 @@
     if (exerciseHidden() || !position?.fen) return {value:null};
     const result = {"1-0":[1,"백 승"],"0-1":[0,"흑 승"],"1/2-1/2":[.5,"무승부"]}[position.result];
     if (result) return {value:null,share:result[0],label:"대국 결과 · "+result[1]};
-    // A PV score belongs to its searched root, not every board along the line.
-    if (variation && lineCursor > 0) return {value:null,unsearchedLine:true};
-    const ply = variation ? selectedPly - 1 : cursor;
-    if (position.ply !== ply) return {value:null};
-    const row = rows().find((item) => item.ply === ply + 1);
-    if (!row || row.fen_before !== position.fen) return {value:null};
-    const freshRetry = retry?.revealed && retry.ply === row.ply && retry.base.fen === position.fen;
-    const value = freshRetry ? retry.feedback?.best : row.classification === "pending" ? null : row.best;
-    if (!value || value.pv_frames?.[0]?.fen !== position.fen || value.pv_frames[0].ply !== ply) return {value:null};
-    if (Number.isInteger(value.mate_white) && value.mate_white === 0 && !["white","black"].includes(value.winner)) return {value:null};
-    return {value};
+    if (reference?.request_id === referenceId && referenceId && reference.fen === position.fen &&
+        reference.source === "stockfish_coaching_reference" && reference.status === "ready" &&
+        reference.bound === "exact" && Number.isInteger(reference.depth) && reference.depth > 0 &&
+        (Number.isInteger(reference.cp) || Number.isInteger(reference.mate))) {
+      const value = {score_cp_white:reference.cp,mate_white:reference.mate,winner:reference.winner,depth:reference.depth,bound:reference.bound};
+      return {value,label:"Stockfish 현재 위치 · "+score(value)+" · 백 기준"};
+    }
+    return {value:null,label:["unavailable","error"].includes(reference?.status) ? "Stockfish 평가 사용 불가" : "Stockfish 형세 계산 중"};
+  }
+
+  function referencePosition(position) {
+    if (!visible || exerciseHidden() || !position?.fen || !frames()[0]?.fen) return null;
+    const base = variation ? selectedPly - 1 : position.ply;
+    if (!Number.isInteger(base) || base < 0 || base >= frames().length) return null;
+    const history = frames().slice(1,base+1).map(item=>item.last_move);
+    if (history.some(uci=>typeof uci !== "string" || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci))) return null;
+    if (variation) {
+      const pv = line()?.pv_uci;
+      if (!Array.isArray(pv) || lineCursor < 0 || lineCursor > pv.length) return null;
+      history.push(...pv.slice(0,lineCursor));
+    }
+    return {root_fen:frames()[0].fen,history_uci:history,fen:position.fen};
+  }
+  function syncReference(position=frame()) {
+    const context=referencePosition(position), key=context ? JSON.stringify([epoch,context]) : "";
+    if(key===referenceKey)return;
+    referenceContext=context;referenceKey=key;reference=null;
+    referenceRetries=0;referenceRetryAt=0;
+    referenceId=key ? referenceClient+"-"+(++referenceSerial) : "";
+  }
+  async function pollReference() {
+    if(referencePolling)return;
+    syncReference();
+    if(!referenceKey) {
+      if(referenceSent) {
+        const hiddenId=referenceSent;referenceSent="";referencePolling=true;
+        try {await request("/api/coaching-reference",{request_id:hiddenId,hidden:true});}catch(_){}
+        finally {referencePolling=false;}
+      }
+      return;
+    }
+    if(referenceSent===referenceId && reference && reference.status!=="loading") {
+      if(!["error","unavailable"].includes(reference.status) || referenceRetries>=2 || Date.now()<referenceRetryAt)return;
+      referenceRetries++;referenceId=referenceClient+"-"+(++referenceSerial);reference=null;
+    }
+    const id=referenceId,key=referenceKey;
+    const payload=referenceSent!==id ? {...referenceContext,request_id:id} : undefined;
+    referenceSent=id;referencePolling=true;
+    try {
+      const value=await request("/api/coaching-reference",payload);
+      syncReference();
+      if(id!==referenceId || key!==referenceKey || !visible || exerciseHidden())return;
+      reference=value?.request_id===id && value.fen===referenceContext.fen ? value : {status:"unavailable"};
+      if(["error","unavailable"].includes(reference.status))referenceRetryAt=Date.now()+3000;
+      renderBoard();
+    } catch(_) {
+      if(id===referenceId && key===referenceKey) {reference={status:"unavailable"};referenceRetryAt=Date.now()+3000;renderBoard();}
+    } finally {referencePolling=false;}
   }
   function moveTitle(row) {
     if (!row) return "수를 선택하세요.";
@@ -126,6 +176,17 @@
     return (row.fen_before?.split(/\s+/)[5] || Math.ceil(row.ply/2)) + "수 · " + actor(row);
   }
   function lessons() { return (report?.coach?.lesson_plies || []).filter((ply) => rows().some((row) => row.ply === ply)).slice(0,5); }
+  function keyRows() {
+    const eligible=rows().filter((row)=>shown(row) && row.classification && !["pending","uncertain"].includes(row.classification));
+    const selected=new Set(lessons().filter((ply)=>eligible.some((row)=>row.ply===ply)));
+    if(!selected.size) for(const row of eligible)if(["best","good"].includes(row.classification))selected.add(row.ply);
+    return eligible.filter((row)=>selected.has(row.ply) || criticalKinds.has(row.classification)).sort((a,b)=>a.ply-b.ply);
+  }
+  function jumpKeyScene(direction) {
+    if(busy || exerciseHidden())return;
+    const candidates=keyRows(),row=direction<0 ? candidates.filter((item)=>item.ply<selectedPly).at(-1) : candidates.find((item)=>item.ply>selectedPly);
+    if(row)choosePly(row.ply,false);
+  }
   function canRetry() {
     const row=selectedRow();
     return visible && !busy && !retry?.submitting && (!contextReplay || contextReplay.done) && ["completed","cancelled"].includes(report?.status) && row?.classification !== "pending" &&
@@ -410,8 +471,9 @@
     get("coach-mascot").setAttribute("aria-label",({encourage:"응원하는",think:"생각하는",celebrate:"기뻐하는",warning:"주의할 점을 알려주는"})[mood]+" 체스 코치 루크");
     get("coach-scene").textContent=row ? positionTitle(row) + (hidden ? " · 다시 두기" : "") : "한 장면씩 함께 살펴봐요.";
     get("coach-dialogue").textContent=continuationReplay ? continuationText() : travelling ? "Following the moves actually played to the next key moment." :
-      hidden ? retry.feedback?.message || wording?.hint || "Check for threats against the king and pieces that can be captured." :
+      hidden ? retry.feedback?.message || (row?.classification === "uncertain" ? "" : wording?.hint) || "Check for threats against the king and pieces that can be captured." :
       openingView ? openingView.section.text : strategyView ? strategyView.section.text :
+      row?.classification === "uncertain" ? "" :
       (!retry && insight?.summary) || wording?.dialogue || (report ? "I'm checking this move and the opponent's reply." : "Choose a game to review its key moments.");
     get("coach-strategy").hidden=!insight || Boolean(retry) || travelling || Boolean(continuationReplay) || speechOverview;
     get("coach-strategy-title").textContent=insight?.title || "";
@@ -609,18 +671,18 @@
   function moveAnnotation(position) {
     if(retry || variation || viewBefore || !position || cursor<1 || position.ply!==cursor)return null;
     const row=rows()[cursor-1],destination=row?.uci?.slice(2,4);
-    if(!row || row.ply!==cursor || row.classification==="pending" || !row.fen_after || position.fen!==row.fen_after ||
+    if(!row || row.ply!==cursor || ["pending","uncertain"].includes(row.classification) || !row.fen_after || position.fen!==row.fen_after ||
       position.last_move!==row.uci || !/^[a-h][1-8]$/.test(destination || "") || !position.board?.[destination])return null;
     const piece=position.board[destination];
     if((piece===piece.toUpperCase() ? "white" : "black")!==row.color)return null;
-    const kinds={great:["!!","탁월 후보"],best:["★","추천 수"],good:["✓","좋은 수"],inaccuracy:["?!","아쉬운 수"],
-      mistake:["?","실수"],blunder:["??","큰 실수"],allows_mate:["??","메이트 허용"],missed_mate:["?","메이트 기회 놓침"],uncertain:["…","판단 보류"]};
+    const kinds={great:["!","탁월 후보"],best:["★","추천 수"],good:["👍","좋은 수"],inaccuracy:["?!","아쉬운 수"],
+      mistake:["?","실수"],blunder:["??","큰 실수"],allows_mate:["??","메이트 허용"],missed_mate:["×","메이트 기회 놓침"]};
     const annotation=row.annotation;
     if(annotation) {
       if(annotation.scope!=="actual_move" || annotation.provisional!==true || annotation.ply!==row.ply || annotation.uci!==row.uci || annotation.fen_after!==position.fen ||
-        annotation.square!==destination || !kinds[annotation.kind] || annotation.symbol!==kinds[annotation.kind][0] ||
+        annotation.square!==destination || !kinds[annotation.kind] || (annotation.symbol!==kinds[annotation.kind][0] && !(annotation.kind==="good" && annotation.symbol==="✓")) ||
         (annotation.kind==="great" ? row.classification!=="best" : annotation.kind!==row.classification))return null;
-      return {...annotation,row};
+      return {...annotation,symbol:kinds[annotation.kind][0],row};
     }
     const fallback=row.classification==="great" ? null : kinds[row.classification];
     return fallback ? {symbol:fallback[0],label:fallback[1],kind:row.classification,square:destination,provisional:true,
@@ -628,6 +690,7 @@
   }
 
   function renderBoard() {
+    syncReference();
     const position = frame(), pieces = position?.board || {}, row = selectedRow();
     const hidden=exerciseHidden();
     const annotation=moveAnnotation(position);
@@ -716,10 +779,14 @@
     get("coaching-evaluation-top").textContent = blackView ? "백" : "흑";
     get("coaching-evaluation-bottom").textContent = blackView ? "흑" : "백";
     get("coaching-evaluation-bar").setAttribute("aria-label", hidden ? "연습 중 평가 숨김" : evaluation.label ||
-      "현재 위치 탐색 평가, 백 기준 " + score(comparison) + ". 승률이 아닙니다.");
+      "Regicide 참고 평가, 백 기준 " + score(comparison) + ". 승률이 아닙니다.");
     get("coaching-score").textContent = hidden ? "스스로 생각할 수 있도록 점수와 추천을 가렸습니다." : evaluation.label ||
-      (comparison ? "현재 위치 탐색 평가 · " + score(comparison) + " · 백 기준" : evaluation.unsearchedLine ?
-        "이 수순 위치는 별도로 평가하지 않았습니다." : "현재 위치 평가 대기 · 백 기준 점수");
+      (comparison ? "Regicide 참고 · 현재 위치 탐색 평가 · " + score(comparison) + " · 백 기준 · " + (reference?.status === "unavailable" || reference?.status === "error" ? "Stockfish 사용 불가" : "Stockfish 계산 중") : evaluation.unsearchedLine ?
+        "이 수순 위치는 별도로 평가하지 않았습니다. Stockfish 형세 계산 대기" : "현재 위치 평가 대기 · Stockfish · 백 기준 점수");
+    if(!hidden && ["unavailable","error"].includes(reference?.status)) {
+      if(!comparison)get("coaching-score").textContent="Stockfish 평가 사용 불가 · 현재 위치의 평가를 불러오지 못했습니다.";
+      if(referenceRetries<2)get("coaching-score").textContent+=" · 잠시 후 재시도";
+    }
   }
 
   function render() {
@@ -762,12 +829,17 @@
       "Regicide 탐색 기준입니다. 제한된 시간 안에 찾은 추천이며 더 깊게 분석하면 평가가 달라질 수 있습니다.");
     get("coaching-summary-card").hidden=hidden;get("coaching-moves-card").hidden=hidden;
     get("coaching-comparison").hidden=hidden;get("coaching-critical-navigation").hidden=hidden;
+    get("coaching-key-navigation").hidden=hidden;
+    const keyScenes=keyRows(),keyIndex=keyScenes.findIndex((item)=>item.ply===selectedPly);
+    get("coaching-key-status").textContent=keyScenes.length ? (keyIndex>=0 ? "핵심 장면 "+(keyIndex+1)+" / "+keyScenes.length : "핵심 장면 "+keyScenes.length+"개") + " · 좋은 판단과 놓친 기회" : "분석하면 배울 점이 있는 장면을 모아 보여줍니다.";
+    get("coaching-prev-key").disabled=busy || !keyScenes.some((item)=>item.ply<selectedPly);
+    get("coaching-next-key").disabled=busy || !keyScenes.some((item)=>item.ply>selectedPly);
     get("coaching-position-navigation").hidden=hidden;
     get("coaching-before").disabled=!row || busy || (viewBefore && !variation);
     get("coaching-after").disabled=!row || busy || (!variation && !viewBefore && cursor===selectedPly);
     get("coaching-move-title").textContent = hidden ? positionTitle(row)+" · 다시 두기" : moveTitle(row);
     get("coaching-played-label").textContent = row ? (row.color === mine() ? "내가 둔 수" : "상대가 둔 수") + " · " + sideName(row.color) : "실제 둔 수";
-    get("coaching-classification").textContent = !hidden && row ? (row.label || "분석 대기") + (Number.isFinite(row.loss_cp) ? " · 손실 " + (row.loss_cp / 100).toFixed(2) : "") : "";
+    get("coaching-classification").textContent = !hidden && row && row.classification !== "uncertain" ? (row.label || "분석 대기") + (Number.isFinite(row.loss_cp) ? " · 손실 " + (row.loss_cp / 100).toFixed(2) : "") : "";
     get("coaching-explanation").textContent = hidden ? "" : row?.explanation || "수별 평가에서 복기할 수를 선택하세요.";
     for (const kind of ["played","best"]) {
       const value = row?.[kind];
@@ -807,7 +879,7 @@
       button.type = "button"; button.className = "coaching-move"; button.dataset.coachingPly = String(item.ply);
       button.setAttribute("aria-pressed", item.ply === selectedPly ? "true" : "false");
       button.classList.toggle("coaching-critical", criticalKinds.has(item.classification));
-      button.textContent = moveTitle(item) + " · " + (item.label || "분석 대기") + (Number.isFinite(item.loss_cp) ? " (" + (item.loss_cp/100).toFixed(2) + ")" : "");
+      button.textContent = moveTitle(item) + (item.classification === "uncertain" ? "" : " · " + (item.label || "분석 대기") + (Number.isFinite(item.loss_cp) ? " (" + (item.loss_cp/100).toFixed(2) + ")" : ""));
       li.append(button); fragment.append(li);
     }
     get("coaching-moves").replaceChildren(fragment);
@@ -1040,6 +1112,8 @@
   get("coaching-last").addEventListener("click", () => seek(frames().length-1));
   get("coaching-before").addEventListener("click",showBefore);
   get("coaching-after").addEventListener("click",()=>{if(!exerciseHidden())choosePly(selectedPly,false);});
+  get("coaching-prev-key").addEventListener("click",()=>jumpKeyScene(-1));
+  get("coaching-next-key").addEventListener("click",()=>jumpKeyScene(1));
   get("coaching-prev-critical").addEventListener("click", () => { const row = criticalRows().filter((item) => item.ply < selectedPly).at(-1); if (row) choosePly(row.ply); });
   get("coaching-next-critical").addEventListener("click", () => { const row = criticalRows().find((item) => item.ply > selectedPly); if (row) choosePly(row.ply); });
   get("coaching-filter").addEventListener("change", () => { cancelExercise();stopContext(); render(); });
@@ -1121,7 +1195,7 @@
       event.preventDefault();
     }
   });
-  const timer = setInterval(() => { void poll(); }, 400);
+  const timer = setInterval(() => { void poll(); void pollReference(); }, 400);
   window.addEventListener("pagehide", () => { cancelExercise();stopContext(); window.RegicideMotion?.cancel(get("coaching-board"),true); ++epoch; visible = false; clearInterval(timer); });
   document.addEventListener?.("visibilitychange", () => {
     if (document.hidden) { cancelExercise();stopContext(); window.RegicideMotion?.cancel(get("coaching-board"),true); render(); }

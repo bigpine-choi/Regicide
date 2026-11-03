@@ -1,0 +1,3490 @@
+{
+  "schema": "regicide.gambit-operations-substitution-audit.v1",
+  "started_utc": "2026-11-03T19:07:24.320761+00:00",
+  "report_sha256": "023c3b80eefdbeb12f933aa637019738dbbd847291cf886aba9696278daa9cda",
+  "stockfish_sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+  "engine_id": {
+    "name": "Stockfish 18",
+    "author": "the Stockfish developers (see AUTHORS file)"
+  },
+  "seconds_per_query": 0.5,
+  "max_depth": 14,
+  "parent_report_finished": false,
+  "requested_targets": [
+    "kings-accepted:9",
+    "danish-accepted:19"
+  ],
+  "scope": "Independent post-play audit at shared completed exact depth; not fed to move selection",
+  "results": [
+    {
+      "case": "kings-accepted",
+      "family_id": "kings",
+      "ply": 9,
+      "before_fen": "rnbqkbnr/pppp1p2/7p/6p1/4PpQ1/5N2/PPPP2PP/RNB1KB1R w KQkq - 0 5",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "d1g4",
+        "g7g5",
+        "g1f3",
+        "h7h6"
+      ],
+      "baseline_uci": "f1b5",
+      "selected_uci": "b1c3",
+      "operations_context": {
+        "family_id": "kings",
+        "case_id": "kings-e8245663a214",
+        "owner": "white",
+        "recognition_prefix_uci": [
+          "e2e4",
+          "e7e5",
+          "f2f4",
+          "e5f4"
+        ],
+        "acceptance": {
+          "capture_ply": 4,
+          "capture_uci": "e5f4",
+          "before_fen": "rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq f3 0 2",
+          "after_fen": "rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP2PP/RNBQKBNR w KQkq - 0 3",
+          "victim_piece": "P",
+          "victim_square": "f4",
+          "victim_value_cp": 100,
+          "actual_capture": true
+        },
+        "recognition_ply": 4,
+        "recognition_fen": "rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP2PP/RNBQKBNR w KQkq - 0 3",
+        "initial_material_debt_cp": 100,
+        "policy": "regicide-gambit-operations-v1",
+        "active": true,
+        "reason": "accepted_sacrifice_operations",
+        "accepted": true,
+        "goal": "development",
+        "elapsed_since_acceptance_plies": 4,
+        "material_debt_cp": 100,
+        "material_balance_cp": -100,
+        "fen": "rnbqkbnr/pppp1p2/7p/6p1/4PpQ1/5N2/PPPP2PP/RNB1KB1R w KQkq - 0 5",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "f2f4",
+          "e5f4",
+          "d1g4",
+          "g7g5",
+          "g1f3",
+          "h7h6"
+        ],
+        "position_key": "rnbqkbnr/pppp1p2/7p/6p1/4PpQ1/5N2/PPPP2PP/RNB1KB1R w KQkq -",
+        "curriculum_sha256": "e3573a0e1ec0acbcdf6348915c8c8c9d1649a4fa9b8521c2ca50400282375e8a",
+        "context_id": "151e2588599b916b2854d110cff4a6402df307db03241f513c7db6c32d98dcb0",
+        "loss_cap_cp": 35,
+        "basis": "actual accepted prefix and current geometry; not a claim of optimal strategy"
+      },
+      "source": {
+        "uci": "b1c3",
+        "source": "native_operations_geometry",
+        "policy": "regicide-gambit-operations-v1",
+        "context_id": "151e2588599b916b2854d110cff4a6402df307db03241f513c7db6c32d98dcb0",
+        "family_id": "kings",
+        "goal": "development",
+        "fen": "rnbqkbnr/pppp1p2/7p/6p1/4PpQ1/5N2/PPPP2PP/RNB1KB1R w KQkq - 0 5",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "f2f4",
+          "e5f4",
+          "d1g4",
+          "g7g5",
+          "g1f3",
+          "h7h6"
+        ],
+        "curriculum_sha256": "e3573a0e1ec0acbcdf6348915c8c8c9d1649a4fa9b8521c2ca50400282375e8a",
+        "candidate_only": true
+      },
+      "live_native_loss_cp": 21,
+      "original_audit": {
+        "status": "exact_common_depth",
+        "depth": 12,
+        "reference_cp_own": -245,
+        "played_cp_own": -507,
+        "reference_mate_own": null,
+        "played_mate_own": null,
+        "loss_cp": 262,
+        "queries": [
+          {
+            "root_moves": null,
+            "returned": "g4f5",
+            "packets": {
+              "1": {
+                "depth": 1,
+                "seldepth": 3,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -136,
+                  "mate_white": null
+                },
+                "nodes": 45,
+                "nps": 45000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "h2h4"
+                ]
+              },
+              "2": {
+                "depth": 2,
+                "seldepth": 4,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -140,
+                  "mate_white": null
+                },
+                "nodes": 129,
+                "nps": 129000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "h2h4",
+                  "h6h5"
+                ]
+              },
+              "3": {
+                "depth": 3,
+                "seldepth": 6,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -184,
+                  "mate_white": null
+                },
+                "nodes": 761,
+                "nps": 380500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.002,
+                "pv": [
+                  "f1c4",
+                  "d7d6"
+                ]
+              },
+              "4": {
+                "depth": 4,
+                "seldepth": 5,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -64,
+                  "mate_white": null
+                },
+                "nodes": 814,
+                "nps": 407000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.002,
+                "pv": [
+                  "f1c4",
+                  "d7d6"
+                ]
+              },
+              "5": {
+                "depth": 5,
+                "seldepth": 6,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -188,
+                  "mate_white": null
+                },
+                "nodes": 1677,
+                "nps": 838500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.002,
+                "pv": [
+                  "f1c4",
+                  "d7d6",
+                  "g4h5",
+                  "d8e7",
+                  "b1c3"
+                ]
+              },
+              "6": {
+                "depth": 6,
+                "seldepth": 9,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -203,
+                  "mate_white": null
+                },
+                "nodes": 2605,
+                "nps": 868333,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.003,
+                "pv": [
+                  "f1c4",
+                  "g8f6",
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "b8c6"
+                ]
+              },
+              "7": {
+                "depth": 7,
+                "seldepth": 9,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -241,
+                  "mate_white": null
+                },
+                "nodes": 3907,
+                "nps": 781400,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.005,
+                "pv": [
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "c7c6"
+                ]
+              },
+              "8": {
+                "depth": 8,
+                "seldepth": 10,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -250,
+                  "mate_white": null
+                },
+                "nodes": 4250,
+                "nps": 850000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.005,
+                "pv": [
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "c7c6",
+                  "b5b4",
+                  "d6d5"
+                ]
+              },
+              "9": {
+                "depth": 9,
+                "seldepth": 15,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -244,
+                  "mate_white": null
+                },
+                "nodes": 4786,
+                "nps": 797666,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "b8d7",
+                  "h2h3",
+                  "f8g7"
+                ]
+              },
+              "10": {
+                "depth": 10,
+                "seldepth": 14,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -250,
+                  "mate_white": null
+                },
+                "nodes": 6529,
+                "nps": 725444,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.009,
+                "pv": [
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "b8c6",
+                  "d2d4",
+                  "f8g7",
+                  "b1c3",
+                  "g5g4",
+                  "f3d2"
+                ]
+              },
+              "11": {
+                "depth": 11,
+                "seldepth": 21,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -252,
+                  "mate_white": null
+                },
+                "nodes": 11642,
+                "nps": 684823,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.017,
+                "pv": [
+                  "g4f5",
+                  "d7d6",
+                  "f5b5",
+                  "b8c6",
+                  "d2d4",
+                  "a7a6",
+                  "b5d3",
+                  "f8g7",
+                  "d4d5",
+                  "c6e5",
+                  "f3e5",
+                  "g7e5",
+                  "d3f3",
+                  "e5g7"
+                ]
+              },
+              "12": {
+                "depth": 12,
+                "seldepth": 25,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -245,
+                  "mate_white": null
+                },
+                "nodes": 18578,
+                "nps": 640620,
+                "hashfull": 2,
+                "tbhits": 0,
+                "time": 0.029,
+                "pv": [
+                  "g4f5",
+                  "f8g7",
+                  "d2d4",
+                  "g8e7",
+                  "f5b5",
+                  "e8g8"
+                ]
+              }
+            }
+          },
+          {
+            "root_moves": [
+              "b1c3"
+            ],
+            "returned": "b1c3",
+            "packets": {
+              "1": {
+                "depth": 1,
+                "seldepth": 2,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -176,
+                  "mate_white": null
+                },
+                "nodes": 1,
+                "nps": 1000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3"
+                ]
+              },
+              "2": {
+                "depth": 2,
+                "seldepth": 5,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -180,
+                  "mate_white": null
+                },
+                "nodes": 5,
+                "nps": 5000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3",
+                  "h6h5"
+                ]
+              },
+              "3": {
+                "depth": 3,
+                "seldepth": 5,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -98,
+                  "mate_white": null
+                },
+                "nodes": 26,
+                "nps": 26000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3",
+                  "c7c6"
+                ]
+              },
+              "4": {
+                "depth": 4,
+                "seldepth": 5,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -202,
+                  "mate_white": null
+                },
+                "nodes": 104,
+                "nps": 104000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "g4h5",
+                  "b8c6"
+                ]
+              },
+              "5": {
+                "depth": 5,
+                "seldepth": 9,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -370,
+                  "mate_white": null
+                },
+                "nodes": 368,
+                "nps": 368000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "g4h5",
+                  "g8f6"
+                ]
+              },
+              "6": {
+                "depth": 6,
+                "seldepth": 8,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -440,
+                  "mate_white": null
+                },
+                "nodes": 472,
+                "nps": 472000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "g4h5",
+                  "g8f6",
+                  "f1b5",
+                  "c7c6"
+                ]
+              },
+              "7": {
+                "depth": 7,
+                "seldepth": 9,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -513,
+                  "mate_white": null
+                },
+                "nodes": 1075,
+                "nps": 537500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.002,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "h2h3",
+                  "c8g4",
+                  "h3g4",
+                  "c7c6",
+                  "f3g5",
+                  "d8g5"
+                ]
+              },
+              "8": {
+                "depth": 8,
+                "seldepth": 13,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -564,
+                  "mate_white": null
+                },
+                "nodes": 1956,
+                "nps": 652000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.003,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "h2h3",
+                  "c8g4",
+                  "h3g4",
+                  "c7c6",
+                  "f3g5",
+                  "d8g5",
+                  "d2d4",
+                  "g5g4",
+                  "d4d5"
+                ]
+              },
+              "9": {
+                "depth": 9,
+                "seldepth": 17,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -532,
+                  "mate_white": null
+                },
+                "nodes": 3337,
+                "nps": 834250,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.004,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "h2h3",
+                  "c8g4",
+                  "h3g4",
+                  "c7c6",
+                  "d2d4",
+                  "d8a5",
+                  "f3d2"
+                ]
+              },
+              "10": {
+                "depth": 10,
+                "seldepth": 18,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -552,
+                  "mate_white": null
+                },
+                "nodes": 7028,
+                "nps": 1171333,
+                "hashfull": 1,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "h2h3",
+                  "g8f6",
+                  "f3g5",
+                  "f6g4",
+                  "c3d5",
+                  "c7c6",
+                  "h3g4"
+                ]
+              },
+              "11": {
+                "depth": 11,
+                "seldepth": 21,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -548,
+                  "mate_white": null
+                },
+                "nodes": 11322,
+                "nps": 1415250,
+                "hashfull": 2,
+                "tbhits": 0,
+                "time": 0.008,
+                "pv": [
+                  "b1c3",
+                  "d7d6",
+                  "h2h3",
+                  "g8f6",
+                  "d2d4",
+                  "f6g4",
+                  "h3g4",
+                  "f8g7",
+                  "f3g5",
+                  "h6g5",
+                  "h1h8",
+                  "g7h8"
+                ]
+              },
+              "12": {
+                "depth": 12,
+                "seldepth": 21,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -507,
+                  "mate_white": null
+                },
+                "nodes": 21431,
+                "nps": 1530785,
+                "hashfull": 3,
+                "tbhits": 0,
+                "time": 0.014,
+                "pv": [
+                  "b1c3",
+                  "d7d5",
+                  "f1b5",
+                  "c7c6"
+                ]
+              }
+            }
+          }
+        ],
+        "selection_use": "independent audit only"
+      },
+      "queries": [
+        {
+          "root_move": null,
+          "bestmove": "g4f5",
+          "elapsed_ms": 112.406,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -136,
+                "mate_white": null
+              },
+              "nodes": 45,
+              "nps": 45000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "h2h4"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 4,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -140,
+                "mate_white": null
+              },
+              "nodes": 129,
+              "nps": 64500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "h2h4",
+                "h6h5"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 6,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -184,
+                "mate_white": null
+              },
+              "nodes": 761,
+              "nps": 253666,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.003,
+              "pv": [
+                "f1c4",
+                "d7d6"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -64,
+                "mate_white": null
+              },
+              "nodes": 814,
+              "nps": 271333,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.003,
+              "pv": [
+                "f1c4",
+                "d7d6"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 6,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -188,
+                "mate_white": null
+              },
+              "nodes": 1677,
+              "nps": 419250,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "f1c4",
+                "d7d6",
+                "g4h5",
+                "d8e7",
+                "b1c3"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -203,
+                "mate_white": null
+              },
+              "nodes": 2605,
+              "nps": 521000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.005,
+              "pv": [
+                "f1c4",
+                "g8f6",
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "b8c6"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -241,
+                "mate_white": null
+              },
+              "nodes": 3907,
+              "nps": 558142,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.007,
+              "pv": [
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "c7c6"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 10,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -250,
+                "mate_white": null
+              },
+              "nodes": 4250,
+              "nps": 531250,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.008,
+              "pv": [
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "c7c6",
+                "b5b4",
+                "d6d5"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 15,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -244,
+                "mate_white": null
+              },
+              "nodes": 4786,
+              "nps": 531777,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.009,
+              "pv": [
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "b8d7",
+                "h2h3",
+                "f8g7"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 14,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -250,
+                "mate_white": null
+              },
+              "nodes": 6529,
+              "nps": 544083,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.012,
+              "pv": [
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "b8c6",
+                "d2d4",
+                "f8g7",
+                "b1c3",
+                "g5g4",
+                "f3d2"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -252,
+                "mate_white": null
+              },
+              "nodes": 11642,
+              "nps": 529181,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.022,
+              "pv": [
+                "g4f5",
+                "d7d6",
+                "f5b5",
+                "b8c6",
+                "d2d4",
+                "a7a6",
+                "b5d3",
+                "f8g7",
+                "d4d5",
+                "c6e5",
+                "f3e5",
+                "g7e5",
+                "d3f3",
+                "e5g7"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 25,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -245,
+                "mate_white": null
+              },
+              "nodes": 18578,
+              "nps": 530800,
+              "hashfull": 2,
+              "tbhits": 0,
+              "time": 0.035,
+              "pv": [
+                "g4f5",
+                "f8g7",
+                "d2d4",
+                "g8e7",
+                "f5b5",
+                "e8g8"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 24,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -261,
+                "mate_white": null
+              },
+              "nodes": 27692,
+              "nps": 553840,
+              "hashfull": 5,
+              "tbhits": 0,
+              "time": 0.05,
+              "pv": [
+                "g4f5",
+                "f8g7",
+                "f5c5",
+                "g5g4",
+                "f3g1",
+                "d8h4",
+                "e1d1"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 26,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -252,
+                "mate_white": null
+              },
+              "nodes": 60772,
+              "nps": 567962,
+              "hashfull": 11,
+              "tbhits": 0,
+              "time": 0.107,
+              "pv": [
+                "g4f5",
+                "f8g7",
+                "b1c3",
+                "b8c6",
+                "d2d4",
+                "g8f6",
+                "f5b5",
+                "e8g8",
+                "h2h4",
+                "g5g4",
+                "e4e5",
+                "g4f3",
+                "e5f6",
+                "d8f6"
+              ]
+            }
+          }
+        },
+        {
+          "root_move": "f1b5",
+          "bestmove": "f1b5",
+          "elapsed_ms": 133.489,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 2,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -260,
+                "mate_white": null
+              },
+              "nodes": 1,
+              "nps": 1000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -247,
+                "mate_white": null
+              },
+              "nodes": 6,
+              "nps": 6000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5",
+                "h6h5"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -228,
+                "mate_white": null
+              },
+              "nodes": 42,
+              "nps": 42000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5",
+                "c7c6"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -297,
+                "mate_white": null
+              },
+              "nodes": 102,
+              "nps": 102000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "b5c4",
+                "d7d6"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -301,
+                "mate_white": null
+              },
+              "nodes": 298,
+              "nps": 298000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5",
+                "b8c6",
+                "h2h4",
+                "g8f6"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 11,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -238,
+                "mate_white": null
+              },
+              "nodes": 496,
+              "nps": 496000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1b5",
+                "b8c6",
+                "g4f5",
+                "d7d6",
+                "b5c6",
+                "b7c6"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -243,
+                "mate_white": null
+              },
+              "nodes": 691,
+              "nps": 345500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "b5c4",
+                "d7d6",
+                "g4h5",
+                "d6d5",
+                "e4d5",
+                "c6d5"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 15,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -391,
+                "mate_white": null
+              },
+              "nodes": 5170,
+              "nps": 861666,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.006,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "f3d4",
+                "d7d6",
+                "d4f5",
+                "c6b5",
+                "b1c3",
+                "g8f6",
+                "g4f3",
+                "c8f5",
+                "e4f5"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 20,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -386,
+                "mate_white": null
+              },
+              "nodes": 7830,
+              "nps": 978750,
+              "hashfull": 1,
+              "tbhits": 0,
+              "time": 0.008,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "d7d6",
+                "g4h5",
+                "c6b5",
+                "d2d4",
+                "b8c6",
+                "e1g1",
+                "d6e5",
+                "d4e5"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 18,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -386,
+                "mate_white": null
+              },
+              "nodes": 10074,
+              "nps": 915818,
+              "hashfull": 1,
+              "tbhits": 0,
+              "time": 0.011,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "c6b5",
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "b8c6",
+                "d2d4",
+                "d6e5",
+                "f3e5",
+                "c6e5",
+                "d4e5",
+                "c8e6"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -409,
+                "mate_white": null
+              },
+              "nodes": 14889,
+              "nps": 930562,
+              "hashfull": 2,
+              "tbhits": 0,
+              "time": 0.016,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "d7d5",
+                "g4h5",
+                "c6b5",
+                "b1c3",
+                "b8c6",
+                "d2d4",
+                "c8e6",
+                "c1d2",
+                "b5b4",
+                "c3b5",
+                "a7a6",
+                "b5d6",
+                "f8d6",
+                "e5d6",
+                "d8d6",
+                "e1c1",
+                "g8f6"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 27,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -410,
+                "mate_white": null
+              },
+              "nodes": 27093,
+              "nps": 967607,
+              "hashfull": 5,
+              "tbhits": 0,
+              "time": 0.028,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "c6b5",
+                "b1c3",
+                "b8c6",
+                "d2d4",
+                "d7d5",
+                "g4h5",
+                "c8e6",
+                "h2h4"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 30,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -390,
+                "mate_white": null
+              },
+              "nodes": 72190,
+              "nps": 937532,
+              "hashfull": 14,
+              "tbhits": 0,
+              "time": 0.077,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "c6b5",
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "b8c6",
+                "h2h4",
+                "g5g4",
+                "d2d4",
+                "g4f3",
+                "c1f4",
+                "d6e5",
+                "f4e5",
+                "g8f6"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 32,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -416,
+                "mate_white": null
+              },
+              "nodes": 125244,
+              "nps": 986173,
+              "hashfull": 27,
+              "tbhits": 0,
+              "time": 0.127,
+              "pv": [
+                "f1b5",
+                "c7c6",
+                "e4e5",
+                "c6b5",
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "b8c6",
+                "d2d4",
+                "d6e5",
+                "f3e5",
+                "c6e5",
+                "d4e5",
+                "c8e6",
+                "c1d2",
+                "b5b4",
+                "e1c1",
+                "b4c3",
+                "d2c3"
+              ]
+            }
+          }
+        },
+        {
+          "root_move": "b1c3",
+          "bestmove": "b1c3",
+          "elapsed_ms": 40.291,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 2,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -176,
+                "mate_white": null
+              },
+              "nodes": 1,
+              "nps": 1000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -180,
+                "mate_white": null
+              },
+              "nodes": 5,
+              "nps": 5000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "h6h5"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -98,
+                "mate_white": null
+              },
+              "nodes": 26,
+              "nps": 26000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "c7c6"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -202,
+                "mate_white": null
+              },
+              "nodes": 104,
+              "nps": 104000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "b8c6"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -370,
+                "mate_white": null
+              },
+              "nodes": 368,
+              "nps": 368000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "g8f6"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 8,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -440,
+                "mate_white": null
+              },
+              "nodes": 472,
+              "nps": 472000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "g4h5",
+                "g8f6",
+                "f1b5",
+                "c7c6"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 9,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -513,
+                "mate_white": null
+              },
+              "nodes": 1075,
+              "nps": 1075000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "h2h3",
+                "c8g4",
+                "h3g4",
+                "c7c6",
+                "f3g5",
+                "d8g5"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 13,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -564,
+                "mate_white": null
+              },
+              "nodes": 1956,
+              "nps": 978000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "h2h3",
+                "c8g4",
+                "h3g4",
+                "c7c6",
+                "f3g5",
+                "d8g5",
+                "d2d4",
+                "g5g4",
+                "d4d5"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 17,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -532,
+                "mate_white": null
+              },
+              "nodes": 3337,
+              "nps": 1112333,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.003,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "h2h3",
+                "c8g4",
+                "h3g4",
+                "c7c6",
+                "d2d4",
+                "d8a5",
+                "f3d2"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 18,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -552,
+                "mate_white": null
+              },
+              "nodes": 7028,
+              "nps": 1405600,
+              "hashfull": 1,
+              "tbhits": 0,
+              "time": 0.005,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "h2h3",
+                "g8f6",
+                "f3g5",
+                "f6g4",
+                "c3d5",
+                "c7c6",
+                "h3g4"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -548,
+                "mate_white": null
+              },
+              "nodes": 11322,
+              "nps": 1617428,
+              "hashfull": 2,
+              "tbhits": 0,
+              "time": 0.007,
+              "pv": [
+                "b1c3",
+                "d7d6",
+                "h2h3",
+                "g8f6",
+                "d2d4",
+                "f6g4",
+                "h3g4",
+                "f8g7",
+                "f3g5",
+                "h6g5",
+                "h1h8",
+                "g7h8"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -507,
+                "mate_white": null
+              },
+              "nodes": 21431,
+              "nps": 1648538,
+              "hashfull": 3,
+              "tbhits": 0,
+              "time": 0.013,
+              "pv": [
+                "b1c3",
+                "d7d5",
+                "f1b5",
+                "c7c6"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 20,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -539,
+                "mate_white": null
+              },
+              "nodes": 23732,
+              "nps": 1695142,
+              "hashfull": 3,
+              "tbhits": 0,
+              "time": 0.014,
+              "pv": [
+                "b1c3",
+                "d7d5",
+                "h2h3",
+                "c8g4",
+                "h3g4",
+                "f8g7",
+                "d2d4",
+                "d5e4"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -533,
+                "mate_white": null
+              },
+              "nodes": 57066,
+              "nps": 1678411,
+              "hashfull": 9,
+              "tbhits": 0,
+              "time": 0.034,
+              "pv": [
+                "b1c3",
+                "d7d5",
+                "h2h3",
+                "g8f6",
+                "f3g5",
+                "f6g4",
+                "h3g4",
+                "c7c6",
+                "e4d5",
+                "d8g5",
+                "c3e4"
+              ]
+            }
+          }
+        }
+      ],
+      "status": "exact_common_depth",
+      "selection_use": "post-play independent audit only",
+      "depth": 14,
+      "free_cp_own": -252,
+      "native_baseline_cp_own": -416,
+      "actual_cp_own": -533,
+      "free_mate_own": null,
+      "native_baseline_mate_own": null,
+      "actual_mate_own": null,
+      "actual_loss_vs_free_cp": 281,
+      "actual_loss_vs_native_baseline_cp": 117,
+      "critical_cp_regression": true,
+      "new_negative_mate_vs_baseline": false
+    },
+    {
+      "case": "danish-accepted",
+      "family_id": "danish",
+      "ply": 19,
+      "before_fen": "r1bq1rk1/pppp1ppp/2n5/4P3/2B1n3/2P2N2/P4PPP/R1BQ1RK1 w - - 1 10",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "d2d4",
+        "e5d4",
+        "c2c3",
+        "d4c3",
+        "b1c3",
+        "b8c6",
+        "g1f3",
+        "g8f6",
+        "f1c4",
+        "f8b4",
+        "e1g1",
+        "e8g8",
+        "e4e5",
+        "b4c3",
+        "b2c3",
+        "f6e4"
+      ],
+      "baseline_uci": "c4d3",
+      "selected_uci": "c1e3",
+      "operations_context": {
+        "family_id": "danish",
+        "case_id": "danish-8593db9da8fe",
+        "owner": "white",
+        "recognition_prefix_uci": [
+          "e2e4",
+          "e7e5",
+          "d2d4",
+          "e5d4",
+          "c2c3",
+          "d4c3"
+        ],
+        "acceptance": {
+          "capture_ply": 6,
+          "capture_uci": "d4c3",
+          "before_fen": "rnbqkbnr/pppp1ppp/8/8/3pP3/2P5/PP3PPP/RNBQKBNR b KQkq - 0 3",
+          "after_fen": "rnbqkbnr/pppp1ppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq - 0 4",
+          "victim_piece": "P",
+          "victim_square": "c3",
+          "victim_value_cp": 100,
+          "actual_capture": true
+        },
+        "recognition_ply": 6,
+        "recognition_fen": "rnbqkbnr/pppp1ppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq - 0 4",
+        "initial_material_debt_cp": 200,
+        "policy": "regicide-gambit-operations-v1",
+        "active": true,
+        "reason": "accepted_sacrifice_operations",
+        "accepted": true,
+        "goal": "development",
+        "elapsed_since_acceptance_plies": 12,
+        "material_debt_cp": 100,
+        "material_balance_cp": -100,
+        "fen": "r1bq1rk1/pppp1ppp/2n5/4P3/2B1n3/2P2N2/P4PPP/R1BQ1RK1 w - - 1 10",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "d2d4",
+          "e5d4",
+          "c2c3",
+          "d4c3",
+          "b1c3",
+          "b8c6",
+          "g1f3",
+          "g8f6",
+          "f1c4",
+          "f8b4",
+          "e1g1",
+          "e8g8",
+          "e4e5",
+          "b4c3",
+          "b2c3",
+          "f6e4"
+        ],
+        "position_key": "r1bq1rk1/pppp1ppp/2n5/4P3/2B1n3/2P2N2/P4PPP/R1BQ1RK1 w - -",
+        "curriculum_sha256": "e3573a0e1ec0acbcdf6348915c8c8c9d1649a4fa9b8521c2ca50400282375e8a",
+        "context_id": "737caf761ad9b6e663f466128c991d9959473e3bf13eba0b7993fdc56e98f289",
+        "loss_cap_cp": 35,
+        "basis": "actual accepted prefix and current geometry; not a claim of optimal strategy"
+      },
+      "source": {
+        "uci": "c1e3",
+        "source": "native_operations_geometry",
+        "policy": "regicide-gambit-operations-v1",
+        "context_id": "737caf761ad9b6e663f466128c991d9959473e3bf13eba0b7993fdc56e98f289",
+        "family_id": "danish",
+        "goal": "development",
+        "fen": "r1bq1rk1/pppp1ppp/2n5/4P3/2B1n3/2P2N2/P4PPP/R1BQ1RK1 w - - 1 10",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "d2d4",
+          "e5d4",
+          "c2c3",
+          "d4c3",
+          "b1c3",
+          "b8c6",
+          "g1f3",
+          "g8f6",
+          "f1c4",
+          "f8b4",
+          "e1g1",
+          "e8g8",
+          "e4e5",
+          "b4c3",
+          "b2c3",
+          "f6e4"
+        ],
+        "curriculum_sha256": "e3573a0e1ec0acbcdf6348915c8c8c9d1649a4fa9b8521c2ca50400282375e8a",
+        "candidate_only": true
+      },
+      "live_native_loss_cp": 8,
+      "original_audit": {
+        "status": "exact_common_depth",
+        "depth": 12,
+        "reference_cp_own": 180,
+        "played_cp_own": -12,
+        "reference_mate_own": null,
+        "played_mate_own": null,
+        "loss_cp": 192,
+        "queries": [
+          {
+            "root_moves": null,
+            "returned": "d1d5",
+            "packets": {
+              "1": {
+                "depth": 1,
+                "seldepth": 3,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 77,
+                  "mate_white": null
+                },
+                "nodes": 54,
+                "nps": 54000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "d1c2"
+                ]
+              },
+              "2": {
+                "depth": 2,
+                "seldepth": 3,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 186,
+                  "mate_white": null
+                },
+                "nodes": 103,
+                "nps": 103000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "d1c2"
+                ]
+              },
+              "3": {
+                "depth": 3,
+                "seldepth": 4,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 258,
+                  "mate_white": null
+                },
+                "nodes": 164,
+                "nps": 164000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "d1c2"
+                ]
+              },
+              "4": {
+                "depth": 4,
+                "seldepth": 7,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 136,
+                  "mate_white": null
+                },
+                "nodes": 537,
+                "nps": 268500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.002,
+                "pv": [
+                  "f1e1",
+                  "e4c5",
+                  "f3g5",
+                  "d7d5",
+                  "c4d5"
+                ]
+              },
+              "5": {
+                "depth": 5,
+                "seldepth": 11,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 104,
+                  "mate_white": null
+                },
+                "nodes": 2129,
+                "nps": 354833,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "d7d5",
+                  "f3g5"
+                ]
+              },
+              "6": {
+                "depth": 6,
+                "seldepth": 8,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 119,
+                  "mate_white": null
+                },
+                "nodes": 2217,
+                "nps": 369500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "d7d5",
+                  "f3g5"
+                ]
+              },
+              "7": {
+                "depth": 7,
+                "seldepth": 8,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 138,
+                  "mate_white": null
+                },
+                "nodes": 2331,
+                "nps": 388500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "d7d5",
+                  "f3g5"
+                ]
+              },
+              "8": {
+                "depth": 8,
+                "seldepth": 8,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 209,
+                  "mate_white": null
+                },
+                "nodes": 2487,
+                "nps": 414500,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.006,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "d7d5",
+                  "f3g5"
+                ]
+              },
+              "9": {
+                "depth": 9,
+                "seldepth": 10,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 273,
+                  "mate_white": null
+                },
+                "nodes": 3011,
+                "nps": 430142,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.007,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "d7d5",
+                  "f3g5",
+                  "c3e2",
+                  "g1h1"
+                ]
+              },
+              "10": {
+                "depth": 10,
+                "seldepth": 17,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 309,
+                  "mate_white": null
+                },
+                "nodes": 6987,
+                "nps": 499071,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.014,
+                "pv": [
+                  "d1d5",
+                  "e4c3",
+                  "d5d3",
+                  "c3a4",
+                  "f3g5",
+                  "g7g6",
+                  "d3h3",
+                  "h7h5",
+                  "g5f7",
+                  "f8f7",
+                  "c4f7",
+                  "g8f7"
+                ]
+              },
+              "11": {
+                "depth": 11,
+                "seldepth": 25,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 189,
+                  "mate_white": null
+                },
+                "nodes": 20583,
+                "nps": 478674,
+                "hashfull": 3,
+                "tbhits": 0,
+                "time": 0.043,
+                "pv": [
+                  "d1d5",
+                  "b7b5",
+                  "d5b5",
+                  "c6e7",
+                  "c1a3",
+                  "c7c6",
+                  "b5b3",
+                  "d7d5",
+                  "e5d6",
+                  "e4d6",
+                  "f1e1",
+                  "d6c4",
+                  "b3c4"
+                ]
+              },
+              "12": {
+                "depth": 12,
+                "seldepth": 27,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 180,
+                  "mate_white": null
+                },
+                "nodes": 60186,
+                "nps": 466558,
+                "hashfull": 11,
+                "tbhits": 0,
+                "time": 0.129,
+                "pv": [
+                  "d1d5",
+                  "b7b5",
+                  "d5e4",
+                  "b5c4",
+                  "f3g5",
+                  "g7g6",
+                  "f1e1",
+                  "a8b8",
+                  "e4h4",
+                  "h7h5",
+                  "g2g4",
+                  "f7f6",
+                  "e5f6",
+                  "d8f6",
+                  "g4h5",
+                  "d7d5",
+                  "h5g6",
+                  "f6g6"
+                ]
+              }
+            }
+          },
+          {
+            "root_moves": [
+              "c1e3"
+            ],
+            "returned": "c1e3",
+            "packets": {
+              "1": {
+                "depth": 1,
+                "seldepth": 3,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -33,
+                  "mate_white": null
+                },
+                "nodes": 2,
+                "nps": 2000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3"
+                ]
+              },
+              "2": {
+                "depth": 2,
+                "seldepth": 3,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -10,
+                  "mate_white": null
+                },
+                "nodes": 12,
+                "nps": 12000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3"
+                ]
+              },
+              "3": {
+                "depth": 3,
+                "seldepth": 5,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -32,
+                  "mate_white": null
+                },
+                "nodes": 95,
+                "nps": 95000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3",
+                  "d7d6",
+                  "c4d3"
+                ]
+              },
+              "4": {
+                "depth": 4,
+                "seldepth": 8,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -10,
+                  "mate_white": null
+                },
+                "nodes": 177,
+                "nps": 177000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3",
+                  "a7a6"
+                ]
+              },
+              "5": {
+                "depth": 5,
+                "seldepth": 7,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -10,
+                  "mate_white": null
+                },
+                "nodes": 299,
+                "nps": 299000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3",
+                  "d7d6",
+                  "c4d5",
+                  "c8f5",
+                  "d1c2"
+                ]
+              },
+              "6": {
+                "depth": 6,
+                "seldepth": 7,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 1,
+                  "mate_white": null
+                },
+                "nodes": 442,
+                "nps": 442000,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.001,
+                "pv": [
+                  "c1e3",
+                  "d7d6",
+                  "c4d5",
+                  "c8f5"
+                ]
+              },
+              "7": {
+                "depth": 7,
+                "seldepth": 10,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 1,
+                  "mate_white": null
+                },
+                "nodes": 1001,
+                "nps": 333666,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.003,
+                "pv": [
+                  "c1e3",
+                  "c6e7",
+                  "f1e1",
+                  "d7d5",
+                  "e5d6",
+                  "e4d6",
+                  "e3c5"
+                ]
+              },
+              "8": {
+                "depth": 8,
+                "seldepth": 12,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": 1,
+                  "mate_white": null
+                },
+                "nodes": 1112,
+                "nps": 370666,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.003,
+                "pv": [
+                  "c1e3",
+                  "c6e7",
+                  "c4b3",
+                  "d7d5",
+                  "e5d6",
+                  "e4d6",
+                  "f1e1",
+                  "e7g6"
+                ]
+              },
+              "9": {
+                "depth": 9,
+                "seldepth": 13,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -11,
+                  "mate_white": null
+                },
+                "nodes": 4498,
+                "nps": 449800,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.01,
+                "pv": [
+                  "c1e3",
+                  "d7d5",
+                  "d1d5",
+                  "d8d5",
+                  "c4d5",
+                  "e4c3"
+                ]
+              },
+              "10": {
+                "depth": 10,
+                "seldepth": 13,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -11,
+                  "mate_white": null
+                },
+                "nodes": 5868,
+                "nps": 451384,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.013,
+                "pv": [
+                  "c1e3",
+                  "d7d5",
+                  "d1d5",
+                  "e4c3",
+                  "d5c5",
+                  "d8e7",
+                  "c4f7",
+                  "e7f7"
+                ]
+              },
+              "11": {
+                "depth": 11,
+                "seldepth": 16,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -12,
+                  "mate_white": null
+                },
+                "nodes": 8699,
+                "nps": 457842,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.019,
+                "pv": [
+                  "c1e3",
+                  "d7d5",
+                  "d1d5",
+                  "d8d5",
+                  "c4d5",
+                  "e4c3",
+                  "d5c6",
+                  "b7c6",
+                  "f1e1",
+                  "f8e8"
+                ]
+              },
+              "12": {
+                "depth": 12,
+                "seldepth": 14,
+                "multipv": 1,
+                "score": {
+                  "score_turn": "white",
+                  "cp_white": -12,
+                  "mate_white": null
+                },
+                "nodes": 8785,
+                "nps": 462368,
+                "hashfull": 0,
+                "tbhits": 0,
+                "time": 0.019,
+                "pv": [
+                  "c1e3",
+                  "d7d5",
+                  "d1d5",
+                  "d8d5",
+                  "c4d5",
+                  "e4c3",
+                  "d5c6",
+                  "b7c6",
+                  "f1e1",
+                  "f8e8",
+                  "f3d4",
+                  "e8e5"
+                ]
+              }
+            }
+          }
+        ],
+        "selection_use": "independent audit only"
+      },
+      "queries": [
+        {
+          "root_move": null,
+          "bestmove": "d1d5",
+          "elapsed_ms": 178.093,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 77,
+                "mate_white": null
+              },
+              "nodes": 54,
+              "nps": 54000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "d1c2"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 186,
+                "mate_white": null
+              },
+              "nodes": 103,
+              "nps": 103000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "d1c2"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 4,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 258,
+                "mate_white": null
+              },
+              "nodes": 164,
+              "nps": 164000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "d1c2"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 7,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 136,
+                "mate_white": null
+              },
+              "nodes": 537,
+              "nps": 537000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "f1e1",
+                "e4c5",
+                "f3g5",
+                "d7d5",
+                "c4d5"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 11,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 104,
+                "mate_white": null
+              },
+              "nodes": 2129,
+              "nps": 532250,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "d7d5",
+                "f3g5"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 8,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 119,
+                "mate_white": null
+              },
+              "nodes": 2217,
+              "nps": 554250,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "d7d5",
+                "f3g5"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 8,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 138,
+                "mate_white": null
+              },
+              "nodes": 2331,
+              "nps": 582750,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "d7d5",
+                "f3g5"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 8,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 209,
+                "mate_white": null
+              },
+              "nodes": 2487,
+              "nps": 621750,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "d7d5",
+                "f3g5"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 10,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 273,
+                "mate_white": null
+              },
+              "nodes": 3011,
+              "nps": 602200,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.005,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "d7d5",
+                "f3g5",
+                "c3e2",
+                "g1h1"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 17,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 309,
+                "mate_white": null
+              },
+              "nodes": 6987,
+              "nps": 635181,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.011,
+              "pv": [
+                "d1d5",
+                "e4c3",
+                "d5d3",
+                "c3a4",
+                "f3g5",
+                "g7g6",
+                "d3h3",
+                "h7h5",
+                "g5f7",
+                "f8f7",
+                "c4f7",
+                "g8f7"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 25,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 189,
+                "mate_white": null
+              },
+              "nodes": 20583,
+              "nps": 623727,
+              "hashfull": 3,
+              "tbhits": 0,
+              "time": 0.033,
+              "pv": [
+                "d1d5",
+                "b7b5",
+                "d5b5",
+                "c6e7",
+                "c1a3",
+                "c7c6",
+                "b5b3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "f1e1",
+                "d6c4",
+                "b3c4"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 27,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 180,
+                "mate_white": null
+              },
+              "nodes": 60186,
+              "nps": 607939,
+              "hashfull": 11,
+              "tbhits": 0,
+              "time": 0.099,
+              "pv": [
+                "d1d5",
+                "b7b5",
+                "d5e4",
+                "b5c4",
+                "f3g5",
+                "g7g6",
+                "f1e1",
+                "a8b8",
+                "e4h4",
+                "h7h5",
+                "g2g4",
+                "f7f6",
+                "e5f6",
+                "d8f6",
+                "g4h5",
+                "d7d5",
+                "h5g6",
+                "f6g6"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 15,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 177,
+                "mate_white": null
+              },
+              "nodes": 60489,
+              "nps": 611000,
+              "hashfull": 11,
+              "tbhits": 0,
+              "time": 0.099,
+              "pv": [
+                "d1d5",
+                "b7b5",
+                "d5e4",
+                "b5c4",
+                "f3g5",
+                "g7g6",
+                "f1e1",
+                "d8e7",
+                "g5f3",
+                "c8b7"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 24,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 173,
+                "mate_white": null
+              },
+              "nodes": 108448,
+              "nps": 626867,
+              "hashfull": 25,
+              "tbhits": 0,
+              "time": 0.173,
+              "pv": [
+                "d1d5",
+                "b7b5",
+                "d5e4",
+                "b5c4",
+                "f3g5",
+                "g7g6",
+                "e4f4",
+                "f7f6",
+                "e5f6",
+                "d8f6",
+                "f4h4",
+                "f6e7",
+                "h4c4",
+                "g8g7",
+                "c4h4",
+                "h7h5"
+              ]
+            }
+          }
+        },
+        {
+          "root_move": "c4d3",
+          "bestmove": "c4d3",
+          "elapsed_ms": 83.138,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 32,
+                "mate_white": null
+              },
+              "nodes": 2,
+              "nps": 2000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c4d3"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 55,
+                "mate_white": null
+              },
+              "nodes": 12,
+              "nps": 12000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c4d3"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 4,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 67,
+                "mate_white": null
+              },
+              "nodes": 34,
+              "nps": 34000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c4d3"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 7,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -24,
+                "mate_white": null
+              },
+              "nodes": 201,
+              "nps": 201000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "c3c4",
+                "c8g4"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 11,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -43,
+                "mate_white": null
+              },
+              "nodes": 590,
+              "nps": 295000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "d1c2",
+                "c8g4",
+                "d3e4",
+                "d5e4",
+                "c2e4",
+                "g4f3",
+                "e4f3"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 11,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -43,
+                "mate_white": null
+              },
+              "nodes": 867,
+              "nps": 433500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "d1c2",
+                "c8g4",
+                "d3e4",
+                "d5e4",
+                "c2e4"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 10,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -43,
+                "mate_white": null
+              },
+              "nodes": 886,
+              "nps": 443000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "d1c2",
+                "c8g4",
+                "d3e4",
+                "d5e4",
+                "c2e4",
+                "g4f3"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 12,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -28,
+                "mate_white": null
+              },
+              "nodes": 1914,
+              "nps": 478500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 10,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -25,
+                "mate_white": null
+              },
+              "nodes": 2058,
+              "nps": 514500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 11,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -12,
+                "mate_white": null
+              },
+              "nodes": 2294,
+              "nps": 573500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.004,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7",
+                "h2h3"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 23,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -29,
+                "mate_white": null
+              },
+              "nodes": 23765,
+              "nps": 698970,
+              "hashfull": 3,
+              "tbhits": 0,
+              "time": 0.034,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7",
+                "f1e1",
+                "h7h6",
+                "g5f4",
+                "d7g4",
+                "f4g3",
+                "c8e6"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 23,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -30,
+                "mate_white": null
+              },
+              "nodes": 41218,
+              "nps": 686966,
+              "hashfull": 7,
+              "tbhits": 0,
+              "time": 0.06,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7",
+                "f1e1",
+                "h7h6",
+                "g5f4",
+                "d7d8"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 23,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -31,
+                "mate_white": null
+              },
+              "nodes": 51971,
+              "nps": 692946,
+              "hashfull": 7,
+              "tbhits": 0,
+              "time": 0.075,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7",
+                "f1e1",
+                "h7h6",
+                "g5f4",
+                "f8e8",
+                "d1d2",
+                "d7d8",
+                "f3d4",
+                "c6d4"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 21,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -31,
+                "mate_white": null
+              },
+              "nodes": 54690,
+              "nps": 692278,
+              "hashfull": 7,
+              "tbhits": 0,
+              "time": 0.079,
+              "pv": [
+                "c4d3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "c1g5",
+                "d8d7",
+                "f1e1",
+                "h7h6",
+                "g5f4",
+                "d7d8",
+                "f3e5",
+                "c6e5",
+                "f4e5",
+                "f8e8"
+              ]
+            }
+          }
+        },
+        {
+          "root_move": "c1e3",
+          "bestmove": "c1e3",
+          "elapsed_ms": 79.627,
+          "packets": {
+            "1": {
+              "depth": 1,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -33,
+                "mate_white": null
+              },
+              "nodes": 2,
+              "nps": 2000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3"
+              ]
+            },
+            "2": {
+              "depth": 2,
+              "seldepth": 3,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -10,
+                "mate_white": null
+              },
+              "nodes": 12,
+              "nps": 12000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3"
+              ]
+            },
+            "3": {
+              "depth": 3,
+              "seldepth": 5,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -32,
+                "mate_white": null
+              },
+              "nodes": 95,
+              "nps": 95000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3",
+                "d7d6",
+                "c4d3"
+              ]
+            },
+            "4": {
+              "depth": 4,
+              "seldepth": 8,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -10,
+                "mate_white": null
+              },
+              "nodes": 177,
+              "nps": 177000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3",
+                "a7a6"
+              ]
+            },
+            "5": {
+              "depth": 5,
+              "seldepth": 7,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -10,
+                "mate_white": null
+              },
+              "nodes": 299,
+              "nps": 299000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3",
+                "d7d6",
+                "c4d5",
+                "c8f5",
+                "d1c2"
+              ]
+            },
+            "6": {
+              "depth": 6,
+              "seldepth": 7,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 1,
+                "mate_white": null
+              },
+              "nodes": 442,
+              "nps": 442000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.001,
+              "pv": [
+                "c1e3",
+                "d7d6",
+                "c4d5",
+                "c8f5"
+              ]
+            },
+            "7": {
+              "depth": 7,
+              "seldepth": 10,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 1,
+                "mate_white": null
+              },
+              "nodes": 1001,
+              "nps": 500500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "c1e3",
+                "c6e7",
+                "f1e1",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "e3c5"
+              ]
+            },
+            "8": {
+              "depth": 8,
+              "seldepth": 12,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": 1,
+                "mate_white": null
+              },
+              "nodes": 1112,
+              "nps": 556000,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.002,
+              "pv": [
+                "c1e3",
+                "c6e7",
+                "c4b3",
+                "d7d5",
+                "e5d6",
+                "e4d6",
+                "f1e1",
+                "e7g6"
+              ]
+            },
+            "9": {
+              "depth": 9,
+              "seldepth": 13,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -11,
+                "mate_white": null
+              },
+              "nodes": 4498,
+              "nps": 749666,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.006,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "d8d5",
+                "c4d5",
+                "e4c3"
+              ]
+            },
+            "10": {
+              "depth": 10,
+              "seldepth": 13,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -11,
+                "mate_white": null
+              },
+              "nodes": 5868,
+              "nps": 733500,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.008,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "e4c3",
+                "d5c5",
+                "d8e7",
+                "c4f7",
+                "e7f7"
+              ]
+            },
+            "11": {
+              "depth": 11,
+              "seldepth": 16,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -12,
+                "mate_white": null
+              },
+              "nodes": 8699,
+              "nps": 724916,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.012,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "d8d5",
+                "c4d5",
+                "e4c3",
+                "d5c6",
+                "b7c6",
+                "f1e1",
+                "f8e8"
+              ]
+            },
+            "12": {
+              "depth": 12,
+              "seldepth": 14,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -12,
+                "mate_white": null
+              },
+              "nodes": 8785,
+              "nps": 732083,
+              "hashfull": 0,
+              "tbhits": 0,
+              "time": 0.012,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "d8d5",
+                "c4d5",
+                "e4c3",
+                "d5c6",
+                "b7c6",
+                "f1e1",
+                "f8e8",
+                "f3d4",
+                "e8e5"
+              ]
+            },
+            "13": {
+              "depth": 13,
+              "seldepth": 25,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -22,
+                "mate_white": null
+              },
+              "nodes": 17793,
+              "nps": 741375,
+              "hashfull": 2,
+              "tbhits": 0,
+              "time": 0.024,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "d8d5",
+                "c4d5",
+                "e4c3",
+                "d5c6",
+                "b7c6",
+                "f1e1",
+                "h7h6",
+                "f3d4",
+                "c6c5",
+                "d4c6",
+                "c5c4",
+                "c6e7",
+                "g8h7",
+                "e7c8",
+                "f8c8"
+              ]
+            },
+            "14": {
+              "depth": 14,
+              "seldepth": 29,
+              "multipv": 1,
+              "score": {
+                "turn": "white",
+                "cp_white": -32,
+                "mate_white": null
+              },
+              "nodes": 56438,
+              "nps": 762675,
+              "hashfull": 6,
+              "tbhits": 0,
+              "time": 0.074,
+              "pv": [
+                "c1e3",
+                "d7d5",
+                "d1d5",
+                "d8d5",
+                "c4d5",
+                "e4c3",
+                "d5c6",
+                "b7c6",
+                "f1e1",
+                "c8d7",
+                "f3d4",
+                "c3d5",
+                "d4b3",
+                "f8b8",
+                "a1c1",
+                "d5b4"
+              ]
+            }
+          }
+        }
+      ],
+      "status": "exact_common_depth",
+      "selection_use": "post-play independent audit only",
+      "depth": 14,
+      "free_cp_own": 173,
+      "native_baseline_cp_own": -31,
+      "actual_cp_own": -32,
+      "free_mate_own": null,
+      "native_baseline_mate_own": null,
+      "actual_mate_own": null,
+      "actual_loss_vs_free_cp": 205,
+      "actual_loss_vs_native_baseline_cp": 1,
+      "critical_cp_regression": false,
+      "new_negative_mate_vs_baseline": false
+    }
+  ],
+  "audit_engine_closed": true,
+  "finished_utc": "2026-11-03T19:07:25.063107+00:00",
+  "substitutions": 2,
+  "critical_cp_regressions": 1,
+  "new_negative_mates": 0,
+  "exact_common_depth_queries": 2
+}

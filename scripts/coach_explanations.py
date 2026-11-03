@@ -4,7 +4,7 @@ from coach_strategy import analyze_strategy
 from coach_openings import describe_opening
 
 COACH_NAME = "Rook"
-COACH_VERSION = 7
+COACH_VERSION = 8
 PIECE_NAMES = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
                chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
 PIECE_POINTS = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
@@ -184,14 +184,14 @@ def _opened_line(board, actual, events, capture):
 
 
 def _dialogue(board, kind, actual, played, best, perspective=None):
+    if kind == "uncertain":
+        return ""
     if actual is None:
         return "I can't verify that move from this position. Reanalyze it before drawing a lesson."
     color, san = actual["color"], actual["san"]
     actor, other = _subject(color, perspective), _subject(not color, perspective)
     own, opposing = _owner(color, perspective), _owner(not color, perspective)
     personal = color == perspective
-    if kind == "uncertain":
-        return "This position needs a closer look. Check the forcing replies before deciding whether this move works."
     if played is None:
         return "The move is legal, but this continuation doesn't check out. Reanalyze the position before relying on the recommendation."
     events, best_event = played["events"], best["events"][0] if best else None
@@ -302,6 +302,8 @@ def _dialogue(board, kind, actual, played, best, perspective=None):
 
 
 def _hint(board, kind, actual, played, best, perspective=None):
+    if kind == "uncertain":
+        return ""
     own, opposing = _owner(board.turn, perspective), _owner(not board.turn, perspective)
     if kind == "allows_mate":
         return f"Deal with the threats against {own} king before looking for anything else."
@@ -309,8 +311,6 @@ def _hint(board, kind, actual, played, best, perspective=None):
         return f"Look for checks against {opposing} king, and test every escape."
     if board.is_check():
         return f"Get {own} king out of check, then check the next forcing reply."
-    if kind == "uncertain":
-        return "Choose a candidate, then check the strongest immediate reply before trusting it."
     events = played["events"] if played else []
     if any(event["color"] != board.turn and event["captured"] for event in events[1:4]):
         return "Check what could be captured after the king's safety has been dealt with."
@@ -690,7 +690,7 @@ def describe_move(board, row):
 
     def wording(perspective=None):
         teaching = _teaching_text(lesson, actual, best, perspective) if lesson else None
-        insight = analyze_strategy(board, row, perspective)
+        insight = analyze_strategy(board, row, perspective) if kind != "uncertain" else None
         return {"dialogue": _with_teaching(_dialogue(board, kind, actual, played, best, perspective), teaching),
                 "teaching": teaching, "hint": _hint(board, kind, actual, played, best, perspective),
                 "insight": insight,

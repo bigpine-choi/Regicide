@@ -21,6 +21,7 @@ from opening_variety_tests import Peer, info
 import sparring_state_tests as state_fixtures
 from game_archive import GameArchive
 import sparring_referee
+from stockfish_gauge import StockfishGauge, SOURCE as GAUGE_SOURCE
 
 host = base.play_human
 REFEREE_SHA = "b" * 64
@@ -78,6 +79,17 @@ class ControlledReferee:
         self.closed += 1
 
 
+class DisplayReferee(ControlledReferee):
+    """An independently owned display channel, deliberately disagreeing."""
+    def cancel(self):
+        pass
+
+    def update_position(self, **kwargs):
+        super().update_position(**kwargs)
+        self.value["cp"] = -555
+        return self.snapshot()
+
+
 class SparringRefereeHostTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="regicide-referee-host-")
@@ -87,10 +99,13 @@ class SparringRefereeHostTests(unittest.TestCase):
         self.binary.write_bytes(b"controlled own engine; never executed")
         self.peer = Peer()
         self.referee = ControlledReferee()
+        self.display_referee = DisplayReferee()
+        self.gauge = StockfishGauge(referee=self.display_referee)
         self.game = host.HumanGame(self.binary, self.root / "games", lambda _: self.peer,
                                   hint_engine_factory=base.FakeFactory(),
                                   evaluation_engine_factory=base.FakeFactory(),
                                   opening_variety_enabled=False, referee=self.referee,
+                                  gauge=self.gauge,
                                   referee_info={"name": REFEREE_NAME, "sha256": REFEREE_SHA,
                                                 "source_url": "https://github.com/official-stockfish/Stockfish",
                                                 "license": "GPL-3.0-or-later"})
@@ -132,8 +147,9 @@ class SparringRefereeHostTests(unittest.TestCase):
         self.assertEqual(own["cp"], -40)
         packet = self.game.evaluation_with_reference()
         self.assertEqual(packet["cp"], -40)
-        self.assertEqual(packet["reference_evaluation"]["cp"], 777)
-        self.assertEqual(packet["reference_evaluation"]["source"], sparring_referee.SOURCE)
+        self.assertEqual(packet["reference_evaluation"]["cp"], -555)
+        self.assertEqual(packet["reference_evaluation"]["source"], GAUGE_SOURCE)
+        self.assertTrue(packet["stockfish_reference"]["enabled"])
         self.assertTrue(packet["sparring_referee"]["assisted"])
         packet["reference_evaluation"]["cp"] = 12345
         self.assertEqual(self.game.evaluation(), own)
@@ -227,7 +243,8 @@ class SparringRefereeHostTests(unittest.TestCase):
 
     def test_reference_update_or_snapshot_failure_never_breaks_the_own_evaluation(self):
         board = self.prepare()
-        with mock.patch.object(self.referee, "update_position", side_effect=RuntimeError("controlled update failure")):
+        with mock.patch.object(self.display_referee, "update_position", side_effect=RuntimeError("controlled update failure")):
+            self.game.revision += 1
             self.game._sync_evaluation(status="searching")
             self.game._publish_evaluation(info(board, "c7c5", 40, 6))
             value = self.game.evaluation_with_reference()
@@ -236,9 +253,10 @@ class SparringRefereeHostTests(unittest.TestCase):
             self.assertFalse(value["reference_evaluation"]["available"])
             self.assertTrue(value["sparring_referee"]["assisted"])
             self.assertIsNone(self.game.state()["error"])
+        self.game.revision += 1
         self.game._sync_evaluation(status="searching")
         self.game._publish_evaluation(info(board, "c7c5", 40, 6))
-        with mock.patch.object(self.referee, "snapshot", side_effect=RuntimeError("controlled snapshot failure")):
+        with mock.patch.object(self.display_referee, "snapshot", side_effect=RuntimeError("controlled snapshot failure")):
             value = self.game.evaluation_with_reference()
             self.assertEqual(value["cp"], -40)
             self.assertEqual(value["reference_evaluation"]["status"], "error")
@@ -311,7 +329,8 @@ class SparringRefereeHostTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.game.new_game("white", 1000, self.game.revision, **mode)
                 self.assertFalse(self.referee.updates[-1]["active"])
-                self.assertNotIn("reference_evaluation", self.game.evaluation_with_reference())
+                self.assertEqual(self.game.evaluation_with_reference()["reference_evaluation"]["cp"], -555)
+                self.assertTrue(self.game.state()["engine"]["stockfish_reference"]["enabled"])
                 self.assertFalse(self.game.state()["engine"]["sparring_referee"]["assisted"])
         self.prepare(); self.play(); count = len(self.referee.screens)
         self.game.begin_handicap(2, self.game.revision)
@@ -325,6 +344,7 @@ class SparringRefereeHostTests(unittest.TestCase):
         self.assertEqual(value["revision"], self.game.revision)
         self.assertEqual(self.game._sparring_decisions, {})
         self.game.close(); self.assertEqual(self.referee.closed, 1)
+        self.assertEqual(self.display_referee.closed, 1)
 
     def test_json_pgn_and_reconstructed_archive_preserve_both_engine_identities(self):
         self.prepare(); self.play(); record = self.record()
@@ -402,7 +422,8 @@ class SparringRefereeHostTests(unittest.TestCase):
             with urllib.request.urlopen(request, timeout=3) as response:
                 value = json.load(response)
             self.assertEqual(value["cp"], -40)
-            self.assertEqual(value["reference_evaluation"]["cp"], 777)
+            self.assertEqual(value["reference_evaluation"]["cp"], -555)
+            self.assertEqual(value["reference_evaluation"]["source"], GAUGE_SOURCE)
             self.assertTrue(value["sparring_referee"]["assisted"])
             self.assertEqual(self.referee.screens, [])
         finally:
