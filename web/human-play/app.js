@@ -285,8 +285,42 @@
     byId("opening-sources").replaceChildren(...sourceItems, attribution, metadata);
   }
 
+  function evaluationScoreNote(value) {
+    let text = "평가 대기";
+    if (["ready", "searching"].includes(value?.status)) {
+      if (Number.isInteger(value.mate)) text = `M${value.mate}`;
+      else if (Number.isInteger(value.cp)) {
+        text = `${value.cp > 0 ? "+" : value.cp < 0 ? "−" : ""}${(Math.abs(value.cp) / 100).toFixed(2)}`;
+        if (value.bound === "lower") text = "≥" + text;
+        if (value.bound === "upper") text = "≤" + text;
+      }
+    }
+    return text + (Number.isInteger(value?.depth) ? ` (깊이 ${value.depth})` : "");
+  }
+
+  function refereePresentation() {
+    const unchanged = {value:evaluation, prefix:"", note:"Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다."};
+    const meta = evaluation?.sparring_referee ?? state?.engine?.sparring_referee;
+    if (analysisMode || coachingMode || state?.result !== "*" || evaluation?.status === "terminal" ||
+        state?.engine?.sparring_mode !== true || meta?.enabled !== true) return unchanged;
+    const reference = evaluation?.reference_evaluation;
+    const identity = samePosition(state, reference) && reference.turn === state.turn;
+    const ready = meta.available === true && identity && reference.status === "ready" && reference.bound === "exact" &&
+      Number.isInteger(reference.depth) && reference.depth > 0 && (Number.isInteger(reference.cp) || Number.isInteger(reference.mate));
+    const own = `Regicide 자체 ${evaluationScoreNote(evaluation)}`;
+    if (ready) return {value:reference, prefix:"형세 · Stockfish 심판 · ", reference:true,
+      note:`${reference.engine_name || meta.name || "Stockfish"} 보조 심판 · ${own} · 백 기준 점수 · 승률이나 정답의 보장이 아닙니다.`};
+    let warning = "Stockfish 심판 준비 중";
+    if (meta.available !== true || ["disabled", "unavailable", "error"].includes(reference?.status)) warning = "Stockfish 심판 사용 불가";
+    else if (reference && !identity) warning = "다른 위치의 심판 평가 제외";
+    else if (reference?.status === "ready" && reference.bound !== "exact") warning = "심판 범위 평가 제외";
+    return {value:evaluation, prefix:"Regicide 자체 · ", note:`${warning} · Regicide 자체 평가 표시 · ${own} · 백 기준 점수 · 승률이 아닙니다.`};
+  }
+
   function evaluationView() {
-    const note = "Regicide의 평가 · 백 기준 점수 · 승률이 아닙니다.";
+    const selected = refereePresentation();
+    const value = selected.value;
+    const note = selected.note;
     const result = state?.result !== "*" ? state?.result : evaluation?.status === "terminal" ? evaluation.result : "*";
     if (result && result !== "*") {
       const label = result === "1-0" ? "백 승리" : result === "0-1" ? "흑 승리" : result === "1/2-1/2" ? "무승부" : "대국 종료";
@@ -294,34 +328,34 @@
       return {label, score:result, detail:"확정된 대국 결과", share};
     }
     if (closed) return {label:"대국 종료", score:"—", detail:note, share:null};
-    if (!evaluation || evaluation.status === "waiting") {
+    if (!value || value.status === "waiting") {
       return {label:"분석 대기 중", score:"—", detail:note, share:null};
     }
-    if (evaluation.status === "unavailable") {
+    if (value.status === "unavailable") {
       return {label:"평가를 사용할 수 없습니다", score:"—", detail:"대국은 계속할 수 있습니다. " + note, share:null};
     }
-    const hasCp = Number.isFinite(evaluation.cp);
-    const hasMate = Number.isInteger(evaluation.mate);
+    const hasCp = Number.isFinite(value.cp);
+    const hasMate = Number.isInteger(value.mate);
     if (!hasCp && !hasMate) {
       return {label:"분석 중…", score:"—", detail:note, share:null};
     }
-    const prefix = evaluation.bound === "lower" ? "≥ " : evaluation.bound === "upper" ? "≤ " : "";
+    const prefix = value.bound === "lower" ? "≥ " : value.bound === "upper" ? "≤ " : "";
     let score;
     let label;
     if (hasMate) {
-      score = evaluation.mate === 0 ? "M0" : `${evaluation.mate > 0 ? "+" : "−"}M${Math.abs(evaluation.mate)}`;
-      label = evaluation.mate === 0 ? (evaluation.winner ? `${colorName(evaluation.winner)} 체크메이트 승리` : "체크메이트 평가") : `${evaluation.mate > 0 ? "백" : "흑"} 메이트 예상`;
+      score = value.mate === 0 ? "M0" : `${value.mate > 0 ? "+" : "−"}M${Math.abs(value.mate)}`;
+      label = value.mate === 0 ? (value.winner ? `${colorName(value.winner)} 체크메이트 승리` : "체크메이트 평가") : `${value.mate > 0 ? "백" : "흑"} 메이트 예상`;
     } else {
-      score = `${evaluation.cp > 0 ? "+" : evaluation.cp < 0 ? "−" : ""}${(Math.abs(evaluation.cp) / 100).toFixed(2)}`;
-      label = evaluation.cp > 0 ? "백 우세" : evaluation.cp < 0 ? "흑 우세" : "균형";
+      score = `${value.cp > 0 ? "+" : value.cp < 0 ? "−" : ""}${(Math.abs(value.cp) / 100).toFixed(2)}`;
+      label = value.cp > 0 ? "백 우세" : value.cp < 0 ? "흑 우세" : "균형";
     }
     // A bound is not an exact assessment of which side is ahead.
-    if (prefix) label = evaluation.bound === "lower" ? "백 평가 하한" : "백 평가 상한";
+    if (prefix) label = value.bound === "lower" ? "백 평가 하한" : "백 평가 상한";
     const details = [];
-    if (evaluation.status === "searching") details.push("분석 중");
-    if (evaluation.status === "searching" && evaluation.refinement?.phase === "refining") details.push("정밀 분석 중");
-    if (evaluation.source === "previous_search") details.push("직전 탐색 평가");
-    if (Number.isInteger(evaluation.depth)) details.push(`탐색 깊이 ${evaluation.depth}`);
+    if (value.status === "searching") details.push("분석 중");
+    if (value.status === "searching" && value.refinement?.phase === "refining") details.push("정밀 분석 중");
+    if (value.source === "previous_search") details.push("직전 탐색 평가");
+    if (Number.isInteger(value.depth)) details.push(`탐색 깊이 ${value.depth}`);
     if (prefix) details.push("확정 평가가 아닌 탐색 경계값");
     const reliabilityLabels = {provisional: "잠정 평가", stable: "탐색 안정", volatile: "평가 변동 큼", bounded: "범위 평가"};
     const reliabilityDetails = {
@@ -330,13 +364,17 @@
       volatile: "최근 탐색에서 평가가 크게 달라졌습니다.",
       bounded: "상한·하한 형태로 얻은 탐색 평가입니다."
     };
-    if (Object.hasOwn(reliabilityLabels, evaluation.reliability)) {
-      label += ` · ${reliabilityLabels[evaluation.reliability]}`;
-      details.push(reliabilityLabels[evaluation.reliability], reliabilityDetails[evaluation.reliability]);
+    if (Object.hasOwn(reliabilityLabels, value.reliability)) {
+      label += ` · ${reliabilityLabels[value.reliability]}`;
+      details.push(reliabilityLabels[value.reliability], reliabilityDetails[value.reliability]);
     }
     details.push(note);
-    const share = Number.isFinite(evaluation.white_share) ? Math.max(0, Math.min(1, evaluation.white_share)) : null;
-    return {label, score:prefix + score, detail:details.join(" · "), share};
+    let share = Number.isFinite(value.white_share) ? Math.max(0, Math.min(1, value.white_share)) : null;
+    if (selected.reference && share === null) {
+      const mateWinner = value.winner || (value.turn === "white" ? "black" : "white");
+      share = hasMate ? (value.mate > 0 || (value.mate === 0 && mateWinner === "white") ? 1 : 0) : .5 + .5 * value.cp / (Math.abs(value.cp) + 400);
+    }
+    return {label:selected.prefix + label, score:prefix + score, detail:details.join(" · "), share};
   }
 
   function renderEvaluation() {
@@ -671,6 +709,14 @@
     };
     const mode = byId("boss-mode").value;
     byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;
+    const referee = state?.engine?.sparring_referee;
+    const sparringOption = byId("boss-mode").querySelector('option[value="sparring"]');
+    if (sparringOption) sparringOption.textContent = "스파링 모드";
+    if (referee && typeof referee.available === "boolean") {
+      if (sparringOption) sparringOption.textContent = referee.available ? "스파링 · Stockfish 심판" : "스파링 · 자체 평가";
+      if (mode === "sparring") byId("boss-mode-help").textContent += referee.available ?
+        " 수는 Regicide가 선택하고 Stockfish가 보조 심판을 맡습니다." : " Stockfish 심판을 사용할 수 없어 Regicide 자체 평가를 사용합니다.";
+    }
     byId("boss-mode-help").title = mode === "sparring" ? "20수는 백과 흑이 각각 20번 둔 시점입니다. 21~49수에 매 수 일정한 폭으로 강도를 높이고, 양쪽 모두 50번째 수부터 전력으로 둡니다." : "";
     renderThinkTimeControls();
   }
@@ -957,7 +1003,8 @@
         byId("opponent-detail").textContent += phase ? ` · 보스 모드 · ${phase}` : " · 보스 모드";
       } else if (state.engine.sparring_mode === true) {
         // Keep adjustment diagnostics in state/records, outside the live presentation.
-        byId("opponent-detail").textContent += " · 스파링 모드";
+        const referee = state.engine.sparring_referee;
+        byId("opponent-detail").textContent += referee?.enabled === true ? (referee.available === true ? " · Stockfish 보조 스파링" : " · 스파링 · 자체 평가 사용") : " · 스파링 모드";
       }
       const engineName = state.engine.name || "Regicide";
       byId("engine-version").textContent = engineName;

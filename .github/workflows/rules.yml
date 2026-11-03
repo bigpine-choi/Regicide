@@ -149,6 +149,9 @@ jobs:
       - run: python tests/sparring_evaluation_tests.py
       - run: python tests/sparring_evaluation_state_tests.py
       - run: python tests/sparring_evaluation_live_tests.py
+      - run: python tests/referee_engine_tests.py
+      - run: python tests/sparring_referee_tests.py
+      - run: python tests/sparring_referee_host_tests.py
       - run: python tests/sparring_play_tests.py
       - run: python tests/rating_evidence_tests.py
       - run: python tests/rating_observation_host_tests.py
@@ -244,6 +247,8 @@ jobs:
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/rapid_clock_offline_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/engine_pacing_transport_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/sparring_referee_ui_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/opening_explorer_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

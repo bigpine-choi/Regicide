@@ -315,9 +315,13 @@ func _build_ui() -> void:
 	board_toolbar.add_child(flip_button)
 	evaluation_summary = _label("형세 분석 대기", 16, "f6f0de")
 	evaluation_summary.name = "EvaluationSummary"
+	evaluation_summary.clip_text = true
+	evaluation_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	board_column.add_child(evaluation_summary)
 	evaluation_detail = _label("현재 체스판의 분석을 기다립니다.", 12, "8197aa")
 	evaluation_detail.name = "EvaluationDetail"
+	evaluation_detail.clip_text = true
+	evaluation_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	board_column.add_child(evaluation_detail)
 	var upper_strip := HBoxContainer.new()
 	board_column.add_child(upper_strip)
@@ -1558,11 +1562,79 @@ func _render_evaluation() -> void:
 		presented = {"status": "terminal", "source": "result", "result": shown.result}
 	elif _evaluation_matches(evaluation, shown):
 		presented = evaluation
+	var own: Dictionary = presented
+	var referee: Dictionary = _live_referee_metadata(presented, shown)
+	var reference: Dictionary = {}
+	var use_reference := false
+	if not referee.is_empty():
+		var candidate: Variant = presented.get("reference_evaluation", {})
+		if candidate is Dictionary:
+			reference = candidate
+		use_reference = referee.get("available", false) == true and _reference_evaluation_ready(reference, shown)
+		if use_reference:
+			presented = reference.duplicate(true)
+			var share: Variant = presented.get("white_share")
+			if typeof(share) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(share)):
+				presented["white_share"] = null
 	evaluation_bar.present(presented, board_model.view_from_white)
+	if not referee.is_empty():
+		var own_note := "Regicide 자체 " + _evaluation_score_note(own)
+		if use_reference:
+			evaluation_bar.summary_text = "형세 · Stockfish 심판 · " + evaluation_bar.summary_text
+			evaluation_bar.detail_text = "%s · 깊이 %d · %s" % [str(reference.get("engine_name", referee.get("name", "Stockfish"))), int(reference.get("depth", 0)), own_note]
+		else:
+			evaluation_bar.summary_text = "Regicide 자체 · " + evaluation_bar.summary_text
+			evaluation_bar.detail_text = _reference_fallback_note(reference, referee, shown) + " · " + own_note
+		evaluation_bar.tooltip_text = evaluation_bar.summary_text + "\n" + evaluation_bar.detail_text + "\n+는 백, −는 흑 우세입니다. 막대는 제한된 탐색의 추정 형세이며 승률이나 정답의 보장이 아닙니다."
+		var referee_message: String = str(reference.get("message", referee.get("message", "")))
+		if not referee_message.is_empty():
+			evaluation_bar.tooltip_text += "\n" + referee_message
 	evaluation_summary.text = evaluation_bar.summary_text
 	evaluation_detail.text = evaluation_bar.detail_text
 	evaluation_summary.tooltip_text = evaluation_bar.tooltip_text
 	evaluation_detail.tooltip_text = evaluation_bar.tooltip_text
+
+
+func _live_referee_metadata(value: Dictionary, shown: Dictionary) -> Dictionary:
+	if review_mode or shown.get("result", "*") != "*" or value.get("status") == "terminal" or shown.get("engine", {}).get("sparring_mode", false) != true:
+		return {}
+	var meta: Variant = value.get("sparring_referee", shown.get("engine", {}).get("sparring_referee", {}))
+	return meta if meta is Dictionary and meta.get("enabled", false) == true else {}
+
+
+static func _integer_score(value: Variant) -> bool:
+	return typeof(value) in [TYPE_INT, TYPE_FLOAT] and is_finite(float(value)) and float(value) == floor(float(value))
+
+
+func _reference_evaluation_ready(value: Dictionary, shown: Dictionary) -> bool:
+	return _evaluation_matches(value, shown) and value.get("turn", "") == shown.get("turn", "") \
+		and value.get("status", "") == "ready" and value.get("bound", "") == "exact" \
+		and _integer_score(value.get("depth")) and int(value.depth) > 0 \
+		and (_integer_score(value.get("cp")) or _integer_score(value.get("mate")))
+
+
+func _evaluation_score_note(value: Dictionary) -> String:
+	var result := "평가 대기"
+	if value.get("status", "") in ["ready", "searching"]:
+		if _integer_score(value.get("mate")):
+			result = "M%d" % int(value.mate)
+		elif _integer_score(value.get("cp")):
+			result = "%+.2f" % (float(value.cp) / 100.0)
+			if value.get("bound", "exact") in ["lower", "upper"]:
+				result = ("≥" if value.bound == "lower" else "≤") + result
+	if _integer_score(value.get("depth")):
+		result += " (깊이 %d)" % int(value.depth)
+	return result
+
+
+func _reference_fallback_note(value: Dictionary, meta: Dictionary, shown: Dictionary) -> String:
+	if meta.get("available", false) != true or value.get("status", "") in ["disabled", "unavailable", "error"]:
+		return "Stockfish 심판 사용 불가 · Regicide 자체 평가 표시"
+	if not value.is_empty() and (not _evaluation_matches(value, shown) or value.get("turn", "") != shown.get("turn", "")):
+		return "다른 위치의 심판 평가 제외 · Regicide 자체 평가 표시"
+	if value.get("status", "") == "ready" and value.get("bound", "") != "exact":
+		return "심판 범위 평가 제외 · Regicide 자체 평가 표시"
+	return "Stockfish 심판 준비 중 · Regicide 자체 평가 표시"
 
 
 func _hint_legal_moves() -> Array:
@@ -2219,6 +2291,13 @@ func _on_game_mode_selected(_index: int) -> void:
 		1: "처음에는 신중하게 두고, 상대의 실수가 누적되면 함정 시도를 늘립니다. 정확히 간파하면 보스가 손해를 보는 함정도 둡니다. 새 대국부터 적용됩니다.",
 		2: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."}
 	var description: String = descriptions.get(boss_mode_option.get_selected_id(), descriptions[0])
+	var meta: Variant = state.get("engine", {}).get("sparring_referee")
+	if meta is Dictionary and meta.has("available"):
+		boss_mode_option.set_item_text(boss_mode_option.get_item_index(2), "스파링 · Stockfish 심판" if meta.get("available", false) else "스파링 · 자체 평가")
+		if boss_mode_option.get_selected_id() == 2:
+			description += "\n수는 Regicide가 선택하고 Stockfish가 보조 심판을 맡습니다." if meta.get("available", false) else "\nStockfish 심판을 사용할 수 없어 Regicide 자체 평가를 사용합니다."
+	else:
+		boss_mode_option.set_item_text(boss_mode_option.get_item_index(2), "스파링 모드")
 	boss_mode_option.tooltip_text = description
 	if boss_mode_option.get_selected_id() == 2:
 		boss_mode_option.tooltip_text += "\n20수는 백과 흑이 각각 20번 둔 시점입니다. 21~49수에 매 수 일정한 폭으로 강도를 높이고, 양쪽 모두 50번째 수부터 전력으로 둡니다."
@@ -2511,6 +2590,10 @@ func _render() -> void:
 	elif engine.get("sparring_mode", false) == true:
 		# Adjustment details remain in state/records, outside the live presentation.
 		boss_phase_label.text = "스파링 모드"
+		var referee_meta: Variant = engine.get("sparring_referee")
+		if referee_meta is Dictionary and referee_meta.get("enabled", false):
+			boss_phase_label.text = "Stockfish 보조 스파링" if referee_meta.get("available", false) else "스파링 · 자체 평가 사용"
+			boss_phase_label.tooltip_text = "수 선택: Regicide · 보조 심판: Stockfish\n" + str(referee_meta.get("message", ""))
 	if not engine.is_empty():
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing

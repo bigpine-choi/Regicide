@@ -503,6 +503,86 @@ test("ranked hints preserve the current gameplay evaluation and board state", as
   assert.deepEqual(state.moves,[]);
 });
 
+function refereePosition() {
+  const meta = {enabled:true,available:true,name:"Stockfish fixture",status:"ready",policy:"stockfish-sparring-referee-v1"};
+  const state = position({turn:"white",engine:{name:"Regicide",movetime_ms:1000,sparring_mode:true,sparring_referee:{...meta}}});
+  state.evaluation = {game_id:state.game_id,revision:state.revision,fen:state.fen,turn:state.turn,
+    status:"ready",cp:350,mate:null,depth:7,bound:"exact",white_share:.7,reliability:"stable",
+    sparring_referee:{...meta},reference_evaluation:{game_id:state.game_id,revision:state.revision,fen:state.fen,
+      turn:state.turn,status:"ready",cp:-85,mate:null,depth:16,bound:"exact",white_share:.42,engine_name:"Stockfish fixture"}};
+  return state;
+}
+
+test("ready exact sparring referee controls gauge while own score and source remain explicit", async () => {
+  const state = refereePosition(), ui = await browser(state);
+  assert.match(ui.element("evaluation-label").textContent,/형세 · Stockfish 심판/);
+  assert.equal(ui.element("evaluation-score").textContent,"−0.85");
+  assert.equal(ui.element("evaluation-white").style.height,"42%");
+  assert.match(ui.element("evaluation-detail").textContent,/탐색 깊이 16/);
+  assert.match(ui.element("evaluation-detail").textContent,/Regicide 자체 \+3.50 \(깊이 7\)/);
+  assert.match(ui.element("evaluation-detail").textContent,/정답의 보장이 아닙니다/);
+  assert.equal(state.evaluation.cp,350);
+  assert.deepEqual(state.moves,[]);
+  assert.match(ui.element("opponent-detail").textContent,/Stockfish 보조 스파링/);
+});
+
+test("stale, incomplete, bounded and malformed referee scores never replace own gauge", async () => {
+  for (const change of [{game_id:"old"},{revision:9},{fen:"old"},{turn:"black"},
+    {status:"searching"},{status:"disabled"},{status:"unavailable"},{status:"error"},
+    {bound:"lower"},{bound:"upper"},{bound:""},{depth:0},{cp:null,mate:null},{cp:NaN,mate:null},{cp:"0",mate:null}]) {
+    const state = refereePosition();
+    Object.assign(state.evaluation.reference_evaluation,change);
+    const ui = await browser(state);
+    assert.equal(ui.element("evaluation-score").textContent,"+3.50",JSON.stringify(change));
+    assert.equal(ui.element("evaluation-white").style.height,"70%");
+    assert.match(ui.element("evaluation-label").textContent,/Regicide 자체/);
+    assert.match(ui.element("evaluation-detail").textContent,/자체 평가 표시/);
+  }
+});
+
+test("uninstalled referee falls back even with a ready cached reference", async () => {
+  const state = refereePosition();
+  state.evaluation.sparring_referee.available = false;
+  state.engine.sparring_referee.available = false;
+  const ui = await browser(state);
+  assert.equal(ui.element("evaluation-score").textContent,"+3.50");
+  assert.match(ui.element("evaluation-detail").textContent,/심판 사용 불가/);
+  assert.match(ui.element("opponent-detail").textContent,/자체 평가 사용/);
+});
+
+test("normal, boss, disabled and old hosts keep the existing evaluation presentation", async () => {
+  for (const mode of ["normal","boss","disabled","legacy"]) {
+    const state = refereePosition();
+    if (["normal","boss"].includes(mode)) { state.engine.sparring_mode = false; state.engine.boss_mode = mode === "boss"; }
+    if (mode === "disabled") state.evaluation.sparring_referee.enabled = false;
+    if (mode === "legacy") { delete state.evaluation.sparring_referee; delete state.engine.sparring_referee; }
+    const ui = await browser(state);
+    assert.equal(ui.element("evaluation-score").textContent,"+3.50",mode);
+    assert.doesNotMatch(ui.element("evaluation-label").textContent,/Stockfish|Regicide 자체/);
+    assert.doesNotMatch(ui.element("evaluation-detail").textContent,/심판/);
+  }
+});
+
+test("reference mate values and absent visual share preserve white perspective", async () => {
+  for (const [mate,winner,expected] of [[3,null,"100%"],[-4,null,"0%"],[0,"white","100%"],[0,"black","0%"],[0,null,"0%"]]) {
+    const state = refereePosition();
+    Object.assign(state.evaluation.reference_evaluation,{cp:null,mate,white_share:null,winner});
+    const ui = await browser(state);
+    assert.match(ui.element("evaluation-label").textContent,/Stockfish 심판/);
+    assert.equal(ui.element("evaluation-white").style.height,expected);
+    assert.match(ui.element("evaluation-score").textContent,/M/);
+  }
+});
+
+test("terminal result remains authoritative and reference metadata never changes root fields", async () => {
+  const state = refereePosition();
+  state.result = "1-0";
+  const ui = await browser(state);
+  assert.equal(ui.element("evaluation-label").textContent,"백 승리");
+  assert.equal(ui.element("evaluation-score").textContent,"1-0");
+  assert.equal(state.evaluation.cp,350);
+});
+
 (async () => {
   for (const {name, run} of cases) {
     await run();

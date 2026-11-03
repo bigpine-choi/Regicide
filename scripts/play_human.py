@@ -32,6 +32,7 @@ from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 from opening_explorer import OpeningExplorer
+from sparring_referee import SparringReferee, POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
 import opening_variety
 import dynamic_play
 import boss_play
@@ -77,7 +78,8 @@ class RevisionError(ValueError):
 class HumanGame:
     def __init__(self, binary, save_dir, engine_factory=None, hint_engine_factory=None, neural_model=None,
                  neural_adopted_generation=None, *, evaluation_engine_factory=None,
-                 opening_variety_enabled=True, dynamic_play_enabled=False, monotonic=None, pacing_wait=None):
+                 opening_variety_enabled=True, dynamic_play_enabled=False, monotonic=None, pacing_wait=None,
+                 referee=None, referee_binary=None, referee_info=None):
         if type(opening_variety_enabled) is not bool:
             raise ValueError("Opening variety must be enabled or disabled explicitly.")
         self.opening_variety_enabled = opening_variety_enabled
@@ -176,6 +178,17 @@ class HumanGame:
         self._engine = None
         self._hints = None
         self._live_evaluation = None
+        self._referee = referee
+        self._referee_info = copy.deepcopy(referee_info) if isinstance(referee_info, dict) else {}
+        if self._referee is None and referee_binary is not None:
+            try:
+                self._referee = SparringReferee(referee_binary)
+            except Exception:
+                self._referee_info.update(available=False, reason="심판 엔진을 준비하지 못했습니다.")
+        self._referee_error = None
+        initial_referee = self._referee_snapshot()
+        self._referee_sha256 = self._referee_info.get("sha256") or initial_referee.get("binary_sha256")
+        self._referee_name = self._referee_info.get("name") or initial_referee.get("engine_name") or "Stockfish"
         self.analysis = None
         self.coaching = None
         self.revision = 0
@@ -390,6 +403,135 @@ class HumanGame:
                 return current
             return snapshot
 
+    def _referee_snapshot(self):
+        if self._referee is None:
+            return {"available": False, "status": "unavailable"}
+        if getattr(self, "_referee_error", None):
+            return {"available": False, "status": "error", "message": self._referee_error}
+        try:
+            sample = self._referee.snapshot()
+            if isinstance(sample, dict):
+                return sample
+        except Exception:
+            pass
+        return {"available": False, "status": "error", "message": "심판 상태를 읽지 못해 자체 평가를 사용합니다."}
+
+    def _referee_metadata(self):
+        sample = self._referee_snapshot()
+        available = bool(self._referee is not None and sample.get("available", True))
+        name = sample.get("engine_name")
+        if (isinstance(name, str) and "stockfish" in name.casefold() and len(name) <= 200
+                and sample.get("binary_sha256") == self._referee_sha256):
+            self._referee_name = name
+        return {"enabled": bool(self.sparring_mode), "available": available,
+                "configured": self._referee is not None,
+                "assisted": bool(self.sparring_mode and self._referee is not None),
+                "name": self._referee_name,
+                "binary_sha256": self._referee_sha256,
+                "policy": REFEREE_POLICY,
+                "status": sample.get("status", "unavailable"),
+                "message": sample.get("message") or self._referee_info.get("reason") or
+                           ("로컬 Stockfish 심판을 사용합니다." if available else
+                            "Stockfish 심판을 사용할 수 없어 Regicide 자체 판단을 사용합니다.")}
+
+    def evaluation_with_reference(self):
+        """UI-only envelope. Internal pacing/rating keeps evaluation()'s own score."""
+        own = self.evaluation()
+        if not self.sparring_mode:
+            return own
+        return {**own, "reference_evaluation": self._referee_snapshot(),
+                "sparring_referee": self._referee_metadata()}
+
+    def _apply_sparring_referee(self, board, decision, baseline_info, baseline_packets, search,
+                                game_id, token, revision):
+        """Stockfish screens only Regicide's baseline and independently checked proposal.
+
+        The native engine remains untouched. A referee failure rejects a
+        concession and retains the legal Regicide baseline, never an SF move.
+        """
+        if self._referee is None or decision is None:
+            return decision
+        baseline = chess.Move.from_uci(decision["baseline_uci"])
+        proposal = chess.Move.from_uci(decision["selected_uci"])
+        if baseline not in board.legal_moves or proposal not in board.legal_moves:
+            raise ValueError("Regicide의 스파링 후보가 현재 위치와 맞지 않습니다.")
+        original = copy.deepcopy(decision)
+        original.pop("referee", None)
+        original.pop("regicide_proposal", None)
+
+        def cancelled():
+            with self._lock:
+                if (self._closing or not self._game_open or self.game_id != game_id
+                        or self._game_token is not token or self.revision != revision
+                        or self._pacing_event.is_set()):
+                    return True
+                clock = self._clock.snapshot()
+                return bool(clock["enabled"] and
+                            clock["white_ms" if board.turn else "black_ms"] <= 150)
+
+        with self._lock:
+            clock = self._clock.snapshot()
+        budget = 1500
+        if clock["enabled"]:
+            remaining = clock["white_ms" if board.turn else "black_ms"]
+            budget = min(budget, max(0, remaining - 500))
+            if remaining < 10_000:
+                budget = 0
+            elif remaining < 60_000:
+                budget = min(budget, 350)
+            elif remaining < 180_000:
+                budget = min(budget, 800)
+        allowed = (proposal != baseline and not self._sparring_analysis_only()
+                   and sparring_play.phase(board) != "finish" and budget >= 250 and not cancelled())
+        if allowed:
+            try:
+                receipt = self._referee.screen_candidates(
+                    game_id=game_id, revision=revision, board=board.copy(stack=True),
+                    baseline_move=baseline, candidates=[baseline, proposal], budget_ms=int(budget),
+                    cancelled=cancelled)
+            except Exception as exc:
+                receipt = {"status": "error", "reason": "referee_exception", "error": type(exc).__name__}
+        else:
+            receipt = {"status": "skipped", "reason": ("full_strength_phase" if sparring_play.phase(board) == "finish"
+                       else "baseline_only" if proposal == baseline else "insufficient_clock_or_analysis_only"),
+                       "selected_uci": baseline.uci()}
+        if not isinstance(receipt, dict):
+            receipt = {"status": "error", "reason": "invalid_referee_receipt"}
+        receipt = copy.deepcopy(receipt)
+        identity = (isinstance(self._referee_sha256, str) and len(self._referee_sha256) == 64
+                    and all(receipt.get(key) == value for key, value in (
+                        ("game_id", game_id), ("revision", revision), ("fen", board.fen(en_passant="fen")),
+                        ("source", REFEREE_SOURCE), ("policy", REFEREE_POLICY),
+                        ("binary_sha256", self._referee_sha256))))
+        selected = receipt.get("selected_uci")
+        verified = (allowed and identity and receipt.get("status") == "ready"
+                    and selected in {baseline.uci(), proposal.uci()}
+                    and (selected == baseline.uci() or receipt.get("accepted") is True)
+                    and not cancelled())
+        # Skips at move 50 preserve the native baseline. A missing judge cannot
+        # silently turn a rejected/incomplete concession back into a played one.
+        selected = selected if verified else baseline.uci()
+        if selected == baseline.uci() and proposal != baseline:
+            replacement, _discarded = sparring_play.choose(
+                board, baseline, baseline_info, baseline_packets, search, lambda: None,
+                decisions=list(self._sparring_decisions.values()), seed=self._opening_seed,
+                movetime_ms=0, forced=bool(self._forced_plies))
+            for key in ("opponent_observation", "profile", "balance_recovery", "baseline_budget_ms",
+                        "baseline_elapsed_ms", "extra_budget_ms", "extra_elapsed_ms", "rating_only"):
+                if key in original:
+                    replacement[key] = copy.deepcopy(original[key])
+            decision = replacement
+        decision["selected_uci"] = selected
+        decision["regicide_proposal"] = original
+        receipt.update(game_id=game_id, revision=revision, fen=board.fen(en_passant="fen"),
+                       baseline_uci=baseline.uci(), selected_uci=selected,
+                       identity_verified=bool(identity), applied=bool(verified),
+                       assistant_scope="external-assisted practice; not standalone Regicide strength")
+        if not verified and allowed:
+            receipt["reason"] = receipt.get("reason") or "unverified_reference_baseline_retained"
+        decision["referee"] = receipt
+        return decision
+
     def hint(self):
         """Advice preference and polling never wait for opponent search."""
         return self._hints.snapshot()
@@ -442,6 +584,15 @@ class HumanGame:
             human_color=self.human_color, movetime_ms=self.movetime_ms,
             engine_name=self.engine_name, active=active,
             handicap_mode=self._handicap_backup is not None)
+        if self._referee is not None:
+            try:
+                self._referee.update_position(game_id=self.game_id, revision=self.revision,
+                    board=self.board.copy(stack=True), active=bool(active and self.sparring_mode
+                                                                 and self._handicap_backup is None),
+                    budget_ms=500)
+                self._referee_error = None
+            except Exception:
+                self._referee_error = "심판 평가를 시작하지 못해 Regicide 자체 평가를 사용합니다."
 
     def _publish_evaluation(self, info):
         """Publish completed-depth opponent-search scores in White's point of view."""
@@ -580,6 +731,7 @@ class HumanGame:
                                "dynamic_play_enabled": self.dynamic_play_enabled and not self.boss_mode and not self.sparring_mode,
                                "boss_mode": self.boss_mode,
                                "sparring_mode": self.sparring_mode,
+                               "sparring_referee": self._referee_metadata(),
                                "sparring": (sparring_play.derive_profile(self.board, list(self._sparring_decisions.values()))
                                             if self.sparring_mode else None),
                                "sparring_rating": self._rating_state() if self.sparring_mode else None,
@@ -1270,6 +1422,10 @@ class HumanGame:
                         decision.update(opponent_observation=observation, frequency=frequency,
                                         extra_budget_ms=total_extra, tactical_budget_ms=search_plan["extra_budget_ms"],
                                         extra_elapsed_ms=round((time.monotonic() - boss_extra_started) * 1000, 3))
+                if self.sparring_mode and decision is not None and self._referee is not None:
+                    decision = self._apply_sparring_referee(
+                        board, decision, baseline_info, baseline_packets, search, game_id, token, revision)
+                    reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
             except BaseException as exc:
@@ -1577,6 +1733,11 @@ class HumanGame:
             game.headers.update(dynamic_play.pgn_headers(self._dynamic_metadata()))
             game.headers.update(boss_play.pgn_headers(self._boss_metadata()))
             game.headers.update(sparring_play.pgn_headers(self._sparring_metadata()))
+            referee = self._referee_metadata()
+            if referee["assisted"]:
+                game.headers.update({"SparringReferee": str(referee["name"]),
+                    "RefereeBinarySHA256": str(referee.get("binary_sha256") or "unknown"),
+                    "RefereePolicy": referee["policy"], "AssistedSparring": "true"})
             if self.neural_model:
                 game.headers.update({"Evaluation": self.neural_evaluation_mode,
                                      "ModelSHA256": self.neural_sha256,
@@ -1635,6 +1796,15 @@ class HumanGame:
                 "profile": sparring_play.derive_profile(self.board, list(self._sparring_decisions.values())),
                 "decisions": [copy.deepcopy(row) for _ply, row in sorted(self._sparring_decisions.items())]}
 
+    def _referee_record(self, metadata=None):
+        metadata = copy.deepcopy(metadata) if metadata is not None else self._referee_metadata()
+        return {**metadata, "identity": {
+                    "name": metadata["name"], "binary_sha256": metadata["binary_sha256"],
+                    "source_url": self._referee_info.get("source_url"),
+                    "license": self._referee_info.get("license", "GPL-3.0")},
+                "decisions": [copy.deepcopy(row["referee"]) for _ply, row in
+                              sorted(self._sparring_decisions.items()) if isinstance(row.get("referee"), dict)]}
+
     def _save(self, update_timestamp=True):
         if update_timestamp:
             self.updated_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -1667,6 +1837,7 @@ class HumanGame:
                   "dynamic_play": self._dynamic_metadata(),
                   "boss_play": self._boss_metadata(),
                   "sparring_play": self._sparring_metadata(),
+                  "sparring_referee": self._referee_record(state["engine"]["sparring_referee"]),
                   "sparring_rating": self._rating_metadata() if self.sparring_mode else None,
                   "purpose": "Human practice; undo and user-forced handicaps permitted, not a strength measurement"}
         # state() above already adjudicated. Keep the PGN and JSON on that
@@ -1684,6 +1855,11 @@ class HumanGame:
         self._pacing_event.set()
         if self._live_evaluation is not None:
             self._live_evaluation.close()
+        if self._referee is not None:
+            try:
+                self._referee.close()
+            except Exception:
+                self._referee_error = "별도 심판을 정리하는 중 오류가 발생했습니다."
         if self.coaching is not None:
             self.coaching.close()
         if self.analysis is not None:
@@ -1801,7 +1977,7 @@ class HumanHandler(BaseHTTPRequestHandler):
         if self.path == "/api/state":
             self._send(200, self.server.game.state())
         elif self.path == "/api/evaluation":
-            self._send(200, self.server.game.evaluation())
+            self._send(200, self.server.game.evaluation_with_reference())
         elif self.path == "/api/hint":
             self._send(200, self.server.game.hint())
         elif self.path == "/api/analysis":
@@ -1997,6 +2173,9 @@ def main():
     parser.add_argument("--desktop-client", action="store_true",
                         help="Include the local session token in the private startup file, never stdout")
     parser.add_argument("--no-browser", action="store_true")
+    referee_options = parser.add_mutually_exclusive_group()
+    referee_options.add_argument("--referee-engine", type=Path, help="Local Stockfish executable for assisted sparring")
+    referee_options.add_argument("--no-referee", action="store_true", help="Use standalone Regicide sparring without an external referee")
     args = parser.parse_args()
     if not 0 <= args.port <= 65535:
         parser.error("port must be in 0..65535")
@@ -2015,8 +2194,13 @@ def main():
     selected = runtime_evaluation(args.binary, args.neural_model, args.learning_state, args.classical)
     if selected["warning"]:
         print(selected["warning"], file=sys.stderr, flush=True)
+    from referee_engine import resolve_referee_engine
+    referee_info = ({"available": False, "reason": "Stockfish 심판을 끄고 자체 스파링으로 실행했습니다."}
+                    if args.no_referee else resolve_referee_engine(ROOT, args.referee_engine))
     game = HumanGame(args.binary, save_dir, neural_model=selected["model"],
-                     neural_adopted_generation=selected["generation"], dynamic_play_enabled=True)
+                     neural_adopted_generation=selected["generation"], dynamic_play_enabled=True,
+                     referee_binary=referee_info.get("binary") if referee_info["available"] else None,
+                     referee_info=referee_info)
     try:
         with HumanServer(game, args.port) as server:
             startup = {"url": server.origin, "pid": os.getpid(),

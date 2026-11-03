@@ -6,6 +6,7 @@ cannot corrupt the viewer or change the game currently being played.
 """
 
 from collections import OrderedDict
+import copy
 import datetime
 import hashlib
 import json
@@ -28,6 +29,7 @@ import boss_play
 import boss_opponent
 import sparring_play
 import sparring_rating
+from sparring_referee import POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
 from game_clock import CONTROLS, MAX_ADJUSTED_MS, SCHEMA as CLOCK_SCHEMA
 
 
@@ -236,6 +238,81 @@ def _text(value, default="", limit=1000):
                    if ord(character) >= 32 and not 0xD800 <= ord(character) <= 0xDFFF)
 
 
+def _recorded_referee(record, sparring_mode):
+    """Keep optional referee identity distinct from the actual playing engine.
+
+    Old games have no referee metadata. New assisted labels require agreement
+    between the authoritative record, its identity, and the saved UI state;
+    malformed optional metadata never prevents replaying a legal old game.
+    """
+    metadata = record.get("sparring_referee")
+    if not sparring_mode or not isinstance(metadata, dict) or metadata.get("policy") != REFEREE_POLICY:
+        return None
+    engine = record.get("state", {}).get("engine", {})
+    saved = engine.get("sparring_referee") if isinstance(engine, dict) else None
+    if not isinstance(saved, dict) or saved.get("policy") != REFEREE_POLICY:
+        return None
+    flags = ("enabled", "available", "assisted")
+    if any(type(metadata.get(key)) is not bool or metadata[key] != saved.get(key) for key in flags):
+        return None
+    if metadata["assisted"] and not metadata["enabled"]:
+        return None
+    configured = metadata.get("configured", metadata["assisted"])
+    if (type(configured) is not bool or configured != saved.get("configured", saved.get("assisted"))
+            or metadata["assisted"] and not configured):
+        return None
+    name, sha = metadata.get("name"), metadata.get("binary_sha256")
+    if any(metadata.get(key) != saved.get(key) for key in ("name", "binary_sha256")):
+        return None
+    identity = metadata.get("identity")
+    if metadata["assisted"]:
+        if (not isinstance(name, str) or not name or len(name) > 200 or _text(name, limit=200) != name
+                or "stockfish" not in name.casefold() or not isinstance(sha, str)
+                or re.fullmatch(r"[0-9a-f]{64}", sha) is None or not isinstance(identity, dict)
+                or identity.get("name") != name or identity.get("binary_sha256") != sha):
+            return None
+    result = {key: metadata[key] for key in flags}
+    result.update({"name": _text(name, limit=200) or None, "configured": configured,
+                   "binary_sha256": sha if isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) else None,
+                   "policy": REFEREE_POLICY, "historical": True,
+                   "status": _text(metadata.get("status"), "unavailable", 40),
+                   "message": _text(metadata.get("message"), limit=400)})
+    if isinstance(identity, dict):
+        result["identity"] = {"name": result["name"], "binary_sha256": result["binary_sha256"],
+                              "source_url": _text(identity.get("source_url"), limit=300) or None,
+                              "license": _text(identity.get("license"), limit=100) or None}
+    return result
+
+
+def _recorded_referee_decisions(record, actual_decisions, positions, metadata):
+    """Expose only referee evidence attached to an actual recorded engine move.
+
+    Configuration attribution survives failed screens. Individual score
+    receipts have stricter position/source checks and remain a separate audit
+    channel; they never become the replay board's own evaluation.
+    """
+    if not metadata or not metadata["assisted"]:
+        return []
+    recorded = record.get("sparring_referee", {}).get("decisions", [])
+    if not isinstance(recorded, list):
+        return []
+    valid = []
+    for row in actual_decisions:
+        receipt = row.get("referee")
+        ply = row["ply"]
+        if (not isinstance(receipt, dict) or receipt not in recorded
+                or receipt.get("source") != REFEREE_SOURCE or receipt.get("policy") != REFEREE_POLICY
+                or receipt.get("game_id") != record.get("game_id")
+                or receipt.get("fen") != positions.get(ply - 1)
+                or receipt.get("selected_uci") != row.get("selected_uci")
+                or receipt.get("engine_name") != metadata["name"]
+                or receipt.get("binary_sha256") != metadata["binary_sha256"]
+                or receipt.get("identity_verified") is not True):
+            continue
+        valid.append({"ply": ply, **copy.deepcopy(receipt)})
+    return valid
+
+
 def _stamp(value):
     value = _text(value, limit=100)
     try:
@@ -349,6 +426,7 @@ class GameArchive:
             board = chess.Board(initial_fen)
             if not board.is_valid():
                 raise ValueError("유효하지 않은 초기 체스판입니다.")
+            positions = {0: board.fen(en_passant="fen")}
             metadata = state.get("moves", [])
             if not isinstance(metadata, list):
                 metadata = []
@@ -367,6 +445,7 @@ class GameArchive:
                     entry["forced"] = True
                 moves.append(entry)
                 board.push(move)
+                positions[ply] = board.fen(en_passant="fen")
         except (ValueError, TypeError, IndexError) as exc:
             raise ValueError("합법적으로 재생할 수 없는 대국 기록입니다.") from exc
         result = state.get("result", "*")
@@ -428,6 +507,8 @@ class GameArchive:
                              and moves[row["ply"] - 1]["actor"] == "engine"
                              and moves[row["ply"] - 1]["uci"] == row.get("selected_uci")
                              and row.get("history_uci") == uci_moves[:row["ply"] - 1]]
+        referee = _recorded_referee(record, sparring_mode)
+        referee_decisions = _recorded_referee_decisions(record, sparring_decisions, positions, referee)
         return {"record": record, "board": board, "moves": moves,
                 "game_id": game_id, "human_color": human_color,
                 "result": result, "termination": termination, "clock": clock,
@@ -436,6 +517,8 @@ class GameArchive:
                 "updated_at": updated_at, "ended_at": ended_at or None,
                 "boss_mode": boss_mode, "boss_decisions": boss_decisions,
                 "sparring_mode": sparring_mode, "sparring_decisions": sparring_decisions,
+                "sparring_referee": referee,
+                "referee_decisions": referee_decisions,
                 "error": bool(state.get("error"))}
 
     def _load(self, game_id):
@@ -495,6 +578,8 @@ class GameArchive:
                 "movetime_ms": prepared["movetime_ms"], "ply_count": len(prepared["moves"]),
                 "boss_mode": prepared["boss_mode"],
                 "sparring_mode": prepared["sparring_mode"],
+                "assisted_sparring": bool(prepared["sparring_referee"] and prepared["sparring_referee"]["assisted"]),
+                "sparring_referee": copy.deepcopy(prepared["sparring_referee"]),
                 "time_control": prepared["clock"]["control_id"] if prepared["clock"] else None,
                 "handicap_moves": sum(bool(move.get("forced")) for move in prepared["moves"]),
                 "current": current}
@@ -552,6 +637,11 @@ class GameArchive:
         game.headers.update(boss_play.pgn_headers(record.get("boss_play")))
         if prepared["sparring_mode"]:
             game.headers.update(sparring_play.pgn_headers(record.get("sparring_play")))
+        referee = prepared["sparring_referee"]
+        if referee and referee["assisted"]:
+            game.headers.update({"SparringReferee": referee["name"],
+                                 "RefereeBinarySHA256": referee["binary_sha256"],
+                                 "RefereePolicy": referee["policy"], "AssistedSparring": "true"})
         clock = prepared["clock"]
         if clock:
             game.headers["TimeControl"] = f"{clock['initial_ms'] // 1000}+{clock['increment_ms'] // 1000}"
@@ -602,6 +692,8 @@ class GameArchive:
                                  "movetime_ms": replay_budget,
                                  "boss_mode": prepared["boss_mode"],
                                  "sparring_mode": prepared["sparring_mode"]}
+                if prepared["sparring_referee"] is not None:
+                    replay_engine["sparring_referee"] = copy.deepcopy(prepared["sparring_referee"])
                 if prepared["sparring_mode"]:
                     replay_engine["sparring"] = sparring_play.derive_profile(
                         board, [row for row in prepared["sparring_decisions"] if row["ply"] <= ply],
@@ -640,7 +732,8 @@ class GameArchive:
                 if not final:
                     board.push_uci(prepared["moves"][ply]["uci"])
             return {"summary": summary, "moves": [dict(move) for move in prepared["moves"]],
-                    "frames": frames, "pgn": self._pgn(prepared)}
+                    "frames": frames, "pgn": self._pgn(prepared),
+                    "referee_decisions": copy.deepcopy(prepared["referee_decisions"])}
 
     @staticmethod
     def _budget_at_ply(prepared, ply):
