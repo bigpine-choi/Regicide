@@ -924,6 +924,7 @@
   }
 
   function render() {
+    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode)});
     renderClockAndAdvice();
     renderModeHelp();
     renderSparringRating();

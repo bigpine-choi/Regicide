@@ -6,6 +6,7 @@ signal returned
 const AnalysisBoard = preload("res://scripts/analysis_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const ViewModel = preload("res://scripts/board_view_model.gd")
+const OpeningExplorer = preload("res://scripts/opening_explorer.gd")
 const START_FEN := "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 var backend_url: String = ""
@@ -59,6 +60,7 @@ var _mutation_epoch: int = 0
 var _poll_in_flight: bool = false
 var _state_ready: bool = false
 var _error: String = ""
+var opening_explorer: OpeningExplorer
 
 
 func _ready() -> void:
@@ -313,6 +315,9 @@ func _build_ui() -> void:
 	history = _label("", 13, "a3b6c8")
 	play_controls.add_child(history)
 	play_controls.add_child(_label("백·흑 양쪽 수를 직접 둘 수 있습니다. 추천은 현재 차례의 Regicide가 계산합니다.", 12, "8197aa"))
+	opening_explorer = OpeningExplorer.new()
+	opening_explorer.explore_position.connect(_on_explorer_position)
+	sidebar.add_child(opening_explorer)
 	requester = HTTPRequest.new()
 	requester.timeout = 6.0
 	add_child(requester)
@@ -328,9 +333,12 @@ func _build_ui() -> void:
 	poll_timer.start()
 
 
-func open_position(fen: String, url: String, token: String) -> void:
+func open_position(fen: String, url: String, token: String, explorer_preferences: Dictionary = {}) -> void:
 	_epoch += 1
 	var epoch: int = _epoch
+	# Publish the new position and inherited filters as one lookup context.
+	# Showing a previously enabled view must never query its old filters first.
+	opening_explorer.suspend_queries()
 	_state_ready = offline_mode
 	backend_url = url
 	backend_token = token
@@ -340,6 +348,9 @@ func open_position(fen: String, url: String, token: String) -> void:
 	_set_editor_fen(source_fen)
 	model.selected_square = ""
 	model.pending_promotions.clear()
+	opening_explorer.set_context(source_fen, backend_url, backend_token, offline_mode)
+	if not explorer_preferences.is_empty():
+		opening_explorer.apply_preferences(explorer_preferences)
 	show()
 	_render()
 	if not offline_mode:
@@ -350,6 +361,20 @@ func open_position(fen: String, url: String, token: String) -> void:
 			if epoch != _epoch or not visible:
 				return
 		await _refresh()
+	if epoch == _epoch and visible:
+		opening_explorer.resume_queries()
+
+
+func explore_position(fen: String, url: String, token: String, explorer_preferences: Dictionary = {}) -> void:
+	await open_position(fen, url, token, explorer_preferences)
+	if visible and not busy and source_fen == fen and _state_ready:
+		await _start_analysis()
+
+
+func _on_explorer_position(fen: String) -> void:
+	if busy or fen.is_empty():
+		return
+	await explore_position(fen, backend_url, backend_token)
 
 
 func _choose_piece(symbol: String, label: String) -> void:
@@ -889,6 +914,8 @@ func _render_evaluation() -> void:
 func _render() -> void:
 	if board == null:
 		return
+	if opening_explorer != null:
+		opening_explorer.set_context(editor_fen() if editing else str(analysis_state.get("fen", "")), backend_url, backend_token, offline_mode)
 	if not _editor_drag.is_empty() and (busy or not editing or not visible):
 		_invalidate_editor_drag()
 	editor_controls.visible = editing

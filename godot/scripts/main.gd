@@ -8,6 +8,7 @@ const ChessBoard = preload("res://scripts/chess_board.gd")
 const EvaluationBar = preload("res://scripts/evaluation_bar.gd")
 const AnalysisMode = preload("res://scripts/analysis_mode.gd")
 const CoachingMode = preload("res://scripts/coaching_mode.gd")
+const OpeningExplorer = preload("res://scripts/opening_explorer.gd")
 # A complete paced turn can take 45 seconds in addition to search/transport.
 const ENGINE_HTTP_TIMEOUT_SECONDS: float = 70.0
 const ORDINARY_HTTP_TIMEOUT_SECONDS: float = 15.0
@@ -17,6 +18,7 @@ var analysis_entry_button: Button
 var coaching_overlay: CoachingMode
 var coaching_entry_button: Button
 var main_contents: MarginContainer
+var opening_explorer: OpeningExplorer
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -389,6 +391,9 @@ func _build_ui() -> void:
 	# A required move choice stays above optional learning content.
 	_build_promotion(sidebar)
 	_build_opening_guide(sidebar)
+	opening_explorer = OpeningExplorer.new()
+	opening_explorer.explore_position.connect(_on_explorer_position)
+	sidebar.add_child(opening_explorer)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
 	hint_button.tooltip_text = "양쪽 차례의 후보를 최대 3개 표시합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 내 수는 직접 두고, 상대 수는 Regicide가 선택합니다."
@@ -685,6 +690,15 @@ func _on_analysis_returned() -> void:
 	if not analysis_overlay._error.is_empty():
 		error_message = analysis_overlay._error
 	_render()
+
+
+func _on_explorer_position(fen: String) -> void:
+	if _file_dialog_busy() or closing or backend_url.is_empty():
+		return
+	main_contents.hide()
+	_clear_hint()
+	analysis_overlay.offline_mode = offline_mode
+	analysis_overlay.explore_position(fen, backend_url, backend_token, opening_explorer.preferences())
 
 
 func _build_opening_guide(parent: VBoxContainer) -> void:
@@ -2382,6 +2396,8 @@ func _render() -> void:
 	_render_evaluation()
 	_render_hint()
 	_render_opening_guide(shown)
+	if opening_explorer != null:
+		opening_explorer.set_context(str(shown.get("fen", "")), backend_url, backend_token, offline_mode)
 	view_label.text = "백 시점 · 백이 아래" if board_model.view_from_white else "흑 시점 · 흑이 아래"
 	flip_button.disabled = _file_dialog_busy()
 	var human_color: String = str(shown.get("human_color", "white"))

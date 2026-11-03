@@ -31,6 +31,7 @@ from move_hints import MoveHints
 from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
+from opening_explorer import OpeningExplorer
 import opening_variety
 import dynamic_play
 import boss_play
@@ -1717,12 +1718,19 @@ class HumanGame:
 class HumanServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, game, port=0):
+    def __init__(self, game, port=0, *, explorer=None):
         super().__init__(("127.0.0.1", port), HumanHandler)
         self.game = game
         self.archive = GameArchive(game.save_dir)
+        self.explorer = explorer if explorer is not None else OpeningExplorer()
         self.token = secrets.token_urlsafe(32)
         self.origin = f"http://127.0.0.1:{self.server_address[1]}"
+
+    def server_close(self):
+        try:
+            self.explorer.close()
+        finally:
+            super().server_close()
 
 
 class HumanHandler(BaseHTTPRequestHandler):
@@ -1798,6 +1806,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._send(200, self.server.game.hint())
         elif self.path == "/api/analysis":
             self._send(200, self.server.game.analysis.snapshot())
+        elif self.path == "/api/opening-explorer":
+            self._send(200, self.server.explorer.snapshot())
         elif self.path == "/api/coaching":
             self._send(200, self.server.game.coaching.snapshot())
         elif self.path == "/api/pgn":
@@ -1806,11 +1816,11 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._archive_get()
         elif self.path in ("/audio/move.wav", "/audio/capture.wav"):
             self._send(200, (ASSETS / self.path[1:]).read_bytes(), "audio/wav")
-        elif self.path in ("/", "/index.html", "/style.css", "/app.js", "/analysis.js", "/coaching.js", "/board_motion.js", "/move_sound.js"):
+        elif self.path in ("/", "/index.html", "/style.css", "/app.js", "/analysis.js", "/coaching.js", "/board_motion.js", "/move_sound.js", "/explorer.js"):
             filename = "index.html" if self.path == "/" else self.path[1:]
             mime = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript",
                     "analysis.js": "text/javascript", "coaching.js": "text/javascript", "board_motion.js": "text/javascript",
-                    "move_sound.js": "text/javascript"}[filename]
+                    "move_sound.js": "text/javascript", "explorer.js": "text/javascript"}[filename]
             contents = (ASSETS / filename).read_text(encoding="utf-8")
             if filename == "index.html":
                 contents = contents.replace("__REGICIDE_TOKEN__", self.server.token)
@@ -1863,6 +1873,21 @@ class HumanHandler(BaseHTTPRequestHandler):
                 return
             revision = data.get("revision")
             game = self.server.game
+            if self.path == "/api/opening-explorer":
+                action = data.get("action")
+                if action == "query":
+                    if set(data) - {"action", "fen", "source", "ratings", "speeds"}:
+                        raise ValueError("오프닝 조회에는 위치와 자료 필터만 전송해 주세요.")
+                    result = self.server.explorer.query(data.get("fen"), data.get("source", "masters"),
+                                                        data.get("ratings"), data.get("speeds"))
+                elif action == "token":
+                    if set(data) - {"action", "token", "remember"}:
+                        raise ValueError("리체스 연결에는 토큰과 저장 여부만 전송해 주세요.")
+                    result = self.server.explorer.set_token(data.get("token"), data.get("remember", True))
+                else:
+                    raise ValueError("오프닝 작업은 조회·리체스 연결 중에서 선택해 주세요.")
+                self._send(200, result)
+                return
             if self.path == "/api/coaching":
                 coaching = game.coaching
                 action = data.get("action")
@@ -1933,16 +1958,25 @@ class HumanHandler(BaseHTTPRequestHandler):
                 error["coaching"] = self.server.game.coaching.snapshot()
             elif self.path == "/api/analysis":
                 error["analysis"] = self.server.game.analysis.snapshot()
+            elif self.path == "/api/opening-explorer":
+                error["error"] = "입력한 위치·자료 필터 또는 리체스 연결 설정을 확인해 주세요."
+                error["explorer"] = self.server.explorer.snapshot()
             elif self.path != "/api/pgn-preview":
                 error["state"] = self.server.game.state()
             self._send(400, error)
         except Exception as exc:
-            print(f"request failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+            # Explorer configuration can contain an access token. Never log
+            # arbitrary exception strings from that request or its transport.
+            if self.path != "/api/opening-explorer":
+                print(f"request failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
             error = {"error": "대국 요청을 처리하지 못했습니다. 저장 위치와 실행 기록을 확인해 주세요."}
             if self.path == "/api/coaching":
                 error["coaching"] = self.server.game.coaching.snapshot()
             elif self.path == "/api/analysis":
                 error["analysis"] = self.server.game.analysis.snapshot()
+            elif self.path == "/api/opening-explorer":
+                error = {"error": "오프닝 통계를 처리하지 못했습니다. 연결 설정을 확인해 주세요.",
+                         "explorer": self.server.explorer.snapshot()}
             elif self.path != "/api/pgn-preview":
                 error["state"] = self.server.game.state()
             self._send(500, error)

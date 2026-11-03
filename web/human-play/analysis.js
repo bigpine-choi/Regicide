@@ -355,6 +355,7 @@
   }
 
   function render() {
+    window.RegicideExplorer?.update("analysis", {fen:snapshot?.fen, active:Boolean(visible && !editing && !busy && snapshot?.active)});
     if (!visible || busy || (drag && !validDrag())) cancelDrag();
     returnNotice.textContent = returnFailure;
     returnNotice.hidden = visible || !returnFailure;
@@ -469,6 +470,17 @@
     get("analysis-palette").append(button);
   }
   get("analysis-mode-button").addEventListener("click", () => { void enter(); });
+  window.addEventListener("regicide-explorer-analyze", async (event) => {
+    const fen = event.detail?.fen;
+    if (typeof fen !== "string" || busy) return;
+    try { readFen(fen); } catch (_) { return; }
+    if (!visible) await enter();
+    if (!visible || busy || !snapshot) return;
+    if (await action("start", {fen,movetime_ms:Number(get("analysis-time").value)})) {
+      editing = false; render();
+      get("analysis-view").scrollIntoView?.({block:"start", behavior:"instant"});
+    }
+  });
   get("live-mode-button").addEventListener("click", () => { void leave(); });
   get("analysis-flip").addEventListener("click", () => { cancelDrag(); blackView = !blackView; render(); });
   get("analysis-board").addEventListener("click", (event) => {

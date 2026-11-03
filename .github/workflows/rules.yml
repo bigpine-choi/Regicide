@@ -105,6 +105,8 @@ jobs:
       - run: node tests/rapid_clock_web_tests.js
       - run: node tests/boss_mode_web_tests.js
       - run: node tests/opening_guide_web_tests.js
+      - run: node --check web/human-play/explorer.js
+      - run: node tests/opening_explorer_web_tests.js
       - run: node tests/web_analysis_tests.js
       - run: node tests/web_board_motion_tests.js
       - run: node tests/web_coaching_tests.js
@@ -117,6 +119,8 @@ jobs:
       - run: python tests/character_coach_tests.py
       - run: python tests/opening_guide_tests.py
       - run: python tests/opening_guide_integration_tests.py
+      - run: python tests/opening_explorer_tests.py
+      - run: python tests/opening_explorer_http_tests.py
       - run: python tests/pgn_preview_tests.py
       - run: python tests/engine_profile_tests.py
       - run: python tests/external_baseline_matrix_tests.py
@@ -238,6 +242,10 @@ jobs:
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/rapid_clock_offline_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/engine_pacing_transport_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/opening_explorer_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/opening_explorer_integration_tests.py --binary $binary --godot "$env:REGICIDE_TEST_GODOT"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/rapid_clock_live_tests.py --binary $binary --output build/rapid-clock-native
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -593,4 +593,21 @@ test("normal opening input events reach both standard two-square castling drags"
   }
   assert.equal(ui.requests.filter((request)=>request.options.method==="POST").length,11);
 });
+test("explorer opens its resulting FEN in separate analysis without a live-game move",async()=>{
+  const ui=await browser(),fen="4k3/8/8/8/4P3/8/8/4K3 b - - 0 1";
+  let scrollOptions=null;ui.get("analysis-view").scrollIntoView=(options)=>{scrollOptions=options;};
+  const operation=ui.lifecycle["regicide-explorer-analyze"]({detail:{fen}}); await flush();
+  const request=ui.requests.at(-1),payload=JSON.parse(request.options.body);
+  assert.equal(request.url,"/api/analysis");assert.equal(payload.action,"start");assert.equal(payload.fen,fen);
+  await ui.finish(active({fen,turn:"black",board:{e1:"K",e8:"k",e4:"P"},legal_moves:["e8d8"]}));await operation;
+  assert.equal(ui.get("analysis-fen").value,fen);assert.match(ui.get("analysis-title").textContent,/흑/);
+  assert.equal(scrollOptions.block,"start");
+  assert.equal(ui.requests.some((item)=>item.url!=="/api/analysis"),false);
+});
+test("invalid explorer positions cannot start analysis",async()=>{
+  const ui=await browser(),count=ui.requests.length;
+  await ui.lifecycle["regicide-explorer-analyze"]({detail:{fen:"bad FEN"}});
+  await ui.lifecycle["regicide-explorer-analyze"]({detail:{fen:42}});
+  assert.equal(ui.requests.length,count);
+});
 (async()=>{for(const item of cases){await item.run();console.log("PASS "+item.name);}console.log(`${cases.length} browser analysis behavior cases passed.`);})().catch((error)=>{console.error(error);process.exitCode=1;});
