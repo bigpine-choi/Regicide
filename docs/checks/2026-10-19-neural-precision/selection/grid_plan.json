@@ -1,0 +1,99 @@
+{
+  "calibration_limitation": "In-sample training calibration, not independent validation",
+  "candidate_grid": [
+    {
+      "batch_size": 128,
+      "candidate_id": "s08-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 8,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s08-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 8,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s16-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 16,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s16-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 16,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s32-lr000020-e120",
+      "epochs": 120,
+      "input_bias_lr": 2e-05,
+      "input_scale": 32,
+      "output_lr": 0.005,
+      "seed": 20261024
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "s32-lr000100-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.0001,
+      "input_scale": 32,
+      "output_lr": 0.005,
+      "seed": 20261024
+    }
+  ],
+  "completion_requirement": "Selected input integers must differ from same-S initial-float quantization",
+  "files": {
+    "base_training_source": {
+      "path": "scripts/neural_training.py",
+      "sha256": "367fae9aea605ea2d311c6c2998a45e7588ff977d650d45b30b6b325f756cd38"
+    },
+    "baseline_model": {
+      "path": "docs/checks/2026-10-19-neural-qat/selection-final/model.nnue",
+      "sha256": "cdbaca3d047ef3d4c5615ce691b4b99fb798c422d9a4bda30a47fa8395f29a13"
+    },
+    "calibration_plan": {
+      "path": "docs/checks/2026-10-19-neural-precision/protocol.json",
+      "sha256": "b1f90ebbb7a6fb569801b2a930fa8d2e48d728bb68f1d9a595b278bddf0cf144"
+    },
+    "dataset_manifest": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/split_manifest.json",
+      "sha256": "7ed9101dfade1e3fbe7a69922bb680499eb2a831162702cc1dc6c0293c26eb2f"
+    },
+    "initial_floats": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/training/float_weights.npz",
+      "sha256": "954f764f6018993a69d33ec2d9a01ab488c5d9aee7b0996813f8503e5620b79d"
+    },
+    "precision_source": {
+      "path": "scripts/neural_precision.py",
+      "sha256": "96c540f13d3ecd14f019ad83a82aab3e11a6f959b0ae6a770f88f86ec07e7775"
+    },
+    "qat_source": {
+      "path": "scripts/neural_qat.py",
+      "sha256": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d"
+    },
+    "training_data": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/train.jsonl",
+      "sha256": "f4584fca5453ea47a2d4eee242d643309e5532a2b261f9940f9bb6c2d8da8ff6"
+    }
+  },
+  "initialization": "Prior float checkpoint trained on the complete original training partition",
+  "model_format": "REGICIDE_NNUE 2 768 16 (127*S) (8*S) S",
+  "ranking": "Final serialized integer train MAE, then train RMSE, then grid index, ascending",
+  "schema_version": 2,
+  "selection_data": "Original training partition only; no validation or held-out labels read"
+}

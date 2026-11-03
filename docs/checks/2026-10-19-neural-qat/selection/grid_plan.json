@@ -1,0 +1,68 @@
+{
+  "calibration_limitation": "Ranking is in-sample training calibration, not independent validation",
+  "candidate_grid": [
+    {
+      "batch_size": 128,
+      "candidate_id": "lr005-e060",
+      "epochs": 60,
+      "input_bias_lr": 0.005,
+      "output_lr": 0.01,
+      "seed": 20261021
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "lr005-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.005,
+      "output_lr": 0.01,
+      "seed": 20261021
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "lr020-e060",
+      "epochs": 60,
+      "input_bias_lr": 0.02,
+      "output_lr": 0.01,
+      "seed": 20261021
+    },
+    {
+      "batch_size": 128,
+      "candidate_id": "lr020-e120",
+      "epochs": 120,
+      "input_bias_lr": 0.02,
+      "output_lr": 0.01,
+      "seed": 20261021
+    }
+  ],
+  "files": {
+    "base_training_source": {
+      "path": "scripts/neural_training.py",
+      "sha256": "367fae9aea605ea2d311c6c2998a45e7588ff977d650d45b30b6b325f756cd38"
+    },
+    "baseline_model": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/training/model.nnue",
+      "sha256": "012baabebc712109b02e0f2ed55dcebf785b0f06f6e2a577d4cfebaad41a57a8"
+    },
+    "dataset_manifest": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/split_manifest.json",
+      "sha256": "7ed9101dfade1e3fbe7a69922bb680499eb2a831162702cc1dc6c0293c26eb2f"
+    },
+    "initial_floats": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/training/float_weights.npz",
+      "sha256": "954f764f6018993a69d33ec2d9a01ab488c5d9aee7b0996813f8503e5620b79d"
+    },
+    "qat_source": {
+      "path": "scripts/neural_qat.py",
+      "sha256": "facecc5f6628e08a196bea778c497975a43167532b5ad43feae998f0c8281a9d"
+    },
+    "training_data": {
+      "path": "docs/checks/2026-10-19-neural-training/first-run/data/train.jsonl",
+      "sha256": "f4584fca5453ea47a2d4eee242d643309e5532a2b261f9940f9bb6c2d8da8ff6"
+    }
+  },
+  "initialization": "Prior float checkpoint trained on the complete original training partition",
+  "model_format": "REGICIDE_NNUE 1 768 16 127 8",
+  "ranking": "Final serialized integer train MAE, then train RMSE, then grid index, ascending",
+  "schema_version": 1,
+  "selection_data": "Original training partition only; no validation or held-out rows read"
+}

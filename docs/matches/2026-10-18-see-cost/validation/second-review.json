@@ -1,0 +1,270 @@
+{
+  "status": "PASS",
+  "method": "Independent stdlib/python-chess implementation; no project audit/runner imports; no engine executed",
+  "baseline_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+  "candidate_commit": "42444edc3ff1de358b97ac4d250b43bf342d1df0",
+  "harness_commit": "25f73cacafe4a831f0b3b258fbf5b19632c369b2",
+  "binary_sha256": {
+    "baseline": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+    "candidate": "722b46c3b7223a3fa354a1fc504cb4cced9be0db8ea1e49d5b796b36d434a335"
+  },
+  "python_version": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "chess_version": "1.11.2",
+  "source_script": "build/see-cost-evidence/second-review.py",
+  "source_sha256": "6df5c90912d681c2cb255c5794cbaeccf19d22151db7eebec79bc2be593e387a",
+  "validation": {
+    "gates": 21,
+    "native_groups": 96,
+    "native_assertions": 50531,
+    "skipped_cases": 1,
+    "native_coverage": {
+      "native-tests": {
+        "groups": 20,
+        "assertions": 8325
+      },
+      "native-search_tests": {
+        "groups": 43,
+        "assertions": 13616
+      },
+      "native-evaluation_tests": {
+        "groups": 6,
+        "assertions": 400
+      },
+      "native-board_state_tests": {
+        "groups": 10,
+        "assertions": 18974
+      },
+      "native-transposition_tests": {
+        "groups": 8,
+        "assertions": 97
+      },
+      "native-see_tests": {
+        "groups": 9,
+        "assertions": 9119
+      }
+    }
+  },
+  "attempts": [
+    "attempt-001"
+  ],
+  "matches": [
+    {
+      "movetime_ms": 100,
+      "candidate_wins": 5,
+      "candidate_draws": 3,
+      "candidate_losses": 8,
+      "candidate_points": 6.5,
+      "candidate_score": 0.40625,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "scheduled_games": 16,
+      "attempted_games": 16,
+      "actual_plies": 1665,
+      "pv_plies": 7323,
+      "terminations": {
+        "checkmate": 13,
+        "threefold_repetition": 3
+      },
+      "pair_scores": [
+        0.25,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.0
+      ],
+      "experiment_paired_bootstrap95": {
+        "seed": 20261020,
+        "resamples": 20000,
+        "interval": [
+          0.28125,
+          0.5
+        ]
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 746,
+          "reported_nodes": 21856988,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 60.961418,
+          "mean_nodes": 29298.911528150133,
+          "mean_depth": 4.109919571045577,
+          "mean_wall_ms": 81.71771849865952,
+          "maximum_wall_ms": 82.81700000000001,
+          "mean_engine_ms": 80.0,
+          "maximum_engine_ms": 80.0,
+          "requested_wall_overruns": 0,
+          "internal_allocation_overruns": 0
+        },
+        "candidate": {
+          "searched_moves": 743,
+          "reported_nodes": 21857064,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 60.732655,
+          "mean_nodes": 29417.313593539704,
+          "mean_depth": 4.177658142664872,
+          "mean_wall_ms": 81.73977792732167,
+          "maximum_wall_ms": 82.91,
+          "mean_engine_ms": 80.0,
+          "maximum_engine_ms": 80.0,
+          "requested_wall_overruns": 0,
+          "internal_allocation_overruns": 0
+        }
+      },
+      "native_cpu": {
+        "snapshots": 293,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "real_owned_transports": 2,
+        "maximum_gap_seconds": 0.5352489999786485,
+        "maximum_snapshot_duration_seconds": 0.019691299996338785,
+        "idle_seconds": 10.0528626999876,
+        "phases": {
+          "initial": 1,
+          "running": 256,
+          "idle-complete": 1,
+          "owned-engine-started": 2,
+          "before-game": 16,
+          "after-game": 16,
+          "finished": 1
+        }
+      }
+    },
+    {
+      "movetime_ms": 1000,
+      "candidate_wins": 5,
+      "candidate_draws": 7,
+      "candidate_losses": 4,
+      "candidate_points": 8.5,
+      "candidate_score": 0.53125,
+      "completed_games": 16,
+      "incomplete_games": 0,
+      "unplayed_games": 0,
+      "scheduled_games": 16,
+      "attempted_games": 16,
+      "actual_plies": 1647,
+      "pv_plies": 9648,
+      "terminations": {
+        "checkmate": 9,
+        "threefold_repetition": 6,
+        "insufficient_material": 1
+      },
+      "pair_scores": [
+        0.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "experiment_paired_bootstrap95": {
+        "seed": 20261020,
+        "resamples": 20000,
+        "interval": [
+          0.5,
+          0.59375
+        ]
+      },
+      "resources": {
+        "baseline": {
+          "searched_moves": 735,
+          "reported_nodes": 261776591,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 721.653072,
+          "mean_nodes": 356158.62721088436,
+          "mean_depth": 6.100680272108844,
+          "mean_wall_ms": 981.8409142857142,
+          "maximum_wall_ms": 983.2379999999999,
+          "mean_engine_ms": 980.0,
+          "maximum_engine_ms": 980.0,
+          "requested_wall_overruns": 0,
+          "internal_allocation_overruns": 0
+        },
+        "candidate": {
+          "searched_moves": 736,
+          "reported_nodes": 264050606,
+          "moves_without_node_report": 0,
+          "elapsed_seconds": 722.649137,
+          "mean_nodes": 358764.410326087,
+          "mean_depth": 6.081521739130435,
+          "mean_wall_ms": 981.8602404891304,
+          "maximum_wall_ms": 986.107,
+          "mean_engine_ms": 980.0027173913044,
+          "maximum_engine_ms": 982.0,
+          "requested_wall_overruns": 0,
+          "internal_allocation_overruns": 1
+        }
+      },
+      "native_cpu": {
+        "snapshots": 2840,
+        "external_engines": 5,
+        "external_cpu_increase_ticks": 0,
+        "real_owned_transports": 2,
+        "maximum_gap_seconds": 0.5397748000104912,
+        "maximum_snapshot_duration_seconds": 0.036852699995506555,
+        "idle_seconds": 10.043790199997602,
+        "phases": {
+          "initial": 1,
+          "running": 2803,
+          "idle-complete": 1,
+          "owned-engine-started": 2,
+          "before-game": 16,
+          "after-game": 16,
+          "finished": 1
+        }
+      }
+    }
+  ],
+  "input_sha256": {
+    "tests/data/see_cost_freeze_2026-10-18.json": "800eb129fcdcc56a40a5226e1895f960cfd6688042c7cdf8d0232ceafc5e94e0",
+    "tests/data/see_cost_openings_2026-10-18.json": "9dafe565121ddad88cef0ca9060bd87b73a7bc52c837240835be0cf5f599ea9e",
+    "build-see-native/regicide.exe": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+    "build-see-cost/regicide.exe": "722b46c3b7223a3fa354a1fc504cb4cced9be0db8ea1e49d5b796b36d434a335",
+    "build/see-cost-comparison/attempt-001/run-state.json": "92e5202abb97422c39d386529cd32e9ef3633031b1ea5095c00b6cd48f4142f0",
+    "build/see-cost-comparison/attempt-001/time100.json": "092c5c51ff701de52c38d92726c25fdc04bb2a23d7dc0ba86be97df241c92988",
+    "build/see-cost-comparison/attempt-001/time100.pgn": "915358e77d0f80f0a8e95442c9d232421f05a2d6e81d7f71775bd4b983a56b7c",
+    "build/see-cost-comparison/attempt-001/time100.monitor.json": "d981858dacc848b8924fee25e3f812ea43f61b081673957aef120f79689b105a",
+    "build/see-cost-comparison/attempt-001/time100.monitor.jsonl": "8fccf8eb2474be9a965121ea94835bdcc8b5cb55b24eeb01e5bc4b62dd218604",
+    "build/see-cost-comparison/attempt-001/time100.log": "8a62fdbe985ae04da3bfd017527f1c940ad71fd929ce979057cbb83a7077141a",
+    "build/see-cost-comparison/attempt-001/time100.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build/see-cost-comparison/attempt-001/time1000.json": "551454c3a651350b91d66649231ed7ea873b6098ac988bf5ac1f9d3fe2027bca",
+    "build/see-cost-comparison/attempt-001/time1000.pgn": "9785d6104c682c68f415c6ccd76afbc223315faae3da42d20b6632dc08784248",
+    "build/see-cost-comparison/attempt-001/time1000.monitor.json": "e8665f5b7f820a622b47b5bd5e0061df82047aead4aa37027adf871af1c593b5",
+    "build/see-cost-comparison/attempt-001/time1000.monitor.jsonl": "4bf347b580624f823ff20be608ea03c94ac4b776009ba73592ac7c310b62951f",
+    "build/see-cost-comparison/attempt-001/time1000.log": "c2fb3c602ba9051415e72990d099a6e6c71bb8b78245bdc75ac8cb19cfac837b",
+    "build/see-cost-comparison/attempt-001/time1000.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build/see-cost-evidence/validation-summary.json": "767983495cc9069d51e91907182c34e656d87f46ccfbf360836c49aca69aee3d",
+    "build/see-cost-evidence/validation-native-tests.log": "00100d12fe0ed3ad4af606036ba199d50c1cb643b2e6180d27f3b958bc952fd8",
+    "build/see-cost-evidence/validation-native-search_tests.log": "19bc2af5b769eca9630ed7e8631884cd3fd999da38ddcfb4b4f2ea19804118df",
+    "build/see-cost-evidence/validation-native-evaluation_tests.log": "f44975752f20bab49410e990dd9144ecfa05ea2064fc3094422d00f015fdfb4f",
+    "build/see-cost-evidence/validation-native-board_state_tests.log": "f5b2a4c8ee732e8ae399bcf638efd84aa10b165658fde782c42135ae88a8e4f9",
+    "build/see-cost-evidence/validation-native-transposition_tests.log": "83d3c903e06ec596fb8898dc363db0247e8299bf7ebd795ba0828b1fcf06a72d",
+    "build/see-cost-evidence/validation-native-see_tests.log": "d89a7f96368fcc17ed90d6901f498277970e47d01cc5c89f44534a480a4d38ed",
+    "build/see-cost-evidence/validation-differential.log": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+    "build/see-cost-evidence/validation-engine_integration.log": "5819918555c33322bcee6f00d8dfc5c181ddfc1dde993dd21b28b54c07f7d463",
+    "build/see-cost-evidence/validation-game_runner_tests.log": "44b0e6e7c9d00926cf3b412b46f9a4a5f8c7d18413eda87e89f90db00e186ff2",
+    "build/see-cost-evidence/validation-compare_engines_tests.log": "bffc374f7fd9bf5ab0a2ea510b98a9ae8e72714f99e6317667a62d8566eb112e",
+    "build/see-cost-evidence/validation-benchmark_search_tests.log": "4a1be630f17f76e4bf49fc53f3156f756d9056fa110c6760d0257f30a62255b8",
+    "build/see-cost-evidence/validation-human_play_tests.log": "8e32f0365ec4090b274829272a5c460d2973c910fabb8584610594eb3f909411",
+    "build/see-cost-evidence/validation-handicap_play_tests.log": "7e89080b655e9cec66857c2e64f5c4a8cf04982c30b5020de1b65feb2355b616",
+    "build/see-cost-evidence/validation-game_archive_tests.log": "395d2ecf7a650712c81a1dfbd0bb201b5d55477c156b51037419e6c995130315",
+    "build/see-cost-evidence/validation-godot_bootstrap_tests.log": "97dfe7b4c99fa47d34ab1a9940fb4408bd4a757486fcd9669277ac913d091f41",
+    "build/see-cost-evidence/validation-godot_integration_tests.log": "51231829a64a2391bbf7be6efc3e2ab4528d69bd7c5f89b44b8c797b6b767a55",
+    "build/see-cost-evidence/validation-handicap_godot_tests.log": "2bbfa1f4dfa8da5df3a5ba6eea4e8d1028722cb001ec6b1a823dcc086749bf19",
+    "build/see-cost-evidence/validation-archive_godot_tests.log": "4ae33269e14f71da90b52d281bfa85cbbc6f9e55acddd7af98a486260baef398",
+    "build/see-cost-evidence/validation-baseline-native-rules.log": "00100d12fe0ed3ad4af606036ba199d50c1cb643b2e6180d27f3b958bc952fd8",
+    "build/see-cost-evidence/validation-baseline-differential.log": "77c697046830a391a5b036654672dd709f5b7d7a073b8caf689d9baee2808773",
+    "build/see-cost-evidence/validation-frozen-engine-source.log": "4a159051f49dc3bb047419d5de1db63e9798c8e153c6c33669cef18a10f1fd51",
+    "build/see-cost-evidence/second-review.py": "6df5c90912d681c2cb255c5794cbaeccf19d22151db7eebec79bc2be593e387a"
+  },
+  "limitations": [
+    "Replay verifies recorded legality and adjudication, not optimal move quality.",
+    "Native sampled discovery excludes observed named external CPU only; unknown/transient processes and other host load remain outside this scope.",
+    "Timed resources come from different played positions; they are not controlled fixed-position cost estimates."
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "workloads": [
+    {
+      "name": "loss-scenes-search-profile-guarded",
+      "command": [
+        "build-see-cost/profile_see_search.exe"
+      ],
+      "input": "loss-scenes.fens",
+      "exit_code": 0
+    },
+    {
+      "name": "loss-scenes-profile-guarded",
+      "command": [
+        "build-see-cost/profile_see.exe",
+        "--repeats",
+        "100000",
+        "--samples",
+        "9"
+      ],
+      "input": "loss-scenes.tsv",
+      "exit_code": 0
+    },
+    {
+      "name": "mixed-regression-profile-guarded",
+      "command": [
+        "build-see-cost/profile_see.exe",
+        "--repeats",
+        "10000",
+        "--samples",
+        "9"
+      ],
+      "input": "mixed-regression.tsv",
+      "exit_code": 0
+    }
+  ],
+  "failure": null
+}

@@ -1,0 +1,90 @@
+{
+  "models": {
+    "baseline": {
+      "model_checksum": 4291016961389606401,
+      "transitions": 163,
+      "workloads": {
+        "classical_after": {
+          "median_ns_per_operation": 143.494,
+          "min_ns_per_operation": 138.2322,
+          "max_ns_per_operation": 149.1002
+        },
+        "neural_full_after": {
+          "median_ns_per_operation": 630.8467,
+          "min_ns_per_operation": 623.2774,
+          "max_ns_per_operation": 651.07
+        },
+        "neural_score_only": {
+          "median_ns_per_operation": 23.4373,
+          "min_ns_per_operation": 21.7526,
+          "max_ns_per_operation": 30.785
+        },
+        "neural_update_snapshot_restore": {
+          "median_ns_per_operation": 64.1943,
+          "min_ns_per_operation": 62.6132,
+          "max_ns_per_operation": 71.6254
+        },
+        "board_play_full_undo": {
+          "median_ns_per_operation": 679.2638,
+          "min_ns_per_operation": 670.6046,
+          "max_ns_per_operation": 686.0922
+        },
+        "board_play_incremental_undo": {
+          "median_ns_per_operation": 108.2997,
+          "min_ns_per_operation": 107.5778,
+          "max_ns_per_operation": 113.6418
+        }
+      },
+      "median_paired_speedup_full_over_incremental": 9.760766042083166,
+      "median_paired_speedup_board_full_over_incremental": 6.197829652136268
+    },
+    "qat": {
+      "model_checksum": 4169634320372998457,
+      "transitions": 163,
+      "workloads": {
+        "classical_after": {
+          "median_ns_per_operation": 140.539,
+          "min_ns_per_operation": 137.4544,
+          "max_ns_per_operation": 143.5612
+        },
+        "neural_full_after": {
+          "median_ns_per_operation": 631.493,
+          "min_ns_per_operation": 622.8342,
+          "max_ns_per_operation": 643.8266
+        },
+        "neural_score_only": {
+          "median_ns_per_operation": 22.2384,
+          "min_ns_per_operation": 21.6694,
+          "max_ns_per_operation": 24.1118
+        },
+        "neural_update_snapshot_restore": {
+          "median_ns_per_operation": 62.0792,
+          "min_ns_per_operation": 61.6804,
+          "max_ns_per_operation": 63.8218
+        },
+        "board_play_full_undo": {
+          "median_ns_per_operation": 682.4413999999999,
+          "min_ns_per_operation": 672.1014,
+          "max_ns_per_operation": 714.2884
+        },
+        "board_play_incremental_undo": {
+          "median_ns_per_operation": 109.945,
+          "min_ns_per_operation": 106.9406,
+          "max_ns_per_operation": 112.3248
+        }
+      },
+      "median_paired_speedup_full_over_incremental": 10.125951534489467,
+      "median_paired_speedup_board_full_over_incremental": 6.23477893749113
+    }
+  },
+  "median_paired_qat_over_baseline_cost_ratio": {
+    "classical_after": 0.9870741929596056,
+    "neural_full_after": 1.0014169370125017,
+    "neural_score_only": 0.9615428726807469,
+    "neural_update_snapshot_restore": 0.9670769256320662,
+    "board_play_full_undo": 1.005346980499716,
+    "board_play_incremental_undo": 1.0104647280858836
+  },
+  "samples": 96,
+  "all_within_model_neural_checksums_equal": true
+}

@@ -1,0 +1,858 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T19:12:18.102212+00:00",
+  "python_version": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "python_chess_version": "1.11.2",
+  "method": "Hand-authored lines; python-chess legality/state/terminal/uniqueness checks only. No candidate or baseline engine process, search, evaluation, ranking, tuning or game result used.",
+  "canonicalization": "First four FEN fields; legal en-passant only; omit halfmove/fullmove counters.",
+  "source": "tests/data/see_cost_openings_2026-10-18.json",
+  "source_sha256": "9dafe565121ddad88cef0ca9060bd87b73a7bc52c837240835be0cf5f599ea9e",
+  "prior_json_files_checked": 105,
+  "prior_pgn_games_checked": 290,
+  "prior_position_occurrences": 2948,
+  "prior_unique_canonical_positions": 348,
+  "historical_input_sha256": [
+    {
+      "path": "tests/data/comparison_openings.json",
+      "sha256": "97632a12bd135f7a452cbafa2b9203b03ecc85145a2a8344daeaa894bcbe8c84"
+    },
+    {
+      "path": "tests/data/heldout_openings_2026-10-17.json",
+      "sha256": "2fe71e89a31cc9834dd9d16d2cf0366a0fbc0bd3e3289863da4941414dcf7bdf"
+    },
+    {
+      "path": "tests/data/profile_positions.json",
+      "sha256": "e0c395ad2d531646c7ccee9d3a156f7580500f59af62186a533a49989e440905"
+    },
+    {
+      "path": "tests/data/pvs_openings_2026-10-18.json",
+      "sha256": "e0a6072ecbee74da029d7e57352feac42a24db17df597d592596097429d75c95"
+    },
+    {
+      "path": "tests/data/see_replication_openings_2026-10-18.json",
+      "sha256": "e12daff0f80ba3e2a09b2c4e9105f5b897763a777d7a2ede46e40012d2003289"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-depth2.json",
+      "sha256": "cdc8f0e9c6fb715ea9a0d03d6ef01c93140e155f303d35e3c9a4e969ae1b96b9"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-nodes1000.json",
+      "sha256": "af953a2583802e99d678a478278754de791f43707a34f597dfb9e812ee63aa2e"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-position-only.json",
+      "sha256": "0d54ee466601b54664e96be969fb1129c699cab644a506c3ddb29ed13fe11546"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-quiescence-only.json",
+      "sha256": "896fff5d9af345147698b347c8c6dc41f55c96b6a58440a04c3543b4ebf0cd49"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-time40.json",
+      "sha256": "d4f2d207508c82f376dd23426aa06ec4ce302a4e92b0c083cf6dfcc9d10395a5"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/debug/conclusion.json",
+      "sha256": "bf8681e542321b3c326135ed776513bd3db095e550577cb8780b810f7942ef9a"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/debug/raw-reproduction.json",
+      "sha256": "2d27832e6c928f1fad873181b886e56e4bd4832cb01aad9141f074470fe70877"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/independent-audit-summary.json",
+      "sha256": "cac683185db04320fdc72209dd898c6ec5975859d47e50e393612a856960cf86"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/primary-audit-summary.json",
+      "sha256": "0b8ccb536d4fee9dc2583bfbb83dc5fe576dee660e122746515afe2575b52d90"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/retry-suspend-events.json",
+      "sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/suspend-events.json",
+      "sha256": "41e64437bc8de997b5b965b5850cadade183420b4623cb0e3cad1f3ede1170ba"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100-retry.independent-audit.json",
+      "sha256": "db64d1b733f6f6e77b19ff95fc2d11b14bdc61bef4e930c8be9a138e18f1bb33"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100-retry.json",
+      "sha256": "339d57bf90b82c5ae754331d31afe6a02a9996e9f01958be6b026a32160bde8c"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100.independent-audit.json",
+      "sha256": "16f12f205b9e32aebb882d91153b6b37d73b794f21a9178fd18a69f5b8df9d81"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100.json",
+      "sha256": "e5b90c4d963b35d85924095127e36d202acc9b62d261851c75d2a06aad8b040c"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time40.independent-audit.json",
+      "sha256": "d22a246bdc5a2d349804e63c682583dccb4882cd2bf27fabde27307c3e93b8b1"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time40.json",
+      "sha256": "b91202b9b99d3e8b79f1a7bf524af5c84066da72ae13c567c08abdfb457b413f"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/wake-guard.json",
+      "sha256": "3f2bcae5c66c68f59fc6c4ecead1322858a4b5425c7860529fee7bcd994a5e84"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/coach-analysis.json",
+      "sha256": "fc8709f9b34dcb8af4fc786d9600e90b06b00baaee29422dc27e1d789d00ccc3"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/development-probes.json",
+      "sha256": "56db682b178509e85038fcfe76e274abeea79c8929e14377f6b5d2618262201c"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/heldout-validation.json",
+      "sha256": "e70ced4a77208c25b032d1b26a74e99a7d29c68778037dbe526520fef7fd0ae4"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/independent-critical-positions.json",
+      "sha256": "e0f88d71e8344faab83f6393f609a98d9a20e2f0cff4c4c0368c3691b9fe2354"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/independent-loss-analysis.json",
+      "sha256": "0faff97f79b54bad3c404facbeceb28c6f336657b08d61b399991bc7feb347c3"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/own-engine-findings.json",
+      "sha256": "6bae3b7908500db5e828ba89e96004c9143930887cd629fd1d8334ffe9e67c3d"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/analysis/own-engine-queries.json",
+      "sha256": "0d1ddb7dfac2c34364ad13b4acd275b0635cb41e99236dea8f2cced53c8725d2"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/cpu.json",
+      "sha256": "67a08ed47cd100037cbe6d9f7355c506b7a66ce7bdb9551a9fa40ce5a3b47938"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/development100.independent-audit.json",
+      "sha256": "2ccfa96bf0a5af87f99bae01a2a53517feea956a5bac915913b7c01f0a00e21a"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/development100.json",
+      "sha256": "04d341439de64860ea626351a713f77909f549c1616df2707b045f4237e5d9eb"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/environment-and-results-audit.json",
+      "sha256": "8b9a218cae5d41786b6183f93c74156ac3967910261c8aa3d851d5542925a0e4"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/frozen-ci.json",
+      "sha256": "615acfdc35a7db64c8156ad020559cf1952e8984a926cc28628b93e2f5fb46ca"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/heldout100.independent-audit.json",
+      "sha256": "d1287a9d1aa679646ad67f1a8eaf7c02f56c7869ef6afb0a87dbe05b33685658"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/heldout100.json",
+      "sha256": "c23809c0f0049f65a18b0b187acdbb9169f5d7c546b749131606429bcbec17d9"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/memory.json",
+      "sha256": "23758a0b783b718c345bd849b603bd93d9647f0b74d5edb289bb1294ac2b2f87"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/os.json",
+      "sha256": "9b21a5c27a4467e68a10877857f7e175a0a1d3dd7c8fab0ed47088bdcadfde0f"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/suspend-event-query.json",
+      "sha256": "b5ee3fbf91f2ecc5b34507d325df2ce156c27d596baabad9eead994b67ef3d21"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/suspend-events-window.json",
+      "sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/wake-guard.json",
+      "sha256": "769ff044ebbefaef264ebb49f5a5fc255238d88153c135e6fa5eb1020cbeefbf"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/independent-audit-summary.json",
+      "sha256": "f5122473de71a33da9cebca1bb740d33902a1c92a609a2aac48c59a3dffe1613"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time100.independent-audit.json",
+      "sha256": "b5e8b3317d106c194867a1a7082c44e4ace3981cfd06e1f7bf15a0f83f0e2054"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time100.json",
+      "sha256": "bc9f5578f37e650165d4495149a04cea78bb1d3b208733698950b7ac34372e95"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time40.independent-audit.json",
+      "sha256": "97185de295a1b702652290468fcc1720b05398433060c8d7ba32157bcf5983c5"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time40.json",
+      "sha256": "f8e755532964ba494b729edbeb15b21efb05526b64a1cd0ec27a6068a7014f04"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/build-provenance.json",
+      "sha256": "7e770b8382fb2f6be1476300cf17753c6a6a37b70158bf4ce543fa675c3f2604"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/control-depth3.json",
+      "sha256": "0d30babbf0693111a39df05df9a6cad97319d96f95fc8b7b2094cabdece6abc8"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/control-depth4.json",
+      "sha256": "ebb697f598cd90d7387fcddafec67bb5146821ef6147b29a091a5a154efd2df4"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/cost-depth3.json",
+      "sha256": "eaa8193f8a6c58ce97922525f9fe227536088a349e36a69bae4680f9e62f80e2"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/cost-depth4.json",
+      "sha256": "e706a372c1e830588deaa3bb1acb844de27f931d2d9fd35fc652027f894e37ed"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/existing-engine-activity.json",
+      "sha256": "6ae8a582ce8e5adb329e0060a32ca0be3e4de41ad6f4d2bc28e8f47aa7035990"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/existing-engine-idle-before.json",
+      "sha256": "a987998634d3b304daef0da40e59bb060d725a8b8162f03e5a6a5f1dae00fbf3"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/independent-audit.json",
+      "sha256": "3180d9ec71177711b295568540cad2604157bd680edb4778f62f9f81b5a61b02"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/run-state.json",
+      "sha256": "9d8196c7d05a6c200591b15b5b84c848293dc88f739e3107f19e767e71570eb3"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/time100.json",
+      "sha256": "5aa9a47d467289f0bebe3aa35674998587408b41e384fab8c664d7b34f590611"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/time1000.json",
+      "sha256": "7e0c28a20d15f32566c06a6cd64d9757428d703e408d93fe3eb23cf3ba6db45a"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/control-depth3.json",
+      "sha256": "12fad9f4ddcb32d13a778e2e2896f2c917d8281690789364dbf63b01e6768921"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/control-depth4.json",
+      "sha256": "0c31581bacd13c6e0f60db5c50b63fac98ed79407f22f08e591fed42abeb81b0"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/cost-depth3.json",
+      "sha256": "9343db88c2903219b6249600df00019e8eefdae23c391b5c267e1f66f46acad0"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/cost-depth4.json",
+      "sha256": "ad75397998fb041e660f80dd759903fa01984c3a8a251da535766e9603b3fef3"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/external-load-audit.json",
+      "sha256": "ff410159b6225626cf281944365b45b9d08503a85452069a35bc26baad2548c6"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/independent-audit.json",
+      "sha256": "e643154961bb70e79caba31ab83e3e5541d7e9f512853f23386cfe899989f321"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/process-parent-diagnostic-late.json",
+      "sha256": "6401a2e820f3eb6ba2e7ab317615f32fe353595c24f81c6a64345288a148a30c"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/process-parent-diagnostic-time100.json",
+      "sha256": "591cf5315db3555bf7c6b48aa85763308997e79624e17563f9e329a995f2ee48"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/process-parent-diagnostic-time1000.json",
+      "sha256": "7c109be5afe93e4ed83a5161821a8b2f09eb003f64865eb1049d3f05b29340d9"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/provenance.json",
+      "sha256": "014adf5753f13f48b51348b64914d55d6d383e823158e57b8a82a53c4021a662"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/run-state.json",
+      "sha256": "d9733ab177232b170abe0ac8bfba583c255636a988e507b975689b5d3a0c2693"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/sha256.json",
+      "sha256": "4ad9d30ee7aead6a53ec419d0eb69a57d8797be821f371375f2eb57f5de3d98b"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/time100.json",
+      "sha256": "3083fed88837cba7e5545c4b9531147f28da89296d31c65c0ad06f41cfa77370"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/time1000.json",
+      "sha256": "2dc4ee7a02ec64b0e942ae83008fae9c5760c24a4407cf113cef8952016822db"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-001/run-state.json",
+      "sha256": "9a3a0060d26448efb1ef05ac7181b516bc615d881f5fde69f02d2fe5f473bf02"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-001/time100.monitor.json",
+      "sha256": "7817e8e3f271748c07178657caa584a43e82d36109e5e7430b6b8a18e87f970a"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/run-state.json",
+      "sha256": "f5e6878379671d4a04d1cc92bc7267d3f1aedbc00266aaacd252539dbbd91058"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time100.json",
+      "sha256": "a9a30db9c29f6e353878568a5b6d81507ac7dd975d3dce603ad70d3f5a9fca6b"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time100.monitor.json",
+      "sha256": "e7fe16e454bb05ac7683696ea6523eccf3aa13abde1eac6757e8ec8b304e0fc6"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time1000.json",
+      "sha256": "335e5aa4146cfb2ecb5d21a0afda30e905224d3df2ea95f4c3ab922348f64b65"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time1000.monitor.json",
+      "sha256": "82a1b7ede78249a83bed33c76f72707549d9c9dd302715f0311175b03e06ae55"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/sha256.json",
+      "sha256": "138b5344d631ebf18283bb728f15ed96b91bf57f3b4f2b6e6a853d6027f26357"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/attempt-001-preflight-review.json",
+      "sha256": "7d67c74f2da7d70f6d0c27eb9535e1870587e33ebba56fdab737dcd26aa5a236"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/ci-frozen-harness.json",
+      "sha256": "627127f04a0c4171375688e0dd6ee0ca6dba63ddc36d5b5378341f093bea6df2"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/independent-audit-corrected.json",
+      "sha256": "b872b57a39b4a85e68f3141bde6b881e0571a5dd69936f092425ba08e9383622"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/preflight-opening-validation.json",
+      "sha256": "07bdb3499984129ed3452b6836b4ec9b0dd3f8c431a3150f160801bc7db0bb4f"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/provenance.json",
+      "sha256": "1a583daab66e32a9f2b98da034bc87c9695f932be712ea0cb702d1b8a307b6cd"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/second-review.json",
+      "sha256": "e56eb41f03b81f6abef287b1ef5a7aabcce5fb004cd400a4563b6b652af71884"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-guard-smoke/windows-smoke.json",
+      "sha256": "1423bac754cba9d306decfe8092c938c6a77fca04cec523bdef207f8fefaeb1b"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-guard-smoke-v2/windows-smoke.json",
+      "sha256": "d8682b60652fc4a0b5b7f6095e5cdabbc393ded1c5cdedf4873f930850bf0b66"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-guard-smoke-v3/windows-smoke.json",
+      "sha256": "76f51066aec21f5ded34be7e547a8032bd16948628363dc210449238834aa2f0"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-1.json",
+      "sha256": "71022448b033a6078fc026c8d04334e38441351502b1e9b0c5ad9355d998643c"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-2.json",
+      "sha256": "e8c2fd5c8f0c916f9ec478743bcc854f61ebb713673b6477c5e801ab13fed133"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-3.json",
+      "sha256": "1bb70adb0466853925818a79ed43317c578ef82a42fb22e2c456a6aa1bdd85c9"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-4.json",
+      "sha256": "32dba3029b6dbf0867dff20c01cdf96c0d542db0cb17e8a1d71a9cde2ec242c0"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/fools-mate-only.json",
+      "sha256": "4f304cc31bafd0963a7c40ff8dc7914a6d45090f92ec7db2ece7f7e24a802678"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-1.json",
+      "sha256": "02de8c3ca188ecebfcdedb1fc118b041d760f21cce90b211453545619e7ae081"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-2.json",
+      "sha256": "4dadce8a8a23d2fcaa8b6f56d2fdfbfa62982a14c49fdaef053ab1d1e8893fb3"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-3.json",
+      "sha256": "f21a1ace336966a198f231cbc55d7c6c3ff7611a1f374535fc140fb073574c29"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-4.json",
+      "sha256": "502981adb0c5e89ae5184c35d28799e2cb7b7e2c3780f91342ffd7d3c8da46bf"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/fools-mate-only.json",
+      "sha256": "4f304cc31bafd0963a7c40ff8dc7914a6d45090f92ec7db2ece7f7e24a802678"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-final-cli-smoke/match.json",
+      "sha256": "99334f8e92e83e3f732f65f85c27edfaffa505db3b4269bb8f2c3883c1a95e75"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-final-cli-smoke/match.monitor.json",
+      "sha256": "af1fcefaef9729bd73d261d1ce78306ecbbc11af2aa1add92f13fbfd2ec24405"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-final-cli-smoke/opening.json",
+      "sha256": "dbc9cc5c94ab40a3c9b2bce34c4e7bbc85a82a746af8a777f96705f2918bb4e0"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-idle-observation-001/idle.json",
+      "sha256": "6a2b6db4130f777b797f50b17346a1d7c1f155f7e6b05b3582dedeb4b631af4d"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/validation-run-state.json",
+      "sha256": "af4dcf335fe03f439e5c8ce339e79a8efc356ab02e1a356f56ca8cbcc0cefb09"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/validation-summary.json",
+      "sha256": "b1df7b3068639a893e15407e702e8bcb0b263a256d83972a73ee24fbbcc2efa1"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-depth2.pgn",
+      "sha256": "8a498be9b7c7a689f7dbef05c8b293ceb38d71fd69877b5453d11e25c6d81e3a"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-nodes1000.pgn",
+      "sha256": "f429fb43a460f8272a320fd2ba7cffac86659b998889fdd2ec81dcb9f966c9c2"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-position-only.pgn",
+      "sha256": "83f104c364bc6a0ec1125d47ae2aab8b04f8b2d2587fc434ec456e710bdeba4f"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-quiescence-only.pgn",
+      "sha256": "f4d89bf0848c7b7fdf3c9459908aa92d6f657cb0c8640694625c7a4cf4e8b00f"
+    },
+    {
+      "path": "docs/matches/2026-10-17/2026-10-17-time40.pgn",
+      "sha256": "191f28aa8913e462496da5b75638cb647eb446f721392a671a39dd253236ad60"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100-retry.pgn",
+      "sha256": "8d2f2398c8667ab62f575439fb8f9b6d2fc8ac194525ab0b18eff72c6618c60f"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time100.pgn",
+      "sha256": "c8416144f00709d3e534cbad62e245ae241d91f5130d993fd2e9f9de99ac4094"
+    },
+    {
+      "path": "docs/matches/2026-10-17-hash-memory/time40.pgn",
+      "sha256": "42285491820ebedeece1df38ceb8c48f223b65e61f60131c7ad1a01cd9407e89"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/development100.pgn",
+      "sha256": "15330f71b0e2f3a03ce0e153a573ce230f8df6aa65c5b5d3cba3d213f3a27541"
+    },
+    {
+      "path": "docs/matches/2026-10-17-loss-guided/heldout100.pgn",
+      "sha256": "3b2a18551349733fc535f7631242dc9e1056d09d910fe632cda1d10137c1cb71"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time100.pgn",
+      "sha256": "03fdb1e3d34cc6cc093b598cf3b139f8c0f8d68e7fdde98761ea6c6e8298fc71"
+    },
+    {
+      "path": "docs/matches/2026-10-17-tt/time40.pgn",
+      "sha256": "54fdf7c9ede713683f4adecf3fd2cbc63f590b36940cfa5f79858bf6d7bbf0b8"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/time100.pgn",
+      "sha256": "c9f89236cf206d4f7f5e1b31212b30ed1854d28b8b35fd46d9e7e577f920e800"
+    },
+    {
+      "path": "docs/matches/2026-10-18-pvs/time1000.pgn",
+      "sha256": "f608b8668a8264c4f1b1f5b88815a9d058b5c830a7cc19a3fe2049548111a21a"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/time100.pgn",
+      "sha256": "953a4697d29a74a52247f0f78de7d746d6e2307a1f9305c79641614e0267a3ae"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see/time1000.pgn",
+      "sha256": "ccf22fbc6f11466a81d15b06996e263a2fb32b38e5bf5c54ced75385f48954c5"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time100.pgn",
+      "sha256": "c6fd81793d05053c4b64b19567e336a0246693f71d6c40aa36bc4d4fdb9b60d6"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/attempt-002/time1000.pgn",
+      "sha256": "f60cd8844d452ecb84dfc7e349f46a70c73464834d602647482a2a1ba828ffed"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-1.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-2.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-3.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke/cycle-4.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-1.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-2.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-3.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-clean-uci-smoke-v2/cycle-4.pgn",
+      "sha256": "535b9f062e4a1c1454ca538c88cf3598108558f1d7110165598d6f93c7a4024e"
+    },
+    {
+      "path": "docs/matches/2026-10-18-see-replication/validation/see-final-cli-smoke/match.pgn",
+      "sha256": "9e2d00f889ccf61ad3a6a6fcf85f8f06c3de2e12cb2e2ae6df446d4af57e32c2"
+    }
+  ],
+  "side_to_move_counts": {
+    "white": 4,
+    "black": 4
+  },
+  "selected_positions": [
+    {
+      "name": "SEE cost bishop retreat and queenside space",
+      "uci_moves": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "d2d3",
+        "b7b5",
+        "a4b3",
+        "f8e7"
+      ],
+      "san_moves": [
+        "e4",
+        "e5",
+        "Nf3",
+        "Nc6",
+        "Bb5",
+        "a6",
+        "Ba4",
+        "Nf6",
+        "d3",
+        "b5",
+        "Bb3",
+        "Be7"
+      ],
+      "plies": 12,
+      "turn": "white",
+      "fen": "r1bqk2r/2ppbppp/p1n2n2/1p2p3/4P3/1B1P1N2/PPP2PPP/RNBQK2R w KQkq - 2 7",
+      "canonical_position": "r1bqk2r/2ppbppp/p1n2n2/1p2p3/4P3/1B1P1N2/PPP2PPP/RNBQK2R w KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 36,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost queen pawn triangle and bishop pin",
+      "uci_moves": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "c7c6",
+        "g1f3",
+        "g8f6",
+        "b1c3",
+        "e7e6",
+        "c1g5",
+        "b8d7"
+      ],
+      "san_moves": [
+        "d4",
+        "d5",
+        "c4",
+        "c6",
+        "Nf3",
+        "Nf6",
+        "Nc3",
+        "e6",
+        "Bg5",
+        "Nbd7"
+      ],
+      "plies": 10,
+      "turn": "white",
+      "fen": "r1bqkb1r/pp1n1ppp/2p1pn2/3p2B1/2PP4/2N2N2/PP2PPPP/R2QKB1R w KQkq - 2 6",
+      "canonical_position": "r1bqkb1r/pp1n1ppp/2p1pn2/3p2B1/2PP4/2N2N2/PP2PPPP/R2QKB1R w KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 39,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost central pawn pair and early queen pressure",
+      "uci_moves": [
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "d7d5",
+        "d2d4",
+        "g8f6",
+        "g1f3",
+        "f8b4",
+        "d1a4",
+        "b8c6"
+      ],
+      "san_moves": [
+        "c4",
+        "e6",
+        "Nc3",
+        "d5",
+        "d4",
+        "Nf6",
+        "Nf3",
+        "Bb4",
+        "Qa4+",
+        "Nc6"
+      ],
+      "plies": 10,
+      "turn": "white",
+      "fen": "r1bqk2r/ppp2ppp/2n1pn2/3p4/QbPP4/2N2N2/PP2PPPP/R1B1KB1R w KQkq - 5 6",
+      "canonical_position": "r1bqk2r/ppp2ppp/2n1pn2/3p4/QbPP4/2N2N2/PP2PPPP/R1B1KB1R w KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 34,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost exchanged c-pawns and paired fianchetto knights",
+      "uci_moves": [
+        "g1f3",
+        "c7c5",
+        "c2c4",
+        "g8f6",
+        "b1c3",
+        "e7e6",
+        "g2g3",
+        "d7d5",
+        "c4d5",
+        "f6d5",
+        "f1g2",
+        "b8c6"
+      ],
+      "san_moves": [
+        "Nf3",
+        "c5",
+        "c4",
+        "Nf6",
+        "Nc3",
+        "e6",
+        "g3",
+        "d5",
+        "cxd5",
+        "Nxd5",
+        "Bg2",
+        "Nc6"
+      ],
+      "plies": 12,
+      "turn": "white",
+      "fen": "r1bqkb1r/pp3ppp/2n1p3/2pn4/8/2N2NP1/PP1PPPBP/R1BQK2R w KQkq - 2 7",
+      "canonical_position": "r1bqkb1r/pp3ppp/2n1p3/2pn4/8/2N2NP1/PP1PPPBP/R1BQK2R w KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 31,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost advanced central pawn and displaced knight",
+      "uci_moves": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "e7e5",
+        "d4b5",
+        "d7d6",
+        "b1c3"
+      ],
+      "san_moves": [
+        "e4",
+        "c5",
+        "Nf3",
+        "Nc6",
+        "d4",
+        "cxd4",
+        "Nxd4",
+        "e5",
+        "Nb5",
+        "d6",
+        "N1c3"
+      ],
+      "plies": 11,
+      "turn": "black",
+      "fen": "r1bqkbnr/pp3ppp/2np4/1N2p3/4P3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 6",
+      "canonical_position": "r1bqkbnr/pp3ppp/2np4/1N2p3/4P3/2N5/PPP2PPP/R1BQKB1R b KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 35,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost opposite fianchetto bishops and white castling",
+      "uci_moves": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "g1f3",
+        "b7b6",
+        "g2g3",
+        "c8b7",
+        "f1g2",
+        "f8e7",
+        "e1g1"
+      ],
+      "san_moves": [
+        "d4",
+        "Nf6",
+        "c4",
+        "e6",
+        "Nf3",
+        "b6",
+        "g3",
+        "Bb7",
+        "Bg2",
+        "Be7",
+        "O-O"
+      ],
+      "plies": 11,
+      "turn": "black",
+      "fen": "rn1qk2r/pbppbppp/1p2pn2/8/2PP4/5NP1/PP2PPBP/RNBQ1RK1 b kq - 4 6",
+      "canonical_position": "rn1qk2r/pbppbppp/1p2pn2/8/2PP4/5NP1/PP2PPBP/RNBQ1RK1 b kq -",
+      "legal_castling_plies": [
+        11
+      ],
+      "legal_move_count": 35,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost exchanged e-pawn and diagonal bishop pressure",
+      "uci_moves": [
+        "e2e4",
+        "e7e6",
+        "d2d4",
+        "d7d5",
+        "b1d2",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "e4d5",
+        "e6d5",
+        "f1b5"
+      ],
+      "san_moves": [
+        "e4",
+        "e6",
+        "d4",
+        "d5",
+        "Nd2",
+        "c5",
+        "Ngf3",
+        "Nc6",
+        "exd5",
+        "exd5",
+        "Bb5"
+      ],
+      "plies": 11,
+      "turn": "black",
+      "fen": "r1bqkbnr/pp3ppp/2n5/1Bpp4/3P4/5N2/PPPN1PPP/R1BQK2R b KQkq - 1 6",
+      "canonical_position": "r1bqkbnr/pp3ppp/2n5/1Bpp4/3P4/5N2/PPPN1PPP/R1BQK2R b KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 33,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    },
+    {
+      "name": "SEE cost exchanged c-pawn and paired active white bishops",
+      "uci_moves": [
+        "e2e4",
+        "c7c6",
+        "d2d4",
+        "d7d5",
+        "e4d5",
+        "c6d5",
+        "f1d3",
+        "b8c6",
+        "c2c3",
+        "g8f6",
+        "c1f4"
+      ],
+      "san_moves": [
+        "e4",
+        "c6",
+        "d4",
+        "d5",
+        "exd5",
+        "cxd5",
+        "Bd3",
+        "Nc6",
+        "c3",
+        "Nf6",
+        "Bf4"
+      ],
+      "plies": 11,
+      "turn": "black",
+      "fen": "r1bqkb1r/pp2pppp/2n2n2/3p4/3P1B2/2PB4/PP3PPP/RN1QK1NR b KQkq - 2 6",
+      "canonical_position": "r1bqkb1r/pp2pppp/2n2n2/3p4/3P1B2/2PB4/PP3PPP/RN1QK1NR b KQkq -",
+      "legal_castling_plies": [],
+      "legal_move_count": 33,
+      "is_valid": true,
+      "claimable_or_terminal_outcome": null,
+      "matches_any_prior_start": false
+    }
+  ],
+  "existing_loader_compatibility": true,
+  "passed": true
+}

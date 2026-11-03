@@ -13,3 +13,197 @@ docs/matches/2026-10-18-see/** -text -whitespace
 docs/matches/2026-10-18-see-replication/** -text -whitespace
 # The preregistered opening SHA256 must survive Windows and Linux checkouts.
 tests/data/see_replication_openings_2026-10-18.json -text
+tests/data/see_cost_openings_2026-10-18.json -text
+tests/data/see_cost_freeze_2026-10-18.json -text
+docs/matches/2026-10-18-see-cost/** -text -whitespace
+
+# Keep the first training model, datasets and validation checksums byte-identical.
+docs/checks/2026-10-19-neural-training/** -text -whitespace
+# Preserve the exact measured source bytes/new-file line endings on Windows.
+src/neural.cpp -text whitespace=cr-at-eol
+tests/neural_model_tests.cpp text eol=lf
+tests/neural_training_integration.py text eol=lf
+requirements-training.txt text eol=lf
+
+# Preserve the QAT freeze, model, datasets and measured source hashes on checkout.
+docs/checks/2026-10-19-neural-qat/** -text -whitespace
+docs/NEURAL_QAT.md text eol=lf
+scripts/neural_qat.py -text
+scripts/calibrate_neural_qat.py -text whitespace=cr-at-eol
+scripts/neural_qat_experiment.py -text whitespace=cr-at-eol
+scripts/benchmark_qat_models.py -text
+scripts/neural_incremental_benchmark.cpp -text
+tests/neural_qat_tests.py text eol=lf
+tests/neural_qat_integration.py text eol=lf
+
+# Keep pre-existing LF bytes used by the QAT measurement manifest on checkout.
+include/regicide/board.hpp text eol=lf
+include/regicide/see.hpp text eol=lf
+include/regicide/transposition.hpp text eol=lf
+include/regicide/uci.hpp text eol=lf
+requirements-test.txt text eol=lf
+src/board.cpp text eol=lf
+src/evaluation.cpp text eol=lf
+src/see.cpp text eol=lf
+src/transposition.cpp text eol=lf
+tests/engine_integration.py text eol=lf
+
+# Preserve the precision experiment's datasets, model and frozen source bytes.
+docs/checks/2026-10-19-neural-precision/** -text -whitespace
+docs/NEURAL_PRECISION.md text eol=lf
+scripts/neural_precision.py -text
+scripts/neural_precision_experiment.py -text
+tests/neural_precision_tests.py text eol=lf
+tests/neural_precision_integration.py text eol=lf
+tests/neural_precision_experiment_tests.py text eol=lf
+tests/differential.py text eol=lf
+
+# Preserve the first neural/classical strength comparison and frozen tool bytes.
+docs/matches/2026-10-19-neural-strength/** -text -whitespace
+docs/experiments/2026-10-19-neural-strength-plan.md -text
+docs/experiments/2026-10-19-neural-strength.md text eol=lf
+tests/data/neural_strength_openings_2026-10-19.json -text
+scripts/generate_neural_strength_openings.py -text
+scripts/run_neural_strength_comparison.py -text
+tests/audit_neural_strength_results.py -text
+tests/neural_strength_driver_tests.py text eol=lf
+
+# Restore the recorded CRLF bytes on every platform, including this file.
+.gitattributes text eol=crlf
+.github/workflows/rules.yml text eol=crlf
+README.md text eol=crlf
+docs/ENGINE.md text eol=crlf
+# These small attribute files were frozen as LF inputs to the diagnostics.
+scripts/.gitattributes text eol=lf
+tests/.gitattributes text eol=lf
+docs/analysis/.gitattributes text eol=lf
+docs/checks/2026-10-19-neural-commit/** -text -whitespace
+
+# Restore exact bytes of the measured source and opening-novelty references.
+CMakeLists.txt text eol=crlf
+docs/matches/2026-10-17-hash-memory/debug/conclusion.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/debug/raw-reproduction.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/independent-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/primary-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/retry-suspend-events.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/suspend-events.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100-retry.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100-retry.json text eol=lf
+docs/matches/2026-10-17-hash-memory/time100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time100.json text eol=lf
+docs/matches/2026-10-17-hash-memory/time40.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-hash-memory/time40.json text eol=lf
+docs/matches/2026-10-17-hash-memory/wake-guard.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/coach-analysis.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/development-probes.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/heldout-validation.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/independent-critical-positions.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/independent-loss-analysis.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/analysis/own-engine-findings.json text eol=lf
+docs/matches/2026-10-17-loss-guided/analysis/own-engine-queries.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/cpu.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/development100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/development100.json text eol=lf
+docs/matches/2026-10-17-loss-guided/environment-and-results-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/frozen-ci.json text eol=lf
+docs/matches/2026-10-17-loss-guided/heldout100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/heldout100.json text eol=lf
+docs/matches/2026-10-17-loss-guided/memory.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/os.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/suspend-event-query.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/suspend-events-window.json text eol=crlf
+docs/matches/2026-10-17-loss-guided/wake-guard.json text eol=crlf
+docs/matches/2026-10-17-tt/independent-audit-summary.json text eol=crlf
+docs/matches/2026-10-17-tt/time100.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-tt/time100.json text eol=lf
+docs/matches/2026-10-17-tt/time40.independent-audit.json text eol=crlf
+docs/matches/2026-10-17-tt/time40.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-depth2.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-nodes1000.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-position-only.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-quiescence-only.json text eol=lf
+docs/matches/2026-10-17/2026-10-17-time40.json text eol=lf
+include/regicide/evaluation.hpp text eol=crlf
+include/regicide/search.hpp text eol=crlf
+scripts/build.ps1 text eol=crlf
+scripts/compare_engines.py text eol=lf
+scripts/see_clean_guard.py text eol=lf
+src/main.cpp text eol=crlf
+src/search.cpp text eol=crlf
+src/uci.cpp text eol=crlf
+tests/audit_see_replication.py text eol=lf
+tests/audit_see_results.py text eol=lf
+tests/compare_engines_tests.py text eol=lf
+tests/data/comparison_openings.json text eol=lf
+tests/data/heldout_openings_2026-10-17.json text eol=lf
+tests/data/pvs_openings_2026-10-18.json text eol=lf
+tests/see_clean_guard_tests.py text eol=lf
+
+# Retain the already-frozen auditor source, including its final blank line.
+tests/audit_neural_strength_results.py whitespace=-blank-at-eof
+
+# Preserve the human-play time-setting source and validation evidence bytes.
+docs/checks/2026-10-19-live-think-time/** -text -whitespace
+docs/experiments/2026-10-19-live-think-time.md -text
+docs/GODOT_PLAY.md -text
+docs/HUMAN_PLAY.md -text
+scripts/play_human.py -text
+scripts/game_archive.py -text
+web/human-play/app.js text eol=crlf
+web/human-play/index.html -text
+godot/scripts/main.gd -text
+godot/tests/think_time_capture_scene.gd -text
+godot/tests/think_time_live_tests.gd -text
+godot/tests/think_time_offline_tests.gd -text
+tests/think_time_live_tests.py -text
+tests/think_time_tests.py -text
+tests/think_time_web_tests.js -text
+
+# Preserve this fixed extra-time experiment and its raw receipts byte for byte.
+docs/matches/2026-10-19-neural-long-time/** -text -whitespace
+docs/experiments/2026-10-19-neural-long-time-plan.md -text
+docs/experiments/2026-10-19-neural-long-time-results.md -text
+scripts/generate_neural_long_time_openings.py -text
+scripts/run_neural_long_time_comparison.py -text
+tests/audit_neural_long_time_results.py -text
+tests/audit_neural_extra_time_results.py -text
+tests/neural_long_time_driver_tests.py -text
+tests/data/neural_long_time_openings_2026-10-19.json -text
+tests/audit_neural_extra_time_prefix.py -text
+
+# Preserve pending research/source evidence bytes at the 2026-10-21 save handoff.
+.github/workflows/neural-search-data.yml -text
+.github/workflows/neural-target-ab.yml -text
+docs/NEURAL_SEARCH_DATA.md -text
+docs/experiments/2026-10-19-neural-search-data.md -text
+docs/experiments/2026-10-20-neural-target-ab-followup-plan.md -text
+docs/experiments/2026-10-20-neural-target-ab-plan.md -text
+docs/experiments/2026-10-20-neural-target-ab.md -text
+docs/experiments/2026-10-21-neural-target-ab-diagnosis.md -text
+scripts/analyze_neural_ab_counterfactuals.py -text
+scripts/analyze_neural_ab_losses.py -text
+scripts/analyze_neural_ab_residuals.py -text
+scripts/neural_target_ab.py -text
+scripts/neural_target_ab_data.py -text
+scripts/run_neural_target_ab_matches.py -text
+scripts/select_neural_ab_early_positions.py -text
+tests/audit_neural_target_ab.py -text
+tests/audit_neural_target_ab_v2.py -text
+tests/neural_target_ab_audit_tests.py -text
+tests/neural_target_ab_data_tests.py -text
+tests/neural_target_ab_match_tests.py -text
+tests/neural_target_ab_training_tests.py -text
+tests/neural_target_ab_v2_audit_tests.py -text
+
+# Preserve original CRLF source receipts and intentional Markdown/archival whitespace.
+.gitattributes -text whitespace=cr-at-eol
+.github/workflows/rules.yml -text whitespace=cr-at-eol
+README.md -text whitespace=cr-at-eol,-blank-at-eol
+web/human-play/app.js -text whitespace=cr-at-eol
+scripts/neural_search_data/.gitattributes -text whitespace=cr-at-eol
+tests/neural_search_data/.gitattributes -text whitespace=cr-at-eol
+docs/experiments/2026-10-20-neural-target-ab-plan.md -text whitespace=-blank-at-eol
+docs/experiments/2026-10-20-neural-target-ab.md -text whitespace=-blank-at-eol
+tests/audit_neural_extra_time_prefix.py -text whitespace=cr-at-eol
+tests/audit_neural_extra_time_results.py -text whitespace=-blank-at-eof
+tests/audit_neural_long_time_results.py -text whitespace=-blank-at-eof

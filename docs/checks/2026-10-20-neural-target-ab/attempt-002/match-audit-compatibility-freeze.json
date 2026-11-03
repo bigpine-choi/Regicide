@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T14:48:28.168538+00:00",
+  "files": {
+    "adapter": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\match-audit-compatibility.py",
+      "sha256": "d3aaf8b81c726da469504917993c22636a4bbfa96be4bc3258045491713c77c7"
+    },
+    "v1_auditor": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\tests\\audit_neural_target_ab.py",
+      "sha256": "ca02e63c4af58b7cd088e6d9b4ace09ac95d359d4e28b9e2d65ce7ab44e56ca5"
+    },
+    "frozen_v2_auditor": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\tests\\audit_neural_target_ab_v2.py",
+      "sha256": "0a0f80b18a4b8d78ec9c39c90221ee040d57142b271703fc3f557aa53e2e7cfc"
+    },
+    "match_driver": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\run_neural_target_ab_matches.py",
+      "sha256": "0739404bda51666da59cc17f9c861a76e5cf7f0a58c4f1fdf2a0a7b0f1dbd2f7"
+    },
+    "execution_freeze": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\freeze.json",
+      "sha256": "bc484c64ff4cad3431a422fdc0a6fc0efeeb26c243bcd70eebf0d3ac7ef43f1c"
+    },
+    "model_freeze": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\model-freeze.json",
+      "sha256": "7b006575f34af05ed06e6fbcb528c7871288af70ddca31149f1752ce64366b96"
+    }
+  },
+  "self_test": {
+    "independent_coverage_tamper_rejections": 4,
+    "status": "PASS",
+    "valid_driver_start_before_guard_is_accepted": true
+  },
+  "issue": "Frozen v2 tests/audit_neural_target_ab_v2.py:145-149 treats driver metadata.started_at as first-search time; driver creates that timestamp at scripts/run_neural_target_ab_matches.py:458 before guard.start at476 and require_idle(10) at477. The initial monitor snapshot therefore occurs after driver startup and before actual searches.",
+  "correction": "Keep native CPU/process/phase and per-process counter checks; require actual raw first go through last bestmove to be covered, completed 10s idle before first go, and all before/after-game snapshots to bracket each game search interval.",
+  "no_engine_model_schedule_or_measurement_mutation": true,
+  "before_match": true
+}

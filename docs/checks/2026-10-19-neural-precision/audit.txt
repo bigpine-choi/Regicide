@@ -1,0 +1,81 @@
+Precision-QAT experiment handoff audit, 2026-10-19
+
+Base HEAD: 1cd4de87eec36e75cdfc321a1e1845245aaa53b8.
+State: measured working-tree candidate; no commit or push in this step.
+No equal-time games, Elo estimate, GUI/manual-play validation, or remote CI run.
+
+Method and chronology:
+- protocol.json was written before six S8/16/32 x LR0.00002/0.0001 runs.
+  Each uses120epochs,batch128,outputLR0.005,seed20261024,Adam,float64 shadows.
+- Selection reads only original1498 training positions and split metadata.
+  Prior float initialization already saw this whole train partition, so selection
+  is in-sample calibration, not an independent inner validation result.
+- Selection includes every candidate, three no-learning same-scale float
+  re-quantized references, and exact rescalings of the previous QAT baseline.
+- Same-scale initial-reference comparisons separate precision representation
+  changes from actual learning. Input-only revert keeps final bias/outputs.
+- Selected S32-LR0.00002 model:975 input,2 bias,11 output integer changes.
+  TrainMAE26.15821095(previousQAT)->8.68291055; input-only revert21.07810414.
+- Identical selected-setting training replay matched every integer and shadow
+  array before creating fresh holdout. No heldout-dependent tuning occurred.
+- selection/freeze.json binds train data/initialization/plan/source/model.
+- experiment-freeze/freeze_receipt.json then binds the two references, selected
+  and baseline models, runtime/engine/generator, all previous data identities.
+  It verifies executed candidate grid and original split manifest match the
+  training freeze, and its generation plan matches the frozen protocol.
+- Receipt recorded no existing new holdout; UTC04:34:01 precedes generation
+  UTC04:34:13. Seed20261025 generated64 new legal random games,1894 candidate
+  samples minus1 within-set duplicate=1893. All prior original1498+390 and
+  QAT1905 normalized color/rank-mirror inputs and game IDs excluded.
+- None of these new holdout results changed settings, source, or model.
+
+Actual new holdout, same1893 rows:
+  Previous QAT v1: MAE30.62176439513999, RMSE38.19315189347919cp.
+  Selected S32 v2: MAE11.210248283148442, RMSE14.656788442149569cp.
+  Same-S initial float re-quantization: MAE20.37136819862652cp.
+  Final model with only learned inputs reverted: MAE20.595879556259906cp.
+  Input-only revert changes1861 predictions. 4models x1893 Python/full/inc
+  predictions and classical teacher labels matched,0 mismatches.
+
+Actual automatic checks:
+- Windows seven core/builtin suites all pass;51153 builtin-neural assertions.
+- Actual selected model: Windows and newly compiled GCC13.3 ASan+UBSan each
+  9groups,26566 assertions,0 failures. No sanitizer diagnostics.
+  Build commands, hashes, linkage and actual-model stdout are archived here.
+- Initial new clipping test had a symmetric-fixture expectation error. Both
+  original failure and corrected fixture/pass are preserved with explanation.
+- Precision unit20 tests; test-only integration166 parity positions,4 UCI pairs.
+- Experiment tests on different seeds:4models,40new positions,legal RNG replay,
+  8 adversarial rejections including rehashed forged games and teacher targets.
+- Original training7 and QAT21 unit tests, their integrations, engine19groups,
+  builtin UCI40/CLI8, rules differential2997 cases all pass.
+- Old/new runtimes load identical prior v1 QAT model;8 fixed-depth3 search
+  pairs match after removing timing-only output. No old/new source confusion.
+
+Independent audits:
+- runtime-coherence-audit.py/json uses independent parser/FNV/scalar integer
+  inference and serialization; checks v1/v2 on1498 train positions each.
+- independent-audit.py/json does not import training or generation helpers.
+  Independently replays64 legal seeded games,1893 positions,all prior exclusions,
+  all4 model metrics/per-game results,1861 input-revert prediction differences,
+  receipt/source/model/data hashes, timing order, and96 benchmark records.
+  Additionally re-executes baseline/selected C++ eval-batch on1893 rows each.
+
+Benchmark:
+  Same current binary; previousQAT v1 vs selectedv2 preloaded before timing.
+  163 transitions,1000warmup,500000iterations x8rounds x6workloads x2models.
+  Model and workload order alternate. Pre/post full/inc and undo checks pass.
+  Full medians594.0618->607.1370ns.
+  Update/snapshot/restore66.1458->66.5644ns.
+  Board-play/incremental/undo111.9001->112.3005ns.
+  Within-v2 paired full/update median9.047649x, board-full/inc5.821406x.
+  Timings do not isolate the new runtime's fixed cost vs the old runtime.
+  No CPU pinning, dedicated machine isolation or external-load sampling.
+  Small mixed differences are not a global speed or strength improvement claim.
+
+Source/evidence preservation:
+  Runtime and training/evaluation source stayed unchanged after final freeze.
+  Subsequent work added documentation, CI, byte-preservation attributes, audit
+  programs and the final manifest. No files under sources/ were modified.
+  Model version2 is explicit; old version1 files remain supported. No external
+  weights, games, teacher engine or engine move-selection code was imported.

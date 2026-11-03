@@ -1,0 +1,656 @@
+{
+  "schema_version": 1,
+  "status": "PASS_WITH_DESCRIPTIVE_METADATA_NOTE",
+  "created_utc": "2026-10-20T15:19:47.041253+00:00",
+  "scope": "Independent read-only recomputation of final saved model residual strata, optimizer/representation diagnostics, and both post-hoc fixed-node probe outputs. No new engines, training or games were run by this audit. Only this new receipt was written.",
+  "residuals": {
+    "train": {
+      "rows": 2209,
+      "absolute_target_delta_ge300_count": 188,
+      "absolute_target_delta_ge300_row_fraction": 0.0851063829787234,
+      "fraction_of_B_search10k_SSE_from_that_group": 0.9003062303445158,
+      "absolute_target_delta_lt50_count": 1551,
+      "small_delta_A_common_search10k_MAE_cp": 16.682570384698042,
+      "small_delta_B_common_search10k_MAE_cp": 31.390070921985814,
+      "aggregation": "Mean of three per-model metrics; not error of mean-prediction ensemble"
+    },
+    "validation": {
+      "rows": 723,
+      "absolute_target_delta_ge300_count": 51,
+      "absolute_target_delta_ge300_row_fraction": 0.07053941908713693,
+      "fraction_of_B_search10k_SSE_from_that_group": 0.8484308045208467,
+      "absolute_target_delta_lt50_count": 517,
+      "small_delta_A_common_search10k_MAE_cp": 20.777562862669246,
+      "small_delta_B_common_search10k_MAE_cp": 33.99290780141843,
+      "aggregation": "Mean of three per-model metrics; not error of mean-prediction ensemble"
+    },
+    "test": {
+      "rows": 687,
+      "absolute_target_delta_ge300_count": 69,
+      "absolute_target_delta_ge300_row_fraction": 0.10043668122270742,
+      "fraction_of_B_search10k_SSE_from_that_group": 0.8776484269573711,
+      "absolute_target_delta_lt50_count": 458,
+      "small_delta_A_common_search10k_MAE_cp": 20.684133915574964,
+      "small_delta_B_common_search10k_MAE_cp": 32.86390101892285,
+      "aggregation": "Mean of three per-model metrics; not error of mean-prediction ensemble"
+    }
+  },
+  "optimization_and_representation": {
+    "A-20261020": {
+      "arm": "A",
+      "seed": 20261020,
+      "input_shadow_max_absolute_change": 0.028571171363627114,
+      "input_shadow_mean_absolute_change": 0.005421954054693599,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 506,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 0,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 2.59761786183877,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 15.145767315527388,
+          "mse_cp2": 401.79040289723855,
+          "rmse_cp": 20.044710097610256
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 0.9040181319827478,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 27.87838014074557,
+          "mse_cp2": 1278.0470942979853,
+          "rmse_cp": 35.74978453498685
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 12.455862381167949,
+          "mse_cp2": 254.01493888637393,
+          "rmse_cp": 15.937846118167094
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 0.89720657505864,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 24.974464118327496,
+          "mse_cp2": 1025.6910059887105,
+          "rmse_cp": 32.0264110694394
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.3145512675418741,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -992,
+          "maximum_accumulator_sum": 1280
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.30441735822959887,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -832,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.32009643377001457,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1056,
+          "maximum_accumulator_sum": 1089
+        }
+      }
+    },
+    "B-20261020": {
+      "arm": "B",
+      "seed": 20261020,
+      "input_shadow_max_absolute_change": 0.03260564117113634,
+      "input_shadow_mean_absolute_change": 0.006046781305630471,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 986,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 7,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 23.53869907053633,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 96.92892711634224,
+          "mse_cp2": 43657.5110909914,
+          "rmse_cp": 208.9437988814011
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 7.60753432850439,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 100.40290120044324,
+          "mse_cp2": 43333.1323481185,
+          "rmse_cp": 208.1661171951826
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 95.44952467179719,
+          "mse_cp2": 40472.559529198734,
+          "rmse_cp": 201.17793002513653
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 9.415570173665063,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 99.11636965553198,
+          "mse_cp2": 41061.564559799546,
+          "rmse_cp": 202.63653313210713
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2800192394748755,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -992,
+          "maximum_accumulator_sum": 1280
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.27321058091286304,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -833,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.276792212518195,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1057,
+          "maximum_accumulator_sum": 1088
+        }
+      }
+    },
+    "B-20261021": {
+      "arm": "B",
+      "seed": 20261021,
+      "input_shadow_max_absolute_change": 0.03237992609370573,
+      "input_shadow_mean_absolute_change": 0.006034410218600823,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 976,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 6,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 14.479616926077725,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 98.22770484382073,
+          "mse_cp2": 43848.95654142146,
+          "rmse_cp": 209.40142440160588
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 8.113609483844419,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 100.67002903097179,
+          "mse_cp2": 43481.09932455851,
+          "rmse_cp": 208.5212203219579
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 95.39520144861929,
+          "mse_cp2": 40502.82299683114,
+          "rmse_cp": 201.25313164477998
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 7.371939138688669,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 99.26222901336543,
+          "mse_cp2": 41147.431042042335,
+          "rmse_cp": 202.8482956350443
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.28400860117700316,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -993,
+          "maximum_accumulator_sum": 1280
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2758039419087137,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -832,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2804312227074236,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1057,
+          "maximum_accumulator_sum": 1088
+        }
+      }
+    },
+    "A-20261021": {
+      "arm": "A",
+      "seed": 20261021,
+      "input_shadow_max_absolute_change": 0.029013141665679174,
+      "input_shadow_mean_absolute_change": 0.005444043386585064,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 514,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 0,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 3.082245032664295,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 15.123585332729743,
+          "mse_cp2": 405.1253961068357,
+          "rmse_cp": 20.12772704770302
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 1.0937651095993106,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 28.060740274011327,
+          "mse_cp2": 1295.500215039119,
+          "rmse_cp": 35.993057872860966
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 12.865550022634677,
+          "mse_cp2": 275.81620642824805,
+          "rmse_cp": 16.607715268159197
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 1.0193056660223856,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 25.09966289730103,
+          "mse_cp2": 1037.5236542564585,
+          "rmse_cp": 32.21061399999166
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.3182011090991399,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -992,
+          "maximum_accumulator_sum": 1279
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.31202455048409405,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -832,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.32300764192139736,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1056,
+          "maximum_accumulator_sum": 1090
+        }
+      }
+    },
+    "A-20261022": {
+      "arm": "A",
+      "seed": 20261022,
+      "input_shadow_max_absolute_change": 0.028009904770099164,
+      "input_shadow_mean_absolute_change": 0.005461603727212379,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 531,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 0,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 2.859619915899003,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 15.17247623358986,
+          "mse_cp2": 404.8076052512449,
+          "rmse_cp": 20.119831143706076
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 1.251348288229198,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 27.849494360583254,
+          "mse_cp2": 1271.5722496963783,
+          "rmse_cp": 35.65911173453958
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 12.733363512901766,
+          "mse_cp2": 268.89814395654145,
+          "rmse_cp": 16.398114036575713
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 1.0469120516674857,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 25.0124002134363,
+          "mse_cp2": 1031.2605203899964,
+          "rmse_cp": 32.11324524849515
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.31852648257129923,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -992,
+          "maximum_accumulator_sum": 1279
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.30960408022130015,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -832,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.32146106259097523,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1056,
+          "maximum_accumulator_sum": 1090
+        }
+      }
+    },
+    "B-20261022": {
+      "arm": "B",
+      "seed": 20261022,
+      "input_shadow_max_absolute_change": 0.0325485571563602,
+      "input_shadow_mean_absolute_change": 0.006100877809090415,
+      "max_deployed_integer_input_change": 1,
+      "integer_input_parameters_changed": 988,
+      "integer_input_parameters_total": 12288,
+      "king_unit_index": 5,
+      "king_unit_output": 0,
+      "king_unit_input_column_unchanged": true,
+      "king_unit_bias_unchanged": true,
+      "gradient_clipped_batches": 13,
+      "total_batches": 2160,
+      "maximum_recorded_gradient_norm": 25.40617584874586,
+      "epoch90": {
+        "epoch": 90,
+        "fake_quantized_train": {
+          "mae_cp": 97.75373472159347,
+          "mse_cp2": 43689.331824354915,
+          "rmse_cp": 209.0199316437428
+        },
+        "gradient_clipped_batches": 1,
+        "max_batch_gradient_global_norm": 12.18593175500425,
+        "optimizer_steps": 1620,
+        "shadow_float_train": {
+          "mae_cp": 100.42247159673786,
+          "mse_cp2": 43373.178909569564,
+          "rmse_cp": 208.2622839343926
+        }
+      },
+      "epoch120": {
+        "epoch": 120,
+        "fake_quantized_train": {
+          "mae_cp": 95.41466727025804,
+          "mse_cp2": 40457.009959257586,
+          "rmse_cp": 201.13928000084317
+        },
+        "gradient_clipped_batches": 0,
+        "max_batch_gradient_global_norm": 7.376421136178702,
+        "optimizer_steps": 2160,
+        "shadow_float_train": {
+          "mae_cp": 99.06860487749574,
+          "mse_cp2": 41069.60773250105,
+          "rmse_cp": 202.6563784648809
+        }
+      },
+      "parameter_at_bound_fraction": {
+        "input_weights": 0.0,
+        "hidden_bias": 0.0,
+        "output_weights": 0.0
+      },
+      "partitions": {
+        "train": {
+          "rows": 2209,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2800616794929833,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -992,
+          "maximum_accumulator_sum": 1280
+        },
+        "validation": {
+          "rows": 723,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2717842323651452,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -832,
+          "maximum_accumulator_sum": 1248
+        },
+        "test": {
+          "rows": 687,
+          "upper_activation_saturation_fraction": 0.0,
+          "lower_inactive_fraction": 0.2770651382823872,
+          "output_clamped_fraction": 0.0,
+          "minimum_accumulator_sum": -1057,
+          "maximum_accumulator_sum": 1088
+        }
+      }
+    }
+  },
+  "fixed_node_probes": {
+    "counterfactuals": {
+      "cases": 76,
+      "losing_turn_matches": 76,
+      "full_query_histories_and_PVs_replayed": 382,
+      "raw_UCI_position_go_bestmove_score_bound_depth_nodes_queries_checked": 382,
+      "unique_candidate_child_records_checked": 122,
+      "child_queries_without_finite_cp": 8,
+      "A_vs_B_child_comparisons_with_two_finite_cp": 69,
+      "A_vs_B_child_comparisons_missing_either_finite_cp": 7,
+      "classical_root_finite_cp": 70,
+      "classical_root_negative_from_original_loser_pov": 70,
+      "turn_pairs": 16,
+      "turn_pairs_with_finite_cp": 15,
+      "maximum_identical_input_pair_MAE_lower_bound_cp": 524.5,
+      "requested_nodes": 24520000,
+      "execution_wall_seconds": 48.86955110001145,
+      "actual_selection_manifest_policy": [
+        "Every decisive game, without selecting only representative losses",
+        "First material deficit <=-300 for four consecutive halfmove states; choose the last losing-side decision no later than deficit start",
+        "If absent, first losing-side move leaving opponent a legal mate in one",
+        "Otherwise earliest maximum material drop over that losing move plus opponent reply"
+      ],
+      "sixth_losing_decision_independently_verified_against_original_match": false,
+      "metadata_note": null,
+      "freeze_input_hashes_verified": 18
+    },
+    "early-counterfactuals": {
+      "cases": 76,
+      "losing_turn_matches": 76,
+      "full_query_histories_and_PVs_replayed": 397,
+      "raw_UCI_position_go_bestmove_score_bound_depth_nodes_queries_checked": 397,
+      "unique_candidate_child_records_checked": 137,
+      "child_queries_without_finite_cp": 0,
+      "A_vs_B_child_comparisons_with_two_finite_cp": 76,
+      "A_vs_B_child_comparisons_missing_either_finite_cp": 0,
+      "classical_root_finite_cp": 76,
+      "classical_root_negative_from_original_loser_pov": 59,
+      "turn_pairs": 16,
+      "turn_pairs_with_finite_cp": 15,
+      "maximum_identical_input_pair_MAE_lower_bound_cp": 524.5,
+      "requested_nodes": 26020000,
+      "execution_wall_seconds": 57.438280800008215,
+      "actual_selection_manifest_policy": "Sixth losing-side decision, every decisive game, without using its score or reanalysis to choose the point",
+      "sixth_losing_decision_independently_verified_against_original_match": true,
+      "metadata_note": "Early diagnostic freeze reused a hardcoded material/mate-pivot description. Hashed selection manifest and rows actually implement sixth losing-side decision. This descriptive mismatch does not change searched positions.",
+      "freeze_input_hashes_verified": 18
+    }
+  },
+  "script_hash_checks": {
+    "residual_script_matches_embedded_summary_sha256": true,
+    "both_probe_current_script_and_frozen_inputs_match_SHA256": true,
+    "original_residual_inputs_checked": 35
+  },
+  "limits": [
+    "The 300cp threshold selects absolute difference between the two targets, not model residual.",
+    "SSE share is not gradient norm or Adam update contribution and does not establish a cause of match losses.",
+    "Reported residual comparison uses mean of per-model metrics across three paired batch-order seeds; mean prediction summaries are descriptive and not a played ensemble.",
+    "Candidate child references all use100000nodes but do not establish objectively optimal chess or exact minimax regret; root teacher choice may differ under a fresh child budget.",
+    "All decisive games were sampled on the eventual losing side. The early decision is uniform conditional on those outcomes; neither probe is a fresh randomized causal experiment.",
+    "Missing finite cp values (including mate) are not silently converted to zero; finite-pair denominators are reported.",
+    "Artificial turn flips establish a representational limitation for selected counterfactual states, not its prevalence in actual play.",
+    "Source/model/input SHA256 checks and raw-UCI replay establish provenance and internal consistency, not independent chess accuracy.",
+    "Late mechanical pivot selection algorithm was not independently reimplemented here; early sixth-decision selection was checked against original search move records."
+  ],
+  "all_checked_input_hashes_equal_before_and_after": true,
+  "checked_file_count": 73,
+  "checked_input_SHA256": {
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-neural-target-ab\\regicide.exe": "86e2dae7933c0507f8bac9c7ecad0a763cadc54f8284028a9f35dab8718a386b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\A-20261020-uci.jsonl": "4a564df99d2fc6456fbd3845085cf678d395f3a20deed73651d6e6f9f1e81b2f",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\A-20261021-uci.jsonl": "6cd601077d308348012b42309cd208f2131656263e298adda5e367a8d69ed2b5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\A-20261022-uci.jsonl": "f362314ab033f65bad2c1f8b55de60c3247489bc1141698fa8dbf91407a766a7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\B-20261020-uci.jsonl": "74ed47e30acb1abb504a61f63fdfce6aa34d1cade443fc083308062a29e36061",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\B-20261021-uci.jsonl": "6951b9ea64b757b82900f9cca6b670406de0f04c37e4aceab27ab37bf1ff66d8",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\B-20261022-uci.jsonl": "3a5c4022b3e156719e541c2d63d26daaae2582e6509e5b7448a4d223f1e1d267",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\classical-uci.jsonl": "389905813e656d661e044c47005c329747ece530fb976f0cc0b2aff7da2af4f0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\diagnostic-freeze.json": "34645d466c165e81c52d6ed7c54c9623d6be0717bd0bcb9eee5b7aa397b1954e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\execution.json": "1ee857b4f048f05ee91ec94e4a75bf34379474284e01d5d9b5bcd4a6c06529c6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\game-comparisons.json": "f6a46f536bf5a15bed06d55b7c9db6cd53ca8c4826d7cd3dbe81bc7759380e98",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\queries.jsonl": "8dae8650c924b0eb5849fb7772fa05a05bb88e987d032b55ae8f0924c1e90066",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\turn-comparisons.json": "b37bf0e0c8ae09d8c34b7f08899dc2ec248006906f61abc475b56c2d9ba75296",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\counterfactuals\\turn-pairs.json": "1e0631a078755ad57dc0fd61194d008b3222f0cd9996138fad08ed64831be60b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\A-20261020-uci.jsonl": "1a47b07378d2740fe912c76f30a8e726dcfb06d2f114ad1669bbad104ad8913b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\A-20261021-uci.jsonl": "cea923d4e0e3af70a720d0519494bb86738b80571d8240a232066dbb265376fa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\A-20261022-uci.jsonl": "1d35e1400c326adf776984c5ad08033cd775c1e8de168a99a24565bc5c65d343",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\B-20261020-uci.jsonl": "e8e7ec4041ab307a252068fdc1f35c4e828676f7b6aff6e7f0b18abd51a46f06",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\B-20261021-uci.jsonl": "195750b0bada96ec373ed3f4f5263c34d009df520eeef05b75f1a5d2941ec169",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\B-20261022-uci.jsonl": "ba69f197c8c88b9307e06ecd0cad9f28cbdde14c1fb8db0a96a2e7e2f3b005a0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\classical-uci.jsonl": "31f7ea4edc8dbc81e0214288248cbb246404384eac9defe93abc1a3f79f7c719",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\diagnostic-freeze.json": "123426ceebda44413787722488b6f4e5662e244983fde6ff3536303555074a60",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\execution.json": "2b913923cc33729e2bb9152f3eaab597db3d27a0166c2dabd5e9062523bf4d0e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\game-comparisons.json": "b6278d27c867052b4d096d5783fbc2e5eb7018d3199b1f8345f8427ed2683249",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\queries.jsonl": "c568f265e2f4214239d33498106fe241957e2a99f75cb47fce25bb3826f81bf7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\turn-comparisons.json": "b37bf0e0c8ae09d8c34b7f08899dc2ec248006906f61abc475b56c2d9ba75296",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-counterfactuals\\turn-pairs.json": "1e0631a078755ad57dc0fd61194d008b3222f0cd9996138fad08ed64831be60b",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-games\\selected-positions.jsonl": "6012f51882693599383a99a3ce780a889b928ec8be5801516abdc4a6cf197116",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\early-games\\selection-manifest.json": "d914194c453db9ff95f46b12505bc359324fa004768bdb953b699de405f05363",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\games\\selected-positions.jsonl": "99e5933d67359943d41bd7198860c0a1d5af88495db244e68fe0d622e57cafe7",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\games\\selection-manifest.json": "1393cd035e3b54d8c380b06b0125263f7318c00a644c2ba418ef3995e7f6e7c8",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\analysis\\2026-10-21-neural-target-ab-diagnosis\\residuals\\summary.json": "4bd3a333f019a2e43811702314b66ae534b8dcebb747c6914eca02ff2d8ca730",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\evaluation\\comparison.json": "39aff38a7ab123341c890d15252568f6f4b055047f939ad674b10e9117d4d04d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\evaluation\\predictions.jsonl": "b3599c022725075dcd5b4ba26d5a26454b26eb38ac6c6b453d3ab4e2d0b494b5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\evaluation\\reference_queries.jsonl": "1db2d2b78fcea764c36e036a9b21587acc99bdf9a2e79f037ef4134e2f5a83d6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\freeze.json": "bc484c64ff4cad3431a422fdc0a6fc0efeeb26c243bcd70eebf0d3ac7ef43f1c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\heldout\\input_collisions.json": "e77e4b7a2fda279bf7875c9991d89db78eb14b25299473eadec52ee3e93a1d32",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\heldout\\test.jsonl": "5983e405cb122a3caeccafb9192f0517eadea935179cea4058920a55e5a7374d",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\matches-100ms\\match.json": "b8432f01d05629f0110e22934760aa90a7edab3f2c1461609abd86738b6621fa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261020\\float_weights.npz": "ab3603dc498d736174f0f0c0a5a69c44a7beb16403b9552ee9b54584a599f222",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261020\\history.json": "65dace081a1b27bf89c7b18c6f2b23b6008d216d6fe52f931ee7175268209053",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261020\\metrics.json": "43c53e395f87c13078b77792207d9b298eb4b4fe1bcdc4c2afc1e5cfc424cd69",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261020\\model.nnue": "5c2e3ec1b880bba6a40ba055af182d02b3db55609ec25e2cc1bf94a3ccdc4741",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261021\\float_weights.npz": "84a3b65d166bd65266c59160bb9d44e10fef267e950e46127f2d74f8f80e9ed4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261021\\history.json": "0bb49ebb90fe3192d4aace6f3c2c5e58016aef180ba5745a3035d5c619525743",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261021\\metrics.json": "49e9f7f354f6433806fb644d5a85ed12492820b722ea5a6f19509a37666eda21",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261021\\model.nnue": "1b79cd1c27e0b1f117bfbeafed9d2df60b2b17d504af258c65266296913d43c9",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261022\\float_weights.npz": "df4b5c206418c6ec045a0ae91364d2eff0739c61860cba5c557310bfd994cfaa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261022\\history.json": "1f5a81a3b073719af90421a185d9e2cdb7cf466256ac8e9e08ca6c797bf261ca",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261022\\metrics.json": "7d7d4711a82aa09442f49f8250fb80f4dcfcf9b7403f4e5096d1a305a5734987",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\A-20261022\\model.nnue": "4f858a7f6875a13853657d2e68d84edf1612cf48b664dce21fdab450ce14efee",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261020\\float_weights.npz": "dcd0b72f0bf0e0666b43e8c7fab10986d1204dc3a3b815a0fdc9cb5dc347ceaa",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261020\\history.json": "c233e69532daf22f0a48f4a43e02857b31bc91ab962140089cdd46e0abb68d9a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261020\\metrics.json": "775b367509c952c2433e8a869abdd48effe2d1066c8a38343dddbc48201374b2",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261020\\model.nnue": "267f65646c24292efa28f11a5f5990311ed7da4f6c134d7c4a6b6c1e0f7be1eb",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261021\\float_weights.npz": "7b8566679de79580ee6018f58bdb68e6f3ac4c2417db355eb03329e57899e3fc",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261021\\history.json": "4527a3b02a988f2765175fcecc266977090a121e6b9f89eadc49bc7c9145f16c",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261021\\metrics.json": "f979ef2a0246803adc6f99ebd2e46b952a44012b530114289ee9b10cc2a28ed6",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261021\\model.nnue": "a7d89622f2b46e1e346751ddcdb53ab80d5fc5c7d36af4e42f944f4ae29c5ec1",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261022\\float_weights.npz": "cd654e0e026efa34c37155154d5116032601162c619c32c978fa1c3db318505a",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261022\\history.json": "c5a202469c7c04de726cf4fa5a55eb29bf93dc7d51355752f537807fe2e3f1e8",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261022\\metrics.json": "e7384cdff729d7e08ebb4691d87438b9e5782183960a192a6811e9e1eda4baa5",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\B-20261022\\model.nnue": "f4228f4d2b0949779b6adc05bc1a183097a601689a8f7c9bad489d267fba9136",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\model-freeze.json": "7b006575f34af05ed06e6fbcb528c7871288af70ddca31149f1752ce64366b96",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\training\\models.json": "605d2b45f5f32a758afaa347b025dd1f9c531910c99f610c832b38b47df5aa9e",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\input_collisions.json": "ed1e51067ff29fe23b1c94ed2275e6441918fe331348a07f1cf0c7a8608027f0",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\train.jsonl": "cb502e8fc274b6429e6ed6298940b146ad91195a4625756993f06cef50552c97",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\docs\\checks\\2026-10-20-neural-target-ab\\attempt-002\\trainval\\validation.jsonl": "be1605423587845c093169358279809472a783d468c66d46c41de090357ff3c4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\analyze_neural_ab_counterfactuals.py": "5e46e6cb97cb4ad752c87bcd2d8ffb56f2d07a670bd311375a61886e82f645e4",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\analyze_neural_ab_residuals.py": "7e7b5ef8808ccd9a9dfd4530858a3adcd6a681f176ff7b1d001896aaa5bfb424",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\neural_precision.py": "96c540f13d3ecd14f019ad83a82aab3e11a6f959b0ae6a770f88f86ec07e7775",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\neural_search_data\\engine.py": "d7817ad87b95be4f9201d93973f2093a906296710aec1d972bd838b37b7b4049",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\scripts\\neural_training.py": "367fae9aea605ea2d311c6c2998a45e7588ff977d650d45b30b6b325f756cd38"
+  }
+}

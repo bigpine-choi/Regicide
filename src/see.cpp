@@ -11,7 +11,7 @@ constexpr int knight_steps[8][2] = {
 constexpr int directions[8][2] = {
     {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
 
-bool inside(int file, int rank) {
+constexpr bool inside(int file, int rank) {
     return file >= 0 && file < 8 && rank >= 0 && rank < 8;
 }
 char type(char piece) {
@@ -38,6 +38,45 @@ int value(char piece) {
 }
 unsigned color_index(Color side) { return side == Color::white ? 0U : 1U; }
 
+struct SquareList {
+    std::array<unsigned char, 8> squares{};
+    unsigned char count = 0;
+};
+struct AttackGeometry {
+    std::array<SquareList, 2> pawns{};
+    SquareList knights{};
+    std::array<SquareList, 8> rays{};
+};
+
+// Occupancy changes during an exchange; geometry does not. These small tables
+// remove repeated file/rank arithmetic and edge tests from both attack queries.
+constexpr auto attack_geometry = [] {
+    std::array<AttackGeometry, 64> result{};
+    for (int target = 0; target < 64; ++target) {
+        auto& geometry = result[target];
+        const int file = target % 8, rank = target / 8;
+        for (unsigned side = 0; side < 2; ++side) {
+            const int pawn_rank = rank + (side == 0 ? -1 : 1);
+            for (int delta : {-1, 1})
+                if (inside(file + delta, pawn_rank))
+                    geometry.pawns[side].squares[geometry.pawns[side].count++] =
+                        static_cast<unsigned char>(pawn_rank * 8 + file + delta);
+        }
+        for (const auto& step : knight_steps) {
+            const int f = file + step[0], r = rank + step[1];
+            if (inside(f, r)) geometry.knights.squares[geometry.knights.count++] =
+                static_cast<unsigned char>(r * 8 + f);
+        }
+        for (int d = 0; d < 8; ++d) {
+            auto& ray = geometry.rays[d];
+            for (int f = file + directions[d][0], r = rank + directions[d][1];
+                 inside(f, r); f += directions[d][0], r += directions[d][1])
+                ray.squares[ray.count++] = static_cast<unsigned char>(r * 8 + f);
+        }
+    }
+    return result;
+}();
+
 struct ExchangePosition {
     std::array<char, 64> squares;
     std::array<int, 2> kings{};
@@ -46,49 +85,57 @@ struct ExchangePosition {
 // Target-centered geometry discovers sliding x-rays after every occupancy
 // change. Pin restrictions are applied separately to recaptures; geometric
 // attacks, including pinned pieces, determine whether a king is safe.
-int attackers(const ExchangePosition& position, int target, Color side,
-              std::array<int, 64>& result) {
-    int count = 0;
-    const int file = target % 8, rank = target / 8;
-    const int pawn_rank = rank + (side == Color::white ? -1 : 1);
-    for (int delta : {-1, 1}) {
-        if (!inside(file + delta, pawn_rank)) continue;
-        const int from = pawn_rank * 8 + file + delta;
-        if (position.squares[from] == colored('p', side)) result[count++] = from;
+template<class Accept>
+bool visit_attackers(const ExchangePosition& position, int target, Color side, Accept&& accept) {
+    const auto& geometry = attack_geometry[target];
+    const auto& pawns = geometry.pawns[color_index(side)];
+    for (unsigned i = 0; i < pawns.count; ++i) {
+        const int from = pawns.squares[i];
+        if (position.squares[from] == colored('p', side) && accept(from)) return true;
     }
-    for (const auto& step : knight_steps) {
-        const int f = file + step[0], r = rank + step[1];
-        if (inside(f, r) && position.squares[r * 8 + f] == colored('n', side))
-            result[count++] = r * 8 + f;
+    for (unsigned i = 0; i < geometry.knights.count; ++i) {
+        const int from = geometry.knights.squares[i];
+        if (position.squares[from] == colored('n', side) && accept(from)) return true;
     }
     for (int d = 0; d < 8; ++d) {
-        int f = file + directions[d][0], r = rank + directions[d][1], distance = 1;
-        for (; inside(f, r); f += directions[d][0], r += directions[d][1], ++distance) {
-            const int from = r * 8 + f;
+        const auto& ray = geometry.rays[d];
+        for (unsigned distance = 0; distance < ray.count; ++distance) {
+            const int from = ray.squares[distance];
             const char piece = position.squares[from];
             if (piece == '.') continue;
             if (belongs(piece, side)) {
                 const char t = type(piece);
                 if (t == 'q' || (d < 4 && t == 'r') || (d >= 4 && t == 'b') ||
-                    (distance == 1 && t == 'k')) result[count++] = from;
+                    (distance == 0 && t == 'k'))
+                    if (accept(from)) return true;
             }
             break;
         }
     }
-    return count;
+    return false;
 }
 
 // On success commits precisely one legal LVA recapture and returns its
 // promotion increment. Equal-valued attackers use the lower square index.
 bool recapture(ExchangePosition& position, int target, Color side, int& promotion_gain) {
-    std::array<int, 64> candidates{};
-    const int count = attackers(position, target, side, candidates);
-    std::sort(candidates.begin(), candidates.begin() + count, [&](int left, int right) {
-        const int a = value(position.squares[left]), b = value(position.squares[right]);
-        return a != b ? a < b : left < right;
+    // At most two pawn, eight knight and eight first-on-ray attackers exist.
+    // Only initialized entries are read. Usually the first legal LVA succeeds,
+    // so selecting its minimum avoids sorting attackers that will not be used.
+    std::array<int, 18> candidates;
+    int count = 0;
+    visit_attackers(position, target, side, [&](int from) {
+        candidates[count++] = from;
+        return false;
     });
-    for (int i = 0; i < count; ++i) {
-        const int from = candidates[i];
+    while (count > 0) {
+        int least = 0;
+        for (int i = 1; i < count; ++i) {
+            const int a = value(position.squares[candidates[i]]);
+            const int b = value(position.squares[candidates[least]]);
+            if (a < b || (a == b && candidates[i] < candidates[least])) least = i;
+        }
+        const int from = candidates[least];
+        candidates[least] = candidates[--count];
         const char piece = position.squares[from], victim = position.squares[target];
         const unsigned king_index = color_index(side);
         const int old_king = position.kings[king_index];
@@ -98,8 +145,10 @@ bool recapture(ExchangePosition& position, int target, Color side, int& promotio
         // gain if retained; if recaptured its extra gain and loss cancel.
         position.squares[target] = promotion ? colored('q', side) : piece;
         if (type(piece) == 'k') position.kings[king_index] = target;
-        std::array<int, 64> king_attackers{};
-        const bool safe = attackers(position, position.kings[king_index], opposite(side), king_attackers) == 0;
+        // King safety needs one geometric attack, including pinned attackers,
+        // rather than the complete collection used for choosing a recapture.
+        const bool safe = !visit_attackers(position, position.kings[king_index], opposite(side),
+                                          [](int) { return true; });
         if (safe) {
             promotion_gain = promotion ? value('q') - value('p') : 0;
             return true;
@@ -126,7 +175,7 @@ int static_exchange_evaluation(const Board& board, Move move) {
         if (position.squares[square] == 'K') position.kings[0] = square;
         else if (position.squares[square] == 'k') position.kings[1] = square;
     }
-    std::array<int, 64> gain{};
+    std::array<int, 64> gain;
     gain[0] = en_passant ? value('p') : value(position.squares[move.to]);
     if (en_passant) position.squares[move.to + (original.turn == Color::white ? -8 : 8)] = '.';
     position.squares[move.from] = '.';

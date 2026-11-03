@@ -1,5 +1,6 @@
 #include "regicide/board.hpp"
 #include "regicide/search.hpp"
+#include "regicide/evaluation.hpp"
 #include "regicide/uci.hpp"
 
 #include <algorithm>
@@ -49,6 +50,18 @@ void batch() {
         }
     }
 }
+void evaluation_batch(const regicide::NeuralModel& model) {
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        Board board(line);
+        const regicide::NeuralAccumulator accumulator(board, model);
+        const int full = regicide::evaluate_neural(board, model);
+        const int incremental = accumulator.evaluate(board.position().turn);
+        if (full != incremental) throw std::logic_error("neural model full/incremental mismatch");
+        std::cout << regicide::evaluate_position(board) << '\t' << full << '\t' << incremental << '\n';
+    }
+    if (std::cin.bad()) throw std::runtime_error("evaluation batch input failed");
+}
 int depth_arg(std::string_view text) {
     int value = -1;
     const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
@@ -61,14 +74,24 @@ int main(int argc, char** argv) {
     try {
         const std::string command = argc > 1 ? argv[1] : "moves";
         if (command == "--help" || command == "help") {
-            std::cout << "Regicide 0.5.2\n"
+            std::cout << "Regicide 0.5.3\n"
                          "regicide [moves|inspect] [--fen \"six-field FEN\"] [--play e2e4 e7e5 ...]\n"
                          "regicide [perft|divide] DEPTH [--fen \"FEN\"] [--play ...]\n"
                          "regicide search [DEPTH=4] [--nodes N] [--movetime MS] [--fen \"FEN\"] [--play ...]\n"
                          "  optional search flags: --no-position --no-quiescence --no-tt --hash MiB --no-fast-moves\n"
-                         "    --no-quiet-ordering --no-quiescence-checks --no-see\n"
+                         "    --no-quiet-ordering --no-quiescence-checks --no-see --neural-full-refresh\n"
+                         "regicide search 4 --neural [--neural-model FILE]  (experimental evaluator)\n"
                          "regicide uci  (UCI engine protocol)\n"
-                         "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n";
+                         "regicide batch  (stdin: FEN|moves; stdout: tab-separated state)\n"
+                         "regicide eval-batch [--neural-model FILE]  (stdin: FEN; stdout: classical/full/incremental cp TSV)\n";
+            return 0;
+        }
+        if (command == "eval-batch") {
+            std::shared_ptr<const regicide::NeuralModel> selected;
+            if (argc == 4 && std::string_view(argv[2]) == "--neural-model")
+                selected = regicide::load_neural_model(argv[3]);
+            else if (argc != 2) throw std::invalid_argument("eval-batch expects optional --neural-model FILE");
+            evaluation_batch(selected ? *selected : regicide::builtin_neural_model());
             return 0;
         }
         if (command == "batch") {
@@ -95,6 +118,10 @@ int main(int argc, char** argv) {
         while (arg < argc) {
             const std::string option = argv[arg++];
             if (option == "--fen" && arg < argc) fen = argv[arg++];
+            else if (command == "search" && option == "--neural-model" && arg < argc)
+                search_options.neural_model = regicide::load_neural_model(argv[arg++]);
+            else if (command == "search" && option == "--neural-full-refresh") search_options.neural_incremental = false;
+            else if (command == "search" && option == "--neural") search_options.neural = true;
             else if (command == "search" && option == "--no-position") search_options.positional = false;
             else if (command == "search" && option == "--no-quiescence") search_options.quiescence = false;
             else if (command == "search" && option == "--no-tt") search_options.transposition = false;

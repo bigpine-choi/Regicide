@@ -1004,6 +1004,23 @@ int main() {
         }
         expect(calls > 0, "SEE mode never evaluated a tactical candidate");
     });
+    test("a sole legal capture needs no exchange sort and still preserves its result", [] {
+        Board board("8/8/8/8/8/8/r1k5/K7 w - - 0 1");
+        const auto saved = board;
+        const auto moves = board.legal_moves();
+        expect(moves.size() == 1 && moves.front() == Move::from_uci("a1a2"),
+               "fixture must have exactly one legal capture evasion");
+        for (bool pvs : {false, true}) for (bool table : {false, true}) {
+            const auto result = search(board, {.depth = 2}, nullptr, {}, see_options(true, pvs, table));
+            const auto old_order = search(board, {.depth = 2}, nullptr, {}, see_options(false, pvs, table));
+            expect(result.depth == 2 && !result.stopped && result.score == 0 &&
+                       result.best_move == moves.front() && !result.see_calls,
+                   "forced capture should be searched without SEE work");
+            same_graph(result, old_order);
+            expect(board == saved, "forced capture ordering changed board or history");
+            valid_pv(board, result);
+        }
+    });
     test("favorable captures precede losing captures without discarding either", [] {
         // a4 is outside the defending rook's fifth rank, so Rxa4 is truly free.
         Board board("7k/8/4p3/3r4/p7/8/8/R2Q2K1 w - - 0 1");

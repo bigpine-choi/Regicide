@@ -1,0 +1,492 @@
+"""Frozen, paired static-versus-search target experiment. No model selection.
+
+The data bank and every runtime/source input are frozen before generation.
+All six final checkpoints precede the existence of the holdout directory.
+The larger-node reference is another own-teacher estimate, not chess truth.
+"""
+from __future__ import annotations
+
+import argparse
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import subprocess
+import sys
+import time
+
+# This process and its children use the protocol's single BLAS thread.
+for _variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ[_variable] = "1"
+
+import chess
+import numpy as np
+
+import neural_training as base
+import neural_precision as precision
+from neural_search_data.engine import EngineTeacher, SearchInterrupted
+from neural_search_data.schema import board_from, validate_query
+
+ROOT = Path(__file__).resolve().parents[1]
+SEEDS = (20261020, 20261021, 20261022)
+TARGETS = {"A": "classical_static_white_cp", "B": "target_white_cp"}
+PREVIOUS = ROOT / "docs/checks/2026-10-19-neural-precision/selection/model.nnue"
+
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def write_new(path, value):
+    with Path(path).open("x", encoding="utf-8", newline="\n") as handle:
+        json.dump(value, handle, indent=2, sort_keys=True, allow_nan=False)
+        handle.write("\n")
+
+
+def read(path):
+    return json.loads(Path(path).read_text(encoding="utf-8-sig"))
+
+
+def entry(path):
+    path = Path(path).resolve()
+    return {"path": str(path), "sha256": base.sha256(path)}
+
+
+def verify_files(files):
+    for name, item in files.items():
+        if base.sha256(Path(item["path"])) != item["sha256"]:
+            raise ValueError("Frozen file changed: " + name)
+
+
+def verify(root):
+    frozen = read(Path(root) / "freeze.json")
+    verify_files(frozen["files"])
+    return frozen
+
+
+def verify_dataset(directory, frozen):
+    plan = read(Path(directory) / "plan.json")
+    if (plan["engine"]["sha256"] != frozen["engine"]["sha256"]
+            or plan["bank_sha256"] != frozen["bank"]["sha256"]
+            or base.sha256(Path(directory) / "bank.json") != frozen["bank"]["sha256"]):
+        raise ValueError("Dataset is not bound to frozen engine and bank")
+
+
+def config(arm, seed, epochs=120):
+    if arm not in TARGETS or seed not in SEEDS and epochs == 120:
+        raise ValueError("Unknown arm or protocol seed")
+    return {"candidate_id": f"{arm}-{seed}", "input_scale": 32,
+            "epochs": epochs, "input_bias_lr": .00002, "output_lr": .005,
+            "seed": seed, "batch_size": 128}
+
+
+def pack(rows, target_key):
+    if target_key not in TARGETS.values():
+        raise ValueError("Not an explicit paired target")
+    for row in rows:
+        for key in TARGETS.values():
+            if type(row.get(key)) is not int or abs(row[key]) > 28000:
+                raise ValueError("Invalid or missing paired target")
+    copied = [{**row, "target_white_cp": row[target_key]} for row in rows]
+    return base.pack_records(copied)
+
+
+def input_hash(indices):
+    return hashlib.sha256(np.asarray(indices, dtype="<i8").tobytes()).hexdigest()
+
+
+def order_hash(count, seed, epochs=120):
+    rng, digest = np.random.default_rng(seed), hashlib.sha256()
+    for _ in range(epochs):
+        digest.update(rng.permutation(count).astype("<i8").tobytes())
+    return digest.hexdigest()
+
+
+def metric(predictions, targets, rows):
+    p, y = np.asarray(predictions, dtype=float), np.asarray(targets, dtype=float)
+    if not len(y):
+        return {"count": 0, "mae_cp": None, "rmse_cp": None, "family_macro_mae_cp": None}
+    errors, families = np.abs(p-y), defaultdict(list)
+    for error, row in zip(errors, rows, strict=True):
+        families[row["family_id"]].append(float(error))
+    margin = np.abs(y) >= 50
+    return {"count": len(y), **base.error_metrics(p, y),
+            "family_macro_mae_cp": float(np.mean([np.mean(v) for v in families.values()])),
+            "family_mae_cp": {key: float(np.mean(value)) for key, value in sorted(families.items())},
+            "p95_absolute_error_cp": float(np.quantile(errors, .95)),
+            "absolute_error_ge100_fraction": float(np.mean(errors >= 100)),
+            "opposite_sign_margin50_count": int(np.sum(margin)),
+            "opposite_sign_margin50_fraction": float(np.mean(p[margin]*y[margin] < 0)) if np.any(margin) else None}
+
+
+def quality(rows_by_partition, partitions):
+    result = {}
+    for name in partitions:
+        rows = rows_by_partition[name]
+        counts = Counter(row["family_id"] for row in rows)
+        kinds = Counter(row["kind"] for row in rows)
+        ok = (len(rows) >= (1000 if name == "train" else 300)
+              and all(kinds[k] >= 100 for k in ("selfplay_start", "synthetic_endgame"))
+              and (name == "train" or sum(n >= 4 for n in counts.values()) >= 12))
+        result[name] = {"count": len(rows), "kinds": dict(kinds),
+                        "families_at_least_four": sum(n >= 4 for n in counts.values()), "pass": ok}
+    return result
+
+
+def prepare(root, engine, followup_from=None):
+    import neural_target_ab_data as data
+    root, engine = Path(root).resolve(), Path(engine).resolve()
+    root.mkdir(parents=True, exist_ok=False)
+    patterns = ["docs/checks/2026-10-19-neural-training/first-run/data/*.jsonl",
+                "docs/checks/2026-10-19-neural-qat/holdout/holdout.jsonl",
+                "docs/checks/2026-10-19-neural-precision/holdout/holdout.jsonl",
+                "docs/checks/2026-10-19-neural-search-data/final/first/train.jsonl",
+                "docs/checks/2026-10-19-neural-search-data/final/first/validation.jsonl",
+                "docs/analysis/2026-10-19-neural-time-scaling/positions.json",
+                "docs/analysis/2026-10-19-neural-time-scaling/supplement/positions.json"]
+    prior_paths = sorted({p.resolve() for pattern in patterns for p in ROOT.glob(pattern)})
+    bank_options = {}
+    protocol = ROOT / "docs/experiments/2026-10-20-neural-target-ab-plan.md"
+    followup = None
+    if followup_from is not None:
+        followup = Path(followup_from).resolve()
+        closed = read(followup / "closed-attempt.json")
+        if closed["status"] != "CLOSED_INSUFFICIENT_HOLDOUT_SYNTHETIC_ROWS":
+            raise ValueError("Followup requires the preserved insufficient-data closure")
+        prior_paths += [followup / "bank.json", followup / "closed-attempt.json", followup / "failure-audit.json"]
+        prior_paths += [followup / dirname / filename for dirname, filenames in (
+            ("trainval", ("train.jsonl", "validation.jsonl")), ("heldout", ("test.jsonl",))) for filename in filenames]
+        bank_options = {"variants_per_family": 4, "variant_seed": 20261127}
+        protocol = ROOT / "docs/experiments/2026-10-20-neural-target-ab-followup-plan.md"
+    bank = Path(data.make_bank(root / "bank.json", exclusion_paths=prior_paths, **bank_options)).resolve()
+    initial = base.bootstrap_float()
+    np.savez(root / "initial-floats.npz", **initial)
+    precision.save_model(precision.quantize(initial, 32), root / "M0.nnue")
+    sources = sorted((ROOT / "src").glob("*.cpp")) + sorted((ROOT / "include/regicide").glob("*.hpp"))
+    sources += sorted((ROOT / "scripts").glob("*.py")) + sorted((ROOT / "scripts/neural_search_data").glob("*.*"))
+    sources += sorted((ROOT / "tests").rglob("*.py")) + sorted((ROOT / "tests/data").glob("*.json"))
+    sources += [ROOT / "requirements-training.txt", ROOT / "requirements-test.txt", ROOT / "CMakeLists.txt", ROOT / "scripts/build.ps1",
+                ROOT / "docs/experiments/2026-10-20-neural-target-ab-plan.md", protocol, engine, bank,
+                root / "initial-floats.npz", root / "M0.nnue", PREVIOUS] + prior_paths
+    sources += [p for p in (root.parent / "build-and-native-tests.txt", root.parent / "build-provenance.json",
+                            root.parent / "regression/regression.json") if p.is_file()]
+    files = {str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p): entry(p) for p in sources if p.is_file()}
+    git = subprocess.run(["git", "status", "--porcelain=v1", "-uall"], cwd=ROOT, capture_output=True, text=True, check=True)
+    frozen = {"schema_version": 1, "created_utc": now(), "engine": entry(engine), "bank": entry(bank),
+              "files": files, "previous_model": entry(PREVIOUS), "initial": entry(root / "initial-floats.npz"),
+              "m0": entry(root / "M0.nnue"), "seeds": list(SEEDS), "configs": [config(a, s) for s in SEEDS for a in TARGETS],
+              "protocol": entry(protocol), "followup_from": str(followup) if followup else None,
+              "bank_options": bank_options or {"variants_per_family": 2, "variant_seed": 20261027},
+              "holdout_absent": not (root / "heldout").exists(), "source_status": git.stdout,
+              "checkout_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+              "binary_build_commit": None, "binary_note": "Fresh build logged separately; identity attested by source and binary hashes",
+              "environment": {"python": platform.python_version(), "numpy": np.__version__, "chess": chess.__version__,
+                              "platform": platform.platform(), "processor": platform.processor(), "blas_threads": 1},
+              "policy": "Same untrained initialization, inputs, paired batch orders; only target field changes; final epoch, all three seeds"}
+    write_new(root / "freeze.json", frozen)
+    return {"root": str(root), "freeze_sha256": base.sha256(root / "freeze.json"), "bank": str(bank)}
+
+
+def smoke(root):
+    root = Path(root).resolve()
+    frozen = verify(root)
+    from neural_search_data.schema import load_dataset
+    prior = ROOT / "docs/checks/2026-10-19-neural-search-data/final/first"
+    rows = load_dataset(prior)["train"]
+    initial = precision.load_float_parameters(frozen["initial"]["path"])
+    output = root / "smoke"
+    output.mkdir(exist_ok=False)
+    report = {}
+    for arm in TARGETS:
+        x, y = pack(rows, TARGETS[arm])
+        cfg = config(arm, 71113, epochs=2)
+        p1, history = precision.train_candidate(initial, x, y, cfg)
+        p2, _ = precision.train_candidate(initial, x, y, cfg)
+        assert all(np.array_equal(p1[k], p2[k]) for k in precision.PARAMETER_KEYS)
+        precision.save_model(precision.quantize(p1, 32), output / f"{arm}.nnue")
+        values = base.evaluate_engine(frozen["engine"]["path"], [row["fen"] for row in rows], output / f"{arm}.nnue")
+        cpp_white = np.array([v[1] * (1 if chess.Board(row["fen"]).turn else -1) for v, row in zip(values, rows, strict=True)])
+        assert np.array_equal(cpp_white, precision.predict(precision.quantize(p1, 32), x))
+        report[arm] = {"rows": len(rows), "epochs": 2, "feature_sha256": input_hash(x), "deterministic": True,
+                       "cpp_full_incremental_python_equal": True, "final_train": history[-1]["fake_quantized_train"]}
+    assert report["A"]["feature_sha256"] == report["B"]["feature_sha256"]
+    write_new(output / "report.json", report)
+    return report
+
+
+def generate_stage(root, heldout=False):
+    import neural_target_ab_data as data
+    root = Path(root).resolve()
+    frozen = verify(root)
+    excluded = set()
+    if heldout:
+        models = read(root / "training/model-freeze.json")
+        verify_files(models["files"])
+        previous = data.load_dataset(root / "trainval")
+        excluded = {r["feature_hash"] for name in ("train", "validation") for r in previous[name]}
+    output = root / ("heldout" if heldout else "trainval")
+    parts = ("test",) if heldout else ("train", "validation")
+    data.generate(frozen["engine"]["path"], frozen["bank"]["path"], output,
+                  partitions=parts, excluded=excluded, max_seconds=600 if heldout else 1200)
+    loaded = data.load_dataset(output)
+    verify_dataset(output, frozen)
+    q = quality(loaded, parts)
+    write_new(output / "quality.json", q)
+    if not all(item["pass"] for item in q.values()):
+        raise ValueError("Insufficient data under the frozen protocol: " + json.dumps(q))
+    return q
+
+
+def train_one(root, arm, seed):
+    import neural_target_ab_data as data
+    root = Path(root).resolve()
+    frozen = verify(root)
+    if (root / "heldout").exists():
+        raise ValueError("Refuse training after holdout exists")
+    loaded = data.load_dataset(root / "trainval")
+    verify_dataset(root / "trainval", frozen)
+    if not all(v["pass"] for v in quality(loaded, ("train", "validation")).values()):
+        raise ValueError("Insufficient training data")
+    output = root / "training" / f"{arm}-{seed}"
+    output.mkdir(parents=True, exist_ok=False)
+    initial = precision.load_float_parameters(frozen["initial"]["path"])
+    x, y = pack(loaded["train"], TARGETS[arm])
+    cfg, started = config(arm, seed), time.monotonic()
+    print(json.dumps({"model": cfg["candidate_id"], "started_utc": now(), "rows": len(y)}), flush=True)
+    parameters, history = precision.train_candidate(initial, x, y, cfg)
+    elapsed = time.monotonic() - started
+    if elapsed > 900:
+        raise TimeoutError("Model exceeded frozen 15-minute cap")
+    model = precision.quantize(parameters, 32)
+    precision.save_model(model, output / "model.nnue")
+    np.savez(output / "float_weights.npz", **parameters)
+    write_new(output / "history.json", history)
+    initial_model = precision.quantize(initial, 32)
+    metrics = {"schema_version": 1, "model_id": cfg["candidate_id"], "arm": arm, "seed": seed, "config": cfg,
+               "target_key": TARGETS[arm], "wall_seconds": elapsed, "feature_sha256": input_hash(x),
+               "batch_order_sha256": order_hash(len(y), seed), "initial_sha256": frozen["initial"]["sha256"],
+               "initial_train": metric(precision.predict(initial_model, x), y, loaded["train"]),
+               "final_train": metric(precision.predict(model, x), y, loaded["train"]),
+               "changed_integer_parameters": {k: int(np.count_nonzero(model[k] != initial_model[k])) for k in precision.PARAMETER_KEYS},
+               "metrics": {}}
+    _, cache = precision._integer_forward(model, x)
+    metrics["activation_at_clip_fraction"] = float(np.mean((cache["sums"] <= 0) | (cache["sums"] >= 4064)))
+    metrics["parameter_at_bound_fraction"] = {
+        k: float(np.mean(np.abs(parameters[k]) >= precision._bounds(32)[k])) for k in precision.PARAMETER_KEYS}
+    for name in ("train", "validation"):
+        metrics["metrics"][name] = {}
+        for target_arm, key in TARGETS.items():
+            tx, ty = pack(loaded[name], key)
+            metrics["metrics"][name]["static" if target_arm == "A" else "search10k"] = metric(precision.predict(model, tx), ty, loaded[name])
+    write_new(output / "metrics.json", metrics)
+    print(json.dumps({"model": cfg["candidate_id"], "done_utc": now(), "wall_seconds": elapsed,
+                      "initial_mae": metrics["initial_train"]["mae_cp"], "final_mae": metrics["final_train"]["mae_cp"]}), flush=True)
+    return metrics
+
+
+def train(root):
+    root = Path(root).resolve()
+    frozen = verify(root)
+    output = root / "training"
+    output.mkdir(exist_ok=False)
+    models = []
+    for si, seed in enumerate(SEEDS):
+        for arm in (("A", "B") if si % 2 == 0 else ("B", "A")):
+            logfile = output / f"{arm}-{seed}.log"
+            with logfile.open("x", encoding="utf-8") as log:
+                subprocess.run([sys.executable, str(Path(__file__).resolve()), "train-one", "--root", str(root),
+                                "--arm", arm, "--seed", str(seed)], stdout=log, stderr=subprocess.STDOUT,
+                               timeout=905, check=True)
+            path = output / f"{arm}-{seed}/model.nnue"
+            model = precision.load_model(path)
+            models.append({"model_id": f"{arm}-{seed}", "arm": arm, "seed": seed,
+                           **entry(path), "checksum": precision.model_checksum(model)})
+            print(logfile.read_text(encoding="utf-8"), flush=True)
+    for seed in SEEDS:
+        a, b = [read(output / f"{arm}-{seed}/metrics.json") for arm in TARGETS]
+        assert a["feature_sha256"] == b["feature_sha256"] and a["batch_order_sha256"] == b["batch_order_sha256"]
+    training_data = {p.name: entry(p) for p in (root / "trainval").glob("*") if p.is_file()}
+    document = {"schema_version": 1, "created_utc": now(), "models": models,
+                "freeze_sha256": base.sha256(root / "freeze.json"), "initial_sha256": frozen["initial"]["sha256"],
+                "training_data": training_data}
+    write_new(output / "models.json", document)
+    verify(root)
+    if (root / "heldout").exists():
+        raise ValueError("Holdout appeared during training")
+    files = {str(p.relative_to(root)): entry(p) for p in output.rglob("*") if p.is_file()}
+    files.update({"trainval/" + key: value for key, value in training_data.items()})
+    write_new(output / "model-freeze.json", {"schema_version": 1, "created_utc": now(), "files": files,
+                                             "holdout_did_not_exist": True, "source_freeze": entry(root / "freeze.json")})
+    return document
+
+
+def bootstrap_delta(rows, matrix):
+    families = sorted({r["family_id"] for r in rows})
+    kind = {r["family_id"]: r["kind"] for r in rows}
+    deltas = {}
+    pairs = {}
+    for seed in SEEDS:
+        aa = matrix[f"A-{seed}"]["search100k"]["family_mae_cp"]
+        bb = matrix[f"B-{seed}"]["search100k"]["family_mae_cp"]
+        pairs[str(seed)] = {f: aa[f]-bb[f] for f in families}
+    for f in families:
+        deltas[f] = float(np.mean([pairs[str(s)][f] for s in SEEDS]))
+    rng = np.random.default_rng(20261029)
+    groups = [[f for f in families if kind[f] == k] for k in sorted(set(kind.values()))]
+    resampled = []
+    for _ in range(10000):
+        sample = [deltas[f] for group in groups for f in rng.choice(group, len(group), replace=True)]
+        resampled.append(float(np.mean(sample)))
+    return {"delta_positive_favors_B": True, "seed_family_deltas_cp": pairs,
+            "family_deltas_mean_over_seeds_cp": deltas, "mean_delta_cp": float(np.mean(list(deltas.values()))),
+            "bootstrap_percentile95_cp": list(map(float, np.quantile(resampled, [.025, .975]))),
+            "bootstrap_replicates": 10000, "bootstrap_seed": 20261029,
+            "scope": "Family-cluster descriptive interval, conditional on three fixed batch-order seeds and sampled source families"}
+
+
+def evaluate(root):
+    import neural_target_ab_data as data
+    root = Path(root).resolve()
+    frozen = verify(root)
+    model_freeze = read(root / "training/model-freeze.json")
+    verify_files(model_freeze["files"])
+    verify_dataset(root / "heldout", frozen)
+    rows = data.load_dataset(root / "heldout")["test"]
+    if not quality({"test": rows}, ("test",))["test"]["pass"]:
+        raise ValueError("Insufficient holdout")
+    output = root / "evaluation"
+    output.mkdir(exist_ok=False)
+    started, deadline = time.monotonic(), time.monotonic()+900
+    refs, ref_rows, reference_error = [], [], None
+    teacher = None
+    with (output / "reference_queries.jsonl").open("x", encoding="utf-8", newline="\n") as log:
+        with EngineTeacher(Path(frozen["engine"]["path"]), output / "reference_uci.jsonl", 100000, deadline, 10) as teacher:
+            for index, row in enumerate(rows):
+                board = board_from(row["initial_fen"], row["history"])
+                try:
+                    query = teacher.query(board, f"reference-{index:05}")
+                except SearchInterrupted as exc:
+                    query = {**exc.record, "completed": False}
+                    reference_error = exc.reason
+                reasons = validate_query(board, query, 100000, quiet=False)
+                value = None if reasons else query["score"]["stm"] * (1 if board.turn else -1)
+                record = {**query, "row_query_id": row["query_id"], "fen": row["fen"],
+                          "initial_fen": row["initial_fen"], "history": row["history"],
+                          "reference_white_cp": value, "excluded_reasons": reasons}
+                log.write(json.dumps(record, sort_keys=True)+"\n")
+                refs.append(value)
+                if value is not None:
+                    ref_rows.append(row)
+                if reference_error is not None:
+                    log.flush()
+                    break
+                if index % 100 == 0:
+                    log.flush()
+                    print(json.dumps({"references_complete": index+1, "planned": len(rows)}), flush=True)
+        cleanup = teacher.cleanup_status
+    attempted = len(refs)
+    refs.extend([None] * (len(rows) - attempted))
+    descriptors = read(root / "training/models.json")["models"] + [
+        {"model_id": "M0", **frozen["m0"]}, {"model_id": "previous-s32", **frozen["previous_model"]}]
+    valid = [i for i, val in enumerate(refs) if val is not None]
+    records = [{"row_query_id": r["query_id"], "family_id": r["family_id"], "kind": r["kind"],
+                "fen": r["fen"], "static_white_cp": r[TARGETS["A"]], "search10k_white_cp": r[TARGETS["B"]],
+                "search100k_white_cp": ref, "predictions_white_cp": {}} for r, ref in zip(rows, refs, strict=True)]
+    matrix, parity = {}, {}
+    for descriptor in descriptors:
+        model_id, path = descriptor["model_id"], descriptor["path"]
+        model = precision.load_model(path)
+        x, _ = pack(rows, TARGETS["A"])
+        prediction = precision.predict(model, x)
+        cpp = base.evaluate_engine(frozen["engine"]["path"], [r["fen"] for r in rows], path)
+        cpp_white = np.array([v[1]*(1 if chess.Board(r["fen"]).turn else -1) for v, r in zip(cpp, rows, strict=True)])
+        if not np.array_equal(prediction, cpp_white):
+            raise AssertionError("Python/C++ parity failed: "+model_id)
+        parity[model_id] = {"rows": len(rows), "mismatches": 0}
+        matrix[model_id] = {
+            "static": metric(prediction, [r[TARGETS["A"]] for r in rows], rows),
+            "search10k": metric(prediction, [r[TARGETS["B"]] for r in rows], rows),
+            "search100k": metric(prediction[valid], [refs[i] for i in valid], ref_rows), "groups": {}}
+        groups = defaultdict(list)
+        for i in valid:
+            row, board = rows[i], chess.Board(rows[i]["fen"])
+            pieces = len(board.piece_map())
+            for group in ("kind:"+row["kind"], "turn:"+("white" if board.turn else "black"),
+                          "pieces:"+("<=12" if pieces <= 12 else "13-24" if pieces <= 24 else "25-32"),
+                          "depth:"+str(row["depth"]), "subtype:"+str(row.get("subtype", "unspecified"))):
+                groups[group].append(i)
+        for name, indexes in sorted(groups.items()):
+            matrix[model_id]["groups"][name] = metric(prediction[indexes], [refs[i] for i in indexes], [rows[i] for i in indexes])
+        for record, val in zip(records, prediction, strict=True):
+            record["predictions_white_cp"][model_id] = int(val)
+    with (output / "predictions.jsonl").open("x", encoding="utf-8", newline="\n") as log:
+        for record in records:
+            log.write(json.dumps(record, sort_keys=True)+"\n")
+    coverage = len(valid)/len(rows)
+    families = len({r["family_id"] for r in ref_rows})
+    report = {"schema_version": 1, "created_utc": now(), "holdout_rows": len(rows),
+              "reference_valid_cp": len(valid), "reference_coverage": coverage, "reference_families": families,
+              "reference_coverage_sufficient": coverage >= .8 and families >= 12,
+              "reference_all_planned_attempted": attempted == len(rows), "reference_attempted": attempted,
+              "reference_unattempted": len(rows)-attempted, "reference_error": reference_error,
+              "reference_nodes": sum(r["nodes"] or 0 for r in
+                  [json.loads(line) for line in (output / "reference_queries.jsonl").read_text().splitlines()]),
+              "wall_seconds": time.monotonic()-started, "reference_cleanup": cleanup,
+              "matrix": matrix, "parity": parity,
+              "paired_delta": bootstrap_delta(ref_rows, matrix) if valid and attempted == len(rows) and reference_error is None else None,
+              "interpretation": "Own classical larger-node reference shares B's teacher; lower error is not strength or objective chess accuracy",
+              "models_manifest": entry(root / "training/models.json"), "model_freeze": entry(root / "training/model-freeze.json")}
+    verify(root)
+    verify_files(model_freeze["files"])
+    write_new(output / "comparison.json", report)
+    return {"holdout_rows": len(rows), "reference_coverage": coverage,
+            "paired_delta_cp": report["paired_delta"]["mean_delta_cp"] if report["paired_delta"] else None}
+
+
+def run_main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("prepare", "verify", "smoke", "generate", "train", "train-one", "heldout", "evaluate"))
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--engine", type=Path)
+    parser.add_argument("--followup-from", type=Path)
+    parser.add_argument("--arm", choices=("A", "B"))
+    parser.add_argument("--seed", type=int)
+    args = parser.parse_args()
+    if args.command == "prepare":
+        if not args.engine:
+            parser.error("prepare requires --engine")
+        result = prepare(args.root, args.engine, args.followup_from)
+    elif args.command == "verify":
+        verify(args.root)
+        result = {"verified": True}
+    elif args.command == "smoke":
+        result = smoke(args.root)
+    elif args.command in ("generate", "heldout"):
+        result = generate_stage(args.root, args.command == "heldout")
+    elif args.command == "train":
+        result = train(args.root)
+    elif args.command == "train-one":
+        result = train_one(args.root, args.arm, args.seed)
+    else:
+        result = evaluate(args.root)
+    print(json.dumps(result, indent=2, allow_nan=False), flush=True)
+
+
+def main():
+    from run_neural_strength_comparison import Awake
+    awake = Awake() if sys.platform == "win32" else None
+    if awake:
+        awake.start()
+    try:
+        run_main()
+    finally:
+        if awake:
+            awake.close()
+            print(json.dumps({"temporary_awake": awake.record}), flush=True)
+
+
+if __name__ == "__main__":
+    main()

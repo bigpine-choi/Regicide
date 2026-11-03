@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "selected_candidate_id": "lr000020-e120",
+  "selected_config": {
+    "candidate_id": "lr000020-e120",
+    "epochs": 120,
+    "input_bias_lr": 2e-05,
+    "output_lr": 0.005,
+    "seed": 20261021,
+    "batch_size": 128
+  },
+  "selection_policy": "Final serialized integer train MAE, then train RMSE, then grid index, ascending",
+  "selection_data": "Original training partition only; no validation or held-out rows read",
+  "calibration_limitation": "Ranking is in-sample training calibration, not independent validation",
+  "training_rows": 1498,
+  "training_game_count": 50,
+  "baseline_train": {
+    "mse_cp2": 1469.260347129506,
+    "rmse_cp": 38.33093198879341,
+    "mae_cp": 30.76502002670227
+  },
+  "ranking": [
+    {
+      "grid_index": 1,
+      "config": {
+        "candidate_id": "lr000020-e120",
+        "epochs": 120,
+        "input_bias_lr": 2e-05,
+        "output_lr": 0.005,
+        "seed": 20261021,
+        "batch_size": 128
+      },
+      "train": {
+        "mse_cp2": 1061.375834445928,
+        "rmse_cp": 32.57876354998648,
+        "mae_cp": 26.158210947930574
+      },
+      "model_sha256": "cdbaca3d047ef3d4c5615ce691b4b99fb798c422d9a4bda30a47fa8395f29a13",
+      "changed_integer_parameters": {
+        "input_weights": 0,
+        "hidden_bias": 0,
+        "output_weights": 13
+      }
+    },
+    {
+      "grid_index": 3,
+      "config": {
+        "candidate_id": "lr000100-e120",
+        "epochs": 120,
+        "input_bias_lr": 0.0001,
+        "output_lr": 0.005,
+        "seed": 20261021,
+        "batch_size": 128
+      },
+      "train": {
+        "mse_cp2": 1061.375834445928,
+        "rmse_cp": 32.57876354998648,
+        "mae_cp": 26.158210947930574
+      },
+      "model_sha256": "cdbaca3d047ef3d4c5615ce691b4b99fb798c422d9a4bda30a47fa8395f29a13",
+      "changed_integer_parameters": {
+        "input_weights": 0,
+        "hidden_bias": 0,
+        "output_weights": 13
+      }
+    },
+    {
+      "grid_index": 0,
+      "config": {
+        "candidate_id": "lr000020-e060",
+        "epochs": 60,
+        "input_bias_lr": 2e-05,
+        "output_lr": 0.005,
+        "seed": 20261021,
+        "batch_size": 128
+      },
+      "train": {
+        "mse_cp2": 1073.6542056074766,
+        "rmse_cp": 32.76666302215526,
+        "mae_cp": 26.348464619492656
+      },
+      "model_sha256": "f44d82c871abfe44963b18573ab121dbc48403dd3836d7353d9ebb9ca1de0ae5",
+      "changed_integer_parameters": {
+        "input_weights": 0,
+        "hidden_bias": 0,
+        "output_weights": 14
+      }
+    },
+    {
+      "grid_index": 2,
+      "config": {
+        "candidate_id": "lr000100-e060",
+        "epochs": 60,
+        "input_bias_lr": 0.0001,
+        "output_lr": 0.005,
+        "seed": 20261021,
+        "batch_size": 128
+      },
+      "train": {
+        "mse_cp2": 1073.6542056074766,
+        "rmse_cp": 32.76666302215526,
+        "mae_cp": 26.348464619492656
+      },
+      "model_sha256": "f44d82c871abfe44963b18573ab121dbc48403dd3836d7353d9ebb9ca1de0ae5",
+      "changed_integer_parameters": {
+        "input_weights": 0,
+        "hidden_bias": 0,
+        "output_weights": 14
+      }
+    },
+    {
+      "grid_index": 4,
+      "config": {
+        "candidate_id": "lr005-e005",
+        "epochs": 5,
+        "input_bias_lr": 0.005,
+        "output_lr": 0.01,
+        "seed": 20261021,
+        "batch_size": 128
+      },
+      "train": {
+        "mse_cp2": 1269.0100133511348,
+        "rmse_cp": 35.62316680688474,
+        "mae_cp": 28.845794392523363
+      },
+      "model_sha256": "66bd3ae8367a8a50cfe3c140a34d59dcd61cbcff8479db5522c767d20f3049fb",
+      "changed_integer_parameters": {
+        "input_weights": 0,
+        "hidden_bias": 0,
+        "output_weights": 14
+      }
+    }
+  ],
+  "optimizer": "Adam beta1=0.9 beta2=0.999 epsilon=1e-8; float64 shadows and moments",
+  "loss": "Mean squared error in pawn units, with exact integer deployed forward",
+  "gradient_global_norm_limit": 10.0,
+  "ste": "Rounding and final truncation derivative=1 surrogate; strict clipped-ReLU and score-clamp interior; parameter-clip derivative=1 at/in bounds",
+  "quantization": "Nearest ties-to-even; input/bias integer, output times8; int64 accumulators; one white-score truncation toward zero; clamp +/-28000",
+  "python": "3.13.16",
+  "numpy": "2.3.4",
+  "python_chess": "1.11.2",
+  "source_dataset_engine_sha256": "6bd5d912c48cd969ff8b1e07dba730fdb7aea186d6fab12a162b6f7381b45969",
+  "no_playing_strength_claim": true
+}

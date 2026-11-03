@@ -1,0 +1,36 @@
+Read-only independent peer review after both blocks, 2026-10-19
+
+The reviewer did not launch an engine, rerun a game or edit evidence.
+Both first attempts completed all16 games and passed their independent audits.
+
+Recomputed from raw match JSON and PGN:
+-100ms:2W/2D/12L,3points/16=18.75%; color points White1.5/8,Black1.5/8.
+-1000ms:5W/4D/7L,7points/16=43.75%; color points White4/8,Black3/8.
+-Whole-opening-pair bootstrap seed20261017,20000 draws:
+ 100ms6.25..34.375%;1000ms25..65.625%.
+-All32 PGNs agree with JSON;3833 actual plies and21398 PV plies replay legally.
+ Endings, draw claims, final FENs and results match.
+-49 frozen source/input SHA256 values match before,after,and current files.
+ Binary hashes match both roles. Effective option differences are only neural
+ evaluator enablement and model path; incremental was already true by default.
+-Eight validation logs have exit0 and matching SHA. Raw UCI checksum
+ 12850805878070247189 matches selected model SHA c9ca5f35bb0ef0f61fca9b7eba10cd01d4320cf6c2a1dd4863630b7f87baaa92
+ and the frozen byte-identical binary SHA598ebec433334b2ce053d0ed6b143fbfd34f9dd3a76557adb62764dcd940c705.
+-Both wake requests restored. All native CPU rows and transport ancestry pass.
+
+Timing qualification:
+1000ms game6 ply162 candidate h7h6 reported988ms,8ms above the internal980ms
+allocation; actual991.05ms remained below requested1000ms. No other internal
+overrun and no requested wall-time overrun in either block.
+
+Draw qualification:
+1000ms games7 and9 finish at halfmove99,can_claim_fifty_moves=true,
+is_fifty_moves=false. A legal announced quiet nonpawn move completes100, so
+claiming before making it is the recorded policy and is a valid ending.
+
+Interpretation:
+100ms has a much lower observed neural score in this fixed sample.1000ms has
+lower observed score but its descriptive paired interval includes50%. The same
+8 starts at two time controls are not32 independent games for inference. No
+universal strength or Elo estimate is justified. Static imitation accuracy is
+separate evidence. Retaining classical as default is consistent with the data.

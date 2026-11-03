@@ -1,0 +1,4615 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-17T19:19:41.292681+00:00",
+  "purpose": "fixed-depth search cost; not an Elo or playing-strength measurement",
+  "depth": 3,
+  "repeats": 5,
+  "seed": 20261020,
+  "warmup": 1,
+  "table_policy": "fresh ucinewgame per sample; logical table cleared; live processes may retain allocated buffer",
+  "allocation_policy": "recorded warmups excluded from paired summaries; measured samples follow warmup in same process",
+  "warmup_policy": "each role searches declared position zero N times after configuration, with a fresh game per search",
+  "timing_policy": "wall includes UCI play transaction and game reset; process startup excluded",
+  "order_policy": "seeded shuffle of positions per repetition; engine order alternates for each position",
+  "allow_score_differences": false,
+  "require_same_search": true,
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD",
+    "logical_cpu_count": 16,
+    "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+    "python_executable": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\.venv-tests\\Scripts\\python.exe",
+    "python_chess": "1.11.2",
+    "harness_checkout": {
+      "commit": "25f73cacafe4a831f0b3b258fbf5b19632c369b2",
+      "status_porcelain": "",
+      "scope": "harness checkout, not proof of either binary's build source"
+    }
+  },
+  "engines": {
+    "baseline": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+      "sha256": "2ba41c8303f266149323b55186f5c6a806c33f73d529d6911d6ca4b33bfa53db",
+      "declared_source_commit": "0edc06e437b934d177fc1e9b0907600b6287be72",
+      "id": {
+        "name": "Regicide 0.5.2",
+        "author": "Regicide project"
+      },
+      "configured_options": {
+        "Hash": 16,
+        "Move Overhead": 20,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    },
+    "candidate": {
+      "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-cost\\regicide.exe",
+      "sha256": "722b46c3b7223a3fa354a1fc504cb4cced9be0db8ea1e49d5b796b36d434a335",
+      "declared_source_commit": "42444edc3ff1de358b97ac4d250b43bf342d1df0",
+      "id": {
+        "name": "Regicide 0.5.3",
+        "author": "Regicide project"
+      },
+      "configured_options": {
+        "Hash": 16,
+        "Move Overhead": 20,
+        "PVS": true,
+        "UseSEE": true
+      },
+      "advertised_options": {
+        "Move Overhead": {
+          "type": "spin",
+          "default": 20,
+          "min": 0,
+          "max": 5000,
+          "var": []
+        },
+        "UsePositionalEvaluation": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescence": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseTranspositionTable": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "Hash": {
+          "type": "spin",
+          "default": 16,
+          "min": 1,
+          "max": 256,
+          "var": []
+        },
+        "Clear Hash": {
+          "type": "button",
+          "default": null,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseFastMoves": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuietMoveOrdering": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseQuiescenceChecks": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "PVS": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        },
+        "UseSEE": {
+          "type": "check",
+          "default": true,
+          "min": null,
+          "max": null,
+          "var": []
+        }
+      }
+    }
+  },
+  "positions_file": {
+    "path": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\tests\\data\\profile_positions.json",
+    "sha256": "e0c395ad2d531646c7ccee9d3a156f7580500f59af62186a533a49989e440905",
+    "document": {
+      "schema_version": 1,
+      "provenance": "The first eight lines duplicate Regicide's developer-composed comparison openings. Two developer-composed positions exercise recaptures and a pawn endgame. No downloaded opening or puzzle data.",
+      "selection_policy": "Declared before observing benchmark or match results. Run the entire ordered set; repetition order is deterministically shuffled. These positions measure search cost, not playing strength.",
+      "positions": [
+        {
+          "name": "Initial position",
+          "moves": [],
+          "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        },
+        {
+          "name": "Open game",
+          "moves": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6"
+          ],
+          "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
+        },
+        {
+          "name": "Queen pawn game",
+          "moves": [
+            "d2d4",
+            "d7d5",
+            "g1f3",
+            "g8f6"
+          ],
+          "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3"
+        },
+        {
+          "name": "Sicilian family",
+          "moves": [
+            "e2e4",
+            "c7c5",
+            "g1f3",
+            "d7d6",
+            "d2d4",
+            "c5d4",
+            "f3d4",
+            "g8f6"
+          ],
+          "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5"
+        },
+        {
+          "name": "French family",
+          "moves": [
+            "e2e4",
+            "e7e6",
+            "d2d4",
+            "d7d5",
+            "b1c3",
+            "g8f6"
+          ],
+          "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4"
+        },
+        {
+          "name": "Caro-Kann family",
+          "moves": [
+            "e2e4",
+            "c7c6",
+            "d2d4",
+            "d7d5",
+            "b1c3",
+            "d5e4",
+            "c3e4",
+            "c8f5"
+          ],
+          "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5"
+        },
+        {
+          "name": "Queen's Gambit Declined family",
+          "moves": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6",
+            "b1c3",
+            "g8f6",
+            "g1f3",
+            "f8e7"
+          ],
+          "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5"
+        },
+        {
+          "name": "Reti-English family",
+          "moves": [
+            "g1f3",
+            "d7d5",
+            "c2c4",
+            "e7e6",
+            "g2g3",
+            "g8f6",
+            "f1g2",
+            "f8e7"
+          ],
+          "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5"
+        },
+        {
+          "name": "Defended rook recapture",
+          "fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+          "moves": [],
+          "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1"
+        },
+        {
+          "name": "Opposed pawn endgame",
+          "fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+          "moves": [],
+          "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40"
+        }
+      ]
+    }
+  },
+  "warmup_records": [
+    {
+      "role": "baseline",
+      "warmup_index": 1,
+      "position_index": 0,
+      "position": "Initial position",
+      "result": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005156799976248294,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 1,
+          "reuses": 0,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 1
+      }
+    },
+    {
+      "role": "candidate",
+      "warmup_index": 1,
+      "position_index": 0,
+      "position": "Initial position",
+      "result": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.0063489000021945685,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 1,
+          "reuses": 0,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 1
+      }
+    }
+  ],
+  "records": [
+    {
+      "repetition": 1,
+      "position_index": 1,
+      "position": "Open game",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005190800002310425,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 2
+      },
+      "baseline": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.004876199993304908,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 2
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 2,
+      "position": "Queen pawn game",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.003953199979150668,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 3
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.004527400014922023,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 3
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 4,
+      "position": "French family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.023,
+        "wall_time_seconds": 0.024737800005823374,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 4
+      },
+      "candidate": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.021,
+        "wall_time_seconds": 0.02336929997545667,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 4
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 8,
+      "position": "Defended rook recapture",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.005694599996786565,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 5
+      },
+      "candidate": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.005745400005253032,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 5
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 6,
+      "position": "Queen's Gambit Declined family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.021,
+        "wall_time_seconds": 0.022510900016641244,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 6
+      },
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.021,
+        "wall_time_seconds": 0.02290979999816045,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 6
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 0,
+      "position": "Initial position",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0021902000007685274,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 7
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0017137000104412436,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 7
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 9,
+      "position": "Opposed pawn endgame",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0012581999762915075,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 8
+      },
+      "baseline": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0010313999955542386,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 8
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 3,
+      "position": "Sicilian family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.01661039999453351,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 9
+      },
+      "baseline": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.015,
+        "wall_time_seconds": 0.016959100001258776,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 9
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 5,
+      "position": "Caro-Kann family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.022,
+        "wall_time_seconds": 0.02433700000983663,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 10
+      },
+      "baseline": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022090100013883784,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 10
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 1,
+      "position_index": 7,
+      "position": "Reti-English family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.008,
+        "wall_time_seconds": 0.010611000005155802,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 11
+      },
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.009,
+        "wall_time_seconds": 0.01115189999109134,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 11
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 9,
+      "position": "Opposed pawn endgame",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0015322999970521778,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 12
+      },
+      "candidate": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.001439499988919124,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 12
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 4,
+      "position": "French family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021789199992781505,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 13
+      },
+      "baseline": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.019,
+        "wall_time_seconds": 0.02179749999777414,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 13
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 2,
+      "position": "Queen pawn game",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.0038830999983474612,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 14
+      },
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.003617299982579425,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 14
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 6,
+      "position": "Queen's Gambit Declined family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021213200001511723,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 15
+      },
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022042600001441315,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 15
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 7,
+      "position": "Reti-English family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.008,
+        "wall_time_seconds": 0.010178800002904609,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 16
+      },
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.009,
+        "wall_time_seconds": 0.010577000008197501,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 16
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 1,
+      "position": "Open game",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005199100007303059,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 17
+      },
+      "candidate": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.004714699985925108,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 17
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 0,
+      "position": "Initial position",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0021106999774929136,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 18
+      },
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0019227000011596829,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 18
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 3,
+      "position": "Sicilian family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.016147200018167496,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 19
+      },
+      "candidate": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.015660100005334243,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 19
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 8,
+      "position": "Defended rook recapture",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.006093300005886704,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 20
+      },
+      "baseline": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005403999995905906,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 20
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 2,
+      "position_index": 5,
+      "position": "Caro-Kann family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021867400006158277,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 21
+      },
+      "candidate": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021369699999922886,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 21
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 9,
+      "position": "Opposed pawn endgame",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0016755000106059015,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 22
+      },
+      "baseline": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0012792999914381653,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 22
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 4,
+      "position": "French family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021885299996938556,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 23
+      },
+      "candidate": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.019,
+        "wall_time_seconds": 0.021267500007525086,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 23
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 7,
+      "position": "Reti-English family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.008,
+        "wall_time_seconds": 0.010179599979892373,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 24
+      },
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.008,
+        "wall_time_seconds": 0.010459799988893792,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 24
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 5,
+      "position": "Caro-Kann family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022303100005956367,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 25
+      },
+      "baseline": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.02145679999375716,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 25
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 1,
+      "position": "Open game",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005256600008578971,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 26
+      },
+      "baseline": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.004940500017255545,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 26
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 6,
+      "position": "Queen's Gambit Declined family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022385199990822002,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 27
+      },
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022858599986648187,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 27
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 0,
+      "position": "Initial position",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0024440000124741346,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 28
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.001,
+        "wall_time_seconds": 0.0027593000268097967,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 28
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 2,
+      "position": "Queen pawn game",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.0040865000046323985,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 29
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.004381399980047718,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 29
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 3,
+      "position": "Sicilian family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.015861499996390194,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 30
+      },
+      "baseline": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.013,
+        "wall_time_seconds": 0.015434900007676333,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 30
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 3,
+      "position_index": 8,
+      "position": "Defended rook recapture",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005214199976762757,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 31
+      },
+      "candidate": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005404499999713153,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 31
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 2,
+      "position": "Queen pawn game",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.004172899993136525,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 32
+      },
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.003925199998775497,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 32
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 9,
+      "position": "Opposed pawn endgame",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0012394000077620149,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 33
+      },
+      "candidate": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.0011713999847415835,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 33
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 5,
+      "position": "Caro-Kann family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021436399983940646,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 34
+      },
+      "candidate": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021493299980647862,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 34
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 0,
+      "position": "Initial position",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.001,
+        "wall_time_seconds": 0.0022353000240400434,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 35
+      },
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.001714799989713356,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 35
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 3,
+      "position": "Sicilian family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.015182499977527186,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 36
+      },
+      "candidate": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.016,
+        "wall_time_seconds": 0.017876099998829886,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 36
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 1,
+      "position": "Open game",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.00568779997411184,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 37
+      },
+      "candidate": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005427700001746416,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 37
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 8,
+      "position": "Defended rook recapture",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.005,
+        "wall_time_seconds": 0.007415600004605949,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 38
+      },
+      "baseline": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.005784299981314689,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 38
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 4,
+      "position": "French family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.019,
+        "wall_time_seconds": 0.021045800007414073,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 39
+      },
+      "baseline": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.02156039999681525,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 39
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 6,
+      "position": "Queen's Gambit Declined family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.021561400004429743,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 40
+      },
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022574700007680804,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 40
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 4,
+      "position_index": 7,
+      "position": "Reti-English family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.008,
+        "wall_time_seconds": 0.010256200010189787,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 41
+      },
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.009,
+        "wall_time_seconds": 0.010925800015684217,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 41
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 4,
+      "position": "French family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022552300011739135,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 42
+      },
+      "candidate": {
+        "move": "e4e5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8700,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022697000007610768,
+        "score": {
+          "pov": "mover",
+          "cp": 26,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4e5",
+          "f6e4",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 152,
+          "hits": 43,
+          "cutoffs": 0,
+          "stores": 152
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        "process_search_index": 42
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 5,
+      "position": "Caro-Kann family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022161300003062934,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 43
+      },
+      "baseline": {
+        "move": "e4c3",
+        "depth": 3,
+        "seldepth": 15,
+        "nodes": 8727,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.022626399993896484,
+        "score": {
+          "pov": "mover",
+          "cp": 15,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "e4c3",
+          "b8d7",
+          "g1e2"
+        ],
+        "tt_counters": {
+          "probes": 348,
+          "hits": 113,
+          "cutoffs": 59,
+          "stores": 287
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+        "process_search_index": 43
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 8,
+      "position": "Defended rook recapture",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.005732399993576109,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 44
+      },
+      "candidate": {
+        "move": "d1e2",
+        "depth": 3,
+        "seldepth": 8,
+        "nodes": 3282,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.005357200017897412,
+        "score": {
+          "pov": "mover",
+          "cp": 292,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "d1e2",
+          "d5g5",
+          "g1f2"
+        ],
+        "tt_counters": {
+          "probes": 148,
+          "hits": 45,
+          "cutoffs": 17,
+          "stores": 131
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "7k/8/4p3/3r4/8/8/8/3Q2K1 w - - 0 1",
+        "process_search_index": 44
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 2,
+      "position": "Queen pawn game",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.002,
+        "wall_time_seconds": 0.004570499993860722,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 45
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 16,
+        "nodes": 1511,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005035500013036653,
+        "score": {
+          "pov": "mover",
+          "cp": 22,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 177,
+          "hits": 61,
+          "cutoffs": 27,
+          "stores": 150
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 45
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 6,
+      "position": "Queen's Gambit Declined family",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.022,
+        "wall_time_seconds": 0.02412489999551326,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 46
+      },
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 8869,
+        "engine_time_seconds": 0.02,
+        "wall_time_seconds": 0.0220110000227578,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "c1e3"
+        ],
+        "tt_counters": {
+          "probes": 147,
+          "hits": 38,
+          "cutoffs": 0,
+          "stores": 147
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 4 5",
+        "process_search_index": 46
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 9,
+      "position": "Opposed pawn endgame",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.002379299985477701,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 47
+      },
+      "baseline": {
+        "move": "f2f4",
+        "depth": 3,
+        "seldepth": 5,
+        "nodes": 173,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.00221800000872463,
+        "score": {
+          "pov": "mover",
+          "cp": 138,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f2f4",
+          "f6f5",
+          "g2f3"
+        ],
+        "tt_counters": {
+          "probes": 40,
+          "hits": 12,
+          "cutoffs": 0,
+          "stores": 40
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "8/6k1/5pp1/3p4/3P4/4P1P1/5PK1/8 w - - 0 40",
+        "process_search_index": 47
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 7,
+      "position": "Reti-English family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.009,
+        "wall_time_seconds": 0.010707300010835752,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 48
+      },
+      "baseline": {
+        "move": "c4d5",
+        "depth": 3,
+        "seldepth": 19,
+        "nodes": 4178,
+        "engine_time_seconds": 0.009,
+        "wall_time_seconds": 0.01184829999692738,
+        "score": {
+          "pov": "mover",
+          "cp": 20,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "c4d5",
+          "f6d5",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 195,
+          "hits": 67,
+          "cutoffs": 33,
+          "stores": 162
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQK2R w KQkq - 3 5",
+        "process_search_index": 48
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 3,
+      "position": "Sicilian family",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.015674400026910007,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 49
+      },
+      "baseline": {
+        "move": "f1b5",
+        "depth": 3,
+        "seldepth": 17,
+        "nodes": 6375,
+        "engine_time_seconds": 0.014,
+        "wall_time_seconds": 0.016524800012120977,
+        "score": {
+          "pov": "mover",
+          "cp": 29,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1b5",
+          "c8d7",
+          "b1d2",
+          "d7b5",
+          "d4b5"
+        ],
+        "tt_counters": {
+          "probes": 183,
+          "hits": 51,
+          "cutoffs": 4,
+          "stores": 179
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+        "process_search_index": 49
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 0,
+      "position": "Initial position",
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "scores_equal": true,
+      "baseline": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.0,
+        "wall_time_seconds": 0.002286700007971376,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 50
+      },
+      "candidate": {
+        "move": "b1c3",
+        "depth": 3,
+        "seldepth": 4,
+        "nodes": 650,
+        "engine_time_seconds": 0.001,
+        "wall_time_seconds": 0.0025864999915938824,
+        "score": {
+          "pov": "mover",
+          "cp": 30,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "b1c3",
+          "b8c6",
+          "g1f3"
+        ],
+        "tt_counters": {
+          "probes": 82,
+          "hits": 22,
+          "cutoffs": 0,
+          "stores": 82
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "process_search_index": 50
+      },
+      "search_differences": [],
+      "search_equal": true
+    },
+    {
+      "repetition": 5,
+      "position_index": 1,
+      "position": "Open game",
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "scores_equal": true,
+      "candidate": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.004,
+        "wall_time_seconds": 0.0059219999820925295,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 51
+      },
+      "baseline": {
+        "move": "f1d3",
+        "depth": 3,
+        "seldepth": 14,
+        "nodes": 1800,
+        "engine_time_seconds": 0.003,
+        "wall_time_seconds": 0.005077000008895993,
+        "score": {
+          "pov": "mover",
+          "cp": 35,
+          "mate": null,
+          "lowerbound": false,
+          "upperbound": false
+        },
+        "pv": [
+          "f1d3",
+          "g8f6",
+          "e1g1"
+        ],
+        "tt_counters": {
+          "probes": 207,
+          "hits": 62,
+          "cutoffs": 29,
+          "stores": 178
+        },
+        "tt_memory": {
+          "allocations": 0,
+          "reuses": 1,
+          "clears": 0,
+          "bytes": 16777208
+        },
+        "search_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "process_search_index": 51
+      },
+      "search_differences": [],
+      "search_equal": true
+    }
+  ],
+  "error": null,
+  "exit_code": 0,
+  "summary": {
+    "completed_pairs": 50,
+    "score_mismatches": 0,
+    "search_graph_mismatches": 0,
+    "median_paired_wall_speedup_baseline_over_candidate": 0.9809391542910022,
+    "median_paired_engine_speedup_baseline_over_candidate": 1.0,
+    "engine_time_ratio_pairs_excluding_zero_or_missing_time": 40,
+    "median_paired_node_ratio_candidate_over_baseline": 1.0,
+    "transposition_counters": {
+      "baseline": {
+        "samples_reporting": 50,
+        "probes": 8395,
+        "hits": 2570,
+        "cutoffs": 845,
+        "stores": 7540
+      },
+      "candidate": {
+        "samples_reporting": 50,
+        "probes": 8395,
+        "hits": 2570,
+        "cutoffs": 845,
+        "stores": 7540
+      }
+    },
+    "transposition_memory": {
+      "baseline": {
+        "samples_reporting": 50,
+        "allocations": 0,
+        "reuses": 50,
+        "clears": 0,
+        "bytes_max": 16777208
+      },
+      "candidate": {
+        "samples_reporting": 50,
+        "allocations": 0,
+        "reuses": 50,
+        "clears": 0,
+        "bytes_max": 16777208
+      }
+    },
+    "per_position": [
+      {
+        "name": "Initial position",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.0021902000007685274,
+          "median_nodes": 650
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.0022353000240400434,
+          "median_nodes": 650
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.8857318844373003
+      },
+      {
+        "name": "Open game",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.005077000008895993,
+          "median_nodes": 1800
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.005256600008578971,
+          "median_nodes": 1800
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.9398660748758629
+      },
+      {
+        "name": "Queen pawn game",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.003953199979150668,
+          "median_nodes": 1511
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.004381399980047718,
+          "median_nodes": 1511
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.93154953107539
+      },
+      {
+        "name": "Sicilian family",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.016147200018167496,
+          "median_nodes": 6375
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.015861499996390194,
+          "median_nodes": 6375
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 1.0209928723474464
+      },
+      {
+        "name": "French family",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.021885299996938556,
+          "median_nodes": 8700
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.021789199992781505,
+          "median_nodes": 8700
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 1.0244514339782709
+      },
+      {
+        "name": "Caro-Kann family",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.021867400006158277,
+          "median_nodes": 8727
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.022161300003062934,
+          "median_nodes": 8727
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.9973526635389425
+      },
+      {
+        "name": "Queen's Gambit Declined family",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.022510900016641244,
+          "median_nodes": 8869
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.0220110000227578,
+          "median_nodes": 8869
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 1.0390982972804899
+      },
+      {
+        "name": "Reti-English family",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.010459799988893792,
+          "median_nodes": 4178
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.010611000005155802,
+          "median_nodes": 4178
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 1.0275256404529545
+      },
+      {
+        "name": "Defended rook recapture",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.005694599996786565,
+          "median_nodes": 3282
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.005745400005253032,
+          "median_nodes": 3282
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.9647885978424469
+      },
+      {
+        "name": "Opposed pawn endgame",
+        "pairs": 5,
+        "baseline": {
+          "median_wall_time_seconds": 0.0012792999914381653,
+          "median_nodes": 173
+        },
+        "candidate": {
+          "median_wall_time_seconds": 0.001439499988919124,
+          "median_nodes": 173
+        },
+        "median_paired_wall_speedup_baseline_over_candidate": 0.9322069609811365
+      }
+    ]
+  },
+  "finished_utc": "2026-10-17T19:19:43.010497+00:00"
+}

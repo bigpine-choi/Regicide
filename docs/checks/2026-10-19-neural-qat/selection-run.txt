@@ -1,0 +1,122 @@
+{
+  "baseline_train": {
+    "mae_cp": 30.76502002670227,
+    "mse_cp2": 1469.260347129506,
+    "rmse_cp": 38.33093198879341
+  },
+  "calibration_limitation": "Ranking is in-sample training calibration, not independent validation",
+  "gradient_global_norm_limit": 10.0,
+  "loss": "Mean squared error in pawn units, with exact integer deployed forward",
+  "no_playing_strength_claim": true,
+  "numpy": "2.3.4",
+  "optimizer": "Adam beta1=0.9 beta2=0.999 epsilon=1e-8; float64 shadows and moments",
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "quantization": "Nearest ties-to-even; input/bias integer, output times8; int64 accumulators; one white-score truncation toward zero; clamp +/-28000",
+  "ranking": [
+    {
+      "changed_integer_parameters": {
+        "hidden_bias": 4,
+        "input_weights": 1288,
+        "output_weights": 11
+      },
+      "config": {
+        "batch_size": 128,
+        "candidate_id": "lr020-e060",
+        "epochs": 60,
+        "input_bias_lr": 0.02,
+        "output_lr": 0.01,
+        "seed": 20261021
+      },
+      "grid_index": 2,
+      "model_sha256": "45806ecd0470650080794fac3d36c2eac7b216b4362156c8acc94e703fb4da6d",
+      "train": {
+        "mae_cp": 79.23164218958611,
+        "mse_cp2": 13998.294392523365,
+        "rmse_cp": 118.31438793537903
+      }
+    },
+    {
+      "changed_integer_parameters": {
+        "hidden_bias": 3,
+        "input_weights": 1037,
+        "output_weights": 12
+      },
+      "config": {
+        "batch_size": 128,
+        "candidate_id": "lr005-e120",
+        "epochs": 120,
+        "input_bias_lr": 0.005,
+        "output_lr": 0.01,
+        "seed": 20261021
+      },
+      "grid_index": 1,
+      "model_sha256": "690bf3388076d746fe6f4c3c453c26b992c07371e3867d4bb639835d19f70d59",
+      "train": {
+        "mae_cp": 103.88785046728972,
+        "mse_cp2": 23655.45660881175,
+        "rmse_cp": 153.80330493462014
+      }
+    },
+    {
+      "changed_integer_parameters": {
+        "hidden_bias": 2,
+        "input_weights": 692,
+        "output_weights": 12
+      },
+      "config": {
+        "batch_size": 128,
+        "candidate_id": "lr005-e060",
+        "epochs": 60,
+        "input_bias_lr": 0.005,
+        "output_lr": 0.01,
+        "seed": 20261021
+      },
+      "grid_index": 0,
+      "model_sha256": "6a3c057baa9b0430addca49ce52d12e03065a8e6db01773517fa09ac7ac1b798",
+      "train": {
+        "mae_cp": 114.89853137516688,
+        "mse_cp2": 24025.47396528705,
+        "rmse_cp": 155.00152891274024
+      }
+    },
+    {
+      "changed_integer_parameters": {
+        "hidden_bias": 11,
+        "input_weights": 2285,
+        "output_weights": 12
+      },
+      "config": {
+        "batch_size": 128,
+        "candidate_id": "lr020-e120",
+        "epochs": 120,
+        "input_bias_lr": 0.02,
+        "output_lr": 0.01,
+        "seed": 20261021
+      },
+      "grid_index": 3,
+      "model_sha256": "e7c520166fbd6f7293e0c5874bd2cd9a16f25519d89426a1a4edeaaca3131c8a",
+      "train": {
+        "mae_cp": 190.01535380507343,
+        "mse_cp2": 69052.46128170895,
+        "rmse_cp": 262.7783501008197
+      }
+    }
+  ],
+  "schema_version": 1,
+  "selected_candidate_id": "lr020-e060",
+  "selected_config": {
+    "batch_size": 128,
+    "candidate_id": "lr020-e060",
+    "epochs": 60,
+    "input_bias_lr": 0.02,
+    "output_lr": 0.01,
+    "seed": 20261021
+  },
+  "selection_data": "Original training partition only; no validation or held-out rows read",
+  "selection_policy": "Final serialized integer train MAE, then train RMSE, then grid index, ascending",
+  "source_dataset_engine_sha256": "6bd5d912c48cd969ff8b1e07dba730fdb7aea186d6fab12a162b6f7381b45969",
+  "ste": "Rounding and final truncation derivative=1 surrogate; strict clipped-ReLU and score-clamp interior; parameter-clip derivative=1 at/in bounds",
+  "training_game_count": 50,
+  "training_rows": 1498
+}

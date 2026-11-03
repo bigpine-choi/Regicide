@@ -298,9 +298,18 @@ class GameArchive:
             "Termination": "unterminated" if prepared["result"] == "*" else "normal",
             "TerminationReason": prepared["termination"] or ("engine_error" if prepared["error"] else "in_progress"),
             "HandicapMoves": str(sum(bool(move.get("forced")) for move in prepared["moves"]))})
+        movetimes = record.get("engine_movetimes_ms", {})
+        if not isinstance(movetimes, dict):
+            movetimes = {}
+        if movetimes or record.get("time_settings_events"):
+            game.headers["EngineMoveTimePolicy"] = "Header is latest setting; move comments record each search budget"
         for entry, node in zip(prepared["moves"], game.mainline()):
             if entry.get("forced"):
                 node.comment = "User-forced Regicide move (handicap)"
+            else:
+                movetime = movetimes.get(str(entry["ply"]))
+                if entry["actor"] == "engine" and type(movetime) is int and 100 <= movetime <= 5000:
+                    node.comment = f"Regicide think time: {movetime} ms"
         return str(game) + "\n\n"
 
     def get_game(self, game_id, current_game_id=None):

@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-17T19:20:10.607461+00:00",
+  "finished_utc": "2026-10-17T19:21:22.332910+00:00",
+  "monitor_root_pid": 11964,
+  "monitor_root_creation_ticks": 134367383708585380,
+  "poll_seconds": 0.5,
+  "max_allowed_snapshot_gap_seconds": 2.0,
+  "cpu_ticks_per_second": 10000000,
+  "external_cpu_tolerance_ticks": 0,
+  "engine_names": [
+    "lc0-cpu.exe",
+    "lc0.exe",
+    "regicide.exe",
+    "stockfish.exe"
+  ],
+  "new_or_disappearing_external_engine_is_failure": true,
+  "snapshot_count": 142,
+  "max_snapshot_gap_seconds": 0.5359805999905802,
+  "max_snapshot_duration_seconds": 0.02296030000434257,
+  "external_cpu_increase_ticks": 0,
+  "owned_engines": [
+    {
+      "pid": 20708,
+      "creation_ticks": 134367384208139057,
+      "parent_pid": 11964,
+      "name": "regicide.exe",
+      "ancestry_to_monitor": [
+        20708,
+        11964
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 20708,
+          "parent_pid": 11964,
+          "creation_ticks": 134367384208139057
+        },
+        {
+          "pid": 11964,
+          "parent_pid": 37852,
+          "creation_ticks": 134367383708585380
+        }
+      ]
+    },
+    {
+      "pid": 11532,
+      "creation_ticks": 134367384208463095,
+      "parent_pid": 11964,
+      "name": "regicide.exe",
+      "ancestry_to_monitor": [
+        11532,
+        11964
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 11532,
+          "parent_pid": 11964,
+          "creation_ticks": 134367384208463095
+        },
+        {
+          "pid": 11964,
+          "parent_pid": 37852,
+          "creation_ticks": 134367383708585380
+        }
+      ]
+    }
+  ],
+  "transport_engines": {
+    "baseline": {
+      "pid": 20708,
+      "creation_ticks": 134367384208139057,
+      "parent_pid": 11964,
+      "name": "regicide.exe",
+      "ancestry_to_monitor": [
+        20708,
+        11964
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 20708,
+          "parent_pid": 11964,
+          "creation_ticks": 134367384208139057
+        },
+        {
+          "pid": 11964,
+          "parent_pid": 37852,
+          "creation_ticks": 134367383708585380
+        }
+      ],
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-native\\regicide.exe",
+        "uci"
+      ]
+    },
+    "candidate": {
+      "pid": 11532,
+      "creation_ticks": 134367384208463095,
+      "parent_pid": 11964,
+      "name": "regicide.exe",
+      "ancestry_to_monitor": [
+        11532,
+        11964
+      ],
+      "ancestry_processes": [
+        {
+          "pid": 11532,
+          "parent_pid": 11964,
+          "creation_ticks": 134367384208463095
+        },
+        {
+          "pid": 11964,
+          "parent_pid": 37852,
+          "creation_ticks": 134367383708585380
+        }
+      ],
+      "command": [
+        "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build-see-cost\\regicide.exe",
+        "uci"
+      ]
+    }
+  },
+  "external_engine_identities": [
+    {
+      "pid": 18392,
+      "creation_ticks": 134367207003283831,
+      "name": "regicide.exe",
+      "initial_cpu_ticks": 2842812500
+    },
+    {
+      "pid": 29128,
+      "creation_ticks": 134367246683890009,
+      "name": "regicide.exe",
+      "initial_cpu_ticks": 761718750
+    },
+    {
+      "pid": 14996,
+      "creation_ticks": 134367256611607980,
+      "name": "regicide.exe",
+      "initial_cpu_ticks": 2168281250
+    },
+    {
+      "pid": 16684,
+      "creation_ticks": 134367283253665253,
+      "name": "regicide.exe",
+      "initial_cpu_ticks": 1335781250
+    },
+    {
+      "pid": 20244,
+      "creation_ticks": 134367312384632090,
+      "name": "regicide.exe",
+      "initial_cpu_ticks": 433593750
+    }
+  ],
+  "observed_external_engine_cpu_increase": false,
+  "contaminated": false,
+  "valid_for_comparison": true,
+  "failure": null,
+  "completed_idle_seconds": 10.049116699985461,
+  "scope": "Zero observed external named engine CPU ticks; sampled process discovery. Unknown/transient engines between samples and non-engine host load are not excluded.",
+  "error": null,
+  "workload_kind": "same-search fixed-depth cost, not a strength test",
+  "benchmark_arguments": [
+    "build-see-native/regicide.exe",
+    "build-see-cost/regicide.exe",
+    "--output",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-cost-evidence\\loss-scenes-depth4.json",
+    "--positions",
+    "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide\\build\\see-cost-evidence\\development-cost-benchmark.json",
+    "--depth",
+    "4",
+    "--repeats",
+    "3",
+    "--warmup",
+    "1",
+    "--seed",
+    "20261020",
+    "--require-same-search",
+    "--baseline-commit",
+    "0edc06e437b934d177fc1e9b0907600b6287be72",
+    "--candidate-commit",
+    "42444edc3ff1de358b97ac4d250b43bf342d1df0",
+    "--baseline-options",
+    "{\"Hash\": 16, \"Move Overhead\": 20, \"PVS\": true, \"UseSEE\": true}",
+    "--candidate-options",
+    "{\"Hash\": 16, \"Move Overhead\": 20, \"PVS\": true, \"UseSEE\": true}"
+  ]
+}

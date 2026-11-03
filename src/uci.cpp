@@ -1,5 +1,6 @@
 #include "regicide/uci.hpp"
 #include "regicide/search.hpp"
+#include "regicide/evaluation.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -125,9 +126,12 @@ public:
         const auto& command = tokens[0];
         if (command == "isready") { send("readyok"); return; }
         if (command == "uci") {
-            send("id name Regicide 0.5.2");
+            send("id name Regicide 0.5.3");
             send("id author Regicide project");
             send("option name Move Overhead type spin default 20 min 0 max 5000");
+            send("option name UseNeuralEvaluation type check default false");
+            send("option name UseIncrementalNeuralEvaluation type check default true");
+            send("option name NeuralModelFile type string default <builtin>");
             send("option name UsePositionalEvaluation type check default true");
             send("option name UseQuiescence type check default true");
             send("option name UseTranspositionTable type check default true");
@@ -166,6 +170,23 @@ private:
             if (!option.empty()) option += ' ';
             option += *i;
         }
+        if (option == "NeuralModelFile") {
+            std::string path;
+            if (value != tokens.end())
+                for (auto i = value + 1; i != tokens.end(); ++i) {
+                    if (!path.empty()) path += ' ';
+                    path += *i;
+                }
+            // Validate completely before replacing the current shared model.
+            // Session::handle has already joined any active search worker.
+            auto selected = path.empty() || path == "<builtin>" ?
+                std::shared_ptr<const NeuralModel>{} : load_neural_model(path);
+            options_.neural_model = std::move(selected);
+            context_.clear();
+            const auto& model = options_.neural_model ? *options_.neural_model : builtin_neural_model();
+            send("info string neural model checksum " + std::to_string(neural_model_checksum(model)));
+            return;
+        }
         if (option == "Clear Hash") {
             if (value != tokens.end()) throw std::invalid_argument("Clear Hash is a button without a value");
             context_.clear(); return;
@@ -173,7 +194,7 @@ private:
         if (option != "Move Overhead" && option != "UsePositionalEvaluation" && option != "UseQuiescence" &&
             option != "UseTranspositionTable" && option != "UseFastMoves" && option != "Hash" &&
             option != "UseQuietMoveOrdering" && option != "UseQuiescenceChecks" && option != "PVS" &&
-            option != "UseSEE") return;
+            option != "UseSEE" && option != "UseNeuralEvaluation" && option != "UseIncrementalNeuralEvaluation") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -184,7 +205,9 @@ private:
         }
         const auto& text = *(value + 1);
         if (text != "true" && text != "false") throw std::invalid_argument("check option requires true or false");
-        if (option == "UsePositionalEvaluation") options_.positional = text == "true";
+        if (option == "UseNeuralEvaluation") options_.neural = text == "true";
+        else if (option == "UseIncrementalNeuralEvaluation") options_.neural_incremental = text == "true";
+        else if (option == "UsePositionalEvaluation") options_.positional = text == "true";
         else if (option == "UseQuiescence") options_.quiescence = text == "true";
         else if (option == "UseTranspositionTable") options_.transposition = text == "true";
         else if (option == "UseFastMoves") options_.fast_moves = text == "true";

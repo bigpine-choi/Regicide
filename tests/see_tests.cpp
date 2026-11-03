@@ -135,6 +135,10 @@ int main() {
     test("absolute pins exclude illegal recaptures", [] {
         check("2k5/2n5/8/3p4/2B5/8/8/2R4K w - - 0 1", "c4d5", 100);
         check("2k5/2n5/8/3p4/2B5/8/8/7K w - - 0 1", "c4d5", -230);
+        // f4 is the earlier knight square, but its move exposes the king.
+        // The legal c7 knight (or a more valuable bishop) must still be tried.
+        check("5k2/2n5/8/3p4/2B2n2/8/8/5R1K w - - 0 1", "c4d5", -230);
+        check("5k2/8/2b5/3p4/2B2n2/8/8/5R1K w - - 0 1", "c4d5", -230);
     });
     test("kings may recapture only onto unattacked squares", [] {
         check("8/8/4k3/3p4/2B5/8/8/3R3K w - - 0 1", "c4d5", 100);
@@ -146,6 +150,8 @@ int main() {
         check("3r3k/8/8/3pP3/8/8/8/3R2K1 w - d6 0 1", "e5d6", 100);
         check("3r3k/8/8/3pP3/8/8/8/6K1 w - d6 0 1", "e5d6", 0);
         check("2k5/2p5/8/3pP3/8/8/8/2R3K1 w - d6 0 1", "e5d6", 100);
+        check("3r2k1/8/8/8/3Pp3/8/8/3R3K b - d3 0 1", "e4d3", 100);
+        check("6k1/8/8/8/3Pp3/8/8/3R3K b - d3 0 1", "e4d3", 0);
     });
     test("initial promotions and promotion recaptures include material increments", [] {
         check("8/P6k/8/8/8/8/8/7K w - - 0 1", "a7a8q", 800);
@@ -202,6 +208,26 @@ int main() {
         Board expected = saved;
         expected.undo();
         expect(board == expected, "SEE changed subsequent undo behavior");
+    });
+    test("compact attack lists agree with legal recursion across deterministic walks", [] {
+        int positions = 0, moves = 0, negative = 0, promotions = 0, ep = 0;
+        // These independent walks exercise edge/corner attack geometry and
+        // both colors after many changing occupancies, including full history.
+        for (std::uint32_t initial : {1u, 73u, 20261019u, 0xabcdefu}) {
+            Board board;
+            auto seed = initial;
+            for (int ply = 0; ply < 100; ++ply) {
+                if (ply % 5 == 0) differential(board, positions, moves, negative, promotions, ep);
+                const auto legal = board.legal_moves();
+                if (legal.empty()) break;
+                seed = seed * 1664525u + 1013904223u;
+                board.play(legal[seed % legal.size()]);
+            }
+        }
+        expect(positions >= 60 && moves >= 1500 && negative > 0,
+               "deterministic geometry coverage was unexpectedly small");
+        std::cout << "Compact SEE differential: " << positions << " positions, " << moves
+                  << " moves, " << negative << " losing exchanges\n";
     });
     std::cout << groups << " groups, " << assertions << " assertions, " << failures << " failures\n";
     return failures ? 1 : 0;

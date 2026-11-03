@@ -1,0 +1,28 @@
+{
+  "config": {
+    "max_plies": 24,
+    "max_searches": 192,
+    "max_seconds": 60.0,
+    "nodes": 2000,
+    "quiet": true,
+    "sample_every": 3,
+    "search_timeout": 10.0,
+    "seed": 20261019,
+    "static_control": true,
+    "validation_fraction": 0.25
+  },
+  "engine_sha256": "598ebec433334b2ce053d0ed6b143fbfd34f9dd3a76557adb62764dcd940c705",
+  "integration_script_sha256": "469b91486483289f1e0ec2fba96aee2dc3a28e546fd0328cb97e11b5514e5bcb",
+  "purpose": "Correctness and reproducibility of data generation only",
+  "requirements": [
+    "byte-identical train/validation labels and semantic digest",
+    "both source kinds and both movers in each partition",
+    "no cross-partition family or feature overlap",
+    "no numeric WDL for unfinished games",
+    "fresh ucinewgame and fixed node command for every completed query",
+    "all source histories and PVs replay legally; root score sign correct"
+  ],
+  "runs": 2,
+  "schema_version": 1,
+  "selection": "All eight committed seed sources, no outcome-based selection"
+}

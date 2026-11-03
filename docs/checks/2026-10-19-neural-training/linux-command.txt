@@ -1,0 +1,3 @@
+WSL Ubuntu GCC13.3.0, debug generated-move assertions active, ASan+UBSan.
+g++ -std=c++20 -Wall -Wextra -Wpedantic -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Iinclude tests/neural_model_tests.cpp src/board.cpp src/search.cpp src/evaluation.cpp src/neural.cpp src/transposition.cpp src/see.cpp -o build-neural-training/model-tests-sanitized && build-neural-training/model-tests-sanitized docs/checks/2026-10-19-neural-training/first-run/training/model.nnue
+Exit0. libasan/libubsan linkage recorded separately.

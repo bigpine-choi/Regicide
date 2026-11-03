@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "5148721e7f357c72400c359cd8ac6ab4f27a7341",
+  "reference_see_sha256": "512060e4424c9b9333e5befb89f302a27b5c389c0356a0faa66aea7ca9b07798",
+  "candidate_value_semantics": "Unchanged local legal LVA, same source-square tie break, all kings/pins/en passant/promotion rules retained. Only traversal and temporary storage optimized.",
+  "test_result": {
+    "groups": 9,
+    "assertions": 9119,
+    "failures": 0,
+    "oracle_differential_positions": 125,
+    "oracle_differential_moves": 3967,
+    "reference_microprofile_queries": 402
+  },
+  "profiling": {
+    "loss-scenes-profile-guarded": {
+      "queries": 43,
+      "samples": 9,
+      "paired_median_candidate_over_reference": 0.8003573397405265,
+      "candidate_slower_pairs": 0,
+      "reference_median_ns_per_call": 167.62427906976745,
+      "candidate_median_ns_per_call": 131.60751162790697
+    },
+    "mixed-regression-profile-guarded": {
+      "queries": 359,
+      "samples": 9,
+      "paired_median_candidate_over_reference": 0.8224049767333844,
+      "candidate_slower_pairs": 2,
+      "reference_median_ns_per_call": 125.73799442896936,
+      "candidate_median_ns_per_call": 121.3791922005571
+    }
+  },
+  "detailed_instrumented_search": {
+    "nodes": 2400000,
+    "qnodes": 2212635,
+    "pvs_probes": 407766,
+    "pvs_researches": 921,
+    "see_calls": 2006700,
+    "see_instrumented_ns": 410319800,
+    "search_instrumented_ns": 5719157000,
+    "qnode_fraction": 0.92193125,
+    "see_instrumented_fraction": 0.07174480434791351
+  },
+  "notes": [
+    "No pruning, exchange thresholds or tactical evaluation changed.",
+    "Microprofile timings include evaluator calls only; parsing, legal generation and reference equality checks are outside timing.",
+    "9 paired samples alternate reference/candidate order. Loss scenes: 43 queries x 100000 repetitions; mixed: 359 x 10000.",
+    "Instrumented search uses archived original SEE and original search object from build-see-native, 16 development positions x 3 repeats x 50000 nodes. The SEE clock wrapper adds overhead: do not equate its fraction with exact production share.",
+    "First preliminary profiles are retained without CPU guard and are not the final controlled comparison.",
+    "Final guarded microprofile and first instrumented search: final-profile.monitor.*. Supplementary detailed search adds qnodes/PVS output only: detailed-search-profile.monitor.*.",
+    "The custom compile-see-microprofile.cmd uses MSVC C++20 /O2 /DNDEBUG /W4 /WX with original SEE symbol renamed for same-binary exact-value comparison.",
+    "compile-profile-search.cmd is the detailed search instrument build. The detailed driver retains the same search/SEE implementation.",
+    "The shell verification returned exit 1 only because a final Get-Process lookup found no remaining test/profile processes; all 9 test groups passed with exit 0 before that lookup.",
+    "The original compile.cmd is intentionally excluded because the normal engine builder reuses that filename; compile-see-microprofile.cmd preserves its profiling build commands."
+  ],
+  "remaining_profile_processes": [],
+  "files": [
+    {
+      "path": "src/see.cpp",
+      "bytes": 8649,
+      "sha256": "3174e4a235165571158efa2c4d000594ac270488c03f377a09ed655812d8a6cb"
+    },
+    {
+      "path": "tests/see_tests.cpp",
+      "bytes": 11308,
+      "sha256": "f04e219a286dacb6cfe6fa327e8f45376b612de1c5814e312e386e94ce6609fd"
+    },
+    {
+      "path": "scripts/profile_see.cpp",
+      "bytes": 5972,
+      "sha256": "4886ea07e989fca04b0feb27a6a387f35a10bfd9056635aba36f22d01094c879"
+    },
+    {
+      "path": "build-see-cost/candidate_see.obj",
+      "bytes": 20199,
+      "sha256": "c563a0356c63d233e2d58d1a97600974339c4b7ff0c6770ae7d13cb00f97eeb3"
+    },
+    {
+      "path": "build-see-cost/compile-profile-search.cmd",
+      "bytes": 593,
+      "sha256": "18507cf241b8ce5e35ebc3f565c362040c41b69f805a73968a85979391709875"
+    },
+    {
+      "path": "build-see-cost/compile-see-microprofile.cmd",
+      "bytes": 1157,
+      "sha256": "0b06852bb04cbf379be19296267da4ae239cd22379044285cd01438bd47bd99a"
+    },
+    {
+      "path": "build-see-cost/compile-see-tests-final.cmd",
+      "bytes": 445,
+      "sha256": "5f29c0bdddb9712bbe175e7fabbdb6fd24fa2711d61540763cfaedd48adc2ed0"
+    },
+    {
+      "path": "build-see-cost/detailed-search-profile-run.json",
+      "bytes": 262,
+      "sha256": "ce8d4ba464ff0a06d6e9c2ec7035200ee8df0470fc8a257943c97679fee7fb46"
+    },
+    {
+      "path": "build-see-cost/detailed-search-profile.monitor.json",
+      "bytes": 2009,
+      "sha256": "c7992c0f966c7ea25f9fb240860eb04b07ab887592dd73e57cb100b400587335"
+    },
+    {
+      "path": "build-see-cost/detailed-search-profile.monitor.jsonl",
+      "bytes": 49284,
+      "sha256": "579a14dd7f23b2c9fbb87687d45a58d995a5a0cb3112c1f53f0fad1aa5da35f0"
+    },
+    {
+      "path": "build-see-cost/final-profile-run.json",
+      "bytes": 796,
+      "sha256": "ce17101293ae9fac8ab595a6001cbdc8324c1db48c948954b686892df4603b09"
+    },
+    {
+      "path": "build-see-cost/final-profile.monitor.json",
+      "bytes": 2008,
+      "sha256": "64d87ecebbd8635759ff8b8bcb06c8b1fa7f48356cc09eb29d40e95a49a9f678"
+    },
+    {
+      "path": "build-see-cost/final-profile.monitor.jsonl",
+      "bytes": 104178,
+      "sha256": "c7098c6fdde4863f9b75fad005d66fd3de531f6351d02d29d756ce73c2fc92cc"
+    },
+    {
+      "path": "build-see-cost/generate-workloads.py",
+      "bytes": 1824,
+      "sha256": "24a2184b5cb24fe1c6adbd931d1a7ccf4a8713162ad196d74fc29d092f955b32"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-profile-guarded.json",
+      "bytes": 1801,
+      "sha256": "ef18b86ae2ab46d9c18d7f284693249f8bb7ce20a157a49cda494ab8d615fc08"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-profile-guarded.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-profile-stable.json",
+      "bytes": 1801,
+      "sha256": "70d2668adeea37fbd805598c7450db827bb836d5e1931e20f050ad8c2bb4d0b5"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-profile.json",
+      "bytes": 1725,
+      "sha256": "9f37eab650608f301645c2332523d2e072c1d08117c11e476d295620f237c7d7"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-search-profile-detailed-guarded.json",
+      "bytes": 9068,
+      "sha256": "2fc083e5a33b4320b7ece85026e3efd530d26062f63bd5a614315e2c588f9300"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-search-profile-detailed-guarded.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-search-profile-guarded.json",
+      "bytes": 6523,
+      "sha256": "bd2b862129e1023a86cbea01c05137a0401cda6dfea4f319f0c9e06dc2a112ab"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-search-profile-guarded.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build-see-cost/loss-scenes-search-profile.json",
+      "bytes": 6526,
+      "sha256": "4862359b69a3a44f040b6ce7551bf737d0a1108324eed00201b89cdf0e3b4346"
+    },
+    {
+      "path": "build-see-cost/loss-scenes.fens",
+      "bytes": 907,
+      "sha256": "a0c9e348706d42a7cd96af27177307b967e84c684f4747ad5103e808cddf3fb7"
+    },
+    {
+      "path": "build-see-cost/loss-scenes.tsv",
+      "bytes": 2903,
+      "sha256": "0df5d3e458a76ddeadafa894136d67cd1d9dfa37df439f2bdd950d084398b6bd"
+    },
+    {
+      "path": "build-see-cost/make-core-manifest.py",
+      "bytes": 4200,
+      "sha256": "44913716db83194b84c4105dc3c457a941809ae24d3f672876a22e6ec692c73f"
+    },
+    {
+      "path": "build-see-cost/mixed-regression-profile-guarded.json",
+      "bytes": 1763,
+      "sha256": "75f78e1f6b13ed802efa05efbfa47245bac4b3e229a60e6c1ea95a8460335252"
+    },
+    {
+      "path": "build-see-cost/mixed-regression-profile-guarded.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build-see-cost/mixed-regression-profile-stable.json",
+      "bytes": 1763,
+      "sha256": "11add8adb4523c2755018695fcab924bafe3559fa483f77c2e11281a10a2e3aa"
+    },
+    {
+      "path": "build-see-cost/mixed-regression-profile.json",
+      "bytes": 1687,
+      "sha256": "8945dee916b7347b1b7e3dca5ae1d92037f66d27970ff8ec68208979a1bbdee8"
+    },
+    {
+      "path": "build-see-cost/mixed-regression.fens",
+      "bytes": 5748,
+      "sha256": "68b019363c1cae2a69447a3684046aef3cbce1e8c3969ffda356dd738431c0c6"
+    },
+    {
+      "path": "build-see-cost/mixed-regression.tsv",
+      "bytes": 23454,
+      "sha256": "a78dedcc4a4215ea62de691d1d4feb06fe3e8db4efedd16de4ada2af46ee04c2"
+    },
+    {
+      "path": "build-see-cost/profile_see.exe",
+      "bytes": 322560,
+      "sha256": "13751df20373831e7364292f8d042a12b4a69ded2af4504696e4ae2e8bea48de"
+    },
+    {
+      "path": "build-see-cost/profile_see.obj",
+      "bytes": 445467,
+      "sha256": "2808601185da94e7c41846d04c3ac7685b9466cdeaea6747e3a9830fd557c3e1"
+    },
+    {
+      "path": "build-see-cost/profile_see_search.cpp",
+      "bytes": 2363,
+      "sha256": "eeed430888a47ac48810efd8877cedb28d9a3b44bdf1249539b47ea4da1ad74a"
+    },
+    {
+      "path": "build-see-cost/profile_see_search.exe",
+      "bytes": 337920,
+      "sha256": "7c4849eb6f1fc465cf329770e16ba70d20356eeb9c09b2d17daba72d2091c0eb"
+    },
+    {
+      "path": "build-see-cost/profile_see_search.obj",
+      "bytes": 344331,
+      "sha256": "64bb8c4921e9e2ce247a2e5eb4523825650b2c538fd3d2925a1ca10ce2b40ba2"
+    },
+    {
+      "path": "build-see-cost/profile_see_wrapper.cpp",
+      "bytes": 610,
+      "sha256": "cc69755df50f3b8fae67ec2d9e06d8e117bd4c325db47efb5352954de66742e9"
+    },
+    {
+      "path": "build-see-cost/profile_see_wrapper.obj",
+      "bytes": 5846,
+      "sha256": "92fcbe66745964300cfcd3b5dfa8dca9deecf27489a3bf49156cf447a50958c3"
+    },
+    {
+      "path": "build-see-cost/reference_search.cpp",
+      "bytes": 20760,
+      "sha256": "3d6f29b46b81a157dd85b017c9548e0b611f43fbeab6977546e7aba8051aa688"
+    },
+    {
+      "path": "build-see-cost/reference_see.cpp",
+      "bytes": 6557,
+      "sha256": "512060e4424c9b9333e5befb89f302a27b5c389c0356a0faa66aea7ca9b07798"
+    },
+    {
+      "path": "build-see-cost/reference_see.obj",
+      "bytes": 46729,
+      "sha256": "207491fcd9acbebd5437c64fe9273d985e797bf705e6ddfbac7cdd40d34425b5"
+    },
+    {
+      "path": "build-see-cost/run-detailed-search-profile.py",
+      "bytes": 2068,
+      "sha256": "9d37aeb9e2b1aa7c476a5e6369fc9de3516085efa0dd91cf410a2550400e3c44"
+    },
+    {
+      "path": "build-see-cost/run-final-profile.py",
+      "bytes": 2251,
+      "sha256": "121f516a5e3a0b7b64fce5748128281bd49775b2833dae38305b3702eb1c1ce1"
+    },
+    {
+      "path": "build-see-cost/see-tests-final.log",
+      "bytes": 817,
+      "sha256": "d89a7f96368fcc17ed90d6901f498277970e47d01cc5c89f44534a480a4d38ed"
+    },
+    {
+      "path": "build-see-cost/see-tests.log",
+      "bytes": 817,
+      "sha256": "bc68dd326d08e69bff38fe432be5503f59e8d6f93da39e011e61bbf3e54878a8"
+    },
+    {
+      "path": "build-see-cost/see_tests.exe",
+      "bytes": 336896,
+      "sha256": "9173e77a437c2bddfe121055ce01dffe723e48c862440bf70a5682cab1be3d6d"
+    },
+    {
+      "path": "build-see-cost/see_tests.obj",
+      "bytes": 465144,
+      "sha256": "418d5e361fa1e5f06188398d857532d97c57b1c20162be0cfbf9b5125a758983"
+    },
+    {
+      "path": "build-see-cost/summarize-and-extend.py",
+      "bytes": 1965,
+      "sha256": "a31ab67c35e32a4bed2d1564cb707f2b33d6be3d3df73d62b2730a1e222af8fc"
+    },
+    {
+      "path": "build-see-cost/workload-metadata.json",
+      "bytes": 311,
+      "sha256": "5b0df08f45256b2e9a3b0827dd8154b36f0d1196b9e4cf9fc0fa730804881900"
+    }
+  ]
+}

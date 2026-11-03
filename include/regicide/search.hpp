@@ -8,9 +8,12 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <memory>
 #include <vector>
 
 namespace regicide {
+
+struct NeuralModel;
 
 inline constexpr int mate_score = 30000;
 inline constexpr int max_search_depth = 64;
@@ -36,6 +39,9 @@ struct SearchOptions {
     bool quiescence_checks = true; // One optional quiet check; all evasions remain.
     bool pvs = true; // Full first move, scout later moves; re-search improvements.
     bool see_ordering = true; // Local exchange estimates order moves only; no pruning.
+    bool neural = false; // Overrides positional; default preserves classical evaluation.
+    bool neural_incremental = true; // Only used when neural is enabled; false is the full oracle.
+    std::shared_ptr<const NeuralModel> neural_model{}; // Null selects the built-in model; owned by each worker.
 };
 
 struct SearchResult {
@@ -54,7 +60,7 @@ struct SearchResult {
     std::uint64_t tt_bytes = 0; // Active table storage, zero if disabled/terminal.
     std::uint64_t pvs_probes = 0; // Later-move null-window searches, including unfinished work.
     std::uint64_t pvs_researches = 0; // Probes needing a full-window re-search.
-    std::uint64_t see_calls = 0; // Once per tactical candidate sorted, including preferred moves.
+    std::uint64_t see_calls = 0; // Tactical candidates needing an exchange key; no sole/preferred move work.
     int seldepth = 0; // Deepest visited ply, including unfinished work.
     std::chrono::milliseconds elapsed{0};
     bool stopped = false;

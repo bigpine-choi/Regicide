@@ -1,0 +1,26 @@
+{
+  "created_utc": "2026-10-19T04:31:10.9433430Z",
+  "windows_build": "./scripts/build.ps1 -BuildDirectory build-neural-precision-runtime -Test",
+  "windows_result": "Existing 7 suites passed. First model-test run exposed symmetric fixture expectation; fixture corrected and only model-test target rebuilt, final 9 groups / 26566 assertions / 0 failures.",
+  "model_test_rebuild": "build-neural-precision-runtime/rebuild-model-tests.cmd",
+  "linux_build": "wsl --exec g++ -std=c++20 -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -Wall -Wextra -Wpedantic -Werror -Iinclude tests/neural_model_tests.cpp src/board.cpp src/search.cpp src/evaluation.cpp src/neural.cpp src/transposition.cpp src/see.cpp -pthread -o build-neural-precision-runtime/model-tests-sanitized",
+  "linux_test": "wsl --exec env ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 build-neural-precision-runtime/model-tests-sanitized",
+  "linux_result": "exit 0; 9 groups / 26566 assertions / 0 failures; no ASan/UBSan diagnostics",
+  "linux_compiler": "Ubuntu g++ 13.3.0-6ubuntu2~24.04.1",
+  "hashes": {
+    "include/regicide/evaluation.hpp": "532be244f74bbd7a159b889de77eba284549431a46a6a517b59253bbf66a3129",
+    "src/neural.cpp": "effdf10b2facae52abeabe639b162cb540bd71506ae66c72e8d971bde72bbd33",
+    "tests/neural_model_tests.cpp": "7ac53adce52ca0334eb202ecb6699c97cf9631ee1ea2cfd8eb2592c0fcc1c456",
+    "src/board.cpp": "f2138847cc0a250ac363c1ec7874eed34c8114972cbe231fd29f08f45fba98e1",
+    "src/search.cpp": "f1f553d3f4032c53f622e1e812589d05cd0da4bdc78c2a06acc94000bd8c4ee6",
+    "src/evaluation.cpp": "283fb58acd8eb805361357900fb422c3e646f96da8a65c71aee509c1d43c543b",
+    "src/transposition.cpp": "6f2c44c6c9e4d0298d696fd381b50e1df892cc0ece9031c3ba05aa2221fe2054",
+    "src/see.cpp": "3174e4a235165571158efa2c4d000594ac270488c03f377a09ed655812d8a6cb",
+    "include/regicide/board.hpp": "82314803540f259b4483e70b499c4735f5ed5e9e33c8a2276681abca9c6ff5af",
+    "include/regicide/search.hpp": "64fa7eba6af4c05356e1f76daa0c0730aa004db6732ad5aa286aa70ca55b1302",
+    "build-neural-precision-runtime/regicide.exe": "598ebec433334b2ce053d0ed6b143fbfd34f9dd3a76557adb62764dcd940c705",
+    "build-neural-precision-runtime/regicide_neural_model_tests.exe": "3cdf79c19ecab5353238a3a0c7082b73e17861dcc08cd9a76566ad7982044bf9",
+    "build-neural-precision-runtime/regicide_neural_incremental_benchmark.exe": "986f40d0de0ba010eb7f239aeda9b1bd9bd94a689a50f7232619cc445f68286a",
+    "build-neural-precision-runtime/model-tests-sanitized": "e121441cc4faed622844769b8c67598e5c7ad26a638adc77ab5b1b2501db1136"
+  }
+}

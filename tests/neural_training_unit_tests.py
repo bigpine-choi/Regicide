@@ -1,0 +1,138 @@
+"""Focused model-format, feature-leakage, and validation-isolation regression tests."""
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+import chess
+import numpy as np
+
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "neural_training.py"
+SPEC = importlib.util.spec_from_file_location("neural_training", SCRIPT)
+training = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(training)
+
+
+class ModelTests(unittest.TestCase):
+    def test_exact_roundtrip_and_exclusive_save(self):
+        model = training.quantize(training.bootstrap_float())
+        for invalid in (True, False, np.bool_(True), 1.0):
+            with self.assertRaises(ValueError):
+                training.validate_model({**model, "output_scale": invalid})
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "model.nnue"
+            training.save_model(model, path)
+            loaded = training.load_model(path)
+            for key in ("hidden_bias", "output_weights", "input_weights"):
+                np.testing.assert_array_equal(loaded[key], model[key])
+            self.assertEqual(training.model_checksum(model), training.model_checksum(loaded))
+            with self.assertRaises(ValueError):
+                training.save_model(model, path)
+
+    def test_malformed_models_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "model.nnue"
+            training.save_model(training.quantize(training.bootstrap_float()), path)
+            text = path.read_text()
+            for bad in (text + "garbage", text.replace("NNUE 1", "NNUE 2", 1),
+                        text.rsplit("\n", 2)[0] + "\n0\n", text.replace("768 16 127 8", "768 16 127 0", 1),
+                        "x" * (training.MODEL_LIMIT + 1)):
+                path.write_text(bad)
+                with self.assertRaises(ValueError):
+                    training.load_model(path)
+
+    def test_clipping_division_and_score_perspective(self):
+        model = {"input_weights": np.zeros((768, 16), dtype=np.int64),
+                 "hidden_bias": np.zeros(16, dtype=np.int64),
+                 "output_weights": np.zeros(16, dtype=np.int64), "output_scale": 8}
+        board = chess.Board("7k/8/8/8/8/8/P7/K7 w - - 0 1")
+        model["input_weights"][chess.A2, 0] = 1
+        model["output_weights"][0] = -7
+        self.assertEqual(training.quantized_white(board, model), 0)
+        model["output_weights"][0] = -9
+        self.assertEqual(training.quantized_white(board, model), -1)
+        self.assertEqual(training.quantized_white(board.mirror(), model), 1)
+        model["input_weights"][chess.A2, 0] = 127
+        model["output_weights"][0] = -8192
+        model["output_scale"] = 1
+        self.assertEqual(training.quantized_white(board, model), -28000)
+
+    def test_identity_covers_same_input_and_reversed_perspective(self):
+        board = chess.Board()
+        altered = board.copy()
+        altered.turn = not altered.turn
+        altered.castling_rights = 0
+        altered.halfmove_clock = 19
+        self.assertEqual(training.feature_identity(board), training.feature_identity(altered))
+        self.assertEqual(training.feature_identity(board), training.feature_identity(board.mirror()))
+        board.push_uci("e2e4")
+        self.assertNotEqual(training.feature_identity(board), training.feature_identity(chess.Board()))
+
+
+class DataIsolationTests(unittest.TestCase):
+    def make_data(self, path, validation_target=500):
+        path.mkdir()
+        groups = {"train-game": "train", "validation-game": "validation"}
+        manifest = {"groups": groups, "partitions": {}, "engine_sha256": "unit-test-synthetic-targets"}
+        choices = {"train": (["e2e4", "e7e5", "g1f3", "b8c6"], 100),
+                   "validation": (["d2d4", "d7d5", "c2c4", "e7e6"], validation_target)}
+        for name, (moves, target) in choices.items():
+            board, rows = chess.Board(), []
+            for ply, move in enumerate(moves, 1):
+                board.push_uci(move)
+                rows.append({"fen": board.fen(), "group_id": f"{name}-game", "ply": ply,
+                    "feature_hash": training.feature_identity(board), "target_white_cp": target,
+                    "classical_stm_cp": target if board.turn else -target})
+            board = chess.Board("7k/8/8/8/8/8/P7/K7 w - - 0 1" if name == "train"
+                                else "7k/8/8/8/8/8/1P6/K7 w - - 0 1")
+            rows.append({"fen": board.fen(), "group_id": f"{name}-game", "ply": 5,
+                "feature_hash": training.feature_identity(board), "target_white_cp": target,
+                "classical_stm_cp": target})
+            file = path / f"{name}.jsonl"
+            file.write_text("".join(json.dumps(row) + "\n" for row in rows))
+            manifest["partitions"][name] = {"file": file.name, "count": len(rows), "sha256": training.sha256(file)}
+        training.write_json(path / "split_manifest.json", manifest)
+
+    def test_validation_targets_never_change_trained_weights(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.make_data(root / "a", 500)
+            self.make_data(root / "b", -1800)
+            first = training.train_model(root / "a", root / "out-a", epochs=3, batch_size=2)
+            second = training.train_model(root / "b", root / "out-b", epochs=3, batch_size=2)
+            self.assertEqual(first["model_sha256"], second["model_sha256"])
+            self.assertEqual(first["training_history"], second["training_history"])
+            self.assertNotEqual(first["final"]["float_validation"], second["final"]["float_validation"])
+            for key in ("input_weights", "hidden_bias", "output_weights"):
+                self.assertGreater(first["changed_float_parameters"][key], 0)
+
+    def test_changed_data_hash_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "data"
+            self.make_data(root)
+            with (root / "train.jsonl").open("a") as handle:
+                handle.write("{}\n")
+            with self.assertRaisesRegex(ValueError, "checksum"):
+                training.read_dataset(root)
+
+    def test_equivalent_board_cannot_cross_split_even_with_new_hash(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "data"
+            self.make_data(root)
+            train = json.loads((root / "train.jsonl").read_text().splitlines()[0])
+            board = chess.Board(train["fen"]).mirror()
+            train.update({"fen": board.fen(), "group_id": "validation-game",
+                          "feature_hash": training.feature_identity(board),
+                          "classical_stm_cp": train["target_white_cp"] if board.turn else -train["target_white_cp"]})
+            file = root / "validation.jsonl"
+            file.write_text(json.dumps(train) + "\n")
+            manifest = json.loads((root / "split_manifest.json").read_text())
+            manifest["partitions"]["validation"].update({"count": 1, "sha256": training.sha256(file)})
+            training.write_json(root / "split_manifest.json", manifest)
+            with self.assertRaisesRegex(ValueError, "leakage"):
+                training.read_dataset(root)
+
+
+if __name__ == "__main__":
+    unittest.main()
