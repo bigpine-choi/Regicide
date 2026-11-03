@@ -176,6 +176,8 @@ class SparringRefereeHostTests(unittest.TestCase):
         baseline = host.boss_play.score_line(board, info(board, "c7c5", 40, 6), chess.Move.from_uci("c7c5"))
         line = host.boss_play.score_line(board, info(board, "e7e6", 20, 6), chess.Move.from_uci("e7e6"))
         proposal.update(baseline=baseline, compared_depth=6, verification_depth=6,
+            candidate_final_raw={"cp": 999, "depth": 6},
+            postmove_attempts=[{"candidate_uci": "e7e5", "valid": True, "cp_own": 999}],
             probes=[{"uci": "e7e6", "admitted": True, "naturalness": {"admitted": True},
                 "compared_depth": 6, "candidate_compared": line, "candidate_final": line,
                 "reference_delta_cp": 20, "loss_cp": 20}])
@@ -192,6 +194,9 @@ class SparringRefereeHostTests(unittest.TestCase):
         self.assertEqual([row["uci"] for row in decision["referee"]["native_pool"]], ["c7c5", "e7e5", "e7e6"])
         self.assertFalse(decision["postmove_verification"]["valid"])
         self.assertIsNone(decision["band_control"]["selected_postmove_cp"])
+        self.assertNotIn("candidate_final_raw", decision)
+        self.assertEqual(decision["postmove_attempts"], [])
+        self.assertEqual(decision["regicide_proposal"]["candidate_final_raw"]["cp"], 999)
         self.assertEqual(decision["verification_policy"], sparring_referee.POLICY)
         replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
         self.assertEqual(replay["referee_decisions"][0]["selected_uci"], "e7e6")

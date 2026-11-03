@@ -552,6 +552,9 @@ class HumanGame:
             control["deviation_cp"] = None
             decision["band_control"] = control
             decision.pop("pressure", None)
+            decision.pop("candidate_final_raw", None)
+            decision["postmove_attempts"] = []
+            decision["postmove_attempts_scope"] = "original attempts retained in regicide_proposal; selected child in referee.postmove"
         decision["selected_uci"] = selected
         decision["regicide_proposal"] = original
         receipt.update(game_id=game_id, revision=revision, fen=board.fen(en_passant="fen"),
