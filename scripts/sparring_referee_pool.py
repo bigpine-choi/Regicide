@@ -1,7 +1,6 @@
 """Validate and reuse native Regicide candidate receipts without any search.
 
-This helper is intentionally not connected to the host. It neither invents
-moves nor evaluates positions. The original host choices require matching
+This helper neither invents moves nor evaluates positions. The original host choices require matching
 position/history and legal UCI moves. Additional candidates require the native
 producer's admitted, natural, completed-depth CP evidence to remain coherent.
 

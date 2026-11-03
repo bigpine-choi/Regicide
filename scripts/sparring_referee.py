@@ -20,7 +20,8 @@ import chess
 import chess.engine
 
 
-POLICY = "regicide-stockfish-referee-v1"
+POLICY = "regicide-stockfish-referee-v2"
+SUPPORTED_POLICIES = ("regicide-stockfish-referee-v1", POLICY)
 SOURCE = "local_stockfish_referee"
 MAX_LIVE_MS = 1500
 LIVE_STARTUP_SECONDS = 1.5
@@ -549,22 +550,27 @@ class SparringReferee:
             lower = -80 + ramp * min(0, baseline_own + 80)
             upper = 80 + ramp * max(0, baseline_own - 80)
             result["band"] = {"lower_cp_own": lower, "upper_cp_own": upper, "target_cp_own": target,
-                              "ramp": ramp, "baseline_cp_own": baseline_own}
+                              "ramp": ramp, "baseline_cp_own": baseline_own,
+                              "safety_floor_cp_own": min(lower, baseline_own),
+                              "selection": ("distance_to_target_then_band" if ramp > 0 else
+                                            "distance_to_band_then_target") + "; baseline wins ties"}
             result["depth"] = depth
             result["candidates"] = [{**copy.deepcopy(rows[move.uci()]),
                                       "cp_own": rows[move.uci()]["cp"] * sign if rows[move.uci()]["cp"] is not None else None}
                                      for move in allowed]
+            floor = min(lower, baseline_own)
+            def distance(cp):
+                band_distance = max(lower - cp, cp - upper, 0)
+                return ((abs(cp - target), band_distance) if ramp > 0 else
+                        (band_distance, abs(cp - target)))
             eligible = [row for row in result["candidates"]
-                        if row["cp_own"] is not None and lower <= row["cp_own"] <= upper]
+                        if row["cp_own"] is not None and row["cp_own"] >= floor]
             if not eligible:
                 return finish("no_candidate_in_reference_band", status="ready")
-            chosen = min(eligible, key=lambda row: (abs(row["cp_own"] - target), row["uci"] != baseline.uci(), row["uci"]))
-            # The own baseline remains an option even outside the close band.
-            # Without this comparison a tiny in-band concession could survive
-            # right up to move 50 while the interpolated target approaches a
-            # much stronger baseline outside the upper boundary.
-            if abs(baseline_own - target) <= abs(chosen["cp_own"] - target):
-                chosen = next(row for row in result["candidates"] if row["uci"] == baseline.uci())
+            # Repair large imbalances in verified steps without crossing the
+            # safety floor or worsening an already losing baseline.
+            chosen = min(eligible, key=lambda row: (*distance(row["cp_own"]),
+                         row["uci"] != baseline.uci(), row["uci"]))
             result.update(cp=chosen["cp"], mate=chosen["mate"], cp_white=chosen["cp"], mate_white=chosen["mate"])
             if chosen["uci"] == baseline.uci():
                 return finish("reference_prefers_regicide_baseline", status="ready")
@@ -587,11 +593,15 @@ class SparringReferee:
             result["postmove"] = {**packet, "fen": child.fen(en_passant="fen"),
                                   "cp_own": own_cp, "disagreement_cp": delta,
                                   "max_disagreement_cp": MAX_POST_DELTA_CP,
+                                  "baseline_distance": list(distance(baseline_own)),
+                                  "selected_distance": list(distance(own_cp)) if own_cp is not None else None,
                                   "scope": "unrestricted opponent replies; same local Stockfish"}
-            if own_cp is None or not lower <= own_cp <= upper:
+            if own_cp is None or own_cp < floor:
                 return finish("postmove_outside_reference_band")
             if delta > MAX_POST_DELTA_CP:
                 return finish("postmove_score_disagreement")
+            if distance(own_cp) >= distance(baseline_own):
+                return finish("postmove_no_reference_progress")
             if control.stopped():
                 return finish(control.reason or "cancelled")
             with self._condition:
@@ -599,7 +609,8 @@ class SparringReferee:
                     return finish("stale_position")
             result.update(selected_uci=chosen["uci"], accepted=True,
                           message="Regicide가 만든 후보를 별도 Stockfish가 비교한 혼합 스파링 선택입니다.")
-            return finish("accepted_reference_screen", status="ready")
+            partial = not (lower <= chosen["cp_own"] <= upper and lower <= own_cp <= upper)
+            return finish("accepted_reference_partial_recovery" if partial else "accepted_reference_screen", status="ready")
         except RefereeUnavailable:
             return finish("engine_identity_or_options_failed")
         except Exception:

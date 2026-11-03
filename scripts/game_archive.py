@@ -29,7 +29,7 @@ import boss_play
 import boss_opponent
 import sparring_play
 import sparring_rating
-from sparring_referee import POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
+from sparring_referee import POLICY as REFEREE_POLICY, SUPPORTED_POLICIES as REFEREE_POLICIES, SOURCE as REFEREE_SOURCE
 from game_clock import CONTROLS, MAX_ADJUSTED_MS, SCHEMA as CLOCK_SCHEMA
 
 
@@ -246,11 +246,11 @@ def _recorded_referee(record, sparring_mode):
     malformed optional metadata never prevents replaying a legal old game.
     """
     metadata = record.get("sparring_referee")
-    if not sparring_mode or not isinstance(metadata, dict) or metadata.get("policy") != REFEREE_POLICY:
+    if not sparring_mode or not isinstance(metadata, dict) or metadata.get("policy") not in REFEREE_POLICIES:
         return None
     engine = record.get("state", {}).get("engine", {})
     saved = engine.get("sparring_referee") if isinstance(engine, dict) else None
-    if not isinstance(saved, dict) or saved.get("policy") != REFEREE_POLICY:
+    if not isinstance(saved, dict) or saved.get("policy") != metadata["policy"]:
         return None
     flags = ("enabled", "available", "assisted")
     if any(type(metadata.get(key)) is not bool or metadata[key] != saved.get(key) for key in flags):
@@ -274,7 +274,7 @@ def _recorded_referee(record, sparring_mode):
     result = {key: metadata[key] for key in flags}
     result.update({"name": _text(name, limit=200) or None, "configured": configured,
                    "binary_sha256": sha if isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) else None,
-                   "policy": REFEREE_POLICY, "historical": True,
+                   "policy": metadata["policy"], "historical": True,
                    "status": _text(metadata.get("status"), "unavailable", 40),
                    "message": _text(metadata.get("message"), limit=400)})
     if isinstance(identity, dict):
@@ -301,7 +301,7 @@ def _recorded_referee_decisions(record, actual_decisions, positions, metadata):
         receipt = row.get("referee")
         ply = row["ply"]
         if (not isinstance(receipt, dict) or receipt not in recorded
-                or receipt.get("source") != REFEREE_SOURCE or receipt.get("policy") != REFEREE_POLICY
+                or receipt.get("source") != REFEREE_SOURCE or receipt.get("policy") != metadata["policy"]
                 or receipt.get("game_id") != record.get("game_id")
                 or receipt.get("fen") != positions.get(ply - 1)
                 or receipt.get("selected_uci") != row.get("selected_uci")

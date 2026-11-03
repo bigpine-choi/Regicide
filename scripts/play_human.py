@@ -33,6 +33,7 @@ from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 from opening_explorer import OpeningExplorer
 from sparring_referee import SparringReferee, POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
+from sparring_referee_pool import build_pool as referee_candidate_pool
 import opening_variety
 import dynamic_play
 import boss_play
@@ -444,7 +445,7 @@ class HumanGame:
 
     def _apply_sparring_referee(self, board, decision, baseline_info, baseline_packets, search,
                                 game_id, token, revision):
-        """Stockfish screens only Regicide's baseline and independently checked proposal.
+        """Stockfish screens the bounded pool of native Regicide candidates.
 
         The native engine remains untouched. A referee failure rejects a
         concession and retains the legal Regicide baseline, never an SF move.
@@ -458,6 +459,8 @@ class HumanGame:
         original = copy.deepcopy(decision)
         original.pop("referee", None)
         original.pop("regicide_proposal", None)
+        native_pool = referee_candidate_pool(board, original)
+        pool_by_uci = {row["uci"]: row for row in native_pool}
 
         def cancelled():
             with self._lock:
@@ -481,19 +484,20 @@ class HumanGame:
                 budget = min(budget, 350)
             elif remaining < 180_000:
                 budget = min(budget, 800)
-        allowed = (proposal != baseline and not self._sparring_analysis_only()
+        allowed = (len(native_pool) > 1 and not self._sparring_analysis_only()
                    and sparring_play.phase(board) != "finish" and budget >= 250 and not cancelled())
         if allowed:
             try:
                 receipt = self._referee.screen_candidates(
                     game_id=game_id, revision=revision, board=board.copy(stack=True),
-                    baseline_move=baseline, candidates=[baseline, proposal], budget_ms=int(budget),
+                    baseline_move=baseline, candidates=[chess.Move.from_uci(row["uci"]) for row in native_pool],
+                    budget_ms=int(budget),
                     cancelled=cancelled)
             except Exception as exc:
                 receipt = {"status": "error", "reason": "referee_exception", "error": type(exc).__name__}
         else:
             receipt = {"status": "skipped", "reason": ("full_strength_phase" if sparring_play.phase(board) == "finish"
-                       else "baseline_only" if proposal == baseline else "insufficient_clock_or_analysis_only"),
+                       else "baseline_only" if len(native_pool) <= 1 else "insufficient_clock_or_analysis_only"),
                        "selected_uci": baseline.uci()}
         if not isinstance(receipt, dict):
             receipt = {"status": "error", "reason": "invalid_referee_receipt"}
@@ -505,7 +509,7 @@ class HumanGame:
                         ("binary_sha256", self._referee_sha256))))
         selected = receipt.get("selected_uci")
         verified = (allowed and identity and receipt.get("status") == "ready"
-                    and selected in {baseline.uci(), proposal.uci()}
+                    and selected in pool_by_uci
                     and (selected == baseline.uci() or receipt.get("accepted") is True)
                     and not cancelled())
         # Skips at move 50 preserve the native baseline. A missing judge cannot
@@ -521,11 +525,39 @@ class HumanGame:
                 if key in original:
                     replacement[key] = copy.deepcopy(original[key])
             decision = replacement
+        elif verified and selected not in (baseline.uci(), proposal.uci()):
+            # Scores below remain native Regicide evidence. The new child
+            # check belongs only to the nested external referee receipt.
+            evidence = pool_by_uci[selected]["native_evidence"]
+            common, final = evidence["candidate_compared"], evidence["candidate_final"]
+            decision = copy.deepcopy(original)
+            decision.update(reason="referee_selected_verified_native_pool_candidate",
+                candidate_compared=copy.deepcopy(common), candidate_final=copy.deepcopy(final),
+                naturalness=copy.deepcopy(evidence["naturalness"]),
+                loss_cp=max(0, evidence["baseline"]["cp"] - common["cp"]),
+                selected_cp_own=common["cp"], selected_cp_white=common["cp_white"],
+                verification_policy=REFEREE_POLICY,
+                postmove_verification={"valid": False, "candidate_uci": selected,
+                    "reason": "native_child_not_researched; see separate Stockfish referee.postmove"})
+            control = copy.deepcopy(decision.get("band_control") or {})
+            inside = all(-sparring_play.BAND_CP <= value <= sparring_play.BAND_CP
+                         for value in (common["cp"], final["cp"]))
+            control.update(selected_cp=common["cp"], selected_final_cp=final["cp"],
+                selected_postmove_cp=None, basis="native_pool_then_separate_stockfish_postmove",
+                status="externally_screened", strict_band_status="met" if inside else "unmet",
+                strict_deviation_cp=max(max(-sparring_play.BAND_CP - value,
+                    value - sparring_play.BAND_CP, 0) for value in (common["cp"], final["cp"])),
+                pre20_inside=inside, pre30_inside=inside, pre40_inside=inside, pre50_inside=inside,
+                failure_reason=None, recovered=False, pacing_status="external_selection")
+            control["deviation_cp"] = None
+            decision["band_control"] = control
+            decision.pop("pressure", None)
         decision["selected_uci"] = selected
         decision["regicide_proposal"] = original
         receipt.update(game_id=game_id, revision=revision, fen=board.fen(en_passant="fen"),
                        baseline_uci=baseline.uci(), selected_uci=selected,
                        identity_verified=bool(identity), applied=bool(verified),
+                       native_pool=copy.deepcopy(native_pool),
                        assistant_scope="external-assisted practice; not standalone Regicide strength")
         if not verified and allowed:
             receipt["reason"] = receipt.get("reason") or "unverified_reference_baseline_retained"

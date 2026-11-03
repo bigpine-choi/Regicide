@@ -170,6 +170,49 @@ class SparringRefereeHostTests(unittest.TestCase):
         # The external 777cp belongs only to the nested referee evidence.
         self.assertNotEqual(receipt.get("selected_score", {}).get("cp_white"), 777)
 
+    def test_referee_can_choose_another_verified_native_probe_without_mixing_scores(self):
+        board = self.prepare()
+        proposal = self.proposal(board)
+        baseline = host.boss_play.score_line(board, info(board, "c7c5", 40, 6), chess.Move.from_uci("c7c5"))
+        line = host.boss_play.score_line(board, info(board, "e7e6", 20, 6), chess.Move.from_uci("e7e6"))
+        proposal.update(baseline=baseline, compared_depth=6, verification_depth=6,
+            probes=[{"uci": "e7e6", "admitted": True, "naturalness": {"admitted": True},
+                "compared_depth": 6, "candidate_compared": line, "candidate_final": line,
+                "reference_delta_cp": 20, "loss_cp": 20}])
+        self.referee.overrides = {"selected_uci": "e7e6"}
+        with mock.patch.object(self, "proposal", return_value=proposal):
+            state = self.play()
+        self.assertIsNone(state["error"])
+        self.assertEqual(state["last_move"], "e7e6")
+        decision = self.decision()
+        self.assertEqual(decision["regicide_proposal"]["selected_uci"], "e7e5")
+        self.assertEqual(decision["selected_cp_own"], 20)
+        self.assertEqual(decision["selected_cp_white"], -20)
+        self.assertEqual(decision["referee"]["cp_white"], 777)
+        self.assertEqual([row["uci"] for row in decision["referee"]["native_pool"]], ["c7c5", "e7e5", "e7e6"])
+        self.assertFalse(decision["postmove_verification"]["valid"])
+        self.assertIsNone(decision["band_control"]["selected_postmove_cp"])
+        self.assertEqual(decision["verification_policy"], sparring_referee.POLICY)
+        replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+        self.assertEqual(replay["referee_decisions"][0]["selected_uci"], "e7e6")
+
+    def test_historical_v1_referee_identity_and_policy_survive_reconstruction(self):
+        self.prepare(); self.play(); record = self.record()
+        old = "regicide-stockfish-referee-v1"
+        for meta in (record["sparring_referee"], record["state"]["engine"]["sparring_referee"]):
+            meta["policy"] = old
+        for receipt in record["sparring_referee"]["decisions"]:
+            receipt["policy"] = old
+        for decision in record["sparring_play"]["decisions"]:
+            decision["referee"]["policy"] = old
+        path = self.game.save_dir / (self.game.game_id + ".json")
+        path.write_text(json.dumps(record), encoding="utf-8")
+        replay = GameArchive(self.game.save_dir).get_game(self.game.game_id)
+        self.assertTrue(replay["summary"]["assisted_sparring"])
+        self.assertEqual(replay["summary"]["sparring_referee"]["policy"], old)
+        self.assertEqual(replay["referee_decisions"][0]["policy"], old)
+        self.assertIn('[RefereePolicy "' + old + '"]', replay["pgn"])
+
     def test_referee_exception_retains_own_baseline_without_breaking_the_game(self):
         self.prepare(); self.referee.error = TimeoutError("controlled referee timeout")
         state = self.play()
