@@ -481,6 +481,7 @@
 
   function renderHint() {
     const button = byId("hint-toggle");
+    byId("hint-panel").hidden = !hintEnabled;
     button.textContent = `추천 수: ${hintEnabled ? "켬" : "끔"}`;
     button.setAttribute("aria-pressed", String(hintEnabled));
     // This setting stays available while the opponent is thinking.
@@ -923,8 +924,15 @@
     } finally { clockPollInFlight = false; }
   }
 
+  function updateSidebarExplorer() {
+    const openingVisible = !window.RegicideSidebar || window.RegicideSidebar.selected("live") === "opening";
+    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode && openingVisible)});
+    const analyze = byId("live-analyze-current");
+    if (analyze) analyze.disabled = !state || closed || analysisMode || coachingMode;
+  }
+
   function render() {
-    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode)});
+    updateSidebarExplorer();
     renderClockAndAdvice();
     renderModeHelp();
     renderSparringRating();
@@ -1084,6 +1092,10 @@
     void mutate("/api/new", payload);
   });
   byId("boss-mode").addEventListener("change", renderModeHelp);
+  byId("live-analyze-current")?.addEventListener("click", () => {
+    if (!state || closed || analysisMode || coachingMode) return;
+    window.dispatchEvent(new CustomEvent("regicide-current-analysis", {detail:{fen:state.fen}}));
+  });
   byId("rapid-time-control").addEventListener("change", renderClockAndAdvice);
   byId("clock-adjust-toggle").addEventListener("click", () => {
     if (!canAdjustClock()) return;
@@ -1173,6 +1185,7 @@
     clearInterval(clockDrawTimer);
   });
   function changeHintMode() {
+    updateSidebarExplorer();
     clearHint();
     if (analysisMode || coachingMode) window.RegicideMotion?.cancel(boardElement, true);
     renderHint();
@@ -1182,5 +1195,6 @@
   }
   window.addEventListener("regicide-analysis-mode", (event) => { analysisMode = event.detail === true; changeHintMode(); });
   window.addEventListener("regicide-coaching-mode", (event) => { coachingMode = event.detail === true; changeHintMode(); });
+  window.addEventListener("regicide-sidebar-change", (event) => { if (event.detail?.name === "live") updateSidebarExplorer(); });
   void initialize();
 })();

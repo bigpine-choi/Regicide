@@ -94,11 +94,12 @@ async function browser(initial = state()) {
 const cases = [];
 const test = (name, run) => cases.push({name, run});
 
-test("the card sits between settings and moves without moving the board or hints", () => {
+test("opening guidance lives in its own panel while common game tools precede the scrolling panels", () => {
   const html = fs.readFileSync(path.join(__dirname, "../web/human-play/index.html"), "utf8");
-  assert.ok(html.indexOf('id="hint-panel"') < html.indexOf('class="card setup-card"'));
-  assert.ok(html.indexOf('class="card setup-card"') < html.indexOf('id="opening-guide"'));
-  assert.ok(html.indexOf('id="opening-guide"') < html.indexOf('class="card moves-card"'));
+  assert.ok(html.indexOf('id="undo"') < html.indexOf('id="live-sidebar-panel-game"'));
+  assert.ok(html.indexOf('id="live-sidebar-panel-opening"') < html.indexOf('id="opening-guide"'));
+  assert.ok(html.indexOf('id="opening-guide"') < html.indexOf('id="live-sidebar-panel-records"'));
+  assert.ok(html.indexOf('id="live-sidebar-panel-records"') < html.indexOf('class="card moves-card"'));
   assert.match(html, /id="opening-status"[^>]+aria-live="polite"/);
 });
 

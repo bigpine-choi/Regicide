@@ -26,13 +26,13 @@ from opening_explorer import OpeningExplorer
 from play_human import HumanGame, HumanServer
 
 
-def fixture_response(request, *, timeout):
+def fixture_response(request, *, timeout, max_moves=5):
     assert request.full_url.startswith("https://explorer.lichess.org/")
     assert request.get_header("Authorization", "").startswith("Bearer ")
     parameters = urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)
     board = chess.Board(parameters["fen"][0])
     rows = []
-    for index, move in enumerate(list(board.legal_moves)[:5]):
+    for index, move in enumerate(list(board.legal_moves)[:max_moves]):
         rows.append({"uci": move.uci(), "white": 200 + index * 60,
                      "draws": 100 + index * 10, "black": 150 + index * 30,
                      "averageRating": 2300})
@@ -52,6 +52,8 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / "build/opening-explorer")
     parser.add_argument("--serve", action="store_true")
     parser.add_argument("--godot", type=Path, help="Also drive the real native scene over local HTTP")
+    parser.add_argument("--fixture-moves", type=int, default=5, choices=range(1, 31),
+                        help="Number of legal next moves in synthetic statistics, for layout stress checks")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     checks = []
@@ -60,7 +62,8 @@ def main():
         credentials = LichessCredentials(folder / "credentials.dpapi")
         credentials.set("verification_fixture_only", remember=False)
         explorer = OpeningExplorer(cache_dir=folder / "cache", credentials=credentials,
-                                   opener=fixture_response, min_interval=0)
+                                   opener=lambda request, timeout: fixture_response(request, timeout=timeout, max_moves=args.fixture_moves),
+                                   min_interval=0)
         game = HumanGame(args.binary, folder / "games")
         try:
             with HumanServer(game, explorer=explorer) as server:
@@ -84,7 +87,9 @@ def main():
                     while report["status"] == "loading" and time.monotonic() < deadline:
                         time.sleep(.01)
                         report = request("/api/opening-explorer")
-                    assert report["status"] == "ready" and report["total"] == 3250
+                    expected_count = min(args.fixture_moves, chess.Board().legal_moves.count())
+                    expected_total = sum(450 + 100 * index for index in range(expected_count))
+                    assert report["status"] == "ready" and report["total"] == expected_total
                     assert report["ratings"] == [1600, 1800] and report["speeds"] == ["rapid"]
                     assert abs(sum(row["play_pct"] for row in report["moves"]) - 100) < 1e-8
                     checks.append("real HTTP + explorer worker + filtered synthetic statistics")

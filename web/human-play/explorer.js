@@ -45,6 +45,7 @@
     constructor(host, name) {
       this.host = host; this.name = name; this.enabled = false; this.active = false; this.fen = "";
       this.epoch = 0; this.timer = null; this.state = null; this.signature = ""; this.requestKey = null;
+      this.section = "stats"; this.pending = false;
       this.mount();
     }
 
@@ -57,8 +58,23 @@
       this.toggle = element("input"); this.toggle.type = "checkbox";
       this.toggle.setAttribute("aria-label", "리체스 오프닝 통계 켜기");
       toggleLabel.append(this.toggle, element("span", "", "통계 켜기")); heading.append(toggleLabel);
-      this.host.append(heading, element("p", "help-note", "켜면 현재 위치를 리체스로 전송합니다. 기보 전체와 개인 정보는 보내지 않습니다."));
+      this.host.append(heading, element("p", "help-note", "실제 대국 통계 · 켜면 현재 위치를 리체스로 전송합니다."));
       this.body = element("div", "explorer-body"); this.body.hidden = true;
+      const tabs = element("div", "explorer-tabs"); tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "오프닝 탐색기 도구");
+      this.sections = new Map(); this.sectionButtons = new Map();
+      for (const [key, title] of [["stats", "통계"], ["games", "참고 기보"], ["connection", "연결 설정"]]) {
+        const button = element("button", "", title); button.type = "button"; button.id = `${this.name}-explorer-tab-${key}`;
+        button.setAttribute("role", "tab"); button.setAttribute("aria-controls", `${this.name}-explorer-panel-${key}`);
+        const panel = element("div", `explorer-section explorer-section-${key}`); panel.id = `${this.name}-explorer-panel-${key}`;
+        panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", button.id);
+        this.sections.set(key, panel); this.sectionButtons.set(key, button); tabs.append(button);
+        button.addEventListener("click", () => { this.selectSection(key); });
+        button.addEventListener("keydown", (event) => {
+          const keys = [...this.sections.keys()], index = keys.indexOf(key);
+          const next = event.key === "ArrowRight" ? keys[(index + 1) % keys.length] : event.key === "ArrowLeft" ? keys[(index + keys.length - 1) % keys.length] : event.key === "Home" ? keys[0] : event.key === "End" ? keys.at(-1) : null;
+          if (next) { event.preventDefault(); this.selectSection(next); this.sectionButtons.get(next).focus(); }
+        });
+      }
       const sourceLabel = element("label", "field-label", "대국 자료"); sourceLabel.htmlFor = `${this.name}-explorer-source`;
       this.source = element("select"); this.source.id = sourceLabel.htmlFor;
       for (const [value, label] of [["masters", "마스터 대국"], ["lichess", "리체스 일반 대국"]]) {
@@ -78,16 +94,22 @@
         const option = element("option", "", label); option.value = value; this.speeds.append(option);
       }
       this.speeds.value = initialSpeeds.join(",");
-      this.filters.append(ratingLabel, this.ratings, speedLabel, this.speeds);
+      const ratingField = element("div"), speedField = element("div");
+      ratingField.append(ratingLabel, this.ratings); speedField.append(speedLabel, this.speeds); this.filters.append(ratingField, speedField);
       this.status = element("p", "explorer-status"); this.status.setAttribute("role", "status");
-      this.refresh = element("button", "secondary-button", "현재 위치 다시 조회"); this.refresh.type = "button";
+      this.refresh = element("button", "secondary-button explorer-refresh", "↻"); this.refresh.type = "button";
+      this.refresh.setAttribute("aria-label", "현재 위치 다시 조회"); this.refresh.title = "현재 위치 다시 조회";
       this.summary = element("p", "help-note");
       this.results = element("div", "explorer-results");
       this.games = element("div", "explorer-games");
-      this.body.append(sourceLabel, this.source, this.filters, this.status, this.refresh, this.summary, this.results, this.games,
-        element("p", "help-note explorer-footnote", "백승·무·흑승은 실제 경기의 결과입니다. 표본이 적으면 변동이 크며, 엔진 평가나 다음 경기의 승률을 뜻하지 않습니다."));
+      const toolbar = element("div", "explorer-toolbar"), sourceField = element("div"); sourceField.append(sourceLabel, this.source); toolbar.append(sourceField, this.refresh);
+      this.sections.get("stats").append(toolbar, this.filters, this.summary, this.results,
+        element("p", "help-note explorer-footnote", "백승·무·흑승은 실전 결과이며 엔진 평가가 아닙니다. 표본 수를 함께 확인하세요."));
+      this.sections.get("games").append(this.games);
+      this.body.append(tabs, this.status, ...this.sections.values());
       this.mountAuthentication();
       this.host.append(this.body);
+      this.selectSection("stats", false);
       this.toggle.addEventListener("change", () => {
         this.enabled = this.toggle.checked; this.body.hidden = !this.enabled;
         this.invalidate(); this.signature = ""; if (this.enabled) this.sync();
@@ -99,8 +121,7 @@
     }
 
     mountAuthentication() {
-      const details = element("details", "explorer-auth");
-      details.append(element("summary", "", "리체스 연결 설정"));
+      const details = element("div", "explorer-auth");
       const link = element("a", "", "리체스 연결키 만들기 ↗");
       link.href = "https://lichess.org/account/oauth/token/create"; link.target = "_blank"; link.rel = "noopener noreferrer";
       const note = element("p", "help-note", "연결키는 Regicide가 리체스의 오프닝 자료를 읽을 수 있게 하는 열쇠입니다. 리체스 화면에서는 ‘토큰’이라고 부릅니다.");
@@ -118,19 +139,34 @@
       this.save = element("button", "secondary-button", "연결하기"); this.save.type = "button";
       this.connection = element("p", "help-note"); this.connection.setAttribute("role", "status");
       details.append(link, note, steps, privacy, label, this.secret, rememberLabel, this.save, this.connection);
-      this.body.append(details);
+      this.sections.get("connection").append(details);
       this.save.addEventListener("click", () => { void this.saveToken(); });
     }
 
     invalidate() {
       this.epoch++; if (this.timer !== null) clearTimeout(this.timer); this.timer = null;
+      this.pending = false;
       this.requestKey = null; this.state = null; this.results.replaceChildren(); this.games.replaceChildren(); this.summary.textContent = "";
+    }
+
+    pause() {
+      this.epoch++; if (this.timer !== null) clearTimeout(this.timer); this.timer = null; this.pending = false;
+    }
+
+    selectSection(section, sync = true) {
+      if (!this.sections.has(section)) return;
+      this.section = section;
+      for (const [key, panel] of this.sections) {
+        const selected = key === section; panel.hidden = !selected;
+        this.sectionButtons.get(key).setAttribute("aria-selected", String(selected)); this.sectionButtons.get(key).tabIndex = selected ? 0 : -1;
+      }
+      if (sync) this.sync();
     }
 
     update(value) {
       const changed = this.fen !== value.fen || this.active !== Boolean(value.active);
       this.fen = value.fen || ""; this.active = Boolean(value.active);
-      if (changed) { this.signature = ""; this.sync(); }
+      if (changed) this.sync();
     }
 
     query() {
@@ -140,15 +176,24 @@
     }
 
     sync() {
-      if (!this.enabled || !this.active || !this.fen) {
-        this.invalidate(); this.status.textContent = this.active ? "통계를 켜면 현재 위치를 조회합니다." : "분석을 시작하거나 대국 화면으로 돌아오면 통계를 조회합니다.";
+      if (!this.enabled) {
+        this.invalidate(); this.refresh.disabled = true; return;
+      }
+      if (!this.active || !this.fen || this.section === "connection") {
+        this.pause();
+        if (this.section === "connection") this.status.textContent = "연결 설정 · 통계 탭으로 돌아가면 현재 위치를 조회합니다.";
+        else if (!this.state) this.status.textContent = "분석을 시작하거나 오프닝 탭으로 돌아오면 통계를 조회합니다.";
         this.refresh.disabled = true; return;
       }
       this.refresh.disabled = false;
       const payload = this.query(), signature = JSON.stringify(payload);
-      if (this.signature === signature) return;
+      if (this.signature === signature && (this.pending || this.state && this.state.status !== "loading")) {
+        if (this.state && !this.pending) this.render(this.state);
+        return;
+      }
       this.signature = signature; this.invalidate();
       this.status.textContent = "리체스에서 현재 위치의 통계를 조회합니다…";
+      this.pending = true;
       const ticket = this.epoch;
       void this.load(payload, ticket);
     }
@@ -165,14 +210,16 @@
         if (!this.matches(value, payload, ticket)) {
           if (ticket === this.epoch && this.enabled && this.active) {
             this.state = null; this.results.replaceChildren(); this.games.replaceChildren(); this.summary.textContent = "";
+            this.pending = false;
             this.status.textContent = "다른 위치의 조회로 바뀌었습니다. 현재 위치 다시 조회를 눌러 주세요.";
           }
           return;
         }
-        this.requestKey = value.request_key || null; this.state = value; this.render(value);
+        this.requestKey = value.request_key || null; this.state = value; this.pending = value.status === "loading"; this.render(value);
         if (value.status === "loading") this.timer = setTimeout(() => { this.timer = null; void this.load(payload, ticket, true); }, 500);
       } catch (_) {
         if (ticket !== this.epoch || !this.enabled || !this.active) return;
+        this.pending = false;
         this.results.replaceChildren(); this.games.replaceChildren(); this.summary.textContent = "";
         this.status.textContent = "통계 서비스와 연결하지 못했습니다. 연결을 확인하고 다시 조회해 주세요.";
       }
@@ -186,14 +233,18 @@
         const value = await request({action:"token", token:secret, remember:this.remember.checked});
         const message = text(value.message, 400);
         this.connection.textContent = value.configured ? `${message || "연결키를 설정했습니다."} 실제 통계 조회로 연결 상태를 확인합니다.` : message || "연결 설정을 확인해 주세요.";
-        for (const component of components.values()) { component.signature = ""; component.sync(); }
+        for (const component of components.values()) {
+          component.signature = "";
+          if (component === this && value.configured) component.selectSection("stats");
+          else component.sync();
+        }
       } catch (_) { this.connection.textContent = "연결키를 저장하지 못했습니다. 연결 설정을 확인해 주세요."; }
       finally { this.save.disabled = false; }
     }
 
     render(value) {
       this.results.replaceChildren(); this.games.replaceChildren(); this.summary.textContent = "";
-      const messages = {idle:"현재 위치를 조회하세요.", loading:"리체스 통계를 불러오고 있습니다…", auth_required:"리체스 연결이 필요합니다. 아래 연결 설정을 열고 연결키를 만들어 입력하세요.",
+      const messages = {idle:"현재 위치를 조회하세요.", loading:"리체스 통계를 불러오고 있습니다…", auth_required:"리체스 연결이 필요합니다. 연결 설정 탭에서 연결키를 입력하세요.",
         rate_limited:`리체스 조회 한도에 도달했습니다. ${Math.max(0, Number(value.retry_after) || 0)}초 뒤 다시 조회해 주세요.`, error:"통계를 읽지 못했습니다. 잠시 후 다시 조회해 주세요."};
       this.status.textContent = messages[value.status] || text(value.message) || "통계를 준비하고 있습니다.";
       if (value.status !== "ready") return;
@@ -205,27 +256,30 @@
       if (Number(value.total) > 0) this.results.append(element("p", "help-note", "다음 수 · 대국 수 / 선택률 · 백승 / 무 / 흑승"));
       for (const move of (value.moves || []).slice(0, 20)) {
         if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(move.uci || "") || typeof move.fen_after !== "string") continue;
-        const row = element("div", "explorer-move");
-        const heading = element("div", "explorer-move-heading");
-        heading.append(element("strong", "", text(move.san, 20) || move.uci), element("span", "", `${number(move.count)}판 · ${percent(move.play_pct)}`));
+        const row = element("button", "explorer-move explorer-explore"); row.type = "button";
+        const heading = element("span", "explorer-move-heading");
+        heading.append(element("strong", "", text(move.san, 20) || move.uci), element("span", "", `${number(move.count)}판 · ${percent(move.play_pct)}`), element("span", "explorer-row-arrow", "↗"));
         row.append(heading, this.resultBar(move));
-        const explore = element("button", "secondary-button explorer-explore", "이 수로 탐색"); explore.type = "button";
-        explore.setAttribute("aria-label", `${text(move.san, 20) || move.uci} 이후 위치를 분석 보드에서 탐색`);
+        row.setAttribute("aria-label", `${text(move.san, 20) || move.uci} 이후 위치를 분석 보드에서 탐색`);
+        row.title = "이 수를 둔 위치를 분석 보드에서 탐색";
         const fen = move.fen_after, ticket = this.epoch, requestKey = this.requestKey;
-        explore.addEventListener("click", () => {
+        row.addEventListener("click", () => {
           if (ticket !== this.epoch || !this.active || !this.enabled || this.state?.request_key !== requestKey) return;
           const analysis = components.get("analysis");
           if (analysis) {
             analysis.enabled = true; analysis.toggle.checked = true; analysis.body.hidden = false;
             analysis.source.value = this.source.value; analysis.ratings.value = this.ratings.value; analysis.speeds.value = this.speeds.value;
             analysis.filters.hidden = analysis.source.value !== "lichess"; analysis.signature = "";
+            analysis.selectSection("stats", false);
           }
+          window.RegicideSidebar?.select("analysis", "opening");
           window.dispatchEvent(new CustomEvent("regicide-explorer-analyze", {detail:{fen}}));
         });
-        row.append(explore); this.results.append(row);
+        this.results.append(row);
       }
       const games = (value.games || []).slice(0, 5).filter((game) => gameLink(game));
       if (games.length) this.games.append(element("h3", "", "참고 기보"));
+      else this.games.append(element("p", "help-note", "현재 위치에서 제공되는 참고 기보가 없습니다."));
       for (const game of games) {
         const year = Number.isInteger(Number(game.year)) && Number(game.year) >= 1000 && Number(game.year) <= 9999 ? String(Number(game.year)) : "";
         const link = element("a", "explorer-game", `${text(game.white, 50)} — ${text(game.black, 50)}${year ? ` · ${year}` : ""}`);
@@ -234,7 +288,7 @@
     }
 
     resultBar(value) {
-      const bar = element("div", "explorer-result-bar");
+      const bar = element("span", "explorer-result-bar");
       const label = `백승 ${percent(value.white_pct)} / 무 ${percent(value.draw_pct)} / 흑승 ${percent(value.black_pct)}`;
       bar.setAttribute("role", "img"); bar.setAttribute("aria-label", label); bar.title = label;
       for (const [field, className] of [["white_pct", "white"], ["draw_pct", "draw"], ["black_pct", "black"]]) {

@@ -61,6 +61,12 @@ var _poll_in_flight: bool = false
 var _state_ready: bool = false
 var _error: String = ""
 var opening_explorer: OpeningExplorer
+var sidebar_tabs: TabBar
+var sidebar_scroll: ScrollContainer
+var sidebar_pages: Array[VBoxContainer] = []
+var quick_actions: GridContainer
+var _sidebar_active: int = 0
+var _sidebar_scroll_positions: Array[int] = [0, 0]
 
 
 func _ready() -> void:
@@ -185,21 +191,52 @@ func _build_ui() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		panel_margin.add_theme_constant_override("margin_" + side, 12)
 	panel.add_child(panel_margin)
+	var side_shell := VBoxContainer.new()
+	side_shell.name = "AnalysisSidebarShell"
+	side_shell.add_theme_constant_override("separation", 7)
+	panel_margin.add_child(side_shell)
+	sidebar_tabs = TabBar.new()
+	sidebar_tabs.name = "AnalysisSidebarTabs"
+	OpeningExplorer.style_tabs(sidebar_tabs)
+	for tab_caption in ["분석", "오프닝"]:
+		sidebar_tabs.add_tab(tab_caption)
+	sidebar_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
+	sidebar_tabs.tab_changed.connect(select_sidebar_tab)
+	side_shell.add_child(sidebar_tabs)
+	quick_actions = GridContainer.new()
+	quick_actions.name = "AnalysisQuickActions"
+	quick_actions.columns = 2
+	quick_actions.add_theme_constant_override("h_separation", 5)
+	quick_actions.add_theme_constant_override("v_separation", 5)
+	side_shell.add_child(quick_actions)
 	var scroll := ScrollContainer.new()
+	sidebar_scroll = scroll
 	scroll.name = "AnalysisSidebarScroll"
 	# The sidebar owns overflow; its contents must never widen the board row.
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	panel_margin.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side_shell.add_child(scroll)
+	var page_stack := VBoxContainer.new()
+	page_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(page_stack)
 	var sidebar := VBoxContainer.new()
 	sidebar.name = "AnalysisSidebarContents"
 	sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sidebar.add_theme_constant_override("separation", 8)
-	scroll.add_child(sidebar)
+	page_stack.add_child(sidebar)
+	sidebar_pages.append(sidebar)
+	var opening_sidebar := VBoxContainer.new()
+	opening_sidebar.name = "AnalysisOpeningContents"
+	opening_sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page_stack.add_child(opening_sidebar)
+	sidebar_pages.append(opening_sidebar)
+	select_sidebar_tab(0)
 	status_label = _label("원하는 위치를 만들어 보세요", 19, "f6f0de")
 	sidebar.add_child(status_label)
 	error_label = _label("", 13, "ffb4a1")
 	error_label.name = "AnalysisError"
-	sidebar.add_child(error_label)
+	side_shell.add_child(error_label)
+	side_shell.move_child(error_label, 2)
 	sidebar.add_child(evaluation_detail)
 	sidebar.add_child(castle_actions)
 	sidebar.add_child(castle_reason)
@@ -293,7 +330,7 @@ func _build_ui() -> void:
 	time_option.select(1)
 	sidebar.add_child(time_option)
 	start_button = _button("이 배치로 분석 시작", _start_analysis, "AnalysisStart")
-	sidebar.add_child(start_button)
+	quick_actions.add_child(start_button)
 	play_controls = VBoxContainer.new()
 	play_controls.add_theme_constant_override("separation", 8)
 	sidebar.add_child(play_controls)
@@ -303,21 +340,25 @@ func _build_ui() -> void:
 	recommendation_detail = _label("", 13, "a3b6c8")
 	play_controls.add_child(recommendation_detail)
 	apply_button = _button("추천 수 따라 두기", _apply_recommendation, "AnalysisApply")
-	play_controls.add_child(apply_button)
+	quick_actions.add_child(apply_button)
 	promotion_row = HBoxContainer.new()
 	play_controls.add_child(promotion_row)
 	for kind in [["q", "퀸"], ["r", "룩"], ["b", "비숍"], ["n", "나이트"]]:
 		promotion_row.add_child(_button(str(kind[1]), _promote.bind(str(kind[0])), "AnalysisPromote" + str(kind[0])))
-	undo_button = _button("한 수 되돌리기", _mutate.bind("undo", {}), "AnalysisUndo")
-	play_controls.add_child(undo_button)
-	edit_button = _button("현재 배치 다시 편집", _edit_position, "AnalysisEdit")
-	play_controls.add_child(edit_button)
+	undo_button = _button("한 수 무르기", _mutate.bind("undo", {}), "AnalysisUndo")
+	quick_actions.add_child(undo_button)
+	quick_actions.move_child(undo_button, 1)
+	edit_button = _button("배치 편집", _edit_position, "AnalysisEdit")
+	quick_actions.add_child(edit_button)
+	for action_button in [start_button, undo_button, apply_button, edit_button]:
+		action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		action_button.add_theme_font_size_override("font_size", 14)
 	history = _label("", 13, "a3b6c8")
 	play_controls.add_child(history)
 	play_controls.add_child(_label("백·흑 양쪽 수를 직접 둘 수 있습니다. 추천은 현재 차례의 Regicide가 계산합니다.", 12, "8197aa"))
 	opening_explorer = OpeningExplorer.new()
 	opening_explorer.explore_position.connect(_on_explorer_position)
-	sidebar.add_child(opening_explorer)
+	opening_sidebar.add_child(opening_explorer)
 	requester = HTTPRequest.new()
 	requester.timeout = 6.0
 	add_child(requester)
@@ -351,6 +392,7 @@ func open_position(fen: String, url: String, token: String, explorer_preferences
 	opening_explorer.set_context(source_fen, backend_url, backend_token, offline_mode)
 	if not explorer_preferences.is_empty():
 		opening_explorer.apply_preferences(explorer_preferences)
+	select_sidebar_tab(1 if not explorer_preferences.is_empty() and explorer_preferences.get("enabled", false) else 0)
 	show()
 	_render()
 	if not offline_mode:
@@ -374,7 +416,21 @@ func explore_position(fen: String, url: String, token: String, explorer_preferen
 func _on_explorer_position(fen: String) -> void:
 	if busy or fen.is_empty():
 		return
-	await explore_position(fen, backend_url, backend_token)
+	await explore_position(fen, backend_url, backend_token, opening_explorer.preferences())
+
+
+func select_sidebar_tab(index: int) -> void:
+	if sidebar_pages.is_empty():
+		return
+	index = clampi(index, 0, sidebar_pages.size() - 1)
+	if index != _sidebar_active:
+		_sidebar_scroll_positions[_sidebar_active] = sidebar_scroll.scroll_vertical
+	_sidebar_active = index
+	if sidebar_tabs.current_tab != index:
+		sidebar_tabs.current_tab = index
+	for page in range(sidebar_pages.size()):
+		sidebar_pages[page].visible = page == index
+	sidebar_scroll.set_deferred("scroll_vertical", _sidebar_scroll_positions[index])
 
 
 func _choose_piece(symbol: String, label: String) -> void:
@@ -774,6 +830,7 @@ func _edit_position() -> void:
 	if not await _mutate("stop", {}):
 		return
 	editing = true
+	select_sidebar_tab(0)
 	_set_editor_fen(fen)
 	_render()
 
@@ -922,6 +979,11 @@ func _render() -> void:
 	play_controls.visible = not editing
 	start_button.text = "이 배치로 분석 시작" if editing else "현재 위치 다시 분석"
 	start_button.disabled = busy or not _state_ready or backend_url.is_empty()
+	apply_button.disabled = editing or not _hint_ready(analysis_state.get("hint", {}))
+	undo_button.disabled = editing or busy or not analysis_state.get("can_undo", false)
+	edit_button.disabled = editing or busy
+	if not model.pending_promotions.is_empty() and _sidebar_active != 0:
+		select_sidebar_tab(0)
 	return_button.disabled = busy
 	turn_option.disabled = busy
 	time_option.disabled = busy

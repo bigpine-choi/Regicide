@@ -63,7 +63,7 @@ func _run() -> void:
 		verify(root.get_texture().get_image().save_png(output) == OK, "native fixture image saved")
 	verify(panel._matches(fixture()), "masters ignores unused rating and speed filters")
 	panel.explore_position.connect(func(fen: String): selected_fen = fen)
-	panel.rows.get_child(0).get_child(3).pressed.emit()
+	panel.rows.get_child(0).pressed.emit()
 	verify(selected_fen == AFTER and panel.current_fen == START, "candidate emits analysis position without changing live context")
 	var count: int = panel.captured.size()
 	panel.set_context(START, "http://127.0.0.1:1", "local-fixture")
@@ -103,6 +103,21 @@ func _run() -> void:
 	await process_frame
 	verify(panel.token_input.text.is_empty() and panel.captured[-1].action == "token", "setting token clears input and uses host endpoint")
 	verify(panel.connection_label.text.contains("이번 실행"), "credential persistence warning survives ordinary query status")
+	panel.next_response = fixture(AFTER, "lichess")
+	panel.enabled_toggle.button_pressed = true
+	await process_frame
+	panel.select_section(2)
+	var requests_before: int = panel.captured.size()
+	panel.set_context(START, "http://127.0.0.1:1", "local-fixture")
+	panel._poll()
+	await process_frame
+	verify(panel.captured.size() == requests_before and panel._poll_timer.is_stopped(), "connection settings pause lookup and polling while board changes")
+	panel.next_response = fixture(START, "lichess")
+	panel.token_response = {"configured": true, "message": "연결 설정 저장"}
+	panel.token_input.text = "not-a-real-token-fixture"
+	panel._save_token()
+	await process_frame
+	verify(panel.section_tabs.current_tab == 0 and panel.captured[-1].action == "query" and panel.captured[-1].fen == START, "saving connection returns to statistics and queries latest position")
 	panel.free()
 	var analysis := Analysis.new()
 	analysis.offline_mode = true
@@ -135,6 +150,7 @@ func _run() -> void:
 	await process_frame
 	verify(app.opening_explorer != null and app.opening_explorer.current_fen == START and not app.opening_explorer.enabled_toggle.button_pressed, "live and saved-game board render provides context without external lookup")
 	var board_rect: Rect2 = app.board.get_global_rect()
+	app.select_sidebar_tab(1)
 	app.opening_explorer.enabled_toggle.button_pressed = true
 	app.opening_explorer.render_snapshot(fixture())
 	await process_frame

@@ -19,6 +19,16 @@ var coaching_overlay: CoachingMode
 var coaching_entry_button: Button
 var main_contents: MarginContainer
 var opening_explorer: OpeningExplorer
+var sidebar_tabs: TabBar
+var sidebar_pages: Array[VBoxContainer] = []
+var sidebar_quick_actions: HBoxContainer
+var sidebar_return_live: Button
+var new_game_toggle: Button
+var new_game_settings: VBoxContainer
+var current_time_controls: VBoxContainer
+var _sidebar_scroll_positions: Array[int] = [0, 0, 0]
+var _sidebar_active: int = 0
+var _new_game_expanded: bool = false
 
 var board_model: ViewModel = ViewModel.new()
 var state: Dictionary = {}
@@ -354,15 +364,46 @@ func _build_ui() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		side_margins.add_theme_constant_override("margin_" + side, 14)
 	side_panel.add_child(side_margins)
-	# The default window keeps the controls visible; a smaller window may scroll.
+	var side_shell := VBoxContainer.new()
+	side_shell.name = "SidebarShell"
+	side_shell.add_theme_constant_override("separation", 7)
+	side_margins.add_child(side_shell)
+	sidebar_tabs = TabBar.new()
+	sidebar_tabs.name = "SidebarTabs"
+	OpeningExplorer.style_tabs(sidebar_tabs)
+	for title in ["대국", "오프닝", "기보"]:
+		sidebar_tabs.add_tab(title)
+	sidebar_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
+	sidebar_tabs.tab_changed.connect(select_sidebar_tab)
+	side_shell.add_child(sidebar_tabs)
+	sidebar_quick_actions = HBoxContainer.new()
+	sidebar_quick_actions.name = "SidebarQuickActions"
+	sidebar_quick_actions.add_theme_constant_override("separation", 6)
+	side_shell.add_child(sidebar_quick_actions)
+	sidebar_return_live = _button("복기 종료 · 진행 대국으로", _exit_review)
+	sidebar_return_live.name = "SidebarReturnLive"
+	sidebar_return_live.hide()
+	side_shell.add_child(sidebar_return_live)
+	# Navigation and common actions remain outside the one scrolling body.
 	sidebar_scroll = ScrollContainer.new()
+	sidebar_scroll.name = "SidebarScroll"
+	sidebar_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sidebar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	side_margins.add_child(sidebar_scroll)
-	var sidebar := VBoxContainer.new()
-	sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sidebar.add_theme_constant_override("separation", 8)
-	sidebar_scroll.add_child(sidebar)
+	side_shell.add_child(sidebar_scroll)
+	var page_stack := VBoxContainer.new()
+	page_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sidebar_scroll.add_child(page_stack)
+	for title in ["GameControls", "OpeningControls", "RecordControls"]:
+		var section := VBoxContainer.new()
+		section.name = title
+		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		section.add_theme_constant_override("separation", 8)
+		page_stack.add_child(section)
+		sidebar_pages.append(section)
+	var sidebar: VBoxContainer = sidebar_pages[0]
+	var opening_sidebar: VBoxContainer = sidebar_pages[1]
+	var record_sidebar: VBoxContainer = sidebar_pages[2]
+	select_sidebar_tab(0)
 	status_label = _label("체스판을 준비하고 있어요", 18, "f6f0de")
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(status_label)
@@ -390,14 +431,15 @@ func _build_ui() -> void:
 	decision_panel.add_child(recommendation_detail)
 	# A required move choice stays above optional learning content.
 	_build_promotion(sidebar)
-	_build_opening_guide(sidebar)
+	_build_opening_guide(opening_sidebar)
 	opening_explorer = OpeningExplorer.new()
 	opening_explorer.explore_position.connect(_on_explorer_position)
-	sidebar.add_child(opening_explorer)
+	opening_sidebar.add_child(opening_explorer)
 	hint_button = _button("추천 수: 끔", _on_hint_pressed)
 	hint_button.name = "ToggleMoveHint"
 	hint_button.tooltip_text = "양쪽 차례의 후보를 최대 3개 표시합니다. 1순위 빨강, 2순위 주황, 3순위 노랑입니다. 내 수는 직접 두고, 상대 수는 Regicide가 선택합니다."
-	sidebar.add_child(hint_button)
+	sidebar_quick_actions.add_child(hint_button)
+	hint_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint_summary = _label("", 15, "9bd7ca")
 	hint_summary.name = "MoveHintSummary"
 	hint_summary.clip_text = true
@@ -421,7 +463,8 @@ func _build_ui() -> void:
 	sidebar.add_child(hint_detail)
 	error_label = _label("", 13, "ffb4a1")
 	error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sidebar.add_child(error_label)
+	side_shell.add_child(error_label)
+	side_shell.move_child(error_label, 3)
 	rating_label_panel = VBoxContainer.new()
 	rating_label_panel.name = "RatingLabelPanel"
 	rating_label_panel.visible = false
@@ -443,13 +486,13 @@ func _build_ui() -> void:
 	coaching_entry_button = _button("대국 코칭 · 실수와 최선수 복기", _on_coaching_pressed)
 	coaching_entry_button.name = "OpenCoaching"
 	coaching_entry_button.tooltip_text = "끝난 대국이나 보관함의 기보에서 실수와 최선수를 살펴봅니다."
-	sidebar.add_child(coaching_entry_button)
+	record_sidebar.add_child(coaching_entry_button)
 	library_button = _button("대국 보관함", _on_library_pressed)
 	library_button.name = "GameLibrary"
 	library_button.tooltip_text = "자동 보관된 대국을 골라 이전 수순을 다시 봅니다. 현재 대국은 그대로 유지됩니다."
 	var library_actions := HBoxContainer.new()
 	library_actions.add_theme_constant_override("separation", 8)
-	sidebar.add_child(library_actions)
+	record_sidebar.add_child(library_actions)
 	library_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	library_actions.add_child(library_button)
 	open_pgn_button = _button("PGN 파일 열기", _on_open_pgn_pressed)
@@ -457,14 +500,22 @@ func _build_ui() -> void:
 	open_pgn_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	open_pgn_button.tooltip_text = "저장한 PGN 파일을 읽기 전용으로 다시 봅니다. 현재 대국은 그대로 유지됩니다."
 	library_actions.add_child(open_pgn_button)
-	_build_review_controls(sidebar)
+	_build_review_controls(record_sidebar)
 	sidebar.add_child(HSeparator.new())
+	new_game_toggle = _button("새 대국 설정 ▸", _toggle_new_game_settings)
+	new_game_toggle.name = "NewGameSettingsToggle"
+	sidebar.add_child(new_game_toggle)
+	new_game_settings = VBoxContainer.new()
+	new_game_settings.name = "NewGameSettings"
+	new_game_settings.add_theme_constant_override("separation", 8)
+	new_game_settings.hide()
+	sidebar.add_child(new_game_settings)
 	var settings := GridContainer.new()
 	live_settings = settings
 	settings.columns = 2
 	settings.add_theme_constant_override("h_separation", 12)
 	settings.add_theme_constant_override("v_separation", 10)
-	sidebar.add_child(settings)
+	new_game_settings.add_child(settings)
 	settings.add_child(_label("내 기물", 14, "a3b6c8"))
 	color_option = OptionButton.new()
 	color_option.add_item("백으로 두기", 0)
@@ -505,16 +556,30 @@ func _build_ui() -> void:
 	game_mode_help = _label("", 12, "a3b6c8")
 	game_mode_help.name = "GameModeHelp"
 	game_mode_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sidebar.add_child(game_mode_help)
+	new_game_settings.add_child(game_mode_help)
 	_on_game_mode_selected(boss_mode_option.selected)
 	rapid_time_help = _label("", 12, "a3b6c8")
 	rapid_time_help.name = "RapidTimeHelp"
 	rapid_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sidebar.add_child(rapid_time_help)
+	new_game_settings.add_child(rapid_time_help)
 	_on_rapid_time_selected(0)
 	think_time_help = _label("AI 생각시간은 현재 대국에, 색·모드·대국 시계는 새 대국에 적용합니다.", 12, "9bd7ca")
 	think_time_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sidebar.add_child(think_time_help)
+	new_game_settings.add_child(think_time_help)
+	# Think time changes the current game; it must not live inside new-game setup.
+	current_time_controls = VBoxContainer.new()
+	current_time_controls.name = "CurrentGameThinkTime"
+	current_time_controls.add_theme_constant_override("separation", 4)
+	sidebar.add_child(current_time_controls)
+	sidebar.move_child(current_time_controls, 2)
+	var current_time_row := HBoxContainer.new()
+	current_time_row.add_theme_constant_override("separation", 8)
+	current_time_controls.add_child(current_time_row)
+	time_option_label.reparent(current_time_row)
+	time_option_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	time_option.reparent(current_time_row)
+	auto_time_label.reparent(current_time_row)
+	think_time_help.reparent(current_time_controls)
 	new_button = _button("새 대국 시작", _on_new_game_pressed)
 	sidebar.add_child(new_button)
 	var actions := HBoxContainer.new()
@@ -524,13 +589,16 @@ func _build_ui() -> void:
 	undo_button = _button("무르기", _on_undo_pressed)
 	undo_button.tooltip_text = "내 수와 Regicide의 응답을 함께 되돌려 내 차례로 돌아갑니다."
 	undo_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(undo_button)
+	sidebar_quick_actions.add_child(undo_button)
+	sidebar_quick_actions.move_child(undo_button, 0)
 	resign_button = _button("기권", _on_resign_pressed)
 	actions.add_child(resign_button)
 	_build_handicap(sidebar)
-	sidebar.add_child(HSeparator.new())
+	handicap_cancel_button.reparent(side_shell)
+	side_shell.move_child(handicap_cancel_button, 3)
+	record_sidebar.add_child(HSeparator.new())
 	var history_title := HBoxContainer.new()
-	sidebar.add_child(history_title)
+	record_sidebar.add_child(history_title)
 	var history_label := _label("대국 기보", 16)
 	history_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	history_title.add_child(history_label)
@@ -543,9 +611,9 @@ func _build_ui() -> void:
 	move_history.scroll_following = true
 	move_history.selection_enabled = true
 	move_history.add_theme_font_size_override("normal_font_size", 16)
-	sidebar.add_child(move_history)
+	record_sidebar.add_child(move_history)
 	save_button = _button("기보 파일로 저장 (PGN)", _on_save_pressed)
-	sidebar.add_child(save_button)
+	record_sidebar.add_child(save_button)
 	var footer := _label("시점은 자유롭게 바뀌며, 당신의 색과 차례는 바뀌지 않습니다.\n반복·50수 청구 무승부는 자동 처리합니다.", 12, "8197aa")
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(footer)
@@ -683,6 +751,26 @@ func _on_analysis_pressed() -> void:
 	_clear_hint()
 	analysis_overlay.offline_mode = offline_mode
 	analysis_overlay.open_position(str(_display_state().get("fen", "")), backend_url, backend_token)
+
+
+func select_sidebar_tab(index: int) -> void:
+	if sidebar_pages.is_empty():
+		return
+	index = clampi(index, 0, sidebar_pages.size() - 1)
+	if index != _sidebar_active:
+		_sidebar_scroll_positions[_sidebar_active] = sidebar_scroll.scroll_vertical
+	_sidebar_active = index
+	if sidebar_tabs.current_tab != index:
+		sidebar_tabs.current_tab = index
+	for page in range(sidebar_pages.size()):
+		sidebar_pages[page].visible = page == index
+	sidebar_scroll.set_deferred("scroll_vertical", _sidebar_scroll_positions[index])
+
+
+func _toggle_new_game_settings() -> void:
+	_new_game_expanded = not _new_game_expanded
+	new_game_settings.visible = _new_game_expanded and not review_mode
+	new_game_toggle.text = "새 대국 설정 ▾" if _new_game_expanded else "새 대국 설정 ▸"
 
 
 func _on_analysis_returned() -> void:
@@ -1271,6 +1359,7 @@ func _adopt_review(detail: Dictionary) -> bool:
 	board_model.pending_promotions.clear()
 	_notice_message = ""
 	error_message = ""
+	select_sidebar_tab(2)
 	return true
 
 
@@ -1315,6 +1404,7 @@ func _exit_review() -> void:
 	board_model.pending_promotions = _live_pending_promotions.duplicate()
 	board_model.apply_state(state)
 	_notice_message = "현재 대국으로 돌아왔습니다."
+	select_sidebar_tab(0)
 	_render()
 
 
@@ -1847,6 +1937,10 @@ func _cancel_promotion() -> void:
 
 
 func _on_new_game_pressed() -> void:
+	select_sidebar_tab(0)
+	_new_game_expanded = false
+	new_game_settings.hide()
+	new_game_toggle.text = "새 대국 설정 ▸"
 	var payload: Dictionary = {"color": "white" if color_option.selected == 0 else "black",
 		"boss_mode": boss_mode_option.get_selected_id() == 1,
 		"sparring_mode": boss_mode_option.get_selected_id() == 2,
@@ -2386,6 +2480,8 @@ func _open_pgn_file(path: String) -> void:
 func _render() -> void:
 	if board == null:
 		return
+	sidebar_return_live.visible = review_mode
+	sidebar_return_live.disabled = _file_dialog_busy() or request_in_flight or closing
 	if analysis_entry_button != null:
 		analysis_entry_button.disabled = _file_dialog_busy() or request_in_flight or think_time_request_in_flight or closing or backend_url.is_empty()
 	if coaching_entry_button != null:
@@ -2427,6 +2523,9 @@ func _render() -> void:
 	live_actions.visible = not review_mode
 	handicap_section.visible = not review_mode
 	new_button.visible = not review_mode
+	new_game_toggle.visible = not review_mode
+	new_game_settings.visible = _new_game_expanded and not review_mode
+	current_time_controls.visible = not review_mode
 	new_button.disabled = not enabled or replacing
 	color_option.disabled = not enabled or replacing
 	boss_mode_option.disabled = not enabled or replacing
@@ -2495,6 +2594,7 @@ func _render() -> void:
 
 
 func _reveal_promotion() -> void:
+	select_sidebar_tab(0)
 	await get_tree().process_frame
 	if not closing and promotion_panel.visible:
 		sidebar_scroll.ensure_control_visible(promotion_panel)

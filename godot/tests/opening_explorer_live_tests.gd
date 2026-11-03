@@ -71,6 +71,7 @@ func _run() -> void:
 	var original := identity(app.state)
 	verify(not app.own_backend, "validation attaches without owning or stopping host")
 	verify(not app.opening_explorer.enabled_toggle.button_pressed, "external statistics start disabled")
+	app.select_sidebar_tab(1)
 	app.opening_explorer.enabled_toggle.button_pressed = true
 	if not await wait_for(func(): return app.opening_explorer.snapshot.get("status", "") == "ready",
 		"real host worker returns validated fixture statistics"):
@@ -89,7 +90,7 @@ func _run() -> void:
 	fixture_note.add_theme_color_override("font_color", Color("ffd578"))
 	root.add_child(fixture_note)
 	await capture("native-http-current-position-fixture-statistics")
-	explorer.rows.get_child(0).get_child(3).pressed.emit()
+	explorer.rows.get_child(0).pressed.emit()
 	if not await wait_for(func(): return app.analysis_overlay.visible and not app.analysis_overlay.editing and not app.analysis_overlay.busy and app.analysis_overlay.analysis_state.get("fen", "") == target,
 		"candidate button starts separate analysis through actual HTTP"):
 		await finish()

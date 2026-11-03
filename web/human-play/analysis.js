@@ -355,7 +355,8 @@
   }
 
   function render() {
-    window.RegicideExplorer?.update("analysis", {fen:snapshot?.fen, active:Boolean(visible && !editing && !busy && snapshot?.active)});
+    const openingVisible = !window.RegicideSidebar || window.RegicideSidebar.selected("analysis") === "opening";
+    window.RegicideExplorer?.update("analysis", {fen:snapshot?.fen, active:Boolean(visible && !editing && !busy && snapshot?.active && openingVisible)});
     if (!visible || busy || (drag && !validDrag())) cancelDrag();
     returnNotice.textContent = returnFailure;
     returnNotice.hidden = visible || !returnFailure;
@@ -370,9 +371,14 @@
       `${hint.san || move} · ${move.slice(0,2)} → ${move.slice(2,4)}${move[4] ? ` · ${names[move[4]]}으로 승격` : ""}${hint.depth != null ? ` · 깊이 ${hint.depth}` : ""}` :
       busy ? "새 위치를 기다리고 있습니다…" : snapshot?.active ? (hint?.message || "Regicide가 추천 수를 찾고 있습니다…") : snapshot?.message || "추천할 수가 없습니다.";
     get("analysis-apply").disabled = !move;
+    get("analysis-apply").hidden = editing;
     get("analysis-start").disabled = busy || !editing || !snapshot;
+    get("analysis-start").hidden = !editing;
     get("analysis-undo").disabled = busy || editing || !snapshot?.can_undo;
+    get("analysis-undo").hidden = editing;
     get("analysis-edit").disabled = busy || editing;
+    get("analysis-edit").hidden = editing;
+    get("analysis-setup-details").hidden = !editing;
     get("analysis-time").disabled = busy || !editing;
     for (const id of ["analysis-turn","analysis-castling","analysis-ep","analysis-import","analysis-standard","analysis-clear","analysis-current"])
       get(id).disabled = busy || !editing;
@@ -470,17 +476,21 @@
     get("analysis-palette").append(button);
   }
   get("analysis-mode-button").addEventListener("click", () => { void enter(); });
-  window.addEventListener("regicide-explorer-analyze", async (event) => {
+  async function openPosition(event, opening) {
     const fen = event.detail?.fen;
     if (typeof fen !== "string" || busy) return;
     try { readFen(fen); } catch (_) { return; }
+    window.RegicideSidebar?.select("analysis", opening ? "opening" : "analysis");
     if (!visible) await enter();
     if (!visible || busy || !snapshot) return;
     if (await action("start", {fen,movetime_ms:Number(get("analysis-time").value)})) {
       editing = false; render();
       get("analysis-view").scrollIntoView?.({block:"start", behavior:"instant"});
     }
-  });
+  }
+  window.addEventListener("regicide-explorer-analyze", (event) => openPosition(event, true));
+  window.addEventListener("regicide-current-analysis", (event) => openPosition(event, false));
+  window.addEventListener("regicide-sidebar-change", (event) => { if (event.detail?.name === "analysis") render(); });
   get("live-mode-button").addEventListener("click", () => { void leave(); });
   get("analysis-flip").addEventListener("click", () => { cancelDrag(); blackView = !blackView; render(); });
   get("analysis-board").addEventListener("click", (event) => {

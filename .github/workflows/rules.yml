@@ -107,6 +107,8 @@ jobs:
       - run: node tests/opening_guide_web_tests.js
       - run: node --check web/human-play/explorer.js
       - run: node tests/opening_explorer_web_tests.js
+      - run: node --check web/human-play/sidebar_tabs.js
+      - run: node tests/sidebar_web_tests.js
       - run: node tests/web_analysis_tests.js
       - run: node tests/web_board_motion_tests.js
       - run: node tests/web_coaching_tests.js
@@ -244,6 +246,8 @@ jobs:
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/engine_pacing_transport_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/opening_explorer_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/opening_explorer_layout_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/opening_explorer_integration_tests.py --binary $binary --godot "$env:REGICIDE_TEST_GODOT"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

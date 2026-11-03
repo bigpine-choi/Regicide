@@ -93,10 +93,12 @@ test("default off and reload restores the saved preference", async () => {
   await off.api.pollHint();
   assert.equal(off.requests.length, 0);
   assert.equal(off.element("hint-toggle").attributes["aria-pressed"], "false");
+  assert.equal(off.element("hint-panel").hidden, true);
   const on = await browser(position({hint_enabled:true}));
   void on.api.pollHint();
   assert.equal(on.requests[0].url, "/api/hint");
   assert.equal(on.element("hint-toggle").attributes["aria-pressed"], "true");
+  assert.equal(on.element("hint-panel").hidden, false);
 });
 
 test("a legacy legal recommendation draws a ranked arrow in both orientations", async () => {

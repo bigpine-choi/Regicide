@@ -318,9 +318,7 @@ func _build_ui() -> void:
 	annotation_label = _label("", 14, "f4e9c9")
 	annotation_label.name = "CoachingMoveAnnotation"
 	sidebar.add_child(annotation_label)
-	_build_coach(sidebar)
-	annotation_legend = _label("기물 위 배지 · ★ 추천  ✓ 좋은 수  ?! 아쉬움  ? 실수  ?? 큰 실수  … 판단 보류\n!! 탁월 후보: 제한 시간 안에서 다른 대안까지 비교한 결과입니다. 배지는 더 깊은 분석에서 달라질 수 있습니다.", 12, "8197aa")
-	sidebar.add_child(annotation_legend)
+	# Choose and start the analysis before the longer, optional coach content.
 	side_option = OptionButton.new()
 	side_option.name = "CoachingHumanColor"
 	side_option.add_item("내가 둔 색 · 백", 0)
@@ -350,6 +348,9 @@ func _build_ui() -> void:
 	sidebar.add_child(progress_bar)
 	progress_label = _label("", 12, "9bd7ca")
 	sidebar.add_child(progress_label)
+	_build_coach(sidebar)
+	annotation_legend = _label("기물 위 배지 · ★ 추천  ✓ 좋은 수  ?! 아쉬움  ? 실수  ?? 큰 실수  … 판단 보류\n!! 탁월 후보: 제한 시간 안에서 다른 대안까지 비교한 결과입니다. 배지는 더 깊은 분석에서 달라질 수 있습니다.", 12, "8197aa")
+	sidebar.add_child(annotation_legend)
 	summary_label = _label("", 14, "f6f0de")
 	sidebar.add_child(summary_label)
 	focus_option = OptionButton.new()

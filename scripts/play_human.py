@@ -1816,11 +1816,12 @@ class HumanHandler(BaseHTTPRequestHandler):
             self._archive_get()
         elif self.path in ("/audio/move.wav", "/audio/capture.wav"):
             self._send(200, (ASSETS / self.path[1:]).read_bytes(), "audio/wav")
-        elif self.path in ("/", "/index.html", "/style.css", "/app.js", "/analysis.js", "/coaching.js", "/board_motion.js", "/move_sound.js", "/explorer.js"):
+        elif self.path in ("/", "/index.html", "/style.css", "/app.js", "/analysis.js", "/coaching.js", "/board_motion.js", "/move_sound.js", "/explorer.js", "/sidebar_tabs.js"):
             filename = "index.html" if self.path == "/" else self.path[1:]
             mime = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript",
                     "analysis.js": "text/javascript", "coaching.js": "text/javascript", "board_motion.js": "text/javascript",
-                    "move_sound.js": "text/javascript", "explorer.js": "text/javascript"}[filename]
+                    "move_sound.js": "text/javascript", "explorer.js": "text/javascript",
+                    "sidebar_tabs.js": "text/javascript"}[filename]
             contents = (ASSETS / filename).read_text(encoding="utf-8")
             if filename == "index.html":
                 contents = contents.replace("__REGICIDE_TOKEN__", self.server.token)
