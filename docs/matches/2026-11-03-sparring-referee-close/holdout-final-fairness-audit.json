@@ -1,0 +1,1105 @@
+{
+  "schema": "regicide.sparring-close-fairness-audit.v1",
+  "created_at": "2026-11-03T08:17:58.630339+00:00",
+  "scope": "execution fairness only; no equal-CPU, performance, whole-game causal or Elo inference",
+  "runner_status": "completed",
+  "jobs_total": 24,
+  "playing_jobs": 12,
+  "judging_jobs": 12,
+  "recorded_workers": 2,
+  "all_jobs_exit_zero": true,
+  "global_barrier": {
+    "passed": true,
+    "gap_seconds": 0.0024001598358154297,
+    "last_play_end_utc": "2026-11-03T08:14:42.338028+00:00",
+    "first_judge_start_utc": "2026-11-03T08:14:42.340428+00:00"
+  },
+  "concurrency_play": {
+    "maximum": 2,
+    "seconds_at_concurrency": {
+      "0": 0.0,
+      "1": 66.78528308868408,
+      "2": 590.6357889175415
+    }
+  },
+  "concurrency_judge": {
+    "maximum": 2,
+    "seconds_at_concurrency": {
+      "0": 0.0,
+      "1": 6.24984335899353,
+      "2": 40.49200963973999
+    }
+  },
+  "actual_start_order": [
+    "holdout-final-before-case-1",
+    "holdout-final-v1-case-1",
+    "holdout-final-v3-case-1",
+    "holdout-final-v1-case-2",
+    "holdout-final-v3-case-2",
+    "holdout-final-before-case-2",
+    "holdout-final-v3-case-3",
+    "holdout-final-before-case-3",
+    "holdout-final-v1-case-3",
+    "holdout-final-v3-case-4",
+    "holdout-final-v1-case-4",
+    "holdout-final-before-case-4"
+  ],
+  "sampling": {
+    "samples": 141,
+    "valid_cpu": 140,
+    "status_counts": {
+      "ok": 141
+    },
+    "max_sample_gap_seconds": 5.015460014343262,
+    "initial_unsampled_seconds": 0.002026081085205078,
+    "trailing_unsampled_seconds": 3.0784029960632324,
+    "runner_summary": {
+      "samples": 141,
+      "cpu_samples": 140,
+      "cpu_mean_percent": 17.084726570453984,
+      "cpu_max_percent": 45.95015576323988,
+      "memory_max_percent": 65,
+      "scope": "sampled total desktop load, including unrelated work; not isolated engine CPU"
+    }
+  },
+  "temporal_load_by_arm": {
+    "before": {
+      "cpu_interval_overlap_seconds": 404.9807059764862,
+      "weighted_desktop_cpu_percent": 16.751281833471182,
+      "max_overlapping_five_second_cpu_percent": 45.95015576323988,
+      "memory_sample_min_percent": 63,
+      "memory_sample_max_percent": 65,
+      "interpretation": "temporal exposure to total desktop load; not this arm's process CPU; interval-boundary prorating assumes uniform load"
+    },
+    "v1": {
+      "cpu_interval_overlap_seconds": 386.93603706359863,
+      "weighted_desktop_cpu_percent": 17.367092410428725,
+      "max_overlapping_five_second_cpu_percent": 20.644531249999996,
+      "memory_sample_min_percent": 63,
+      "memory_sample_max_percent": 65,
+      "interpretation": "temporal exposure to total desktop load; not this arm's process CPU; interval-boundary prorating assumes uniform load"
+    },
+    "v3": {
+      "cpu_interval_overlap_seconds": 456.14011788368225,
+      "weighted_desktop_cpu_percent": 17.882640606536587,
+      "max_overlapping_five_second_cpu_percent": 45.95015576323988,
+      "memory_sample_min_percent": 63,
+      "memory_sample_max_percent": 65,
+      "interpretation": "temporal exposure to total desktop load; not this arm's process CPU; interval-boundary prorating assumes uniform load"
+    }
+  },
+  "temporal_load_by_phase": {
+    "1": {
+      "cpu_interval_overlap_seconds": 657.4210720062256,
+      "weighted_desktop_cpu_percent": 17.044901225101924,
+      "max_overlapping_five_second_cpu_percent": 45.95015576323988,
+      "memory_sample_min_percent": 63,
+      "memory_sample_max_percent": 65,
+      "interpretation": "temporal exposure to total desktop load; not this arm's process CPU; interval-boundary prorating assumes uniform load"
+    },
+    "2": {
+      "cpu_interval_overlap_seconds": 43.66584777832031,
+      "weighted_desktop_cpu_percent": 17.69171268676065,
+      "max_overlapping_five_second_cpu_percent": 19.080996884735203,
+      "memory_sample_min_percent": 64,
+      "memory_sample_max_percent": 64,
+      "interpretation": "temporal exposure to total desktop load; not this arm's process CPU; interval-boundary prorating assumes uniform load"
+    }
+  },
+  "cases": [
+    {
+      "case": 1,
+      "matched": {
+        "v1": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        },
+        "v3": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        }
+      },
+      "conditions": {
+        "config": {
+          "variant": "before",
+          "referee": "off",
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\source-before",
+          "output": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\holdout-final\\before-case-1",
+          "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+          "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "judge_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "referee_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "ratings": [
+            1320,
+            1700
+          ],
+          "colors": [
+            "white",
+            "black"
+          ],
+          "game_ids": [
+            1
+          ],
+          "stage": "play",
+          "seed": "sparring-close-heldout-2026-11-03",
+          "own_ms": 1000,
+          "opponent_ms": 1000,
+          "time_control": "10+5",
+          "max_plies": 44,
+          "close_plies": 40,
+          "judge_depth": 14,
+          "judge_nodes": null,
+          "move_timeout": 70.0,
+          "judge_timeout": 15,
+          "openings": [
+            {
+              "id": "holdout-queens-gambit",
+              "moves": [
+                "d2d4",
+                "d7d5",
+                "c2c4",
+                "e7e6"
+              ]
+            }
+          ]
+        },
+        "schedule": {
+          "game": 1,
+          "pair": 1,
+          "pair_key": "c04a101400acbae6df85b8b7f14d0c1520e38bf563d2ab8759738d2c2933538c",
+          "sparring_seed": "c04a101400acbae6df85b8b7f14d0c15",
+          "opponent_elo": 1320,
+          "sparring_color": "white",
+          "opening_id": "holdout-queens-gambit",
+          "opening_uci": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6"
+          ]
+        },
+        "protocol": {
+          "pairing": "same opening, seed, color and opponent settings per arm",
+          "opponent_randomness": "Stockfish limited-strength RNG has no exposed seed; exact reproducibility not claimed",
+          "wait": "only _wait_for_engine_turn overridden to receipt-only; no skip/cancel event set",
+          "display": "QuietHints and ScreenOnlyReferee in every arm; candidate screening retained when on",
+          "judge": "offline after every playing game/process ended; fixed depth/nodes; fresh game and Clear Hash each position",
+          "denominator": "actual post-move positions 1..40; initial position excluded; unknown/missing retained",
+          "clock": "production time control and search allocation; no artificial post-search waiting",
+          "cap": "unfinished *; never an artificial draw",
+          "claims": "small segment diagnostic, not Elo or general strength"
+        },
+        "driver_hash": "a8428482e59b326d3ed59e70bcc844161492a41665286c859074e107f85fbf26",
+        "binary_hashes": {
+          "binary": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+          "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "judge_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "referee_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+        },
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "clock": {
+          "enabled": true,
+          "control_id": "10+5",
+          "initial_ms": 600000,
+          "increment_ms": 5000
+        },
+        "opponent_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1320,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "host_policy": "regicide-sparring-play-v6",
+        "referee": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        }
+      },
+      "arm_referee_settings": {
+        "before": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        },
+        "v1": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v1"
+        },
+        "v3": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v3"
+        }
+      },
+      "start_order": [
+        "holdout-final-before-case-1",
+        "holdout-final-v1-case-1",
+        "holdout-final-v3-case-1"
+      ],
+      "controller_wall_seconds": {
+        "before": 96.23577904701233,
+        "v1": 106.85788702964783,
+        "v3": 114.48661804199219
+      }
+    },
+    {
+      "case": 2,
+      "matched": {
+        "v1": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        },
+        "v3": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        }
+      },
+      "conditions": {
+        "config": {
+          "variant": "before",
+          "referee": "off",
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\source-before",
+          "output": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\holdout-final\\before-case-2",
+          "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+          "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "judge_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "referee_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "ratings": [
+            1320,
+            1700
+          ],
+          "colors": [
+            "white",
+            "black"
+          ],
+          "game_ids": [
+            2
+          ],
+          "stage": "play",
+          "seed": "sparring-close-heldout-2026-11-03",
+          "own_ms": 1000,
+          "opponent_ms": 1000,
+          "time_control": "10+5",
+          "max_plies": 44,
+          "close_plies": 40,
+          "judge_depth": 14,
+          "judge_nodes": null,
+          "move_timeout": 70.0,
+          "judge_timeout": 15,
+          "openings": [
+            {
+              "id": "holdout-queens-gambit",
+              "moves": [
+                "d2d4",
+                "d7d5",
+                "c2c4",
+                "e7e6"
+              ]
+            }
+          ]
+        },
+        "schedule": {
+          "game": 2,
+          "pair": 1,
+          "pair_key": "c04a101400acbae6df85b8b7f14d0c1520e38bf563d2ab8759738d2c2933538c",
+          "sparring_seed": "c04a101400acbae6df85b8b7f14d0c15",
+          "opponent_elo": 1320,
+          "sparring_color": "black",
+          "opening_id": "holdout-queens-gambit",
+          "opening_uci": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6"
+          ]
+        },
+        "protocol": {
+          "pairing": "same opening, seed, color and opponent settings per arm",
+          "opponent_randomness": "Stockfish limited-strength RNG has no exposed seed; exact reproducibility not claimed",
+          "wait": "only _wait_for_engine_turn overridden to receipt-only; no skip/cancel event set",
+          "display": "QuietHints and ScreenOnlyReferee in every arm; candidate screening retained when on",
+          "judge": "offline after every playing game/process ended; fixed depth/nodes; fresh game and Clear Hash each position",
+          "denominator": "actual post-move positions 1..40; initial position excluded; unknown/missing retained",
+          "clock": "production time control and search allocation; no artificial post-search waiting",
+          "cap": "unfinished *; never an artificial draw",
+          "claims": "small segment diagnostic, not Elo or general strength"
+        },
+        "driver_hash": "a8428482e59b326d3ed59e70bcc844161492a41665286c859074e107f85fbf26",
+        "binary_hashes": {
+          "binary": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+          "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "judge_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "referee_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+        },
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "clock": {
+          "enabled": true,
+          "control_id": "10+5",
+          "initial_ms": 600000,
+          "increment_ms": 5000
+        },
+        "opponent_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1320,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "host_policy": "regicide-sparring-play-v6",
+        "referee": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        }
+      },
+      "arm_referee_settings": {
+        "before": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        },
+        "v1": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v1"
+        },
+        "v3": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v3"
+        }
+      },
+      "start_order": [
+        "holdout-final-v1-case-2",
+        "holdout-final-v3-case-2",
+        "holdout-final-before-case-2"
+      ],
+      "controller_wall_seconds": {
+        "before": 86.221431016922,
+        "v1": 91.00343799591064,
+        "v3": 86.82417702674866
+      }
+    },
+    {
+      "case": 3,
+      "matched": {
+        "v1": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        },
+        "v3": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        }
+      },
+      "conditions": {
+        "config": {
+          "variant": "before",
+          "referee": "off",
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\source-before",
+          "output": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\holdout-final\\before-case-3",
+          "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+          "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "judge_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "referee_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "ratings": [
+            1320,
+            1700
+          ],
+          "colors": [
+            "white",
+            "black"
+          ],
+          "game_ids": [
+            3
+          ],
+          "stage": "play",
+          "seed": "sparring-close-heldout-2026-11-03",
+          "own_ms": 1000,
+          "opponent_ms": 1000,
+          "time_control": "10+5",
+          "max_plies": 44,
+          "close_plies": 40,
+          "judge_depth": 14,
+          "judge_nodes": null,
+          "move_timeout": 70.0,
+          "judge_timeout": 15,
+          "openings": [
+            {
+              "id": "holdout-queens-gambit",
+              "moves": [
+                "d2d4",
+                "d7d5",
+                "c2c4",
+                "e7e6"
+              ]
+            }
+          ]
+        },
+        "schedule": {
+          "game": 3,
+          "pair": 2,
+          "pair_key": "8eaa375d3020e75db5a0be0daa1dd4355ab175e57b927e274bc86b9ada08387c",
+          "sparring_seed": "8eaa375d3020e75db5a0be0daa1dd435",
+          "opponent_elo": 1700,
+          "sparring_color": "white",
+          "opening_id": "holdout-queens-gambit",
+          "opening_uci": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6"
+          ]
+        },
+        "protocol": {
+          "pairing": "same opening, seed, color and opponent settings per arm",
+          "opponent_randomness": "Stockfish limited-strength RNG has no exposed seed; exact reproducibility not claimed",
+          "wait": "only _wait_for_engine_turn overridden to receipt-only; no skip/cancel event set",
+          "display": "QuietHints and ScreenOnlyReferee in every arm; candidate screening retained when on",
+          "judge": "offline after every playing game/process ended; fixed depth/nodes; fresh game and Clear Hash each position",
+          "denominator": "actual post-move positions 1..40; initial position excluded; unknown/missing retained",
+          "clock": "production time control and search allocation; no artificial post-search waiting",
+          "cap": "unfinished *; never an artificial draw",
+          "claims": "small segment diagnostic, not Elo or general strength"
+        },
+        "driver_hash": "a8428482e59b326d3ed59e70bcc844161492a41665286c859074e107f85fbf26",
+        "binary_hashes": {
+          "binary": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+          "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "judge_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "referee_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+        },
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "clock": {
+          "enabled": true,
+          "control_id": "10+5",
+          "initial_ms": 600000,
+          "increment_ms": 5000
+        },
+        "opponent_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1700,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "host_policy": "regicide-sparring-play-v6",
+        "referee": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        }
+      },
+      "arm_referee_settings": {
+        "before": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        },
+        "v1": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v1"
+        },
+        "v3": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v3"
+        }
+      },
+      "start_order": [
+        "holdout-final-v3-case-3",
+        "holdout-final-before-case-3",
+        "holdout-final-v1-case-3"
+      ],
+      "controller_wall_seconds": {
+        "before": 105.64341306686401,
+        "v1": 121.88898396492004,
+        "v3": 139.95189690589905
+      }
+    },
+    {
+      "case": 4,
+      "matched": {
+        "v1": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        },
+        "v3": {
+          "config_differences": {},
+          "schedule_equal": true,
+          "binary_hashes_equal": true,
+          "driver_equal": true,
+          "protocol_equal": true,
+          "initial_fen_equal": true,
+          "clock_equal": true,
+          "opponent_options_equal": true,
+          "host_policy_equal": true
+        }
+      },
+      "conditions": {
+        "config": {
+          "variant": "before",
+          "referee": "off",
+          "source_root": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\source-before",
+          "output": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\sparring-close-experiment\\holdout-final\\before-case-4",
+          "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+          "stockfish": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "judge_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "referee_binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-m2-opponents\\stockfish18\\package\\stockfish\\stockfish-windows-x86-64.exe",
+          "ratings": [
+            1320,
+            1700
+          ],
+          "colors": [
+            "white",
+            "black"
+          ],
+          "game_ids": [
+            4
+          ],
+          "stage": "play",
+          "seed": "sparring-close-heldout-2026-11-03",
+          "own_ms": 1000,
+          "opponent_ms": 1000,
+          "time_control": "10+5",
+          "max_plies": 44,
+          "close_plies": 40,
+          "judge_depth": 14,
+          "judge_nodes": null,
+          "move_timeout": 70.0,
+          "judge_timeout": 15,
+          "openings": [
+            {
+              "id": "holdout-queens-gambit",
+              "moves": [
+                "d2d4",
+                "d7d5",
+                "c2c4",
+                "e7e6"
+              ]
+            }
+          ]
+        },
+        "schedule": {
+          "game": 4,
+          "pair": 2,
+          "pair_key": "8eaa375d3020e75db5a0be0daa1dd4355ab175e57b927e274bc86b9ada08387c",
+          "sparring_seed": "8eaa375d3020e75db5a0be0daa1dd435",
+          "opponent_elo": 1700,
+          "sparring_color": "black",
+          "opening_id": "holdout-queens-gambit",
+          "opening_uci": [
+            "d2d4",
+            "d7d5",
+            "c2c4",
+            "e7e6"
+          ]
+        },
+        "protocol": {
+          "pairing": "same opening, seed, color and opponent settings per arm",
+          "opponent_randomness": "Stockfish limited-strength RNG has no exposed seed; exact reproducibility not claimed",
+          "wait": "only _wait_for_engine_turn overridden to receipt-only; no skip/cancel event set",
+          "display": "QuietHints and ScreenOnlyReferee in every arm; candidate screening retained when on",
+          "judge": "offline after every playing game/process ended; fixed depth/nodes; fresh game and Clear Hash each position",
+          "denominator": "actual post-move positions 1..40; initial position excluded; unknown/missing retained",
+          "clock": "production time control and search allocation; no artificial post-search waiting",
+          "cap": "unfinished *; never an artificial draw",
+          "claims": "small segment diagnostic, not Elo or general strength"
+        },
+        "driver_hash": "a8428482e59b326d3ed59e70bcc844161492a41665286c859074e107f85fbf26",
+        "binary_hashes": {
+          "binary": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+          "stockfish": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "judge_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+          "referee_binary": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6"
+        },
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "clock": {
+          "enabled": true,
+          "control_id": "10+5",
+          "initial_ms": 600000,
+          "increment_ms": 5000
+        },
+        "opponent_options": {
+          "UCI_LimitStrength": true,
+          "UCI_Elo": 1700,
+          "Threads": 1,
+          "Hash": 16
+        },
+        "host_policy": "regicide-sparring-play-v6",
+        "referee": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        }
+      },
+      "arm_referee_settings": {
+        "before": {
+          "enabled": null,
+          "available": null,
+          "configured": null,
+          "assisted": null,
+          "policy": null
+        },
+        "v1": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v1"
+        },
+        "v3": {
+          "enabled": true,
+          "available": true,
+          "configured": true,
+          "assisted": true,
+          "policy": "regicide-stockfish-referee-v3"
+        }
+      },
+      "start_order": [
+        "holdout-final-v3-case-4",
+        "holdout-final-v1-case-4",
+        "holdout-final-before-case-4"
+      ],
+      "controller_wall_seconds": {
+        "before": 116.88008284568787,
+        "v1": 67.18572807312012,
+        "v3": 114.87742590904236
+      }
+    }
+  ],
+  "all_recorded_owned_processes_exited": true,
+  "process_counts_by_arm": {
+    "before": {
+      "opponent": 4,
+      "regicide": 4,
+      "independent_judge": 4
+    },
+    "v1": {
+      "opponent": 4,
+      "regicide": 4,
+      "candidate_referee": 14,
+      "independent_judge": 4
+    },
+    "v3": {
+      "opponent": 4,
+      "regicide": 4,
+      "candidate_referee": 54,
+      "independent_judge": 4
+    }
+  },
+  "process_counts_by_case": {
+    "before-1": {
+      "opponent": 1,
+      "regicide": 1,
+      "independent_judge": 1
+    },
+    "before-2": {
+      "opponent": 1,
+      "regicide": 1,
+      "independent_judge": 1
+    },
+    "before-3": {
+      "opponent": 1,
+      "regicide": 1,
+      "independent_judge": 1
+    },
+    "before-4": {
+      "opponent": 1,
+      "regicide": 1,
+      "independent_judge": 1
+    },
+    "v1-1": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 4,
+      "independent_judge": 1
+    },
+    "v1-2": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 2,
+      "independent_judge": 1
+    },
+    "v1-3": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 8,
+      "independent_judge": 1
+    },
+    "v1-4": {
+      "opponent": 1,
+      "regicide": 1,
+      "independent_judge": 1
+    },
+    "v3-1": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 15,
+      "independent_judge": 1
+    },
+    "v3-2": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 11,
+      "independent_judge": 1
+    },
+    "v3-3": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 17,
+      "independent_judge": 1
+    },
+    "v3-4": {
+      "opponent": 1,
+      "regicide": 1,
+      "candidate_referee": 11,
+      "independent_judge": 1
+    }
+  },
+  "all_source_hashes_still_match": true,
+  "all_manifests_completed_without_execution_errors": true,
+  "options_by_role": {
+    "opponent": [
+      {
+        "Hash": 16,
+        "Threads": 1,
+        "UCI_Elo": 1320,
+        "UCI_LimitStrength": true
+      },
+      {
+        "Hash": 16,
+        "Threads": 1,
+        "UCI_Elo": 1700,
+        "UCI_LimitStrength": true
+      }
+    ],
+    "regicide": [
+      {
+        "Hash": 16,
+        "UsePieceActivity": true
+      }
+    ],
+    "independent_judge": [
+      {
+        "Clear Hash": null,
+        "Hash": 32,
+        "Skill Level": 20,
+        "Threads": 1,
+        "UCI_LimitStrength": false
+      }
+    ],
+    "candidate_referee": [
+      {
+        "Hash": 32,
+        "Skill Level": 20,
+        "Threads": 1,
+        "UCI_LimitStrength": false,
+        "UCI_ShowWDL": true
+      }
+    ]
+  },
+  "manifest_checks": [
+    {
+      "folder": "holdout-final\\before-case-1",
+      "arm": "before",
+      "case": 1,
+      "source_commit": "307f33ab69a24d2a454b72dab0a8cb2284965008",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\before-case-2",
+      "arm": "before",
+      "case": 2,
+      "source_commit": "307f33ab69a24d2a454b72dab0a8cb2284965008",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\before-case-3",
+      "arm": "before",
+      "case": 3,
+      "source_commit": "307f33ab69a24d2a454b72dab0a8cb2284965008",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\before-case-4",
+      "arm": "before",
+      "case": 4,
+      "source_commit": "307f33ab69a24d2a454b72dab0a8cb2284965008",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v1-case-1",
+      "arm": "v1",
+      "case": 1,
+      "source_commit": "7fc666c052988a99b7be05f4678a4c207f73137e",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v1-case-2",
+      "arm": "v1",
+      "case": 2,
+      "source_commit": "7fc666c052988a99b7be05f4678a4c207f73137e",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v1-case-3",
+      "arm": "v1",
+      "case": 3,
+      "source_commit": "7fc666c052988a99b7be05f4678a4c207f73137e",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v1-case-4",
+      "arm": "v1",
+      "case": 4,
+      "source_commit": "7fc666c052988a99b7be05f4678a4c207f73137e",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v3-case-1",
+      "arm": "v3",
+      "case": 1,
+      "source_commit": "59538d7855dab617d8e1c35b6cf69eccad814e46",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v3-case-2",
+      "arm": "v3",
+      "case": 2,
+      "source_commit": "59538d7855dab617d8e1c35b6cf69eccad814e46",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v3-case-3",
+      "arm": "v3",
+      "case": 3,
+      "source_commit": "59538d7855dab617d8e1c35b6cf69eccad814e46",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    },
+    {
+      "folder": "holdout-final\\v3-case-4",
+      "arm": "v3",
+      "case": 4,
+      "source_commit": "59538d7855dab617d8e1c35b6cf69eccad814e46",
+      "source_dirty": false,
+      "source_before_after_equal": true,
+      "driver_before_after_equal": true,
+      "binary_before_after_equal": true,
+      "manifest_status": "completed",
+      "errors": []
+    }
+  ],
+  "source_commits_by_arm": {
+    "before": [
+      "307f33ab69a24d2a454b72dab0a8cb2284965008"
+    ],
+    "v1": [
+      "7fc666c052988a99b7be05f4678a4c207f73137e"
+    ],
+    "v3": [
+      "59538d7855dab617d8e1c35b6cf69eccad814e46"
+    ]
+  },
+  "driver_hashes": [
+    "a8428482e59b326d3ed59e70bcc844161492a41665286c859074e107f85fbf26"
+  ],
+  "recorded_engine_process_instances": 104,
+  "all_12_conditions_matched": true,
+  "all_frozen_sources_clean_and_unchanged": true,
+  "v3_matches_frozen_plan_commit": true,
+  "limitations": [
+    "Controller start/end intervals are not individual engine-search intervals.",
+    "The worker pool has a global play/judge barrier; cases can overlap and total engine processes exceed two.",
+    "The three arms rotate case-local launch priority; wallclock-limited searches and unexposed Stockfish weakening RNG still vary.",
+    "Global desktop CPU samples are five-second averages. No per-process CPU or unrelated-process inventory was captured; equal CPU and isolated load are not established.",
+    "Four paired development-selected conditions with one held-out opening/seed do not establish general playing strength or Elo.",
+    "Case-local lead counts are before=1, v1=1, v3=2; four cases across three arms are not perfectly counterbalanced."
+  ],
+  "input_sha256": {
+    "holdout-final-runner\\result.json": "dd05ad19f63481f26a23a20b7cf5a159715469a1609b63c90edee38aba352afe",
+    "holdout-final-runner\\system-samples.jsonl": "5a35d95471ddf7d57697f39bfd3e270518ee39c6e578c397e4b0f4b1fe58fedd",
+    "holdout-final-play.json": "22782a55527a6b0937d5a5967d7125680de64ebfacb13bde9aa2cc19ae31730d",
+    "holdout-final-judge.json": "d68a471f714dd0dbc0583e3a95950bb839308d65e3c81308f20d03a6b2fc756b",
+    "candidate-validation-plan.json": "ed2064dfd90a0c4368b31330e33f0c8f25e4d1782fd042c2c4fad58f79411da5",
+    "hardware.json": "4823601bb19cfe43730df920e0abf307397c82b37b3bc6ac81ed9b79e166ce75",
+    "holdout-final\\before-case-1\\manifest.json": "7b9946cb951e13905628e777b06fb5dc4c2edc89c38b249f87b154f9ae8c35a6",
+    "holdout-final\\before-case-1\\game-001.json": "cc5a2cf25c03ec8d646863f71c5b2ad1c1e017be4271dd9aea1d3bd519c005e3",
+    "holdout-final\\before-case-2\\manifest.json": "61318020dd177058df1cfc0582490eb5b787e9ab0e6224a6812f36d61f5598f2",
+    "holdout-final\\before-case-2\\game-002.json": "2cd997d488639c5fe5357f64a82800d240a234638d9635c27113cdbfd5337158",
+    "holdout-final\\before-case-3\\manifest.json": "925534a914e3c4b46f6c4695c22555655ff987b9147da21d250ce60d561c1233",
+    "holdout-final\\before-case-3\\game-003.json": "232ea45775511ba8034ba612bee2bd43639f412e538875fc7fa12a54660bd54e",
+    "holdout-final\\before-case-4\\manifest.json": "8b7bb0c3bde68f1f931db21b9b7d39447d8db3012e232a0a012020635944d50f",
+    "holdout-final\\before-case-4\\game-004.json": "ef1643189b211f6aa867217f85782d46379c8ea3e70c09cadef63c77c74c4494",
+    "holdout-final\\v1-case-1\\manifest.json": "b63ddc6d85cbf0f6269b9d3310a460451aa3c5f2ba8c5ddbc875e7ebd24b3266",
+    "holdout-final\\v1-case-1\\game-001.json": "bd7a3d669330cc93e75d072cc3573e85e41dba5100f338f63f6e2f71cd2d1275",
+    "holdout-final\\v1-case-2\\manifest.json": "3b122a63571a62ec6e84c20a79c26e92224245f224053444f2e40021fda79af3",
+    "holdout-final\\v1-case-2\\game-002.json": "f921d7b52e9015cbb61a46b9a972f2fbc8cb461f15d724d307a0539e07afa18a",
+    "holdout-final\\v1-case-3\\manifest.json": "88ad27cfc3aaf3c1aeac6a4e5b02f62a83641015271c549b1c5c870c7056fede",
+    "holdout-final\\v1-case-3\\game-003.json": "038a923631a084f8eb36bcc80213c02e049cb13c945599e50f8f4ff8415c400c",
+    "holdout-final\\v1-case-4\\manifest.json": "35d580845bb54eb9a8d771f9a638f998b21954a898f9de2b38c1e4f192109cc4",
+    "holdout-final\\v1-case-4\\game-004.json": "9297009beda2e5478e31ea86fbc2cde3da6eaea2e5a7ea388971fec0d9da44b8",
+    "holdout-final\\v3-case-1\\manifest.json": "5ffa5b2cc12d87d23325cc9d1f3a53bd920dcec08cfc5d380020e3a53cb72c5c",
+    "holdout-final\\v3-case-1\\game-001.json": "fe424202c09344f2372065f6fa5d508e1f368096b1488448330ac2a3526a999f",
+    "holdout-final\\v3-case-2\\manifest.json": "267471f5f16740a4d82f59858b456f3653a6e765eb4ddb900a767131a117c6d6",
+    "holdout-final\\v3-case-2\\game-002.json": "53d9dd992f92427c945bf3466a327ca3e04a67daea3eecdec5ad7008a7557855",
+    "holdout-final\\v3-case-3\\manifest.json": "aae18520d60bf437a9edd3944fd87ac32e0786e6b0a566703042e8c3231454ee",
+    "holdout-final\\v3-case-3\\game-003.json": "6867b93a5bca851c07447ed0f3c37f4f83256dc56a938a12d954c8524690476a",
+    "holdout-final\\v3-case-4\\manifest.json": "c82719285e5401ceb8d93927551b20f8456dd1d3af2649de81f5fcdf6e682b51",
+    "holdout-final\\v3-case-4\\game-004.json": "e35bbec8fad31489d947aac2ba3b5c09dedecfde26859fbfcf2b0d1d0e7bb3d4"
+  },
+  "passed": true,
+  "case_local_lead_counts": {
+    "before": 1,
+    "v1": 1,
+    "v3": 2
+  },
+  "case_local_launch_slot_counts": {
+    "before": {
+      "1": 1,
+      "3": 2,
+      "2": 1
+    },
+    "v1": {
+      "2": 2,
+      "1": 1,
+      "3": 1
+    },
+    "v3": {
+      "3": 1,
+      "2": 1,
+      "1": 2
+    }
+  }
+}
