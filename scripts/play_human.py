@@ -33,7 +33,8 @@ from coaching_session import CoachingSession, CoachingRevisionError
 from opening_presentation import OpeningGuideCache
 from opening_explorer import OpeningExplorer
 from sparring_referee import SparringReferee, POLICY as REFEREE_POLICY, SOURCE as REFEREE_SOURCE
-from sparring_referee_pool import build_pool as referee_candidate_pool
+from sparring_referee_pool import build_pool as referee_candidate_pool, extend_pool as extend_referee_pool
+from sparring_referee_discovery import discover as discover_referee_candidates
 import opening_variety
 import dynamic_play
 import boss_play
@@ -444,7 +445,7 @@ class HumanGame:
                 "sparring_referee": self._referee_metadata()}
 
     def _apply_sparring_referee(self, board, decision, baseline_info, baseline_packets, search,
-                                game_id, token, revision):
+                                game_id, token, revision, *, discovery_search=None, close_engine=None):
         """Stockfish screens the bounded pool of native Regicide candidates.
 
         The native engine remains untouched. A referee failure rejects a
@@ -460,7 +461,6 @@ class HumanGame:
         original.pop("referee", None)
         original.pop("regicide_proposal", None)
         native_pool = referee_candidate_pool(board, original)
-        pool_by_uci = {row["uci"]: row for row in native_pool}
 
         def cancelled():
             with self._lock:
@@ -484,6 +484,33 @@ class HumanGame:
                 budget = min(budget, 350)
             elif remaining < 180_000:
                 budget = min(budget, 800)
+        discovery = None
+        can_discover = (discovery_search is not None and close_engine is not None
+            and 8 <= len(board.move_stack) < 40 and 0 < len(native_pool) < 4
+            and not self._forced_plies and not self._sparring_analysis_only()
+            and not cancelled() and self._referee_metadata()["available"]
+            and (not clock["enabled"] or clock["white_ms" if board.turn else "black_ms"] >= 180_000))
+        if can_discover:
+            owned_engine = self._engine
+            try:
+                discovery = discover_referee_candidates(board, discovery_search, close_engine,
+                    excluded_uci=[row["uci"] for row in native_pool], budget_ms=600,
+                    cancelled=cancelled, max_candidates=4 - len(native_pool))
+            except Exception as exc:
+                discovery = {"reason": "native_discovery_failed", "error": type(exc).__name__,
+                             "native_candidates": [], "discard_engine": False}
+            context = discovery.get("context", {})
+            if (not isinstance(context, dict) or context.get("before_fen") != board.fen(en_passant="fen")
+                    or context.get("history_uci") != [move.uci() for move in board.move_stack]
+                    or context.get("pov") != ("white" if board.turn else "black")):
+                discovery["native_candidates"] = []
+            native_pool = extend_referee_pool(board, original, native_pool,
+                discovery.get("native_candidates", []), origin="shallow_discovery")
+            if discovery.get("discard_engine"):
+                with self._lock:
+                    if self._engine is owned_engine:
+                        self._engine = None
+        pool_by_uci = {row["uci"]: row for row in native_pool}
         allowed = (len(native_pool) > 1 and not self._sparring_analysis_only()
                    and sparring_play.phase(board) != "finish" and budget >= 250 and not cancelled())
         if allowed:
@@ -529,12 +556,16 @@ class HumanGame:
             # Scores below remain native Regicide evidence. The new child
             # check belongs only to the nested external referee receipt.
             evidence = pool_by_uci[selected]["native_evidence"]
-            common, final = evidence["candidate_compared"], evidence["candidate_final"]
+            comparable = "candidate_compared" in evidence
+            common = evidence["candidate_compared"] if comparable else evidence["line"]
+            final = evidence["candidate_final"] if comparable else evidence.get("completed_final_line", evidence["line"])
             decision = copy.deepcopy(original)
             decision.update(reason="referee_selected_verified_native_pool_candidate",
                 candidate_compared=copy.deepcopy(common), candidate_final=copy.deepcopy(final),
                 naturalness=copy.deepcopy(evidence["naturalness"]),
-                loss_cp=max(0, evidence["baseline"]["cp"] - common["cp"]),
+                loss_cp=max(0, evidence["baseline"]["cp"] - common["cp"]) if comparable else None,
+                native_comparison_available=comparable, native_candidate_depth=common["depth"],
+                native_final_depth=final["depth"],
                 selected_cp_own=common["cp"], selected_cp_white=common["cp_white"],
                 verification_policy=REFEREE_POLICY,
                 postmove_verification={"valid": False, "candidate_uci": selected,
@@ -555,12 +586,16 @@ class HumanGame:
             decision.pop("candidate_final_raw", None)
             decision["postmove_attempts"] = []
             decision["postmove_attempts_scope"] = "original attempts retained in regicide_proposal; selected child in referee.postmove"
+            if not comparable:
+                decision.update(comparison_basis="individual_native_depth; separate Stockfish common round",
+                                compared_depth=None, verification_depth=common["depth"])
         decision["selected_uci"] = selected
         decision["regicide_proposal"] = original
         receipt.update(game_id=game_id, revision=revision, fen=board.fen(en_passant="fen"),
                        baseline_uci=baseline.uci(), selected_uci=selected,
                        identity_verified=bool(identity), applied=bool(verified),
                        native_pool=copy.deepcopy(native_pool),
+                       native_discovery=copy.deepcopy(discovery),
                        assistant_scope="external-assisted practice; not standalone Regicide strength")
         if not verified and allowed:
             receipt["reason"] = receipt.get("reason") or "unverified_reference_baseline_retained"
@@ -1049,6 +1084,7 @@ class HumanGame:
             clock_watchdog = None
             clock_monitor_done = threading.Event()
             active_analysis = [None]
+            referee_search_active = threading.Event()
             pacing_receipt = None
             baseline_packets, timing_infos = {}, {}
             recovery_deadline = None
@@ -1074,7 +1110,7 @@ class HumanGame:
                                 expired = (self._clock.flagged_color is not None or
                                            current["white_ms" if board.turn else "black_ms"] <= 0)
                                 pacing = self._active_pacing
-                                if not expired and pacing and (pacing.get("clock_adjusted")
+                                if not expired and pacing and not referee_search_active.is_set() and (pacing.get("clock_adjusted")
                                         or pacing.get("balance_recovery", {}).get("active")):
                                     left = max(0, pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"])
                                     available = current["white_ms" if board.turn else "black_ms"]
@@ -1095,16 +1131,24 @@ class HumanGame:
                                                expire_search)
                     watchdog.daemon = True
                     watchdog.start()
-                def search(budget, *, root_move=None, root_moves=None, publish=True, fresh=False, depth=None, position=None):
+                def search(budget, *, root_move=None, root_moves=None, publish=True, fresh=False, depth=None, position=None,
+                           referee_discovery=False):
                     with self._lock:
                         pacing = self._active_pacing
-                        if recovery_deadline is not None:
+                        if referee_discovery:
+                            if (self._closing or not self._game_open or self.game_id != game_id
+                                    or self._game_token is not token or self.revision != revision or pacing_event.is_set()):
+                                raise InterruptedError("Native referee discovery cancelled")
+                            current = self._clock.snapshot()
+                            if current["enabled"]:
+                                budget = min(budget, current["white_ms" if board.turn else "black_ms"] - 500)
+                        elif recovery_deadline is not None:
                             if (self._closing or not self._game_open or self.game_id != game_id
                                     or self._game_token is not token or self.revision != revision
                                     or pacing_event.is_set()):
                                 raise InterruptedError("Balance recovery cancelled")
                             budget = min(budget, (recovery_deadline - time.monotonic()) * 1000)
-                        if pacing and (pacing.get("clock_adjusted") or recovery_deadline is not None):
+                        if not referee_discovery and pacing and (pacing.get("clock_adjusted") or recovery_deadline is not None):
                             current = self._clock.snapshot()
                             left = pacing.get("target_total_ms", 0) - current["turn_elapsed_ms"] - 100
                             available = current["white_ms" if board.turn else "black_ms"] - 100
@@ -1458,8 +1502,15 @@ class HumanGame:
                                         extra_budget_ms=total_extra, tactical_budget_ms=search_plan["extra_budget_ms"],
                                         extra_elapsed_ms=round((time.monotonic() - boss_extra_started) * 1000, 3))
                 if self.sparring_mode and decision is not None and self._referee is not None:
+                    def discovery_search(*args, **kwargs):
+                        referee_search_active.set()
+                        try:
+                            return search(*args, **kwargs, referee_discovery=True)
+                        finally:
+                            referee_search_active.clear()
                     decision = self._apply_sparring_referee(
-                        board, decision, baseline_info, baseline_packets, search, game_id, token, revision)
+                        board, decision, baseline_info, baseline_packets, search, game_id, token, revision,
+                        discovery_search=discovery_search, close_engine=engine.close)
                     reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                 if reply.move is None or reply.move not in board.legal_moves:
                     raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")

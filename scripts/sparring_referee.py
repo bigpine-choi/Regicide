@@ -20,8 +20,8 @@ import chess
 import chess.engine
 
 
-POLICY = "regicide-stockfish-referee-v2"
-SUPPORTED_POLICIES = ("regicide-stockfish-referee-v1", POLICY)
+POLICY = "regicide-stockfish-referee-v3"
+SUPPORTED_POLICIES = ("regicide-stockfish-referee-v1", "regicide-stockfish-referee-v2", POLICY)
 SOURCE = "local_stockfish_referee"
 MAX_LIVE_MS = 1500
 LIVE_STARTUP_SECONDS = 1.5

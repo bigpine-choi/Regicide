@@ -180,4 +180,63 @@ def build_pool(board, decision, max_candidates=MAX_CANDIDATES):
                 "validation": "same_context_native_completed_depth_probe",
                 "baseline": copy.deepcopy(baseline)}})
         seen.add(verified["uci"])
+    # A completed native depth-6 result is still a genuine native candidate
+    # when its depth-7 comparison was unfinished. It supplies no native loss
+    # estimate: the separate Stockfish round must compare it to the baseline.
+    for probe in probes:
+        if len(result) >= max_candidates:
+            break
+        if (not isinstance(probe, dict) or probe.get("reason") != "no_common_depth"
+                or probe.get("error") is not None or probe.get("admitted") is not False):
+            continue
+        row = {"uci": probe.get("uci"), "line": probe.get("candidate_final"),
+               "naturalness": probe.get("naturalness"), "original_reason": probe["reason"]}
+        line = _line(board, row["line"], row["uci"])
+        raw = probe.get("candidate_final_raw")
+        if (line is None or not isinstance(raw, dict) or raw.get("mate") is not None
+                or raw.get("mate_white") is not None or raw.get("bound", "exact") != "exact"
+                or raw.get("score_bound", "exact") != "exact"
+                or raw.get("lowerbound") or raw.get("upperbound")
+                or not _integer(raw.get("depth")) or not _integer(raw.get("cp"))
+                or raw.get("depth") != line["depth"] or raw.get("cp") != line["cp"]):
+            continue
+        result = extend_pool(board, decision, result, [row], origin="partial_probe", max_candidates=max_candidates)
+    return result
+
+
+def extend_pool(board, decision, pool, candidates, *, origin="shallow_discovery", max_candidates=MAX_CANDIDATES):
+    """Attach individually completed native lines; never compare unlike depths."""
+    if origin not in ("partial_probe", "shallow_discovery"):
+        raise ValueError("Unknown native candidate origin")
+    context = _context(board, decision)
+    if context is None or not isinstance(pool, list) or not isinstance(candidates, (list, tuple)):
+        return copy.deepcopy(pool) if isinstance(pool, list) else []
+    if not _integer(max_candidates) or not 1 <= max_candidates <= MAX_CANDIDATES or len(candidates) > MAX_PROBES:
+        raise ValueError("Invalid native candidate pool limit")
+    result = copy.deepcopy(pool[:max_candidates])
+    seen = {row["uci"] for row in result}
+    for row in candidates:
+        if len(result) >= max_candidates:
+            break
+        if (not isinstance(row, dict) or _legal_move(board, row.get("uci")) is None or row.get("uci") in seen
+                or not isinstance(row.get("naturalness"), dict)
+                or row["naturalness"].get("admitted") is not True):
+            continue
+        line = _line(board, row.get("line"), row.get("uci"))
+        if line is None:
+            continue
+        if origin == "shallow_discovery" and line["depth"] != MIN_DEPTH:
+            continue
+        final = _line(board, row.get("completed_final_line", row["line"]), row["uci"])
+        if (final is None or final["depth"] < line["depth"]
+                or final["depth"] == line["depth"] and final["cp"] != line["cp"]):
+            continue
+        result.append({"uci": line["uci"], "origin": origin, "native_evidence": {
+            **copy.deepcopy(context), "line": line, "completed_final_line": final,
+            "naturalness": copy.deepcopy(row["naturalness"]),
+            "baseline": copy.deepcopy(decision.get("baseline")),
+            "original_reason": row.get("original_reason"),
+            "validation": "individual_native_completed_depth; no baseline CP comparison",
+            "native_comparison_available": False}})
+        seen.add(line["uci"])
     return result

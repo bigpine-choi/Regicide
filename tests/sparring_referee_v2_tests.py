@@ -57,7 +57,7 @@ class SparringRefereeV2Tests(unittest.TestCase):
         self.assertEqual((board.fen(en_passant="fen"), board.move_stack), before)
         self.assertEqual(result["cp_white"],
                          (proposal_cp if accepted else baseline_cp) * (1 if board.turn else -1))
-        self.assertEqual(result["policy"], "regicide-stockfish-referee-v2")
+        self.assertEqual(result["policy"], referee.POLICY)
         self.assertTrue(all(engine.closed.is_set() for engine in factory.engines))
         return result, factory
 
@@ -123,7 +123,7 @@ class SparringRefereeV2Tests(unittest.TestCase):
         self.assertEqual(result["reason"], "postmove_score_disagreement")
 
     def test_new_receipts_identify_v2_and_keep_v1_readable(self):
-        self.assertEqual(referee.POLICY, "regicide-stockfish-referee-v2")
+        self.assertIn("regicide-stockfish-referee-v2", referee.SUPPORTED_POLICIES)
         self.assertIn("regicide-stockfish-referee-v1", referee.SUPPORTED_POLICIES)
         self.assertIn(referee.POLICY, referee.SUPPORTED_POLICIES)
 
