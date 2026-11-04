@@ -1,0 +1,40 @@
+PASS UCI: python_chess
+PASS UCI: history_and_terminal
+PASS UCI: limits
+PASS UCI: interleaving
+PASS UCI: bad_commands
+PASS UCI: searchmoves
+PASS UCI: shutdown
+PASS UCI: evaluation_options
+PASS UCI: transposition_options
+PASS UCI: transposition_search
+PASS UCI: transposition_isolation
+PASS UCI: table_allocation_reuse
+PASS UCI: reused_table_context_isolation
+PASS UCI: table_options_during_search
+PASS UCI: search_quality_option_lifecycle
+PASS UCI: search_quality_option_behavior
+PASS UCI: pvs_protocol_and_fixed_depth
+PASS UCI: pvs_option_lifecycle
+PASS UCI: see_protocol_and_fixed_depth
+PASS UCI: see_option_lifecycle
+Traceback (most recent call last):
+  File "<workspace>\work\run-with-oracle.py", line 5, in <module>
+    runpy.run_path(script,run_name="__main__")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 294, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>\work\Regicide\tests\engine_integration.py", line 1702, in <module>
+    main()
+    ~~~~^^
+  File "<workspace>\work\Regicide\tests\engine_integration.py", line 1695, in main
+    check(binary)
+    ~~~~~^^^^^^^^
+  File "<workspace>\work\Regicide\tests\engine_integration.py", line 1177, in test_pawn_shield_protocol_and_cli
+    assert actual == cli_query(board, go, enabled), (board.fen(), go, enabled, actual)
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>\work\Regicide\tests\engine_integration.py", line 1157, in cli_query
+    return (fields["bestmove"], ("mate" if score_name == "score_mate" else "cp",
+            ~~~~~~^^^^^^^^^^^^
+KeyError: 'bestmove'
