@@ -180,7 +180,7 @@ def _write_new_export(path, value):
 def run(binary, output, *, curriculum=CURRICULUM, nodes=100000, owner_turns=8,
         per_family=2, candidates=3, seed=20261105, wall_seconds=1200,
         families=None, case_ids=None, resume=False, max_new_queries=None, search_timeout=12,
-        memory_path=None):
+        memory_path=None, opponent_replies=1, max_branches=2, max_research_nodes=None):
     if memory_path is not None:
         memory_path = _export_path(memory_path)
     if (type(nodes) is not int or nodes < 100000 or type(owner_turns) is not int or not 2 <= owner_turns <= 16
@@ -192,6 +192,12 @@ def run(binary, output, *, curriculum=CURRICULUM, nodes=100000, owner_turns=8,
         raise ValueError("Wall budget and per-query timeout must be finite and positive")
     if max_new_queries is not None and (type(max_new_queries) is not int or max_new_queries < 1):
         raise ValueError("max_new_queries must be a positive integer")
+    if (type(opponent_replies) is not int or not 1 <= opponent_replies <= 3
+            or type(max_branches) is not int or not 1 <= max_branches <= 16):
+        raise ValueError("Use 1..3 opponent replies and 1..16 branches per case")
+    if max_research_nodes is not None and (type(max_research_nodes) is not int
+            or max_research_nodes < nodes * (candidates + 1)):
+        raise ValueError("Research node cap must cover at least one complete owner turn")
     binary, output, curriculum = Path(binary).resolve(strict=True), Path(output).resolve(), Path(curriculum).resolve(strict=True)
     if (output == memory.DEFAULT_MEMORY.parent.resolve() or output.is_relative_to(ROOT.parent / "sources")
             or output / "operations_memory.json" == memory.DEFAULT_MEMORY.resolve()):
@@ -204,7 +210,10 @@ def run(binary, output, *, curriculum=CURRICULUM, nodes=100000, owner_turns=8,
         raise ValueError("The full curriculum must retain its heldout family declaration")
     # Focused research still reserves every declared heldout root and immediate
     # child, even when no heldout case is selected for native practice.
-    heldout_keys = set()
+    inherited_keys = data.get("reserved_holdout_position_keys", [])
+    if not isinstance(inherited_keys, list) or any(type(key) is not str or not key for key in inherited_keys):
+        raise ValueError("Inherited holdout position keys must be a list of nonempty strings")
+    heldout_keys = set(inherited_keys)
     for case in data["cases"]:
         if case["family_id"] not in heldout:
             continue
@@ -218,6 +227,8 @@ def run(binary, output, *, curriculum=CURRICULUM, nodes=100000, owner_turns=8,
                 "evaluation_id": "classical_activity_v1"}
     configuration = {"schema": "regicide.gambit-operations-research-config.v1", "seed": seed,
         "nodes": nodes, "owner_turns": owner_turns, "per_family": per_family,
+        "opponent_replies": opponent_replies, "max_branches": max_branches,
+        "max_research_nodes": max_research_nodes,
         "max_candidates": candidates, "engine_identity": identity,
         "source_sha256": source_hashes(), "curriculum_sha256": hashlib.sha256(data_bytes).hexdigest(),
         "curriculum_path": str(curriculum), "cases": cases, "heldout_family_ids": heldout,
@@ -228,6 +239,99 @@ def run(binary, output, *, curriculum=CURRICULUM, nodes=100000, owner_turns=8,
         "minimum_stored_depth": 4, "external_engine_role": "none; native-only practice and target queries"}
     with ResearchSession(output, configuration, resume=resume, max_new_queries=max_new_queries) as session:
         return _run_session(binary, output, configuration, session, wall_seconds, search_timeout, memory_path)
+
+
+def _advance_branch(teacher, session, board, branch, case, turn, configuration,
+                    queries, records, excluded, fork_slots):
+    """Play one owner/reply pair; fork only bounded, separately searched replies."""
+    owner, seed = case["owner"], configuration["seed"]
+    nodes, candidates = configuration["nodes"], configuration["max_candidates"]
+    prefix = f"{branch.get('branch_id', case['case_id'])}:{turn + 1}"
+    before, before_facts = board.copy(stack=True), facts(board, owner)
+    root_query = session.query(teacher, board, prefix + ":root")
+    queries.append({"role": "owner_root", "case_id": case["case_id"],
+                    "fen": board.fen(en_passant="fen"),
+                    "history_uci": [m.uci() for m in board.move_stack], **root_query})
+    if not root_query.get("bestmove_uci"):
+        raise ValueError("Completed root query has no best move")
+    moves = candidate_moves(board, root_query, seed=seed, limit=candidates)
+    labels, child_queries = [], {}
+    for move in moves:
+        child = board.copy(stack=True)
+        child.push(move)
+        if automatic_outcome(child) is not None:
+            excluded.append({"query_id": prefix + ":" + move.uci(), "reason": "terminal_child"})
+            continue
+        query = session.query(teacher, child, prefix + ":" + move.uci())
+        child_queries[move.uci()] = query
+        queries.append({"role": "candidate_and_opponent", "case_id": case["case_id"],
+                        "candidate_uci": move.uci(), "fen": child.fen(en_passant="fen"),
+                        "history_uci": [m.uci() for m in child.move_stack], **query})
+        score = query.get("score", {})
+        line, end = legal_line(board, [move.uci(), *query.get("pv_uci", [])])
+        after_facts = facts(end, owner)
+        if (query.get("completed") is not True or query.get("lowerbound") or query.get("upperbound")
+                or score.get("kind") != "cp" or type(score.get("stm")) is not int
+                or type(query.get("depth")) is not int or query["depth"] < 4 or len(line) < 2):
+            excluded.append({"query_id": query["query_id"], "reason": "no_exact_depth4_reply_line"})
+            continue
+        labels.append({"uci": move.uci(), "offline_owner_cp": -score["stm"],
+            "native_depth": query["depth"], "native_nodes": query.get("nodes"),
+            "requested_nodes": nodes, "query_id": query["query_id"], "pv_uci": line,
+            "goal": classify(before_facts, after_facts),
+            "observations": {"before": before_facts, "after_native_pv": after_facts},
+            "line_kind": "native_search_pv_not_additional_played_game"})
+    record = {"record_id": prefix, "case_id": case["case_id"], "family_id": case["family_id"],
+        "split": case["split"], "owner": owner, "fen": board.fen(en_passant="fen"),
+        "position_key": memory.position_key(board), "history_uci": [m.uci() for m in board.move_stack],
+        "goal": labels[0]["goal"] if labels else "consolidation", "candidates": labels,
+        "curriculum_goal_tags": case.get("goal_tags", []), "source": case.get("source"),
+        "signature": case.get("signature"), "acceptance": case.get("acceptance")}
+    records.append(record)
+    played = chess.Move.from_uci(root_query["bestmove_uci"])
+    if played not in board.legal_moves:
+        raise ValueError("Native practice move is illegal")
+    board.push(played)
+    opponent_query = child_queries.get(played.uci())
+    if automatic_outcome(board) is None and opponent_query is None:
+        opponent_query = session.query(teacher, board, prefix + ":opponent")
+        queries.append({"role": "opponent", "case_id": case["case_id"],
+                        "fen": board.fen(en_passant="fen"),
+                        "history_uci": [m.uci() for m in board.move_stack], **opponent_query})
+    alternatives = []
+    reply_uci = None
+    if automatic_outcome(board) is None and opponent_query and opponent_query.get("bestmove_uci"):
+        reply = chess.Move.from_uci(opponent_query["bestmove_uci"])
+        if reply not in board.legal_moves:
+            raise ValueError("Native opponent response is illegal")
+        reply_uci = reply.uci()
+        chosen = {reply_uci}
+        # An alternate search excludes previously selected replies at this
+        # root only. Its score is never exported as the unrestricted score.
+        for rank in range(1, min(configuration["opponent_replies"], fork_slots + 1)):
+            remaining = sorted((move for move in board.legal_moves if move.uci() not in chosen),
+                               key=lambda move: move.uci())
+            if not remaining:
+                break
+            query = session.query(teacher, board, prefix + f":reply-{rank + 1}", root_moves=remaining)
+            queries.append({"role": "opponent_alternative", "case_id": case["case_id"],
+                            "fen": board.fen(en_passant="fen"),
+                            "history_uci": [m.uci() for m in board.move_stack], **query})
+            alternative = query["bestmove_uci"]
+            chosen.add(alternative)
+            side = board.copy(stack=True)
+            side.push_uci(alternative)
+            alternatives.append((side, {"parent_record_id": prefix,
+                "fork_owner_move": played.uci(), "opponent_move": alternative,
+                "reply_query_id": query["query_id"], "reply_rank": rank + 1,
+                "selection_scope": "native best among remaining legal root replies"}))
+        board.push(reply)
+    after_actual = facts(board, owner)
+    branch["turns"].append({"turn": turn + 1, "before_fen": before.fen(en_passant="fen"),
+        "owner_move": played.uci(), "opponent_move": reply_uci, "after_fen": board.fen(en_passant="fen"),
+        "actual_goal": classify(before_facts, after_actual), "before_facts": before_facts,
+        "after_actual_facts": after_actual, "record_id": prefix})
+    return alternatives
 
 
 def _run_session(binary, output, configuration, session, wall_seconds, search_timeout, memory_path):
@@ -241,7 +345,7 @@ def _run_session(binary, output, configuration, session, wall_seconds, search_ti
     records, queries, practice, excluded = [], [], [], []
     teacher = RuntimeTeacher(binary, session.raw_path, nodes,
                              time.monotonic() + wall_seconds, search_timeout=search_timeout)
-    failed, paused = None, None
+    failed, paused, budget_limited = None, None, False
     try:
         teacher.__enter__()
         session.bind_engine(teacher)
@@ -252,81 +356,59 @@ def _run_session(binary, output, configuration, session, wall_seconds, search_ti
                       "owner": owner, "initial_fen": board.fen(en_passant="fen"),
                       "initial_history_uci": [move.uci() for move in board.move_stack], "turns": []}
             practice.append(branch)
-            for turn in range(owner_turns):
-                if automatic_outcome(board) is not None:
-                    break
-                if board.turn != (owner == "white"):
-                    raise ValueError("Practice owner turn mismatch")
-                prefix = f"{case['case_id']}:{turn + 1}"
-                before, before_facts = board.copy(stack=True), facts(board, owner)
-                root_query = session.query(teacher, board, prefix + ":root")
-                queries.append({"role": "owner_root", "case_id": case["case_id"],
-                                "fen": board.fen(en_passant="fen"),
-                                "history_uci": [m.uci() for m in board.move_stack], **root_query})
-                if not root_query.get("bestmove_uci"):
-                    break
-                moves = candidate_moves(board, root_query, seed=seed, limit=candidates)
-                labels, child_queries = [], {}
-                for move in moves:
-                    child = board.copy(stack=True)
-                    child.push(move)
-                    if automatic_outcome(child) is not None:
-                        excluded.append({"query_id": prefix + ":" + move.uci(), "reason": "terminal_child"})
-                        continue
-                    query = session.query(teacher, child, prefix + ":" + move.uci())
-                    child_queries[move.uci()] = query
-                    queries.append({"role": "candidate_and_opponent", "case_id": case["case_id"],
-                                    "candidate_uci": move.uci(), "fen": child.fen(en_passant="fen"),
-                                    "history_uci": [m.uci() for m in child.move_stack], **query})
-                    score = query.get("score", {})
-                    line, end = legal_line(board, [move.uci(), *query.get("pv_uci", [])])
-                    after_facts = facts(end, owner)
-                    if (query.get("completed") is not True or query.get("lowerbound") or query.get("upperbound")
-                            or score.get("kind") != "cp" or type(score.get("stm")) is not int
-                            or type(query.get("depth")) is not int or query["depth"] < 4 or len(line) < 2):
-                        excluded.append({"query_id": query["query_id"], "reason": "no_exact_depth4_reply_line"})
-                        continue
-                    labels.append({"uci": move.uci(), "offline_owner_cp": -score["stm"],
-                        "native_depth": query["depth"], "native_nodes": query.get("nodes"),
-                        "requested_nodes": nodes, "query_id": query["query_id"], "pv_uci": line,
-                        "goal": classify(before_facts, after_facts),
-                        "observations": {"before": before_facts, "after_native_pv": after_facts},
-                        "line_kind": "native_search_pv_not_additional_played_game"})
-                record = {"record_id": prefix, "case_id": case["case_id"], "family_id": case["family_id"],
-                    "split": case["split"], "owner": owner, "fen": board.fen(en_passant="fen"),
-                    "position_key": memory.position_key(board), "history_uci": [m.uci() for m in board.move_stack],
-                    "goal": labels[0]["goal"] if labels else "consolidation", "candidates": labels,
-                    "curriculum_goal_tags": case.get("goal_tags", []), "source": case.get("source"),
-                    "signature": case.get("signature"), "acceptance": case.get("acceptance")}
-                records.append(record)
-                played = chess.Move.from_uci(root_query["bestmove_uci"])
-                if played not in board.legal_moves:
-                    raise ValueError("Native practice move is illegal")
-                board.push(played)
-                opponent_query = child_queries.get(played.uci())
-                if automatic_outcome(board) is None and opponent_query is None:
-                    opponent_query = session.query(teacher, board, prefix + ":opponent")
-                    queries.append({"role": "opponent", "case_id": case["case_id"],
-                                    "fen": board.fen(en_passant="fen"),
-                                    "history_uci": [m.uci() for m in board.move_stack], **opponent_query})
-                reply_uci = None
-                if automatic_outcome(board) is None and opponent_query and opponent_query.get("bestmove_uci"):
-                    reply = chess.Move.from_uci(opponent_query["bestmove_uci"])
-                    if reply not in board.legal_moves:
-                        raise ValueError("Native opponent response is illegal")
-                    reply_uci = reply.uci()
-                    board.push(reply)
-                after_actual = facts(board, owner)
-                branch["turns"].append({"turn": turn + 1, "before_fen": before.fen(en_passant="fen"),
-                    "owner_move": played.uci(), "opponent_move": reply_uci, "after_fen": board.fen(en_passant="fen"),
-                    "actual_goal": classify(before_facts, after_actual), "before_facts": before_facts,
-                    "after_actual_facts": after_actual, "record_id": prefix})
-            branch.update(final_fen=board.fen(en_passant="fen"),
-                          final_history_uci=[m.uci() for m in board.move_stack],
-                          result=automatic_outcome(board).result() if automatic_outcome(board) else "*")
+            case_branches = [branch]
+            pending = [(board, 0, branch)]
+            # Breadth-first turns let alternative defenses receive continuation
+            # work before the principal branch consumes the whole study budget.
+            while pending:
+                board, turn, branch = pending.pop(0)
+                if automatic_outcome(board) is None and turn < owner_turns:
+                    if board.turn != (owner == "white"):
+                        raise ValueError("Practice owner turn mismatch")
+                    fork_slots = (configuration["max_branches"] - len(case_branches)
+                                  if turn + 1 < owner_turns else 0)
+                    extra = min(configuration["opponent_replies"] - 1, fork_slots)
+                    # Reserve a whole turn before starting it. A global cap is
+                    # a bounded study plan, unlike a resumable per-attempt pause.
+                    cap = configuration["max_research_nodes"]
+                    if cap is not None:
+                        available = cap // nodes - len(queries)
+                        if available < candidates + 1:
+                            budget_limited = True
+                            branch.update(final_fen=board.fen(en_passant="fen"),
+                                final_history_uci=[m.uci() for m in board.move_stack], result="*")
+                            break
+                        # Leave room for a continuation turn for each new
+                        # alternative, rather than only paying to discover it.
+                        extra = min(extra, (available - candidates - 1) // (candidates + 2))
+                    fork_slots = min(fork_slots, extra)
+                    alternatives = _advance_branch(teacher, session, board, branch, case, turn,
+                        configuration, queries, records, excluded, fork_slots)
+                    for side, fork in alternatives:
+                        side_branch = {"case_id": case["case_id"], "family_id": case["family_id"],
+                            "split": case["split"], "owner": owner,
+                            "branch_id": case["case_id"] + ":branch:" + memory.digest(
+                                [m.uci() for m in side.move_stack])[:16],
+                            "fork": fork, "initial_owner_turn": turn + 2,
+                            "initial_fen": side.fen(en_passant="fen"),
+                            "initial_history_uci": [m.uci() for m in side.move_stack], "turns": [],
+                            "final_fen": side.fen(en_passant="fen"),
+                            "final_history_uci": [m.uci() for m in side.move_stack],
+                            "result": automatic_outcome(side).result() if automatic_outcome(side) else "*"}
+                        case_branches.append(side_branch)
+                        practice.append(side_branch)
+                        pending.append((side, turn + 1, side_branch))
+                    if turn + 1 < owner_turns and automatic_outcome(board) is None:
+                        pending.append((board, turn + 1, branch))
+                branch.update(final_fen=board.fen(en_passant="fen"),
+                              final_history_uci=[m.uci() for m in board.move_stack],
+                              result=automatic_outcome(board).result() if automatic_outcome(board) else "*")
             print(json.dumps({"practice_cases": index + 1, "total_cases": len(cases),
+                              "practice_branches": len(practice),
                               "owner_turns": sum(len(b["turns"]) for b in practice),
                               "queries": len(queries)}), flush=True)
+            if budget_limited:
+                break
     except (ResearchPaused, SearchInterrupted) as error:
         paused = error.reason
     except KeyboardInterrupt:
@@ -342,6 +424,7 @@ def _run_session(binary, output, configuration, session, wall_seconds, search_ti
                         failure=failed, source_hashes_match=manifest["source_sha256"] == source_hashes(),
                         binary_hash_matches=identity["binary_sha256"] == hashlib.sha256(binary.read_bytes()).hexdigest(),
                         research_status="paused" if paused else "failed" if failed else "complete", pause_reason=paused,
+                        coverage_budget_limited=budget_limited,
                         new_queries=session.new_queries, reused_queries=session.reused_queries,
                         new_requested_nodes=session.new_queries * nodes)
         write(output / "queries.json", queries)
@@ -413,7 +496,8 @@ def compile_memory(directory, memory_path=None, *, _locked=False):
         for item in row["candidates"]:
             query = lookup[item["query_id"]]
             if (query["score"].get("kind") != "cp" or item["offline_owner_cp"] != -query["score"]["stm"]
-                    or item["native_depth"] != query["depth"] or query["requested_nodes"] != run["nodes"]):
+                    or item["native_depth"] != query["depth"] or query["requested_nodes"] != run["nodes"]
+                    or "root_moves_uci" in query or query.get("role") == "opponent_alternative"):
                 raise ValueError("Candidate query provenance mismatch")
         exported.append(row)
     counts = {"practice_branches": len(practice), "owner_turns": sum(len(row["turns"]) for row in practice),
@@ -423,6 +507,12 @@ def compile_memory(directory, memory_path=None, *, _locked=False):
               "overlap_excluded": len(overlap_excluded), "inactive_state_excluded": len(inactive_excluded),
               "actual_goal_counts": dict(Counter(turn["actual_goal"] for branch in practice for turn in branch["turns"])),
               "candidate_goal_counts": dict(Counter(item["goal"] for row in exported for item in row["candidates"]))}
+    if run.get("opponent_replies", 1) > 1 or run.get("max_research_nodes") is not None:
+        counts.update(alternative_reply_queries=sum(row["role"] == "opponent_alternative" for row in queries),
+                      alternative_branches=sum("fork" in row for row in practice),
+                      alternative_branches_continued=sum("fork" in row and bool(row["turns"]) for row in practice),
+                      coverage_budget_limited=run.get("coverage_budget_limited", False),
+                      max_research_nodes=run.get("max_research_nodes"))
     artifact = {"schema": memory.SCHEMA, "policy": memory.POLICY, "status": "approved",
         "scope": "exact practiced full histories only; no unseen-family generalization",
         "engine_identity": run["engine_identity"], "curriculum_sha256": run["curriculum_sha256"],
@@ -481,6 +571,12 @@ def main(argv=None):
     parser.add_argument("--resume", action="store_true", help="Replay completed queries and continue the same output session")
     parser.add_argument("--max-new-queries", type=int, help="Pause after this many newly completed queries in this attempt")
     parser.add_argument("--search-timeout", type=float, default=12)
+    parser.add_argument("--opponent-replies", type=int, default=1,
+                        help="Research 1..3 distinct native opponent replies at a fork")
+    parser.add_argument("--max-branches", type=int, default=2,
+                        help="Maximum retained practice branches per starting case (1..16)")
+    parser.add_argument("--max-research-nodes", type=int,
+                        help="Whole-study logical query node cap, including reused completed queries")
     args = parser.parse_args(argv)
     if args.list_lines:
         data = json.loads(args.curriculum.read_text(encoding="utf-8"))
@@ -503,7 +599,8 @@ def main(argv=None):
                    owner_turns=args.owner_turns, per_family=args.per_family, candidates=args.candidates,
                    seed=args.seed, wall_seconds=args.wall_seconds, families=args.family, case_ids=args.case_ids,
                    resume=args.resume, max_new_queries=args.max_new_queries, search_timeout=args.search_timeout,
-                   memory_path=args.memory_path)
+                   memory_path=args.memory_path, opponent_replies=args.opponent_replies,
+                   max_branches=args.max_branches, max_research_nodes=args.max_research_nodes)
     if artifact["research_status"] == "paused":
         print(json.dumps(artifact), flush=True)
         return 0

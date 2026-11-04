@@ -1,0 +1,154 @@
+{
+  "checks": {
+    "all_original_holdout_cases_preserved": true,
+    "all_original_inputs_unchanged": true,
+    "base_snapshot_bytes_preserved": true,
+    "binary_unchanged": true,
+    "focused_full_history_unchanged": true,
+    "merge_not_activated": true,
+    "merged_candidates_require_runtime_verification": true,
+    "merged_loader_valid": true,
+    "new_revision_complete": true,
+    "new_revision_does_not_reuse_lower_budget_queries": true,
+    "requested_higher_budget_is_recorded": true,
+    "sources_unchanged": true
+  },
+  "common_candidate_comparisons_not_accuracy_labels": [
+    {
+      "after_cp": -109,
+      "after_depth": 5,
+      "before_cp": -65,
+      "before_depth": 4,
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4"
+      ],
+      "uci": "d1g4"
+    },
+    {
+      "after_cp": -126,
+      "after_depth": 6,
+      "before_cp": -146,
+      "before_depth": 5,
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4"
+      ],
+      "uci": "d1h5"
+    },
+    {
+      "after_cp": -105,
+      "after_depth": 5,
+      "before_cp": -82,
+      "before_depth": 4,
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "d1g4",
+        "d8f6"
+      ],
+      "uci": "g1h3"
+    },
+    {
+      "after_cp": -893,
+      "after_depth": 6,
+      "before_cp": -893,
+      "before_depth": 6,
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "f2f4",
+        "e5f4",
+        "d1g4",
+        "d8f6"
+      ],
+      "uci": "g4d7"
+    }
+  ],
+  "error": null,
+  "evidence_archive": {
+    "path": "evidence.zip",
+    "sha256": "5c3de0b0915166f9301e09cf67cc87950bb6294dd2cf63df1cdbf041b54430ee"
+  },
+  "full_report": {
+    "archive_path": "gambit-research-pipeline/report.json",
+    "sha256": "4894ce960bec8bfb00945eced2ac1ea6106b8a69ead8cf028daebf1a62085c96"
+  },
+  "merge": {
+    "activated": false,
+    "counts": {
+      "capacity_held_candidates": 0,
+      "conflicts_held": 4,
+      "duplicate_candidates": 4,
+      "excluded_rows": 0,
+      "input_memories": 3,
+      "input_records": 165,
+      "memory_candidates": 462,
+      "memory_records": 161
+    },
+    "memory_id": "22bd44738cb405aaeb842127fb82476a38beb99c80b7734396486419950eb426",
+    "status": "complete_with_held_conflicts"
+  },
+  "passed": true,
+  "revision": {
+    "case_ids": [
+      "focus-kings-b93b93b184ec76f9"
+    ],
+    "cleanup": {
+      "quit_requested": true,
+      "returncode": 0,
+      "returncode_observed": true,
+      "transport_closed": true
+    },
+    "counts": {
+      "actual_goal_counts": {
+        "consolidation": 1,
+        "development": 1
+      },
+      "candidate_goal_counts": {
+        "development": 4
+      },
+      "heldout_practice_records": 0,
+      "inactive_state_excluded": 0,
+      "memory_candidates": 4,
+      "memory_records": 2,
+      "native_queries": 6,
+      "overlap_excluded": 0,
+      "owner_turns": 2,
+      "practice_branches": 1,
+      "requested_nodes_total": 1200000
+    },
+    "new_queries": 6,
+    "reused_queries": 0
+  },
+  "schema": "regicide.gambit-research-pipeline-summary.v1",
+  "settings": {
+    "candidates": 2,
+    "nodes": 200000,
+    "owner_turns": 2,
+    "scope": "One explicit prior position, fresh higher-node revision, immutable-input merge, no strength claim",
+    "selected_record": "kings-b0c8d3df038a:1"
+  },
+  "source_version_boundary": {
+    "branch_matrix_reexecuted_after_this_change": false,
+    "branch_matrix_training_sha256": "41813eaee676d6df077db861d7a1806fad633f5116dcb248279de40f3659385c",
+    "change_after_branch_matrix": "Validate inherited reserved_holdout_position_keys and union them into the focused curriculum holdout protection set.",
+    "exact_training_diff": "--- branch snapshot\n+++ final pipeline snapshot\n@@ -210,7 +210,10 @@\n         raise ValueError(\"The full curriculum must retain its heldout family declaration\")\n     # Focused research still reserves every declared heldout root and immediate\n     # child, even when no heldout case is selected for native practice.\n-    heldout_keys = set()\n+    inherited_keys = data.get(\"reserved_holdout_position_keys\", [])\n+    if not isinstance(inherited_keys, list) or any(type(key) is not str or not key for key in inherited_keys):\n+        raise ValueError(\"Inherited holdout position keys must be a list of nonempty strings\")\n+    heldout_keys = set(inherited_keys)\n     for case in data[\"cases\"]:\n         if case[\"family_id\"] not in heldout:\n             continue\n",
+    "final_pipeline_training_sha256": "2a82f39a92a9cbf6211b8704a12bd26c83a482b4b602897ad0c6af54ae7a5a1f",
+    "post_change_validation": {
+      "final_unique_unit_tests": 92,
+      "new_regression_test": "gambit_branch_research_tests.BranchResearchTests.test_focused_curriculum_inherits_prior_reserved_descendant_positions",
+      "pipeline_native_queries": 6
+    },
+    "source_snapshots_preserved": [
+      "gambit-branch-research/execution-sources/scripts/train_gambit_operations.py",
+      "gambit-research-pipeline/execution-sources/scripts/train_gambit_operations.py"
+    ]
+  }
+}

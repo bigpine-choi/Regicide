@@ -50,6 +50,23 @@ def legacy_options(advertised):
             if name in advertised}
 
 
+def normalize_root_moves(board: chess.Board, root_moves: list[chess.Move] | None) -> list[chess.Move] | None:
+    """Snapshot a legal root set in deterministic order, or retain free search."""
+    if root_moves is None:
+        return None
+    if not isinstance(root_moves, list) or not root_moves:
+        raise ValueError("root_moves must be a nonempty list of legal chess.Move objects")
+    try:
+        invalid = any(not isinstance(move, chess.Move) or move not in board.legal_moves for move in root_moves)
+    except (IndexError, TypeError, ValueError) as error:
+        raise ValueError("root_moves contains an invalid or illegal move") from error
+    if invalid:
+        raise ValueError("root_moves contains an invalid or illegal move")
+    # UCI spelling is stable for promotions/castling too. New Move instances
+    # isolate the request from later caller mutation of either list or moves.
+    return [chess.Move.from_uci(uci) for uci in sorted({move.uci() for move in root_moves})]
+
+
 class SearchInterrupted(RuntimeError):
     """A query was interrupted and must never become a training label."""
 
@@ -199,10 +216,15 @@ class EngineTeacher:
             "uci_end_seq": seq,
         }
 
-    def query(self, board: chess.Board, query_id: Any) -> dict[str, Any]:
+    def query(self, board: chess.Board, query_id: Any, *, root_moves: list[chess.Move] | None = None) -> dict[str, Any]:
         if self.closed or self._engine is None or self._log is None:
             raise RuntimeError("EngineTeacher must be entered before querying")
+        # Snapshot both the full move history and the optional root restriction.
+        snapshot = board.copy(stack=True)
+        roots = normalize_root_moves(snapshot, root_moves)
         record = self._empty_record(query_id)
+        if roots is not None:
+            record["root_moves_uci"] = [move.uci() for move in roots]
         started = time.monotonic()
         remaining = self.deadline - started
         if remaining <= 0:
@@ -211,12 +233,11 @@ class EngineTeacher:
             raise SearchInterrupted("wall_budget", record)
         duration = min(self.search_timeout, remaining)
         reason = "wall_budget" if remaining <= self.search_timeout else "search_timeout"
-        # A snapshot prevents concurrent caller mutations from changing history.
-        snapshot = board.copy(stack=True)
+        root_options = {} if roots is None else {"root_moves": roots}
         coroutine = asyncio.wait_for(
             self._engine.protocol.play(
                 snapshot, chess.engine.Limit(nodes=self.nodes), game=object(),
-                info=chess.engine.INFO_ALL,
+                info=chess.engine.INFO_ALL, **root_options,
             ), duration,
         )
         future = asyncio.run_coroutine_threadsafe(coroutine, self._engine.protocol.loop)

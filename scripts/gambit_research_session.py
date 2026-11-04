@@ -18,6 +18,8 @@ import uuid
 
 import chess
 
+from neural_search_data.engine import normalize_root_moves
+
 
 SESSION_SCHEMA = "regicide.gambit-research-session.v1"
 ENGINE_SCHEMA = "regicide.gambit-research-engine.v1"
@@ -251,7 +253,7 @@ class ResearchSession:
         self._engine_profile, self._engine_id = profile, engine_id
         return copy.deepcopy(expected)
 
-    def _request(self, board, query_id):
+    def _request(self, board, query_id, roots=None):
         root = board.root()
         replay = root.copy(stack=True)
         history = [move.uci() for move in board.move_stack]
@@ -262,12 +264,15 @@ class ResearchSession:
             replay.push(move)
         if replay.fen(en_passant="fen") != board.fen(en_passant="fen"):
             raise ValueError("Query history does not reconstruct its current position")
-        return {"config_id": self.config_id, "engine_id": self._engine_id,
-                "query_id": json.loads(_canonical(query_id)), "nodes": self.configuration["nodes"],
-                "root_fen": root.fen(en_passant="fen"), "history_uci": history,
-                "fen": board.fen(en_passant="fen"), "chess960": board.chess960}
+        request = {"config_id": self.config_id, "engine_id": self._engine_id,
+                   "query_id": json.loads(_canonical(query_id)), "nodes": self.configuration["nodes"],
+                   "root_fen": root.fen(en_passant="fen"), "history_uci": history,
+                   "fen": board.fen(en_passant="fen"), "chess960": board.chess960}
+        if roots is not None:
+            request["root_moves_uci"] = [move.uci() for move in roots]
+        return request
 
-    def _validate_result(self, record, board, query_id):
+    def _validate_result(self, record, board, query_id, roots=None):
         if not isinstance(record, dict):
             raise ValueError("Native query returned no result record")
         _canonical(record)
@@ -290,6 +295,13 @@ class ResearchSession:
         pv, best = record.get("pv_uci"), record.get("bestmove_uci")
         if not isinstance(pv, list) or not pv or type(best) is not str or pv[0] != best:
             raise ValueError("Native query returned no matching move and principal variation")
+        if roots is None:
+            if "root_moves_uci" in record:
+                raise ValueError("Unrestricted query returned restricted-root provenance")
+        else:
+            allowed = [move.uci() for move in roots]
+            if record.get("root_moves_uci") != allowed or best not in allowed:
+                raise ValueError("Native query root restriction or returned move differs from its request")
         replay = board.copy(stack=True)
         for uci in pv:
             try:
@@ -357,15 +369,16 @@ class ResearchSession:
             self._raw_cursor = byte_end
         return evidence
 
-    def query(self, teacher, board, query_id):
+    def query(self, teacher, board, query_id, *, root_moves=None):
         self._require_active()
+        snapshot = board.copy(stack=True)
+        roots = normalize_root_moves(snapshot, root_moves)
         self.bind_engine(teacher)
         if type(teacher.nodes) is not int or teacher.nodes != self.configuration["nodes"]:
             raise ValueError("Teacher node limit differs from the research configuration")
         if Path(teacher.raw_path).resolve() != self.raw_path:
             raise ValueError("Teacher raw log does not belong to this attempt")
-        snapshot = board.copy(stack=True)
-        request = self._request(snapshot, query_id)
+        request = self._request(snapshot, query_id, roots)
         path = self._cache / (_digest(query_id) + ".json")
         if path.exists() or path.is_symlink():
             envelope = _read_json(path)
@@ -377,7 +390,7 @@ class ResearchSession:
             if _canonical(envelope.get("request")) != _canonical(request):
                 raise ValueError("Completed-query request differs from its current position or history")
             result = envelope.get("result")
-            self._validate_result(result, snapshot, query_id)
+            self._validate_result(result, snapshot, query_id, roots)
             raw = result.get("raw_log")
             if not isinstance(raw, dict):
                 raise ValueError("Completed query has no linked raw UCI evidence")
@@ -389,8 +402,9 @@ class ResearchSession:
         self.new_queries += 1
         # A teacher receives a separate full-history board so a faulty adapter
         # cannot mutate the caller's game or the validation reference board.
-        result = teacher.query(snapshot.copy(stack=True), query_id)
-        self._validate_result(result, snapshot, query_id)
+        root_options = {} if roots is None else {"root_moves": copy.deepcopy(roots)}
+        result = teacher.query(snapshot.copy(stack=True), query_id, **root_options)
+        self._validate_result(result, snapshot, query_id, roots)
         if _profile(teacher) != self._engine_profile:
             raise ValueError("Native engine options changed during the query")
         result = copy.deepcopy(result)

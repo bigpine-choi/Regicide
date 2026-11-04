@@ -70,15 +70,16 @@ class FakeTeacher:
         self.cleanup_status.update(quit_requested=True, transport_closed=True,
                                    returncode=type(self).exit_code, returncode_observed=type(self).exit_observed)
 
-    def query(self, board, query_id):
+    def query(self, board, query_id, *, root_moves=None):
         cls = type(self)
         cls.calls.append((query_id, board.fen(en_passant="fen"), tuple(move.uci() for move in board.move_stack)))
         replay = board.copy(stack=True)
         pv = []
-        for _ in range(4):
+        for ply in range(4):
             if replay.outcome(claim_draw=False) is not None:
                 break
-            move = min(replay.legal_moves, key=lambda item: item.uci())
+            legal = root_moves if ply == 0 and root_moves is not None else replay.legal_moves
+            move = min(legal, key=lambda item: item.uci())
             pv.append(move.uci())
             replay.push(move)
         begin = self.seq + 1
@@ -93,6 +94,8 @@ class FakeTeacher:
             "bestmove_uci": pv[0], "pv_uci": pv, "score": {"kind": "cp", "stm": 50},
             "lowerbound": False, "upperbound": False, "completed": True,
             "uci_begin_seq": begin, "uci_end_seq": self.seq}
+        if root_moves is not None:
+            result["root_moves_uci"] = sorted({move.uci() for move in root_moves})
         if cls.interrupt_at == len(cls.calls):
             result["completed"] = False
             if cls.interrupt_reason == "keyboard_interrupt":
