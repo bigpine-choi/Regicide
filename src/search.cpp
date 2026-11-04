@@ -50,6 +50,43 @@ bool belongs_to(char piece, Color side) {
     return piece != '.' && ((piece >= 'A' && piece <= 'Z') == (side == Color::white));
 }
 
+// A bounded horizon trigger. Queen exchanges alone do not force a reply;
+// pawn, minor, rook and king attacks do. Pinned attackers may also trigger
+// the search: only the subsequent legal replies determine the score. Never
+// force the queen itself to move (a sacrifice or counterattack can be best).
+bool queen_under_lesser_attack(const Board& board) {
+    const auto& position = board.position();
+    const Color enemy = opposite(position.turn);
+    const char queen = position.turn == Color::white ? 'Q' : 'q';
+    const auto enemy_piece = [&](int file, int rank, char type) {
+        if (file < 0 || file >= 8 || rank < 0 || rank >= 8) return false;
+        const char piece = position.squares[rank * 8 + file];
+        return belongs_to(piece, enemy) && (piece == type || piece == type - ('a' - 'A'));
+    };
+    constexpr int rays[8][2] = {
+        {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+    for (int square = 0; square < 64; ++square) {
+        if (position.squares[square] != queen) continue;
+        const int file = square % 8, rank = square / 8;
+        const int pawn_rank = rank + (enemy == Color::white ? -1 : 1);
+        if (enemy_piece(file - 1, pawn_rank, 'p') || enemy_piece(file + 1, pawn_rank, 'p')) return true;
+        for (const auto& step : knight_steps)
+            if (enemy_piece(file + step[0], rank + step[1], 'n')) return true;
+        for (int direction = 0; direction < 8; ++direction) {
+            for (int distance = 1; distance < 8; ++distance) {
+                const int f = file + rays[direction][0] * distance;
+                const int r = rank + rays[direction][1] * distance;
+                if (f < 0 || f >= 8 || r < 0 || r >= 8) break;
+                if (position.squares[r * 8 + f] == '.') continue;
+                if (enemy_piece(f, r, direction < 4 ? 'r' : 'b') ||
+                    (distance == 1 && enemy_piece(f, r, 'k'))) return true;
+                break;
+            }
+        }
+    }
+    return false;
+}
+
 // A conservative motif, not an evaluation bonus or a claim that a fork wins:
 // a quiet knight move attacks two enemy rooks/queens, or threatens a legal,
 // locally non-losing capture which attacks two such pieces. The actual search
@@ -302,6 +339,7 @@ public:
     std::uint64_t qsee_pruned = 0;
     std::uint64_t qcache_probes = 0, qcache_hits = 0, qcache_cutoffs = 0, qcache_stores = 0;
     std::uint64_t root_threat_candidates = 0, root_threat_searches = 0;
+    std::uint64_t queen_defense_qnodes = 0;
     std::uint64_t qcache_bytes() const { return qcache_.size() * sizeof(QuiescenceEntry); }
     int seldepth = 0;
     int iteration_depth = 0;
@@ -612,9 +650,17 @@ private:
         // complete result, rather than treating an unresolved check as quiet.
         if ((checked || defensive_reply) && qply >= max_quiescence_depth) throw Interrupted{};
 
+        // Only the first q ply can open this full-width defense. Descendants
+        // resume the existing capture/check policy, so this cannot recursively
+        // expand a quiet queen chase. qply is already part of the q-cache key;
+        // the option is immutable during the lifetime of this search's caches.
+        const bool queen_defense = options_.quiescence_queen_defense && qply == 0 &&
+            !checked && !defensive_reply && queen_under_lesser_attack(board);
+        if (queen_defense) ++queen_defense_qnodes;
+
         int best = -infinity;
         std::vector<Move> threats;
-        if (!checked && !defensive_reply) {
+        if (!checked && !defensive_reply && !queen_defense) {
             // An unused optional extension must not make a long capture chain
             // launch a second full-width tree arbitrarily far from the normal
             // horizon. Keep the first three q plies, including a preparation
@@ -833,6 +879,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.qcache_bytes = searcher.qcache_bytes();
         result.root_threat_candidates = searcher.root_threat_candidates;
         result.root_threat_searches = searcher.root_threat_searches;
+        result.queen_defense_qnodes = searcher.queen_defense_qnodes;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -859,6 +906,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.qcache_bytes = searcher.qcache_bytes();
     result.root_threat_candidates = searcher.root_threat_candidates;
     result.root_threat_searches = searcher.root_threat_searches;
+    result.queen_defense_qnodes = searcher.queen_defense_qnodes;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

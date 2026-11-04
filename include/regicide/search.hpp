@@ -93,6 +93,11 @@ struct SearchOptions {
     // every immediate reply to an already launched threat keep their policy.
     // This is selective: a quiet threat first appearing later can be missed.
     bool quiescence_horizon_budget = false;
+    // At the first quiet horizon, an attacked queen is not assumed safe by
+    // standing pat. Search every legal reply once, including counterattacks
+    // and queen sacrifices. Geometric lower-value attacks are a selective
+    // trigger, not a material penalty or proof that the queen will be lost.
+    bool quiescence_queen_defense = false;
 };
 
 struct SearchResult {
@@ -129,6 +134,7 @@ struct SearchResult {
     std::uint64_t qcache_bytes = 0; // At most 1 MiB, separate from normal Hash.
     std::uint64_t root_threat_candidates = 0;
     std::uint64_t root_threat_searches = 0;
+    std::uint64_t queen_defense_qnodes = 0; // All-reply queen horizons, including unfinished work.
 };
 
 using SearchCallback = std::function<void(const SearchResult&)>;

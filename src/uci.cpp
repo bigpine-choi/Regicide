@@ -157,6 +157,7 @@ public:
             send("option name UseQuiescenceThreatCache type check default false");
             send("option name UseTacticalThreatOrdering type check default false");
             send("option name UseQuiescenceReplyBudget type check default false");
+            send("option name UseQuiescenceQueenDefense type check default false");
             send("option name PVS type check default true");
             send("option name UseSEE type check default true");
             send("option name UsePawnShield type check default true");
@@ -275,7 +276,7 @@ private:
             option != "UseSEE" && option != "UsePawnShield" && option != "UsePawnStructure" &&
             option != "UsePieceActivity" && option != "UseLMR" && option != "UseQuiescenceThreats" &&
             option != "UseQuiescenceThreatCache" && option != "UseTacticalThreatOrdering" &&
-            option != "UseQuiescenceReplyBudget") return;
+            option != "UseQuiescenceReplyBudget" && option != "UseQuiescenceQueenDefense") return;
         if (value == tokens.end() || tokens.end() - value != 2)
             throw std::invalid_argument("missing or extra option value");
         if (option == "Move Overhead") { overhead_ = static_cast<int>(number(*(value + 1), 5000)); return; }
@@ -296,6 +297,7 @@ private:
         else if (option == "UseQuiescenceThreatCache") options_.quiescence_cache = text == "true";
         else if (option == "UseTacticalThreatOrdering") options_.tactical_threat_ordering = text == "true";
         else if (option == "UseQuiescenceReplyBudget") options_.quiescence_horizon_budget = text == "true";
+        else if (option == "UseQuiescenceQueenDefense") options_.quiescence_queen_defense = text == "true";
         else if (option == "PVS") options_.pvs = text == "true";
         else if (option == "UseSEE") options_.see_ordering = text == "true";
         else if (option == "UsePawnShield") options_.king_pawn_shield = text == "true";
@@ -334,6 +336,7 @@ private:
              " bytes " + std::to_string(result.qcache_bytes));
         send("info string rootthreat candidates " + std::to_string(result.root_threat_candidates) +
              " searches " + std::to_string(result.root_threat_searches));
+        send("info string queen-defense qnodes " + std::to_string(result.queen_defense_qnodes));
         send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
              " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores) +
              " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +
