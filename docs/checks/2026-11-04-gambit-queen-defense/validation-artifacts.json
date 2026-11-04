@@ -1,0 +1,34 @@
+{
+  "schema": "regicide.validation-artifacts.v1",
+  "generated_utc": "2026-11-04T14:04:02.609498+00:00",
+  "archive": "validation-artifacts.zip",
+  "archive_sha256": "e3da124db5c348891ef1204e05efa5dd917f4363f6f2de7219cc9fe3062f0259",
+  "archive_bytes": 434724,
+  "archived_files_including_manifest": 48,
+  "all_archive_entry_hashes_verified": true,
+  "original_reports_unchanged": {
+    "screen-001": "df2bdc17444b39a1874b180f05954186af0658bc1f7e0b103d068105c93b3910",
+    "followup-001": "10a2f7ab9af3eaf4a2c0ecc84ad11e3f2dfd0051ed8a9fdfdb1cd67ca29ed383",
+    "sf-reaudit-001": "00c012d25b7f3ccec5b7cb6293b5c1b2654b5a6e51c7fb9e616a1ca07a364135"
+  },
+  "content": "Original reports, raw UCI logs, authored Host smoke traces, fixtures, executed source snapshots, final diagnostic tool, summaries and reproduction recipe. No native/SF executable or private full game history included.",
+  "status_separation": {
+    "native_query_execution": "screen terminal normalization corrected in a separate four-query record; native processes quit0",
+    "host_policy_contracts": "both arms passed King's and Stafford fixtures",
+    "sf_original": "all exact results completed, transport close exit1; original clean-exit validation failed",
+    "sf_king_clean_exit_reaudit": "three queries completed depth14, explicit UCI quit, exit0",
+    "strength": "not adjudicated by this archive"
+  },
+  "reproduction": {
+    "working_directory": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration",
+    "broad_screen": ".\\.venv-tests\\Scripts\\python.exe tests/tactical_horizon_validation.py --baseline build-gambit-horizon/baseline/regicide.exe --candidate build-gambit-horizon/candidate/regicide.exe --output-dir build-gambit-horizon/replay-screen-new --stockfish build-m2-opponents/stockfish18/package/stockfish/stockfish-windows-x86-64.exe --host-smoke --host-ms 500",
+    "three_query_clean_exit_audit": ".\\.venv-tests\\Scripts\\python.exe build-gambit-horizon/reaudit-kings.py --repo . --stockfish build-m2-opponents/stockfish18/package/stockfish/stockfish-windows-x86-64.exe --output-dir build-gambit-horizon/replay-audit-new",
+    "followup": {
+      "invocation": "Original execution orchestrated the frozen helper API; no standalone original runner was saved.",
+      "terminal": "For fixture mate-precedes-75-moves, call query once per baseline/candidate and each Limit(nodes=100000), Limit(time=0.1). Candidate option UseQuiescenceQueenDefense=True.",
+      "kings": "For fixture kings-accepted:9, call query once per baseline/candidate and each Limit(nodes=850000), Limit(time=2.085), free root. Then sf_audit of the saved union only, Limit(depth=14,time=0.5), Hash32 Threads1, ClearHash per query.",
+      "source": "followup-001/executed-tool-source.zip",
+      "scope": "Reproduction recipe; not a claim that a standalone original runner existed"
+    }
+  }
+}

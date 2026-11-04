@@ -1,0 +1,58 @@
+{
+  "schema": "regicide.tactical-horizon-followup-summary.v1",
+  "report_sha256": "10a2f7ab9af3eaf4a2c0ecc84ad11e3f2dfd0051ed8a9fdfdb1cd67ca29ed383",
+  "report_modified": false,
+  "native_execution_valid": true,
+  "sources_unchanged": true,
+  "terminal_correction_queries": 4,
+  "sf_audit_execution": {
+    "query_results_complete": true,
+    "shared_depths": [
+      14
+    ],
+    "clean_shutdown": false,
+    "last_logged_audit_exit_code": 1,
+    "explanation": "All saved exact packets and bestmove replies precede context-manager transport close. That close produced exit1 rather than a verified UCI quit0. Scores are retained as completed post-selection evidence; clean-shutdown validation was not satisfied. No leaked process was observed by root.",
+    "raw_uci_sha256": "d5cffa35369ae24e73470617d54ecd4db7a8214c9a60a388ee3c0f3a16beef58"
+  },
+  "kings_development": {
+    "nodes": {
+      "baseline": {
+        "move": "b1c3",
+        "depth": 6,
+        "cp": -141,
+        "final_total_nodes": 850000,
+        "queen_defense_qnodes": null
+      },
+      "candidate": {
+        "move": "f1b5",
+        "depth": 5,
+        "cp": -120,
+        "final_total_nodes": 850000,
+        "queen_defense_qnodes": 5626
+      }
+    },
+    "time": {
+      "baseline": {
+        "move": "b1c3",
+        "depth": 6,
+        "cp": -141,
+        "final_total_nodes": 778530,
+        "queen_defense_qnodes": null
+      },
+      "candidate": {
+        "move": "f1b5",
+        "depth": 5,
+        "cp": -120,
+        "final_total_nodes": 799481,
+        "queen_defense_qnodes": 5387
+      }
+    }
+  },
+  "scope": "Explicit known-development-root larger-node/time followup, not a new heldout or played game",
+  "improvement_limit": "Both 850000 nodes and 2085ms changed Nc3(depth6) to Bb5(depth5). Saved independent depth14 loss moved 281cp to164cp. This partial local improvement is paired with lower completed depth and does not prove general strength.",
+  "sf_same_root_loss_cp": {
+    "b1c3": 281,
+    "f1b5": 164
+  }
+}
