@@ -1,0 +1,60 @@
+{
+  "schema": "regicide.gambit-line-research.unit-verification.v1",
+  "evidence_kind": "agent-attested",
+  "attested_utc": "2026-11-04T15:19:05.658571+00:00",
+  "raw_stdout_saved_to_workspace": false,
+  "observation": "The agent directly observed both unittest outputs in the tool response. No tests were rerun to produce this attestation.",
+  "original_tool_chunk_id": "3f42bc",
+  "original_exec_exit_code": 0,
+  "suites": [
+    {
+      "file": "tests/gambit_research_tests.py",
+      "command": ".venv-tests/Scripts/python.exe tests/gambit_research_tests.py -v",
+      "tests_run": 21,
+      "failures": 0,
+      "errors": 0,
+      "reported_seconds": 1.443,
+      "actual_output_result": "OK"
+    },
+    {
+      "file": "tests/gambit_practice_memory_tests.py",
+      "command": ".venv-tests/Scripts/python.exe tests/gambit_practice_memory_tests.py -v",
+      "tests_run": 10,
+      "failures": 0,
+      "errors": 0,
+      "reported_seconds": 0.036,
+      "actual_output_result": "OK"
+    }
+  ],
+  "total_tests": 31,
+  "native_engine_executed": false,
+  "external_engine_executed": false,
+  "research_test_backend": "FakeTeacher: deterministic legal four-ply PV, exact cp score and fixed nodes, flushed raw JSONL ranges, controlled interruptions and cleanup status",
+  "verification_scope": [
+    "Continuous and pause/resume runs produce the same semantic records, practice decisions, query results, memory records and logical counts",
+    "Completed queries are reused without duplicate teacher calls; incomplete and interrupted work is queried again",
+    "Repeated family/case selection, unknown selection rejection, holdout exclusion and holdout-only experimental completion",
+    "Configuration, binary, curriculum, source hash and engine option mismatch rejection",
+    "Search timeout, wall budget and keyboard interrupt recovery",
+    "Corrupt completed cache, altered raw bytes and checksum-valid full-history mismatch rejection",
+    "Concurrent same-output writer lock rejection",
+    "No-engine list-lines path and active default memory protection in public compiler and CLI",
+    "One-candidate limit yields four logical queries for two owner turns",
+    "Concurrent export publication cannot replace a competing existing file and temporary export is cleaned",
+    "Session lock remains held during external export both from run() and direct compile_memory()",
+    "Unknown or nonzero native exit cannot produce a successful memory export",
+    "Existing exact-state practice-memory boundaries and proposal provenance remain covered by the ten pre-existing tests"
+  ],
+  "limitations": [
+    "This is an agent attestation, not a saved raw unittest transcript or machine-generated test report",
+    "Elapsed seconds are copied from the observed unittest summaries; execution start and finish timestamps were not separately captured",
+    "Current hashes below were measured when this attestation was written and are not claimed as independently captured run-start hashes",
+    "No native search, crash-by-power-loss experiment, human GUI validation, strength, Elo or generalization result is asserted"
+  ],
+  "current_source_sha256_at_attestation": {
+    "tests/gambit_research_tests.py": "643c013f3339c13d152cc91396de33430db33fdaee2c902febc64669dd7af663",
+    "tests/gambit_practice_memory_tests.py": "d7df6654e78b196f8bc772a5b0834decff00345042c88092acc0509699d6b4fd",
+    "scripts/train_gambit_operations.py": "5eae1b565b6c566cd314592423b92a9afde062d5daa0acc7e5ab1afb5af74cc6",
+    "scripts/gambit_research_session.py": "01ba9aa840a537dd1eab0cc874b53a54e7f211dbe4fc2093c6917e1817937f2e"
+  }
+}
