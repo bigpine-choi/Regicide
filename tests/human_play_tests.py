@@ -128,6 +128,16 @@ class HumanPlayTests(unittest.TestCase):
         self.assertEqual(state["engine"]["movetime_ms"], 100)
         self.assertEqual(state["engine"]["binary_sha256"], hashlib.sha256(self.binary.read_bytes()).hexdigest())
 
+    def test_pgn_draw_policy_matches_current_saved_json_policy(self):
+        self.new()
+        record_path = self.game.save_dir / f"{self.game.game_id}.json"
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        exported, _ = read_pgn(self.game.pgn())
+        saved, _ = read_pgn(record_path.with_suffix(".pgn").read_text(encoding="utf-8"))
+        self.assertEqual(record["draw_policy"], play_human.DRAW_POLICY)
+        self.assertEqual(exported.headers["DrawPolicy"], record["draw_policy"])
+        self.assertEqual(saved.headers["DrawPolicy"], record["draw_policy"])
+
     def test_human_engine_turn_and_san_history(self):
         self.new()
         self.assert_unchanged_error(ValueError, lambda: self.engine())

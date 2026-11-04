@@ -1,0 +1,44 @@
+{
+  "schema": "regicide.gambit-depth-checks.v1",
+  "source_base_commit": "aaf5d29",
+  "unit_groups": [
+    {
+      "modules": [
+        "gambit_deeper_search_tests"
+      ],
+      "count": 13,
+      "passed": true
+    },
+    {
+      "modules": [
+        "engine_pacing_tests",
+        "common_pacing_policy_tests",
+        "common_human_pacing_host_tests",
+        "game_outcome_tests",
+        "boss_play_state_tests"
+      ],
+      "count": 78,
+      "passed": true
+    },
+    {
+      "module": "human_play_tests",
+      "tests": [
+        "test_pgn_draw_policy_matches_current_saved_json_policy",
+        "test_intended_repetition_waits_for_completed_move_with_full_history",
+        "test_intended_repetition_can_be_avoided_by_different_move"
+      ],
+      "count": 3,
+      "passed": true
+    }
+  ],
+  "unique_unit_tests": 94,
+  "native_baseline_queries": 9,
+  "native_depth_comparison_queries": 6,
+  "native_host_smokes": 1,
+  "offline_audit_queries": 8,
+  "core_candidates_adopted": 0,
+  "core_bug_fixed": false,
+  "runtime_binary_changed": false,
+  "playing_strength_claim": "none",
+  "executed_sources_sha256": "11a7c01b24f86aa3b337dd028a0caad1c7e0fd3db5835f9946fc748813c636c4"
+}

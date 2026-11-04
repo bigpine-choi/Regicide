@@ -232,7 +232,7 @@ class PacingHostTests(unittest.TestCase):
         self.assertEqual(self.waits, [])
         self.assertEqual(self.factory.instances[0].calls[0][1].time, 1.0)
 
-    def test_all_timed_modes_use_same_pacing_plan(self):
+    def test_same_turn_target_with_gambit_spending_more_of_it_on_search(self):
         targets, allocations = [], []
         self.search_seconds = 0
         for modes in ({}, {"boss_mode": True}, {"sparring_mode": True}):
@@ -247,7 +247,11 @@ class PacingHostTests(unittest.TestCase):
             allocations.append(receipt["allocation"])
             self.assertAlmostEqual(sum(self.waits) * 1000, receipt["wait_target_total_ms"], delta=1)
         self.assertEqual(len(set(targets)), 1)
-        self.assertEqual(allocations, [allocations[0]] * 3)
+        self.assertEqual(allocations[0], allocations[2])
+        self.assertGreater(allocations[1]["baseline_ms"], allocations[0]["baseline_ms"])
+        self.assertEqual(allocations[1]["total_search_ms"], allocations[0]["total_search_ms"])
+        self.assertEqual(allocations[1]["optional_ms"], allocations[0]["optional_ms"])
+        self.assertTrue(allocations[1]["deeper_search"]["active"])
 
     def test_timed_sparring_manual_setting_rejected_and_omission_allowed(self):
         state = self.new(sparring_mode=True, ms=None)

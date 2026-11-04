@@ -19,6 +19,7 @@ import sparring_evaluation
 
 
 POLICY = "regicide-engine-pacing-v13"
+GAMBIT_SEARCH_POLICY = "regicide-gambit-search-time-v1"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
@@ -487,8 +488,14 @@ def reserve_analysis(pacing, clock, *, minimum_baseline_ms, optional_ms):
     return result
 
 
-def search_budget(pacing, clock, configured_ms, *, automatic=False):
-    """Allocate baseline+optional analysis inside the same total-turn target."""
+def search_budget(pacing, clock, configured_ms, *, automatic=False, deepen=False):
+    """Allocate real search inside the turn target, preserving optional probes.
+
+    Gambit play can spend otherwise unused presentation time on its baseline.
+    This increases the native search allowance, never its reported depth or
+    evaluation. Obvious replies, urgent clocks and explicit manual limits keep
+    their existing budgets. The post-search speed-up remains part of the cap.
+    """
     if not isinstance(clock, dict) or clock.get("enabled") is not True:
         return {"baseline_ms": configured_ms, "total_search_ms": None, "completion_margin_ms": 0,
                 "automatic": False, "optional_ms": None, "analysis_reserve_active": False}
@@ -508,10 +515,32 @@ def search_budget(pacing, clock, configured_ms, *, automatic=False):
     baseline = max(1, min(baseline, total_search))
     optional = (min(reserve["optional_ms"], max(0, total_search - baseline)) if reserved else
                 0 if automatic else max(0, total_search - baseline))
-    return {"baseline_ms": baseline, "total_search_ms": total_search,
-            "completion_margin_ms": round(margin, 3), "automatic": automatic,
-            "optional_ms": optional,
-            "analysis_reserve_active": bool(reserved and baseline >= reserve["minimum_baseline_ms"])}
+    result = {"baseline_ms": baseline, "total_search_ms": total_search,
+              "completion_margin_ms": round(margin, 3), "automatic": automatic,
+              "optional_ms": optional,
+              "analysis_reserve_active": bool(reserved and baseline >= reserve["minimum_baseline_ms"])}
+    if (deepen and automatic and pacing.get("enabled") is True
+            and pacing.get("reason") == "shared_human_recommendation"
+            and clock.get("status") == "running"
+            and clock.get("running_color") == pacing.get("color")
+            and all(_number(value) for value in (current, elapsed, pacing.get("target_total_ms")))
+            and _number(pacing.get("reserve_ms", 0))
+            and _number(pacing.get("post_search_reduction_ms", 0))
+            and current > LOW_CLOCK_MS and pacing.get("clarity_kind") not in QUICK_KINDS):
+        # Do not consume either the sacrifice-verification reserve or the
+        # clock buffer. A short target must never reduce the old baseline.
+        search_target = wait_target_ms(pacing)
+        clock_reserve = max(LOW_CLOCK_MS, pacing.get("reserve_ms", 0))
+        usable = max(0, min(total_search, search_target - elapsed - margin,
+                            current - clock_reserve - margin))
+        deeper = int(usable) - optional
+        if deeper > baseline:
+            result["baseline_ms"] = deeper
+            result["deeper_search"] = {
+                "policy": GAMBIT_SEARCH_POLICY, "active": True,
+                "previous_baseline_ms": baseline, "reclaimed_ms": deeper - baseline,
+                "search_target_ms": search_target}
+    return result
 
 
 def recovery_clock_limit(clock, color, direction, *, pressure_start_ms=PRESSURE_START_MS):
@@ -578,10 +607,11 @@ def recovery_plan(board, pacing, clock, *, baseline_info, baseline_move):
 
 
 def wait_target_ms(pacing):
-    """Presentation deadline only; never feed this back into search budgets.
+    """Return the visible deadline without repeatedly subtracting its trim.
 
-    Always derive it from the original target so polling and clock edits do
-    not repeatedly subtract time. Legacy receipts retain their original pace.
+    The initial deadline also caps gambit's reclaimed search time. Later
+    presentation refinements cannot retroactively enlarge that allocation.
+    Legacy receipts retain their original pace.
     """
     return max(0, pacing["target_total_ms"] - pacing.get("post_search_reduction_ms", 0))
 

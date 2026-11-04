@@ -1127,7 +1127,7 @@ class HumanGame:
                         optional_ms=policy_plan["extra_budget_ms"])
                 allocation = engine_pacing.search_budget(
                     pacing_plan, clock_state, configured_ms,
-                    automatic=clock_state["enabled"])
+                    automatic=clock_state["enabled"], deepen=self.boss_mode)
                 movetime_ms = allocation["baseline_ms"]
                 clock_limited = False
                 if clock_remaining_ms is not None:
@@ -2052,7 +2052,7 @@ class HumanGame:
                                  "EngineSHA256": self.binary_sha256,
                                  "Evaluation": self.classical_evaluation_mode,
                                  "InterfaceSourceCommit": self.source["commit"] or "unknown",
-                                 "DrawPolicy": "always claim available threefold/50-move draws",
+                                 "DrawPolicy": DRAW_POLICY,
                                  "Termination": "unterminated" if result == "*" else "normal",
                                  "TerminationReason": termination or ("engine_error" if error else "in_progress"),
                                  "HandicapMoves": str(len(forced_plies))})

@@ -1,0 +1,46 @@
+{
+  "schema": "regicide.repetition-cycle-development.v1",
+  "authorship": "Project-authored synthetic legal positions, independent of the user's a3 game; no external game database or engine answers.",
+  "scope": "Development regression fixtures only. Legal moves and mate-in-one sets were independently enumerated with python-chess 1.11.2. No native search, timing or strength result is asserted.",
+  "cases": [
+    {
+      "id": "rook-surplus-forced-check-strategy",
+      "initial_fen": "RQ6/p3k3/8/8/7q/8/6P1/6K1 b - - 0 1",
+      "history_uci": [],
+      "before_fen": "RQ6/p3k3/8/8/7q/8/6P1/6K1 b - - 0 1",
+      "white_material_surplus_cp": 500,
+      "material_basis": "Q+R+P versus Q+P, using Q=900, R=500, P=100",
+      "declared_strategy_uci": ["h4e1", "g1h2", "e1h4", "h2g1"],
+      "white_evasions_after_declared_checks": [
+        {"after_move_uci": "h4e1", "all_legal_evasions_uci": ["g1h2"]},
+        {"after_move_uci": "e1h4", "all_legal_evasions_uci": ["h2g1"]}
+      ],
+      "repeat_strategy_times": 2,
+      "after_strategy_repetitions": 3,
+      "after_strategy_fen": "RQ6/p3k3/8/8/7q/8/6P1/6K1 b - - 8 5",
+      "guarantee": "Black can force a completed third repetition by following the declared check strategy because every White evasion is unique.",
+      "limitations": "This does not prove that Black has no stronger alternative or that an unrestricted native root score must equal zero. The declared Black checking moves are fixture choices, not an engine result."
+    },
+    {
+      "id": "mate-over-intended-repetition-claim",
+      "initial_fen": "7k/5Q2/n5K1/8/8/8/8/1N6 b - - 0 1",
+      "history_uci": ["a6b8", "b1a3", "b8a6", "a3b1", "a6b8", "b1a3", "b8a6"],
+      "before_fen": "7k/5Q2/n5K1/8/8/N7/8/8 w - - 7 5",
+      "can_claim_threefold_repetition": true,
+      "current_position_is_threefold": false,
+      "intended_repetition_move_uci": "a3b1",
+      "all_mate_in_one_moves_uci": ["f7e8", "f7f8", "f7g7", "f7h7"],
+      "expected_selection": "Any independently enumerated mate-in-one instead of the optional draw or an unconditional root cycle cutoff.",
+      "oracle": "Enumerate every current legal move and require the resulting board to be checkmate. Rebuild from initial_fen and all history_uci; FEN alone loses the draw entitlement.",
+      "limitations": "The history is deliberately authored and not best play. This tests winning continuation versus an intended repetition claim, not the strength of a perpetual-check defender."
+    }
+  ],
+  "cycle_heuristic_requirements": [
+    "A score-zero search ancestor cutoff is a search heuristic, not actual-game draw adjudication or a claim that twofold repetition is a legal terminal result.",
+    "Do not cut at the root merely because pre-search history contains a twofold or intended threefold claim.",
+    "A restricted original root has different available moves from its unrestricted descendant; omit that root ancestor from cycle matching when root_moves restricts it.",
+    "Normal nodes and quiescence nodes can have different candidate sets and extension budgets. Do not assume that matching board identity alone makes those search contexts equivalent.",
+    "Checkmate and stalemate detection must retain priority; preserve current and intended draw claims and compulsory fivefold/75-move boundaries.",
+    "Ancestor state must be restored across undo, exceptions, node/time cancellation and iterative-deepening restarts. Score cache reuse requires proven compatible path/root-boundary/extension context or must be disabled for the heuristic."
+  ]
+}
