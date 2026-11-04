@@ -33,6 +33,9 @@ STATIC_SCORE_FIELDS = (
     "eval_shield_off_structure_on_cp", "eval_shield_off_structure_off_cp")
 STATIC_FIELDS = ("fen", "turn", *STATIC_SCORE_FIELDS, "legal_count", "in_check",
                  "claim_threefold_now", "claim_fifty_moves_now", "outcome", "repetitions")
+ACTIVITY_SCORE_FIELDS = (
+    "eval_activity_shield_on_structure_on_cp", "eval_activity_shield_on_structure_off_cp",
+    "eval_activity_shield_off_structure_on_cp", "eval_activity_shield_off_structure_off_cp")
 SEARCH_REQUIRED_NUMBERS = (
     "depth", "nodes", "time_ms", "qnodes", "seldepth", "tt_probes", "tt_hits",
     "tt_cutoffs", "tt_stores", "tt_allocations", "tt_reuses", "tt_clears", "tt_bytes",
@@ -166,7 +169,7 @@ def parse_search_output(stdout, board=None, node_limit=None, requested_depth=Non
 
 
 def parse_static_probe(stdout, expected_boards=None):
-    """Parse the probe's fixed 13 columns and optionally replay-check each row."""
+    """Parse legacy 13 columns or the opt-in 17-column activity schema."""
     require(isinstance(stdout, str), "static probe output must be text")
     lines = stdout.splitlines()
     if expected_boards is not None:
@@ -174,10 +177,11 @@ def parse_static_probe(stdout, expected_boards=None):
     result = []
     for index, line in enumerate(lines):
         cells = line.split("\t")
-        require(len(cells) == 13, f"static probe row {index + 1} must have 13 columns")
-        item = dict(zip(STATIC_FIELDS, cells))
+        require(len(cells) in (13, 17), f"static probe row {index + 1} must have 13 or 17 columns")
+        extra = ACTIVITY_SCORE_FIELDS if len(cells) == 17 else ()
+        item = dict(zip((*STATIC_FIELDS, *extra), cells))
         require(item["turn"] in ("w", "b"), "invalid static side to move")
-        for name in (*STATIC_SCORE_FIELDS, "legal_count", "in_check", "claim_threefold_now",
+        for name in (*STATIC_SCORE_FIELDS, *extra, "legal_count", "in_check", "claim_threefold_now",
                      "claim_fifty_moves_now", "repetitions"):
             require(re.fullmatch(r"-?\d+", item[name]) is not None,
                     f"noninteger static field: {name}")
@@ -453,6 +457,10 @@ def arguments(argv=None):
 
 
 def main(argv=None):
+    selected_argv = list(sys.argv[1:] if argv is None else argv)
+    if any(item == "--root-candidates" or item.startswith("--root-candidates=") for item in selected_argv):
+        from gambit_candidate_probe import main as candidate_main
+        return candidate_main(selected_argv)
     args = arguments(argv)
     try:
         # Exclusive creation reserves this result. Only this invocation rewrites

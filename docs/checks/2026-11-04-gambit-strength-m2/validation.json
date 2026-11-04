@@ -1,0 +1,44 @@
+{
+  "scope": "Recorded checks from this implementation session; no match/Elo or GUI validation",
+  "unit_tests": {
+    "gambit_candidate_probe": {
+      "passed": 11,
+      "skipped": 0,
+      "runner": "delegated implementation agent"
+    },
+    "loss_diagnosis": {
+      "passed": 17,
+      "skipped": 4,
+      "runner": "delegated implementation agent",
+      "skip_reason": "optional old native binaries not supplied"
+    },
+    "trace_gambit_leaf": {
+      "passed": 4,
+      "skipped": 0,
+      "runner": "root, actual new native driver"
+    }
+  },
+  "strict_msvc_build": "passed O2 DNDEBUG C++20 W4 WX",
+  "final_smoke": {
+    "queries": 4,
+    "passed": true,
+    "normal_exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "core_sources_unchanged": true,
+  "runtime_binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "runtime_binary_unchanged": true,
+  "trace_binary_sha256": "fe588abff0b75ea9d288ed7c1b10014d14c21d6bed5196b049cf8fb19935086a",
+  "current_source_sha256": {
+    "scripts/gambit_candidate_probe.py": "24aff8cfc749ee67418d47fd1b367a6f5b70b638223b2ee3fde75bd226b6df0f",
+    "scripts/probe_loss_search.py": "c9f93217838a6fb3c582e9d81a368a38e364f3d4c2611bbd5d90b1ee6f1bbb12",
+    "scripts/trace_gambit_leaf.cpp": "a7ba856ba75d29ac240e7d5a1c03b3e1a855e121f4830cf4173f819deeadcb71",
+    "tests/gambit_candidate_probe_tests.py": "41eace003c43d9e920bb5345019fc418ce4032c92f2301a53e7da3c07f4bda49",
+    "tests/trace_gambit_leaf_tests.py": "971d4e8cc229dd9d70fb4dea1c6faf3b28890eb3df29e71e37ae4e8510ca391f"
+  },
+  "independent_review": "No blocking defects; observer/root-causality boundary retained; wrapper now requires actual matching observations"
+}
