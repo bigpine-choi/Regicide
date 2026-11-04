@@ -1,0 +1,17 @@
+{
+  "schema": "regicide.gambit-memory-match-audit-selection.v1",
+  "reason": "User requested faster execution. Retain completed color pairs 1-2 and restart entire pairs 3-8 with at most four concurrent matches.",
+  "max_parallel_matches": 4,
+  "speed_change_record": "build/gambit-memory-match/user-speed-change.json",
+  "excluded_original_games": [
+    {"game": 5, "reason": "Completed candidate win excluded because its paired game 6 was interrupted; both colors restarted."},
+    {"game": 6, "reason": "User-directed speed change interrupted this game; unscored and restarted with its complete pair."}
+  ],
+  "shards": [
+    {"directory": "build/gambit-memory-match", "games": [1, 2, 3, 4], "pair_start": 1, "pairs": 8},
+    {"directory": "build/gambit-memory-match-parallel-a", "games": [5, 6, 7, 8], "pair_start": 3, "pairs": 2},
+    {"directory": "build/gambit-memory-match-parallel-b", "games": [9, 10, 11, 12], "pair_start": 5, "pairs": 2},
+    {"directory": "build/gambit-memory-match-parallel-c", "games": [13, 14], "pair_start": 7, "pairs": 1},
+    {"directory": "build/gambit-memory-match-parallel-d", "games": [15, 16], "pair_start": 8, "pairs": 1}
+  ]
+}

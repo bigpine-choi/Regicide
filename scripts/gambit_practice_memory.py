@@ -6,6 +6,8 @@ generalization.  Its candidates still require fresh native safety verification.
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 import hashlib
 import json
@@ -20,10 +22,28 @@ SCHEMA = "regicide.gambit-operations-memory.v1"
 SOURCE = "native_practice_memory"
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MEMORY = ROOT / "data/gambits/operations_memory.json"
+_MEMORY_PATH = ContextVar("gambit_practice_memory_path", default=None)
 MAX_BYTES = 16 * 1024 * 1024
 MAX_RECORDS = 10000
 MAX_HISTORY_PLIES = 160
 GOALS = ("development", "attack_maintenance", "material_recovery", "defensive_transition", "consolidation")
+
+
+@contextmanager
+def using_memory(memory_path):
+    """Scope all implicit memory reads to one research caller, without writes.
+
+    Explicit ``memory_path=`` arguments still take precedence. ``None`` selects
+    the production default, including inside a nested override. Wrap each host
+    entry point (construction, play, metadata and saves); a newly created worker
+    thread must enter its own scope rather than assume context inheritance.
+    """
+    path = Path(memory_path).resolve() if memory_path is not None else None
+    token = _MEMORY_PATH.set(path)
+    try:
+        yield path if path is not None else DEFAULT_MEMORY
+    finally:
+        _MEMORY_PATH.reset(token)
 
 
 def digest(value):
@@ -142,7 +162,7 @@ def _read(path, modified_ns, size):
 
 
 def _load(memory_path=None):
-    path = Path(memory_path) if memory_path is not None else DEFAULT_MEMORY
+    path = Path(memory_path) if memory_path is not None else (_MEMORY_PATH.get() or DEFAULT_MEMORY)
     stat = path.stat()
     return _read(str(path.resolve()), stat.st_mtime_ns, stat.st_size)
 
