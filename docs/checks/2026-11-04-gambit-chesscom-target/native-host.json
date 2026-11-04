@@ -1,0 +1,834 @@
+{
+  "schema": "regicide.boss.native-adaptive-selector.v1",
+  "started_utc": "2026-11-04T12:43:25.925468+00:00",
+  "source_base_commit": "4e4de2fd28d3dcc5d26061edfc2dc6e2b4144228",
+  "source_sha256": {
+    "scripts/boss_play.py": "642a2051f41cb3968c9f77702ae6ce371f3197f6d524765501bbe4a0a7eb5ac3",
+    "scripts/boss_opponent.py": "518587138673ca4b904a279375b386dbb615dbc84b204f69c3c39cfd1fa40bc2",
+    "scripts/poisoned_piece.py": "1601a1cc0f10e82e9b4bf356d89f8aba843ca340d22eb79f6f340076826c0e5d",
+    "scripts/gambit_tactics.py": "4088daec89b05d772993df3787b4cf9e8574de007d24a9da63a95f053e2694ad",
+    "scripts/sound_sacrifice.py": "054fab7efcc988ecb634d192bb3034607d5fd86defcf6f56bf01df01c65a8f7a",
+    "scripts/boss_openings.py": "3c1b241040bd74bcb73a58fd9a87a6d1de3b9b103aab0dc9a6bc43cb803aaa58",
+    "scripts/play_human.py": "14508bf3ccd5c3f932e6097a322a5b921afe7610f1a869cc385c4d47d391f026",
+    "tests/boss_selector_integration.py": "fad65b070e9928ab2bd336cab401599faaaf8c067a57f5dc453969eb0e38298a"
+  },
+  "binary": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build\\runtime-engines\\5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba\\regicide.exe",
+  "binary_sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+  "python": "3.13.16",
+  "python_chess": "1.11.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "policy": "regicide-boss-play-v8",
+  "opponent_policy": "regicide-boss-opponent-v1",
+  "execution": "Real own engine through HumanGame.engine_move; isolated temporary saves; fake UI helper engines only.",
+  "configured_options": {
+    "UsePieceActivity": true
+  },
+  "movetime_ms": 1000,
+  "seed_selection": "Chosen by deterministic gate draw only, before engine search. No candidate or proof is forced.",
+  "limitations": [
+    "Authored development fixtures, not played games, held-out human data, Elo or calibrated probabilities.",
+    "A rare admitted initial draw does not imply frequent risky play against a new opponent.",
+    "Search scores and observations are own-engine estimates under short budgets."
+  ],
+  "cases": [
+    {
+      "id": "queen-lure-open-draw",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "d7d6",
+        "b1c3",
+        "c8g4"
+      ],
+      "criterion": "lure",
+      "expected_gate_open": true,
+      "before_fen": "r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 2 5",
+      "seed": "0000000000000000000000000000004c",
+      "wall_ms": 1403.168,
+      "error": null,
+      "selected_uci": "e1g1",
+      "receipt": {
+        "policy": "regicide-boss-play-v8",
+        "repertoire_policy": "regicide-boss-traps-v4",
+        "mode": "trap_hunt",
+        "ply": 9,
+        "before_fen": "r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 2 5",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1c4",
+          "d7d6",
+          "b1c3",
+          "c8g4"
+        ],
+        "seed": "0000000000000000000000000000004c",
+        "baseline_uci": "e1g1",
+        "selected_uci": "e1g1",
+        "candidate_uci": null,
+        "line_id": null,
+        "opening_name": null,
+        "proposed_line_id": null,
+        "proposed_opening_name": null,
+        "line_complete": false,
+        "reason": "no_verified_lure",
+        "loss_cp": 0,
+        "compared_depth": 5,
+        "baseline": {
+          "uci": "e1g1",
+          "pv_uci": [
+            "e1g1",
+            "g8f6",
+            "d2d3",
+            "c6d4",
+            "c1e3",
+            "g4f3",
+            "g2f3"
+          ],
+          "depth": 5,
+          "cp": 65,
+          "cp_white": 65,
+          "pov": "white"
+        },
+        "probes": [],
+        "best_defense_pv_uci": [
+          "e1g1",
+          "g8f6",
+          "d2d3",
+          "c6d4",
+          "c1e3",
+          "g4f3",
+          "g2f3"
+        ],
+        "risk_profile": "quality_gated",
+        "conservative_setup": false,
+        "opening_frequency_exempt": false,
+        "frequency_gate_applied": true,
+        "setup_max_loss_cp": null,
+        "reference_delta_cp": 0,
+        "best_defense_cp": 65,
+        "final_best_defense_cp": 65,
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 1000,
+        "baseline_elapsed_ms": 984.03,
+        "extra_elapsed_ms": 369.176,
+        "reused": false,
+        "trap_evidence": null,
+        "trap_attempts": [
+          {
+            "offer": {
+              "uci": "f3e5",
+              "capture_uci": "g4d1",
+              "offered_piece": "queen",
+              "offered_cp": 900,
+              "capturing_piece": "bishop",
+              "newly_exposed": true,
+              "moved_piece_is_bait": false,
+              "offer_is_capture": true,
+              "offer_is_check": false,
+              "apparent_capture_gain_cp": 600,
+              "opened_slider_rays": [],
+              "attraction_score": 800,
+              "immediate_recaptures": [
+                "c3d1",
+                "e1d1"
+              ],
+              "reason": "legal_capture_of_offered_piece"
+            },
+            "evaluated": true,
+            "reason": "trap_outside_quality_floor",
+            "loss_cp": 277,
+            "comparison": {
+              "uci": "f3e5",
+              "admitted": true,
+              "reason": "evaluated_speculative_risk",
+              "loss_cp": 277,
+              "compared_depth": 5,
+              "reference_delta_cp": 277,
+              "candidate_compared": {
+                "uci": "f3e5",
+                "pv_uci": [
+                  "f3e5",
+                  "c6e5",
+                  "c4e2",
+                  "g4e2",
+                  "d1e2"
+                ],
+                "depth": 5,
+                "cp": -212,
+                "cp_white": -212,
+                "pov": "white"
+              },
+              "candidate_final": {
+                "uci": "f3e5",
+                "pv_uci": [
+                  "f3e5",
+                  "c6e5",
+                  "c4e2",
+                  "g4e2",
+                  "d1e2"
+                ],
+                "depth": 5,
+                "cp": -212,
+                "cp_white": -212,
+                "pov": "white"
+              },
+              "candidate_final_raw": {
+                "depth": 5,
+                "cp": -212,
+                "mate": null,
+                "lowerbound": false,
+                "upperbound": false
+              },
+              "budget_ms": 348.28762505203485,
+              "elapsed_ms": 65.377,
+              "error": null
+            },
+            "compared_depth": 5,
+            "admitted": false
+          },
+          {
+            "offer": {
+              "uci": "f3d4",
+              "capture_uci": "g4d1",
+              "offered_piece": "queen",
+              "offered_cp": 900,
+              "capturing_piece": "bishop",
+              "newly_exposed": true,
+              "moved_piece_is_bait": false,
+              "offer_is_capture": false,
+              "offer_is_check": false,
+              "apparent_capture_gain_cp": 600,
+              "opened_slider_rays": [],
+              "attraction_score": 800,
+              "immediate_recaptures": [
+                "c3d1",
+                "e1d1"
+              ],
+              "reason": "legal_capture_of_offered_piece"
+            },
+            "evaluated": true,
+            "reason": "trap_outside_quality_floor",
+            "loss_cp": 565,
+            "comparison": {
+              "uci": "f3d4",
+              "admitted": true,
+              "reason": "evaluated_speculative_risk",
+              "loss_cp": 565,
+              "compared_depth": 5,
+              "reference_delta_cp": 565,
+              "candidate_compared": {
+                "uci": "f3d4",
+                "pv_uci": [
+                  "f3d4",
+                  "g4d1",
+                  "d4c6",
+                  "b7c6",
+                  "e1d1"
+                ],
+                "depth": 5,
+                "cp": -500,
+                "cp_white": -500,
+                "pov": "white"
+              },
+              "candidate_final": {
+                "uci": "f3d4",
+                "pv_uci": [
+                  "f3d4",
+                  "g4d1",
+                  "d4c6",
+                  "b7c6",
+                  "e1d1"
+                ],
+                "depth": 5,
+                "cp": -500,
+                "cp_white": -500,
+                "pov": "white"
+              },
+              "candidate_final_raw": {
+                "depth": 5,
+                "cp": -500,
+                "mate": null,
+                "lowerbound": false,
+                "upperbound": false
+              },
+              "budget_ms": 318.58600499108434,
+              "elapsed_ms": 74.688,
+              "error": null
+            },
+            "compared_depth": 5,
+            "admitted": false
+          }
+        ],
+        "trap_max_loss_cp": 35,
+        "trap_score_floor_cp": 0,
+        "tactics": {
+          "policy": "regicide-gambit-tactics-v2",
+          "selected_uci": "e1g1",
+          "applied": false,
+          "qualified": false,
+          "kind": null,
+          "kinds": [],
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "loss_cp": 0,
+          "evidence": null,
+          "baseline": {
+            "depth": 5,
+            "cp": 65,
+            "mate": null,
+            "uci": "e1g1",
+            "cp_white": 65,
+            "pv_uci": [
+              "e1g1",
+              "g8f6",
+              "d2d3",
+              "c6d4",
+              "c1e3",
+              "g4f3",
+              "g2f3"
+            ],
+            "pov": "white"
+          },
+          "attempts": [
+            {
+              "stage": "candidate_set",
+              "budget_ms": 273.5525120049715,
+              "selected_uci": "c4f7",
+              "common": {
+                "depth": 5,
+                "cp": -190,
+                "mate": null,
+                "uci": "c4f7",
+                "cp_white": -190,
+                "pv_uci": [
+                  "c4f7",
+                  "e8f7",
+                  "e1g1",
+                  "g4f3",
+                  "g2f3"
+                ],
+                "pov": "white"
+              },
+              "final": {
+                "depth": 5,
+                "cp": -190,
+                "mate": null,
+                "uci": "c4f7",
+                "cp_white": -190,
+                "pv_uci": [
+                  "c4f7",
+                  "e8f7",
+                  "e1g1",
+                  "g4f3",
+                  "g2f3"
+                ],
+                "pov": "white"
+              }
+            }
+          ],
+          "budget_ms": 879.6139999758452,
+          "extra_elapsed_ms": 98.82,
+          "threshold_basis": "native conservative heuristics; not exact Chess.com classification",
+          "thresholds": {
+            "max_loss_cp": 25,
+            "candidate_cp_min": 0,
+            "already_winning_alternative_cp": 250,
+            "critical_alternative_cp_max": -200
+          },
+          "candidate_group": "sacrifice",
+          "geometry_probes": 30,
+          "candidates_uci": [
+            "c4f7",
+            "f3e5",
+            "c4a6",
+            "c4e6",
+            "f3d4",
+            "f3g1",
+            "f3g5",
+            "f3h4"
+          ]
+        },
+        "opponent_observation": {
+          "valid": true,
+          "ply": 8,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "b8c6",
+            "f1c4",
+            "d7d6",
+            "b1c3"
+          ],
+          "played_uci": "c8g4",
+          "loss_cp": 13,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 225,
+          "elapsed_ms": 118.724,
+          "rating_evidence": {
+            "method": "regicide-rating-evidence-v1",
+            "valid": true,
+            "kind": "cp_loss",
+            "depth": 4,
+            "best_cp": -52,
+            "played_cp": -65,
+            "best_mate": null,
+            "played_mate": null,
+            "best_uci": "c8e6",
+            "played_uci": "c8g4",
+            "reliability": "limited",
+            "root_changes": 0,
+            "cp_span": 0,
+            "reason": "same_position_completed_depth"
+          },
+          "before_fen": "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 1 4",
+          "baseline": {
+            "uci": "c8e6",
+            "pv_uci": [
+              "c8e6",
+              "c4e6",
+              "f7e6",
+              "e1g1"
+            ],
+            "depth": 4,
+            "cp": -52,
+            "cp_white": 52,
+            "pov": "black"
+          },
+          "candidate_compared": {
+            "uci": "c8g4",
+            "pv_uci": [
+              "c8g4",
+              "e1g1",
+              "g8f6",
+              "d2d3"
+            ],
+            "depth": 4,
+            "cp": -65,
+            "cp_white": 65,
+            "pov": "black"
+          }
+        },
+        "frequency": {
+          "allow": true,
+          "attempt_trap": true,
+          "profile": {
+            "policy": "regicide-boss-opponent-v1",
+            "quality_observations": 1,
+            "quality_rows": [
+              {
+                "ply": 8,
+                "played_uci": "c8g4",
+                "loss_cp": 13,
+                "depth": 4,
+                "bad_weight": 0.0
+              }
+            ],
+            "ignored_quality_observations": 0,
+            "prior_good": 8.0,
+            "prior_bad": 1.0,
+            "good_weight": 9.0,
+            "bad_weight": 1.0,
+            "error_indicator": 0.1,
+            "posterior_stddev": 0.09045340337332909,
+            "uncertainty_interval": [
+              0.0,
+              0.2809068067466582
+            ],
+            "uncertainty_scope": "approximate two-standard-deviation range of the heuristic Beta model",
+            "frequency": 0.08937500000000001,
+            "initial_frequency": 0.1,
+            "trap_opportunities": 0,
+            "trap_outcomes": {
+              "taken": 0,
+              "reference_defense": 0,
+              "unknown": 0
+            },
+            "trap_rows": [],
+            "observed_take_fraction": null,
+            "take_fraction_denominator": "all verified chosen-trap replies, including unknown",
+            "scope": "uncalibrated current-game error indicator; no Elo or exact capture probability",
+            "history_valid": true
+          },
+          "frequency": 0.08937500000000001,
+          "probability": 0.08937500000000001,
+          "draw": 0.0002643476100075921,
+          "override": null,
+          "reason": "frequency_admitted",
+          "baseline_matches_repertoire": false,
+          "scope": "poisoned_piece_frequency_only",
+          "opening_exempt": false
+        },
+        "tactical_budget_ms": 780.0809999462217
+      },
+      "checks": {
+        "no_error": true,
+        "legal_move": true,
+        "policy_recorded": true,
+        "gate_expected": true,
+        "refutable_queen_lure_rejected": true,
+        "tactics_attempt_recorded": true,
+        "quality_gated_choice": true
+      },
+      "passed": true
+    },
+    {
+      "id": "sound-queen-offer",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "c8g4",
+        "b1c3",
+        "g7g6"
+      ],
+      "criterion": "sound-tactic",
+      "expected_gate_open": false,
+      "before_fen": "rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5",
+      "seed": "00000000000000000000000000000000",
+      "wall_ms": 1669.844,
+      "error": null,
+      "selected_uci": "f3e5",
+      "receipt": {
+        "policy": "regicide-boss-play-v8",
+        "repertoire_policy": "regicide-boss-traps-v4",
+        "mode": "trap_hunt",
+        "ply": 9,
+        "before_fen": "rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5",
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "d7d6",
+          "f1c4",
+          "c8g4",
+          "b1c3",
+          "g7g6"
+        ],
+        "seed": "00000000000000000000000000000000",
+        "baseline_uci": "f3e5",
+        "selected_uci": "f3e5",
+        "candidate_uci": null,
+        "line_id": null,
+        "opening_name": null,
+        "proposed_line_id": null,
+        "proposed_opening_name": null,
+        "line_complete": false,
+        "reason": "opponent_frequency_hold",
+        "loss_cp": 0,
+        "compared_depth": 5,
+        "baseline": {
+          "uci": "f3e5",
+          "pv_uci": [
+            "f3e5",
+            "d6e5",
+            "d1g4",
+            "g8f6",
+            "g4f3"
+          ],
+          "depth": 5,
+          "cp": 162,
+          "cp_white": 162,
+          "pov": "white"
+        },
+        "probes": [],
+        "best_defense_pv_uci": [
+          "f3e5",
+          "d6e5",
+          "d1g4",
+          "g8f6",
+          "g4f3"
+        ],
+        "risk_profile": "speculative",
+        "conservative_setup": false,
+        "opening_frequency_exempt": false,
+        "frequency_gate_applied": true,
+        "setup_max_loss_cp": null,
+        "reference_delta_cp": 0,
+        "best_defense_cp": 162,
+        "final_best_defense_cp": 162,
+        "baseline_budget_ms": 1000,
+        "extra_budget_ms": 1000,
+        "baseline_elapsed_ms": 984.685,
+        "extra_elapsed_ms": 639.185,
+        "reused": false,
+        "tactics": {
+          "policy": "regicide-gambit-tactics-v2",
+          "selected_uci": "f3e5",
+          "applied": false,
+          "qualified": false,
+          "kind": null,
+          "kinds": [],
+          "reason": "alternative_probe_incomplete",
+          "loss_cp": 0,
+          "evidence": null,
+          "baseline": {
+            "depth": 5,
+            "cp": 162,
+            "mate": null,
+            "uci": "f3e5",
+            "cp_white": 162,
+            "pv_uci": [
+              "f3e5",
+              "d6e5",
+              "d1g4",
+              "g8f6",
+              "g4f3"
+            ],
+            "pov": "white"
+          },
+          "attempts": [
+            {
+              "stage": "candidate_set",
+              "budget_ms": 277.45475202798843,
+              "selected_uci": "f3e5",
+              "common": {
+                "depth": 5,
+                "cp": 162,
+                "mate": null,
+                "uci": "f3e5",
+                "cp_white": 162,
+                "pv_uci": [
+                  "f3e5",
+                  "d6e5",
+                  "d1g4",
+                  "g8f6",
+                  "g4f3"
+                ],
+                "pov": "white"
+              },
+              "final": {
+                "depth": 5,
+                "cp": 162,
+                "mate": null,
+                "uci": "f3e5",
+                "cp_white": 162,
+                "pv_uci": [
+                  "f3e5",
+                  "d6e5",
+                  "d1g4",
+                  "g8f6",
+                  "g4f3"
+                ],
+                "pov": "white"
+              }
+            },
+            {
+              "stage": "deeper_confirmation",
+              "budget_ms": 320.8014929849655,
+              "common": {
+                "depth": 5,
+                "cp": 162,
+                "mate": null,
+                "uci": "f3e5",
+                "cp_white": 162,
+                "pv_uci": [
+                  "f3e5",
+                  "d6e5",
+                  "d1g4",
+                  "g8f6",
+                  "g4f3"
+                ],
+                "pov": "white"
+              },
+              "final": {
+                "depth": 6,
+                "cp": 122,
+                "mate": null,
+                "uci": "f3e5",
+                "cp_white": 122,
+                "pv_uci": [
+                  "f3e5",
+                  "g4e6",
+                  "c4e6",
+                  "f7e6",
+                  "e5c4",
+                  "b8c6"
+                ],
+                "pov": "white"
+              }
+            },
+            {
+              "stage": "all_other_legal_roots",
+              "budget_ms": 294.124455063045,
+              "root_count": 34,
+              "final": {
+                "depth": 4,
+                "cp": 60,
+                "mate": null,
+                "uci": "e1g1",
+                "cp_white": 60,
+                "pv_uci": [
+                  "e1g1",
+                  "b8c6",
+                  "h2h3",
+                  "g4e6"
+                ],
+                "pov": "white"
+              },
+              "common": null
+            }
+          ],
+          "budget_ms": 894.3807000759989,
+          "extra_elapsed_ms": 532.202,
+          "threshold_basis": "native conservative heuristics; not exact Chess.com classification",
+          "thresholds": {
+            "max_loss_cp": 25,
+            "candidate_cp_min": 0,
+            "already_winning_alternative_cp": 250,
+            "critical_alternative_cp_max": -200
+          },
+          "candidate_group": "sacrifice",
+          "geometry_probes": 30,
+          "candidates_uci": [
+            "f3e5",
+            "c4f7",
+            "c4a6",
+            "c4e6",
+            "f3d4",
+            "f3g1",
+            "f3g5",
+            "f3h4"
+          ]
+        },
+        "opponent_observation": {
+          "valid": true,
+          "ply": 8,
+          "history_before": [
+            "e2e4",
+            "e7e5",
+            "g1f3",
+            "d7d6",
+            "f1c4",
+            "c8g4",
+            "b1c3"
+          ],
+          "played_uci": "g7g6",
+          "loss_cp": 114,
+          "depth": 4,
+          "forced": false,
+          "reason": "same_position_completed_depth",
+          "budget_ms": 225,
+          "elapsed_ms": 104.378,
+          "rating_evidence": {
+            "method": "regicide-rating-evidence-v1",
+            "valid": true,
+            "kind": "cp_loss",
+            "depth": 4,
+            "best_cp": -65,
+            "played_cp": -179,
+            "best_mate": null,
+            "played_mate": null,
+            "best_uci": "b8c6",
+            "played_uci": "g7g6",
+            "reliability": "limited",
+            "root_changes": 0,
+            "cp_span": 0,
+            "reason": "same_position_completed_depth"
+          },
+          "before_fen": "rn1qkbnr/ppp2ppp/3p4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 3 4",
+          "baseline": {
+            "uci": "b8c6",
+            "pv_uci": [
+              "b8c6",
+              "e1g1",
+              "g8f6",
+              "d2d3"
+            ],
+            "depth": 4,
+            "cp": -65,
+            "cp_white": 65,
+            "pov": "black"
+          },
+          "candidate_compared": {
+            "uci": "g7g6",
+            "pv_uci": [
+              "g7g6",
+              "f3e5",
+              "g4e6",
+              "c4e6",
+              "f7e6"
+            ],
+            "depth": 4,
+            "cp": -179,
+            "cp_white": 179,
+            "pov": "black"
+          }
+        },
+        "frequency": {
+          "allow": false,
+          "attempt_trap": false,
+          "profile": {
+            "policy": "regicide-boss-opponent-v1",
+            "quality_observations": 1,
+            "quality_rows": [
+              {
+                "ply": 8,
+                "played_uci": "g7g6",
+                "loss_cp": 114,
+                "depth": 4,
+                "bad_weight": 0.7
+              }
+            ],
+            "ignored_quality_observations": 0,
+            "prior_good": 8.0,
+            "prior_bad": 1.0,
+            "good_weight": 8.3,
+            "bad_weight": 1.7,
+            "error_indicator": 0.16999999999999998,
+            "posterior_stddev": 0.11325755042059107,
+            "uncertainty_interval": [
+              0.0,
+              0.39651510084118213
+            ],
+            "uncertainty_scope": "approximate two-standard-deviation range of the heuristic Beta model",
+            "frequency": 0.1563125,
+            "initial_frequency": 0.1,
+            "trap_opportunities": 0,
+            "trap_outcomes": {
+              "taken": 0,
+              "reference_defense": 0,
+              "unknown": 0
+            },
+            "trap_rows": [],
+            "observed_take_fraction": null,
+            "take_fraction_denominator": "all verified chosen-trap replies, including unknown",
+            "scope": "uncalibrated current-game error indicator; no Elo or exact capture probability",
+            "history_valid": true
+          },
+          "frequency": 0.1563125,
+          "probability": 0.1563125,
+          "draw": 0.9666574584904598,
+          "override": null,
+          "reason": "conservative_frequency_gate",
+          "baseline_matches_repertoire": false,
+          "scope": "poisoned_piece_frequency_only",
+          "opening_exempt": false
+        },
+        "tactical_budget_ms": 0
+      },
+      "checks": {
+        "no_error": true,
+        "legal_move": true,
+        "policy_recorded": true,
+        "gate_expected": true,
+        "native_tactic_qualified": false,
+        "sound_offer_selected": true,
+        "independent_of_closed_lure_gate": false
+      },
+      "passed": false
+    }
+  ],
+  "passed": 1,
+  "failed": 1,
+  "finished_utc": "2026-11-04T12:43:33.087560+00:00",
+  "sources_unchanged": true
+}

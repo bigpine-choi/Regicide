@@ -1360,6 +1360,7 @@ class HumanGame:
                     if reply.move is None or reply.move not in board.legal_moves:
                         raise RuntimeError("엔진이 합법 수를 반환하지 않았습니다.")
                     boss_extra_started = None
+                    tactical_decision, tactical_detail = None, None
                     recovery = None
                     if self.sparring_mode:
                         with self._lock:
@@ -1529,10 +1530,25 @@ class HumanGame:
                         remaining_extra = max(0, total_extra - (time.monotonic() - boss_extra_started) * 1000)
                         search_plan = {**search_plan, "extra_budget_ms": remaining_extra,
                                        "candidate_budget_ms": remaining_extra}
+                        if (not discard_engine and search_plan.get("eligible") and
+                                search_plan.get("mode") in ("initiative", "trap_hunt") and
+                                remaining_extra >= boss_play.MIN_PROBE_MS):
+                            candidate_decision, discard_engine = boss_play.explore_tactics(
+                                board, search_plan, reply.move, baseline_info, _packets, self._opening_seed,
+                                search, engine.close, baseline_elapsed_ms=baseline_elapsed_ms)
+                            tactical_detail = candidate_decision["tactics"]
+                            if tactical_detail.get("qualified") and not discard_engine:
+                                tactical_decision = candidate_decision
+                            remaining_extra = max(0, total_extra - (time.monotonic() - boss_extra_started) * 1000)
+                            search_plan = {**search_plan, "extra_budget_ms": remaining_extra,
+                                           "candidate_budget_ms": remaining_extra}
                         search_plan, frequency = boss_play.apply_frequency(
                             search_plan, frequency, reply.move, probe_failed=discard_engine)
                         compare = bool(search_plan["eligible"])
-                    if self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "initiative":
+                    if tactical_decision is not None:
+                        decision = tactical_decision
+                        reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
+                    elif self.boss_mode and search_plan and search_plan["eligible"] and search_plan.get("mode") == "initiative":
                         decision, discard_engine = boss_play.explore_initiative(
                             board, search_plan, reply.move, baseline_info, _packets, self._opening_seed,
                             search, engine.close, baseline_elapsed_ms=baseline_elapsed_ms)
@@ -1616,6 +1632,8 @@ class HumanGame:
                                                            extra_elapsed_ms=extra_elapsed_ms)
                         reply = chess.engine.BestMove(chess.Move.from_uci(decision["selected_uci"]), None)
                     if self.boss_mode and decision is not None:
+                        if tactical_detail is not None:
+                            decision["tactics"] = copy.deepcopy(tactical_detail)
                         decision.update(opponent_observation=observation, frequency=frequency,
                                         extra_budget_ms=total_extra, tactical_budget_ms=search_plan["extra_budget_ms"],
                                         extra_elapsed_ms=round((time.monotonic() - boss_extra_started) * 1000, 3))

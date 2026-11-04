@@ -1,0 +1,133 @@
+{
+  "schema": "regicide.gambit-tactics-predeclared.v1",
+  "cases": [
+    {
+      "id": "refutable-legal-nc6",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "d7d6",
+        "b1c3",
+        "c8g4"
+      ],
+      "reference_candidate_uci": "f3e5",
+      "role": "refutable_conditional_lure",
+      "source": "tests/poisoned_piece_tests.py::test_unsound_offer_still_has_forced_punishment_if_queen_is_taken",
+      "note": "The opponent can refuse the queen bait with ...Nxe5. Conditional mate after ...Bxd1 is not soundness.",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "before_fen": "r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 2 5",
+      "history_scope": "complete standard-start history"
+    },
+    {
+      "id": "legal-d6-g6",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "c8g4",
+        "b1c3",
+        "g7g6"
+      ],
+      "reference_candidate_uci": "f3e5",
+      "role": "existing_tactical_opportunity",
+      "source": "tests/poisoned_piece_tests.py::legal_trap; tests/boss_trap_integration.py::LEGAL",
+      "note": "Existing legal project example. No claim that a particular response or engine choice is forced.",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "before_fen": "rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5",
+      "history_scope": "complete standard-start history"
+    },
+    {
+      "id": "damiano",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "f7f6"
+      ],
+      "reference_candidate_uci": "f3e5",
+      "role": "declared_tactical_opportunity",
+      "source": "Project-authored legal opening fixture requested for this experiment",
+      "note": "New declared fixture; reference move is descriptive and never passed into candidate selection.",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "before_fen": "rnbqkbnr/pppp2pp/5p2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+      "history_scope": "complete standard-start history"
+    },
+    {
+      "id": "synthetic-ray-gain",
+      "initial_fen": "k5r1/5p2/8/8/5N2/1B6/8/7K w - - 0 1",
+      "history_uci": [],
+      "reference_candidate_uci": "f4g6",
+      "role": "synthetic_local_exchange_opportunity",
+      "source": "tests/poisoned_piece_tests.py::test_pawn_taking_knight_opens_bishop_ray_to_rook",
+      "note": "Synthetic local motif, not a played game or an all-defense winning proof.",
+      "before_fen": "k5r1/5p2/8/8/5N2/1B6/8/7K w - - 0 1",
+      "history_scope": "all available history; earlier history before synthetic FEN is unknown"
+    },
+    {
+      "id": "synthetic-ray-recapture",
+      "initial_fen": "6rk/5p2/8/8/5N2/1B6/8/7K w - - 0 1",
+      "history_uci": [],
+      "reference_candidate_uci": "f4g6",
+      "role": "synthetic_negative_control",
+      "source": "tests/poisoned_piece_tests.py::test_rook_gain_is_rejected_when_defender_can_recapture_bishop",
+      "note": "The defender can recapture the bishop; the superficially similar payoff is insufficient.",
+      "before_fen": "6rk/5p2/8/8/5N2/1B6/8/7K w - - 0 1",
+      "history_scope": "all available history; earlier history before synthetic FEN is unknown"
+    },
+    {
+      "id": "synthetic-equal-exchange",
+      "initial_fen": "7k/8/8/8/8/1r6/B7/1R5K w - - 0 1",
+      "history_uci": [],
+      "reference_candidate_uci": "h1g1",
+      "role": "synthetic_equal_exchange_control",
+      "source": "tests/gambit_initiative_tests.py::test_a_complete_equal_exchange_is_not_mislabeled_a_donation",
+      "note": "An equal exchange is not a new sound-sacrifice claim. Other native moves remain legal choices.",
+      "before_fen": "7k/8/8/8/8/1r6/B7/1R5K w - - 0 1",
+      "history_scope": "all available history; earlier history before synthetic FEN is unknown"
+    },
+    {
+      "id": "already-winning-control",
+      "history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "d8h4",
+        "f3h4",
+        "b8c6"
+      ],
+      "reference_candidate_uci": "h4g6",
+      "role": "already_winning_unnecessary_sacrifice_control",
+      "source": "Project-authored legal history: Black has already lost its queen",
+      "note": "New declared control, not a human game. An already winning position is not a special-move grade.",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "before_fen": "r1b1kbnr/pppp1ppp/2n5/4p3/4P2N/8/PPPP1PPP/RNBQKB1R w KQkq - 1 4",
+      "history_scope": "complete standard-start history"
+    },
+    {
+      "id": "initial-control",
+      "history_uci": [],
+      "role": "ordinary_position_control",
+      "source": "Standard initial position",
+      "note": "No move or geometry outcome is injected.",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "before_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "history_scope": "complete standard-start history"
+    }
+  ],
+  "selection": "Eight roots accepted before native execution; all existing development patterns or explicitly marked new authored controls.",
+  "candidate_injection": false,
+  "chesscom_grades_evaluated": false,
+  "conditions": {
+    "baseline_ms": 1000,
+    "extra_ms": 1000,
+    "classical_piece_activity": true,
+    "Hash": 16,
+    "UseLMR": true
+  },
+  "success_definition": "Functional execution and evidence integrity; zero qualified alternatives remains a valid observed outcome, never a claim of tactical improvement."
+}

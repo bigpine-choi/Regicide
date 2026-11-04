@@ -37,6 +37,7 @@ def fixtures():
         ('initial-conservative', [], False, 'initial'),
         ('queen-lure-held', legal_lure, False, 'held'),
         ('queen-lure-open-draw', legal_lure, True, 'lure'),
+        ('sound-queen-offer', 'e2e4 e7e5 g1f3 d7d6 f1c4 c8g4 b1c3 g7g6'.split(), False, 'sound-tactic'),
         ('human-queen-error', 'e2e4 d7d5 e4d5 d8d5 b1c3 d5c4'.split(), False, 'error'),
     ]
 
@@ -60,6 +61,7 @@ def main():
     args = parser.parse_args()
     binary = (args.binary or resolve_runtime_engine(ROOT)).resolve(strict=True)
     sources = ['scripts/boss_play.py', 'scripts/boss_opponent.py', 'scripts/poisoned_piece.py',
+               'scripts/gambit_tactics.py', 'scripts/sound_sacrifice.py',
                'scripts/boss_openings.py', 'scripts/play_human.py', 'tests/boss_selector_integration.py']
     report = {
         'schema': 'regicide.boss.native-adaptive-selector.v1',
@@ -117,14 +119,24 @@ def main():
                     checks['conservative_setup'] = (decision.get('conservative_setup') is True
                                                      and decision.get('loss_cp', 1000) <= boss_play.SETUP_MAX_LOSS_CP)
                 if criterion == 'lure':
-                    evidence = decision.get('trap_evidence') or {}
-                    checks['verified_lure'] = evidence.get('verified') is True
-                    checks['speculative_selection'] = decision.get('selected_uci') != decision.get('baseline_uci')
+                    # v8 keeps the tempting queen capture's conditional mate
+                    # separate from the cost of the opponent's accurate refusal.
+                    checks['refutable_queen_lure_rejected'] = decision.get('selected_uci') != 'f3e5'
+                    checks['tactics_attempt_recorded'] = isinstance(decision.get('tactics'), dict)
+                    checks['quality_gated_choice'] = (decision.get('selected_uci') == decision.get('baseline_uci') or
+                        decision.get('loss_cp', 9999) <= boss_play.TRAP_MAX_LOSS_CP and
+                        min(decision.get('best_defense_cp', -9999), decision.get('final_best_defense_cp', -9999)) >= 0)
                 if criterion == 'error':
                     observation = decision.get('opponent_observation') or {}
                     profile = decision.get('frequency', {}).get('profile', {})
                     checks['error_observed'] = observation.get('valid') is True and (observation.get('loss_cp') or 0) >= 150
                     checks['frequency_raised'] = profile.get('quality_observations') == 1 and profile.get('frequency', 0) > .1
+                if criterion == 'sound-tactic':
+                    tactical = decision.get('tactics') or {}
+                    checks['native_tactic_qualified'] = tactical.get('qualified') is True
+                    checks['sound_offer_selected'] = decision.get('selected_uci') == 'f3e5'
+                    checks['independent_of_closed_lure_gate'] = (not decision.get('frequency', {}).get('attempt_trap') and
+                                                                decision.get('tactical_frequency_exempt') is True)
                 row.update(checks=checks, passed=all(checks.values()))
                 game.close()
                 game = None

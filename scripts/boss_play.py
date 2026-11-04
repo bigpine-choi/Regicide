@@ -1,7 +1,7 @@
-"""Speculative opening gambits and independently verified capture traps.
+"""Opening gambits, sound tactical opportunities and verified capture traps.
 
-The boss may choose a worse move against correct defense to offer a tempting
-capture. Search scores disclose that cost; they do not cap it. Within-game
+Authored opening sacrifices disclose their speculative cost. Later tempting
+captures must also survive a quality floor against accurate defense. Within-game
 move-quality evidence changes only offer frequency, never the engine budget
 or a claimed Elo rating. Conditional punishment is not a forced win.
 """
@@ -22,11 +22,12 @@ import gambit_learning
 import gambit_repertoire_play
 import gambit_operations
 import gambit_practice_memory
+import gambit_tactics
 import opening_variety as opening
 import rating_evidence
 
-POLICY = "regicide-boss-play-v7"
-SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", POLICY)
+POLICY = "regicide-boss-play-v8"
+SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", POLICY)
 MAX_PLIES = 16
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
@@ -37,6 +38,7 @@ TRAP_MAX_PLIES = 8
 RISK_PROFILE = "speculative"
 QUALITY_BUDGET_MS = 225
 SETUP_MAX_LOSS_CP = 35
+TRAP_MAX_LOSS_CP = 35
 
 
 def _rows(decisions):
@@ -112,6 +114,7 @@ def extra_budget(budget_ms, *, ply=0):
 
 def memo_key(board, budget_ms, binary_sha256, evaluation_id, *, seed="", catalog_id=None):
     return opening._digest([POLICY, boss_openings.POLICY, boss_opponent.POLICY, gambit_initiative.POLICY,
+                            gambit_tactics.POLICY,
                             gambit_knowledge.metadata().get("catalog_sha256"), gambit_learning.model_identity(),
                             gambit_operations.metadata().get("curriculum_sha256"), gambit_practice_memory.memory_identity(),
                             seed, opening.history_key(board), budget_ms,
@@ -422,6 +425,43 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
             "reused": False}
 
 
+def explore_tactics(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
+                    search, close_engine, *, baseline_elapsed_ms=0):
+    """Prefer independently checked tactics inside the existing extra allowance.
+
+    These are native research signals guided by published Chess.com concepts,
+    never a Chess.com classification or a replacement for independent review.
+    """
+    baseline = score_line(board, baseline_info, baseline_move)
+    allowed = (search_plan.get("eligible") is True and
+               search_plan.get("mode") in ("initiative", "trap_hunt") and
+               baseline is not None and len(baseline.get("pv_uci", [])) >= 2)
+    if allowed:
+        detail, discard = gambit_tactics.choose(
+            board, baseline_move, baseline_info, baseline_packets, search, close_engine,
+            budget_ms=search_plan["extra_budget_ms"])
+    else:
+        detail = {"policy": gambit_tactics.POLICY, "qualified": False, "applied": False,
+                  "selected_uci": baseline_move.uci(), "reason": "tactical_context_unavailable",
+                  "loss_cp": 0, "budget_ms": 0, "extra_elapsed_ms": 0, "attempts": []}
+        discard = False
+    result = receipt(board, {**search_plan, "eligible": False, "reason": detail["reason"]},
+                     baseline_move, baseline_info, seed=seed,
+                     baseline_elapsed_ms=baseline_elapsed_ms,
+                     extra_elapsed_ms=detail["extra_elapsed_ms"])
+    result.update(tactics=copy.deepcopy(detail), verification_policy=gambit_tactics.POLICY,
+                  risk_profile="quality_gated", tactical_frequency_exempt=True)
+    if detail.get("qualified") and not discard:
+        evidence = detail["evidence"]
+        compared, final = evidence["candidate_compared"], evidence["candidate_final"]
+        result.update(selected_uci=detail["selected_uci"], candidate_uci=detail["selected_uci"],
+                      loss_cp=detail["loss_cp"], compared_depth=compared["depth"],
+                      best_defense_cp=compared["cp"], final_best_defense_cp=final["cp"],
+                      best_defense_pv_uci=final["pv_uci"],
+                      reference_delta_cp=baseline["cp"] - compared["cp"])
+    return result, discard
+
+
 def explore_initiative(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
                        search, close_engine, *, baseline_elapsed_ms=0):
     """Keep gambit compensation active inside the existing shared allowance."""
@@ -473,7 +513,8 @@ def explore_traps(board, search_plan, baseline_move, baseline_info, baseline_pac
     fallback_plan = {**search_plan, "eligible": False, "reason": "no_verified_lure"}
     result = receipt(board, fallback_plan, baseline_move, baseline_info, seed=seed,
                      baseline_elapsed_ms=baseline_elapsed_ms)
-    result.update(risk_profile=RISK_PROFILE, trap_evidence=None, trap_attempts=[])
+    result.update(risk_profile="quality_gated", trap_evidence=None, trap_attempts=[],
+                  trap_max_loss_cp=TRAP_MAX_LOSS_CP, trap_score_floor_cp=0)
     guard = baseline_guard(board, baseline_move, baseline_info)
     if guard:
         result["reason"] = guard
@@ -531,6 +572,12 @@ def explore_traps(board, search_plan, baseline_move, baseline_info, baseline_pac
                                loss_cp=loss, comparison=checked, compared_depth=baseline["depth"])
                 if not evaluated:
                     continue
+            # A tempting capture's punishment cannot excuse losing against
+            # correct refusal. Preserve the original move when either complete
+            # root score drops below this deliberately conservative native floor.
+            if min(common["cp"], last["cp"]) < max(0, baseline["cp"] - TRAP_MAX_LOSS_CP):
+                attempt.update(reason="trap_outside_quality_floor", admitted=False)
+                continue
             after_capture = board.copy(stack=True)
             after_capture.push(move)
             capture = chess.Move.from_uci(offer["capture_uci"])

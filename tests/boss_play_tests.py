@@ -229,9 +229,9 @@ class PoisonedPieceSelectionTests(unittest.TestCase):
         self.plan = policy.plan(self.board, 1000, '00' * 16)
         self.calls = []
 
-    def run_selection(self, *, baseline='f3e5', candidate_cp=90, branch_error=None, prove=True):
+    def run_selection(self, *, baseline='f3e5', candidate_cp=90, baseline_cp=100, branch_error=None, prove=True):
         base_move = chess.Move.from_uci(baseline)
-        base = packet(self.board, baseline, 100)
+        base = packet(self.board, baseline, baseline_cp)
         def search(budget, *, root_move=None, position=None, **options):
             self.calls.append({'budget': budget, 'root_move': root_move, 'position': position, **options})
             if position is None:
@@ -274,16 +274,16 @@ class PoisonedPieceSelectionTests(unittest.TestCase):
         self.assertEqual(self.calls[0]['depth'], 4)
         self.assertTrue(all(call['publish'] is False for call in self.calls))
 
-    def test_five_hundred_cp_cost_is_recorded_but_not_a_trap_veto(self):
+    def test_losing_refusal_vetoes_a_tempting_trap_before_capture_proof(self):
         result, discard = self.run_selection(baseline='e1g1', candidate_cp=-400)
         self.assertFalse(discard)
-        self.assertEqual(result['selected_uci'], 'f3e5')
-        self.assertTrue(result['trap_evidence']['verified'])
-        self.assertEqual(result['loss_cp'], 500)
-        self.assertEqual(result['reference_delta_cp'], 500)
-        self.assertEqual(result['best_defense_cp'], -400)
-        self.assertEqual(result['risk_profile'], 'speculative')
-        self.assertEqual(len(self.calls), 2)
+        self.assertEqual(result['selected_uci'], 'e1g1')
+        self.assertIsNone(result['trap_evidence'])
+        self.assertEqual(result['loss_cp'], 0)
+        self.assertEqual(result['trap_attempts'][0]['loss_cp'], 500)
+        self.assertEqual(result['trap_attempts'][0]['reason'], 'trap_outside_quality_floor')
+        self.assertEqual(result['risk_profile'], 'quality_gated')
+        self.assertEqual(len(self.calls), 1)
 
     def test_no_proof_or_failed_probe_keeps_full_baseline(self):
         result, discard = self.run_selection(baseline='e1g1', prove=False)
@@ -294,6 +294,17 @@ class PoisonedPieceSelectionTests(unittest.TestCase):
         self.assertTrue(discard)
         self.assertEqual(result['selected_uci'], 'e1g1')
         self.assertIsNone(result['trap_evidence'])
+
+    def test_trap_quality_boundary_and_nonlosing_floor(self):
+        for cp, admitted in [(65, True), (64, False)]:
+            with self.subTest(cp=cp):
+                result, discard = self.run_selection(baseline='e1g1', candidate_cp=cp)
+                self.assertFalse(discard)
+                self.assertEqual(result['selected_uci'], 'f3e5' if admitted else 'e1g1')
+        result, discard = self.run_selection(baseline='e1g1', baseline_cp=-50, candidate_cp=-20)
+        self.assertFalse(discard)
+        self.assertEqual(result['selected_uci'], 'e1g1')
+        self.assertEqual(result['trap_attempts'][0]['reason'], 'trap_outside_quality_floor')
 
 
 if __name__ == '__main__':
