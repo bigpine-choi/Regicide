@@ -26,8 +26,8 @@ import gambit_tactics
 import opening_variety as opening
 import rating_evidence
 
-POLICY = "regicide-boss-play-v8"
-SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", POLICY)
+POLICY = "regicide-boss-play-v9"
+SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", POLICY)
 MAX_PLIES = 16
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
@@ -427,10 +427,10 @@ def receipt(board, search_plan, baseline_move, baseline_info, probes=(), seed=""
 
 def explore_tactics(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
                     search, close_engine, *, baseline_elapsed_ms=0):
-    """Prefer independently checked tactics inside the existing extra allowance.
+    """Prefer paired native verification inside the existing extra allowance.
 
-    These are native research signals guided by published Chess.com concepts,
-    never a Chess.com classification or a replacement for independent review.
+    Candidate style and move quality are distinct. A successful local check is
+    neither a Chess.com classification nor a replacement for independent review.
     """
     baseline = score_line(board, baseline_info, baseline_move)
     allowed = (search_plan.get("eligible") is True and

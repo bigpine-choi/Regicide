@@ -161,6 +161,39 @@ class TacticalHostTests(unittest.TestCase):
         self.assertTrue(self.game._boss_decisions[9]["tactics"]["qualified"])
         self.assertFalse(self.game._boss_decisions[9]["tactics"]["applied"])
 
+    def test_real_selector_sends_two_finalists_and_saves_quality_without_a_grade(self):
+        # Exercise the real selector and production callback. Only geometry and
+        # UCI answers are controlled; this checks wiring, not chess strength.
+        board = self.prepare()
+        candidate = "f3e5"
+        first = line(board, candidate, cp=40)
+        deeper = {**line(board, candidate, cp=55), "depth": 5}
+        self.peer.scripts.extend([
+            {"move": candidate, "packets": [first]},
+            {"move": candidate, "packets": [first, deeper]},
+        ])
+        self.stack.enter_context(patch.object(host.boss_play.gambit_tactics.sound_sacrifice, "evidence",
+            side_effect=lambda _board, move, **_: {"eligible": move.uci() == candidate,
+                "complete": True, "offers": [], "investment_cp": 300}))
+        self.no_legacy_selection()
+        state = self.game.engine_move(self.game.revision)
+        self.assertIsNone(state["error"])
+        self.assertEqual(state["last_move"], candidate)
+        self.assertEqual(len(self.peer.searches), 3)  # baseline + two optional probes
+        final_search = self.peer.searches[-1]
+        self.assertEqual(final_search["limit"].depth, 5)
+        self.assertEqual({m.uci() for m in final_search["root_moves"]}, {candidate, "e1g1"})
+        decision = self.game._boss_decisions[9]
+        self.assertEqual(decision["policy"], "regicide-boss-play-v9")
+        self.assertTrue(decision["tactics"]["quality_qualified"])
+        self.assertEqual(decision["compared_depth"], 4)
+        self.assertEqual(decision["final_best_defense_cp"], 55)
+        self.assertFalse(decision["tactics"]["evidence"]["paired_verification"]["global_best_proven"])
+        stored = json.loads((self.game.save_dir / f"{self.game.game_id}.json").read_text(encoding="utf-8"))
+        saved = stored["boss_play"]["decisions"][0]
+        self.assertEqual(saved["tactics"]["classification_scope"], "local_native_verification_not_chesscom_grade")
+        self.assertNotIn("annotation", saved)
+
     def test_tactical_receipt_survives_save_and_memo_replay_but_undo_removes_played_receipt(self):
         self.prepare()
         tactical = self.tactics()

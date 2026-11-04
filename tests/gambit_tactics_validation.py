@@ -5,6 +5,7 @@ no known history before that FEN. Candidate moves are discovered by the real
 selector, not injected by this driver. No user game or runtime install changes.
 """
 import argparse
+import copy
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -98,7 +99,8 @@ def replay(row):
     return board
 
 
-def run_case(binary, fixture, selector):
+def run_case(binary, fixture, selector, *, baseline_seed=None, baseline_sink=None,
+             baseline_ms=1000, extra_ms=1000, baseline_depth=None):
     board = replay(fixture)
     original = board.fen(en_passant="fen"), list(board.move_stack)
     row = {"case": fixture, "queries": [], "error": None, "engine_closed": False,
@@ -165,18 +167,42 @@ def run_case(binary, fixture, selector):
                     raise TimeoutError("Native callback safety timeout")
 
         baseline_started = time.monotonic()
-        baseline, info, packets = search(1000)
+        if baseline_seed is None:
+            baseline, info, packets = search(baseline_ms, depth=baseline_depth)
+            seed = {"before_fen": original[0], "history_uci": [move.uci() for move in original[1]],
+                    "initial_fen": board.root().fen(en_passant="fen"),
+                    "result": copy.deepcopy((baseline, info, packets))}
+        else:
+            seed = copy.deepcopy(baseline_seed)
+            if (seed["before_fen"] != original[0]
+                    or seed["history_uci"] != [move.uci() for move in original[1]]
+                    or seed["initial_fen"] != board.root().fen(en_passant="fen")):
+                raise ValueError("Shared baseline belongs to a different position/history")
+            baseline, info, packets = seed["result"]
+        if (baseline.move not in board.legal_moves or validate_packet(board, info, baseline.move) is None
+                or packets.get(info["depth"]) != info):
+            raise ValueError("Shared baseline is not an exact legal returned-root packet")
+        if baseline_sink is not None:
+            baseline_sink.update(copy.deepcopy(seed))
+        baseline_value = {key: seed[key] for key in ("before_fen", "initial_fen", "history_uci")}
+        baseline_value.update(move=baseline.move, ponder=baseline.ponder, info=info, packets=packets)
+        baseline_bytes = json.dumps(safe(baseline_value), sort_keys=True, separators=(",", ":")).encode("utf-8")
         row.update(baseline_uci=baseline.move.uci(), baseline_san=board.san(baseline.move),
                    baseline_info=safe(info), baseline_packets=safe(packets),
+                   baseline_requested_depth=baseline_depth,
+                   baseline_origin="shared_seed" if baseline_seed is not None else "native_once",
+                   baseline_seed_sha256=hashlib.sha256(baseline_bytes).hexdigest(),
                    baseline_elapsed_ms=round((time.monotonic() - baseline_started) * 1000, 3))
         extra_started = time.monotonic()
-        detail, discard = selector.choose(board, baseline.move, info, packets, search, engine.close, budget_ms=1000)
+        detail, discard = selector.choose(board, baseline.move, info, packets, search, engine.close, budget_ms=extra_ms)
         selected = chess.Move.from_uci(detail["selected_uci"])
         row.update(detail=safe(detail), discard_engine=discard, selected_uci=selected.uci(),
                    selected_san=board.san(selected), extra_elapsed_ms=round((time.monotonic() - extra_started) * 1000, 3))
         row["checks"] = {"selected_legal": selected in board.legal_moves,
             "selected_matches_detail": selected.uci() == detail["selected_uci"],
             "unapplied_preserves_baseline": bool(detail.get("applied")) or selected == baseline.move,
+            "shared_baseline_optional_searches_are_fresh": all(query["fresh"] for query in
+                (row["queries"][1:] if baseline_seed is None else row["queries"])),
             "all_native_queries_complete": all(query["status"] == "complete" and not query["safety_timeout_expired"] for query in row["queries"])}
     except Exception as error:
         row["error"] = f"{type(error).__name__}: {error}"

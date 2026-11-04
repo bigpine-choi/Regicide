@@ -1,0 +1,333 @@
+{
+  "schema": "regicide.gambit-paired-summary.v1",
+  "source_report_sha256": "619dcdb76e2b3dac2bef7ae433ec06b7d64225836895508d45dbab8644e0996a",
+  "scope": "Depth-capped low-budget functional diagnostic; not an ordinary 1000ms-baseline comparison. Eight existing development fixtures; functional policy A/B, not heldout, games, Elo or Chess.com grades",
+  "paired_deeper_queries": [
+    {
+      "id": "legal-d6-g6",
+      "roots": [
+        "f3e5"
+      ],
+      "requested_depth": 5,
+      "completed_depth": 5,
+      "returned_uci": "f3e5",
+      "pv_uci": [
+        "f3e5",
+        "d6e5",
+        "d1g4",
+        "g8f6",
+        "g4f3"
+      ]
+    }
+  ],
+  "two_root_paired_verifications": 0,
+  "native_passed": true,
+  "sources_unchanged": true,
+  "policies": {
+    "baseline": "regicide-gambit-tactics-v3",
+    "candidate": "regicide-gambit-tactics-v4"
+  },
+  "conditions": {
+    "native_binary_shared": "C:\\Users\\hanso\\.codex\\.chatgpt-projects\\g-p-6a8b058617088191ac7cb44895558f31\\Regicide-m1-integration\\build-gambit-horizon\\baseline\\regicide.exe",
+    "baseline_ms": 1000,
+    "baseline_depth_cap": 4,
+    "optional_ms_per_arm": 1000,
+    "baseline": "One native search per fixture; exact same in-memory move, score and packets copied into each policy",
+    "order": "Alternating baseline/candidate first per fixture; serial fresh processes, each optional callback fresh=True",
+    "evaluation": "Classical UsePieceActivity=true, Hash16, LMR on"
+  },
+  "elapsed_seconds": 2.78236,
+  "case_count": 8,
+  "identical_baselines": 8,
+  "changed_moves": 0,
+  "newly_qualified_cases": 0,
+  "all_processes_exit_zero": true,
+  "arm_totals": {
+    "baseline": {
+      "qualified_cases": 1,
+      "applied_cases": 0,
+      "optional_search_calls": 9,
+      "sum_optional_wall_ms": 321.262,
+      "median_optional_wall_ms": 17.7105
+    },
+    "candidate": {
+      "qualified_cases": 1,
+      "applied_cases": 0,
+      "optional_search_calls": 8,
+      "sum_optional_wall_ms": 213.443,
+      "median_optional_wall_ms": 19.611
+    }
+  },
+  "rows": [
+    {
+      "id": "refutable-legal-nc6",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "baseline": {
+          "selected_uci": "e1g1",
+          "baseline_uci": "e1g1",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 35.25,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "candidate": {
+          "selected_uci": "e1g1",
+          "baseline_uci": "e1g1",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 37.482,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "legal-d6-g6",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "candidate": {
+          "selected_uci": "f3e5",
+          "baseline_uci": "f3e5",
+          "baseline_depth": 4,
+          "qualified": true,
+          "applied": false,
+          "reason": "native_verified_tactical_opportunity",
+          "extra_elapsed_ms": 84.392,
+          "optional_search_calls": 2,
+          "native_search_calls_including_shared_baseline_if_owner": 3,
+          "process_exit_code": 0
+        },
+        "baseline": {
+          "selected_uci": "f3e5",
+          "baseline_uci": "f3e5",
+          "baseline_depth": 4,
+          "qualified": true,
+          "applied": false,
+          "reason": "native_verified_tactical_opportunity",
+          "extra_elapsed_ms": 196.846,
+          "optional_search_calls": 3,
+          "native_search_calls_including_shared_baseline_if_owner": 3,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "damiano",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "baseline": {
+          "selected_uci": "f1c4",
+          "baseline_uci": "f1c4",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 23.184,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "candidate": {
+          "selected_uci": "f1c4",
+          "baseline_uci": "f1c4",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 25.755,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "synthetic-ray-gain",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "candidate": {
+          "selected_uci": "b3d5",
+          "baseline_uci": "b3d5",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 10.209,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "baseline": {
+          "selected_uci": "b3d5",
+          "baseline_uci": "b3d5",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 14.679,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "synthetic-ray-recapture",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "baseline": {
+          "selected_uci": "b3f7",
+          "baseline_uci": "b3f7",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 10.04,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "candidate": {
+          "selected_uci": "b3f7",
+          "baseline_uci": "b3f7",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 13.467,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "synthetic-equal-exchange",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "candidate": {
+          "selected_uci": "a2b3",
+          "baseline_uci": "a2b3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 9.487,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "baseline": {
+          "selected_uci": "a2b3",
+          "baseline_uci": "a2b3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 15.017,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "already-winning-control",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "baseline": {
+          "selected_uci": "b1c3",
+          "baseline_uci": "b1c3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 20.404,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 2,
+          "process_exit_code": 0
+        },
+        "candidate": {
+          "selected_uci": "b1c3",
+          "baseline_uci": "b1c3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "candidate_unreliable_or_outside_quality_floor",
+          "extra_elapsed_ms": 26.37,
+          "optional_search_calls": 1,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        }
+      }
+    },
+    {
+      "id": "initial-control",
+      "baseline_identical": true,
+      "passed": true,
+      "changed_move": false,
+      "newly_qualified": false,
+      "arms": {
+        "candidate": {
+          "selected_uci": "b1c3",
+          "baseline_uci": "b1c3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "no_tactical_candidates",
+          "extra_elapsed_ms": 6.281,
+          "optional_search_calls": 0,
+          "native_search_calls_including_shared_baseline_if_owner": 1,
+          "process_exit_code": 0
+        },
+        "baseline": {
+          "selected_uci": "b1c3",
+          "baseline_uci": "b1c3",
+          "baseline_depth": 4,
+          "qualified": false,
+          "applied": false,
+          "reason": "no_tactical_candidates",
+          "extra_elapsed_ms": 5.842,
+          "optional_search_calls": 0,
+          "native_search_calls_including_shared_baseline_if_owner": 0,
+          "process_exit_code": 0
+        }
+      }
+    }
+  ],
+  "interpretation": "All eight existing development fixtures preserved their chosen move. Legal Nxe5 is qualified in both policies and already is the shared baseline; v4 used two verification calls rather than three. No successful replacement of a different baseline was observed.",
+  "limits": [
+    "No playing-strength, Elo, Chess.com grading or attack-frequency conclusion",
+    "One serial timed observation per arm; local elapsed reduction is not a general speed benchmark",
+    "Native replacement branch for a candidate differing from the baseline was not exercised by a successful selection"
+  ]
+}

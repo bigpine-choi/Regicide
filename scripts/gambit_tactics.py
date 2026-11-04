@@ -1,8 +1,11 @@
-"""Own-engine tactical opportunities under a shared optional-turn budget.
+"""Separate attacking proposals from native, paired tactical verification.
 
 The thresholds below are conservative native heuristics, not a reconstruction
 of Chess.com ratings or its unpublished move-grading implementation. Local
-investment evidence plus finite search is not a proof of compensation.
+investment evidence plus finite search is not a proof of compensation. The
+finalist search keeps the baseline and the proposed attack at the same deeper
+depth. Only its native winner can replace the baseline; all descendant replies
+remain available. No external evaluator participates in move selection.
 """
 import math
 import threading
@@ -13,15 +16,13 @@ import chess.engine
 
 import sound_sacrifice
 
-POLICY = "regicide-gambit-tactics-v3"
+POLICY = "regicide-gambit-tactics-v4"
 MIN_DEPTH = 4
 MIN_BUDGET_MS = 100
 MAX_BUDGET_MS = 1000
 MAX_CANDIDATES = 8
 MAX_LOSS_CP = 25
 MIN_CANDIDATE_CP = 0
-ALREADY_WINNING_CP = 250
-CRITICAL_ALTERNATIVE_CP = -200
 MIN_SEARCH_MS = 20
 
 
@@ -67,13 +68,13 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     started = time.monotonic()
     base_uci = baseline_move.uci() if isinstance(baseline_move, chess.Move) else None
     result = {"policy": POLICY, "selected_uci": base_uci, "applied": False, "qualified": False,
+              "quality_qualified": False, "classification_scope": "local_native_verification_not_chesscom_grade",
               "kind": None, "kinds": [], "reason": "baseline_preserved", "loss_cp": 0,
               "evidence": None, "baseline": None, "attempts": [], "budget_ms": 0, "extra_elapsed_ms": 0,
               "budget_basis": "shared monotonic wall deadline; per-call requested ceilings may overlap when an earlier depth completes early",
               "threshold_basis": "native conservative heuristics; not exact Chess.com classification",
               "thresholds": {"max_loss_cp": MAX_LOSS_CP, "candidate_cp_min": MIN_CANDIDATE_CP,
-                  "already_winning_alternative_cp": ALREADY_WINNING_CP,
-                  "critical_alternative_cp_max": CRITICAL_ALTERNATIVE_CP}}
+                  "deeper_requirement": "candidate_wins_native_finalist_search"}}
 
     def finish(reason, discard=False):
         result["reason"] = reason
@@ -160,7 +161,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
             result["candidate_group"] = "sacrifice"
         else:
             candidates = [move for move in order if _forcing(board, move)][:MAX_CANDIDATES]
-            result["candidate_group"] = "forcing_critical" if candidates else "none"
+            result["candidate_group"] = "forcing" if candidates else "none"
         result["geometry_probes"] = len(geometries)
         result["candidates_uci"] = [move.uci() for move in candidates]
         if not candidates:
@@ -184,68 +185,51 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                     final_reason = "candidate_unreliable_or_outside_quality_floor"
                 else:
                     remaining = (deadline - time.monotonic()) * 1000
-                    amount = remaining * .52
+                    amount = remaining - 2
                     if amount < MIN_SEARCH_MS:
                         final_reason = "insufficient_confirmation_budget"
                     else:
-                        reply2, info2, packets2, confirm_attempt = timed_search(amount, "deeper_confirmation",
-                            root_move=selected, publish=False, fresh=True, depth=baseline["depth"] + 1)
-                        confirm_common = _line(board, (packets2 or {}).get(baseline["depth"]), selected)
-                        deeper = _line(board, info2, selected)
-                        depth_packet = _line(board, (packets2 or {}).get(baseline["depth"] + 1), selected)
-                        confirm_attempt.update(common=confirm_common, final=deeper)
-                        if (reply2.move != selected or deeper is None or depth_packet != deeper
-                                or deeper["depth"] != baseline["depth"] + 1
-                                or not _quality(confirm_common, baseline) or deeper["cp"] < MIN_CANDIDATE_CP):
-                            final_reason = "deeper_confirmation_incomplete_or_outside_floor"
+                        # A positive deeper score alone is insufficient: the
+                        # baseline may be substantially better at this depth.
+                        # Compete both roots in one native search, using the
+                        # former all-alternative grading time for verification.
+                        # The root restriction never restricts opponent replies.
+                        finalists = list(dict.fromkeys((selected, baseline_move)))
+                        reply2, info2, packets2, confirm_attempt = timed_search(amount, "paired_verification",
+                            root_moves=finalists, publish=False, fresh=True, depth=baseline["depth"] + 1)
+                        deeper = _line(board, info2, reply2.move, allow_mate=True)
+                        depth_packet = _line(board, (packets2 or {}).get(baseline["depth"] + 1),
+                                             reply2.move, allow_mate=True)
+                        confirm_attempt.update(roots_uci=[move.uci() for move in finalists], final=deeper)
+                        if (reply2.move not in finalists or deeper is None or depth_packet != deeper
+                                or deeper["depth"] != baseline["depth"] + 1):
+                            final_reason = "paired_verification_incomplete_or_unreliable"
+                        elif reply2.move != selected:
+                            final_reason = "paired_verification_prefers_baseline"
+                        elif deeper["mate"] is not None or deeper["cp"] < MIN_CANDIDATE_CP:
+                            # Keep mate handling on the ordinary engine path;
+                            # never coerce a mate score into a centipawn grade.
+                            final_reason = "paired_verification_outside_floor"
                         else:
-                            alternatives = [move for move in legal if move != selected]
-                            remaining = (deadline - time.monotonic()) * 1000 - 2
-                            if remaining < MIN_SEARCH_MS:
-                                final_reason = "insufficient_alternative_budget"
-                            else:
-                                reply3, info3, packets3, alternative_attempt = timed_search(remaining,
-                                    "all_other_legal_roots", root_moves=alternatives,
-                                    publish=False, fresh=True, depth=baseline["depth"])
-                                alternative = _line(board, info3, reply3.move, allow_mate=True)
-                                alternative_common = _line(board, (packets3 or {}).get(baseline["depth"]),
-                                                           reply3.move, allow_mate=True)
-                                alternative_attempt.update(root_count=len(alternatives), final=alternative,
-                                                           common=alternative_common)
-                                if (reply3.move not in alternatives or alternative is None
-                                        or alternative["depth"] != baseline["depth"] or alternative_common != alternative):
-                                    final_reason = "alternative_probe_incomplete"
-                                else:
-                                    geometry = geometries.get(selected.uci(), {})
-                                    winning_elsewhere = (alternative["mate"] is not None and alternative["mate"] > 0
-                                        or alternative["cp"] is not None and alternative["cp"] >= ALREADY_WINNING_CP)
-                                    critical = (alternative["mate"] is not None and alternative["mate"] < 0
-                                        or alternative["cp"] is not None and alternative["cp"] <= CRITICAL_ALTERNATIVE_CP)
-                                    sacrifice = (geometry.get("eligible") is True and geometry.get("complete") is True
-                                                 and not winning_elsewhere)
-                                    if winning_elsewhere:
-                                        final_reason = "already_winning_without_sacrifice"
-                                    elif not sacrifice and not critical:
-                                        final_reason = "no_qualified_tactical_opportunity"
-                                    else:
-                                        kinds = (["sound_sacrifice_candidate"] if sacrifice else []) + (["critical_opportunity"] if critical else [])
-                                        compared = min((common, confirm_common), key=lambda line: line["cp"])
-                                        chosen = {"move": selected, "kinds": kinds,
-                                            "loss_cp": max(0, baseline["cp"] - compared["cp"]),
-                                            "evidence": {"geometry": geometry, "candidate_common": common, "candidate_set_final": final,
-                                                "confirmation_common": confirm_common, "deeper_confirmation": deeper,
-                                                "alternative": alternative, "alternative_root_count": len(alternatives),
-                                                "candidate_compared": compared, "candidate_final": deeper,
-                                                "same_depth_quality": {"depth": baseline["depth"],
-                                                    "baseline_cp": baseline["cp"], "candidate_cp": common["cp"],
-                                                    "confirmation_cp": confirm_common["cp"], "max_loss_cp": MAX_LOSS_CP},
-                                                "deeper_nonlosing_confirmation": {"depth": deeper["depth"],
-                                                    "cp": deeper["cp"], "minimum_cp": MIN_CANDIDATE_CP,
-                                                    "near_best_at_this_depth": False},
-                                                "deeper_delta_from_common": deeper["cp"] - confirm_common["cp"],
-                                                "sacrifice": geometry,
-                                                "scope": "near-best floor compares only depth D; depth D+1 confirms nonlosing only, not relative best play; own finite search and local investment, not forced compensation or a site grade"}}
-                                        final_reason = "native_verified_tactical_opportunity"
+                            geometry = geometries.get(selected.uci(), {})
+                            sacrifice = geometry.get("eligible") is True and geometry.get("complete") is True
+                            kinds = ["sound_sacrifice_candidate" if sacrifice else "verified_forcing_candidate"]
+                            chosen = {"move": selected, "kinds": kinds,
+                                "loss_cp": max(0, baseline["cp"] - common["cp"]),
+                                "evidence": {"geometry": geometry, "candidate_common": common,
+                                    "candidate_set_final": final, "candidate_compared": common,
+                                    "candidate_final": deeper, "deeper_confirmation": deeper,
+                                    "same_depth_quality": {"depth": baseline["depth"],
+                                        "baseline_cp": baseline["cp"], "candidate_cp": common["cp"],
+                                        "max_loss_cp": MAX_LOSS_CP},
+                                    "paired_verification": {"depth": deeper["depth"],
+                                        "roots_uci": [move.uci() for move in finalists],
+                                        "winner_uci": selected.uci(), "baseline_included": True,
+                                        "comparison": "native_best_of_finalists", "global_best_proven": False},
+                                    "deeper_delta_from_common": deeper["cp"] - common["cp"],
+                                    "sacrifice": geometry,
+                                    "scope": "depth D proposal floor, then native best of candidate and baseline at D+1; all descendant replies remain; finite local verification, not global best play, forced compensation or a site grade"}}
+                            final_reason = "native_verified_tactical_opportunity"
     except Exception as error:
         result["error"] = type(error).__name__
         discard = True
@@ -259,6 +243,6 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         return finish("tactical_probe_timeout", True)
     if chosen:
         result.update(selected_uci=chosen["move"].uci(), applied=chosen["move"] != baseline_move,
-            qualified=True, kind=chosen["kinds"][0], kinds=chosen["kinds"],
+            qualified=True, quality_qualified=True, kind=chosen["kinds"][0], kinds=chosen["kinds"],
             loss_cp=chosen["loss_cp"], evidence=chosen["evidence"])
     return finish(final_reason, discard)
