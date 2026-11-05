@@ -98,9 +98,13 @@ struct SearchOptions {
     // and queen sacrifices. Geometric lower-value attacks are a selective
     // trigger, not a material penalty or proof that the queen will be lost.
     bool quiescence_queen_defense = false;
-    // Experimental continuation of the same checking attack. Two additional
-    // quiet checks per q path, following checks with at most two legal replies.
-    // All evasions remain; a broad defense or nonchecking attack ends the chain.
+    // Experimental forcing continuation: two extra quiet checks after checks
+    // with at most three evasions. An actual repeated checked position can
+    // grant two more credits once per q path; it is not adjudicated a draw.
+    // One quiet rook lift against an exposed king is verified with all replies.
+    // Ordinary nonchecking attacks and broad defenses end the checking chain.
+    // A frontier may spend at most 65536 nodes before restarting with baseline
+    // quiescence. Cache savings can change which extended frontiers complete.
     bool quiescence_forcing = false;
 };
 
@@ -140,6 +144,7 @@ struct SearchResult {
     std::uint64_t root_threat_searches = 0;
     std::uint64_t queen_defense_qnodes = 0; // All-reply queen horizons, including unfinished work.
     std::uint64_t forcing_checks = 0; // Searched extra chain checks, including unfinished work.
+    std::uint64_t forcing_fallbacks = 0; // Extended frontiers restarted with the baseline policy.
 };
 
 using SearchCallback = std::function<void(const SearchResult&)>;

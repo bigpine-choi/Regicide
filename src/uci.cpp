@@ -341,6 +341,7 @@ private:
              " searches " + std::to_string(result.root_threat_searches));
         send("info string queen-defense qnodes " + std::to_string(result.queen_defense_qnodes));
         send("info string forcing checks " + std::to_string(result.forcing_checks));
+        send("info string forcing fallbacks " + std::to_string(result.forcing_fallbacks));
         send("info string tt probes " + std::to_string(result.tt_probes) + " hits " + std::to_string(result.tt_hits) +
              " cutoffs " + std::to_string(result.tt_cutoffs) + " stores " + std::to_string(result.tt_stores) +
              " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +

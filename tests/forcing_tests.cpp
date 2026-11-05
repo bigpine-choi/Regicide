@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -47,7 +48,7 @@ void same_graph(const SearchResult& a, const SearchResult& b) {
     expect(a.score == b.score && a.depth == b.depth && a.best_move == b.best_move &&
            a.pv == b.pv && a.nodes == b.nodes && a.qnodes == b.qnodes &&
            a.seldepth == b.seldepth && a.stopped == b.stopped &&
-           a.forcing_checks == b.forcing_checks,
+           a.forcing_checks == b.forcing_checks && a.forcing_fallbacks == b.forcing_fallbacks,
            "identical search semantics changed results or traversal");
 }
 Board escape_root() {
@@ -70,6 +71,45 @@ Board losing_king() {
 }
 void cycle(Board& board) {
     for (const char* move : {"g1f1", "h8g8", "f1g1", "g8h8"}) board.play(move);
+}
+Move mirrored_move(Move move) { return {move.from ^ 56, move.to ^ 56, move.promotion}; }
+Board mirrored_board(const Board& board) {
+    const auto& position = board.position();
+    expect(!position.castling && position.en_passant < 0 && !board.history_size(),
+           "mirror helper requires a declared history-free fixture without special rights");
+    std::string fen;
+    for (int rank = 7; rank >= 0; --rank) {
+        int empty = 0;
+        for (int file = 0; file < 8; ++file) {
+            const unsigned char piece = static_cast<unsigned char>(position.squares[(7 - rank) * 8 + file]);
+            if (piece == '.') { ++empty; continue; }
+            if (empty) { fen += static_cast<char>('0' + empty); empty = 0; }
+            fen += static_cast<char>(std::islower(piece) ? std::toupper(piece) : std::tolower(piece));
+        }
+        if (empty) fen += static_cast<char>('0' + empty);
+        if (rank) fen += '/';
+    }
+    fen += position.turn == Color::white ? " b - - " : " w - - ";
+    fen += std::to_string(position.halfmove) + " " + std::to_string(position.fullmove);
+    return Board(fen);
+}
+Board d5_escape_before(bool mirror = false) {
+    Board board("r4k2/2p5/1pqp4/5r2/p3R2R/2B3P1/PP3P1P/6K1 b - - 3 31");
+    if (mirror) board = mirrored_board(board);
+    for (const char* text : {"d6d5", "h4h8", "f8f7", "h8h7", "f7g8", "h7h8", "g8f7", "h8h7"}) {
+        const Move move = Move::from_uci(text);
+        board.play(mirror ? mirrored_move(move) : move);
+    }
+    return board;
+}
+bool real_claim(const Board& board) {
+    const auto now = board.claims_now();
+    if (now.threefold || now.fifty_moves) return true;
+    for (Move move : board.legal_moves()) {
+        const auto intended = board.claims_after(move);
+        if (intended.threefold || intended.fifty_moves) return true;
+    }
+    return false;
 }
 } // namespace
 
@@ -157,19 +197,27 @@ int main() {
                                                    const StaticEvaluationObservation&) {
             Board replay = root;
             unsigned late_checks = 0;
+            bool refreshed = false, left_pure_checks = false;
             for (std::size_t i = 0; i < path.size(); ++i) {
+                if (i && replay.in_check() && replay.repetition_count() >= 2) refreshed = true;
                 const auto& position = replay.position();
                 const char piece = position.squares[path[i].from];
                 const bool ep = (piece == 'P' || piece == 'p') && path[i].to == position.en_passant;
                 const bool quiet = position.squares[path[i].to] == '.' && !ep && !path[i].promotion;
                 // One ordinary root ply precedes qsearch. At index 4 the
                 // source node is qply 3, outside the ordinary quiet horizon.
-                if (i >= 4 && !replay.in_check() && quiet && replay.gives_check_generated(path[i]))
+                const bool checking = replay.gives_check_generated(path[i]);
+                // Quiet preparation grants a full defensive reply, whose
+                // counterchecks are mandatory replies rather than extensions.
+                // Keep this invariant on the original pure-checking segment.
+                if (i && !replay.in_check() && quiet && !checking) left_pure_checks = true;
+                if (i >= 4 && !replay.in_check() && quiet && checking && !left_pure_checks)
                     ++late_checks;
+                expect(late_checks <= (refreshed ? 4U : 2U),
+                       "a checking path exceeded its base or genuinely refreshed allowance");
                 replay.play(path[i]);
             }
             expect(replay == leaf, "late-check observation lost the actual history");
-            expect(late_checks <= 2, "a path exceeded the two additional nonmandatory late checks");
             maximum_late_checks = std::max(maximum_late_checks, late_checks);
             if (prefix(path, wanted)) saw_late_check = true;
         };
@@ -185,7 +233,7 @@ int main() {
         Board checked = root;
         checked.play(checking_move);
         const auto escapes = checked.legal_moves();
-        expect(checked.in_check() && escapes.size() > 2, "declared broad-defense frontier changed");
+        expect(checked.in_check() && escapes.size() > 3, "declared broad-defense frontier changed");
         std::vector<Move> observed_escapes;
         auto selected = options();
         selected.quiescence_checks = false;
@@ -210,9 +258,17 @@ int main() {
         const Board root("7k/8/2b5/8/8/5q2/r4P1P/R5K1 w - - 0 1"), saved = root;
         auto selected = options();
         selected.positional = false;
+        // Completion under the original hard node cap is part of this safety
+        // regression: an unfinished extension must not hide the short mate.
         const auto result = search(root, {.depth = 1, .nodes = 100000}, nullptr, {}, selected);
         expect(result.depth == 1 && !result.stopped && result.score == -mate_score + 2,
                "extra forcing work lost the established quiet mating refutation");
+        expect(result.forcing_fallbacks && result.nodes <= 100000,
+               "the costly frontier did not restart within the original global limit");
+        selected.quiescence_forcing = false;
+        const auto baseline = search(root, {.depth = 1, .nodes = 100000}, nullptr, {}, selected);
+        expect(result.score == baseline.score && result.best_move == baseline.best_move,
+               "a partial extended value escaped instead of the completed mating refutation");
         valid_pv(root, result);
         Board leaf = root;
         for (Move move : result.pv) leaf.play(move);
@@ -317,6 +373,129 @@ int main() {
             expect(ended.score == 0 && !ended.nodes && !ended.forcing_checks && !ended.best_move,
                    "automatic draw performed forcing work or returned an artificial penalty");
         }
+    });
+    test("a quiet rook continuation corrects the declared shallow king-escape frontier", [] {
+        const Board before = d5_escape_before(), saved = before;
+        const Move escape = Move::from_uci("f7g6");
+        Board after = before;
+        after.play(escape);
+        auto selected = options(), previous = options(false);
+        selected.root_moves = previous.root_moves = std::vector<Move>{escape};
+        const auto candidate = search(before, {.depth = 1, .nodes = 500000}, nullptr, {}, selected);
+        const auto old = search(before, {.depth = 1, .nodes = 500000}, nullptr, {}, previous);
+        // Three ordinary plies from the child independently expose the quiet
+        // rook move, the opponent's response, and its tactical continuation.
+        auto ordinary = options(false);
+        const auto deeper = search(after, {.depth = 3, .nodes = 500000}, nullptr, {}, ordinary);
+        expect(candidate.depth == 1 && old.depth == 1 && deeper.depth == 3 &&
+               !candidate.stopped && !old.stopped && !deeper.stopped,
+               "declared shallow/deeper comparison did not finish");
+        expect(candidate.score == -deeper.score && candidate.score < old.score &&
+               candidate.quiet_threat_extensions && candidate.defensive_qnodes && candidate.pv.size() >= 3,
+               "quiet threat did not recover the independently deeper native continuation");
+        const Move pressure = candidate.pv[1];
+        expect(after.position().squares[pressure.from] == 'R' &&
+               after.position().squares[pressure.to] == '.' && !after.gives_check_generated(pressure),
+               "improved continuation was not a legal quiet rook preparation");
+        expect(before == saved, "quiet-preparation analysis altered the actual history");
+        valid_pv(before, candidate);
+        valid_pv(after, deeper);
+    });
+    test("quiet rook preparation retains a pawn capture and a quiet countercheck defense", [] {
+        bool saw_capture = false, saw_countercheck = false;
+        for (bool capture_case : {true, false}) {
+            const Board root(capture_case ? "8/p7/5p2/8/4k3/8/8/6RK b - - 0 1" :
+                                          "8/p7/8/8/4k3/3q4/8/6RK b - - 0 1"), saved = root;
+            const Move preparation = Move::from_uci("g1g5");
+            Board witness = root;
+            witness.play("a7a6");
+            witness.play(preparation);
+            expect(!witness.in_check(), "pressure fixture became an immediate check");
+            if (capture_case) {
+                const auto legal = witness.legal_moves();
+                expect(std::find(legal.begin(), legal.end(), Move::from_uci("f6g5")) != legal.end(),
+                       "pawn defense ceased to be legal");
+            } else {
+                expect(witness.gives_check_generated(Move::from_uci("d3b1")),
+                       "declared quiet countercheck disappeared");
+            }
+            auto selected = options();
+            selected.root_moves = std::vector<Move>{Move::from_uci("a7a6")};
+            selected.static_evaluation_observer = [&](const Board&, const std::vector<Move>& path,
+                                                       const StaticEvaluationObservation&) {
+                if (path.size() < 3 || path[1] != preparation) return;
+                Board defense = root;
+                defense.play(path[0]); defense.play(path[1]);
+                if (capture_case && path[2] == Move::from_uci("f6g5")) saw_capture = true;
+                if (!capture_case && defense.position().squares[path[2].to] == '.' &&
+                    defense.gives_check_generated(path[2])) saw_countercheck = true;
+            };
+            const auto result = search(root, {.depth = 1, .nodes = 500000}, nullptr, {}, selected);
+            expect(result.depth == 1 && !result.stopped && result.quiet_threat_extensions &&
+                   result.defensive_qnodes && root == saved,
+                   "full-response rook preparation did not complete or restore the board");
+            valid_pv(root, result);
+        }
+        expect(saw_capture && saw_countercheck, "quiet-preparation filter lost a legal capture or countercheck");
+    });
+    test("rook pressure preserves native value under rank and color reversal", [] {
+        const Board root = d5_escape_before(), mirror = d5_escape_before(true);
+        auto first = options(), second = options();
+        first.root_moves = std::vector<Move>{Move::from_uci("f7g6")};
+        second.root_moves = std::vector<Move>{mirrored_move(first.root_moves->front())};
+        const auto a = search(root, {.depth = 1, .nodes = 500000}, nullptr, {}, first);
+        const auto b = search(mirror, {.depth = 1, .nodes = 500000}, nullptr, {}, second);
+        expect(a.depth == 1 && b.depth == 1 && !a.stopped && !b.stopped && a.score == b.score &&
+               a.quiet_threat_extensions && b.quiet_threat_extensions &&
+               a.defensive_qnodes && b.defensive_qnodes,
+               "quiet rook frontier is asymmetric under color/rank reversal");
+        valid_pv(root, a);
+        valid_pv(mirror, b);
+    });
+    test("actual twofold history reaches genuine claims without fabricating an imported-FEN draw", [] {
+        Board root("r4k2/2p5/1pqp4/5r2/p3R2R/2B3P1/PP3P1P/6K1 b - - 3 31");
+        for (const char* move : {"a4a3", "h4h8", "f8f7", "h8h7", "f7f8", "h7h8", "f8f7"}) root.play(move);
+        const Board saved = root, imported(root.fen());
+        const Move checking_move = Move::from_uci("h8h7");
+        Board repeated = root, fresh = imported;
+        repeated.play(checking_move); fresh.play(checking_move);
+        expect(repeated.in_check() && repeated.repetition_count() == 2 && fresh.repetition_count() == 1,
+               "actual twofold frontier and imported FEN no longer differ");
+        unsigned original_claims = 0;
+        auto selected = options();
+        selected.root_moves = std::vector<Move>{checking_move};
+        selected.static_evaluation_observer = [&](const Board& leaf, const std::vector<Move>&,
+                                                   const StaticEvaluationObservation& observation) {
+            if (observation.draw_claim_adjusted) {
+                expect(real_claim(leaf), "a twofold refresh fabricated a draw without a current/intended claim");
+                ++original_claims;
+            }
+        };
+        const auto plain = search(root, {.depth = 1, .nodes = 500000}, nullptr, {}, selected);
+        expect(plain.depth == 1 && !plain.stopped && original_claims && root == saved,
+               "actual repeated frontier did not reach a genuine claim or restore history");
+        selected.static_evaluation_observer = [&](const Board& leaf, const std::vector<Move>&,
+                                                   const StaticEvaluationObservation& observation) {
+            if (observation.draw_claim_adjusted)
+                expect(real_claim(leaf), "imported FEN inherited a draw right from a different history");
+        };
+        const auto imported_result = search(imported, {.depth = 1, .nodes = 500000}, nullptr, {}, selected);
+        selected.static_evaluation_observer = {};
+        selected.quiescence_cache = true;
+        const auto cached = search(root, {.depth = 1, .nodes = 500000}, nullptr, {}, selected);
+        expect(imported_result.depth == 1 && !imported_result.stopped && cached.depth == 1 &&
+               !cached.stopped && cached.qcache_probes,
+               "refresh/history-aware cache failed to complete the frontier");
+        // Node-bounded optional work is selective: cache savings may let a
+        // frontier finish which otherwise falls back to baseline quiescence.
+        // Without such a restart, the completed value must still be identical.
+        expect(plain.score == cached.score || plain.forcing_fallbacks || cached.forcing_fallbacks,
+               "cache changed the value without a budget-dependent restart");
+        const auto stopped = search(root, {.depth = 3, .nodes = 50}, nullptr, {}, selected);
+        expect(stopped.stopped && stopped.nodes == 50 && root == saved,
+               "repetition refresh exceeded its node cap or damaged history");
+        valid_pv(root, plain); valid_pv(root, cached); valid_pv(root, stopped);
+        valid_pv(imported, imported_result);
     });
     test("quiet checkmate outranks the seventy-five-move counter", [] {
         const Board root("7k/5Q2/6K1/8/8/8/8/8 w - - 149 1"), saved = root;

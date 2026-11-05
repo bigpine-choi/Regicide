@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -136,6 +137,42 @@ bool quiet_knight_fork_threat(const Board& board, Move move, std::uint64_t& see_
         if (static_exchange_evaluation(hypothetical, capture) >= 0) return true;
     }
     return false;
+}
+
+// A candidate generator, never an evaluation bonus. A quiet rook lift that
+// newly controls two squares around an exposed king merits one full reply
+// search. All legal defenses, including captures and counterchecks, survive.
+bool quiet_rook_pressure(const Board& board, Move move) {
+    const auto& before = board.position();
+    const bool white = before.turn == Color::white;
+    if (before.squares[move.from] != (white ? 'R' : 'r') || before.squares[move.to] != '.') return false;
+    const char enemy_king = white ? 'k' : 'K';
+    int king = -1;
+    for (int square = 0; square < 64; ++square)
+        if (before.squares[square] == enemy_king) { king = square; break; }
+    if (king < 0 || king / 8 < 2 || king / 8 > 5) return false;
+    std::uint64_t zone = 0;
+    for (int dr = -1; dr <= 1; ++dr) for (int df = -1; df <= 1; ++df) {
+        const int r = king / 8 + dr, f = king % 8 + df;
+        if ((dr || df) && r >= 0 && r < 8 && f >= 0 && f < 8)
+            zone |= UINT64_C(1) << (r * 8 + f);
+    }
+    const auto attacks = [](const auto& squares, int from) {
+        std::uint64_t mask = 0;
+        for (const auto& [df, dr] : std::array<std::pair<int, int>, 4>{{{1,0}, {-1,0}, {0,1}, {0,-1}}}) {
+            int f = from % 8 + df, r = from / 8 + dr;
+            while (f >= 0 && f < 8 && r >= 0 && r < 8) {
+                mask |= UINT64_C(1) << (r * 8 + f);
+                if (squares[r * 8 + f] != '.') break;
+                f += df; r += dr;
+            }
+        }
+        return mask;
+    };
+    auto after = before.squares;
+    after[move.to] = after[move.from]; after[move.from] = '.';
+    const auto added = attacks(after, move.to) & zone & ~attacks(before.squares, move.from);
+    return std::popcount(added) >= 2;
 }
 
 using QuietHistory = std::array<std::array<int, 64>, 64>;
@@ -279,6 +316,7 @@ int static_score(const Board& board, const SearchOptions& options,
 }
 
 struct Interrupted {};
+struct ForcingLimit {};
 
 // Normal-node bounds cannot describe a quiescence query: optional quiet checks,
 // fork preparation, mandatory defense and the absolute q ceiling all change its
@@ -292,6 +330,8 @@ struct QuiescenceKey {
     bool defensive = false;
     int forcing_owner = -1;
     int forcing_left = 0;
+    bool cycle_refresh = false;
+    bool forcing_enabled = false;
     bool operator==(const QuiescenceKey&) const = default;
 };
 
@@ -343,6 +383,7 @@ public:
     std::uint64_t root_threat_candidates = 0, root_threat_searches = 0;
     std::uint64_t queen_defense_qnodes = 0;
     std::uint64_t forcing_checks = 0;
+    std::uint64_t forcing_fallbacks = 0;
     std::uint64_t qcache_bytes() const { return qcache_.size() * sizeof(QuiescenceEntry); }
     int seldepth = 0;
     int iteration_depth = 0;
@@ -351,12 +392,21 @@ public:
                 std::vector<Move>& pv, bool pv_node,
                 const std::optional<Move>& preferred = {}) {
         // A horizon position belongs to exactly one node, even when extended.
-        if (depth == 0 && options_.quiescence)
+        if (depth == 0 && options_.quiescence) {
+            if (options_.quiescence_forcing) {
+                // An unresolved extended tree is not a completed score. Bound
+                // its work locally and re-search this same frontier with the
+                // original policy. All spent nodes still count globally.
+                try {
+                    return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0,
+                        1, false, alpha, beta, pv,
+                        board.in_check() ? (board.position().turn == Color::white ? 1 : 0) : -1,
+                        2, true, true, nodes + 65536);
+                } catch (const ForcingLimit&) { ++forcing_fallbacks; }
+            }
             return quiescence(board, ply, 0, options_.quiescence_checks ? 1 : 0,
-                              options_.quiescence_threats ? 1 : 0, false, alpha, beta, pv,
-                              options_.quiescence_forcing && board.in_check() ?
-                                  (board.position().turn == Color::white ? 1 : 0) : -1,
-                              options_.quiescence_forcing ? 2 : 0);
+                options_.quiescence_threats ? 1 : 0, false, alpha, beta, pv, -1, 0, false, false, 0);
+        }
         poll();
         ++nodes;
         seldepth = std::max(seldepth, ply);
@@ -571,7 +621,8 @@ private:
         mixed ^= static_cast<std::uint64_t>(key.board.halfmove) * UINT64_C(0xbf58476d1ce4e5b9);
         mixed ^= static_cast<std::uint64_t>(key.remaining + 1) * UINT64_C(0x94d049bb133111eb);
         mixed ^= static_cast<std::uint64_t>(key.checks + 4 * key.threats + 16 * key.defensive);
-        mixed ^= static_cast<std::uint64_t>(key.forcing_owner + 1 + 4 * key.forcing_left) *
+        mixed ^= static_cast<std::uint64_t>(key.forcing_owner + 1 + 4 * key.forcing_left +
+                                          32 * key.cycle_refresh + 64 * key.forcing_enabled) *
                  UINT64_C(0xd6e8feb86659fd93);
         mixed ^= mixed >> 30;
         mixed *= UINT64_C(0xbf58476d1ce4e5b9);
@@ -630,8 +681,10 @@ private:
 
     int quiescence(Board& board, int ply, int qply, int checks_left, int threats_left,
                    bool defensive_reply, int alpha, int beta, std::vector<Move>& pv,
-                   int forcing_owner, int forcing_left) {
+                   int forcing_owner, int forcing_left, bool cycle_refresh,
+                   bool forcing_enabled, std::uint64_t forcing_end) {
         poll();
+        if (forcing_enabled && nodes >= forcing_end) throw ForcingLimit{};
         ++nodes;
         ++qnodes;
         if (defensive_reply) ++defensive_qnodes;
@@ -641,7 +694,7 @@ private:
         const QuiescenceKey key{{board.position_key(), board.repetition_context_key(),
                                   board.position().halfmove},
                                  max_quiescence_depth - qply, checks_left, threats_left, defensive_reply,
-                                 forcing_owner, forcing_left};
+                                 forcing_owner, forcing_left, cycle_refresh, forcing_enabled};
         if (const auto cached = qcache_probe(key, ply, alpha, beta, pv)) return *cached;
         const auto finish = [&](int score, bool exact = false) {
             const auto bound = exact ? TranspositionBound::exact :
@@ -652,20 +705,32 @@ private:
         };
         auto moves = board.legal_moves();
         const bool checked = board.in_check();
+        // Repeated checks warrant more calculation, not an artificial draw
+        // score. Only the existing current/intended claim rules can grant 0.
+        // A single refill bounds the extension even when a player declines a
+        // draw. The incoming budget and permission are part of the cache key.
+        if (cycle_refresh && checked && board.repetition_count() >= 2) {
+            forcing_left += 2;
+            cycle_refresh = false;
+        }
         // Continue only a narrow forcing attack. Keep every legal evasion,
         // but do not spend extra checks chasing a king with many escapes.
         // The incoming owner remains in the cache key; this deterministic
         // normalization is derived from this exact position, not its window.
-        if (checked && moves.size() > 2) forcing_owner = -1;
+        if (checked && moves.size() > 3) forcing_owner = -1;
         const int mover = board.position().turn == Color::white ? 0 : 1;
         const bool continuing = forcing_left > 0 && forcing_owner == mover;
         if (moves.empty()) return finish(checked ? -mate_score + ply : 0, true);
         if (automatic_draw(board)) return finish(0, true);
         const bool current_claim = claimable(board);
         // No position in check may use stand pat. If the absolute extension
-        // ceiling is reached, discard this iteration and retain the previous
-        // complete result, rather than treating an unresolved check as quiet.
-        if ((checked || defensive_reply) && qply >= max_quiescence_depth) throw Interrupted{};
+        // ceiling is reached, restart an optional forcing frontier with the
+        // baseline policy, or discard an incomplete baseline iteration. Never
+        // treat an unresolved check as quiet.
+        if ((checked || defensive_reply) && qply >= max_quiescence_depth) {
+            if (forcing_enabled) throw ForcingLimit{};
+            throw Interrupted{};
+        }
 
         // Only the first q ply can open this full-width defense. Descendants
         // resume the existing capture/check policy, so this cannot recursively
@@ -718,8 +783,11 @@ private:
                 }
                 if ((checks_left > 0 || threats_left > 0 || continuing) && board.gives_check_generated(move))
                     return !(optional_quiet && checks_left > 0) && !continuing;
-                if (optional_quiet && threats_left > 0 && qply + 2 < max_quiescence_depth &&
-                    quiet_knight_fork_threat(board, move, see_calls, [this] { poll(false); })) {
+                if (threats_left > 0 && qply + 2 < max_quiescence_depth &&
+                    ((options_.quiescence_threats && optional_quiet &&
+                      quiet_knight_fork_threat(board, move, see_calls, [this] { poll(false); })) ||
+                     (forcing_enabled && (forcing_owner == mover || qply == 0) &&
+                      quiet_rook_pressure(board, move)))) {
                     threats.push_back(move);
                     ++quiet_threat_candidates;
                     return false;
@@ -757,12 +825,13 @@ private:
                 const bool extra_check = !checked && !defensive_reply && !queen_defense &&
                     quiet && gives_check && !(optional_quiet && checks_left > 0) && continuing;
                 if (extra_check) ++forcing_checks;
-                const int child_owner = !options_.quiescence_forcing ? -1 :
-                    gives_check ? mover : (forcing_owner == mover ? -1 : forcing_owner);
+                const int child_owner = !forcing_enabled ? -1 :
+                    gives_check || threat ? mover : (forcing_owner == mover ? -1 : forcing_owner);
                 score = -quiescence(board, ply + 1, qply + 1, child_checks,
                                     threats_left - (threat ? 1 : 0), threat,
                                     -beta, -alpha, child_pv, child_owner,
-                                    forcing_left - (extra_check ? 1 : 0));
+                                    forcing_left - (extra_check ? 1 : 0), cycle_refresh,
+                                    forcing_enabled, forcing_end);
                 if (intended_claim) score = std::max(0, score);
             }
             if (score > best) {
@@ -908,6 +977,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
         result.root_threat_searches = searcher.root_threat_searches;
         result.queen_defense_qnodes = searcher.queen_defense_qnodes;
         result.forcing_checks = searcher.forcing_checks;
+        result.forcing_fallbacks = searcher.forcing_fallbacks;
         result.seldepth = searcher.seldepth;
         result.elapsed = elapsed();
         if (on_iteration) on_iteration(result);
@@ -936,6 +1006,7 @@ SearchResult search(const Board& input, const SearchLimits& limits,
     result.root_threat_searches = searcher.root_threat_searches;
     result.queen_defense_qnodes = searcher.queen_defense_qnodes;
     result.forcing_checks = searcher.forcing_checks;
+    result.forcing_fallbacks = searcher.forcing_fallbacks;
     result.seldepth = searcher.seldepth;
     result.elapsed = elapsed();
     return result;

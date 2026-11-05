@@ -65,13 +65,15 @@ int main(int argc, char** argv) {
     try {
         int depth = 6;
         std::uint64_t nodes = 5000000;
+        bool forcing = false;
         for (int i = 1; i < argc; ++i) {
             const std::string flag = argv[i];
             if (flag == "--help") {
-                std::cout << "regicide_trace_gambit_leaf [--depth 6] [--nodes 5000000]\n"
+                std::cout << "regicide_trace_gambit_leaf [--depth 6] [--nodes 5000000] [--forcing]\n"
                     "stdin: initial_fen<TAB>full root history<TAB>root UCI move or -<TAB>target PV UCI sequence\n";
                 return 0;
             }
+            if (flag == "--forcing") { forcing = true; continue; }
             if (++i == argc) throw std::invalid_argument("missing option value");
             if (flag == "--nodes") nodes = number(argv[i]);
             else if (flag == "--depth") {
@@ -107,6 +109,7 @@ int main(int argc, char** argv) {
             throw std::invalid_argument("nonempty bounded target path required");
         SearchOptions options;
         options.piece_activity = true;
+        options.quiescence_forcing = forcing;
         if (fields[2] != "-") {
             const auto move = Move::from_uci(fields[2]);
             const auto legal = root.legal_moves();
@@ -138,7 +141,8 @@ int main(int argc, char** argv) {
         moves_json(target);
         std::cout << ",\"target_fen\":" << quote(endpoint.fen())
             << ",\"requested_depth\":" << depth << ",\"node_cap\":" << nodes
-            << ",\"piece_activity\":true,\"lmr\":true,\"root_constraint\":"
+            << ",\"piece_activity\":true,\"lmr\":true,\"forcing\":" << (forcing ? "true" : "false")
+            << ",\"root_constraint\":"
             << (fields[2] == "-" ? "null" : quote(fields[2]))
             << ",\"position_unchanged\":true,\"requested_iteration_completed\":" << (completed ? "true" : "false")
             << ",\"match_status\":" << quote(matched ? "observed_static_evaluation" : "unavailable")
