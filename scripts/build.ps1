@@ -63,6 +63,8 @@ cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude t
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\queen_defense_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\queen_defense_tests.obj /Febuild\regicide_queen_defense_tests.exe
 if errorlevel 1 exit /b 1
+cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\forcing_tests.cpp build\board.obj build\search.obj build\evaluation.obj build\transposition.obj build\see.obj build\neural.obj build\nnue.obj /Fobuild\forcing_tests.obj /Febuild\regicide_forcing_tests.exe
+if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\evaluation_tests.cpp build\board.obj build\evaluation.obj build\reference_evaluation_v054.obj build\reference_evaluation_v056.obj /Fobuild\evaluation_tests.obj /Febuild\regicide_evaluation_tests.exe
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++20 /EHsc /W4 /WX /permissive- /utf-8 /O2 /DNDEBUG /Iinclude tests\board_state_tests.cpp build\board.obj /Fobuild\board_state_tests.obj /Febuild\regicide_board_state_tests.exe
@@ -100,6 +102,8 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Search tests failed.' }
     & (Join-Path $buildDir 'regicide_queen_defense_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Queen defense tests failed.' }
+    & (Join-Path $buildDir 'regicide_forcing_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Forcing continuation tests failed.' }
     & (Join-Path $buildDir 'regicide_evaluation_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Evaluation tests failed.' }
     & (Join-Path $buildDir 'regicide_board_state_tests.exe')

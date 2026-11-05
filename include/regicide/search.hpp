@@ -98,6 +98,10 @@ struct SearchOptions {
     // and queen sacrifices. Geometric lower-value attacks are a selective
     // trigger, not a material penalty or proof that the queen will be lost.
     bool quiescence_queen_defense = false;
+    // Experimental continuation of the same checking attack. Two additional
+    // quiet checks per q path, following checks with at most two legal replies.
+    // All evasions remain; a broad defense or nonchecking attack ends the chain.
+    bool quiescence_forcing = false;
 };
 
 struct SearchResult {
@@ -135,6 +139,7 @@ struct SearchResult {
     std::uint64_t root_threat_candidates = 0;
     std::uint64_t root_threat_searches = 0;
     std::uint64_t queen_defense_qnodes = 0; // All-reply queen horizons, including unfinished work.
+    std::uint64_t forcing_checks = 0; // Searched extra chain checks, including unfinished work.
 };
 
 using SearchCallback = std::function<void(const SearchResult&)>;
