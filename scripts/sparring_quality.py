@@ -15,7 +15,7 @@ import sparring_play
 import sparring_balance
 import pending_exchange
 
-POLICY = "regicide-sparring-quality-v5"
+POLICY = "regicide-sparring-quality-v6"
 MAX_BUDGET_MS = 8000
 AUDIT_MS = 650
 STARTUP_ALLOWANCE_MS = 1500
@@ -42,10 +42,9 @@ def _number(value):
 
 
 def _contact_moves(board, moves):
-    """Legal minor moves making an immediate minor-or-major piece threat.
+    """Diagnostic contacts; live origin searches keep every legal move.
 
-    Geometry only orders native discovery. No reference PV enters this group,
-    and native completion plus the ordinary external floor remain mandatory.
+    An immediate threat does not establish that a move beats a quiet defense.
     """
     contacts = []
     for move in moves:
@@ -129,7 +128,7 @@ def verdict(board, move, assessment):
         return {**result, "acceptable": True, "reason": "winning_mate_verified"}
     if child.get("winner") is not None:
         return {**result, "reason": "losing_mate_detected"}
-    if (len(board.move_stack) < 40 and board.root().fen(en_passant="fen") == chess.STARTING_FEN
+    if (len(board.move_stack) < sparring_play.RAMP_PLY and board.root().fen(en_passant="fen") == chess.STARTING_FEN
             and (root.get("winner") == own or _number(root_cp) and root_cp >= -80)):
         natural = pending_exchange.naturalness(board, move)
         result["naturalness"] = natural
@@ -137,7 +136,7 @@ def verdict(board, move, assessment):
             return {**result, "floor_cp": -80, "reason": "avoidable_material_donation",
                     "loss_cp": max(0, root_cp - child_cp) if _number(root_cp) and _number(child_cp) else None}
     if root.get("winner") == own:
-        if (len(board.move_stack) < 40 and board.root().fen(en_passant="fen") == chess.STARTING_FEN
+        if (len(board.move_stack) < sparring_play.RAMP_PLY and board.root().fen(en_passant="fen") == chess.STARTING_FEN
                 and _number(child_cp)):
             return {**result, "acceptable": child_cp >= -100, "floor_cp": -80,
                     "reason": "early_winning_mate_deferred" if child_cp >= -100 else "position_collapse_detected"}
@@ -146,17 +145,23 @@ def verdict(board, move, assessment):
         return {**result, "acceptable": True, "reason": "escaped_reference_mate"}
     if not _number(root_cp) or not _number(child_cp):
         return {**result, "verified": False, "reason": "uncomparable_reference"}
-    if len(board.move_stack) < 40:
+    if len(board.move_stack) < sparring_play.RAMP_PLY:
         # A sound concession may reduce a large advantage. It must not turn
         # a holdable position into a losing one; behind, preserve resistance.
         floor = -80 if root_cp >= -80 else root_cp - 40
-    elif len(board.move_stack) < 98:
+    elif len(board.move_stack) < sparring_play.FINISH_PLY:
         floor = sparring_play.ramp_guard(board, root_cp)["floor_cp"]
     else:
         floor = root_cp - FINISH_MAX_LOSS_CP
-    result.update(floor_cp=floor, loss_cp=max(0, root_cp - child_cp))
-    result.update(acceptable=child_cp >= floor - NOISE_CP,
-                  reason="reference_floor_met" if child_cp >= floor - NOISE_CP else "position_collapse_detected")
+    effective_floor = floor - NOISE_CP
+    if result["phase"] == "ramp" and root_cp >= 0:
+        # The comparison noise margin must not authorize turning a holdable
+        # position into a negative one after the close phase has ended.
+        effective_floor = max(0, effective_floor)
+    result.update(floor_cp=floor, effective_floor_cp=effective_floor,
+                  loss_cp=max(0, root_cp - child_cp))
+    result.update(acceptable=child_cp >= effective_floor,
+                  reason="reference_floor_met" if child_cp >= effective_floor else "position_collapse_detected")
     return result
 
 
@@ -253,13 +258,13 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
         """A separately labelled external confirmation, never native depth four.
 
         Some completed native iterations stop at the quiescence safety limit.
-        A shallow proposal can only repair an already unsafe pre-20 incumbent,
+        A shallow proposal can only repair an already unsafe pre-16 incumbent,
         with two stable native completions and two central-band references.
         Elective concessions and all later phases retain the depth-four rule.
         """
         initial_verdict = receipt["initial_verdict"]
         cp = candidate_verdict.get("child_cp_own")
-        if (len(board.move_stack) >= 40 or board.root().fen(en_passant="fen") != chess.STARTING_FEN
+        if (len(board.move_stack) >= sparring_play.RAMP_PLY or board.root().fen(en_passant="fen") != chess.STARTING_FEN
                 or len(attempt.get("allowed_uci", [])) < 2
                 or initial_verdict.get("acceptable") or not initial_verdict.get("verified")
                 or not _number(initial_verdict.get("child_cp_own")) or initial_verdict["child_cp_own"] >= -100
@@ -351,7 +356,7 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
     try:
         initial, initial_verdict = audit(move, first=True)
         receipt.update(initial=initial, initial_verdict=initial_verdict, final_verdict=initial_verdict)
-        early_resistance = (len(board.move_stack) < 40
+        early_resistance = (len(board.move_stack) < sparring_play.RAMP_PLY
                             and board.root().fen(en_passant="fen") == chess.STARTING_FEN
                             and initial_verdict["verified"] and initial_verdict["acceptable"]
                             and _number(initial_verdict["child_cp_own"])
@@ -385,7 +390,7 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
 
             def probes():
                 for index, allocation in enumerate(NATIVE_BUDGETS_MS):
-                    if index == 1 and len(board.move_stack) < 40 and MAX_ROOK_PROBES:
+                    if index == 1 and len(board.move_stack) < sparring_play.RAMP_PLY and MAX_ROOK_PROBES:
                         represented = {candidate.from_square for candidate in excluded}
                         rooks = {candidate.from_square for candidate in board.legal_moves
                                  if candidate.from_square not in represented
@@ -404,11 +409,9 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
                         # compare each unseen minor piece's legal choices.
                         origins = _minor_origins(board, excluded)
                         for origin in origins:
-                            available = [candidate for candidate in board.legal_moves
-                                         if candidate not in excluded and candidate.from_square == origin]
-                            contact = (sparring_play.phase(board) == "ramp"
-                                       and bool(_contact_moves(board, available)))
-                            yield MINOR_PROBE_MS, "minor_contact" if contact else "minor_origin", origin
+                            # Keep quiet defense/outpost moves in the same
+                            # bounded search as attacks from this piece.
+                            yield MINOR_PROBE_MS, "minor_origin", origin
                         if origins:
                             allocation = min(allocation, MINOR_PROBE_MS)
                     yield allocation, "global", None
@@ -417,8 +420,6 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
                 check()
                 allowed = [candidate for candidate in board.legal_moves if candidate not in excluded
                            and (origin is None or candidate.from_square == origin)]
-                if kind == "minor_contact":
-                    allowed = _contact_moves(board, allowed)
                 amount = min(allocation, (deadline - time.monotonic()) * 1000 - AUDIT_MS - 50)
                 if not allowed or amount < 100:
                     break
@@ -460,7 +461,11 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
                         and _number(candidate_verdict["floor_cp"])):
                     floor = max(initial_verdict["floor_cp"], candidate_verdict["floor_cp"])
                     candidate_verdict["floor_cp"] = floor
-                    candidate_verdict["acceptable"] = candidate_verdict["child_cp_own"] >= floor - NOISE_CP
+                    effective = max([floor - NOISE_CP] + [value for value in (
+                        initial_verdict.get("effective_floor_cp"),
+                        candidate_verdict.get("effective_floor_cp")) if _number(value)])
+                    candidate_verdict["effective_floor_cp"] = effective
+                    candidate_verdict["acceptable"] = candidate_verdict["child_cp_own"] >= effective
                     if not candidate_verdict["acceptable"]:
                         candidate_verdict["reason"] = "position_collapse_detected"
                 acceptable = candidate_verdict["verified"] and candidate_verdict["acceptable"]
@@ -512,7 +517,7 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
                         candidate = promoted
                 if acceptable:
                     cp = candidate_verdict.get("child_cp_own")
-                    if (len(board.move_stack) < 40 and board.root().fen(en_passant="fen") == chess.STARTING_FEN
+                    if (len(board.move_stack) < sparring_play.RAMP_PLY and board.root().fen(en_passant="fen") == chess.STARTING_FEN
                             and _number(cp) and cp >= -100 and abs(cp) > sparring_balance.BUFFER_CP):
                         attempt["reason"] = "verified_repair_outside_buffer"
                         if (best_safe_repair is None or abs(cp - sparring_balance.TARGET_CP)

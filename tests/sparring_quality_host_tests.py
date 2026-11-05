@@ -150,8 +150,8 @@ class QualityHostTests(unittest.TestCase):
         self.assertIsNone(state["error"])
         self.assertEqual(state["last_move"], move.uci())
 
-    def test_baseline_only_is_audited_before20_for_both_colors(self):
-        for ply in (38, 39):
+    def test_baseline_only_is_audited_before16_for_both_colors(self):
+        for ply in (28, 29):
             with self.subTest(ply=ply):
                 board, moves = self.prepare(ply, root_cp=300, child_cp=30)
                 self.referee.quality_calls.clear()

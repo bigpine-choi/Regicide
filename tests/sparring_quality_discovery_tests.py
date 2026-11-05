@@ -46,9 +46,9 @@ class QualityDiscoveryTests(unittest.TestCase):
             elif index == 1:
                 chosen = king
             elif index == 2:
-                chosen = original if foreign else good
+                chosen = original if foreign else good if good in root_moves else root_moves[0]
             else:
-                chosen = root_moves[0]
+                chosen = good if good in root_moves else root_moves[0]
             return native_reply(board, chosen)
         def assess(move, amount, cancelled):
             assessed.append(move)
@@ -65,13 +65,13 @@ class QualityDiscoveryTests(unittest.TestCase):
         self.assertEqual(replacement[0].move, good)
         self.assertEqual(receipt["status"], "replaced")
         self.assertEqual([attempt["kind"] for attempt in receipt["attempts"]],
-                         ["global", "global", "minor_origin"])
-        attempt = receipt["attempts"][2]
+                         ["global", "global", "minor_origin", "minor_origin"])
+        attempt = receipt["attempts"][3]
         self.assertEqual(attempt["origin"], "c3")
         expected = [move for move in board.legal_moves if move.from_square == chess.C3]
-        self.assertEqual(calls[2][1], expected)
+        self.assertEqual(calls[3][1], expected)
         self.assertEqual(attempt["allowed_uci"], [move.uci() for move in expected])
-        self.assertEqual(calls[2][0], 400)
+        self.assertEqual(calls[3][0], 400)
         self.assertEqual(attempt["native_evidence"]["root"], good.uci())
 
     def test_black_mirroring_preserves_history_and_origin_order(self):
@@ -79,8 +79,25 @@ class QualityDiscoveryTests(unittest.TestCase):
         self.assertEqual(len(board.move_stack), 32)
         self.assertEqual(board.turn, chess.BLACK)
         self.assertEqual(replacement[0].move, good)
-        self.assertEqual(receipt["attempts"][2]["origin"], "c6")
-        self.assertTrue(all(move.from_square == chess.C6 for move in calls[2][1]))
+        self.assertEqual(receipt["attempts"][3]["origin"], "c6")
+        self.assertTrue(all(move.from_square == chess.C6 for move in calls[3][1]))
+
+    def test_ramp_keeps_noncontact_choices_in_the_same_bounded_piece_search(self):
+        board, _, _, calls, _, _, receipt, _ = self.run_diversity(succeed=False)
+        seen = False
+        for (_, allowed), attempt in zip(calls, receipt["attempts"]):
+            if attempt["kind"] != "minor_origin":
+                continue
+            contacts = quality._contact_moves(board, allowed)
+            noncontacts = [move for move in allowed if move not in contacts]
+            if contacts and noncontacts:
+                seen = True
+                origin = chess.parse_square(attempt["origin"])
+                expected = {move for move in board.legal_moves if move.from_square == origin
+                            and move.uci() not in attempt["excluded_uci"]}
+                self.assertEqual(set(allowed), expected)
+                self.assertEqual(attempt["budget_ms"], 400)
+        self.assertTrue(seen)
 
     def test_original_rejected_minor_origin_is_already_represented(self):
         board = chess.Board("2r5/B1p1k3/2Bp4/PR2b3/2P3p1/2P2pP1/5P1r/1K6 b - - 0 43")
@@ -100,7 +117,7 @@ class QualityDiscoveryTests(unittest.TestCase):
         board, original, _good, calls, _assessed, replacement, receipt, _discarded = self.run_diversity(succeed=False)
         self.assertIsNone(replacement)
         self.assertEqual([attempt["origin"] for attempt in receipt["attempts"] if attempt["kind"] == "minor_origin"],
-                         ["c3", "g5"])
+                         ["e3", "c3"])
         self.assertEqual(sum(attempt["kind"] == "global" for attempt in receipt["attempts"]), 4)
         self.assertEqual(len(calls), 6)
         for (amount, allowed), attempt in zip(calls, receipt["attempts"]):

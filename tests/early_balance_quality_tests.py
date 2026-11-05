@@ -87,7 +87,7 @@ class EarlyBalanceTests(unittest.TestCase):
         self.assertFalse(value["acceptable"])
         self.assertEqual(value["reason"], "forced_win_lost")
 
-    def test_pre20_winning_mate_can_be_deferred_to_verified_finite_close_position(self):
+    def test_pre16_winning_mate_can_be_deferred_to_verified_finite_close_position(self):
         board, original, target, _, search, assess = self.fixture(root_mate=4, child_mate=3)
         replacement, receipt, _ = quality.verify(board, original, search, lambda: None, assess)
         self.assertEqual(replacement[0].move, target)
@@ -96,12 +96,12 @@ class EarlyBalanceTests(unittest.TestCase):
         bad = quality.verdict(board, target, assessment(board, target, child=-101, root_mate=4))
         self.assertFalse(bad["acceptable"])
 
-    def test_after20_keeps_forced_win_and_does_not_seek_early_balance(self):
-        board = position(40)
+    def test_after15_keeps_forced_win_and_does_not_seek_early_balance(self):
+        board = position(30)
         original = next(iter(board.legal_moves))
         self.assertFalse(quality.verdict(board, original, assessment(board, original, child=0, root_mate=4))["acceptable"])
         def search(*args, **kwargs):
-            self.fail("Move 21 must not run early balance discovery")
+            self.fail("Move 16 must not run early balance discovery")
         replacement, receipt, _ = quality.verify(board, original, search, lambda: None,
             lambda move, *_: assessment(board, move, 500, 500))
         self.assertIsNone(replacement)
@@ -247,8 +247,8 @@ class ConfirmedNativeRepairTests(unittest.TestCase):
                 self.assertIsNone(replacement)
                 self.assertFalse(receipt["applied"])
 
-    def test_after20_and_already_safe_incumbent_keep_depth_four_requirement(self):
-        for options in ({"ply":40},{"original_cp":-90}):
+    def test_after15_and_already_safe_incumbent_keep_depth_four_requirement(self):
+        for options in ({"ply":30},{"original_cp":-90}):
             with self.subTest(options=options):
                 (replacement,receipt,_),_,_,_=self.scenario(**options)
                 self.assertIsNone(replacement)
@@ -282,12 +282,19 @@ class ConfirmedNativeRepairTests(unittest.TestCase):
 
 
 class RookOriginTests(unittest.TestCase):
-    def test_central_rook_is_compared_before_another_global_pawn_search_for_both_colors(self):
+    def rook_position(self):
         sequence=("b1c3 g7g6 g1f3 d7d5 e2e3 f8g7 f1b5 b8c6 b5c6 b7c6 e1g1 c8g4 "
                   "d2d4 g8f6 h2h3 g4f5 a2a4 f6e4 c3e4 d5e4 f3d2 c6c5 d4c5 d8d5 "
                   "d1e2 e8g8 e2c4 d5c6 f1d1 f8d8")
         white=chess.Board()
         for uci in sequence.split():white.push_uci(uci)
+        return white
+
+    @mock.patch.object(balance.sparring_play,"RAMP_PLY",40)
+    def test_extended_close_fixture_compares_central_rook_before_another_global_pawn_search(self):
+        # Isolate the early discovery algorithm with the unchanged recorded
+        # 30-ply position; the actual current schedule is tested separately.
+        white=self.rook_position()
         for black in (False,True):
             board=white
             original,pawn,good=map(chess.Move.from_uci,("c4b5","g2g4","d1e1"))
@@ -313,6 +320,29 @@ class RookOriginTests(unittest.TestCase):
             if not black:
                 self.assertEqual(receipt["attempts"][0]["reason"],"verified_repair_outside_buffer")
 
+    def test_same_move16_position_uses_regular_verified_repair_without_early_balance(self):
+        from sparring_quality_discovery_tests import mirrored_history,mirrored_move
+        white=self.rook_position()
+        self.assertEqual(len(white.move_stack),30)
+        for black in (False,True):
+            board=mirrored_history(white) if black else white
+            original,good=map(chess.Move.from_uci,("c4b5","d1e1"))
+            if black:
+                original,good=map(mirrored_move,(original,good))
+            def search(amount,*,root_moves,**options):
+                self.assertIn(good,root_moves)
+                return native_reply(board,good,depth=5)
+            def assess(move,*_):
+                return assessment(board,move,-72,-200 if move==original else -40)
+            with mock.patch.object(balance,"recover",side_effect=AssertionError("late early-balance search")) as recovery:
+                replacement,receipt,_=quality.verify(board,original,search,lambda:None,assess)
+            recovery.assert_not_called()
+            self.assertEqual(receipt["phase"],"ramp")
+            self.assertEqual(receipt["status"],"replaced")
+            self.assertEqual(replacement[0].move,good)
+            self.assertEqual([row["kind"] for row in receipt["attempts"]],["global"])
+            self.assertTrue(receipt["final_verdict"]["acceptable"])
+
 
 class FinalDonationGateTests(unittest.TestCase):
     def hanging_bishop(self):
@@ -333,19 +363,28 @@ class FinalDonationGateTests(unittest.TestCase):
         value=quality.verdict(board,move,assessment(board,move,184,-9))
         self.assertTrue(value["verified"])
         self.assertFalse(value["acceptable"])
-        self.assertEqual(value["reason"],"avoidable_material_donation")
+        self.assertEqual(value["phase"],"ramp")
+        self.assertEqual(value["reason"],"position_collapse_detected")
+        self.assertGreater(value["effective_floor_cp"],0)
 
     def test_same_final_gate_applies_to_repair_candidates_not_only_incumbent(self):
         board=self.hanging_bishop();move=chess.Move.from_uci("a7a5")
         self.assertIn(move,board.legal_moves)
         value=quality.verdict(board,move,assessment(board,move,184,0))
         self.assertFalse(value["acceptable"])
-        self.assertEqual(value["reason"],"avoidable_material_donation")
+        self.assertEqual(value["phase"],"ramp")
+        self.assertEqual(value["reason"],"position_collapse_detected")
+        self.assertGreater(value["effective_floor_cp"],0)
 
     def test_forced_bad_position_and_verified_mating_compensation_remain_distinct(self):
         board=self.hanging_bishop();move=chess.Move.from_uci("h7h5")
         forced=quality.verdict(board,move,assessment(board,move,-200,-250))
-        self.assertTrue(forced["acceptable"])
+        self.assertFalse(forced["acceptable"])
+        self.assertEqual(forced["reason"],"position_collapse_detected")
+        self.assertEqual(forced["effective_floor_cp"],-220)
+        resistance=quality.verdict(board,move,assessment(board,move,-200,-215))
+        self.assertTrue(resistance["acceptable"])
+        self.assertEqual(resistance["reason"],"reference_floor_met")
         mate=quality.verdict(board,move,assessment(board,move,184,child_mate=3))
         self.assertTrue(mate["acceptable"])
         self.assertEqual(mate["reason"],"winning_mate_verified")
@@ -406,7 +445,9 @@ class UnsafePositiveBalanceTests(unittest.TestCase):
         self.assertTrue(receipt["final_verdict"]["acceptable"])
         self.assertEqual(receipt["final_verdict"]["naturalness"]["pending_exchange"]["opponent_changed_recapture"],["c7a5"])
 
-    def test_failed_balance_discovery_falls_through_to_safe_native_repair_if_time_remains(self):
+    @mock.patch.object(balance.sparring_play,"RAMP_PLY",40)
+    def test_extended_close_fixture_failed_balance_falls_through_to_safe_native_repair(self):
+        # Isolated extended-close fixture for the early fallback algorithm.
         board=FinalDonationGateTests().hanging_bishop()
         original,good=map(chess.Move.from_uci,("h7h5","c6c5"))
         self.assertTrue(quality.pending_exchange.naturalness(board,good)["admitted"])
@@ -421,7 +462,9 @@ class UnsafePositiveBalanceTests(unittest.TestCase):
         self.assertEqual(receipt["status"],"replaced")
         self.assertTrue(called)
 
-    def test_failed_balance_at_exhausted_budget_never_labels_original_donation_verified(self):
+    @mock.patch.object(balance.sparring_play,"RAMP_PLY",40)
+    def test_extended_close_fixture_exhaustion_never_labels_original_donation_verified(self):
+        # Keep the original late-game sequence, without extending runtime play.
         board=FinalDonationGateTests().hanging_bishop();original=chess.Move.from_uci("h7h5")
         clock=[100.0]
         def recover(*args,**kwargs):
@@ -435,6 +478,29 @@ class UnsafePositiveBalanceTests(unittest.TestCase):
         self.assertEqual(receipt["status"],"unverified")
         self.assertEqual(receipt["reason"],"budget_exhausted")
         self.assertFalse(receipt["final_verdict"]["acceptable"])
+
+    def test_same_late_donation_skips_early_balance_and_requires_ramp_floor_repair(self):
+        board=FinalDonationGateTests().hanging_bishop()
+        original,good=map(chess.Move.from_uci,("h7h5","c6c5"))
+        self.assertEqual(len(board.move_stack),35)
+        calls=[]
+        def search(amount,*,root_moves,**options):
+            self.assertIn(good,root_moves)
+            calls.append(good)
+            return native_reply(board,good)
+        def assess(move,*_):
+            return assessment(board,move,184,143 if move==original else 170)
+        with mock.patch.object(balance,"recover",side_effect=AssertionError("late early-balance search")) as recovery:
+            replacement,receipt,_=quality.verify(board,original,search,lambda:None,assess)
+        recovery.assert_not_called()
+        self.assertTrue(calls)
+        self.assertEqual(receipt["phase"],"ramp")
+        self.assertFalse(receipt["initial_verdict"]["acceptable"])
+        self.assertEqual(receipt["initial_verdict"]["reason"],"position_collapse_detected")
+        self.assertEqual(replacement[0].move,good)
+        self.assertEqual(receipt["status"],"replaced")
+        self.assertGreaterEqual(receipt["final_verdict"]["child_cp_own"],
+                                receipt["final_verdict"]["effective_floor_cp"])
 
 
 if __name__ == "__main__":

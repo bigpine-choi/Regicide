@@ -547,12 +547,12 @@ class SummaryTests(unittest.TestCase):
                 report.summarize_matches([historical, current])
 
     def test_v6_keeps_twenty_fifty_schedule_and_does_not_pool_previous_policies(self):
-        self.assertEqual(report.POLICY, "regicide-sparring-play-v6")
+        historical_policy = "regicide-sparring-play-v6"
         sans = long_sans()
         for color in ("white", "black"):
             ramp_ply, finish_ply = (41, 99) if color == "white" else (42, 100)
             for length in (39, 40, 41, 42, 97, 98, 99, 100):
-                current = match(game(" ".join(sans[:length]), color=color, policy=report.POLICY))
+                current = match(game(" ".join(sans[:length]), color=color, policy=historical_policy))
                 result = report.summarize_matches([current])
                 row = result["games"][0]
                 self.assertEqual(result["target_fullmoves"], 20)
@@ -564,7 +564,7 @@ class SummaryTests(unittest.TestCase):
         for window in (20, 30, 40, 50):
             result = report.summarize_matches([current], target_fullmoves=window)
             self.assertEqual(result["target_fullmoves"], window)
-            self.assertEqual(result["policy"], report.POLICY)
+            self.assertEqual(result["policy"], historical_policy)
             self.assertEqual(result["policy_phase_root_plies"], {"ramp": 40, "finish": 98})
         for policy, window, roots in (("regicide-sparring-play-v1", 40, (100, 140)),
                                       ("regicide-sparring-play-v2", 40, (80, 138)),
@@ -580,9 +580,66 @@ class SummaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "different sparring policies"):
                 report.summarize_matches([historical, current])
 
-    def test_winning_mate_exception_remains_readable_for_v2_through_v6(self):
+    def test_v7_reports_fifteen_moves_and_keeps_all_historical_windows(self):
+        self.assertEqual(report.POLICY, "regicide-sparring-play-v7")
+        sans = long_sans()
+        for color in ("white", "black"):
+            ramp_ply, finish_ply = (31, 99) if color == "white" else (32, 100)
+            for length in (29, 30, 31, 32, 39, 40, 97, 98, 99, 100):
+                current = match(game(" ".join(sans[:length]), color=color, policy=report.POLICY))
+                saved = copy.deepcopy(current)
+                result = report.summarize_matches([current])
+                row = result["games"][0]
+                self.assertEqual(result["target_fullmoves"], 15)
+                self.assertEqual(result["policy_phase_root_plies"], {"ramp": 30, "finish": 98})
+                self.assertEqual(row["reached_target_full_moves"], length >= 30)
+                self.assertEqual(row["reached_ramp_phase"], length >= ramp_ply)
+                self.assertEqual(row["reached_finish_phase"], length >= finish_ply)
+                self.assertEqual(row["issues"], [])
+                self.assertEqual(current, saved)
+                if length >= 30:
+                    self.assertEqual(result["first_15_full_moves"]["sparring_moves"], 15)
+                    self.assertTrue(row["continuous_first15_band"]["selected_root_same_depth"][
+                        "sustained_through_target_full_moves"])
+        for policy, window, roots in (("regicide-sparring-play-v1", 40, (100, 140)),
+                                      ("regicide-sparring-play-v2", 40, (80, 138)),
+                                      ("regicide-sparring-play-v3", 30, (60, 138)),
+                                      ("regicide-sparring-play-v4", 20, (40, 138)),
+                                      ("regicide-sparring-play-v5", 20, (40, 98)),
+                                      ("regicide-sparring-play-v6", 20, (40, 98))):
+            previous = match(game(policy=policy))
+            saved = copy.deepcopy(previous)
+            result = report.summarize_matches([previous])
+            self.assertEqual(result["target_fullmoves"], window)
+            self.assertEqual(result["policy_phase_root_plies"], dict(zip(("ramp", "finish"), roots)))
+            self.assertEqual(previous, saved)
+            with self.assertRaisesRegex(ValueError, "different sparring policies"):
+                report.summarize_matches([previous, current])
+
+    def test_v7_cli_default_and_explicit_fifteen_move_windows(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            record = game(policy=report.POLICY)
+            record["record_file"] = "game-001.json"
+            document = match(record)
+            document["games"] = [{key: value for key, value in record.items() if key not in ("moves", "uci_moves")}]
+            (root / "game-001.json").write_text(json.dumps(record), encoding="utf-8")
+            source = root / "match.json"
+            source.write_text(json.dumps(document), encoding="utf-8")
+            for window in (None, 15, 20):
+                output = root / f"summary-{window}.json"
+                options = [str(source), "--output", str(output)]
+                if window is not None:
+                    options.extend(["--target-fullmoves", str(window)])
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(report.main(options), 0)
+                result = json.loads(output.read_text(encoding="utf-8"))
+                self.assertEqual(result["target_fullmoves"], 15 if window is None else window)
+                self.assertEqual(result["policy_phase_root_plies"], {"ramp": 30, "finish": 98})
+
+    def test_winning_mate_exception_remains_readable_for_v2_through_v7(self):
         for policy in ("regicide-sparring-play-v2", "regicide-sparring-play-v3", "regicide-sparring-play-v4",
-                       "regicide-sparring-play-v5", "regicide-sparring-play-v6"):
+                       "regicide-sparring-play-v5", "regicide-sparring-play-v6", "regicide-sparring-play-v7"):
             value = winning_mate_choice()
             for row in value["moves"]:
                 if row["sparring_decision"] is not None:

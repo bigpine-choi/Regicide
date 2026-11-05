@@ -40,7 +40,7 @@ def refine(board, plan, current_clock, moves="e2e4 e7e5 g1f3", packets=None):
 
 class PacingV4Tests(unittest.TestCase):
     def test_version_and_pressure_contract(self):
-        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v13")
+        self.assertEqual(pacing.POLICY, "regicide-engine-pacing-v14")
         self.assertEqual(pacing.PRESSURE_START_MS, 300000)
         self.assertEqual(pacing.TURN_REDUCTION_MS, 1000)
         self.assertEqual(pacing.MIN_TURN_TARGET_MS, 100)

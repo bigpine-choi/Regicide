@@ -361,10 +361,10 @@ class SparringRefereeTests(unittest.TestCase):
         result = self.screen(service, board, moves[0], moves[1])
         self.assertEqual(result["selected_uci"], moves[0].uci())
         self.assertEqual(result["reason"], "reference_prefers_regicide_baseline")
-        # Same fullmove fraction as native play for both colors; the late
-        # four-cp concession cap also raises the target to the296cp floor.
-        self.assertAlmostEqual(result["band"]["ramp"], 29 / 30)
-        self.assertAlmostEqual(result["band"]["target_cp_own"], 299.883333)
+        # At move49 the remaining allowance is30cp * (1/35)^2;
+        # that floor also protects the optional referee's target.
+        self.assertAlmostEqual(result["band"]["ramp"], 34 / 35)
+        self.assertAlmostEqual(result["band"]["target_cp_own"], round(300 - 30 / 35 ** 2, 6))
 
     def test_move_fifty_skips_every_external_search(self):
         board = long_board(98)

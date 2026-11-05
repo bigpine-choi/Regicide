@@ -25,10 +25,11 @@ def recorded(game, ply):
 
 
 class PacingTests(unittest.TestCase):
-    def test_major_losses_stop_entering_recovery_after_each_sides_twentieth_move(self):
-        self.assertEqual(pacing.CLOSE_PLIES, 40)
-        for color, capture_ply, included in ((chess.WHITE, 39, True), (chess.BLACK, 40, True),
-                                             (chess.WHITE, 41, False), (chess.BLACK, 42, False)):
+    def test_major_loss_recovery_must_start_before_each_sides_sixteenth_move(self):
+        self.assertEqual(pacing.CLOSE_PLIES, 30)
+        for color, capture_ply, included in ((chess.WHITE, 27, True), (chess.BLACK, 28, True),
+                                             (chess.WHITE, 29, False), (chess.BLACK, 30, False),
+                                             (chess.WHITE, 31, False), (chess.BLACK, 32, False)):
             fen = "1n5k/q7/8/8/8/8/8/RN5K w - - 0 1" if color else "rn5k/8/8/8/8/8/Q7/1N5K w - - 0 1"
             board = chess.Board(fen)
             cycle = ("b1c3", "b8c6", "c3b1", "c6b8")
@@ -44,9 +45,12 @@ class PacingTests(unittest.TestCase):
             if included:
                 self.assertEqual(plan["event_ply"], capture_ply)
                 self.assertEqual(plan["stage"], 1)
+            else:
+                self.assertEqual(plan["reason"], "close_phase_finished")
+                self.assertFalse(plan["allow_material_return"])
 
-    def test_resource_guard_only_latches_through_completed_move_twenty(self):
-        for capture_ply in (40, 42):
+    def test_resource_guard_only_latches_through_completed_move_fifteen(self):
+        for capture_ply in (30, 32):
             original = chess.Board("1n5k/q7/8/8/8/8/R7/1N5K w - - 0 1")
             for ply in range(capture_ply - 1):
                 original.push_uci(("b1c3", "b8c6", "c3b1", "c6b8")[ply % 4])
@@ -57,15 +61,27 @@ class PacingTests(unittest.TestCase):
             for board in (original, mirrored):
                 self.assertTrue(board.is_valid())
                 guard = pacing.resource_guard(board)
-                self.assertEqual(guard["active"], capture_ply == 40, (capture_ply, board.turn, guard))
-                self.assertEqual(guard["trigger_ply"], 40 if capture_ply == 40 else None)
+                self.assertEqual(guard["active"], capture_ply == 30, (capture_ply, board.turn, guard))
+                self.assertEqual(guard["trigger_ply"], 30 if capture_ply == 30 else None)
                 self.assertTrue(guard["material_concessions_blocked"])
 
-    def test_actual_rook_loss_recovers_over_four_bot_turns(self):
+    def test_recorded_rook_loss_after_move15_no_longer_starts_or_carries_recovery(self):
+        for ply in (36, 38, 40, 42, 44):
+            board, _ = recorded(1, ply)
+            plan = pacing.derive(board, [], 500)
+            self.assertFalse(plan["active"])
+            self.assertEqual(plan["reason"], "close_phase_finished")
+            self.assertFalse(plan["allow_material_return"])
+            self.assertEqual(plan["return_cap_cp"], 0)
+
+    @patch.object(pacing, "CLOSE_PLIES", 80)
+    def test_explicit_extended_window_keeps_recorded_four_stage_settlement(self):
+        # Exercise the original recorded exchange mechanics under an explicit
+        # longer test window; this is not the current 15-move runtime policy.
         targets = []
         for stage, ply in enumerate((36, 38, 40, 42), 1):
             board, _ = recorded(1, ply)
-            plan = pacing.derive(board, [], 500)
+            plan = pacing.derive(board, [], 500, persist_recovery=False)
             self.assertTrue(plan["active"])
             self.assertEqual((plan["event_ply"], plan["stage"]), (35, stage))
             self.assertEqual(plan["allow_material_return"], stage >= 3)
@@ -73,22 +89,26 @@ class PacingTests(unittest.TestCase):
         self.assertEqual(targets[-1], 30)
         self.assertEqual(targets, sorted(targets, reverse=True))
         board, _ = recorded(1, 44)
-        self.assertFalse(pacing.derive(board, [], 500)["active"])
+        self.assertFalse(pacing.derive(board, [], 500, persist_recovery=False)["active"])
 
+    @patch.object(pacing, "CLOSE_PLIES", 80)
     def test_equal_rook_and_long_queen_rook_exchange_are_not_blunders(self):
         # g3 p36..41 trades pawns, two queens and two rooks: net zero.
         # Looking only at p39..41 would incorrectly report a +500cp gift.
         for game, ply in ((3, 42), (7, 66)):
             board, _ = recorded(game, ply)
-            self.assertFalse(pacing.derive(board, [], 500)["active"])
+            plan = pacing.derive(board, [], 500)
+            self.assertFalse(plan["active"])
+            self.assertEqual(plan["reason"], "no_recent_major_loss")
 
-    def test_capture_on_last_practice_ply_is_included_not_the_next_ply(self):
+    def test_earlier_capture_cannot_carry_return_across_the_root_deadline(self):
         board, _ = recorded(1, 36)
-        with patch.object(pacing, "CLOSE_PLIES", 35):
+        with patch.object(pacing, "CLOSE_PLIES", 37):
             self.assertTrue(pacing.derive(board, [], 500)["active"])
-        with patch.object(pacing, "CLOSE_PLIES", 34):
+        with patch.object(pacing, "CLOSE_PLIES", 36):
             self.assertFalse(pacing.derive(board, [], 500)["active"])
 
+    @patch.object(pacing, "CLOSE_PLIES", 80)
     def test_black_mirror_has_same_material_and_delay(self):
         original, _ = recorded(1, 40)
         mirror = original.root().mirror()
@@ -101,6 +121,7 @@ class PacingTests(unittest.TestCase):
         for key in ("active", "event_ply", "stage", "debt_cp", "target_cp", "allow_material_return"):
             self.assertEqual(white[key], black[key])
 
+    @patch.object(pacing, "CLOSE_PLIES", 80)
     def test_undo_and_stale_anchor_do_not_keep_future_loss(self):
         board, source = recorded(1, 36)
         plan = pacing.derive(board, [], 500)
@@ -117,13 +138,15 @@ class PacingTests(unittest.TestCase):
         board.pop()
         self.assertFalse(pacing.derive(board, [row], 500)["active"])
 
-    def test_ramp_fades_temporary_allowance_without_changing_nominal_band(self):
+    @patch.object(pacing, "CLOSE_PLIES", 80)
+    def test_explicit_fade_scales_temporary_allowance_without_changing_nominal_band(self):
         board, _ = recorded(1, 38)
         normal = pacing.derive(board, [], 500)
         fading = pacing.derive(board, [], 500, ramp_fraction=.5)
         self.assertLess(fading["upper_cp"], normal["upper_cp"])
         self.assertGreaterEqual(fading["upper_cp"], 100)
 
+    @patch.object(pacing, "CLOSE_PLIES", 80)
     def test_partial_material_return_keeps_remaining_recovery_window(self):
         board, _ = recorded(1, 36)
         original = pacing.derive(board, [], 500)

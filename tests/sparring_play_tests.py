@@ -129,7 +129,7 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile["policy"], "regicide-sparring-play-v4")
         self.assertAlmostEqual(profile["target_loss_cp"], profile["skill_target_loss_cp"] * .18, places=2)
         current = policy.derive_profile(board, rows)
-        self.assertEqual(current["policy"], "regicide-sparring-play-v6")
+        self.assertEqual(current["policy"], "regicide-sparring-play-v7")
         self.assertEqual(current["phase"], "finish")
         self.assertEqual(current["target_loss_cp"], 0)
         self.assertEqual(policy._target(board, profile, 300)["target_cp"], 300)
@@ -137,11 +137,11 @@ class ProfileTests(unittest.TestCase):
 
 
 class ScheduleAndNaturalnessTests(unittest.TestCase):
-    def test_twenty_moves_then_ramp_and_full_at_each_colors_fiftieth_move(self):
+    def test_fifteen_moves_then_ramp_and_full_at_each_colors_fiftieth_move(self):
         board = chess.Board()
         sequence = ["g1f3", "g8f6", "f3g1", "f6g8"]
         for ply in range(141):
-            expected = "finish" if ply >= 98 else "ramp" if ply >= 40 else "calibration" if ply < 6 else "sparring"
+            expected = "finish" if ply >= 98 else "ramp" if ply >= 30 else "calibration" if ply < 6 else "sparring"
             self.assertEqual(policy.phase(board), expected, ply)
             legacy = "finish" if ply >= 140 else "ramp" if ply >= 100 else "calibration" if ply < 6 else "sparring"
             self.assertEqual(policy.phase(board, policy="regicide-sparring-play-v1"), legacy, ply)
@@ -151,13 +151,23 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
             self.assertEqual(policy.phase(board, policy="regicide-sparring-play-v3"), thirty, ply)
             twenty = "finish" if ply >= 138 else "ramp" if ply >= 40 else "calibration" if ply < 6 else "sparring"
             self.assertEqual(policy.phase(board, policy="regicide-sparring-play-v4"), twenty, ply)
-            if ply in (38, 39, 40, 41, 96, 97, 98, 99):
+            for version in (5, 6):
+                previous = "finish" if ply >= 98 else "ramp" if ply >= 40 else "calibration" if ply < 6 else "sparring"
+                self.assertEqual(policy.phase(board, policy=f"regicide-sparring-play-v{version}"), previous, ply)
+            if ply in (28, 29, 30, 31, 96, 97, 98, 99):
                 fullmove = ply // 2 + 1
-                expected_fraction = {20: 0, 21: 1 / 30, 49: 29 / 30, 50: 1}[fullmove]
+                expected_fraction = {15: 0, 16: 1 / 35, 49: 34 / 35, 50: 1}[fullmove]
                 self.assertEqual(board.fullmove_number, fullmove)
                 self.assertEqual(board.turn, chess.WHITE if ply % 2 == 0 else chess.BLACK)
                 self.assertAlmostEqual(policy._ramp_fraction(board), expected_fraction, msg=(fullmove, board.turn))
                 self.assertAlmostEqual(policy._phase_factor(board), (1 - expected_fraction) ** 2, msg=(fullmove, board.turn))
+            if ply in (38, 39, 40, 41, 96, 97, 98, 99):
+                old_fraction = {20: 0, 21: 1 / 30, 49: 29 / 30, 50: 1}[board.fullmove_number]
+                for version in (5, 6):
+                    old_policy = f"regicide-sparring-play-v{version}"
+                    self.assertAlmostEqual(policy._ramp_fraction(board, policy=old_policy), old_fraction)
+                    old_factor = (1 - old_fraction) ** 2 if version == 6 else 1 - old_fraction
+                    self.assertAlmostEqual(policy._phase_factor(board, policy=old_policy), old_factor)
             if ply in (38, 39, 40, 41, 136, 137, 138, 139):
                 old_fraction = {20: 0, 21: 1 / 50, 69: 49 / 50, 70: 1}[board.fullmove_number]
                 self.assertAlmostEqual(policy._ramp_fraction(board, policy="regicide-sparring-play-v4"), old_fraction)
@@ -181,21 +191,21 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         board = chess.Board()
         by_color = {chess.WHITE: [], chess.BLACK: []}
         for ply in range(140):
-            if 20 <= board.fullmove_number <= 50:
+            if 15 <= board.fullmove_number <= 50:
                 fraction = policy._ramp_fraction(board)
                 concession = policy._phase_factor(board)
-                self.assertAlmostEqual(fraction, (board.fullmove_number - 20) / 30)
+                self.assertAlmostEqual(fraction, (board.fullmove_number - 15) / 35)
                 self.assertAlmostEqual(concession, (1 - fraction) ** 2)
                 by_color[board.turn].append((fraction, concession))
             if ply < 139:
                 board.push_uci(("g1f3", "g8f6", "f3g1", "f6g8")[ply % 4])
         self.assertEqual(by_color[chess.WHITE], by_color[chess.BLACK])
         for color, values in by_color.items():
-            self.assertEqual(len(values), 31, color)
+            self.assertEqual(len(values), 36, color)
             self.assertEqual(values[0], (0, 1))
             self.assertEqual(values[-1], (1, 0))
             for before, after in zip(values, values[1:]):
-                self.assertAlmostEqual(after[0] - before[0], 1 / 30, msg=color)
+                self.assertAlmostEqual(after[0] - before[0], 1 / 35, msg=color)
                 self.assertGreater(before[1], after[1], msg=color)
 
     def test_budget_and_phase_target_are_bounded_and_decline_smoothly(self):
@@ -212,12 +222,12 @@ class ScheduleAndNaturalnessTests(unittest.TestCase):
         profile = {"observations": 12, "target_loss_cp": 90}
         targets = []
         for ply in range(141):
-            if ply in (39, 40, 60, 80, 96, 97, 98):
+            if ply in (29, 30, 60, 80, 96, 97, 98):
                 targets.append(policy._target(board, profile, 300)["target_cp"])
             if ply < 140:
                 board.push_uci(["g1f3", "g8f6", "f3g1", "f6g8"][ply % 4])
-        # Move21 retains its advantage under both the quadratic and 35% caps.
-        self.assertEqual(targets[:2], [30, 201.883])
+        # Move16 retains its advantage under both the quadratic and 10% caps.
+        self.assertEqual(targets[:2], [30, 271.69])
         self.assertEqual(targets[-1], 300)
         self.assertTrue(all(a <= b for a, b in zip(targets, targets[1:])))
         self.assertFalse(policy._target(board, profile, 300)["active"])
@@ -629,6 +639,27 @@ class PositionFeedbackTests(unittest.TestCase):
         result, _ = self.run_case(board, "d8h4", None, {}, depth=1, mate=(1, ["d8h4"]))
         self.assertEqual(result["band_control"]["status"], "unmet")
         self.assertFalse(result["band_control"]["recovered"])
+
+    def test_each_colors_move16_keeps_a_known_winning_mate_without_candidate_search(self):
+        for cycles, setup, mate_move in (
+                (6, "a3 a6 e4 f6 d3 g5", "d1h5"),
+                (7, "f3 e5 g4", "d8h4")):
+            board = chess.Board()
+            for _ in range(cycles):
+                for uci in ("g1f3", "g8f6", "f3g1", "f6g8"):
+                    board.push_uci(uci)
+            for san in setup.split():
+                board.push_san(san)
+            self.assertEqual(board.fullmove_number, 16)
+            before = (board.fen(), list(board.move_stack))
+            result, calls = self.run_case(board, mate_move, None, {}, depth=1,
+                                          mate=(1, [mate_move]))
+            self.assertEqual(result["selected_uci"], mate_move)
+            self.assertEqual(result["reason"], "mate_reference_full_strength")
+            self.assertEqual(result["phase"], "ramp")
+            self.assertFalse(result["recovery"]["eligible"])
+            self.assertEqual(calls, [])
+            self.assertEqual((board.fen(), board.move_stack), before)
 
     def test_postmove_check_records_both_color_scores_without_replacing_root_evidence(self):
         for black in (False, True):

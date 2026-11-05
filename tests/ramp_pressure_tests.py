@@ -18,9 +18,9 @@ def live(ply):
 
 
 @lru_cache(maxsize=None)
-def repetition_scene(cycles):
-    """A live 20-move prefix followed by a real reversible four-ply cycle."""
-    original = live(40)
+def repetition_scene(cycles, prefix_ply=30):
+    """A live 15-move prefix followed by a real reversible four-ply cycle."""
+    original = live(prefix_ply)
     for first in original.legal_moves:
         piece = original.piece_at(first.from_square)
         if piece.piece_type == chess.PAWN or original.is_capture(first) or original.is_castling(first):
@@ -83,12 +83,12 @@ class PressureTests(unittest.TestCase):
 
     def test_small_advantage_is_retained_and_caps_shrink_on_both_colors(self):
         previous = None
-        for fullmove in range(21, 51):
+        for fullmove in range(16, 51):
             caps = []
             for offset in (0, 1):
                 guard = policy.ramp_guard(schedule_board((fullmove - 1) * 2 + offset), 20)
-                self.assertGreater(guard["floor_cp"], 13)
-                self.assertLessEqual(guard["max_loss_cp"], 7)
+                self.assertGreater(guard["floor_cp"], 18)
+                self.assertLessEqual(guard["max_loss_cp"], 2)
                 caps.append(guard["max_loss_cp"])
             self.assertEqual(*caps)
             if previous is not None:
@@ -104,9 +104,11 @@ class PressureTests(unittest.TestCase):
         self.assertEqual((board.fen(), board.move_stack), before)
 
     def test_winning_avoids_claimable_repetition_with_equal_verified_alternative(self):
-        board, repeat, alternative = repetition_scene(2)
-        chosen = self.choose(board, repeat, [self.probe(alternative, 300)])
-        self.assertEqual(chosen["uci"], alternative.uci())
+        for prefix_ply in (30, 31):
+            board, repeat, alternative = repetition_scene(2, prefix_ply)
+            self.assertLess(board.fullmove_number, 21)
+            chosen = self.choose(board, repeat, [self.probe(alternative, 300)])
+            self.assertEqual(chosen["uci"], alternative.uci())
 
     def test_twofold_is_only_a_tiebreak_and_not_a_false_draw(self):
         board, repeat, alternative = repetition_scene(1)

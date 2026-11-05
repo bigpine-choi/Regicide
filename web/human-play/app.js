@@ -777,7 +777,7 @@
     const descriptions = {
       normal: "기본 기풍으로 두며, 남은 시간과 국면에 맞춰 생각 시간을 조절합니다. 새 대국부터 적용됩니다.",
       boss: "갬빗 오프닝을 적극적으로 선택하고, 성립 후 전개·중앙 돌파·왕 압박을 이어갑니다. 기물 미끼는 상대의 포획 뒤 응징을 검증한 경우에만 선택합니다. 새 대국부터 적용됩니다.",
-      sparring: "20수까지 ±1점 범위를 목표로 형세를 조절하고, 21~49수에는 매 수 일정한 폭으로 강도를 높여 50번째 수부터 전력으로 둡니다. 20수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
+      sparring: "15수까지 ±1점 범위를 목표로 형세를 조절하고, 16~49수에는 강도를 점진적으로 높이며 우세를 지키는 수를 우선합니다. 양쪽 모두 50번째 수부터 전력으로 둡니다. 15수까지 형세가 벌어지면 균형 회복에 계산 시간을 우선 배분합니다. 생각시간은 자동으로 조절합니다. 새 대국부터 적용됩니다."
     };
     const mode = byId("boss-mode").value;
     byId("boss-mode-help").textContent = Object.hasOwn(descriptions, mode) ? descriptions[mode] : descriptions.normal;
@@ -789,7 +789,7 @@
       if (mode === "sparring") byId("boss-mode-help").textContent += referee.available ?
         " 수는 Regicide가 선택하고 Stockfish가 보조 심판을 맡습니다." : " Stockfish 심판을 사용할 수 없어 Regicide 자체 평가를 사용합니다.";
     }
-    byId("boss-mode-help").title = mode === "sparring" ? "20수는 백과 흑이 각각 20번 둔 시점입니다. 21~49수에 매 수 일정한 폭으로 강도를 높이고, 양쪽 모두 50번째 수부터 전력으로 둡니다." : "";
+    byId("boss-mode-help").title = mode === "sparring" ? "백과 흑이 각각 15번 둔 뒤 양쪽 모두 16번째 수부터 강화합니다. 16~49수에 강도를 점진적으로 높이고 우세를 지키는 수를 우선하며, 양쪽 모두 50번째 수부터 전력으로 둡니다." : "";
     renderThinkTimeControls();
   }
 

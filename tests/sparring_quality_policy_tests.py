@@ -55,7 +55,7 @@ def native_reply(board, move, *, depth=5):
 
 class QualityPolicyTests(unittest.TestCase):
     def test_close_phase_scores_use_original_side_for_both_colors(self):
-        for ply in (38, 39):
+        for ply in (28, 29):
             board = position(ply)
             with self.subTest(ply=ply):
                 self.assertTrue(evaluate(board, 0, -100)["acceptable"])
@@ -66,28 +66,67 @@ class QualityPolicyTests(unittest.TestCase):
                 self.assertFalse(quality.verdict(board, move, evidence)["verified"])
 
     def test_early_winning_advantage_can_return_to_close_band(self):
-        result = evaluate(position(38), 500, 20)
+        result = evaluate(position(28), 500, 20)
         self.assertTrue(result["acceptable"])
         self.assertTrue(result["inside_close_band"])
         self.assertEqual(result["loss_cp"], 480)
 
     def test_early_losing_position_preserves_resistance(self):
-        board = position(38)
+        board = position(28)
         self.assertTrue(evaluate(board, -300, -360)["acceptable"])
         result = evaluate(board, -300, -361)
         self.assertFalse(result["acceptable"])
         self.assertEqual(result["floor_cp"], -340)
 
-    def test_move21_starts_anti_reversal_guard_for_both_colors(self):
-        for before, after in ((38, 40), (39, 41)):
+    def test_move16_starts_anti_reversal_guard_for_both_colors(self):
+        for before, after in ((28, 30), (29, 31)):
             self.assertTrue(evaluate(position(before), 50, -50)["acceptable"])
             self.assertFalse(evaluate(position(after), 50, -50)["acceptable"])
 
     def test_ramp_allowance_shrinks_at_later_moves(self):
-        self.assertTrue(evaluate(position(40), 300, 200)["acceptable"])
-        self.assertFalse(evaluate(position(84), 300, 200)["acceptable"])
-        self.assertGreater(evaluate(position(84), 300, 200)["floor_cp"],
-                           evaluate(position(40), 300, 200)["floor_cp"])
+        self.assertTrue(evaluate(position(30), 300, 260)["acceptable"])
+        self.assertFalse(evaluate(position(84), 300, 260)["acceptable"])
+        self.assertGreater(evaluate(position(84), 300, 260)["floor_cp"],
+                           evaluate(position(30), 300, 260)["floor_cp"])
+
+    def test_ramp_noise_margin_cannot_cross_from_holdable_to_negative_for_either_color(self):
+        for ply in (30, 31, 96, 97):
+            for root in (0, 5, 20):
+                with self.subTest(ply=ply, root=root):
+                    value = evaluate(position(ply), root, -1)
+                    self.assertTrue(value["verified"])
+                    self.assertFalse(value["acceptable"])
+                    self.assertGreaterEqual(value["effective_floor_cp"], 0)
+                    self.assertTrue(evaluate(position(ply), root, root)["acceptable"])
+
+    def test_fifteenth_move_can_balance_but_sixteenth_cannot_give_away_advantage_or_mate(self):
+        for early, later in ((28, 30), (29, 31)):
+            self.assertTrue(evaluate(position(early), 500, 30)["acceptable"])
+            self.assertFalse(evaluate(position(later), 500, 30)["acceptable"])
+            board = position(later)
+            move = next(iter(board.legal_moves))
+            value = quality.verdict(board, move, assessment(board, move, root_mate=4, child=500))
+            self.assertEqual(value["reason"], "forced_win_lost")
+            self.assertFalse(value["acceptable"])
+
+    def test_repair_cannot_use_root_drift_to_undo_ramp_nonnegative_floor(self):
+        for ply in (30, 31):
+            board = position(ply)
+            incumbent = next(iter(board.legal_moves))
+            def search(amount, *, root_moves, **kwargs):
+                return native_reply(board, root_moves[0])
+            def assess(move, amount, cancelled):
+                return (assessment(board, move, 5, -10) if move == incumbent
+                        else assessment(board, move, -5, -1))
+            replacement, receipt, discarded = quality.verify(
+                board, incumbent, search, lambda: None, assess)
+            self.assertFalse(discarded)
+            self.assertIsNone(replacement)
+            self.assertFalse(receipt["final_verdict"]["acceptable"])
+            checked = [row["verdict"] for row in receipt["attempts"] if row.get("verdict")]
+            self.assertTrue(checked)
+            self.assertTrue(all(not row["acceptable"] and row["effective_floor_cp"] == 0
+                                for row in checked))
 
     def test_move50_keeps_fixed_loss_cap_for_both_colors(self):
         for ply in (98, 99):
@@ -123,7 +162,7 @@ class QualityPolicyTests(unittest.TestCase):
                     self.assertFalse(quality.verdict(board, move, value)["verified"])
 
     def test_mate_perspective_and_winner_must_agree_for_both_colors(self):
-        for ply in (38, 39):
+        for ply in (28, 29):
             board = position(ply)
             move = next(iter(board.legal_moves))
             value = assessment(board, move, child_mate=3)

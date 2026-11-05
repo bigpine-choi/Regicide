@@ -152,18 +152,21 @@ class RecoveryPolicyTests(unittest.TestCase):
         self.assertFalse(result["recovery"]["enabled"])
         self.assertEqual(result["reason"], "winning_resources_guard")
 
-    def test_explicit_recovery_stops_at_twenty_and_preserves_v5_phase_schedule(self):
+    def test_explicit_recovery_stops_at_sixteen_and_v5_replay_keeps_twenty(self):
         from summarize_sparring_match_tests import long_sans
         sans = long_sans()
-        for length in (39, 40, 41, 97, 98, 99):
+        for length in (28, 29, 30, 31, 39, 40, 41, 97, 98, 99):
             board = chess.Board()
             for san in sans[:length]:
                 board.push_san(san)
-            self.assertEqual(policy.phase(board), policy.phase(board, policy="regicide-sparring-play-v5"))
-            if length >= 40:
-                result, _ = self.run_case(board, next(iter(board.legal_moves)).uci(), 400,
-                                          {}, recovery_budget_ms=8000)
-                self.assertFalse(result["recovery"]["enabled"])
+            if 30 <= length < 40:
+                self.assertEqual(policy.phase(board), "ramp")
+                self.assertEqual(policy.phase(board, policy="regicide-sparring-play-v5"), "sparring")
+            else:
+                self.assertEqual(policy.phase(board), policy.phase(board, policy="regicide-sparring-play-v5"))
+            result, _ = self.run_case(board, next(iter(board.legal_moves)).uci(), 400,
+                                      {}, recovery_budget_ms=8000)
+            self.assertEqual(result["recovery"]["enabled"], length < 30)
 
 
 class PersistentRecoveryTests(unittest.TestCase):
@@ -180,7 +183,7 @@ class PersistentRecoveryTests(unittest.TestCase):
         return board
 
     def test_first_two_turns_stay_concealed_then_failed_recovery_can_continue(self):
-        for root, expected_stage in ((7, 1), (9, 2), (11, 3), (13, 4), (15, 4), (39, 4)):
+        for root, expected_stage in ((7, 1), (9, 2), (11, 3), (13, 4), (15, 4), (29, 4)):
             plan = pacing.derive(self.board_at(root), [], 800)
             self.assertTrue(plan["active"], plan)
             self.assertEqual(plan["stage"], expected_stage)
@@ -190,8 +193,29 @@ class PersistentRecoveryTests(unittest.TestCase):
                 self.assertEqual((plan["target_cp"], plan["upper_cp"]), (30, 100))
         legacy = pacing.derive(self.board_at(15), [], 800, persist_recovery=False)
         self.assertEqual(legacy["reason"], "recovery_window_finished")
-        ended = pacing.derive(self.board_at(41), [], 800)
-        self.assertEqual(ended["reason"], "recovery_window_finished")
+        ended = pacing.derive(self.board_at(31), [], 800)
+        self.assertEqual(ended["reason"], "close_phase_finished")
+
+    def test_active_material_return_stops_at_move16_for_both_colors(self):
+        for root in (29, 30, 31, 39, 41, 97):
+            original = self.board_at(root)
+            mirrored = original.root().mirror()
+            for move in original.move_stack:
+                mirrored.push(chess.Move(chess.square_mirror(move.from_square),
+                                         chess.square_mirror(move.to_square)))
+            for board in (original, mirrored):
+                before = (board.fen(), list(board.move_stack))
+                plan = pacing.derive(board, [], 800)
+                if root == 29:
+                    self.assertTrue(plan["active"])
+                    self.assertTrue(plan["persistent"])
+                    self.assertTrue(plan["allow_material_return"])
+                else:
+                    self.assertEqual(plan["reason"], "close_phase_finished")
+                    self.assertFalse(plan["active"])
+                    self.assertFalse(plan["allow_material_return"])
+                    self.assertEqual(plan["return_cap_cp"], 0)
+                self.assertEqual((board.fen(), board.move_stack), before)
 
     def test_strict_band_stops_debt_and_color_mirror_has_same_schedule(self):
         original = self.board_at(15)

@@ -128,7 +128,7 @@ class SparringStateTests(unittest.TestCase):
                 self.assertEqual(state["engine"]["extra_budget_ms"], 500 if finishing else 2000)
                 self.assertEqual(state["engine"]["extra_budget_purpose"],
                                  "rating_observation" if finishing else "sparring_control_and_rating")
-                self.assertAlmostEqual(host.sparring_play._ramp_fraction(board), 1 if finishing else 29 / 30)
+                self.assertAlmostEqual(host.sparring_play._ramp_fraction(board), 1 if finishing else 34 / 35)
 
     def test_current_and_previous_policy_archives_keep_fiftieth_move_distinct(self):
         for ply in (98, 99):

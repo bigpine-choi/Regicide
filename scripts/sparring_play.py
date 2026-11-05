@@ -21,15 +21,16 @@ import sparring_pacing
 import sparring_evaluation
 import sparring_material
 
-POLICY = "regicide-sparring-play-v6"
-RAMP_GUARD_POLICY = "regicide-sparring-ramp-guard-v2"
-PRESSURE_POLICY = "regicide-sparring-pressure-v1"
-RAMP_MAX_CONCESSION_CP = 120
-RAMP_ADVANTAGE_RETURN_FRACTION = .35
+POLICY = "regicide-sparring-play-v7"
+RAMP_GUARD_POLICY = "regicide-sparring-ramp-guard-v3"
+PRESSURE_POLICY = "regicide-sparring-pressure-v2"
+# Conservative per-move design limits, not measured strength or win odds.
+RAMP_MAX_CONCESSION_CP = 30
+RAMP_ADVANTAGE_RETURN_FRACTION = .10
 PRESSURE_TIE_CP = 5
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
                       "regicide-sparring-play-v3", "regicide-sparring-play-v4",
-                      "regicide-sparring-play-v5", POLICY)
+                      "regicide-sparring-play-v5", "regicide-sparring-play-v6", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -65,7 +66,8 @@ POSTMOVE_RESERVE_FRACTION = .3
 # Match the existing completed-iteration stability window. This is an
 # explicit disagreement screen, not a statistical error bound.
 POSTMOVE_MAX_DELTA_CP = 80
-RAMP_PLY = 40
+RAMP_PLY = sparring_pacing.CLOSE_PLIES
+PREVIOUS_RAMP_PLY = 40
 FINISH_PLY = 98
 PREVIOUS_FINISH_PLY = 138
 V3_RAMP_PLY = 60
@@ -105,15 +107,25 @@ def _finish_ply(policy):
     return PREVIOUS_FINISH_PLY if policy in SUPPORTED_POLICIES[1:4] else FINISH_PLY
 
 
+def _ramp_ply(policy):
+    if policy == SUPPORTED_POLICIES[0]:
+        return LEGACY_RAMP_PLY
+    if policy == SUPPORTED_POLICIES[1]:
+        return V2_RAMP_PLY
+    if policy == SUPPORTED_POLICIES[2]:
+        return V3_RAMP_PLY
+    return PREVIOUS_RAMP_PLY if policy in SUPPORTED_POLICIES[3:6] else RAMP_PLY
+
+
 def phase(board, *, policy=None):
-    """v5/v6: close through move 20, ramp 21..49, full on each side's move 50."""
+    """v7: close through move 15, ramp 16..49, full on each side's move 50.
+
+    Explicit older policies retain their recorded schedules during replay.
+    """
     ply = len(board.move_stack)
-    legacy = policy == SUPPORTED_POLICIES[0]
     if ply >= _finish_ply(policy):
         return "finish"
-    ramp_ply = (LEGACY_RAMP_PLY if legacy else V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1]
-                else V3_RAMP_PLY if policy == SUPPORTED_POLICIES[2] else RAMP_PLY)
-    if ply >= ramp_ply:
+    if ply >= _ramp_ply(policy):
         return "ramp"
     return "calibration" if ply < 6 else "sparring"
 
@@ -125,8 +137,9 @@ def extra_budget(movetime_ms, *, ply=0, analysis_only=False):
 
 
 def _ramp_fraction(board, *, policy=None):
-    ramp_ply = (V2_RAMP_PLY if policy == SUPPORTED_POLICIES[1]
-                else V3_RAMP_PLY if policy == SUPPORTED_POLICIES[2] else RAMP_PLY)
+    # v1 profile replay uses its own ply-linear curve in _phase_factor.
+    # Keep this historical helper's separate fullmove fraction unchanged too.
+    ramp_ply = PREVIOUS_RAMP_PLY if policy == SUPPORTED_POLICIES[0] else _ramp_ply(policy)
     if len(board.move_stack) < ramp_ply:
         return 0.0
     close_fullmoves = ramp_ply // 2
@@ -142,7 +155,7 @@ def _phase_factor(board, *, policy=None):
         return 1.0
     if policy == SUPPORTED_POLICIES[0]:
         return max(0., (LEGACY_FINISH_PLY - len(board.move_stack)) / (LEGACY_FINISH_PLY - LEGACY_RAMP_PLY))
-    if policy is None or policy == POLICY:
+    if policy is None or policy in ("regicide-sparring-play-v6", POLICY):
         return 1 - _ramp_strength(board, policy=policy)
     return 1 - _ramp_fraction(board, policy=policy)
 
@@ -362,9 +375,11 @@ def naturalness(board, move, *, pacing=None, resource_guard=None):
 def ramp_guard(board, baseline_cp):
     """A per-move loss cap shared by native play and the optional referee.
 
-Both colors share quadratic release on each full move from move 21.
+Both colors share quadratic release on each full move from move 16.
 After the close phase, a concession cannot reverse a positive baseline or
-deliberately worsen an already losing position. This is a bounded estimate.
+deliberately worsen an already losing position. The initial cap is the
+smaller of 30cp and 10% of the estimated advantage, then shrinks to zero.
+These are conservative design limits, not an empirical victory guarantee.
 """
     fraction = _ramp_fraction(board)
     active = len(board.move_stack) >= RAMP_PLY
@@ -446,7 +461,7 @@ def _deviation(control, cp):
 def _candidate_pressure(board, baseline_move, natural):
     if len(board.move_stack) < RAMP_PLY:
         return {"policy": PRESSURE_POLICY, "points": 0, "weight": 0,
-                "components": {}, "scope": "inactive before move 21"}
+                "components": {}, "scope": "inactive before move 16"}
     after = board.copy(stack=True)
     after.push(baseline_move)
     replies = list(after.legal_moves)

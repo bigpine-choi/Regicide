@@ -28,18 +28,18 @@ def live_board(ply):
 
 class NativeRampGuardTests(unittest.TestCase):
     def test_guard_schedule_matches_both_colors_and_finishes_at_fifty(self):
-        for fullmove, expected in ((20, None), (21, 112.133333), (30, 53.333333), (40, 13.333333), (49, .133333), (50, 0)):
+        for fullmove, expected in ((15, None), (16, 28.310204), (30, 9.795918), (40, 2.44898), (49, .02449), (50, 0)):
             for color_offset in (0, 1):
                 with self.subTest(fullmove=fullmove, color=color_offset):
                     board = schedule_board((fullmove - 1) * 2 + color_offset)
                     guard = native.ramp_guard(board, 500)
-                    self.assertEqual(guard["active"], fullmove >= 21)
+                    self.assertEqual(guard["active"], fullmove >= 16)
                     self.assertEqual(guard["max_loss_cp"], expected)
                     self.assertEqual(guard["floor_cp"], None if expected is None else round(500 - expected, 6))
 
     def test_positive_advantage_never_crosses_zero_and_losing_never_worsens(self):
         board = schedule_board(58)
-        for baseline, floor in ((155, 130.888889), (20, 16.888889), (0, 0), (-30, -30), (-400, -400)):
+        for baseline, floor in ((155, 149.938776), (20, 19.346939), (0, 0), (-30, -30), (-400, -400)):
             with self.subTest(baseline=baseline):
                 target = native._target(board, {}, baseline)
                 self.assertEqual(target["lower_cp"], floor)
@@ -62,20 +62,25 @@ class NativeRampGuardTests(unittest.TestCase):
 
     def test_recorded_move30_style_155_to15_is_rejected(self):
         chosen, best, _, control = self.choose_fixture(58, 155, 15)
-        self.assertEqual(control["lower_cp"], 130.888889)
+        self.assertEqual(control["lower_cp"], 149.938776)
         self.assertEqual(chosen["uci"], best.uci())
 
-    def test_pre_twenty_close_band_choice_is_retained(self):
-        chosen, _, alternative, control = self.choose_fixture(38, 155, 15)
+    def test_through_fifteen_close_band_choice_is_retained(self):
+        chosen, _, alternative, control = self.choose_fixture(28, 155, 15)
         self.assertEqual(control["lower_cp"], -100)
         self.assertEqual(chosen["uci"], alternative.uci())
 
     def test_small_verified_concession_remains_available(self):
-        chosen, _, alternative, _ = self.choose_fixture(58, 155, 140)
+        chosen, _, alternative, _ = self.choose_fixture(30, 155, 145)
         self.assertEqual(chosen["uci"], alternative.uci())
 
+    def test_move16_floor_rejects_a_return_of_more_than_ten_percent(self):
+        for ply in (30, 31):
+            chosen, best, _, _ = self.choose_fixture(ply, 155, 140)
+            self.assertEqual(chosen["uci"], best.uci())
+
     def test_replayed_admission_cannot_bypass_compared_or_final_floor(self):
-        for compared, final in ((130, 140), (140, 130), (-1, -1)):
+        for compared, final in ((149, 150), (150, 149), (-1, -1)):
             chosen, best, _, _ = self.choose_fixture(58, 155, compared, final)
             self.assertEqual(chosen["uci"], best.uci())
 
@@ -88,8 +93,8 @@ class NativeRampGuardTests(unittest.TestCase):
     def test_paced_target_cannot_relax_ramp_floor(self):
         control = native._target(schedule_board(58), {}, 155)
         native._paced_control(control, {"active": True, "target_cp": 15, "upper_cp": 100})
-        self.assertEqual(control["lower_cp"], 130.888889)
-        self.assertGreaterEqual(control["target_cp"], 130.888889)
+        self.assertEqual(control["lower_cp"], 149.938776)
+        self.assertGreaterEqual(control["target_cp"], 149.938776)
 
     def test_native_postmove_check_uses_the_raised_floor(self):
         board = live_board(58).copy(stack=True)
@@ -128,12 +133,12 @@ class RefereeRampGuardTests(unittest.TestCase):
         receipt = self.screen(service, board, moves[0], moves[1])
         return receipt, moves, factory
 
-    def test_move21_both_colors_use_identical_fullmove_fraction_and_floor(self):
-        for ply in (40, 41):
+    def test_move16_both_colors_use_identical_fullmove_fraction_and_floor(self):
+        for ply in (30, 31):
             receipt, _, _ = self.run_case(ply, 300, 200)
-            self.assertAlmostEqual(receipt["band"]["ramp"], 1 / 30)
-            self.assertEqual(receipt["ramp_guard"]["max_loss_cp"], 98.116667)
-            self.assertEqual(receipt["band"]["safety_floor_cp_own"], 201.883333)
+            self.assertAlmostEqual(receipt["band"]["ramp"], 1 / 35)
+            self.assertEqual(receipt["ramp_guard"]["max_loss_cp"], 28.310204)
+            self.assertEqual(receipt["band"]["safety_floor_cp_own"], 271.689796)
 
     def test_excessive_loss_and_sign_reversal_rejected_on_both_sides(self):
         for ply in (58, 59):
@@ -144,16 +149,16 @@ class RefereeRampGuardTests(unittest.TestCase):
                 self.assertEqual(len(factory.searches), 1)
 
     def test_small_loss_still_accepted_and_child_below_floor_rejected(self):
-        receipt, moves, _ = self.run_case(58, 155, 140)
+        receipt, moves, _ = self.run_case(30, 155, 145)
         self.assertTrue(receipt["accepted"])
         self.assertEqual(receipt["selected_uci"], moves[1].uci())
-        receipt, moves, _ = self.run_case(58, 155, 140, child_cp=130)
+        receipt, moves, _ = self.run_case(30, 155, 145, child_cp=140)
         self.assertFalse(receipt["accepted"])
         self.assertEqual(receipt["reason"], "postmove_outside_reference_band")
         self.assertEqual(receipt["selected_uci"], moves[0].uci())
 
-    def test_pre_twenty_reference_behavior_unchanged(self):
-        receipt, moves, _ = self.run_case(38, 155, 15)
+    def test_through_fifteen_reference_behavior_unchanged(self):
+        receipt, moves, _ = self.run_case(28, 155, 15)
         self.assertTrue(receipt["accepted"])
         self.assertEqual(receipt["selected_uci"], moves[1].uci())
         self.assertFalse(receipt["ramp_guard"]["active"])

@@ -20,6 +20,9 @@ import chess.engine
 VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 300,
           chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
 ROOT = Path(__file__).resolve().parents[1]
+V7_POLICY = "regicide-sparring-play-v7"
+V7_GUARD = "regicide-sparring-ramp-guard-v3"
+PLAY_POLICIES = frozenset(f"regicide-sparring-play-v{version}" for version in range(1, 8))
 
 
 def sha(path):
@@ -142,17 +145,18 @@ def score_loss(before, after, white):
             "comparison_known": known}
 
 
-def ramp_receipts(decision, fullmove, *, path="final"):
+def ramp_receipts(decision, fullmove, *, path="final", policy=None):
     """Check the actual adjudicating score source, plus pre-safety decisions."""
     if not isinstance(decision, dict):
         return []
+    policy = decision.get("policy", policy)
     results = []
     prior = decision.get("pre_safety_selection")
     if isinstance(prior, dict):
-        results.extend(ramp_receipts(prior, fullmove, path=path + ".pre_safety_selection"))
+        results.extend(ramp_receipts(prior, fullmove, path=path + ".pre_safety_selection", policy=policy))
     selected, baseline = decision.get("selected_uci"), decision.get("baseline_uci")
     changed = bool(selected and baseline and selected != baseline)
-    if not 21 <= fullmove <= 49 or not changed:
+    if not changed:
         return results
     ref = decision.get("referee") or {}
     if ref.get("applied") and ref.get("accepted") and ref.get("selected_uci") == selected:
@@ -169,10 +173,20 @@ def ramp_receipts(decision, fullmove, *, path="final"):
                   "child": (decision.get("postmove_verification") or {}).get("cp_own", control.get("selected_postmove_cp"))}
         recorded_guard = decision.get("ramp_guard") or control.get("ramp_guard")
         source = "native"
+    guard_policy = recorded_guard.get("policy") if isinstance(recorded_guard, dict) else None
+    current = policy == V7_POLICY or policy is None and guard_policy == V7_GUARD
+    if not (16 if current else 21) <= fullmove <= 49:
+        return results
     cap = round(120 * (50 - fullmove) / 30, 6)
     floor = min(baseline_cp, max(0, baseline_cp - cap)) if type(baseline_cp) in (int, float) else None
-    guard_policy = recorded_guard.get("policy") if isinstance(recorded_guard, dict) else None
-    if guard_policy == "regicide-sparring-ramp-guard-v2" and type(baseline_cp) in (int, float):
+    if current:
+        cap = (round(min(30, max(0, baseline_cp) * .10) * ((50 - fullmove) / 35) ** 2, 6)
+               if type(baseline_cp) in (int, float) else None)
+        floor = round(baseline_cp - cap, 6) if cap is not None else None
+        allowed_guards = (V7_GUARD,)
+    else:
+        allowed_guards = (None, "regicide-sparring-ramp-guard-v1", "regicide-sparring-ramp-guard-v2")
+    if not current and guard_policy == "regicide-sparring-ramp-guard-v2" and type(baseline_cp) in (int, float):
         # Independently recompute the recorded policy; do not import the
         # implementation that this auditor is intended to check.
         cap = round(min(120, max(0, baseline_cp) * .35) * ((50 - fullmove) / 30) ** 2, 6)
@@ -180,7 +194,7 @@ def ramp_receipts(decision, fullmove, *, path="final"):
     violations = [key for key, value in values.items() if type(value) in (int, float) and floor is not None and value < floor - 1e-6]
     unknown = floor is None or any(type(value) not in (int, float) for value in values.values())
     guard_match = (isinstance(recorded_guard, dict) and floor is not None
-                   and guard_policy in (None, "regicide-sparring-ramp-guard-v1", "regicide-sparring-ramp-guard-v2")
+                   and guard_policy in allowed_guards
                    and type(recorded_guard.get("floor_cp")) in (int, float)
                    and type(recorded_guard.get("max_loss_cp")) in (int, float)
                    and abs(recorded_guard.get("floor_cp", -1e9) - floor) < 1e-5
@@ -188,6 +202,8 @@ def ramp_receipts(decision, fullmove, *, path="final"):
     return results + [{"path": path, "source": source, "selected": selected, "baseline": baseline,
                        "played_final": path == "final", "execution": "played_final" if path == "final" else "superseded_pre_safety",
                        "baseline_cp": baseline_cp, "scores": values, "fullmove": fullmove,
+                       "play_policy": policy, "guard_policy": guard_policy,
+                       "ramp_start_fullmove": 16 if current else 21,
                        "expected_cap_cp": cap, "expected_floor_cp": floor, "recorded_guard_matches": guard_match,
                        "violations": violations, "unknown": unknown,
                        "compliant": not violations and not unknown and guard_match}]
@@ -227,8 +243,41 @@ def close_stats(scores, indexes):
             "outside_plies": [i for i in indexes if i not in inside]}
 
 
+def recorded_policy(game):
+    """Read fresh decisions; a retained continuation prefix is historical."""
+    host = game.get("host") or {}
+    metadata = host.get("sparring_play") or {}
+    policies = {value for value in (game.get("policy"), metadata.get("policy")) if value is not None}
+    for turn in game.get("moves", []):
+        if turn.get("recorded_prefix") and turn.get("ply", 0) <= game.get("continuation_start_ply", 0):
+            continue
+        value = (turn.get("sparring_decision") or {}).get("policy")
+        if value is not None:
+            policies.add(value)
+    if len(policies) > 1 or any(value not in PLAY_POLICIES for value in policies):
+        raise ValueError("Mixed or unsupported sparring audit policy")
+    return next(iter(policies), None)
+
+
+def close_window(scores, moves, fullmoves):
+    """Keep the fixed historical 20-move observation independent of v7."""
+    plies = fullmoves * 2
+    early = list(range(min(plies, len(scores) - 1) + 1))
+    own = [ply for ply in early if ply > 0 and moves[ply - 1]["actor"] == "sparring"]
+    opponent = [ply for ply in early if ply > 0 and moves[ply - 1]["actor"] == "stockfish"]
+    all_roots = close_stats(scores, early)
+    reached = len(scores) > plies
+    return {"target_fullmoves": fullmoves, "reached": reached,
+            "strict_pass": reached and all_roots["close"] == plies + 1,
+            "all_roots": all_roots, "after_sparring": close_stats(scores, own),
+            "after_opponent": close_stats(scores, opponent)}
+
+
 def audit_game(path, auditor, output, deep_ms, max_deep):
     game, boards = replay_game(path)
+    policy = recorded_policy(game)
+    close_fullmoves = 15 if policy == V7_POLICY else 20
+    ramp_start = close_fullmoves + 1
     white = game["sparring_color"] == "white"
     scores = []
     for ply, board in enumerate(boards):
@@ -236,9 +285,6 @@ def audit_game(path, auditor, output, deep_ms, max_deep):
         scores.append({"ply": ply, "fen": board.fen(en_passant="fen"), **score})
         if ply % 20 == 0:
             print(json.dumps({"event": "audit_root", "game": str(path), "ply": ply, "cp_white": score.get("cp_white")}), flush=True)
-    early = list(range(min(40, len(boards) - 1) + 1))
-    own_early = [i for i in early if i > 0 and game["moves"][i - 1]["actor"] == "sparring"]
-    human_early = [i for i in early if i > 0 and game["moves"][i - 1]["actor"] == "stockfish"]
     events, ramps, safety, own_moves = [], [], [], []
     for ply, turn in enumerate(game["moves"], 1):
         if turn["actor"] != "sparring":
@@ -261,11 +307,12 @@ def audit_game(path, auditor, output, deep_ms, max_deep):
                "cp_before_own": own_cp(scores[ply - 1], white), "cp_after_own": own_cp(scores[ply], white),
                "immediate_exposure": exposed, "minimum_actual_material_swing_next4plies": actual_swing}
         own_moves.append(row)
-        receipts = ramp_receipts(decision, before.fullmove_number)
+        receipts = ramp_receipts(decision, before.fullmove_number, policy=policy)
         ramps.extend({"ply": ply, **item} for item in receipts)
         if decision.get("tactical_safety"):
             safety.append({"ply": ply, **decision["tactical_safety"]})
-        ramp_cap = round(120 * (50 - before.fullmove_number) / 30, 6) if 21 <= before.fullmove_number <= 49 else None
+        ramp_cap = (round(120 * (50 - before.fullmove_number) / 30, 6)
+                    if policy != V7_POLICY and 21 <= before.fullmove_number <= 49 else None)
         current_receipt = next((item for item in receipts if item["played_final"]), None)
         if current_receipt is not None:
             ramp_cap = current_receipt["expected_cap_cp"]
@@ -279,7 +326,7 @@ def audit_game(path, auditor, output, deep_ms, max_deep):
             events.append({**row, "deep_reviewed": False, "trigger": "score_loss_or_mate" if suspicious else
                            "material_exposure" if exposed else "delayed_material_swing"})
     # Prioritize largest losses; a bounded deep-review budget stays explicit.
-    ordered = sorted(events, key=lambda r: (not r["new_losing_mate"], r["fullmove"] > 20,
+    ordered = sorted(events, key=lambda r: (not r["new_losing_mate"], r["fullmove"] > close_fullmoves,
                                            not bool(r["immediate_exposure"]), -(r["cp_loss"] or 0)))
     for index, event in enumerate(ordered):
         if max_deep and index >= max_deep:
@@ -304,22 +351,30 @@ def audit_game(path, auditor, output, deep_ms, max_deep):
                                      "independent_ramp_loss_exceeds_cap_plus50" if ramp_excess else "quick_signal_not_confirmed"))
         print(json.dumps({"event": "audit_deep", "game": str(path), "ply": ply, "loss_cp": loss["cp_loss"],
                           "classification": event["classification"]}), flush=True)
-    early_stats = close_stats(scores, early)
+    current_window = close_window(scores, game["moves"], close_fullmoves)
+    historical_twenty = close_window(scores, game["moves"], 20)
+    fifteen = current_window if close_fullmoves == 15 else close_window(scores, game["moves"], 15)
     result = {"game_file": str(path.resolve()), "game_sha256": sha(path), "sparring_color": game["sparring_color"],
+              "policy": policy, "target_fullmoves": close_fullmoves,
               "stockfish_elo_setting": game.get("stockfish_elo"), "plies": len(boards) - 1,
               "result": game.get("result"), "termination": game.get("termination"), "error": game.get("error"),
-              "legal_replay": True, "reached20": len(boards) > 40, "reached50": len(boards) > 98,
-              "early_all_roots": early_stats, "early_after_sparring": close_stats(scores, own_early),
-              "early_after_opponent": close_stats(scores, human_early),
-              "strict20_pass": len(boards) > 40 and early_stats["close"] == 41,
+              "legal_replay": True, "reached20": historical_twenty["reached"], "reached50": len(boards) > 98,
+              "reached15": fifteen["reached"], "strict15_pass": fifteen["strict_pass"],
+              "reached_close_target": current_window["reached"], "policy_close_pass": current_window["strict_pass"],
+              "early_all_roots": current_window["all_roots"],
+              "early_after_sparring": current_window["after_sparring"],
+              "early_after_opponent": current_window["after_opponent"],
+              "strict20_pass": historical_twenty["strict_pass"],
+              "historical_first20_observation": {**historical_twenty,
+                  "scope": "Fixed 20-move observation retained separately; not v7 policy acceptance"},
               "ramp_concessions": ramps, "ramp_violation_count": sum(r["played_final"] and bool(r["violations"]) for r in ramps),
               "ramp_unknown_count": sum(r["played_final"] and (r["unknown"] or not r["recorded_guard_matches"]) for r in ramps),
               "pre_safety_attempt_violation_count": sum(not r["played_final"] and bool(r["violations"]) for r in ramps),
               "pre_safety_attempt_unknown_count": sum(not r["played_final"] and (r["unknown"] or not r["recorded_guard_matches"]) for r in ramps),
               "played_ramp_concessions": sum(r["played_final"] for r in ramps),
-              "ramp_own_moves": sum(21 <= r["fullmove"] <= 49 for r in own_moves),
+              "ramp_own_moves": sum(ramp_start <= r["fullmove"] <= 49 for r in own_moves),
               "finish_own_moves": sum(r["fullmove"] >= 50 for r in own_moves),
-              "ramp_baseline_moves": sum(21 <= r["fullmove"] <= 49 and r["selection_kind"] == "native_baseline" for r in own_moves),
+              "ramp_baseline_moves": sum(ramp_start <= r["fullmove"] <= 49 and r["selection_kind"] == "native_baseline" for r in own_moves),
               "missing_sparring_receipts": sum(t["actor"] == "sparring" and not t.get("sparring_decision") for t in game["moves"]),
               "safety_checks": safety, "own_moves": own_moves, "suspicious_events": events,
               "deep_reviewed": sum(e["deep_reviewed"] for e in events),
@@ -335,11 +390,13 @@ def audit_game(path, auditor, output, deep_ms, max_deep):
 def report(document):
     games = document["games"]
     lines = ["# 수정 스파링 실제 대국 독립 검증", "", "약화 상대의 탐색값 대신 별도 전력 Stockfish로 모든 실제 위치를 다시 평가했다. 작은 기능 검증이며 Elo나 인간 체감의 증거는 아니다.", "",
-             "| 대국 | 상대 설정 | Regicide | 수 | 20수 도달 | 20수까지 접전 위치 | 연속 접전 | 램프 위반 | 깊은 재검토 큰 손실 |", "|---|---:|---|---:|---|---|---|---:|---:|"]
+             "| 대국 | 상대 설정 | Regicide | 수 | 접전 목표 | 목표 도달 | 목표까지 접전 위치 | 연속 접전 | 램프 위반 | 깊은 재검토 큰 손실 |", "|---|---:|---|---:|---:|---|---|---|---:|---:|"]
     for i, g in enumerate(games, 1):
         c = g["early_all_roots"]
-        lines.append(f"| {i} | {g['stockfish_elo_setting']} | {g['sparring_color']} | {g['plies']/2:g} | {'예' if g['reached20'] else '아니오'} | {c['close']}/{c['positions']} | {'충족' if g['strict20_pass'] else '미충족'} | {g['ramp_violation_count']} | {g['deep_large_losses']} |")
-    lines += ["", "접전 기준은 초기 위치부터 20수까지 41개 위치 모두 |평가| ≤ 1.00이며, 메이트·미확인 평가도 충족으로 세지 않는다. 상대가 둔 직후와 스파링이 둔 직후의 비율은 JSON에 따로 기록했다. 표의 램프 위반은 실제 최종 수만 센다. 안전 검사에 의해 대체된 이전 시도는 별도 집계한다.", "",
+        reached = g.get("reached_close_target", g["reached20"])
+        passed = g.get("policy_close_pass", g["strict20_pass"])
+        lines.append(f"| {i} | {g['stockfish_elo_setting']} | {g['sparring_color']} | {g['plies']/2:g} | {g.get('target_fullmoves', 20)}수 | {'예' if reached else '아니오'} | {c['close']}/{c['positions']} | {'충족' if passed else '미충족'} | {g['ramp_violation_count']} | {g['deep_large_losses']} |")
+    lines += ["", "v7의 접전 목표는 초기 위치부터 15수까지 31개 위치 모두 |평가| ≤ 1.00이다. 이전 기록은 이 감사 도구의 기존 20수·41개 위치 관측을 유지한다. 메이트·미확인 평가도 충족으로 세지 않는다. 고정 20수 관측과 strict20_pass는 JSON에 별도로 보존하며 v7의 15수 통과로 과거 20수 실패를 덮어쓰지 않는다. 상대가 둔 직후와 스파링이 둔 직후의 비율도 따로 기록했다. 표의 램프 위반은 실제 최종 수만 센다. 안전 검사에 의해 대체된 이전 시도는 별도 집계한다.", "",
               "## 주요 의심 장면", ""]
     for i, g in enumerate(games, 1):
         for e in g["suspicious_events"]:
@@ -391,6 +448,8 @@ def main():
             write(args.output / "summary.json", document)
             (args.output / "report.md").write_text(report(document), encoding="utf-8")
         document.update(status="completed", analyzer_unchanged=sha(__file__) == source_hash,
+                        policy_close_pass_games=sum(g["policy_close_pass"] for g in document["games"]),
+                        strict15_pass_games=sum(g["strict15_pass"] for g in document["games"]),
                         strict20_pass_games=sum(g["strict20_pass"] for g in document["games"]),
                         ramp_violations=sum(g["ramp_violation_count"] for g in document["games"]),
                         pre_safety_attempt_violations=sum(g["pre_safety_attempt_violation_count"] for g in document["games"]),
@@ -400,7 +459,9 @@ def main():
         (args.output / "report.md").write_text(report(document), encoding="utf-8")
     finally:
         auditor.close()
-    print(json.dumps({"event": "audit_complete", "games": len(paths), "strict20_pass_games": document["strict20_pass_games"],
+    print(json.dumps({"event": "audit_complete", "games": len(paths),
+                      "policy_close_pass_games": document["policy_close_pass_games"],
+                      "strict20_pass_games": document["strict20_pass_games"],
                       "ramp_violations": document["ramp_violations"], "deep_pending": document["deep_pending"]}), flush=True)
 
 

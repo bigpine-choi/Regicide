@@ -38,8 +38,10 @@ class MinorContactTests(unittest.TestCase):
         reverse = quality._minor_origins(mirrored, {support.mirrored_move(move) for move in excluded})
         self.assertEqual(reverse, [chess.square_mirror(square) for square in origins])
 
-    def test_pre20_keeps_original_knight_origin_order(self):
+    def test_pre16_keeps_original_knight_origin_order(self):
         board = support.move33_board()
+        while len(board.move_stack) > 28:
+            board.pop()
         origins = quality._minor_origins(board, set())
         self.assertEqual([board.piece_type_at(square) for square in origins], [chess.KNIGHT, chess.KNIGHT])
 

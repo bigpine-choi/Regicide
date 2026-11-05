@@ -434,7 +434,7 @@ def judge_offline(record, config, *, factory=native_factory):
     return record
 
 
-def close_metrics(record, window=40):
+def close_metrics(record, window=30):
     values = {row["ply"]: row for row in record.get("judgements", [])}
     after = [values[ply] for ply in range(1, window + 1) if ply in values]
     finite = [row for row in after if row.get("status") == "exact" and type(row.get("cp_white")) is int]
@@ -501,7 +501,7 @@ def run(config, *, runtime=None, factory=native_factory):
                              "wait": "only _wait_for_engine_turn overridden to receipt-only; no skip/cancel event set",
                              "display": "QuietHints and ScreenOnlyReferee in every arm; candidate screening retained when on",
                              "judge": "offline after every playing game/process ended; fixed depth/nodes; fresh game and Clear Hash each position",
-                             "denominator": "actual post-move positions 1..40; initial position excluded; unknown/missing retained",
+                             "denominator": f"actual post-move positions 1..{config['close_plies']}; initial position excluded; unknown/missing retained",
                              "clock": "production time control and search allocation; no artificial post-search waiting",
                              "cap": "unfinished *; never an artificial draw", "claims": "small segment diagnostic, not Elo or general strength"},
                 "games": [], "errors": [], "status": "playing"}
@@ -578,7 +578,7 @@ def arguments(argv=None):
     parser.add_argument("--opponent-ms", type=int, default=1000)
     parser.add_argument("--time-control", choices=("10+0", "10+5", "15+10", "none"), default="10+5")
     parser.add_argument("--max-plies", type=int, default=44)
-    parser.add_argument("--close-plies", type=int, default=40)
+    parser.add_argument("--close-plies", type=int, default=30)
     limits = parser.add_mutually_exclusive_group()
     limits.add_argument("--judge-depth", type=int, default=14)
     limits.add_argument("--judge-nodes", type=int)

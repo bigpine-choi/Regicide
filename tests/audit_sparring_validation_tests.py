@@ -1,13 +1,18 @@
 """Independent audit perspective, strict coverage and receipt checks."""
 from pathlib import Path
+import contextlib
+import copy
+import io
 import sys
 import unittest
+from unittest.mock import patch
 
 import chess
 import chess.engine
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import audit_sparring_validation as audit
+from summarize_sparring_match_tests import game as game_fixture, long_sans
 
 
 class AuditTests(unittest.TestCase):
@@ -83,6 +88,88 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(audit.ramp_receipts(row, 30)[0]["violations"], ["child"])
         row["ramp_guard"]["policy"] = "invented-policy"
         self.assertFalse(audit.ramp_receipts(row, 30)[0]["recorded_guard_matches"])
+
+    def test_v7_guard_checks_move_sixteen_without_reinterpreting_legacy_guards(self):
+        row = self.decision(372)
+        row.update(policy=audit.V7_POLICY, baseline={"cp": 400},
+                   ramp_guard={"policy": audit.V7_GUARD, "floor_cp": 371.689796, "max_loss_cp": 28.310204})
+        self.assertEqual(audit.ramp_receipts(row, 15), [])
+        value = audit.ramp_receipts(row, 16)[0]
+        self.assertTrue(value["compliant"])
+        self.assertEqual(value["expected_cap_cp"], 28.310204)
+        row["postmove_verification"]["cp_own"] = 371
+        self.assertEqual(audit.ramp_receipts(row, 16)[0]["violations"], ["child"])
+        self.assertEqual(audit.ramp_receipts(row, 50), [])
+        old = self.decision()
+        old["policy"] = "regicide-sparring-play-v6"
+        self.assertEqual(audit.ramp_receipts(old, 16), [])
+        self.assertTrue(audit.ramp_receipts(old, 30)[0]["compliant"])
+        old["ramp_guard"]["policy"] = audit.V7_GUARD
+        self.assertFalse(audit.ramp_receipts(old, 30)[0]["recorded_guard_matches"])
+        row["ramp_guard"]["policy"] = "regicide-sparring-ramp-guard-v2"
+        self.assertFalse(audit.ramp_receipts(row, 30)[0]["recorded_guard_matches"])
+
+    def test_v7_advantage_fraction_and_referee_scores_use_the_same_independent_floor(self):
+        row = self.decision(91)
+        guard = {"policy": audit.V7_GUARD, "floor_cp": 90.563265, "max_loss_cp": 9.436735}
+        row.update(policy=audit.V7_POLICY, baseline={"cp": 100}, ramp_guard=guard)
+        self.assertTrue(audit.ramp_receipts(row, 16)[0]["compliant"])
+        row["referee"] = {"applied": True, "accepted": True, "selected_uci": "e2e4",
+                          "band": {"baseline_cp_own": 100}, "ramp_guard": copy.deepcopy(guard),
+                          "candidates": [{"uci": "e2e4", "cp_own": 91}], "postmove": {"cp_own": 90}}
+        value = audit.ramp_receipts(row, 16)[0]
+        self.assertEqual(value["source"], "referee")
+        self.assertEqual(value["violations"], ["child"])
+        row = self.decision(-100)
+        row.update(policy=audit.V7_POLICY, baseline={"cp": -100},
+                   ramp_guard={"policy": audit.V7_GUARD, "floor_cp": -100, "max_loss_cp": 0})
+        self.assertTrue(audit.ramp_receipts(row, 16)[0]["compliant"])
+
+    def test_recorded_policy_ignores_only_marked_historical_continuation_prefix(self):
+        game = {"continuation_start_ply": 1, "moves": [
+            {"ply": 1, "recorded_prefix": True, "sparring_decision": {"policy": "regicide-sparring-play-v6"}},
+            {"ply": 2, "sparring_decision": {"policy": audit.V7_POLICY}}]}
+        self.assertEqual(audit.recorded_policy(game), audit.V7_POLICY)
+        game["moves"][0]["recorded_prefix"] = False
+        with self.assertRaisesRegex(ValueError, "Mixed or unsupported"):
+            audit.recorded_policy(game)
+
+    def test_v7_fifteen_move_pass_never_relabels_failed_twenty_move_observation(self):
+        source = game_fixture(" ".join(long_sans()[:40]), policy=audit.V7_POLICY)
+        board, boards = chess.Board(), [chess.Board()]
+        for turn in source["moves"]:
+            move = chess.Move.from_uci(turn["uci"])
+            turn["san"] = board.san(move)
+            board.push(move)
+            boards.append(board.copy(stack=True))
+        class ControlledAuditor:
+            def evaluate(self, position, **_options):
+                return {"kind": "cp", "cp_white": 200 if len(position.move_stack) > 30 else 0,
+                        "mate_white": None, "bestmove": None}
+        def run(value):
+            with patch.object(audit, "replay_game", return_value=(value, boards)), \
+                 patch.object(audit, "sha", return_value="controlled"), \
+                 patch.object(audit, "write"), patch.object(audit, "exposure", return_value=[]), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                return audit.audit_game(Path("controlled.json"), ControlledAuditor(), Path("unused.json"), 1, 1)
+        result = run(source)
+        self.assertEqual(result["target_fullmoves"], 15)
+        self.assertTrue(result["strict15_pass"])
+        self.assertTrue(result["policy_close_pass"])
+        self.assertFalse(result["strict20_pass"])
+        self.assertEqual(result["early_all_roots"]["positions"], 31)
+        self.assertEqual(result["historical_first20_observation"]["all_roots"]["positions"], 41)
+        self.assertFalse(result["historical_first20_observation"]["strict_pass"])
+        self.assertEqual(result["ramp_own_moves"], 5)
+        previous = copy.deepcopy(source)
+        for turn in previous["moves"]:
+            if turn["sparring_decision"]:
+                turn["sparring_decision"]["policy"] = "regicide-sparring-play-v6"
+        old = run(previous)
+        self.assertEqual(old["target_fullmoves"], 20)
+        self.assertFalse(old["policy_close_pass"])
+        self.assertEqual(old["early_all_roots"], old["historical_first20_observation"]["all_roots"])
+        self.assertEqual(old["ramp_own_moves"], 0)
 
 
 if __name__ == "__main__":

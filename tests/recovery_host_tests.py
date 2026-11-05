@@ -169,8 +169,8 @@ class RecoveryHostTests(unittest.TestCase):
                 for call in choose.call_args_list:
                     self.assertFalse(call.kwargs.get("recovery_budget_ms"))
 
-    def test_recovery_plan_respects_both_twentieth_move_boundaries(self):
-        for ply in (38,39,40,41,98,99):
+    def test_recovery_plan_respects_both_fifteenth_move_boundaries(self):
+        for ply in (28,29,30,31,98,99):
             with self.subTest(ply=ply):
                 board = self.position(late_game_board(ply))
                 move = next(iter(board.legal_moves))
@@ -178,7 +178,7 @@ class RecoveryHostTests(unittest.TestCase):
                 plan = host.engine_pacing.plan(board, clock, seed=self.game._opening_seed)
                 recovery = host.engine_pacing.recovery_plan(board, plan, clock,
                     baseline_info=info(board,move.uci(),-250,4),baseline_move=move)["balance_recovery"]
-                self.assertEqual(recovery["active"], ply < 40)
+                self.assertEqual(recovery["active"], ply < 30)
 
     def test_inside_band_and_normal_mode_keep_recovery_off(self):
         for sparring, cp in ((True,80),(False,500)):

@@ -507,7 +507,7 @@ class HumanGame:
                 budget = min(budget, 800)
         discovery = None
         can_discover = (discovery_search is not None and close_engine is not None
-            and 8 <= len(board.move_stack) < 40 and 0 < len(native_pool) < 4
+            and 8 <= len(board.move_stack) < sparring_play.RAMP_PLY and 0 < len(native_pool) < 4
             and not self._forced_plies and not self._sparring_analysis_only()
             and not cancelled() and self._referee_metadata()["available"]
             and (not clock["enabled"] or clock["white_ms" if board.turn else "black_ms"] >= 180_000))

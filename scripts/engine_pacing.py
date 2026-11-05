@@ -16,9 +16,10 @@ import chess.engine
 import decision_support
 import evaluation_stability
 import sparring_evaluation
+import sparring_pacing
 
 
-POLICY = "regicide-engine-pacing-v13"
+POLICY = "regicide-engine-pacing-v14"
 GAMBIT_SEARCH_POLICY = "regicide-gambit-search-time-v1"
 GAMBIT_RECHECK_POLICY = "regicide-gambit-idle-recheck-v1"
 # Keep each game's established variation while changing its time allowance.
@@ -564,7 +565,7 @@ def recovery_plan(board, pacing, clock, *, baseline_info, baseline_move):
     recovery = {"active": False, "reason": "outside_close_phase", "budget_ms": 0,
                 "direction": None, "initial_cp_own": None}
     result["balance_recovery"] = recovery
-    if len(board.move_stack) >= 40 or board.root().fen() != chess.STARTING_FEN:
+    if len(board.move_stack) >= sparring_pacing.CLOSE_PLIES or board.root().fen() != chess.STARTING_FEN:
         return result
     sample = sparring_evaluation.validate_packet(board, baseline_info)
     if (sample is None or not isinstance(baseline_move, chess.Move)

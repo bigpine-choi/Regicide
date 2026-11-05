@@ -22,7 +22,7 @@ MAX_AUDITS = 5
 
 
 def required(board, verdict, assessment):
-    if (len(board.move_stack) >= 40 or not verdict.get("verified")
+    if (len(board.move_stack) >= sparring_play.RAMP_PLY or not verdict.get("verified")
             or board.root().fen(en_passant="fen") != chess.STARTING_FEN):
         return False
     own = "white" if board.turn else "black"
@@ -33,7 +33,7 @@ def required(board, verdict, assessment):
 
 def recover(board, move, initial, initial_verdict, *, native_search, native_evidence,
             audit, check, deadline, minimum_native_depth, completed=None):
-    """Find a safe native candidate closer to the ordinary pre-20 band.
+    """Find a safe native candidate closer to the ordinary pre-16 band.
 
 Shallow singleton searches order candidates only. Application needs a matching
 completed native search of at least ``minimum_native_depth`` and independent

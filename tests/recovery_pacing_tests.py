@@ -76,11 +76,20 @@ class RecoveryBudgetTests(unittest.TestCase):
             self.assertLessEqual(abs(budgets[2] - budgets[3]), 1)
             self.assertEqual(budgets[-2:], [0, 0])
 
-    def test_move21_and_custom_roots_cannot_restart_close_phase(self):
-        for _ in range(10):
-            for uci in ("g1f3", "g8f6", "f3g1", "f6g8"):
-                self.board.push_uci(uci)
-        self.assertFalse(self.recover(200)["balance_recovery"]["active"])
+    def test_each_colors_move16_and_custom_roots_cannot_restart_close_phase(self):
+        for ply in (28, 29, 30, 31, 40, 41):
+            self.board = chess.Board()
+            for index in range(ply):
+                self.board.push_uci(("g1f3", "g8f6", "f3g1", "f6g8")[index % 4])
+            self.move = next(iter(self.board.legal_moves))
+            color = "white" if self.board.turn else "black"
+            self.clock["running_color"] = color
+            self.plan.update(color=color, root_ply=ply, before_fen=self.board.fen(en_passant="fen"))
+            recovery = self.recover(200)["balance_recovery"]
+            self.assertEqual(recovery["active"], ply < 30)
+            if ply >= 30:
+                self.assertEqual(recovery["reason"], "outside_close_phase")
+                self.assertEqual(recovery["budget_ms"], 0)
 
         self.board = chess.Board("8/8/8/8/8/4k3/8/KQ6 w - - 0 1")
         self.move = chess.Move.from_uci("b1b2")
