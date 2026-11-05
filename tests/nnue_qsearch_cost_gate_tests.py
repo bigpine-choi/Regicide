@@ -13,6 +13,7 @@ import chess
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import neural_training as base
 import nnue_qsearch_cost_gate as gate
+import nnue_reservation_audit as historical
 
 
 class QsearchCostGateTests(unittest.TestCase):
@@ -39,7 +40,7 @@ class QsearchCostGateTests(unittest.TestCase):
         self.assertFalse(gate.CRITERIA['retry_or_gate_checkpoint_selection'])
 
     def test_original_reservation_has_no_queries_and_exactly_594_features(self):
-        source, reservation, roots, blocked = gate.authenticate_source()
+        source, reservation, roots, blocked = historical.audit_original()
         self.assertEqual(len(roots), 16)
         self.assertEqual(len(blocked), 594)
         self.assertEqual({path.name for path in source.iterdir()}, gate.SOURCE_FILES)

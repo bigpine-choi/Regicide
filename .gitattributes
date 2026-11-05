@@ -720,3 +720,14 @@ tests/data/gambit_opening_growth*_2026_11_05.json -text whitespace=cr-at-eol
 tests/gambit_continuation_tests.py -text whitespace=cr-at-eol
 tests/gambit_knowledge_support_tests.py -text whitespace=cr-at-eol
 tests/gambit_opening_quality_tests.py -text whitespace=cr-at-eol
+# Preserve the creativity experiment and its predeclared input byte-for-byte.
+docs/checks/2026-11-06-*/** -text -whitespace
+scripts/gambit_creativity.py -text whitespace=cr-at-eol
+tests/gambit_creativity*.py -text whitespace=cr-at-eol
+tests/data/gambit_creativity_2026_11_06.json -text whitespace=cr-at-eol
+# These historical input bytes are bound by the untouched NNUE reservations.
+docs/checks/2026-10-19-neural-incremental/search-depth4.json -text -whitespace
+docs/checks/2026-10-19-neural-incremental/uci-integration.json -text -whitespace
+docs/checks/2026-10-19-neural/integration.json -text -whitespace
+scripts/nnue_reservation_audit.py text eol=lf
+tests/nnue_reservation_audit_tests.py text eol=lf

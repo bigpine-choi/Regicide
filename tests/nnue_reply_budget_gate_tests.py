@@ -13,6 +13,7 @@ import chess
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import neural_training as base
 import nnue_reply_budget_gate as gate
+import nnue_reservation_audit as historical
 
 
 def known_receipt():
@@ -66,7 +67,7 @@ class ReplyBudgetGateTests(unittest.TestCase):
         self.assertEqual(gate.BF5_FIRST_NODE_LIMIT, 2577)
 
     def test_both_historical_reservations_remain_unused_and_exactly_same_bytes(self):
-        source, original, previous, reservation, roots, blocked = gate.authenticate_source()
+        source, original, previous, reservation, roots, blocked = historical.audit_cost_source()
         self.assertEqual(len(roots), 16)
         self.assertEqual(len(blocked), 594)
         self.assertEqual(original['exposure_files'], 256)
@@ -81,7 +82,8 @@ class ReplyBudgetGateTests(unittest.TestCase):
             previous = Path(temporary)
             for name in gate.SOURCE_FILES | {'label-started.json'}:
                 gate.write(previous / name, {})
-            with self.assertRaisesRegex(ValueError, 'queried, sealed, consumed'):
+            with patch.object(gate.cost, 'authenticate_source', return_value=(None, {}, [], set())), \
+                 self.assertRaisesRegex(ValueError, 'queried, sealed, consumed'):
                 gate.authenticate_source(previous)
 
     def test_delta_replays_only_later_history_and_pv(self):
