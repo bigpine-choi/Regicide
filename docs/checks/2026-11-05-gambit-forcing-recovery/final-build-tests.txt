@@ -1,0 +1,282 @@
+board.cpp
+search.cpp
+evaluation.cpp
+reference_evaluation_v054.cpp
+reference_evaluation_v056.cpp
+transposition.cpp
+see.cpp
+neural.cpp
+nnue.cpp
+reference_neural_v063.cpp
+uci.cpp
+main.cpp
+rules_tests.cpp
+search_tests.cpp
+queen_defense_tests.cpp
+forcing_tests.cpp
+evaluation_tests.cpp
+board_state_tests.cpp
+transposition_tests.cpp
+see_tests.cpp
+neural_tests.cpp
+nnue_tests.cpp
+neural_model_tests.cpp
+leaf_observer_tests.cpp
+collect_search_leaves.cpp
+evaluation_benchmark.cpp
+neural_incremental_benchmark.cpp
+PASS exact initial moves and FEN
+  depth 5 nodes 4865609
+PASS perft start
+  depth 4 nodes 4085603
+PASS perft kiwipete
+  depth 5 nodes 674624
+PASS perft rook-pawn-endgame
+  depth 4 nodes 422333
+PASS perft promotion-castling
+  depth 4 nodes 2103487
+PASS perft promotion-check
+  depth 4 nodes 3894594
+PASS perft middlegame
+PASS castling moves and exact restoration
+PASS castling through attack and blocked queenside
+PASS castling rights lost on move or capture
+PASS en passant both colors, expiration, restoration
+PASS en passant king safety and check evasion
+PASS all promotions and capture promotions
+PASS pinned piece attacks and double check
+PASS checkmate, stalemate and 75-move priority
+PASS 50-move claim vs automatic 75-move draw
+PASS threefold claims, fivefold draw and history undo
+PASS repetition identity: en passant legality and castling
+PASS conservative dead-material classification
+PASS invalid moves and malformed FEN leave state intact
+20 groups, 8325 assertions, 0 failures
+PASS centipawn material and side-to-move perspective
+PASS both colors select a free queen
+PASS depth two sees the recapture beyond a tempting material gain
+PASS mate on the horizon beats capturing material for both colors
+PASS terminal roots distinguish mate and automatic draws
+PASS draw claims are optional and preserve a legal root move
+PASS promotion and en passant use material correctly
+PASS alpha-beta matches unpruned minimax
+PASS deterministic iterative deepening and complete node counts
+PASS node budget returns last complete iteration and restores history
+PASS preexisting and between-iteration stop flags
+PASS wall clock budget and invalid limits
+PASS quiescence avoids a poisoned rook at depth one
+PASS checked horizon searches quiet evasions without stand pat
+PASS quiescence recognizes en passant at the frontier
+PASS extended alpha-beta matches unpruned tactical minimax
+PASS positional alpha-beta matches unpruned minimax without quiescence
+PASS quiet horizon is stable and counted only once
+PASS quiescence terminal and optional claim handling
+PASS quiescence shares exact node budgets and restores interrupted work
+PASS transposition scores agree with uncached fixed-depth search
+PASS transpositions reuse completed work and never publish a partial root
+PASS cached search keeps optional history-dependent claims
+PASS caller-owned memory reuse preserves every completed iteration graph
+PASS reused memory isolates options FENs history clocks and hash resize
+PASS disabled terminal and interrupted calls preserve reusable storage safely
+PASS quiet move ordering changes work without changing exact fixed-depth scores
+PASS one quiet-check qsearch matches an unpruned independent oracle
+PASS quiet checks recognize mate beyond the capture-only frontier
+PASS Caro-Kann loss regression sees the checking knight refutation
+PASS PVS and alpha-beta select oracle-optimal moves with and without TT
+PASS PVS preserves independently enumerated quiescence and quiet-check values
+PASS PVS scouts ties without re-search and re-searches a genuine improvement
+PASS PVS handles current intended and historical optional draw claims
+PASS an intended draw floor can require a PVS full-window re-search
+PASS PVS interruption at scout and re-search entry retains the completed iteration
+PASS reused PVS memory isolates modes histories options and interruption
+PASS SEE ordering preserves independently enumerated optimal moves in every PVS/TT mode
+PASS a sole legal capture needs no exchange sort and still preserves its result
+PASS favorable captures precede losing captures without discarding either
+PASS negative SEE queen sacrifice remains available and produces the oracle mate
+PASS SEE preserves the independent bounded-check quiescence oracle
+PASS SEE mode changes and cancellation cannot leak through retained memory
+PASS shelter ON and OFF search match exhaustive normal and tactical oracles
+PASS cancelled fallback uses the selected shelter evaluator before any completed iteration
+PASS reused memory isolates shelter mode switches and material-only evaluation ignores them
+PASS pawn structure ON and OFF match exhaustive ordinary and tactical search
+PASS pawn structure defaults ON and remains selected in cancelled or one-node fallbacks
+PASS retained memory isolates pawn structure changes and material-only ignores both positional flags
+PASS pawn bonuses never override mate automatic draws or optional claims
+PASS LMR OFF retains full-depth reference graphs and shallow ON never reduces
+PASS LMR requires both PVS and learned quiet ordering and never reduces pawn or king moves
+PASS LMR really reduces and verifies late quiet scouts while publishing legal deterministic lines
+PASS LMR interruption retains the last full iteration and its reusable memory stays isolated
+PASS LMR protects current and intended draw claims before reducing any late knight move
+PASS LMR preserves quiet checking mates sacrifices terminal results and optional claims
+PASS root restriction preserves every reply and the unrestricted default graph
+PASS root restriction rejects empty duplicate and illegal moves
+PASS restricted fallback cancellation and every completed PV stay inside the list
+PASS root restriction handles castling promotion and en passant
+PASS root restriction preserves current draw claims and automatic adjudication
+PASS bounded quiet knight forks see a horizon fork and all quiet defensive replies
+PASS capture-fork preparation is observed but locally losing hypothetical captures are rejected
+PASS quiet fork and capture-fork preparation work with colors and ranks reversed
+PASS quiet fork extensions share exact budgets and restore NNUE history and reused TT state
+PASS quiet fork option preserves terminal and optional draw precedence
+PASS opt-in qsearch SEE pruning skips a losing capture without changing its exhaustive value
+PASS guarded qsearch retains negative checking sacrifices promotions and en passant
+PASS q cache is an explicit bounded opt-in independent of the normal TT
+PASS q cache preserves independent bounded-check and tactical oracle values
+PASS q cache retains full quiet fork witnesses and all legal defense semantics
+PASS q cache preserves draw history counters mate precedence and promotion witnesses
+PASS q cache obeys exact cancellation and resets across NNUE and option context changes
+PASS first-root threat ordering preserves independent minimax and every root alternative
+PASS root capture-fork preparation is visited before capture frontiers without changing q policy
+PASS root threat priority preserves NNUE oracle cancellation and disabled graph
+PASS optional q horizon matches an independent bounded-check oracle without bounding forced replies
+PASS optional q horizon retains two-capture knight-fork preparation and mandatory replies
+PASS optional q horizon preserves checking sacrifices promotion and en passant candidates
+PASS optional q horizon preserves NNUE cancellation cache reset and inactive search graphs
+80 groups, 34527 assertions, 0 failures
+PASS trapped queen frontier equals an independent full-reply material oracle
+PASS rank-and-color mirror retains the same material value
+PASS quiet mating counterattack is retained while the queen is en prise
+PASS a sound queen offer is preserved before the move exposes its queen
+PASS pinned attacker triggers extra replies without a fabricated material penalty
+PASS queen exchange checked frontier and no-queen cases preserve the old graph
+PASS quiet intended fifty-move claim survives the queen emergency
+PASS NNUE incremental and full refresh agree through queen-defense replies
+PASS node cancellation and reused storage cannot publish stale queen-defense work
+9/9 queen-defense groups passed
+PASS default-off policy preserves the previous traversal
+PASS a disclosed king escape now reaches the second quiet checking continuation
+PASS qsearch cache preserves the completed continuation value and legal PV
+PASS late quiet checks spend the finite continuation allowance even after a checking capture
+PASS a broad checked frontier keeps every escape and ends additional checking pursuit
+PASS the established quiet mating refutation survives chain expansion
+PASS a mandatory quiet countercheck survives even without ordinary quiet-check credits
+PASS preexisting stop and exact node limits restore board and legal fallback
+PASS asynchronous cancellation during an observed tactical line retains legal state
+PASS actual threefold history remains a draw resource instead of a cycle penalty
+PASS intended fifty-move claim and automatic draws keep their rule priority
+PASS a quiet rook continuation corrects the declared shallow king-escape frontier
+PASS quiet rook preparation retains a pawn capture and a quiet countercheck defense
+PASS rook pressure preserves native value under rank and color reversal
+PASS actual twofold history reaches genuine claims without fabricating an imported-FEN draw
+PASS quiet checkmate outranks the seventy-five-move counter
+16/16 forcing groups passed
+PASS experimental activity matches manually counted geometry and component terms
+PASS activity includes a capturable blocker once and deliberately retains pinned pseudo-attacks
+PASS activity follows legal game positions and preserves castling EP promotion and undo histories
+PASS initial symmetry and color/rank reflections
+PASS opening development and center beat edge moves and retreat
+PASS bishops develop and queens wait for minor development
+PASS rook exposure loses time while minors remain home
+PASS king shelter in middlegame and activity in endgame
+PASS promotion-rich phase and very large material remain well behaved
+PASS disabled shelter preserves pinned pre-change evaluation values
+PASS nearby pawns shelter both wings and both colors without hiding their advance cost
+PASS edge shelter uses two files and ignores a third outside the king neighborhood
+PASS a pawn behind the king cannot shelter it and the closest forward pawn wins
+PASS shelter fades in pawn endings and uses the opponent's attacking material
+PASS promoted attacking armies clamp shelter rather than magnifying it without bound
+PASS shelter evaluation preserves repetition history hashes and turn antisymmetry
+PASS frozen v0.5.4 oracle across king squares pawn distances phases and home minors
+PASS frozen v0.5.4 oracle on deterministic legal game walks with retained history
+PASS frozen v0.5.4 oracle preserves special move and repetition histories
+PASS passed pawns gain promotion proximity and blocked rewards are halved for either color
+PASS enemy pawns block passage only ahead on the same or adjacent files including board edges
+PASS doubled and isolated costs combine while only the foremost pawn earns passage
+PASS pawn terms share one phase blend and preserve the independent king shield
+PASS independent pawn oracle exhausts legal two-pawn placements and retained game histories
+PASS pawn structure follows deterministic en passant promotions and their complete undo histories
+PASS frozen v0.5.6 matches all file-presence patterns with enemy and blocked-pawn inputs
+PASS frozen v0.5.6 matches every legal single-file rank mask at edges and center
+16860 frozen v0.5.4 oracle positions (each shield on/off)
+320 independent activity oracle positions (all shield/structure combinations)
+23929 independent pawn-structure oracle positions (all option combinations)
+27 groups, 413025 assertions, 0 failures
+PASS position identity includes pieces turn and rights, excludes clocks
+PASS canonical EP uses legal captures including pins and check evasion
+PASS history digest retains counts and all reversible past positions
+PASS history digest is independent of order when exact position counts agree
+PASS repetition candidate is conservative and restores across undo
+PASS castling-right loss resets context without resetting halfmove clock
+PASS generated moves and incremental hashes roundtrip normal special positions
+PASS failed external moves leave keys and history unchanged
+PASS generated check prediction handles direct discovered and special checks
+PASS all generated check predictions match full play and preserve repetition history
+10 groups, 18974 assertions, 0 failures
+PASS bounded allocation and empty slots
+PASS exact, lower and upper bound windows
+PASS mate distance is normalized from either side
+PASS index collisions verify every key field and prefer deeper work
+PASS history and halfmove distinguish otherwise identical queries
+PASS same-size prepare reuses backing memory but no old entries
+PASS resizing changes storage budget and invalid arguments preserve a table
+PASS generation wrap physically removes old generation-one records once
+8 groups, 97 assertions, 0 failures
+PASS free material, poisoned capture and optional stopping
+PASS updated occupancy reveals both black and white x-ray attackers
+PASS absolute pins exclude illegal recaptures
+PASS kings may recapture only onto unattacked squares
+PASS en passant removes the off-target pawn and recomputes pins and rays
+PASS initial promotions and promotion recaptures include material increments
+SEE differential: 45 positions, 1442 moves, 57 losing exchanges, 8 promotions, 1 en passant
+PASS LVA agrees with independent legal-move recursion on varied legal positions
+PASS repeated calls preserve castling repetition and undo history
+Compact SEE differential: 80 positions, 2525 moves, 86 losing exchanges
+PASS compact attack lists agree with legal recursion across deterministic walks
+9 groups, 9119 assertions, 0 failures
+PASS frozen v0.6.3 parity over seeded models both formats and legal histories
+PASS committed learned V2 models match frozen inference over legal histories
+PASS cancellation and half-centipawn boundaries retain original accumulation order
+PASS separate multiply and add semantics remain visible at rounding boundaries
+PASS V2 zero correction preserves every classical option and board state
+PASS V2 correction is bounded and uses classical position rather than material
+PASS V2 feature paths have the same orientation as V1
+PASS V2 retains bounded corrections in legal promotion-heavy positions
+PASS zero residual preserves exact side-to-move material
+PASS hand-computed affine layers use output-major weights
+PASS own and opposing pawn channels remain distinct
+PASS all six piece types use PNBRQK channel order
+PASS later rows and columns are not transposed or omitted
+PASS ReLU is applied independently to both hidden layers
+PASS rounding halves go away from zero
+PASS output clamps protect the search mate-score range
+PASS evaluation preserves position history draw state and undo
+PASS terminal adjudication is deliberately outside the evaluator
+PASS strict header rejects versions dimensions scale and extra fields
+PASS parameter counts and trailing tokens must match exactly
+PASS non-finite excessive and malformed weights are rejected
+PASS bounded loading rejects oversized inputs and nonexistent files
+PASS format accepts CRLF and trailing whitespace
+23 groups, 72958 assertions, 0 failures
+PASS perspective, determinism, history and undo
+PASS special moves
+PASS incremental special moves, sibling branches and exact undo
+PASS incremental raw values survive nonlinear clipping crossings
+PASS seeded deep legal walks, sibling isolation and complete unwind
+PASS incremental/full search parity across search options
+PASS incremental/full cancellation, draw claims and context reuse
+PASS search selection, fallback, terminal and context reuse
+PASS integer NNUE shares LMR reductions, full-depth retries and cancellation exactly
+PASS classical, residual and integer model transitions isolate reusable memory
+10 groups, 51270 assertions, 0 failures
+PASS builtin and custom parameter serialization, checksum and safe save
+PASS malformed headers, checksum, truncation, ranges and trailing data
+PASS fixed-point v2 serialization and exact integer rescaling of v1
+PASS v2 malformed precision headers, numeric limits and checksum rejection
+PASS v2 fractional inputs, one signed division, clipping crossings and undo
+PASS v3 serialization, legacy bytes and zero-feature compatibility
+PASS v3 turn feature, clipping and unchanged-piece turn flip
+PASS v3 header, turn ranges, truncation and checksum rejection
+PASS v3 special moves, exact undo and full/incremental search
+PASS loaded model identity and snapshot model references
+PASS loaded weights: all special moves, sibling branches and undo
+PASS loaded weights: seeded legal walks and complete snapshot unwind
+PASS loaded weights: exact full/incremental search, model and context switching
+tested_model_checksum 18155381136170626874
+13 groups, 30348 assertions, 0 failures
+PASS observer preserves deterministic traversal across NNUE search switches
+PASS observations include unfinished work without claiming a completed PV leaf
+PASS terminal and stopped fallback scores never masquerade as leaves
+PASS draw-adjusted evaluations carry exclusion metadata
+PASS special-move leaf paths replay complete repetition history
+PASS throwing observer restores input and search-local move path
+6 groups, 52321 assertions, 0 failures
