@@ -116,6 +116,7 @@ jobs:
       - run: node tests/web_coaching_tests.js
       - run: node tests/coaching_reference_web_tests.js
       - run: node tests/clock_adjust_web_tests.js
+      - run: node tests/live_history_web_tests.js
       - run: node tests/web_move_sound_tests.js
       - run: python tests/analysis_tests.py
       - run: python tests/analysis_castling_tests.py
@@ -143,6 +144,7 @@ jobs:
       - run: python tests/rapid_clock_archive_tests.py
       - run: python tests/decision_support_tests.py
       - run: python tests/engine_pacing_tests.py
+      - run: python tests/live_history_tests.py
       - run: python tests/pacing_v4_tests.py
       - run: python tests/contrast_pacing_tests.py
       - run: python tests/opening_pacing_tests.py
@@ -279,6 +281,8 @@ jobs:
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/rapid_clock_offline_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/engine_pacing_transport_tests.gd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/live_history_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:REGICIDE_TEST_GODOT" --headless --path godot --script res://tests/sparring_referee_ui_tests.gd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -28,6 +28,7 @@ import chess.pgn
 
 from play_game import source_version
 from game_archive import GameArchive, default_game_directory
+from live_history import live_history
 from move_hints import MoveHints
 from analysis_session import AnalysisSession, AnalysisRevisionError
 from coaching_session import CoachingSession, CoachingRevisionError
@@ -372,6 +373,9 @@ class HumanGame:
                     clock, pacing["color"], pacing["balance_recovery"]["direction"],
                     pressure_start_ms=pacing["pressure_start_ms"])
                 pacing["target_total_ms"] = min(previous["target_total_ms"], clock["turn_elapsed_ms"] + cap)
+            if previous.get("gambit_recheck", {}).get("active"):
+                pacing["gambit_recheck"] = copy.deepcopy(previous["gambit_recheck"])
+                pacing["target_total_ms"] = min(previous["target_total_ms"], pacing["target_total_ms"])
         except Exception as exc:
             # A cosmetic timing failure must never undo an accepted clock edit.
             pacing = {**previous, "refinement_error": type(exc).__name__}
@@ -799,6 +803,12 @@ class HumanGame:
                                     source="search", source_fen=self.board.fen(en_passant="fen"))
             self._evaluation.update(evaluation_stability.assess(self.board, self._evaluation_packets))
 
+    def history(self):
+        with self._lock:
+            board = self.board.copy(stack=True)
+            game_id, revision, human_color = self.game_id, self.revision, self.human_color
+        return live_history(board, game_id=game_id, revision=revision, human_color=human_color)
+
     def state(self):
         with self._lock:
             self._adjudicate_clock()
@@ -1002,6 +1012,92 @@ class HumanGame:
                 "spent_before_wait_ms": start_clock["turn_elapsed_ms"],
                 "waited_ms": round(max(0, (self._clock_now() - wait_start) * 1000), 3),
                 "completion_reason": reason}
+
+    def _recheck_gambit_idle(self, board, move, pacing, search, close_engine,
+                            game_id, token, revision, pacing_event):
+        """Use an existing unsettled hold for one bounded own-engine check."""
+        with self._lock:
+            current = self._clock.snapshot()
+            valid = (self.boss_mode and not self.sparring_mode and not self._forced_plies
+                     and not self._closing and self._game_open and self.game_id == game_id
+                     and self._game_token is token and self.revision == revision
+                     and not pacing_event.is_set()
+                     and pacing.get("before_fen") == board.fen(en_passant="fen")
+                     and pacing.get("root_ply") == len(board.move_stack))
+            budget = engine_pacing.gambit_recheck_budget(pacing, current) if valid else 0
+        if budget < sparring_safety.MIN_BUDGET_MS or not sparring_safety.inspect(board, move)["risky"]:
+            return None, None, False, pacing
+        color = "white" if board.turn else "black"
+        # Freeze the original visible deadline. Later clock edits can shorten
+        # the work; neither a recheck nor a replacement can extend this turn.
+        turn_deadline_ms = engine_pacing.wait_target_ms(pacing)
+        reserve_ms = max(engine_pacing.LOW_CLOCK_MS, pacing["reserve_ms"])
+
+        def cancelled():
+            with self._lock:
+                now = self._clock.snapshot()
+                active = self._active_pacing or pacing
+                deadline = min(turn_deadline_ms, engine_pacing.wait_target_ms(active))
+                return (self._closing or not self._game_open or self.game_id != game_id
+                        or self._game_token is not token or self.revision != revision
+                        or pacing_event.is_set() or now.get("enabled") is not True
+                        or now.get("status") != "running" or now.get("running_color") != color
+                        or now[color + "_ms"] <= reserve_ms + 150
+                        or now["turn_elapsed_ms"] >= deadline - 100)
+
+        def native_search(amount, **options):
+            if cancelled():
+                raise InterruptedError("Gambit recheck cancelled")
+            with self._lock:
+                now = self._clock.snapshot()
+                active = self._active_pacing or pacing
+                deadline = min(turn_deadline_ms, engine_pacing.wait_target_ms(active))
+                amount = min(amount, deadline - now["turn_elapsed_ms"] - 150,
+                             now[color + "_ms"] - reserve_ms - 150)
+            if amount < 1:
+                raise InterruptedError("Gambit recheck budget exhausted")
+            # This flag routes only to the native engine and bypasses the old
+            # allocation. The wrapper and verifier enforce the new deadline.
+            return search(amount, **options, referee_discovery=True)
+
+        receipt_plan = {"policy": engine_pacing.GAMBIT_RECHECK_POLICY, "active": True,
+                        "budget_ms": budget, "visible_deadline_ms": turn_deadline_ms,
+                        "reason": "checking_risky_unsettled_selection"}
+        with self._lock:
+            if cancelled():
+                return None, None, False, pacing
+            pacing = {**pacing, "gambit_recheck": receipt_plan}
+            self._active_pacing = {**pacing, "status": "searching"}
+            self._active_extra_budget_ms = budget
+        started = time.monotonic()
+        try:
+            replacement, receipt, discarded = sparring_safety.verify(
+                board, move, native_search, close_engine, budget_ms=budget, cancelled=cancelled)
+        except Exception as exc:
+            # Optional work must preserve the already legal baseline even if
+            # the verifier fails before installing its own interruption guard.
+            try:
+                close_engine()
+            except Exception:
+                pass
+            replacement, discarded = None, True
+            receipt = {"status": "unverified", "reason": "verification_failed",
+                       "error": type(exc).__name__, "budget_ms": budget,
+                       "original_move": move.uci(), "selected_move": move.uci(),
+                       "elapsed_ms": round((time.monotonic() - started) * 1000, 3)}
+        # The enclosing decision already owns the full game history. Bind this
+        # additional evidence without duplicating a private game a third time.
+        history = receipt.pop("history_uci", [move.uci() for move in board.move_stack])
+        receipt.update(host_policy=engine_pacing.GAMBIT_RECHECK_POLICY,
+                       history_sha256=hashlib.sha256(" ".join(history).encode("ascii")).hexdigest(),
+                       history_plies=len(history), funded_from="existing_refined_idle_time")
+        with self._lock:
+            if (self.game_id == game_id and self._game_token is token and self.revision == revision):
+                pacing = copy.deepcopy(self._active_pacing or pacing)
+                pacing["gambit_recheck"] = {**receipt_plan, "reason": receipt["reason"],
+                                             "status": receipt["status"], "elapsed_ms": receipt["elapsed_ms"]}
+                self._active_pacing = {**pacing, "status": "searching"}
+        return replacement, receipt, discarded, pacing
 
     def _sparring_analysis_only(self, board=None):
         position = self.board if board is None else board
@@ -1775,8 +1871,8 @@ class HumanGame:
                 if clock_watchdog is not None:
                     clock_watchdog.join(timeout=.2)
             if failure is None:
-                # Search allocation is already spent/frozen. Refine only the
-                # whole-turn timing target using the selected move's evidence.
+                # Refine once. An unsettled gambit selection may spend the
+                # existing hold on native verification before the final wait.
                 with self._lock:
                     same_turn = (not self._closing and self._game_open and self.game_id == game_id
                                  and self._game_token is token and self.revision == revision)
@@ -1793,6 +1889,39 @@ class HumanGame:
                         except Exception as timing_error:
                             pacing_plan = {**pacing_plan, "refinement_error": type(timing_error).__name__}
                         self._active_pacing = {**pacing_plan, "status": "searching"}
+                if self.boss_mode and same_turn and not discard_engine:
+                    replacement, recheck, discarded, pacing_plan = self._recheck_gambit_idle(
+                        board, reply.move, pacing_plan, search, engine.close,
+                        game_id, token, revision, pacing_event)
+                    discard_engine = discard_engine or discarded
+                    if recheck is not None:
+                        if decision is None:
+                            decision = {"policy": boss_play.POLICY, "ply": len(board.move_stack) + 1,
+                                "before_fen": board.fen(en_passant="fen"),
+                                "history_uci": [move.uci() for move in board.move_stack],
+                                "baseline_uci": reply.move.uci(), "selected_uci": reply.move.uci(),
+                                "reason": "baseline_preserved"}
+                        decision["gambit_recheck"] = recheck
+                        if replacement is not None:
+                            original_move = reply.move.uci()
+                            reply, checked_info, checked_packets = replacement
+                            decision.update(pre_recheck_selected_uci=original_move,
+                                            pre_recheck_reason=decision.get("reason"),
+                                            selected_uci=reply.move.uci(), reason="gambit_tactical_recheck",
+                                            candidate_uci=None, line_id=None, opening_name=None,
+                                            line_complete=False, loss_cp=None, reference_delta_cp=None,
+                                            compared_depth=checked_info["depth"],
+                                            best_defense_pv_uci=[m.uci() for m in checked_info.get("pv", [])],
+                                            best_defense_cp=recheck["alternative_root"]["cp_own"],
+                                            final_best_defense_cp=recheck["alternative_child"]["cp_own"])
+                            pacing_plan.update(selected_uci=reply.move.uci(),
+                                forecast=engine_pacing._selected_line(board, reply.move, checked_info))
+                            with self._lock:
+                                if (self.game_id == game_id and self._game_token is token
+                                        and self.revision == revision and not self._closing):
+                                    self._active_timing_evidence = {"selected_move": reply.move,
+                                        "baseline_packets": checked_packets, "selected_info": checked_info}
+                                    self._active_pacing = {**pacing_plan, "status": "searching"}
                 pacing_receipt = self._wait_for_engine_turn(pacing_plan, game_id, token, revision, pacing_event)
             with self._lock:
                 self._engine_searching = False
@@ -1826,7 +1955,7 @@ class HumanGame:
                         decisions = (self._sparring_decisions if self.sparring_mode else self._boss_decisions if self.boss_mode else
                                      self._dynamic_decisions if self.dynamic_play_enabled else self._opening_decisions)
                         decisions[len(self.board.move_stack)] = copy.deepcopy(decision)
-                        if memo_key:
+                        if memo_key and not decision.get("gambit_recheck"):
                             policy_memo[memo_key] = copy.deepcopy(decision)
                     if discard_engine and self._engine is not None:
                         self._engine.close()
@@ -2324,6 +2453,8 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/api/state":
             self._send(200, self.server.game.state())
+        elif self.path == "/api/history":
+            self._send(200, self.server.game.history())
         elif self.path == "/api/evaluation":
             self._send(200, self.server.game.evaluation_with_reference())
         elif self.path == "/api/hint":

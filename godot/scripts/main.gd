@@ -56,6 +56,18 @@ var review_moves: Array = []
 var review_ply: int = 0
 var review_summary: Dictionary = {}
 var review_pgn: String = ""
+var live_history_frames: Array = []
+var live_history_ply: int = -1
+var _live_history_moves: Array = []
+var _live_history_game: String = ""
+var _live_history_loading: bool = false
+var _live_history_epoch: int = 0
+var _live_history_silent_transition: bool = false
+var history_http: HTTPRequest
+var live_history_previous: Button
+var live_history_next: Button
+var live_history_return: Button
+var live_history_label: Label
 var _live_selected_square: String = ""
 var _live_pending_promotions: Array[String] = []
 var _library_games: Array = []
@@ -369,6 +381,26 @@ func _build_ui() -> void:
 	bottom_clock.name = "BottomClock"
 	lower_strip.add_child(bottom_clock)
 	board_column.add_child(_label("기물 → 도착 칸 클릭  /  드래그 이동  /  F 키로 시점 전환", 12, "8197aa"))
+	var history_row := HBoxContainer.new()
+	history_row.name = "LiveHistoryNavigation"
+	history_row.add_theme_constant_override("separation", 8)
+	board_column.add_child(history_row)
+	live_history_previous = _button("<", _step_live_history.bind(-1))
+	live_history_previous.name = "LiveHistoryPrevious"
+	live_history_previous.tooltip_text = "이전 위치 보기 (왼쪽 화살표). 대국과 시계는 계속됩니다."
+	history_row.add_child(live_history_previous)
+	live_history_next = _button(">", _step_live_history.bind(1))
+	live_history_next.name = "LiveHistoryNext"
+	live_history_next.tooltip_text = "다음 위치 보기 (오른쪽 화살표)"
+	history_row.add_child(live_history_next)
+	live_history_label = _label("현재 위치", 13, "9bd7ca")
+	live_history_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	live_history_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	history_row.add_child(live_history_label)
+	live_history_return = _button("현재로", _return_live_history)
+	live_history_return.name = "LiveHistoryReturn"
+	live_history_return.tooltip_text = "진행 중인 최신 위치로 돌아갑니다. (End)"
+	history_row.add_child(live_history_return)
 	var side_panel := PanelContainer.new()
 	side_panel.custom_minimum_size.x = 330
 	side_panel.add_theme_stylebox_override("panel", _panel_style("132134"))
@@ -636,6 +668,9 @@ func _build_ui() -> void:
 	http = HTTPRequest.new()
 	http.timeout = ORDINARY_HTTP_TIMEOUT_SECONDS
 	add_child(http)
+	history_http = HTTPRequest.new()
+	history_http.timeout = ORDINARY_HTTP_TIMEOUT_SECONDS
+	add_child(history_http)
 	# Search updates must arrive while the move request is still waiting.
 	evaluation_http = HTTPRequest.new()
 	evaluation_http.timeout = 3.0
@@ -1361,6 +1396,7 @@ func _adopt_review(detail: Dictionary) -> bool:
 	var summary: Variant = detail.get("summary", {})
 	if not frames is Array or not moves is Array or not summary is Dictionary or frames.is_empty() or frames.size() != moves.size() + 1:
 		return false
+	_reset_live_history()
 	if not review_mode:
 		_live_selected_square = board_model.selected_square
 		_live_pending_promotions = board_model.pending_promotions.duplicate()
@@ -1380,6 +1416,17 @@ func _adopt_review(detail: Dictionary) -> bool:
 
 
 func _display_state() -> Dictionary:
+	if _live_history_active() and live_history_ply < live_history_frames.size():
+		var historical: Dictionary = state.duplicate(true)
+		historical.merge(live_history_frames[live_history_ply], true)
+		historical["moves"] = state.get("moves", []).slice(0, live_history_ply)
+		historical["human_to_move"] = false
+		historical["engine_to_move"] = false
+		historical["legal_moves"] = []
+		historical["hint_legal_moves"] = []
+		historical["result"] = "*"
+		historical.erase("opening_guide")
+		return historical
 	if not review_mode or review_frames.is_empty():
 		return state
 	var shown: Dictionary = review_frames[review_ply].duplicate(true)
@@ -1390,6 +1437,88 @@ func _display_state() -> Dictionary:
 		shown["engine"] = {"name": str(review_summary.get("engine_name", "Regicide")),
 			"movetime_ms": int(saved_movetime) if saved_movetime != null else 1000}
 	return shown
+
+
+func _live_history_active() -> bool:
+	return not review_mode and live_history_ply >= 0
+
+
+func _reset_live_history() -> void:
+	_live_history_silent_transition = _live_history_active()
+	_live_history_epoch += 1
+	live_history_ply = -1
+	live_history_frames.clear()
+	_live_history_moves.clear()
+	_live_history_game = ""
+
+
+func _return_live_history() -> void:
+	_live_history_silent_transition = true
+	_live_history_epoch += 1
+	live_history_ply = -1
+	board_model.selected_square = ""
+	board_model.pending_promotions.clear()
+	_clear_hint()
+	_render()
+
+
+func _accept_live_history(detail: Dictionary) -> bool:
+	var frames: Variant = detail.get("frames")
+	var moves: Variant = detail.get("moves")
+	var actual: Array = state.get("moves", [])
+	if str(detail.get("game_id", "")) != str(state.get("game_id", "")) or not frames is Array or not moves is Array or frames.size() != moves.size() + 1 or moves.size() > actual.size():
+		return false
+	for index in range(moves.size()):
+		if not moves[index] is Dictionary or str(moves[index].get("uci", "")) != str(actual[index].get("uci", "")):
+			return false
+	for frame in frames:
+		if not frame is Dictionary or not frame.get("board") is Dictionary or str(frame.get("fen", "")).is_empty():
+			return false
+	if moves.size() == actual.size() and str(frames[-1].get("fen", "")) != str(state.get("fen", "")):
+		return false
+	live_history_frames = frames.duplicate(true)
+	_live_history_moves = moves.duplicate(true)
+	_live_history_game = str(detail.game_id)
+	return true
+
+
+func _step_live_history(change: int) -> void:
+	if review_mode:
+		_step_review(change)
+		return
+	if closing or _file_dialog_busy() or _analysis_open() or _coaching_open() or _live_history_loading or state.is_empty() or state.get("handicap_mode", false):
+		return
+	var latest: int = state.get("moves", []).size()
+	var target: int = clampi((live_history_ply if _live_history_active() else latest) + change, 0, latest)
+	if target == latest:
+		_return_live_history()
+		return
+	board_model.selected_square = ""
+	board_model.pending_promotions.clear()
+	_clear_hint()
+	if _live_history_game == str(state.get("game_id", "")) and target < live_history_frames.size():
+		_live_history_silent_transition = true
+		live_history_ply = target
+		_render()
+		return
+	if backend_url.is_empty():
+		return
+	_live_history_loading = true
+	_live_history_epoch += 1
+	var epoch: int = _live_history_epoch
+	var game: String = str(state.get("game_id", ""))
+	_render()
+	var response: Dictionary = await _send_request("/api/history", null, history_http)
+	_live_history_loading = false
+	if epoch != _live_history_epoch or game != str(state.get("game_id", "")) or closing or review_mode:
+		_render()
+		return
+	if response.get("ok", false) and _accept_live_history(response.get("data", {})) and target < live_history_frames.size():
+		_live_history_silent_transition = true
+		live_history_ply = target if target < state.get("moves", []).size() else -1
+	else:
+		error_message = str(response.get("error", "수순이 갱신됐습니다. 이전 위치 버튼을 다시 눌러 주세요."))
+	_render()
 
 
 func _set_review_ply(ply: int) -> void:
@@ -1494,6 +1623,7 @@ static func planned_extra_budget(position: Dictionary) -> int:
 
 
 func accept_state(next: Dictionary) -> void:
+	var previous: Dictionary = state
 	var merged: Dictionary = merge_state_versions(state, next)
 	var next_clock: Dictionary = next.get("clock", {}) if next.get("clock") is Dictionary else {}
 	var old_clock: Dictionary = state.get("clock", {}) if state.get("clock") is Dictionary else {}
@@ -1513,6 +1643,16 @@ func accept_state(next: Dictionary) -> void:
 	if accepted_clock:
 		_clock_received_ticks = _next_clock_anchor(next_clock, old_clock, same_revision)
 	state = merged
+	var old_moves: Array = previous.get("moves", [])
+	var new_moves: Array = state.get("moves", [])
+	var same_line: bool = str(previous.get("game_id", "")) == str(state.get("game_id", "")) and new_moves.size() >= old_moves.size()
+	if same_line:
+		for index in range(old_moves.size()):
+			if old_moves[index].get("uci") != new_moves[index].get("uci"):
+				same_line = false
+				break
+	if not same_line:
+		_reset_live_history()
 	if _hint_toggle_version == 0 and state.has("hint_enabled"):
 		hint_enabled = bool(state.hint_enabled)
 	if not _evaluation_matches(evaluation, state):
@@ -1561,6 +1701,13 @@ func _poll_evaluation() -> void:
 
 func _render_evaluation() -> void:
 	if evaluation_bar == null:
+		return
+	if _live_history_active():
+		evaluation_bar.present({"status": "waiting"}, board_model.view_from_white)
+		evaluation_summary.text = "과거 위치 · 형세 표시 없음"
+		evaluation_detail.text = "현재로 돌아가면 진행 중인 위치의 형세를 볼 수 있습니다."
+		evaluation_summary.tooltip_text = evaluation_detail.text
+		evaluation_detail.tooltip_text = evaluation_detail.text
 		return
 	var shown: Dictionary = _display_state()
 	var presented: Dictionary = {"status": "waiting"}
@@ -1798,6 +1945,14 @@ func _poll_hint() -> void:
 
 
 func _render_hint() -> void:
+	if _live_history_active():
+		board.hint_moves = []
+		board.hint_move = ""
+		hint_button.disabled = true
+		hint_summary.visible = false
+		hint_detail.visible = false
+		hint_legend.visible = false
+		return
 	if hint_button == null:
 		return
 	hint_button.text = "추천 수: 켬" if hint_enabled else "추천 수: 끔"
@@ -1887,7 +2042,7 @@ func _connect_backend() -> void:
 
 
 func _mutate(path: String, payload: Dictionary = {}) -> void:
-	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode:
+	if _file_dialog_busy() or request_in_flight or think_time_request_in_flight or state.is_empty() or closing or backend_url.is_empty() or review_mode or _live_history_active():
 		return
 	request_in_flight = true
 	error_message = ""
@@ -1979,6 +2134,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
 		_on_flip_pressed()
 		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and not _analysis_open() and not _coaching_open():
+		if event.keycode == KEY_LEFT or event.keycode == KEY_RIGHT:
+			_step_live_history(-1 if event.keycode == KEY_LEFT else 1)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_END and _live_history_active():
+			_return_live_history()
+			get_viewport().set_input_as_handled()
 
 
 func _on_square_pressed(square: String) -> void:
@@ -2009,7 +2171,7 @@ func _on_square_pressed(square: String) -> void:
 
 
 func _on_promotion_pressed(kind: String) -> void:
-	if review_mode or think_time_request_in_flight:
+	if review_mode or _live_history_active() or think_time_request_in_flight:
 		return
 	for move in board_model.pending_promotions:
 		if move.ends_with(kind):
@@ -2018,7 +2180,7 @@ func _on_promotion_pressed(kind: String) -> void:
 
 
 func _can_select_move() -> bool:
-	return not _file_dialog_busy() and not review_mode and (state.get("human_to_move", false) or state.get("handicap_mode", false))
+	return not _file_dialog_busy() and not review_mode and not _live_history_active() and (state.get("human_to_move", false) or state.get("handicap_mode", false))
 
 
 func _submit_selected_move(move: String) -> void:
@@ -2115,7 +2277,7 @@ func _process(_delta: float) -> void:
 func _render_clock_and_advice() -> void:
 	if top_clock == null:
 		return
-	var shown: Dictionary = _display_state()
+	var shown: Dictionary = state if _live_history_active() else _display_state()
 	var clock: Dictionary = shown.get("clock", {}) if shown.get("clock") is Dictionary else {}
 	var enabled: bool = clock.get("enabled", false) == true
 	var human_overtime: bool = clock.get("timeout_policy") == "engine_only" and clock.get("overtime_color") == shown.get("human_color") and shown.get("result", "*") == "*"
@@ -2594,7 +2756,17 @@ func _render() -> void:
 	if coaching_entry_button != null:
 		coaching_entry_button.disabled = not _can_open_coaching()
 	var shown: Dictionary = _display_state()
+	var browsing: bool = _live_history_active()
+	var live_count: int = state.get("moves", []).size()
+	live_history_previous.get_parent().visible = not review_mode
+	live_history_previous.disabled = closing or state.is_empty() or _file_dialog_busy() or _live_history_loading or state.get("handicap_mode", false) or (live_history_ply == 0 if browsing else live_count == 0)
+	live_history_next.disabled = closing or _file_dialog_busy() or _live_history_loading or not browsing
+	live_history_return.disabled = closing or not browsing and not _live_history_loading
+	live_history_label.text = "수순 불러오는 중 · 대국은 계속됩니다" if _live_history_loading else "%d / %d 착수 · 과거 보기 · 대국과 시계는 계속됩니다" % [live_history_ply, live_count] if browsing else "현재 위치 · %d 착수" % live_count
+	board.animation_enabled = not browsing and not _live_history_silent_transition
+	board.move_sounds_enabled = not browsing and not _live_history_silent_transition
 	board.state = shown
+	_live_history_silent_transition = false
 	board.queue_redraw()
 	_render_evaluation()
 	_render_hint()
@@ -2626,7 +2798,7 @@ func _render() -> void:
 		engine_label.tooltip_text = "실행 파일 SHA-256\n" + str(engine.get("binary_sha256", ""))
 	var ready: bool = not state.is_empty() and not closing
 	var active: bool = ready and state.get("result", "*") == "*" and state.get("error") == null
-	var enabled: bool = ready and not _file_dialog_busy() and not request_in_flight and not think_time_request_in_flight and not review_mode
+	var enabled: bool = ready and not _file_dialog_busy() and not request_in_flight and not think_time_request_in_flight and not review_mode and not browsing
 	_render_sparring_rating(shown, enabled)
 	_render_clock_and_advice()
 	var replacing: bool = state.get("handicap_mode", false)
@@ -2670,6 +2842,9 @@ func _render() -> void:
 	elif review_mode:
 		status_label.text = "기보 다시 보기 · 읽기 전용"
 		status_detail.text = _record_description(review_summary) + "\n처음·이전·다음·끝으로 수순을 살펴보세요."
+	elif browsing:
+		status_label.text = "과거 위치를 보고 있습니다"
+		status_detail.text = "대국과 시계는 계속됩니다. 수를 두려면 '현재로'를 누르세요.\n현재 대국: " + str(state.get("status", "대국 중"))
 	elif thinking_now:
 		status_label.text = "Regicide가 생각하고 있어요"
 		status_detail.text = "기다리는 동안에도 시점을 자유롭게 뒤집어 볼 수 있습니다."
@@ -2692,7 +2867,7 @@ func _render() -> void:
 	if not _notice_message.is_empty():
 		status_detail.text += "\n" + _notice_message
 	var promotion_was_visible: bool = promotion_panel.visible
-	promotion_panel.visible = not review_mode and not board_model.pending_promotions.is_empty()
+	promotion_panel.visible = not review_mode and not browsing and not board_model.pending_promotions.is_empty()
 	if promotion_panel.visible and not promotion_was_visible:
 		_reveal_promotion()
 	for kind in promotion_buttons:

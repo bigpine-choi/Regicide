@@ -20,6 +20,7 @@ import sparring_evaluation
 
 POLICY = "regicide-engine-pacing-v13"
 GAMBIT_SEARCH_POLICY = "regicide-gambit-search-time-v1"
+GAMBIT_RECHECK_POLICY = "regicide-gambit-idle-recheck-v1"
 # Keep each game's established variation while changing its time allowance.
 RHYTHM_NAMESPACE = "regicide-engine-pacing-v3"
 LOW_CLOCK_MS = 10_000
@@ -616,9 +617,39 @@ def wait_target_ms(pacing):
     return max(0, pacing["target_total_ms"] - pacing.get("post_search_reduction_ms", 0))
 
 
+def gambit_recheck_budget(pacing, clock):
+    """Reclaim an unsettled turn's existing hold, never extend its deadline.
+
+    The host separately requires gambit mode and a risky legal selection.
+    This allowance is issued once, after refinement, and still preserves the
+    current clock reserve. A completed recheck does not cause another hold.
+    """
+    if (not isinstance(pacing, dict) or not isinstance(clock, dict)
+            or pacing.get("policy") != POLICY or pacing.get("enabled") is not True
+            or pacing.get("gambit_recheck", {}).get("active")
+            or pacing.get("opening_budget") or pacing.get("clarity_kind") in QUICK_KINDS):
+        return 0
+    refinement = pacing.get("refinement") or {}
+    if not (refinement.get("search_evidence", {}).get("unsettled") is True
+            or refinement.get("kind") == "long_deliberation"):
+        return 0
+    color = pacing.get("color")
+    remaining, elapsed = clock.get(str(color) + "_ms"), clock.get("turn_elapsed_ms")
+    reserve = pacing.get("reserve_ms")
+    target, reduction = pacing.get("target_total_ms"), pacing.get("post_search_reduction_ms", 0)
+    if (color not in ("white", "black") or clock.get("enabled") is not True
+            or clock.get("status") != "running" or clock.get("running_color") != color
+            or not all(_number(value) for value in (remaining, elapsed, reserve, target, reduction))
+            or remaining <= LOW_CLOCK_MS):
+        return 0
+    budget = int(max(0, min(6000, target - reduction - elapsed - 150,
+                           remaining - max(LOW_CLOCK_MS, reserve) - 150)))
+    return budget if budget >= 600 else 0
+
+
 def remaining_wait_ms(pacing, clock):
     if (pacing.get("balance_recovery", {}).get("active") or pacing.get("safety_check", {}).get("active")
-            or pacing.get("quality_check", {}).get("active")):
+            or pacing.get("quality_check", {}).get("active") or pacing.get("gambit_recheck", {}).get("active")):
         return 0
     if not pacing.get("enabled") or not isinstance(clock, dict):
         return 0

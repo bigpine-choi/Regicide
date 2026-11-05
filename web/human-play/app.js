@@ -31,6 +31,9 @@
   let renderedOpeningKey = null;
   let analysisMode = false;
   let coachingMode = false;
+  let historyPly = -1, historyFrames = [], historyGame = null;
+  let historyLoading = false, historyEpoch = 0;
+  let historyNavigated = false;
   let ratingInputGame = null;
   let ratingSavedValue = null;
   let clockPollInFlight = false;
@@ -117,11 +120,74 @@
     } else {
       clockReceivedAt = nextClockAnchor(next.clock, state?.clock, unchangedPosition);
     }
+    const oldMoves = state?.moves || [], nextMoves = next.moves || [];
+    if (state?.game_id !== next.game_id || nextMoves.length < oldMoves.length ||
+        oldMoves.some((move, index) => move.uci !== nextMoves[index]?.uci)) resetHistory();
     state = next;
     if (!hintPositionAvailable()) clearHint();
     if (samePosition(state, next.evaluation)) evaluation = next.evaluation;
     if (!preserveSelection || !unchangedPosition) selected = null;
     render();
+  }
+
+  function browsingHistory() { return historyPly >= 0; }
+  function resetHistory() { historyNavigated = browsingHistory(); historyEpoch++; historyPly = -1; historyFrames = []; historyGame = null; }
+  function displayedState() {
+    if (!browsingHistory() || !historyFrames[historyPly]) return state;
+    return {...state, ...historyFrames[historyPly], moves:(state?.moves || []).slice(0, historyPly),
+      human_to_move:false, engine_to_move:false, legal_moves:[], hint_legal_moves:[],
+      result:"*", opening_guide:null};
+  }
+  function returnToCurrent() {
+    historyNavigated = true;
+    historyEpoch++;
+    historyPly = -1;
+    selected = null;
+    pendingPromotion = [];
+    clearHint();
+    render();
+  }
+  function acceptHistory(detail) {
+    const moves = detail?.moves, frames = detail?.frames, actual = state?.moves || [];
+    if (detail?.game_id !== state?.game_id || !Array.isArray(moves) || !Array.isArray(frames) ||
+        frames.length !== moves.length + 1 || moves.length > actual.length ||
+        moves.some((move,index) => !move || move.uci !== actual[index]?.uci) ||
+        frames.some(frame => !frame?.board || typeof frame.fen !== "string") ||
+        (moves.length === actual.length && frames.at(-1)?.fen !== state?.fen)) return false;
+    historyFrames = frames;
+    historyGame = detail.game_id;
+    return true;
+  }
+  async function stepHistory(change) {
+    if (!state || closed || analysisMode || coachingMode || historyLoading || state.handicap_mode) return;
+    const latest = state.moves?.length || 0;
+    const target = Math.max(0, Math.min(latest, (browsingHistory() ? historyPly : latest) + change));
+    if (target === latest) { returnToCurrent(); return; }
+    selected = null; pendingPromotion = []; clearHint();
+    if (dialog.open) dialog.close();
+    if (historyGame === state.game_id && target < historyFrames.length) {
+      historyNavigated = true; historyPly = target; render(); return;
+    }
+    historyLoading = true;
+    const epoch = ++historyEpoch, game = state.game_id;
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 10000);
+    render();
+    try {
+      const detail = await request("/api/history", undefined, controller.signal);
+      if (epoch !== historyEpoch || state?.game_id !== game || closed) return;
+      if (!acceptHistory(detail) || target >= historyFrames.length)
+        throw new Error("수순이 갱신됐습니다. 이전 위치 버튼을 다시 눌러 주세요.");
+      historyNavigated = true; historyPly = target < state.moves.length ? target : -1;
+    } catch (error) { if (epoch === historyEpoch && state?.game_id === game) showError(error.message); }
+    finally { clearTimeout(timeout); historyLoading = false; render(); }
+  }
+  function renderHistoryControls() {
+    const latest = state?.moves?.length || 0, browsing = browsingHistory();
+    byId("live-history-prev").disabled = !state || closed || historyLoading || state.handicap_mode || (browsing ? historyPly === 0 : latest === 0);
+    byId("live-history-next").disabled = closed || historyLoading || !browsing;
+    byId("live-history-current").disabled = closed || (!browsing && !historyLoading);
+    byId("live-history-status").textContent = historyLoading ? "수순 불러오는 중 · 대국은 계속됩니다" : browsing
+      ? `${historyPly} / ${latest} 착수 · 과거 보기 · 대국과 시계는 계속됩니다` : `현재 위치 · ${latest} 착수`;
   }
 
   function samePosition(first, second) {
@@ -172,8 +238,8 @@
   }
 
   function renderOpeningGuide() {
-    const guide = state?.opening_guide;
-    const key = JSON.stringify([state?.game_id, state?.revision, state?.fen, guide || null]);
+    const shown = displayedState(), guide = shown?.opening_guide;
+    const key = JSON.stringify([shown?.game_id, shown?.revision, shown?.fen, guide || null]);
     // Board selection and time-setting renders must not collapse a reader's
     // open previews. A new position or catalog payload rebuilds the examples.
     if (key === renderedOpeningKey) return;
@@ -381,7 +447,8 @@
   }
 
   function renderEvaluation() {
-    const view = evaluationView();
+    const view = browsingHistory() ? {label:"과거 위치 · 형세 표시 없음", score:"—", share:null,
+      detail:"현재로 돌아가면 진행 중인 위치의 형세를 볼 수 있습니다."} : evaluationView();
     const blackView = state?.human_color === "black";
     const bar = byId("evaluation-bar");
     bar.classList.toggle("black-view", blackView);
@@ -430,7 +497,7 @@
   }
 
   function hintPositionAvailable() {
-    return Boolean(!closed && !analysisMode && !coachingMode && state &&
+    return Boolean(!closed && !browsingHistory() && !analysisMode && !coachingMode && state &&
       (state.human_to_move || state.engine_to_move) && !state.handicap_mode &&
       state.result === "*" && !state.error &&
       (!busy || (engineThinking && state.engine_to_move)) && hintLegalMoves().length);
@@ -522,11 +589,11 @@
 
   function renderHint() {
     const button = byId("hint-toggle");
-    byId("hint-panel").hidden = !hintEnabled;
+    byId("hint-panel").hidden = !hintEnabled || browsingHistory();
     button.textContent = `추천 수: ${hintEnabled ? "켬" : "끔"}`;
     button.setAttribute("aria-pressed", String(hintEnabled));
     // This setting stays available while the opponent is thinking.
-    button.disabled = !state || closed;
+    button.disabled = !state || closed || browsingHistory();
     const candidates = currentHintCandidates();
     let text = "켜면 양쪽 차례의 최대 3개 후보를 표시합니다.";
     if (closed) text = "대국 프로그램을 종료했습니다.";
@@ -609,19 +676,20 @@
   }
 
   function renderBoard() {
-    const blackView = state?.human_color === "black";
+    const shown = displayedState();
+    const blackView = shown?.human_color === "black";
     const files = blackView ? "hgfedcba" : "abcdefgh";
     const ranks = blackView ? "12345678" : "87654321";
-    const legal = state?.legal_moves || [];
+    const legal = shown?.legal_moves || [];
     const destinations = new Set(selected ? legal.filter((move) => move.slice(0,2) === selected).map((move) => move.slice(2,4)) : []);
-    const lastSquares = state?.last_move ? [state.last_move.slice(0,2), state.last_move.slice(2,4)] : [];
+    const lastSquares = shown?.last_move ? [shown.last_move.slice(0,2), shown.last_move.slice(2,4)] : [];
     const hints = currentHintCandidates();
     const focusedSquare = document.activeElement?.dataset?.square;
     const fragment = document.createDocumentFragment();
     for (const rank of ranks) {
       for (const file of files) {
         const square = file + rank;
-        const piece = state?.board?.[square];
+        const piece = shown?.board?.[square];
         const button = document.createElement("button");
         button.type = "button";
         button.dataset.square = square;
@@ -635,12 +703,12 @@
         if (destinations.has(square)) button.classList.add("legal-target");
         if (piece) button.classList.add("occupied");
         const pieceColor = piece && piece === piece.toUpperCase() ? "white" : "black";
-        if (state?.in_check && piece?.toLowerCase() === "k" && pieceColor === state.turn) button.classList.add("in-check");
+        if (shown?.in_check && piece?.toLowerCase() === "k" && pieceColor === shown.turn) button.classList.add("in-check");
         const label = piece ? `${square}, ${colorName(pieceColor)} ${pieceNames[piece.toLowerCase()]}` : `${square}, 빈 칸`;
         button.setAttribute("aria-label", label + (destinations.has(square) ? ", 이동 가능" : "") +
           (hintLabels.length ? ", " + hintLabels.join(", ") : ""));
         button.setAttribute("aria-pressed", String(square === selected));
-        button.disabled = busy || timeSaving || closed || !state?.human_to_move;
+        button.disabled = busy || timeSaving || closed || browsingHistory() || !shown?.human_to_move;
         if (piece) {
           const symbol = document.createElement("span");
           symbol.className = "piece " + pieceColor;
@@ -668,16 +736,17 @@
     const arrows = hintArrows(hints, files, ranks);
     if (arrows) fragment.append(arrows);
     if (window.RegicideMotion) window.RegicideMotion.replace(boardElement, fragment, {
-      scope:state?.game_id, ply:state?.moves?.length || 0, pieces:state?.board || {},
-      turn:state?.turn, lastMove:state?.last_move, legalMoves:state?.legal_moves,
-      orientation:blackView ? "black" : "white", enabled:!analysisMode && !coachingMode && !closed
+      scope:shown?.game_id, ply:shown?.moves?.length || 0, pieces:shown?.board || {},
+      turn:shown?.turn, lastMove:shown?.last_move, legalMoves:shown?.legal_moves,
+      orientation:blackView ? "black" : "white", enabled:!analysisMode && !coachingMode && !closed && !browsingHistory() && !historyNavigated
     });
     else boardElement.replaceChildren(fragment);
+    historyNavigated = false;
     if (focusedSquare) boardElement.querySelector(`[data-square="${focusedSquare}"]`)?.focus({preventScroll:true});
   }
 
   function renderMoves() {
-    const moves = state?.moves || [];
+    const moves = displayedState()?.moves || [];
     byId("move-count").textContent = `${moves.length}수`;
     byId("empty-moves").hidden = moves.length > 0;
     const fragment = document.createDocumentFragment();
@@ -979,12 +1048,13 @@
   }
 
   function updateSidebarExplorer() {
-    window.RegicideExplorer?.update("live", {fen:state?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode)});
+    window.RegicideExplorer?.update("live", {fen:displayedState()?.fen, active:Boolean(state && !closed && !analysisMode && !coachingMode)});
     const analyze = byId("live-analyze-current");
     if (analyze) analyze.disabled = !state || closed || analysisMode || coachingMode;
   }
 
   function render() {
+    renderHistoryControls();
     updateSidebarExplorer();
     renderClockAndAdvice();
     renderModeHelp();
@@ -1018,12 +1088,12 @@
       byId("header-engine-version").textContent = engineName.startsWith("Regicide ") ? "v" + engineName.slice("Regicide ".length) : "";
       byId("human-detail").textContent = active ? `${colorName(humanColor)}으로 두고 있어요. 기물과 도착 칸을 눌러주세요.` : "이번 대국이 끝났습니다.";
     }
-    byId("new-game").disabled = !ready || busy || timeSaving;
+    byId("new-game").disabled = !ready || busy || timeSaving || browsingHistory();
     byId("human-side").disabled = !ready || busy || timeSaving;
     byId("boss-mode").disabled = !ready || busy || timeSaving || state?.handicap_mode;
     byId("rapid-time-control").disabled = !ready || busy || timeSaving || state?.handicap_mode;
-    byId("undo").disabled = !ready || busy || timeSaving || !state.can_undo;
-    byId("resign").disabled = !ready || busy || timeSaving || !active;
+    byId("undo").disabled = !ready || busy || timeSaving || browsingHistory() || !state.can_undo;
+    byId("resign").disabled = !ready || busy || timeSaving || browsingHistory() || !active;
     byId("download-pgn").disabled = !ready || busy;
     byId("shutdown").disabled = !ready || busy || timeSaving;
     byId("connection-label").textContent = closed ? "프로그램 종료됨" : "내 컴퓨터에서 대국 중";
@@ -1032,6 +1102,10 @@
     byId("status-dot").classList.toggle("finished", ready && !active);
     byId("status-text").textContent = closed ? "대국 프로그램을 종료했습니다." : thinking ? "Regicide가 다음 수를 생각하고 있어요…" : state?.status || "체스판을 준비하고 있어요.";
     byId("status-detail").textContent = closed ? "진행한 기보는 자동 저장했습니다. 이 창을 닫아도 됩니다." : !ready ? "잠시만 기다려주세요." : thinking ? "엔진이 수를 두면 바로 이어서 둘 수 있습니다." : !active ? `결과 ${state.result} · 기보를 저장하거나 새 대국을 시작하세요.` : state.in_check ? "체크입니다. 왕을 안전하게 지키는 수를 두세요." : state.human_to_move ? (selected ? `${selected} 기물을 선택했습니다. 표시된 칸으로 이동하세요.` : "내 차례입니다. 기물을 선택해보세요.") : "Regicide의 차례입니다.";
+    if (browsingHistory() && !closed) {
+      byId("status-text").textContent = "과거 위치를 보고 있습니다";
+      byId("status-detail").textContent = `대국과 시계는 계속됩니다. 수를 두려면 '현재로'를 누르세요. 현재 대국: ${state?.status || "대국 중"}`;
+    }
     showError(closed ? "" : errorMessage || state?.error || "");
   }
 
@@ -1053,7 +1127,7 @@
   }
 
   async function mutate(path, payload = {}) {
-    if (busy || timeSaving || closed || !state) return;
+    if (busy || timeSaving || closed || !state || browsingHistory()) return;
     busy = true;
     showError("");
     selected = null;
@@ -1112,7 +1186,7 @@
 
   boardElement.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-square]");
-    if (!button || busy || timeSaving || closed || !state?.human_to_move) return;
+    if (!button || busy || timeSaving || closed || browsingHistory() || !state?.human_to_move) return;
     const square = button.dataset.square;
     if (selected === square) { selected = null; render(); return; }
     if (selected) {
@@ -1144,7 +1218,18 @@
   byId("boss-mode").addEventListener("change", renderModeHelp);
   byId("live-analyze-current")?.addEventListener("click", () => {
     if (!state || closed || analysisMode || coachingMode) return;
-    window.dispatchEvent(new CustomEvent("regicide-current-analysis", {detail:{fen:state.fen}}));
+    window.dispatchEvent(new CustomEvent("regicide-current-analysis", {detail:{fen:displayedState().fen}}));
+  });
+  byId("live-history-prev").addEventListener("click", () => { void stepHistory(-1); });
+  byId("live-history-next").addEventListener("click", () => { void stepHistory(1); });
+  byId("live-history-current").addEventListener("click", returnToCurrent);
+  window.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.repeat ||
+        analysisMode || coachingMode || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) ||
+        event.target?.isContentEditable || dialog.open) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault(); void stepHistory(event.key === "ArrowLeft" ? -1 : 1);
+    } else if (event.key === "End" && browsingHistory()) { event.preventDefault(); returnToCurrent(); }
   });
   byId("rapid-time-control").addEventListener("change", renderClockAndAdvice);
   byId("clock-adjust-toggle").addEventListener("click", () => {
