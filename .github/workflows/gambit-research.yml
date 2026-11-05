@@ -1,0 +1,37 @@
+name: Gambit research
+on:
+  pull_request:
+    paths:
+      - 'scripts/*gambit*.py'
+      - 'tests/*gambit*.py'
+      - 'data/openings/**'
+      - '.github/workflows/gambit-research.yml'
+  workflow_dispatch:
+jobs:
+  offline-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-test.txt
+      - name: Research contracts
+        run: |
+          python -m unittest discover -s tests -p gambit_theory_curriculum_tests.py -v
+          python -m unittest discover -s tests -p study_gambit_theory_tests.py -v
+          python -m unittest discover -s tests -p gambit_discovery_tests.py -v
+          python -m unittest discover -s tests -p gambit_research_core_tests.py -v
+          python -m unittest discover -s tests -p gambit_research_cli_tests.py -v
+      - name: Build native engine
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+          cmake --build build --target regicide -j2
+      - name: Native theory smoke
+        run: python scripts/gambit_research.py study --binary build/regicide --output build/theory-smoke --roots-per-family 2 --nodes 10000 --wall-seconds 60 --candidates 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gambit-research-smoke
+          path: build/theory-smoke
