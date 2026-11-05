@@ -26,8 +26,8 @@ import gambit_tactics
 import opening_variety as opening
 import rating_evidence
 
-POLICY = "regicide-boss-play-v9"
-SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", POLICY)
+POLICY = "regicide-boss-play-v10"
+SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", "regicide-boss-play-v9", POLICY)
 MAX_PLIES = 16
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
@@ -116,6 +116,10 @@ def memo_key(board, budget_ms, binary_sha256, evaluation_id, *, seed="", catalog
     return opening._digest([POLICY, boss_openings.POLICY, boss_opponent.POLICY, gambit_initiative.POLICY,
                             gambit_tactics.POLICY,
                             gambit_knowledge.metadata().get("catalog_sha256"), gambit_learning.model_identity(),
+                            gambit_knowledge.metadata().get("extension_manifest_sha256"),
+                            gambit_repertoire_play.POLICY, gambit_operations.POLICY,
+                            gambit_repertoire_play.ENABLE_STUDIED_FINALISTS,
+                            gambit_operations.CONTINUATION_POLICY,
                             gambit_operations.metadata().get("curriculum_sha256"), gambit_practice_memory.memory_identity(),
                             seed, opening.history_key(board), budget_ms,
                             binary_sha256, evaluation_id, catalog_id])
@@ -182,7 +186,7 @@ def plan(board, budget_ms, seed, *, forced=False, decisions=(), engine_identity=
                           initiative_context=attack, candidate_budget_ms=extra, extra_budget_ms=extra)
     if ((not result["eligible"] and result["reason"] in ("outside_repertoire", "signature_complete", "forced_or_late")
          or result.get("mode") == "initiative") and not forced and budget_ms >= MIN_TOTAL_MS):
-        rows = gambit_knowledge.proposals(board, seed, decisions=decisions)
+        rows = gambit_knowledge.runtime_proposals(board, seed, decisions=decisions)
         if rows:
             rows, ranking = gambit_learning.rank_with_metadata(board, rows, engine_identity=engine_identity)
             extra = extra_budget(budget_ms)
@@ -199,11 +203,23 @@ def plan(board, budget_ms, seed, *, forced=False, decisions=(), engine_identity=
             memory = gambit_practice_memory.proposals(board, seed, engine_identity=engine_identity,
                                                        context=operation, limit=4)
             native = gambit_operations.proposals(board, seed, context_value=operation, limit=4)
-            rows, seen = [], set()
-            for row in [*memory, *result.get("knowledge_candidates", []), *native]:
+            rows, seen = [], {}
+            knowledge = result.get("knowledge_candidates", [])
+            # Only two alternatives can be verified on a turn. Reserve an
+            # early opportunity for both practiced memory and opening study;
+            # four old memory entries must not hide every new continuation.
+            evidence = []
+            for index in range(max(len(memory), len(knowledge))):
+                for source in (memory, knowledge):
+                    if index < len(source):
+                        evidence.append(source[index])
+            for row in [*evidence, *native]:
                 if row["uci"] not in seen:
+                    seen[row["uci"]] = len(rows)
                     rows.append(row)
-                    seen.add(row["uci"])
+                # A later study of the same move must not erase independently
+                # valid practiced evidence. The retained proposal is still
+                # revalidated against its own source before any allowance.
             if rows:
                 extra = extra_budget(budget_ms)
                 result.update(eligible=True, mode="initiative", reason="practice_post_sacrifice_operations",
@@ -498,6 +514,10 @@ def explore_initiative(board, search_plan, baseline_move, baseline_info, baselin
         result.update(compared_depth=compared["depth"], best_defense_cp=compared["cp"],
                       final_best_defense_cp=final["cp"], best_defense_pv_uci=compared["pv_uci"],
                       reference_delta_cp=result["baseline"]["cp"] - compared["cp"])
+        if detail.get("loss_basis") == "baseline_included_in_same_completed_native_search":
+            result.update(reference_delta_cp=None, loss_cp=None,
+                comparison_kind="completed_deeper_finalists_including_baseline",
+                selected_vs_finalist_best_loss_cp=detail["selected_vs_finalist_best_loss_cp"])
     return result, discard
 
 

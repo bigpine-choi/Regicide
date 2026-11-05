@@ -18,6 +18,8 @@ import sparring_material
 POLICY = "regicide-gambit-operations-v2"
 CURRICULUM = Path(__file__).resolve().parents[1] / "data/gambits/operations_curriculum.json"
 MAX_AFTER_ACCEPTANCE_PLIES = 48
+CONTINUATION_POLICY = "regicide-gambit-continuation-v2"
+MAX_CONTINUATION_PLIES = 8
 VALUES = sparring_material.VALUES
 GOALS = ("development", "attack_maintenance", "material_recovery", "defensive_transition", "consolidation")
 
@@ -223,20 +225,64 @@ def proposals(board, seed, *, context_value=None, limit=4):
 
 
 def continuation_evidence(board, pv, purpose):
-    """Measure the plan after a real legal opponent reply; never change CP."""
-    if purpose not in GOALS or not isinstance(pv, (list, tuple)) or len(pv) < 2:
+    """Measure a bounded settled native continuation; never change CP.
+
+    Start with the candidate and actual opponent reply. Extend only actual
+    PV recaptures on pending exchange squares, or intervening checks/evasions.
+    An available recapture needs a next PV move to establish whether it was
+    taken or declined. A truncated exchange/check supplies no plan credit.
+    """
+    if (not isinstance(board, chess.Board) or not board.is_valid()
+            or purpose not in GOALS or not isinstance(pv, (list, tuple)) or len(pv) < 2):
         return None
     replay = board.copy(stack=True)
-    first = None
+    prefix, extensions = [], []
+    capture_squares = set()
+
+    def push(move):
+        evasion = replay.is_check()
+        captured = replay.is_capture(move)
+        replay.push(move)
+        if captured:
+            capture_squares.add(move.to_square)
+        elif not evasion and not replay.is_check():
+            capture_squares.clear()
+        # A checking intermediate move and its evasion can postpone a
+        # recapture, even if that evasion captures a different checker.
+        # Retain pending squares across the forced interruption.
+        prefix.append(move)
+        return automatic_outcome(replay) is None
+
     try:
-        for index, uci in enumerate(pv[:2]):
+        for uci in pv[:2]:
             move = chess.Move.from_uci(uci) if isinstance(uci, str) else uci
-            if move not in replay.legal_moves:
+            if not isinstance(move, chess.Move) or move not in replay.legal_moves:
                 return None
-            if index == 0:
-                first = move
-            replay.push(move)
-            if automatic_outcome(replay) is not None:
+            if not push(move):
+                return None
+        while True:
+            checked = replay.is_check()
+            recaptures = ([move for move in replay.generate_legal_captures()
+                           if move.to_square in capture_squares] if capture_squares else [])
+            if not checked and not recaptures:
+                break
+            if len(prefix) >= len(pv):
+                return None
+            uci = pv[len(prefix)]
+            move = chess.Move.from_uci(uci) if isinstance(uci, str) else uci
+            if not isinstance(move, chess.Move) or move not in replay.legal_moves:
+                return None
+            intermediate_check = not checked and move not in recaptures and replay.gives_check(move)
+            if not checked and move not in recaptures and not intermediate_check:
+                # The native PV explicitly declines this recapture. Do not
+                # accumulate development credit from an unrelated longer PV.
+                break
+            if len(prefix) >= MAX_CONTINUATION_PLIES:
+                return None
+            extensions.append({"ply": len(prefix) + 1, "uci": move.uci(),
+                               "reason": "check_evasion" if checked else
+                                         "intermediate_check" if intermediate_check else "recapture"})
+            if not push(move):
                 return None
     except (TypeError, ValueError):
         return None
@@ -247,17 +293,28 @@ def continuation_evidence(board, pv, purpose):
     activity = (after["mobility"] - before["mobility"]) / 4
     pressure = after["coordinated_pressure"] - before["coordinated_pressure"]
     material = material_balance(replay, owner) - material_balance(board, owner)
-    castled = int(board.is_castling(first))
+    undeveloped_before = sum(len(board.pieces(kind, owner)) for kind in (chess.KNIGHT, chess.BISHOP)) - before["developed_minors"]
+    undeveloped_after = sum(len(replay.pieces(kind, owner)) for kind in (chess.KNIGHT, chess.BISHOP)) - after["developed_minors"]
+    # A settled equal exchange of already developed minors is not retreat.
+    # Count the remaining development burden only without a material loss;
+    # simply losing an undeveloped piece must not earn a development bonus.
+    development_progress = undeveloped_before - undeveloped_after if material >= 0 else development
+    development_basis = "undeveloped_reduction_without_material_loss" if material >= 0 else "raw_developed_change_after_material_loss"
+    castled = int(board.is_castling(prefix[0]))
     points = (4 * safety + activity + 2 * castled if purpose == "defensive_transition" else
               material / 50 + 2 * safety + activity if purpose == "material_recovery" else
-              3 * safety + 3 * development + activity + material / 100 if purpose == "consolidation" else
-              5 * development + 4 * castled + 2 * safety + activity + pressure if purpose == "development" else
-              2 * pressure + 3 * development + activity + 2 * safety)
+              3 * safety + 3 * development_progress + activity + material / 100 if purpose == "consolidation" else
+              5 * development_progress + 4 * castled + 2 * safety + activity + pressure if purpose == "development" else
+              2 * pressure + 3 * development_progress + activity + 2 * safety)
     return {"goal": purpose, "points": points, "material_change_cp": material,
             "king_danger_reduction": safety, "developed_minors_change": development,
+            "development_progress": development_progress, "development_change_basis": development_basis,
+            "undeveloped_minors_before": undeveloped_before, "undeveloped_minors_after": undeveloped_after,
             "pressure_change": pressure, "reply_fen": replay.fen(en_passant="fen"),
-            "pv_prefix_uci": [str(move) for move in pv[:2]],
-            "basis": "observed geometry after native opponent reply; not CP or a forced plan"}
+            "pv_prefix_uci": [move.uci() for move in prefix],
+            "continuation_policy": CONTINUATION_POLICY, "measured_plies": len(prefix),
+            "extensions": extensions, "settled": True,
+            "basis": "observed geometry after bounded native reply exchanges/check evasions; not CP or a forced plan"}
 
 
 def valid_proposal(board, row):

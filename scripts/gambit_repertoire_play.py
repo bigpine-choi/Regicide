@@ -16,10 +16,79 @@ import dynamic_play
 import gambit_operations
 import gambit_practice_memory
 
-POLICY = "regicide-gambit-repertoire-play-v3"
+POLICY = "regicide-gambit-repertoire-play-v7"
 MAX_PROBES = 2
 MAX_EXTRA_MS = 1000
 LOSS_CAP_CP = 35
+NATIVE_GAIN_CP = 10
+# Research only: the 2026-11-05 fixed 50-position study changed four moves,
+# with one external improvement and three regressions (total loss +29cp).
+# Retain same-depth independent verification until this experiment earns use.
+ENABLE_STUDIED_FINALISTS = False
+
+
+def _compare_studied(board, rows, baseline_move, baseline, operation, search, deadline):
+    """Let the native engine compare the live baseline and studied alternatives.
+
+    Prior study supplies moves, never scores. The comparison must complete one
+    full iteration beyond the baseline with that baseline still in the root
+    set. Descendant replies are unrestricted. A partial iteration cannot pick
+    an alternative, even if its provisional score looks promising.
+    """
+    attempt = {"admitted": False, "reason": "studied_comparison_incomplete",
+               "uci": baseline_move.uci(), "source": None,
+               "finalists": [baseline_move.uci()], "screens": [],
+               "target_depth": baseline["depth"] + 1, "loss_cap_cp": 0,
+               "loss_basis": "baseline_included_in_same_completed_native_search"}
+    admitted = {}
+    for row in rows[:MAX_PROBES]:
+        move = chess.Move.from_uci(row["uci"])
+        screen = attack._material_screen(board, move, deadline)
+        attempt["screens"].append({"uci": row["uci"], **screen})
+        if screen["admitted"]:
+            admitted[row["uci"]] = row
+            attempt["finalists"].append(row["uci"])
+    if not admitted:
+        attempt["reason"] = "no_safe_studied_alternative"
+        return attempt
+    amount = (deadline - time.monotonic()) * 1000 - 10
+    if amount < attack.MIN_PROBE_MS:
+        attempt["reason"] = "insufficient_probe_budget"
+        return attempt
+    reply, info, packets = search(amount,
+        root_moves=[chess.Move.from_uci(uci) for uci in attempt["finalists"]],
+        publish=False, fresh=True, depth=attempt["target_depth"])
+    move = reply.move
+    if move is None or move.uci() not in attempt["finalists"]:
+        attempt["reason"] = "studied_comparison_wrong_root"
+        return attempt
+    common = attack._line(board, (packets or {}).get(attempt["target_depth"]), move)
+    final = attack._line(board, info, move)
+    attempt.update(uci=move.uci(), candidate_compared=common, candidate_final=final,
+                   budget_ms=round(amount, 3))
+    if common is None or final is None or final["depth"] < attempt["target_depth"]:
+        return attempt
+    if final["depth"] == common["depth"] and final["cp"] != common["cp"]:
+        attempt["reason"] = "candidate_score_conflict"
+        return attempt
+    if move == baseline_move:
+        attempt["reason"] = "baseline_wins_studied_comparison"
+        return attempt
+    style = attack._style(board, final["pv_uci"])
+    if style is None or dynamic_play._pv_has_terminal(board, final["pv_uci"]):
+        attempt["reason"] = "insufficient_reply_evidence"
+        return attempt
+    if operation:
+        progress = gambit_operations.continuation_evidence(board, final["pv_uci"], operation["goal"])
+        attempt["operations_evidence"] = progress
+        if progress is None:
+            attempt["reason"] = "insufficient_operations_reply_evidence"
+            return attempt
+    attempt.update(admitted=True, reason="native_verified_studied_finalists",
+                   admission_basis="deeper_native_comparison_including_baseline",
+                   source=copy.deepcopy(admitted[move.uci()]), loss_cp=None,
+                   selected_vs_finalist_best_loss_cp=0, style=style)
+    return attempt
 
 
 def choose(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
@@ -76,7 +145,9 @@ def choose(board, search_plan, baseline_move, baseline_info, baseline_packets, s
         if baseline_operation is None:
             result["reason"] = "insufficient_operations_reply_evidence"
             return result, False
-    if (any(row["uci"] == baseline_move.uci() for row in rows)
+    studied = ([row for row in rows if row.get("source") == "native_gambit_continuation"
+                and row["uci"] != baseline_move.uci()] if ENABLE_STUDIED_FINALISTS else [])
+    if (not studied and any(row["uci"] == baseline_move.uci() for row in rows)
             and (not operation or rows[0]["uci"] == baseline_move.uci())):
         result.update(reason="knowledge_move_is_baseline", evidence={"source": next(
             copy.deepcopy(row) for row in rows if row["uci"] == baseline_move.uci())})
@@ -101,6 +172,16 @@ def choose(board, search_plan, baseline_move, baseline_info, baseline_packets, s
     chosen, discard = None, False
     try:
         alternatives = [row for row in rows if row["uci"] != baseline_move.uci()][:MAX_PROBES]
+        if studied:
+            attempt = _compare_studied(board, studied, baseline_move, baseline, operation, search, deadline)
+            result["attempts"].append(attempt)
+            if attempt["admitted"]:
+                chosen = attempt
+                result["loss_basis"] = attempt["loss_basis"]
+                result["selected_vs_finalist_best_loss_cp"] = 0
+            else:
+                result["reason"] = attempt["reason"]
+            alternatives = []
         for index, row in enumerate(alternatives):
             move = chess.Move.from_uci(row["uci"])
             attempt = {"uci": row["uci"], "admitted": False, "source": copy.deepcopy(row)}
@@ -130,7 +211,8 @@ def choose(board, search_plan, baseline_move, baseline_info, baseline_packets, s
             # Geometry alone supplies no evidence for accepting a weaker
             # move. A known book/practiced analysis may use the bounded
             # compensation allowance; new unsourced plans must be lossless.
-            cap = 0 if row.get("source") == "native_operations_geometry" else result["loss_cap_cp"]
+            cap = (0 if row.get("source") in ("native_operations_geometry", "native_gambit_continuation")
+                   else result["loss_cap_cp"])
             attempt["loss_cap_cp"] = cap
             if min(common["cp"], final["cp"]) < baseline["cp"] - cap:
                 attempt["reason"] = "outside_quality_floor"
@@ -142,11 +224,19 @@ def choose(board, search_plan, baseline_move, baseline_info, baseline_packets, s
             if operation:
                 progress = gambit_operations.continuation_evidence(board, final["pv_uci"], operation["goal"])
                 attempt["operations_evidence"] = progress
-                if (progress is None or progress["points"] < baseline_operation["points"]
-                        or progress["points"] == baseline_operation["points"]
-                        and min(common["cp"], final["cp"]) <= baseline["cp"]):
+                native_gain = min(common["cp"], final["cp"]) - baseline["cp"]
+                attempt["native_gain_cp"] = native_gain
+                # Geometry describes a plan; it is not a second evaluator.
+                # A settled, completed native improvement must not be vetoed
+                # just because it trades an active piece or changes the plan.
+                operations_gain = (progress is not None and
+                    (progress["points"] > baseline_operation["points"] or
+                     progress["points"] == baseline_operation["points"] and native_gain > 0))
+                if progress is None or not (operations_gain or native_gain >= NATIVE_GAIN_CP):
                     attempt["reason"] = "no_reply_supported_operations_gain"
                     continue
+                attempt["admission_basis"] = ("native_quality_improvement" if native_gain >= NATIVE_GAIN_CP
+                                               else "reply_supported_operations_gain")
             attempt.update(admitted=True, reason="native_verified_knowledge_continuation",
                            loss_cp=max(0, baseline["cp"] - common["cp"]), style=style)
             if chosen is None or (min(common["cp"], final["cp"]), style["points"]) > (

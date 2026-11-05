@@ -18,7 +18,7 @@ import sparring_material
 
 POLICY = "regicide-gambit-initiative-v2"
 SOURCE_POLICY = "regicide-boss-play-v5"
-SOURCE_POLICIES = (SOURCE_POLICY, "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", "regicide-boss-play-v9")
+SOURCE_POLICIES = (SOURCE_POLICY, "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", "regicide-boss-play-v9", "regicide-boss-play-v10")
 MAX_WINDOW_PLIES = 20
 MAX_EXTRA_MS = 1000
 MAX_PROBES = 2

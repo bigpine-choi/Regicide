@@ -184,7 +184,7 @@ class TacticalHostTests(unittest.TestCase):
         self.assertEqual(final_search["limit"].depth, 5)
         self.assertEqual({m.uci() for m in final_search["root_moves"]}, {candidate, "e1g1"})
         decision = self.game._boss_decisions[9]
-        self.assertEqual(decision["policy"], "regicide-boss-play-v9")
+        self.assertEqual(decision["policy"], "regicide-boss-play-v10")
         self.assertTrue(decision["tactics"]["quality_qualified"])
         self.assertEqual(decision["compared_depth"], 4)
         self.assertEqual(decision["final_best_defense_cp"], 55)

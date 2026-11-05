@@ -19,6 +19,7 @@ import chess
 import chess.pgn
 
 import boss_openings
+import gambit_knowledge_support as native_support
 from game_outcome import automatic_outcome
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -176,10 +177,13 @@ def _load():
 
 def metadata():
     data, _index, manifest, error = _load()
+    extension = native_support.metadata()
     return {"policy": POLICY, "available": error is None, "reason": error,
             "counts": copy.deepcopy(data.get("counts", {})), "source": copy.deepcopy(data.get("source", {})),
             "catalog_sha256": manifest.get("catalog_sha256"), "candidate_only": True,
-            "loss_cap_cp": 35, "learned_evaluator": False}
+            "loss_cap_cp": 35, "learned_evaluator": False,
+            "native_support": extension, "support_id": extension.get("support_id"),
+            "extension_manifest_sha256": extension.get("manifest_sha256")}
 
 
 def repertoire():
@@ -261,13 +265,20 @@ def context(board, decisions=()):
     authored = family["anchor_source"] == "authored_signature"
     stage = ("accepted" if authored else "anchor_piece_captured") if captured else (
         "offer_withdrawn" if withdrawn else "offered" if len(history) == anchor_at else "declined_or_pending")
+    researched = native_support.proposals(board,
+        active_families={key for key in active if data["families"][key]["owner"] == owner}, seed="context")
+    catalog_continuation = any(row["family_id"] == family["family_id"] for row, _i, _uci in index.get(keys[-1], []))
     return {"active": True, "policy": POLICY, "family_id": family["family_id"], "line_id": family["family_id"],
             "name": family["name"], "owner": family["owner"], "stage": stage,
             "anchor_ply": anchor_at, "anchor_source": family["anchor_source"],
             "offer_captured": captured if authored else None, "captured_anchor_piece": captured,
             "offer_withdrawn": withdrawn, "owner_inference": family["owner_inference"],
             "matching_families": sorted(active),
-            "has_continuation": any(row["family_id"] == family["family_id"] for row, _i, _uci in index.get(keys[-1], []))}
+            "native_support_families": sorted({row["family_id"] for row in researched}),
+            "has_catalog_continuation": catalog_continuation,
+            "has_native_continuation": bool(researched),
+            "has_continuation": catalog_continuation,
+            "has_any_continuation": catalog_continuation or bool(researched)}
 
 
 def proposals(board, seed, *, limit=4, decisions=()):
@@ -312,6 +323,28 @@ def proposals(board, seed, *, limit=4, decisions=()):
     return result
 
 
+def runtime_proposals(board, seed, *, limit=4, decisions=()):
+    """Own-search support plus catalog proposals for play, leaving source builds stable."""
+    checked = _history(board)
+    data, _index, _manifest, error = _load()
+    if checked is None or error or type(limit) is not int or not 1 <= limit <= MAX_PROPOSALS:
+        return []
+    history, keys = checked
+    active = _active_families(data, history, keys, decisions)
+    owner = "white" if board.turn else "black"
+    own_active = {key for key in active if data["families"][key]["owner"] == owner}
+    result = proposals(board, seed, limit=limit, decisions=decisions)
+    # Exact, deeper own-search continuations get a review opportunity before
+    # seeded catalog diversity. Their stored scores never authorize a move.
+    researched = native_support.proposals(board, active_families=own_active, seed=seed, limit=limit)
+    merged, seen = [], set()
+    for proposal in [*researched, *result]:
+        if proposal["uci"] not in seen:
+            seen.add(proposal["uci"])
+            merged.append(proposal)
+    return merged[:limit]
+
+
 def valid_proposal(board, proposal):
     """Validate against every source edge, not a seeded representative list.
 
@@ -324,6 +357,10 @@ def valid_proposal(board, proposal):
     data, index, manifest, error = _load()
     if checked is None or error or not isinstance(proposal, dict):
         return False
+    if proposal.get("source") == native_support.SOURCE:
+        history, keys = checked
+        active = _active_families(data, history, keys, ())
+        return native_support.valid_proposal(board, proposal, active_families=active)
     if (proposal.get("catalog_sha256") != manifest.get("catalog_sha256")
             or proposal.get("policy") != POLICY or proposal.get("candidate_only") is not True
             or proposal.get("loss_cap_cp") != 35):
