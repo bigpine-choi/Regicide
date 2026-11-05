@@ -1,0 +1,74 @@
+{
+  "schema": "regicide.gambit-creativity-v3-predeclaration.v1",
+  "declared_utc": "2026-11-05T15:52:49.513095+00:00",
+  "status": "implementation and accounting frozen; full 364-test regression passed; immediately before v3 native queries",
+  "baseline_commit": "72f765f0346c6c4de67139525ee39ad064c54d30",
+  "fixture_sha256": "d2dc99ed154d8135d2826691bd69273eab27a0d3ed4627e1edc85668b3231e90",
+  "paired_cases": 24,
+  "root_ids": [
+    "blackmar-diemer-catalog-tail",
+    "smith-morra-catalog-tail",
+    "evans-catalog-tail",
+    "kings-catalog-tail",
+    "benko-catalog-tail",
+    "danish-catalog-tail",
+    "budapest-memory-regression",
+    "kings-twofold-control"
+  ],
+  "seeds_per_root": 3,
+  "baseline_ms": 1000,
+  "optional_ceiling_ms": 1000,
+  "original_acceptance_criteria": {
+    "maximum_changed_pair_loss_increase_cp": 50,
+    "changed_pair_loss_sum_must_not_increase": true,
+    "minimum_roots_with_increased_unique_moves": 1,
+    "minimum_selected_reply_retained_motifs": 1,
+    "require_stable_native_baseline_for_variety_attribution": true,
+    "require_named_motif_positive_after_reply": true,
+    "require_new_unique_choice_to_be_actually_creative": true
+  },
+  "new_native_admission_contract": {
+    "direct_root_route": "Existing exact completed same-depth root zero-loss verification remains valid.",
+    "child_route_entry": "A selected own native pool winner may enter child verification only if root loss is at most10cp. This is not itself admission.",
+    "child_comparison": "After each real baseline/candidate move, fresh unrestricted own native searches must both complete exact depth D-1. Compare scores in the original parent perspective. Candidate parent score must be at least baseline parent score (zero child-comparison loss).",
+    "root_loss_recording": "Root D score difference remains recorded separately; it is not replaced with child loss0.",
+    "reply_evidence": "Use the candidate real child reply/PV for safety, exchange settlement, repetition and selected named motif retention.",
+    "failure": "Incomplete/bound/conflicting/illegal/terminal/unsafe or exhausted shared budget preserves baseline."
+  },
+  "audit": {
+    "sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+    "version": "Stockfish18",
+    "depth_cap": 18,
+    "milliseconds_cap": 1000,
+    "Threads": 1,
+    "Hash": 32,
+    "stage": "Only after every native selection; union of all actual moves per root gets one common exact completed audit depth."
+  },
+  "limits": [
+    "Same24 inputs and external diversity/quality acceptance thresholds as001/002; no earlier failure is retrospectively relabeled.",
+    "All24 positions were exposed to001/002 post-selection audits; this is development data, not unseen evidence.",
+    "No external evaluation or expected-move target is supplied to the native chooser.",
+    "CPU isolation/affinity/fixed frequency remain uncontrolled."
+  ],
+  "environment_note": {
+    "user_application_previously_closed": true,
+    "user_application_reopened_before_v3": true,
+    "earlier_runs": "Parent previously closed user app after observing it. Whether it computed concurrently during001/002 is unknown. Earlier all-engines-exited claims refer only to benchmark-owned processes.",
+    "v3": "User app was reopened before003; it is left open. Concurrent computation is unknown. CPU isolation/affinity/fixed frequency remain uncontrolled. Same inputs, requested time, and acceptance criteria are unchanged. No private user game is copied."
+  },
+  "frozen_utc": "2026-11-05T16:07:40.264431+00:00",
+  "v3_native_queries_so_far": 0,
+  "native_evidence_gate": "Every actual creative selection must have valid normalized root or paired-child evidence. Paired child common/final must be exactly equal at D-1; child FEN/full history, legal PV, parent POV sign, root loss, and parent-line construction are independently checked. A deeper root warning cannot be erased. Worker traces must witness unrestricted child requests and returned moves.",
+  "accounting_checks": {
+    "tests": 9,
+    "passed": true,
+    "scope": "Controlled receipts only, including actual helper schema for both colors; not strength evidence."
+  },
+  "frozen_source_sha256": {
+    "scripts/gambit_creativity.py": "eefc48768d4130ef68e422c86a5ff4f8f247acfc6fcaf9c02da502d6399745f2",
+    "scripts/boss_play.py": "6ca4fbe0ee64c0dbd2317b7381949c40cbf129819440f9f7525bf317e5bad31a",
+    "scripts/play_human.py": "0fa35a3cd06741fdd338ceee14481bdca5826adc2acfa0df2a892565d438c376",
+    "tests/gambit_creativity_validation.py": "e502764f9a0e3a21b214cd7369555534d6c6d65420458fe67fb70df7c531cddd",
+    "tests/gambit_creativity_validation_tests.py": "c4e3735025027d351e5d8985fc69137feedbdf870b8fd8acfb506dbc3bf45e5b"
+  }
+}

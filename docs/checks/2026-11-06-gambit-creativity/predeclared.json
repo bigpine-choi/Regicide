@@ -1,0 +1,66 @@
+{
+  "schema": "regicide.gambit-creativity-predeclaration.v1",
+  "status": "prepared_before_native_queries",
+  "declared_utc": "2026-11-05T15:11:18.558359+00:00",
+  "baseline_commit": "72f765f0346c6c4de67139525ee39ad064c54d30",
+  "baseline_manifest_sha256": "c5689f1c00e86560012a55fa347fc77f8ccffbd516db480cfd9595abdcefb57b",
+  "fixture_sha256": "d2dc99ed154d8135d2826691bd69273eab27a0d3ed4627e1edc85668b3231e90",
+  "roots": [
+    "blackmar-diemer-catalog-tail",
+    "smith-morra-catalog-tail",
+    "evans-catalog-tail",
+    "kings-catalog-tail",
+    "benko-catalog-tail",
+    "danish-catalog-tail",
+    "budapest-memory-regression",
+    "kings-twofold-control"
+  ],
+  "paired_cases": 24,
+  "seeds_per_root": 3,
+  "baseline_ms": 1000,
+  "optional_ceiling_ms": 1000,
+  "native": {
+    "sha256": "5011da4c5e6ef01c452bd7125e4e22b372d2c9cfb858ed8759057325acb0e6ba",
+    "evaluation": "classical_activity_v1",
+    "Hash": 16,
+    "UsePieceActivity": true,
+    "UseNeuralEvaluation": false,
+    "UseNNUEEvaluation": false,
+    "UseQuiescenceForcing": false
+  },
+  "audit": {
+    "sha256": "9bde420202717ce083412027fbfb8c5c935b537591d712be8a8a8bae92f6e8d6",
+    "version": "Stockfish18",
+    "depth_cap": 18,
+    "milliseconds_cap": 1000,
+    "Threads": 1,
+    "Hash": 32,
+    "stage": "Only after every native selection; union of all actual moves per root gets one common exact completed audit depth."
+  },
+  "acceptance": {
+    "maximum_changed_pair_loss_increase_cp": 50,
+    "changed_pair_loss_sum_must_not_increase": true,
+    "minimum_roots_with_increased_unique_moves": 1,
+    "minimum_selected_reply_retained_motifs": 1,
+    "require_stable_native_baseline_for_variety_attribution": true,
+    "require_named_motif_positive_after_reply": true,
+    "require_new_unique_choice_to_be_actually_creative": true
+  },
+  "runtime_scope": "Frozen separate source imports; actual production HumanGame route, DisplayOnlyPeer for hints/evaluation; no actual forced expected move, no external teacher or evaluator during selection.",
+  "limitations": [
+    "Public catalog exposed development roots, Budapest prior training/audit exposed.",
+    "Same requested time ceilings, not identical measured CPU or completed baseline depth.",
+    "Only three seeds per root; root-level baseline drift reported and excluded from creativity attribution.",
+    "No complete games, Elo, global strength guarantee, or statistically established no-regression."
+  ],
+  "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "accounting_review_before_queries": {
+    "utc": "2026-11-05T15:16:15.909930+00:00",
+    "clarifications": [
+      "The selected named motif must itself stay positive after the observed reply.",
+      "A new distinct move must itself be an actually selected retained creative move, not an unrelated policy change."
+    ],
+    "native_queries_so_far": 0
+  }
+}

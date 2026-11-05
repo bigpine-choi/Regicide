@@ -23,11 +23,12 @@ import gambit_repertoire_play
 import gambit_operations
 import gambit_practice_memory
 import gambit_tactics
+import gambit_creativity
 import opening_variety as opening
 import rating_evidence
 
-POLICY = "regicide-boss-play-v10"
-SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", "regicide-boss-play-v9", POLICY)
+POLICY = "regicide-boss-play-v11"
+SUPPORTED_POLICIES = ("regicide-boss-play-v3", "regicide-boss-play-v4", "regicide-boss-play-v5", "regicide-boss-play-v6", "regicide-boss-play-v7", "regicide-boss-play-v8", "regicide-boss-play-v9", "regicide-boss-play-v10", POLICY)
 MAX_PLIES = 16
 MIN_TOTAL_MS = 500
 MIN_DEPTH = 4
@@ -115,6 +116,7 @@ def extra_budget(budget_ms, *, ply=0):
 def memo_key(board, budget_ms, binary_sha256, evaluation_id, *, seed="", catalog_id=None):
     return opening._digest([POLICY, boss_openings.POLICY, boss_opponent.POLICY, gambit_initiative.POLICY,
                             gambit_tactics.POLICY,
+                            gambit_creativity.POLICY, gambit_creativity.ENABLED,
                             gambit_knowledge.metadata().get("catalog_sha256"), gambit_learning.model_identity(),
                             gambit_knowledge.metadata().get("extension_manifest_sha256"),
                             gambit_repertoire_play.POLICY, gambit_operations.POLICY,
@@ -481,6 +483,7 @@ def explore_tactics(board, search_plan, baseline_move, baseline_info, baseline_p
 def explore_initiative(board, search_plan, baseline_move, baseline_info, baseline_packets, seed,
                        search, close_engine, *, baseline_elapsed_ms=0):
     """Keep gambit compensation active inside the existing shared allowance."""
+    started = time.monotonic()
     knowledge = bool(search_plan.get("knowledge_candidates"))
     if knowledge:
         detail, discard = gambit_repertoire_play.choose(
@@ -518,6 +521,40 @@ def explore_initiative(board, search_plan, baseline_move, baseline_info, baselin
             result.update(reference_delta_cp=None, loss_cp=None,
                 comparison_kind="completed_deeper_finalists_including_baseline",
                 selected_vs_finalist_best_loss_cp=detail["selected_vs_finalist_best_loss_cp"])
+    # Existing verified choices retain priority, including practiced moves
+    # whose valid source has its own compensation allowance. Creativity only
+    # investigates unused time after the ordinary policy kept the baseline.
+    remaining = max(0, search_plan["extra_budget_ms"] - (time.monotonic() - started) * 1000 - 5)
+    if (gambit_creativity.ENABLED and not discard and not detail["applied"]
+            and detail["selected_uci"] == baseline_move.uci()
+            and remaining >= gambit_creativity.MIN_PROBE_MS):
+        excluded = [row["uci"] for row in detail.get("attempts", []) if isinstance(row.get("uci"), str)]
+        creative, failed = gambit_creativity.choose(
+            board, baseline_move, baseline_info, baseline_packets, search, close_engine,
+            seed=seed, budget_ms=remaining, search_plan=search_plan, excluded_uci=excluded)
+        result.update(creativity=copy.deepcopy(creative),
+                      extra_elapsed_ms=round((time.monotonic() - started) * 1000, 3))
+        discard = discard or failed
+        if creative["applied"] and not failed:
+            evidence = creative["evidence"]
+            compared = evidence.get("selection_compared", evidence["candidate_compared"])
+            final = evidence.get("selection_final", evidence["candidate_final"])
+            result.update(selected_uci=creative["selected_uci"], candidate_uci=creative["selected_uci"],
+                candidate_source="native_gambit_creativity", reason=creative["reason"],
+                loss_cp=creative["loss_cp"], verification_policy=gambit_creativity.POLICY,
+                comparison_kind="native_same_depth_creativity", compared_depth=compared["depth"],
+                best_defense_cp=compared["cp"], final_best_defense_cp=final["cp"],
+                best_defense_pv_uci=compared["pv_uci"],
+                reference_delta_cp=result["baseline"]["cp"] - compared["cp"])
+            if creative.get("comparison_kind") == "paired_unrestricted_children":
+                # Child-root searches have different selective-search behavior.
+                # Do not disguise their paired result as zero loss at root D.
+                result.update(comparison_kind="paired_unrestricted_children",
+                    compared_depth=None, verification_child_depth=creative["child_depth"],
+                    loss_basis="paired_completed_child_searches", reference_delta_cp=None,
+                    root_reference_delta_cp=result["baseline"]["cp"] - evidence["candidate_compared"]["cp"],
+                    root_loss_cp=creative["root_loss_cp"], paired_loss_cp=creative["paired_loss_cp"],
+                    comparison_baseline=copy.deepcopy(creative["baseline_compared"]))
     return result, discard
 
 
