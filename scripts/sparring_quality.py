@@ -15,7 +15,7 @@ import sparring_play
 import sparring_balance
 import pending_exchange
 
-POLICY = "regicide-sparring-quality-v5"
+POLICY = "regicide-sparring-quality-v6"
 MAX_BUDGET_MS = 8000
 AUDIT_MS = 650
 STARTUP_ALLOWANCE_MS = 1500
@@ -558,3 +558,4 @@ def verify(board, move, search, close_engine, assess, *, budget_ms=MAX_BUDGET_MS
         watcher.join(timeout=.2)
         receipt["elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
     return replacement, receipt, discarded[0]
+

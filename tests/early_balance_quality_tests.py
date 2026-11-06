@@ -174,6 +174,156 @@ class EarlyBalanceTests(unittest.TestCase):
         self.assertIsNone(replacement)
 
 
+class PreventiveBalanceTests(unittest.TestCase):
+    def board(self, *, black=False):
+        board = chess.Board()
+        for move in "g1f3 g8f6 b1c3 b8c6 e2e3 e7e6 f1e2 f8e7".split():
+            board.push_uci(move)
+        if black:
+            board.push_uci("e1g1")
+        return board
+
+    def scenario(self, *, black=False, original_cp=500, first_cp=75, center_cp=30,
+                 stop=None):
+        board = self.board(black=black)
+        original, first, center = map(chess.Move.from_uci,
+            ("e8g8", "a7a6", "d7d6") if black else ("e1g1", "a2a3", "d2d3"))
+        calls, assessed = [], []
+        clock, cancelled = [100.0], [False]
+
+        def search(amount, *, root_moves, **options):
+            candidate = root_moves[0]
+            calls.append((candidate, amount, options))
+            value = native_reply(board, candidate, depth=options.get("depth") or 5)
+            value[1]["score"] = chess.engine.PovScore(chess.engine.Cp(
+                30 if candidate == first else 40 if candidate == center else 500), board.turn)
+            return value
+
+        def assess(candidate, *_):
+            assessed.append(candidate)
+            if candidate == center:
+                if stop == "budget":
+                    clock[0] = 109.0
+                elif stop == "cancel":
+                    cancelled[0] = True
+            cp = original_cp if candidate == original else first_cp if candidate == first else center_cp if candidate == center else 480
+            return assessment(board, candidate, max(original_cp, 100), cp)
+
+        with mock.patch.object(quality.time, "monotonic", side_effect=lambda: clock[0]):
+            result = quality.verify(board, original, search, lambda: None, assess,
+                                    cancelled=lambda: cancelled[0])
+        return result, calls, assessed, original, first, center
+
+    def test_boundary_candidate_keeps_searching_for_center_for_both_colors(self):
+        for black in (False, True):
+            with self.subTest(black=black):
+                (replacement, receipt, discarded), _, assessed, _, first, center = self.scenario(black=black)
+                self.assertFalse(discarded)
+                self.assertEqual(replacement[0].move, center)
+                self.assertLess(assessed.index(first), assessed.index(center))
+                self.assertEqual(receipt["status"], "balanced")
+                self.assertTrue(receipt["balance"]["center_reached"])
+                self.assertEqual(receipt["balance"]["policy"], balance.POLICY)
+                self.assertEqual(receipt["balance"]["trigger_cp"], 60)
+                self.assertEqual(receipt["balance"]["target_tolerance_cp"], 20)
+                self.assertEqual(len(receipt["balance"]["attempts"]), 2)
+
+    def test_first_central_candidate_stops_optional_audits(self):
+        (replacement, receipt, _), _, assessed, _, first, center = self.scenario(first_cp=35)
+        self.assertEqual(replacement[0].move, first)
+        self.assertNotIn(center, assessed)
+        self.assertEqual(len(receipt["balance"]["attempts"]), 1)
+        self.assertTrue(receipt["balance"]["center_reached"])
+
+    def test_completed_boundary_candidate_survives_budget_but_not_cancellation(self):
+        for stop in ("budget", "cancel"):
+            with self.subTest(stop=stop):
+                (replacement, receipt, _), _, _, original, first, _ = self.scenario(stop=stop)
+                if stop == "budget":
+                    self.assertEqual(replacement[0].move, first)
+                    self.assertEqual(receipt["status"], "balanced")
+                    self.assertFalse(receipt["balance"]["center_reached"])
+                    self.assertEqual(receipt["balance"]["stopped_reason"], "budget_exhausted")
+                else:
+                    self.assertIsNone(replacement)
+                    self.assertFalse(receipt["applied"])
+                    self.assertEqual(receipt["selected_uci"], original.uci())
+                    self.assertEqual(receipt["reason"], "cancelled")
+
+    def test_preventive_replacement_requires_twenty_cp_of_progress(self):
+        for black in (False, True):
+            for candidate_cp, accepted in ((51, False), (50, True)):
+                with self.subTest(black=black, candidate_cp=candidate_cp):
+                    (replacement, receipt, _), _, _, _, first, _ = self.scenario(
+                        black=black, original_cp=70, first_cp=candidate_cp, center_cp=480)
+                    self.assertEqual(replacement is not None, accepted)
+                    self.assertTrue(receipt["balance"]["preventive"])
+                    self.assertEqual(receipt["balance"]["minimum_progress_cp"], 20)
+                    if accepted:
+                        self.assertEqual(replacement[0].move, first)
+                    else:
+                        attempt = next(row for row in receipt["balance"]["attempts"] if row["uci"] == first.uci())
+                        self.assertEqual(attempt["progress_cp"], 19)
+                        self.assertEqual(attempt["reason"], "no_clear_balance_progress")
+
+    def test_soft_trigger_is_strict_and_starts_after_four_moves_each(self):
+        for black in (False, True):
+            board = self.board(black=black)
+            move = next(iter(board.legal_moves))
+            for cp, expected in ((60, False), (61, True), (80, True)):
+                data = assessment(board, move, 100, cp)
+                value = quality.verdict(board, move, data)
+                self.assertEqual(balance.required(board, value, data), expected)
+        board = self.board()
+        board.pop()  # Black's fourth move has not yet been played.
+        move = next(iter(board.legal_moves))
+        for cp, expected in ((80, False), (81, True)):
+            data = assessment(board, move, 100, cp)
+            self.assertEqual(balance.required(board, quality.verdict(board, move, data), data), expected)
+
+    def test_soft_trigger_never_extends_past_twentieth_move_or_custom_roots(self):
+        for ply in (38, 39, 40, 41):
+            board = position(ply)
+            move = next(iter(board.legal_moves))
+            data = assessment(board, move, 100, 75)
+            self.assertEqual(balance.required(board, quality.verdict(board, move, data), data), ply < 40)
+        board = chess.Board("4k3/8/8/8/8/8/4P3/4K3 w - - 0 12")
+        move = chess.Move.from_uci("e2e4")
+        data = assessment(board, move, 500, 500)
+        self.assertFalse(balance.required(board, quality.verdict(board, move, data), data))
+
+    def test_preventive_guard_preserves_resource_and_recovery_holds_for_both_colors(self):
+        for black in (False, True):
+            for protection in ("resources", "recovery"):
+                with self.subTest(black=black, protection=protection), \
+                        mock.patch.object(balance.sparring_play.sparring_pacing, "resource_guard",
+                            return_value={"active": protection == "resources"}) as resources, \
+                        mock.patch.object(balance.sparring_play.sparring_pacing, "derive",
+                            return_value={"active": protection == "recovery"}) as recovery:
+                    (replacement, receipt, _), calls, _, _, _, _ = self.scenario(
+                        black=black, original_cp=70, first_cp=30)
+                    self.assertIsNone(replacement)
+                    self.assertFalse(receipt["applied"])
+                    self.assertEqual(receipt["status"], "verified")
+                    self.assertNotIn("balance", receipt)
+                    self.assertEqual(calls, [])
+                    resources.assert_called_once()
+                    self.assertEqual(recovery.call_count, int(protection == "recovery"))
+
+    def test_existing_outside_buffer_and_mate_recovery_do_not_use_preventive_guards(self):
+        for black in (False, True):
+            board = self.board(black=black)
+            move = next(iter(board.legal_moves))
+            for options in ({"child": 81}, {"child_mate": 3}):
+                with self.subTest(black=black, options=options), \
+                        mock.patch.object(balance.sparring_play.sparring_pacing, "resource_guard",
+                            side_effect=AssertionError("Legacy recovery must keep its existing policy")), \
+                        mock.patch.object(balance.sparring_play.sparring_pacing, "derive",
+                            side_effect=AssertionError("Legacy recovery must keep its existing policy")):
+                    data = assessment(board, move, 100, **options)
+                    self.assertTrue(balance.required(board, quality.verdict(board, move, data), data))
+
+
 class ConfirmedNativeRepairTests(unittest.TestCase):
     def scenario(self, *, ply=0, original_cp=-135, first_cp=-56, second_cp=-50,
                  second_root=14, second_status="ready", first_bound=False,
@@ -439,3 +589,4 @@ class UnsafePositiveBalanceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

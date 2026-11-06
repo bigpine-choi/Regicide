@@ -129,7 +129,7 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile["policy"], "regicide-sparring-play-v4")
         self.assertAlmostEqual(profile["target_loss_cp"], profile["skill_target_loss_cp"] * .18, places=2)
         current = policy.derive_profile(board, rows)
-        self.assertEqual(current["policy"], "regicide-sparring-play-v6")
+        self.assertEqual(current["policy"], "regicide-sparring-play-v7")
         self.assertEqual(current["phase"], "finish")
         self.assertEqual(current["target_loss_cp"], 0)
         self.assertEqual(policy._target(board, profile, 300)["target_cp"], 300)
@@ -358,13 +358,13 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["candidate_compared"]["depth"], 6)
         self.assertTrue(any(call[1] is not None and call[3]["depth"] == 6 for call in self.calls))
 
-    def test_accurate_or_uncalibrated_profile_keeps_baseline(self):
+    def test_accurate_or_uncalibrated_profile_at_trigger_keeps_baseline(self):
         for losses in ([0] * 6, [250] * 2):
             board, rows = quality_game(losses)
             self.board, self.rows = board, rows
             self.base = sorted(board.legal_moves, key=lambda m: m.uci())[0]
-            self.base_info = packet(board, self.base.uci())
-            self.packets = {d: packet(board, self.base.uci(), depth=d) for d in (4, 5, 6)}
+            self.base_info = packet(board, self.base.uci(), cp=60)
+            self.packets = {d: packet(board, self.base.uci(), cp=60, depth=d) for d in (4, 5, 6)}
             result, _ = self.choose()
             self.assertEqual(result["selected_uci"], self.base.uci())
         self.assertEqual(self.calls, [])
@@ -789,3 +789,4 @@ class PostmoveEvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -1,0 +1,359 @@
+{
+  "scope": "Actual sparring HTTP evaluation, cancellation and legal move integration.\n\nUses the selected local Regicide binary and temporary games only. This is a\nfunctional check, not a full game, manual GUI session, or playing-strength test.\n",
+  "binary": "C:\\Users\\user\\Documents\\ChatGPT\\Regicide 개발 프로젝트\\build\\native\\regicide.exe",
+  "binary_sha256": "15945c755365d9dfc8a208dc43d76fc6192695574855281d4fc917ecffcb5799",
+  "source_sha256": {
+    "scripts/play_human.py": "92a75cc6c3a3f4e4d60d38069f7775830aa6e0a8a61a5cdabe177a286b51bafe",
+    "scripts/move_hints.py": "e30ad346846e067abe2ba44bf8d6d78e328c829b379118731aeed30d615f0bb2",
+    "scripts/sparring_evaluation.py": "5a0de27ea569a59a14fc523cc06e6eb7cfcea9297c5c11e0cd2a8249c78aacbb",
+    "scripts/sparring_play.py": "1a7a363a412872069000d76bebb95a74a93b9f33deba7b7c3321ddb218b23e68",
+    "tests/sparring_evaluation_integration.py": "a4607e28ebe04db3707b22100ef1d3c8cef0bb3df6a2339ba66b64ae0feb3abe"
+  },
+  "source_unchanged": true,
+  "checks": [
+    {
+      "human_color": "white",
+      "initial": {
+        "first_score_ms_from_poll": 109.248,
+        "samples": [
+          {
+            "elapsed_ms": 109.248,
+            "depth": 3,
+            "cp": 41,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261106-094252-1563827996de",
+          "revision": 2,
+          "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "turn": "white",
+          "status": "searching",
+          "cp": 41,
+          "mate": null,
+          "depth": 3,
+          "bound": "exact",
+          "white_share": 0.546485260770975,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "reliability": "provisional",
+          "recent_cp_range_white": null,
+          "score_swing_cp": null,
+          "stable_depths": 0,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "initial",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 18.786,
+            "stop_reason": null,
+            "converged": false,
+            "accepted_packets": 3,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000,
+          "reference_evaluation": {
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "status": "unavailable",
+            "game_id": "20261106-094252-1563827996de",
+            "revision": 2,
+            "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "turn": "white",
+            "request_id": "stockfish-gauge-0f0c0ec7bdf74b3b9faa78f440e012f7:2",
+            "source_fen": null,
+            "cp": null,
+            "mate": null,
+            "depth": null,
+            "bound": null,
+            "white_share": null,
+            "wdl_white": null,
+            "winner": null,
+            "result": "*",
+            "available": false,
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "stockfish_reference": {
+            "enabled": true,
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "configured": false,
+            "available": false,
+            "name": "Stockfish · 별도 심판",
+            "binary_sha256": null,
+            "status": "unavailable",
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "sparring_referee": {
+            "enabled": true,
+            "available": false,
+            "configured": false,
+            "assisted": false,
+            "name": "Stockfish",
+            "binary_sha256": null,
+            "policy": "regicide-stockfish-referee-v3",
+            "status": "unavailable",
+            "message": "Stockfish 심판을 사용할 수 없어 Regicide 자체 판단을 사용합니다."
+          }
+        }
+      },
+      "refined": {
+        "first_score_ms_from_poll": 75.613,
+        "samples": [
+          {
+            "elapsed_ms": 75.613,
+            "depth": 3,
+            "cp": 25,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 117.965,
+            "depth": 4,
+            "cp": -3,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 212.166,
+            "depth": 5,
+            "cp": 23,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 850.024,
+            "depth": 6,
+            "cp": -2,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 2948.666,
+            "depth": 7,
+            "cp": 26,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261106-094252-1563827996de",
+          "revision": 4,
+          "fen": "r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+          "turn": "white",
+          "status": "ready",
+          "cp": 26,
+          "mate": null,
+          "depth": 7,
+          "bound": "exact",
+          "white_share": 0.5305164319248826,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+          "reliability": "stable",
+          "recent_cp_range_white": [
+            -2,
+            26
+          ],
+          "score_swing_cp": 28,
+          "stable_depths": 3,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "complete",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 9996.528,
+            "stop_reason": "engine_completed",
+            "converged": false,
+            "accepted_packets": 8,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000,
+          "reference_evaluation": {
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "status": "unavailable",
+            "game_id": "20261106-094252-1563827996de",
+            "revision": 4,
+            "fen": "r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+            "turn": "white",
+            "request_id": "stockfish-gauge-0f0c0ec7bdf74b3b9faa78f440e012f7:4",
+            "source_fen": null,
+            "cp": null,
+            "mate": null,
+            "depth": null,
+            "bound": null,
+            "white_share": null,
+            "wdl_white": null,
+            "winner": null,
+            "result": "*",
+            "available": false,
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "stockfish_reference": {
+            "enabled": true,
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "configured": false,
+            "available": false,
+            "name": "Stockfish · 별도 심판",
+            "binary_sha256": null,
+            "status": "unavailable",
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "sparring_referee": {
+            "enabled": true,
+            "available": false,
+            "configured": false,
+            "assisted": false,
+            "name": "Stockfish",
+            "binary_sha256": null,
+            "policy": "regicide-stockfish-referee-v3",
+            "status": "unavailable",
+            "message": "Stockfish 심판을 사용할 수 없어 Regicide 자체 판단을 사용합니다."
+          }
+        }
+      },
+      "evaluation_poll_ms_during_engine": [
+        3.213,
+        3.954,
+        12.061,
+        6.489
+      ],
+      "legal_plies": 2,
+      "board_unchanged_by_analysis": true,
+      "archive_policy_preserved": true
+    },
+    {
+      "human_color": "black",
+      "initial": null,
+      "refined": {
+        "first_score_ms_from_poll": 73.371,
+        "samples": [
+          {
+            "elapsed_ms": 73.371,
+            "depth": 4,
+            "cp": 28,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 119.656,
+            "depth": 5,
+            "cp": 0,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 318.703,
+            "depth": 6,
+            "cp": 32,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 1656.046,
+            "depth": 7,
+            "cp": 0,
+            "mate": null
+          },
+          {
+            "elapsed_ms": 8636.708,
+            "depth": 8,
+            "cp": 26,
+            "mate": null
+          }
+        ],
+        "final": {
+          "game_id": "20261106-094302-2899b588b169",
+          "revision": 6,
+          "fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+          "turn": "black",
+          "status": "ready",
+          "cp": 26,
+          "mate": null,
+          "depth": 8,
+          "bound": "exact",
+          "white_share": 0.5305164319248826,
+          "winner": null,
+          "result": "*",
+          "source": "search",
+          "source_fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+          "reliability": "volatile",
+          "recent_cp_range_white": [
+            0,
+            32
+          ],
+          "score_swing_cp": 32,
+          "stable_depths": 3,
+          "refinement": {
+            "policy": "regicide-sparring-evaluation-v1",
+            "phase": "complete",
+            "base_budget_ms": 3000,
+            "max_budget_ms": 10000,
+            "elapsed_ms": 10001.878,
+            "stop_reason": "budget",
+            "converged": false,
+            "accepted_packets": 9,
+            "rejected_packets": 0,
+            "retained_previous_score": false
+          },
+          "budget_ms": 10000,
+          "reference_evaluation": {
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "status": "unavailable",
+            "game_id": "20261106-094302-2899b588b169",
+            "revision": 6,
+            "fen": "rnbqkbnr/pppppppp/8/8/8/2N5/PPPPPPPP/R1BQKBNR b KQkq - 1 1",
+            "turn": "black",
+            "request_id": "stockfish-gauge-0f0c0ec7bdf74b3b9faa78f440e012f7:6",
+            "source_fen": null,
+            "cp": null,
+            "mate": null,
+            "depth": null,
+            "bound": null,
+            "white_share": null,
+            "wdl_white": null,
+            "winner": null,
+            "result": "*",
+            "available": false,
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "stockfish_reference": {
+            "enabled": true,
+            "source": "stockfish_gauge",
+            "policy": "regicide-stockfish-gauge-v1",
+            "configured": false,
+            "available": false,
+            "name": "Stockfish · 별도 심판",
+            "binary_sha256": null,
+            "status": "unavailable",
+            "message": "Stockfish 형세를 확인할 수 없습니다."
+          },
+          "sparring_referee": {
+            "enabled": true,
+            "available": false,
+            "configured": false,
+            "assisted": false,
+            "name": "Stockfish",
+            "binary_sha256": null,
+            "policy": "regicide-stockfish-referee-v3",
+            "status": "unavailable",
+            "message": "Stockfish 심판을 사용할 수 없어 Regicide 자체 판단을 사용합니다."
+          }
+        }
+      },
+      "evaluation_poll_ms_during_engine": [
+        9.479,
+        5.093,
+        3.133,
+        22.171,
+        2.685,
+        15.337,
+        3.251
+      ],
+      "legal_plies": 1,
+      "board_unchanged_by_analysis": true,
+      "archive_policy_preserved": true
+    }
+  ],
+  "passed": true
+}
