@@ -1,0 +1,246 @@
+{
+  "schema": "regicide.gambit-research-independent-audit.v1",
+  "engine_started": false,
+  "study_run": "docs/checks/2026-11-05-gambit-theory-discovery/native-v4",
+  "discovery_run": "docs/checks/2026-11-05-gambit-theory-discovery/native-v4",
+  "limitations": [
+    "Native finite-depth labels are not objective chess truth",
+    "No Elo or equal-time completed-match evidence",
+    "Novelty checked against pinned named openings; additional PGNs require extending audit"
+  ],
+  "excluded_previous_runs": [
+    {
+      "run": "native-v1",
+      "excluded_from_final_evidence": true,
+      "reason": "superseded_by_complete_final_frozen_source_run",
+      "recorded_sources_unchanged": false,
+      "incremental_query_checkpoint_missing_ids": [
+        "q000019",
+        "q000020",
+        "q000136",
+        "q000137"
+      ],
+      "invalid_discovery_cases": [
+        {
+          "case_id": "theory-7a7050b0f7891cb38453",
+          "reason": "history does not reproduce fen"
+        }
+      ],
+      "raw_uci_sha256": "5f9957e860fd40e7fd3e66c2469eb4a1dbe6bb74f2db8a1e7648635a90d30596",
+      "original_files_modified_by_audit": false
+    },
+    {
+      "run": "native-v2",
+      "excluded_from_final_evidence": true,
+      "reason": "superseded_by_complete_final_frozen_source_run",
+      "recorded_sources_unchanged": false,
+      "incremental_query_checkpoint_missing_ids": [
+        "q000101",
+        "q000189",
+        "q000213",
+        "q000242",
+        "q000243"
+      ],
+      "invalid_discovery_cases": [
+        {
+          "case_id": "theory-7a7050b0f7891cb38453",
+          "reason": "history does not reproduce fen"
+        }
+      ],
+      "raw_uci_sha256": "62b869ee14d2815ffeb15655a7524d431f87a2a0ad6a64fd532e042c74856239",
+      "original_files_modified_by_audit": false
+    },
+    {
+      "run": "native-v3",
+      "excluded_from_final_evidence": true,
+      "reason": "superseded_by_complete_final_frozen_source_run",
+      "recorded_sources_unchanged": true,
+      "incremental_query_checkpoint_missing_ids": [],
+      "invalid_discovery_cases": [],
+      "raw_uci_sha256": "d36d3d19dd5b6dd89b880647fb88892133e6721a5f91beaf21246343371870ac",
+      "original_files_modified_by_audit": false
+    }
+  ],
+  "shared_query_run": true,
+  "study_queries": {
+    "run": "docs/checks/2026-11-05-gambit-theory-discovery/native-v4",
+    "queries": 513,
+    "raw_lines": 27381,
+    "original_query_checkpoints": 513,
+    "final_query_snapshot_sha256": "b086b37176d8763892d229f47a2c683ca215a14b18790a1c7106e3126edcea68",
+    "incremental_checkpoint_missing_ids": [
+      "q000050",
+      "q000051"
+    ],
+    "incremental_checkpoint_malformed_lines": 0,
+    "final_ledger_is_authoritative_and_independently_raw_verified": true,
+    "statuses": {
+      "complete": 510,
+      "unknown": 3
+    },
+    "requested_nodes": 80100000,
+    "actual_nodes": 80100000,
+    "query_wall_seconds_sum": 341.8808172810095,
+    "maximum_query_wall_seconds": 2.1337413779983763,
+    "issued_go_commands": 513,
+    "queries_without_available_node_counters": 0,
+    "resource_interpretation": "Requested nodes include recorded requests; actual nodes sum available counters only; wall sum excludes preparation and is not a speed comparison",
+    "source_changes_since_run_start": [],
+    "recorded_sources_unchanged": true,
+    "cleanup": {
+      "quit_requested": true,
+      "transport_closed": true,
+      "returncode": 0,
+      "returncode_observed": true
+    },
+    "raw_sha256": "df8c4ee864abfa6820613a6f05da115705296a4290104adc1b68d0cd2d214274",
+    "queries_sha256": "2c5033e10264f2f7030c8a5537c68eb6a0c8030541b0ca5eb2f760a8bb5f115f"
+  },
+  "discovery_queries": {
+    "run": "docs/checks/2026-11-05-gambit-theory-discovery/native-v4",
+    "queries": 513,
+    "raw_lines": 27381,
+    "original_query_checkpoints": 513,
+    "final_query_snapshot_sha256": "b086b37176d8763892d229f47a2c683ca215a14b18790a1c7106e3126edcea68",
+    "incremental_checkpoint_missing_ids": [
+      "q000050",
+      "q000051"
+    ],
+    "incremental_checkpoint_malformed_lines": 0,
+    "final_ledger_is_authoritative_and_independently_raw_verified": true,
+    "statuses": {
+      "complete": 510,
+      "unknown": 3
+    },
+    "requested_nodes": 80100000,
+    "actual_nodes": 80100000,
+    "query_wall_seconds_sum": 341.8808172810095,
+    "maximum_query_wall_seconds": 2.1337413779983763,
+    "issued_go_commands": 513,
+    "queries_without_available_node_counters": 0,
+    "resource_interpretation": "Requested nodes include recorded requests; actual nodes sum available counters only; wall sum excludes preparation and is not a speed comparison",
+    "source_changes_since_run_start": [],
+    "recorded_sources_unchanged": true,
+    "cleanup": {
+      "quit_requested": true,
+      "transport_closed": true,
+      "returncode": 0,
+      "returncode_observed": true
+    },
+    "raw_sha256": "df8c4ee864abfa6820613a6f05da115705296a4290104adc1b68d0cd2d214274",
+    "queries_sha256": "2c5033e10264f2f7030c8a5537c68eb6a0c8030541b0ca5eb2f760a8bb5f115f"
+  },
+  "study": {
+    "cases": 32,
+    "family_splits": {
+      "evans": "train",
+      "smith-morra": "train",
+      "albin": "validation",
+      "benko": "holdout"
+    },
+    "groups": 30,
+    "stable_labels": 90,
+    "split_counts": {
+      "train": 14,
+      "validation": 8,
+      "holdout": 8
+    },
+    "excluded_records": 6,
+    "model_trained": true,
+    "candidate_acceptance": false,
+    "active": false,
+    "independent_refit": {
+      "weights_means_scales_match": true,
+      "selection_used_only_validation": true,
+      "training_pairs": 34,
+      "regularization": 0.001
+    },
+    "dataset_sha256": "8ef9983432cae8d570d6a68e1249c818882020a6b8ccc8cc4e697265e49f6929"
+  },
+  "discovery": {
+    "cases": 4,
+    "invalid_cases": 0,
+    "candidates": 12,
+    "candidate_statuses": {
+      "rejected": 12
+    },
+    "pgn_games": 12,
+    "bounded_screen_passed": 0,
+    "source_unseen_two_budget_candidates": 0,
+    "soundness_proven": false,
+    "world_first_claimed": false
+  },
+  "existing_policy_sha256": "48e2b85b5005fca1914625e13dcc42067a46a58553e960a590ee540e823c48aa",
+  "status": "complete",
+  "passed": true,
+  "checks": {
+    "final_json_and_jsonl_agree": 1,
+    "final_query_ids_contiguous": 1,
+    "raw_sequence": 1,
+    "unique_query_ids": 1,
+    "query_history": 513,
+    "query_pov": 513,
+    "raw_query_range": 513,
+    "raw_full_history_fresh_game_and_budget": 513,
+    "query_completion": 510,
+    "raw_bestmove": 510,
+    "raw_completed_info": 510,
+    "raw_score_pov": 510,
+    "native_score_matches_raw": 510,
+    "legal_query_pv": 2754,
+    "source_snapshot_scope": 1,
+    "engine_manifest": 2,
+    "predeclared_source_identity": 1,
+    "binary_identity": 1,
+    "final_ledger_summary_sha_and_rows": 1,
+    "engine_cleanup": 1,
+    "resource_totals": 1,
+    "query_status_totals": 1,
+    "binary_unchanged": 1,
+    "final_discovery_source_unchanged": 1,
+    "dataset_checksum": 1,
+    "curriculum_checksum": 1,
+    "study_dependency_unchanged": 4,
+    "study_engine_identity": 1,
+    "model_dataset_identity": 1,
+    "all_predeclared_study_cases_counted": 1,
+    "curriculum_replay": 32,
+    "family_separation": 32,
+    "root_and_all_child_separation": 3,
+    "training_case_identity": 30,
+    "native_baseline": 30,
+    "native_baseline_candidate_identity": 30,
+    "embedded_label_evidence_matches_final_ledger": 90,
+    "label_full_history": 90,
+    "label_two_budgets": 90,
+    "stable_exact_label": 90,
+    "label_pov_and_stability": 90,
+    "all_predeclared_study_cases_reported": 1,
+    "no_policy_activation": 1,
+    "independent_train_only_refit": 3,
+    "validation_only_hyperparameter": 1,
+    "independent_ranking_metrics": 3,
+    "independent_acceptance_gates": 1,
+    "predeclared_discovery_cases": 1,
+    "valid_discovery_case": 4,
+    "discovery_curriculum_case_identity": 4,
+    "audit_reference_scope_supported": 4,
+    "probe_native_history": 289,
+    "probe_native_cp_pv_pov": 289,
+    "independent_catalog_novelty": 12,
+    "material_offer": 12,
+    "independent_candidate_gate": 9,
+    "all_immediate_defenses": 9,
+    "independent_defense_gate": 276,
+    "independent_immediate_recapture": 11,
+    "material_continuation_trace": 11,
+    "persistent_sacrifice": 5,
+    "research_pgn_legality": 12,
+    "research_pgn_count": 1,
+    "research_pgn_evidence": 12,
+    "discovery_summary_counts": 1,
+    "discovery_screening_summary_counts": 1,
+    "existing_policy_matches_documented_baseline": 1
+  },
+  "failures": []
+}

@@ -190,6 +190,7 @@ Visual Studio CMake 생성기를 사용한 Windows 빌드는 실행 파일이 `b
 
 ## 문서
 
+- [갬빗 이론 학습·신규 희생 수순 연구 도구](docs/GAMBIT_RESEARCH.md)
 - [프로젝트 지침](docs/PROJECT_INSTRUCTIONS.md)
 - [NNUE 개발 아이디어와 공개 연구 자료](docs/research/2026-10-19-nnue-development-ideas.md)
 - [개발 로드맵](docs/ROADMAP.md)
