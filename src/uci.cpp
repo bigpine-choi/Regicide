@@ -1,5 +1,6 @@
 #include "regicide/uci.hpp"
 #include "regicide/search.hpp"
+#include "regicide/mate.hpp"
 #include "regicide/neural.hpp"
 #include "regicide/nnue.hpp"
 
@@ -38,6 +39,7 @@ std::uint64_t number(const std::string& text, std::uint64_t maximum) {
 struct Go {
     SearchLimits limits;
     bool infinite = false;
+    std::optional<int> mate;
     std::optional<std::vector<Move>> root_moves;
 };
 Go parse_go(const std::vector<std::string>& tokens, Color turn, int overhead) {
@@ -63,14 +65,18 @@ Go parse_go(const std::vector<std::string>& tokens, Color turn, int overhead) {
             if (go.root_moves->empty()) throw std::invalid_argument("searchmoves requires legal moves");
             continue;
         }
-        if (key == "ponder" || key == "mate")
+        if (key == "ponder")
             throw std::invalid_argument("unsupported go mode: " + key);
         if (key != "depth" && key != "nodes" && key != "movetime" && key != "wtime" &&
-            key != "btime" && key != "winc" && key != "binc" && key != "movestogo")
+            key != "btime" && key != "winc" && key != "binc" && key != "movestogo" && key != "mate")
             throw std::invalid_argument("unknown go parameter: " + key);
         if (++i == tokens.size()) throw std::invalid_argument("missing go value");
         const auto value = number(tokens[i], key == "nodes" ? UINT64_MAX : 1000000000000ULL);
-        if (key == "depth") {
+        if (key == "mate") {
+            if (go.mate) throw std::invalid_argument("duplicate mate parameter");
+            if (value < 1 || value > 64) throw std::invalid_argument("mate must be 1..64");
+            go.mate = static_cast<int>(value);
+        } else if (key == "depth") {
             if (value < 1 || value > 64) throw std::invalid_argument("depth must be 1..64");
             go.limits.depth = static_cast<int>(value); explicit_depth = true;
         } else if (key == "nodes") {
@@ -86,6 +92,8 @@ Go parse_go(const std::vector<std::string>& tokens, Color turn, int overhead) {
             moves_to_go = static_cast<std::int64_t>(value);
         }
     }
+    if (go.mate && (go.infinite || explicit_depth))
+        throw std::invalid_argument("go mate cannot combine with depth or infinite");
     if (!go.infinite) {
         if (movetime) {
             go.limits.movetime = std::chrono::milliseconds(std::max<std::int64_t>(1, *movetime - overhead));
@@ -339,6 +347,24 @@ private:
              " allocations " + std::to_string(result.tt_allocations) + " reuses " + std::to_string(result.tt_reuses) +
              " clears " + std::to_string(result.tt_clears) + " bytes " + std::to_string(result.tt_bytes));
     }
+    void mate_progress(const MateResult& result, int target, bool restricted) {
+        const std::string status = result.status == MateStatus::proven ? "proven" :
+            result.status == MateStatus::no_mate_within_bound ? "no_mate_within_bound" : "unknown";
+        std::ostringstream summary;
+        summary << "info string mate_status " << status << " target " << target
+                << " completed " << result.completed_moves << " nodes " << result.nodes
+                << " time " << result.elapsed.count() << " reason " << result.reason
+                << " scope " << (restricted ? "searchmoves" : "all");
+        send(summary.str());
+        if (result.status == MateStatus::proven) {
+            std::ostringstream line;
+            line << "info depth " << result.mate_plies << " score mate " << (result.mate_plies + 1) / 2
+                 << " nodes " << result.nodes << " time " << result.elapsed.count() << " pv";
+            for (auto move : result.pv) line << ' ' << move.uci();
+            send(line.str());
+            send("info string mate_distance plies " + std::to_string(result.mate_plies));
+        } else if (result.best_move) send("info string mate_fallback unproven");
+    }
     void start(Go go) {
         stop_.store(false, std::memory_order_relaxed);
         const Board snapshot = board_;
@@ -346,6 +372,17 @@ private:
         options.root_moves = std::move(go.root_moves);
         worker_ = std::thread([this, snapshot, go, options] {
             try {
+                if (go.mate) {
+                    MateLimits limits;
+                    limits.moves = *go.mate;
+                    limits.nodes = go.limits.nodes ? go.limits.nodes : 1000000;
+                    limits.movetime = go.limits.movetime;
+                    limits.root_moves = options.root_moves;
+                    const auto result = solve_mate(snapshot, limits, &stop_);
+                    mate_progress(result, *go.mate, options.root_moves.has_value());
+                    send("bestmove " + (result.best_move ? result.best_move->uci() : std::string("0000")));
+                    return;
+                }
                 auto result = search(snapshot, go.limits, &stop_, [this](const auto& r) { progress(r); }, options, &context_);
                 if (go.infinite) {
                     std::unique_lock lock(wait_mutex_);

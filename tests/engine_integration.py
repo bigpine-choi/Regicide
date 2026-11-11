@@ -421,7 +421,7 @@ def test_bad_commands(binary):
         engine.send("setoption name UnknownTestOption value ignored")
         engine.send("unknown_command")
         engine.ready()
-        for command in ["go searchmoves g6g6", "go ponder", "go mate 2", "go depth banana",
+        for command in ["go searchmoves g6g6", "go ponder", "go mate 0", "go depth banana",
                         "go depth", "go depth 65", "go nodes -1", "go movetime nope"]:
             engine.send(command)
             best, output = engine.bestmove()

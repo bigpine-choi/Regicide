@@ -62,7 +62,8 @@ constexpr auto attack_geometry = [] {
                     geometry.pawns[side].squares[geometry.pawns[side].count++] =
                         static_cast<unsigned char>(pawn_rank * 8 + file + delta);
         }
-        for (const auto& step : knight_steps) {
+        for (int knight = 0; knight < 8; ++knight) {
+            const auto& step = knight_steps[knight];
             const int f = file + step[0], r = rank + step[1];
             if (inside(f, r)) geometry.knights.squares[geometry.knights.count++] =
                 static_cast<unsigned char>(r * 8 + f);

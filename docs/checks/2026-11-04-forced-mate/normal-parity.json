@@ -1,0 +1,240 @@
+{
+  "baseline": "C:\\Users\\user\\Documents\\Codex\\2026-11-04\\11-3-regicide-m16-bigpine-choi-2\\work\\Baseline\\build\\regicide.exe",
+  "prototype": "C:\\Users\\user\\Documents\\Codex\\2026-11-04\\11-3-regicide-m16-bigpine-choi-2\\work\\Regicide\\build-native\\regicide.exe",
+  "timing_note": "Single-run wall times are diagnostic, not a speed or Elo claim.",
+  "cases": [
+    {
+      "name": "start_depth3",
+      "position": "position startpos",
+      "command": "go depth 3",
+      "baseline": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 645,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 10.493
+      },
+      "prototype": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 645,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 15.358
+      },
+      "equal": true
+    },
+    {
+      "name": "ruy_depth3",
+      "position": "position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6",
+      "command": "go depth 3",
+      "baseline": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 34,
+          "nodes": 7604,
+          "pv": [
+            "a4c6",
+            "b7c6",
+            "e1g1"
+          ],
+          "bestmove": "a4c6"
+        },
+        "wall_ms": 92.101
+      },
+      "prototype": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 34,
+          "nodes": 7604,
+          "pv": [
+            "a4c6",
+            "b7c6",
+            "e1g1"
+          ],
+          "bestmove": "a4c6"
+        },
+        "wall_ms": 92.405
+      },
+      "equal": true
+    },
+    {
+      "name": "castling_depth3",
+      "position": "position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+      "command": "go depth 3",
+      "baseline": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": -24,
+          "nodes": 69706,
+          "pv": [
+            "e2a6",
+            "e6d5",
+            "e5f7",
+            "e7f7"
+          ],
+          "bestmove": "e2a6"
+        },
+        "wall_ms": 615.568
+      },
+      "prototype": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": -24,
+          "nodes": 69706,
+          "pv": [
+            "e2a6",
+            "e6d5",
+            "e5f7",
+            "e7f7"
+          ],
+          "bestmove": "e2a6"
+        },
+        "wall_ms": 739.844
+      },
+      "equal": true
+    },
+    {
+      "name": "endgame_depth4",
+      "position": "position fen 8/8/4k3/8/4K3/8/4P3/8 w - - 0 1",
+      "command": "go depth 4",
+      "baseline": {
+        "result": {
+          "depth": 4,
+          "score_type": "cp",
+          "score": 146,
+          "nodes": 273,
+          "pv": [
+            "e4d4",
+            "e6d6",
+            "e2e4",
+            "d6e6"
+          ],
+          "bestmove": "e4d4"
+        },
+        "wall_ms": 6.528
+      },
+      "prototype": {
+        "result": {
+          "depth": 4,
+          "score_type": "cp",
+          "score": 146,
+          "nodes": 273,
+          "pv": [
+            "e4d4",
+            "e6d6",
+            "e2e4",
+            "d6e6"
+          ],
+          "bestmove": "e4d4"
+        },
+        "wall_ms": 6.282
+      },
+      "equal": true
+    },
+    {
+      "name": "start_nodes2000",
+      "position": "position startpos",
+      "command": "go nodes 2000",
+      "baseline": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 2000,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 16.699
+      },
+      "prototype": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 2000,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 15.698
+      },
+      "equal": true
+    },
+    {
+      "name": "normal_after_mate",
+      "position": "position startpos",
+      "command": "go depth 3",
+      "baseline": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 645,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 7.725
+      },
+      "prototype": {
+        "result": {
+          "depth": 3,
+          "score_type": "cp",
+          "score": 30,
+          "nodes": 645,
+          "pv": [
+            "b1c3",
+            "b8c6",
+            "g1f3"
+          ],
+          "bestmove": "b1c3"
+        },
+        "wall_ms": 7.611
+      },
+      "equal": true,
+      "mate_priming": {
+        "baseline": [
+          "info string unsupported go mode: mate",
+          "bestmove 0000"
+        ],
+        "prototype": [
+          "info string mate_status proven target 1 completed 1 nodes 2 time 0 reason all_defenses_proven scope all",
+          "info depth 1 score mate 1 nodes 2 time 0 pv f7g7",
+          "info string mate_distance plies 1",
+          "bestmove f7g7"
+        ]
+      }
+    }
+  ],
+  "all_equal": true
+}
