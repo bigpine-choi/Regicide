@@ -11,14 +11,24 @@ import chess
 import sparring_play
 import pending_exchange
 
+POLICY = "regicide-sparring-balance-v2"
 TARGET_CP = 30
 BAND_CP = 100
 BUFFER_CP = 80
+PREVENTIVE_START_PLY = 8
+PREVENTIVE_TRIGGER_CP = 60
+TARGET_TOLERANCE_CP = 20
+MIN_PREVENTIVE_PROGRESS_CP = 20
 MAX_DISCOVERY_MS = 1800
 MIN_DISCOVERY_MS = 12
 MAX_DISCOVERY_DEPTH = 3
 PROMOTION_MS = 1200
 MAX_AUDITS = 5
+
+
+def trigger_cp(board):
+    """Start correcting a modest advantage after both sides develop four moves."""
+    return PREVENTIVE_TRIGGER_CP if PREVENTIVE_START_PLY <= len(board.move_stack) < 40 else BUFFER_CP
 
 
 def required(board, verdict, assessment):
@@ -28,7 +38,17 @@ def required(board, verdict, assessment):
     own = "white" if board.turn else "black"
     child = assessment.get("child") or {}
     cp = verdict.get("child_cp_own")
-    return child.get("winner") == own or type(cp) in (int, float) and cp > BUFFER_CP
+    if child.get("winner") == own:
+        return True
+    if type(cp) not in (int, float) or not cp > trigger_cp(board):
+        return False
+    if cp > BUFFER_CP:
+        return True
+    # The new preventive range must not reopen a concession that native play
+    # suppressed to preserve scarce resources or a delayed recovery schedule.
+    # Existing outside-buffer and mate recovery retain their historical policy.
+    return (not sparring_play.sparring_pacing.resource_guard(board).get("active")
+            and not sparring_play.sparring_pacing.derive(board, [], cp).get("active"))
 
 
 def recover(board, move, initial, initial_verdict, *, native_search, native_evidence,
@@ -40,9 +60,13 @@ completed native search of at least ``minimum_native_depth`` and independent
 root/child evidence. A forced existing defensive move is never filtered here.
 """
     own = "white" if board.turn else "black"
-    result = {"active": True, "status": "unmet", "reason": "no_verified_natural_balance_candidate",
+    original_cp = initial_verdict.get("child_cp_own")
+    preventive = type(original_cp) in (int, float) and abs(original_cp) <= BUFFER_CP
+    result = {"policy": POLICY, "active": True, "status": "unmet", "reason": "no_verified_natural_balance_candidate",
               "target_cp": TARGET_CP, "band_cp": BAND_CP, "buffer_cp": BUFFER_CP,
-              "original_child_cp_own": initial_verdict.get("child_cp_own"),
+              "trigger_cp": trigger_cp(board), "target_tolerance_cp": TARGET_TOLERANCE_CP,
+              "preventive": preventive, "minimum_progress_cp": MIN_PREVENTIVE_PROGRESS_CP if preventive else 0,
+              "center_reached": False, "original_child_cp_own": original_cp,
               "discovery": [], "attempts": [], "selected_child_cp_own": None,
               "scope": "elective natural native concessions; no material-return exception"}
     legal = []
@@ -83,7 +107,6 @@ root/child evidence. A forced existing defensive move is never filtered here.
                                   abs(item[1]["cp_own"] - TARGET_CP),
                                   board.is_capture(item[0][0].move), item[1]["uci"]))
     best = None
-    original_cp = initial_verdict.get("child_cp_own")
     root = initial.get("root") or {}
     for response, discovery in leads[:MAX_AUDITS]:
         check()
@@ -109,9 +132,12 @@ root/child evidence. A forced existing defensive move is never filtered here.
         if checked.get("child", {}).get("winner") is not None or cp is None or cp < -BAND_CP:
             continue
         inside = abs(cp) <= BUFFER_CP
+        central = abs(cp - TARGET_CP) <= TARGET_TOLERANCE_CP
         if original_cp is not None:
             progress = abs(original_cp - TARGET_CP) - abs(cp - TARGET_CP)
-            if progress <= 0 or not inside and progress < 30:
+            minimum_progress = MIN_PREVENTIVE_PROGRESS_CP if preventive else 0 if inside else 30
+            row.update(progress_cp=progress, minimum_progress_cp=minimum_progress)
+            if progress <= 0 or progress < minimum_progress:
                 row["reason"] = "no_clear_balance_progress"
                 continue
         if best is not None and abs(cp - TARGET_CP) >= abs(best[1]["child_cp_own"] - TARGET_CP):
@@ -132,14 +158,17 @@ root/child evidence. A forced existing defensive move is never filtered here.
         best = (response, copy.deepcopy(verdict), checked)
         result.update(status="met" if inside else "improved",
                       reason="verified_natural_balance" if inside else "verified_natural_balance_progress",
-                      selected_child_cp_own=cp)
+                      selected_child_cp_own=cp, center_reached=central)
         if completed is not None:
             completed(best, copy.deepcopy(result))
-        if inside:
+        # A boundary-level success is retained while later verified candidates
+        # can still reach the center. Completed evidence survives optional expiry.
+        if central:
             break
     if best is not None:
         cp = best[1]["child_cp_own"]
         result.update(status="met" if abs(cp) <= BUFFER_CP else "improved",
                       reason="verified_natural_balance" if abs(cp) <= BUFFER_CP else "verified_natural_balance_progress",
-                      selected_child_cp_own=cp)
+                      selected_child_cp_own=cp, center_reached=abs(cp - TARGET_CP) <= TARGET_TOLERANCE_CP)
     return best, result
+

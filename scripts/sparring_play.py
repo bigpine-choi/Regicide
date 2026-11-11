@@ -21,7 +21,10 @@ import sparring_pacing
 import sparring_evaluation
 import sparring_material
 
-POLICY = "regicide-sparring-play-v6"
+POLICY = "regicide-sparring-play-v7"
+OPENING_TENSION_POLICY = "regicide-sparring-opening-tension-v1"
+OPENING_TENSION_TRIGGER_CP = 60
+OPENING_TENSION_MIN_PROGRESS_CP = 20
 RAMP_GUARD_POLICY = "regicide-sparring-ramp-guard-v2"
 PRESSURE_POLICY = "regicide-sparring-pressure-v1"
 RAMP_MAX_CONCESSION_CP = 120
@@ -29,7 +32,7 @@ RAMP_ADVANTAGE_RETURN_FRACTION = .35
 PRESSURE_TIE_CP = 5
 SUPPORTED_POLICIES = ("regicide-sparring-play-v1", "regicide-sparring-play-v2",
                       "regicide-sparring-play-v3", "regicide-sparring-play-v4",
-                      "regicide-sparring-play-v5", POLICY)
+                      "regicide-sparring-play-v5", "regicide-sparring-play-v6", POLICY)
 MIN_TOTAL_MS = 600
 MIN_DEPTH = 4
 MIN_OBSERVATIONS = 3
@@ -106,7 +109,7 @@ def _finish_ply(policy):
 
 
 def phase(board, *, policy=None):
-    """v5/v6: close through move 20, ramp 21..49, full on each side's move 50."""
+    """v5+: close through move 20, ramp 21..49, full on each side's move 50."""
     ply = len(board.move_stack)
     legacy = policy == SUPPORTED_POLICIES[0]
     if ply >= _finish_ply(policy):
@@ -142,7 +145,7 @@ def _phase_factor(board, *, policy=None):
         return 1.0
     if policy == SUPPORTED_POLICIES[0]:
         return max(0., (LEGACY_FINISH_PLY - len(board.move_stack)) / (LEGACY_FINISH_PLY - LEGACY_RAMP_PLY))
-    if policy is None or policy == POLICY:
+    if policy is None or policy in ("regicide-sparring-play-v6", POLICY):
         return 1 - _ramp_strength(board, policy=policy)
     return 1 - _ramp_fraction(board, policy=policy)
 
@@ -692,6 +695,20 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         "recovered": False, "failure_reason": "known_mate_outside_cp_band" if reference_mate else "no_exact_finite_reference",
         "selection_objective": "finite in-band candidate nearest target; no mate-to-CP conversion"}
     _paced_control(control, pacing)
+    # Keep some room for the next human move before a small advantage leaves
+    # the ordinary band. This is position feedback, independent of the skill
+    # sample count. An active material-recovery delay retains its own target.
+    tension_requested = bool(standard_history and 8 <= len(board.move_stack) < RAMP_PLY
+                             and finite_baseline is not None
+                             and OPENING_TENSION_TRIGGER_CP < baseline["cp"] <= BAND_CP)
+    opening_tension = {"policy": OPENING_TENSION_POLICY,
+                       "trigger_cp": OPENING_TENSION_TRIGGER_CP,
+                       "minimum_progress_cp": OPENING_TENSION_MIN_PROGRESS_CP,
+                       "requested": tension_requested, "active": False, "applied": False,
+                       "baseline_cp_own": finite_baseline["cp"] if finite_baseline else None,
+                       "target_cp": control["target_cp"], "improvement_cp": None,
+                       "reason": "pending" if tension_requested else "outside_preventive_scope",
+                       "scope": "in-band native position feedback; existing verification and budgets"}
     result = {"policy": POLICY, "ply": len(board.move_stack) + 1, "before_fen": board.fen(en_passant="fen"),
               "history_uci": [move.uci() for move in board.move_stack],
               "color": "white" if board.turn else "black", "selected_uci": baseline_move.uci(),
@@ -703,7 +720,7 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
               "reused": False, "opponent_observation": {"valid": False, "forced": bool(forced),
                   "reason": "not_observed", "loss_cp": None, "depth": None, "elapsed_ms": 0},
               "profile": profile, "phase": phase(board), "band_control": control,
-              "pacing": pacing, "resource_guard": resource_guard,
+              "pacing": pacing, "resource_guard": resource_guard, "opening_tension": opening_tension,
               "target_loss_cp": max(0, baseline["cp"] - control["target_cp"]) if finite_baseline else None,
               "max_loss_cp": (control["ramp_guard"]["max_loss_cp"] if finite_baseline and control["ramp_guard"]["active"]
                               else max(0, baseline["cp"] + BAND_CP) if finite_baseline else None),
@@ -736,6 +753,13 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
         postmove_cp = control.get("selected_postmove_cp")
         if type(postmove_cp) in (int, float):
             values.append(postmove_cp)
+        if opening_tension["requested"]:
+            improvement = (abs(baseline["cp"] - control["target_cp"])
+                           - max(abs(value - control["target_cp"]) for value in values)) if known else None
+            opening_tension.update(improvement_cp=improvement,
+                applied=bool(opening_tension["active"] and result["selected_uci"] != baseline_move.uci()
+                             and improvement is not None and improvement >= OPENING_TENSION_MIN_PROGRESS_CP),
+                reason="pacing_preserved" if control["pacing_applied"] else reason)
         inside = all(-BAND_CP <= value <= BAND_CP for value in values) if known else False if reference_mate else None
         control["pre20_inside"] = control["pre30_inside"] = control["pre40_inside"] = control["pre50_inside"] = inside
         control["strict_band_status"] = "met" if inside is True else "unmet" if inside is False else "unavailable"
@@ -807,11 +831,13 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
     if board.is_check() or opening.has_repetition(board):
         return finish("forcing_or_repeated_position", unavailable=True)
     headroom = (finite_baseline is not None and baseline["cp"] > control["target_cp"] + 15
-                and (pacing.get("active") is True or profile.get("skill_target_loss_cp", 0) > 0))
+                and (pacing.get("active") is True or profile.get("skill_target_loss_cp", 0) > 0
+                     or tension_requested and not control["pacing_applied"]))
     if not correction and not headroom:
         return finish("paced_baseline_preserved" if control["pacing_applied"]
                       and baseline["cp"] > control["nominal_upper_cp"] else "baseline_inside_band")
 
+    opening_tension["active"] = tension_requested and not control["pacing_applied"]
     deadline = started + extra / 1000
     result["candidate_budget_ms"] = round(max(0, (deadline - time.monotonic()) * 1000), 3)
     if result["candidate_budget_ms"] < POSTMOVE_MIN_MS:
@@ -946,6 +972,11 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                         probe.update(admitted=False, reason="candidate_reference_conflict")
                     elif min(compared["cp"], latest["cp"]) < control["lower_cp"]:
                         probe.update(admitted=False, reason="below_band_safety_floor")
+                    elif (opening_tension["active"] and
+                          abs(baseline["cp"] - control["target_cp"])
+                          - max(abs(value["cp"] - control["target_cp"]) for value in (compared, latest))
+                          < OPENING_TENSION_MIN_PROGRESS_CP):
+                        probe.update(admitted=False, reason="opening_tension_no_clear_progress")
                     else:
                         probe["reason"] = "verified_position_candidate"
                         probe["inside_band"] = all(control["lower_cp"] <= cp <= control["upper_cp"]
@@ -977,6 +1008,11 @@ def choose(board, baseline_move, baseline_info, baseline_packets, search, close_
                         failure = None
                         chosen["inside"] = (chosen["inside"] and
                             control["lower_cp"] <= verified["cp_own"] <= control["upper_cp"])
+                        if (opening_tension["active"] and
+                                abs(baseline["cp"] - control["target_cp"])
+                                - abs(verified["cp_own"] - control["target_cp"])
+                                < OPENING_TENSION_MIN_PROGRESS_CP):
+                            failure = "opening_tension_no_clear_postmove_progress"
                     break
     except Exception as error:
         failure = "candidate_search_failed"
@@ -1024,3 +1060,4 @@ def pgn_headers(metadata):
     if isinstance(seed, str) and re.fullmatch(r"[0-9a-f]{32}", seed):
         headers["SparringSeed"] = seed
     return headers
+

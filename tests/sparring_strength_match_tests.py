@@ -64,7 +64,7 @@ class SparringMatchTests(unittest.TestCase):
     def test_real_host_path_records_sparring_only_mate_options_and_legal_pgn(self):
         report = self.run_match()
         self.assertEqual(report['status'], 'completed')
-        self.assertEqual(report['policy'], 'regicide-sparring-play-v6')
+        self.assertEqual(report['policy'], 'regicide-sparring-play-v7')
         self.assertEqual(report['protocol']['target_fullmoves'], 20)
         self.assertIn('40-ply reach', report['protocol']['measurements'])
         self.assertEqual(report['summary']['wins'], 1)
@@ -186,3 +186,4 @@ class SparringMatchTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
